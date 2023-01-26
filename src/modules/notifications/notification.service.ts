@@ -3,7 +3,11 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NotificationPayload } from "./domain/NotificationPayload";
-import { NotificationEventHandler, NotificationEventType } from "./domain/NotificationTypes";
+import {
+  NotificationEventHandler,
+  NotificationEventType,
+  preferredNotificationMedium,
+} from "./domain/NotificationTypes";
 import { SendCardAddedEvent } from "./events/SendCardAddedEvent";
 import { SendCardAdditionFailedEvent } from "./events/SendCardAdditionFailedEvent";
 import { SendCardDeletedEvent } from "./events/SendCardDeletedEvent";
@@ -26,17 +30,38 @@ import { SendWithdrawalInitiatedEvent } from "./events/SendWithdrawalInitiatedEv
 import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
 import { SendWalletTransferEvent } from "./events/SendWalletTransferEvent";
 import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
+import { SendPhoneVerificationCodeEvent } from "./events/SendPhoneVerificationCodeEvent";
 
 @Injectable()
 export class NotificationService {
   @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger;
   constructor(private readonly eventEmitter: EventEmitter2) {}
 
+  private getNotificationMedium(
+    eventType: NotificationEventType,
+    payload: NotificationPayload,
+  ): NotificationEventHandler[] {
+    let notificationMedium = preferredNotificationMedium[eventType];
+    if (notificationMedium.indexOf(NotificationEventHandler.EMAIL) > -1 && !payload.email) {
+      notificationMedium = notificationMedium.filter(medium => medium !== NotificationEventHandler.EMAIL);
+    }
+
+    if (notificationMedium.indexOf(NotificationEventHandler.SMS) > -1 && !payload.phone) {
+      notificationMedium = notificationMedium.filter(medium => medium !== NotificationEventHandler.SMS);
+    }
+    return notificationMedium;
+  }
+
   async sendNotification(eventType: NotificationEventType, payload: NotificationPayload): Promise<void> {
     const notificationEvent = {
       notificationEventType: eventType,
-      notificationEventHandler: [NotificationEventHandler.EMAIL],
+      notificationEventHandler: this.getNotificaitonMedium(eventType, payload),
     };
+
+    if (notificationEvent.notificationEventHandler.length === 0) {
+      this.logger.error(`Failed to send notification for event type ${eventType} as no notification medium was found`);
+      return;
+    }
 
     notificationEvent.notificationEventHandler.forEach(eventHandler => {
       const eventName = `${eventHandler}.${eventType}`;
@@ -51,6 +76,7 @@ export class NotificationService {
           eventName,
           new SendOtpEvent({
             email: payload.email,
+            phone: payload.phone,
             otp: payload.otp,
             name: payload.firstName,
             handle: payload.handle,
@@ -63,12 +89,25 @@ export class NotificationService {
           eventName,
           new SendWalletUpdateVerificationCodeEvent({
             email: payload.email,
+            phone: payload.phone,
             otp: payload.otp,
             name: payload.firstName,
             nobaUserID: payload.nobaUserID,
             locale: payload.locale,
 
             walletAddress: payload.walletAddress,
+          }),
+        );
+        break;
+      case NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT:
+        this.eventEmitter.emitAsync(
+          eventName,
+          new SendPhoneVerificationCodeEvent({
+            phone: payload.phone,
+            otp: payload.otp,
+            handle: payload.handle,
+            name: payload.firstName,
+            locale: payload.locale,
           }),
         );
         break;

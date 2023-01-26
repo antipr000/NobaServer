@@ -35,7 +35,7 @@ const SENDER_EMAIL = "Noba <no-reply@noba.com>";
 const NOBA_COMPLIANCE_EMAIL = "Noba Compliance <compliance@noba.com>";
 
 @Injectable()
-export class EventHandler {
+export class EmailEventHandler {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 

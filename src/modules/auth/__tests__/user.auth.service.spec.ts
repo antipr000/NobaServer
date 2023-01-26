@@ -2,9 +2,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { Test, TestingModule } from "@nestjs/testing";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { getMockSmsServiceWithDefaults } from "../../common/mocks/mock.sms.service";
-import { SMSService } from "../../common/sms.service";
-import { anything, instance, when } from "ts-mockito";
+import { anyString, anything, deepEqual, instance, verify, when } from "ts-mockito";
 import { UnauthorizedException } from "@nestjs/common";
 import { consumerIdentityIdentifier } from "../domain/IdentityType";
 import { STATIC_DEV_OTP } from "../../../config/ConfigurationUtils";
@@ -21,6 +19,7 @@ import { getMockTokenRepoWithDefaults } from "../mocks/MockTokenRepo";
 import { Token } from "../domain/Token";
 import { OTPService } from "../../../modules/common/otp.service";
 import { getMockOTPServiceWithDefaults } from "../../common/mocks/mock.otp.service";
+import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 
 describe("UserAuthService", () => {
   jest.setTimeout(5000);
@@ -30,18 +29,16 @@ describe("UserAuthService", () => {
     let mockOTPService: OTPService;
     let mockTokenRepo: ITokenRepo;
     let mockNotificationService: NotificationService;
-    let mockSmsService: SMSService;
 
     const testJwtSecret = "TEST_SECRET";
     const identityType = consumerIdentityIdentifier;
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
-    beforeEach(async () => {
+    beforeAll(async () => {
       mockConsumerService = getMockConsumerServiceWithDefaults();
       mockOTPService = getMockOTPServiceWithDefaults();
       mockTokenRepo = getMockTokenRepoWithDefaults();
       mockNotificationService = getMockNotificationServiceWithDefaults();
-      mockSmsService = getMockSmsServiceWithDefaults();
 
       const app: TestingModule = await Test.createTestingModule({
         imports: [
@@ -69,10 +66,6 @@ describe("UserAuthService", () => {
           {
             provide: NotificationService,
             useFactory: () => instance(mockNotificationService),
-          },
-          {
-            provide: SMSService,
-            useFactory: () => instance(mockSmsService),
           },
           UserAuthService,
         ],
@@ -231,6 +224,44 @@ describe("UserAuthService", () => {
         expect(otp).toBe(12345);
       });
     });
+
+    describe("sendOtp", () => {
+      it("should create notification event with email when it is provided", async () => {
+        const email = "fake+email@noba.com";
+        const otp = "123456";
+        when(mockNotificationService.sendNotification(anyString(), anything())).thenResolve();
+
+        await userAuthService.sendOtp(email, otp);
+
+        verify(
+          mockNotificationService.sendNotification(
+            NotificationEventType.SEND_OTP_EVENT,
+            deepEqual({
+              email,
+              otp,
+            }),
+          ),
+        ).once();
+      });
+
+      it("should create notification event with phone when it is provided", async () => {
+        const phone = "+1234567890";
+        const otp = "123456";
+        when(mockNotificationService.sendNotification(anyString(), anything())).thenResolve();
+
+        await userAuthService.sendOtp(phone, otp);
+
+        verify(
+          mockNotificationService.sendNotification(
+            NotificationEventType.SEND_OTP_EVENT,
+            deepEqual({
+              phone,
+              otp,
+            }),
+          ),
+        ).once();
+      });
+    });
   });
 
   describe("Test with otp override for lower environments", () => {
@@ -239,7 +270,6 @@ describe("UserAuthService", () => {
     let mockOTPService: OTPService;
     let mockTokenRepo: ITokenRepo;
     let mockNotificationService: NotificationService;
-    let mockSmsService: SMSService;
 
     const testJwtSecret = "TEST_SECRET";
 
@@ -264,7 +294,6 @@ describe("UserAuthService", () => {
       mockOTPService = getMockOTPServiceWithDefaults();
       mockTokenRepo = getMockTokenRepoWithDefaults();
       mockNotificationService = getMockNotificationServiceWithDefaults();
-      mockSmsService = getMockSmsServiceWithDefaults();
 
       const app: TestingModule = await Test.createTestingModule({
         imports: [
@@ -292,10 +321,6 @@ describe("UserAuthService", () => {
           {
             provide: NotificationService,
             useFactory: () => instance(mockNotificationService),
-          },
-          {
-            provide: SMSService,
-            useFactory: () => instance(mockSmsService),
           },
           UserAuthService,
         ],

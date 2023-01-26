@@ -6,7 +6,6 @@ import { ConsumerController } from "./consumer.controller";
 import { ConsumerService } from "./consumer.service";
 import { NotificationsModule } from "../notifications/notification.module";
 import { PspModule } from "../psp/psp.module";
-import { SMSService } from "../common/sms.service";
 import { ConsumerRepoModule } from "./repos/consumer.repo.module";
 import { ConsumerMapper } from "./mappers/ConsumerMapper";
 import { EmployeeModule } from "../employee/employee.module";
@@ -25,7 +24,7 @@ import { BubbleModule } from "../bubble/bubble.module";
     BubbleModule,
   ],
   controllers: [ConsumerController],
-  providers: [ConsumerService, SanctionedCryptoWalletService, SMSService, ConsumerMapper],
+  providers: [ConsumerService, SanctionedCryptoWalletService, ConsumerMapper],
   exports: [ConsumerService, ConsumerMapper],
 })
 export class ConsumerModule {}

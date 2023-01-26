@@ -10,7 +10,8 @@ import {
 } from "./TransactionNotificationParameters";
 
 export type NotificationPayload = {
-  email: string;
+  email?: string;
+  phone?: string;
   locale?: string;
   otp?: string;
   handle?: string;
@@ -41,6 +42,7 @@ export function prepareNotificationPayload(
 ): NotificationPayload {
   return {
     email: consumer.props.email,
+    phone: consumer.props.phone,
     firstName: consumer.props.firstName,
     lastName: consumer.props.lastName,
     handle: consumer.props.handle,

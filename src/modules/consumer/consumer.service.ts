@@ -11,7 +11,6 @@ import { consumerIdentityIdentifier } from "../auth/domain/IdentityType";
 import { OTPService } from "../common/otp.service";
 import { KmsService } from "../common/kms.service";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
-import { SMSService } from "../common/sms.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { NotificationService } from "../notifications/notification.service";
 import { PaymentService } from "../psp/payment.service";
@@ -69,9 +68,6 @@ export class ConsumerService {
 
   @Inject()
   private readonly otpService: OTPService;
-
-  @Inject()
-  private readonly smsService: SMSService;
 
   private otpOverride: number;
   private qrCodePrefix: string;
@@ -224,7 +220,10 @@ export class ConsumerService {
   async sendOtpToPhone(consumerID: string, phone: string) {
     const otp = this.generateOTP();
     await this.otpService.saveOTP(phone, consumerIdentityIdentifier, otp);
-    await this.smsService.sendSMS(phone, `${otp} is your one-time password to verify your phone number with Noba.`);
+    await this.notificationService.sendNotification(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT, {
+      phone,
+      otp: otp.toString(),
+    });
   }
 
   async updateConsumerPhone(consumer: Consumer, reqData: UserPhoneUpdateRequest): Promise<Consumer> {
@@ -557,7 +556,16 @@ export class ConsumerService {
         },
       );
     } else if (notificationMethod == NotificationMethod.PHONE) {
-      await this.smsService.sendSMS(consumer.props.phone, `${otp} is your wallet verification code`);
+      await this.notificationService.sendNotification(
+        NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
+        {
+          phone: consumer.props.phone,
+          otp: otp.toString(),
+          walletAddress: walletAddress,
+          firstName: consumer.props.firstName,
+          nobaUserID: consumer.props.id,
+        },
+      );
     }
   }
 

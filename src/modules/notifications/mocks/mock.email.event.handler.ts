@@ -1,8 +1,8 @@
 import { anything, mock, when } from "ts-mockito";
-import { EventHandler } from "../event.handler";
+import { EmailEventHandler } from "../email.event.handler";
 
-export const getMockEventHandlerWithDefaults = () => {
-  const mockEventHandler: EventHandler = mock(EventHandler);
+export const getMockEmailEventHandlerWithDefaults = () => {
+  const mockEventHandler: EmailEventHandler = mock(EmailEventHandler);
 
   when(mockEventHandler.sendOtp(anything())).thenReject(new Error("Not implemented!"));
   when(mockEventHandler.sendWelcomeMessage(anything())).thenReject(new Error("Not implemented!"));
@@ -16,10 +16,14 @@ export const getMockEventHandlerWithDefaults = () => {
   when(mockEventHandler.sendCardAddedEmail(anything())).thenReject(new Error("Not implemented!"));
   when(mockEventHandler.sendCardAdditionFailedEmail(anything())).thenReject(new Error("Not implemented!"));
   when(mockEventHandler.sendCardDeletedEmail(anything())).thenReject(new Error("Not implemented!"));
-  when(mockEventHandler.sendTransactionInitiatedEmail(anything())).thenReject(new Error("Not implemented!"));
-  when(mockEventHandler.sendCryptoFailedEmail(anything())).thenReject(new Error("Not implemented!"));
-  when(mockEventHandler.sendOrderExecutedEmail(anything())).thenReject(new Error("Not implemented!"));
-  when(mockEventHandler.sendOrderFailedEmail(anything())).thenReject(new Error("Not implemented!"));
+  when(mockEventHandler.sendDepositCompletedEmail(anything())).thenReject(new Error("Not implemented!"));
+  when(mockEventHandler.sendDepositFailedEmail(anything())).thenReject(new Error("Not implemented!"));
+  when(mockEventHandler.sendDepositInitiatedEmail(anything())).thenReject(new Error("Not implemented!"));
+  when(mockEventHandler.sendWithdrawalCompletedEmail(anything())).thenReject(new Error("Not implemented!"));
+  when(mockEventHandler.sendWithdrawalFailedEmail(anything())).thenReject(new Error("Not implemented!"));
+  when(mockEventHandler.sendWithdrawalInitiatedEmail(anything())).thenReject(new Error("Not implemented!"));
+  when(mockEventHandler.sendTransferCompletedEmail(anything())).thenReject(new Error("Not implemented!"));
+  when(mockEventHandler.sendCollectionCompletedEvent(anything())).thenReject(new Error("Not implemented!"));
 
   return mockEventHandler;
 };

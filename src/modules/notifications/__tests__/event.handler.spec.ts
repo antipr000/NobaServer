@@ -21,7 +21,7 @@ import { getMockCurrencyServiceWithDefaults } from "../../common/mocks/mock.curr
 import { EmailTemplates } from "../domain/EmailTemplates";
 import { Utils } from "../../../core/utils/Utils";
 import { EmailService } from "../emails/email.service";
-import { EventHandler } from "../event.handler";
+import { EmailEventHandler } from "../email.event.handler";
 import { getMockEmailServiceWithDefaults } from "../mocks/mock.email.service";
 import { SendDepositCompletedEvent } from "../events/SendDepositCompletedEvent";
 import { SendDepositFailedEvent } from "../events/SendDepositFailedEvent";
@@ -36,7 +36,7 @@ import { SendCollectionCompletedEvent } from "../events/SendCollectionCompletedE
 describe("EventHandlerService", () => {
   let currencyService: CurrencyService;
   let emailService: EmailService;
-  let eventHandler: EventHandler;
+  let eventHandler: EmailEventHandler;
 
   const SUPPORT_URL = "help.noba.com";
   const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -72,11 +72,11 @@ describe("EventHandlerService", () => {
           provide: "EmailService",
           useFactory: () => instance(emailService),
         },
-        EventHandler,
+        EmailEventHandler,
       ],
     }).compile();
 
-    eventHandler = app.get<EventHandler>(EventHandler);
+    eventHandler = app.get<EmailEventHandler>(EmailEventHandler);
     when(emailService.sendEmail(anything())).thenResolve();
   });
 

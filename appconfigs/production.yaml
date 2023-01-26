@@ -169,6 +169,7 @@ bubble:
 
 dependencies:
   emailClient: "SENDGRID"
+  smsClient: "TWILIO"
 
 locationDataFileName: "countries+states.json"
 dbDumpFilesBucketPath: "dump"

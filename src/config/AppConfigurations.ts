@@ -129,14 +129,7 @@ import {
   BUBBLE_BEARER_TOKEN,
   NOBA_BUBBLE_BEARER_TOKEN,
   AWS_SECRET_KEY_FOR_NOBA_BUBBLE_BEARER_TOKEN,
-  COLLECTION_FEE_FIXED_AMOUNT,
-  COLLECTION_FEE_MULTIPLIER,
-  AWS_SECRET_KEY_FOR_COLLECTION_FEE_FIXED_AMOUNT,
-  AWS_SECRET_KEY_FOR_COLLECTION_FEE_MULTIPLIER,
-  WITHDRAWAL_MONO_FEE_AMOUNT,
-  WITHDRAWAL_NOBA_FEE_AMOUNT,
-  AWS_SECRET_KEY_FOR_WITHDRAWAL_MONO_FEE_AMOUNT,
-  AWS_SECRET_KEY_FOR_WITHDRAWAL_NOBA_FEE_AMOUNT,
+  DEPENDENCY_SMS_CLIENT,
 } from "./ConfigurationUtils";
 import fs from "fs";
 
@@ -150,7 +143,7 @@ import { CommonConfigs } from "./configtypes/CommonConfigs";
 import { CheckoutConfigs } from "./configtypes/CheckoutConfigs";
 import { EllipticConfigs } from "./configtypes/EllipticConfig";
 import { PlaidConfigs } from "./configtypes/PlaidConfigs";
-import { DependencyConfigs, EmailClient } from "./configtypes/DependencyConfigs";
+import { DependencyConfigs, EmailClient, SMSClient } from "./configtypes/DependencyConfigs";
 import { CircleConfigs, isValidCircleEnvironment } from "./configtypes/CircleConfigs";
 import { NobaWorkflowConfig } from "./configtypes/NobaWorkflowConfig";
 import { MonoConfigs } from "./configtypes/MonoConfig";
@@ -522,7 +515,7 @@ async function configureDependencies(
   if (dependencyConfigs === undefined) {
     const errorMessage =
       "\n'Dependencies' configurations are required. Please configure the dependencies in 'appconfigs/<ENV>.yaml' file.\n" +
-      `You should configure the key "${DEPENDENCY_CONFIG_KEY}" and populate "${DEPENDENCY_EMAIL_CLIENT}"\n`;
+      `You should configure the key "${DEPENDENCY_CONFIG_KEY}" and populate "${DEPENDENCY_EMAIL_CLIENT}" and "${DEPENDENCY_SMS_CLIENT}"\n`;
 
     throw Error(errorMessage);
   }
@@ -530,6 +523,12 @@ async function configureDependencies(
   const allowedEmailClients = [EmailClient.STUB, EmailClient.SENDGRID];
   if (!allowedEmailClients.includes(dependencyConfigs.emailClient)) {
     const errorMessage = `"${DEPENDENCY_EMAIL_CLIENT}" should be one of ${allowedEmailClients}`;
+    throw Error(errorMessage);
+  }
+
+  const allowedSMSClients = [SMSClient.STUB, SMSClient.TWILIO];
+  if (!allowedSMSClients.includes(dependencyConfigs.smsClient)) {
+    const errorMessage = `"${DEPENDENCY_SMS_CLIENT}" should be one of ${allowedSMSClients}`;
     throw Error(errorMessage);
   }
 

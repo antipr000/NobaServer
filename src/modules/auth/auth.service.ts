@@ -3,7 +3,6 @@ import { JwtService } from "@nestjs/jwt";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { LoginResponseDTO } from "./dto/LoginResponse";
 import { NotificationService } from "../notifications/notification.service";
-import { SMSService } from "../common/sms.service";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { Utils } from "../../core/utils/Utils";
@@ -22,9 +21,6 @@ export abstract class AuthService {
 
   @Inject()
   private readonly notificationService: NotificationService;
-
-  @Inject()
-  private readonly smsService: SMSService;
 
   @Inject()
   private readonly jwtService: JwtService;
@@ -91,14 +87,10 @@ export abstract class AuthService {
 
   async sendOtp(emailOrPhone: string, otp: string): Promise<void> {
     const isEmail = Utils.isEmail(emailOrPhone);
-    if (isEmail) {
-      await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, {
-        email: emailOrPhone,
-        otp: otp,
-      });
-    } else {
-      await this.smsService.sendSMS(emailOrPhone, `${otp} is your one-time password for Noba login.`);
-    }
+    await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, {
+      ...(isEmail ? { email: emailOrPhone } : { phone: emailOrPhone }),
+      otp: otp,
+    });
   }
 
   generateOTP(): number {

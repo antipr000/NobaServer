@@ -21,8 +21,6 @@ import { NotificationService } from "../../../modules/notifications/notification
 import { getMockPaymentServiceWithDefaults } from "../../../modules/psp/mocks/mock.payment.service";
 import { consumerIdentityIdentifier, IdentityType } from "../../auth/domain/IdentityType";
 import { getMockSanctionedCryptoWalletServiceWithDefaults } from "../../common/mocks/mock.sanctionedcryptowallet.service";
-import { getMockSmsServiceWithDefaults } from "../../common/mocks/mock.sms.service";
-import { SMSService } from "../../common/sms.service";
 import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
 import { PaymentService } from "../../psp/payment.service";
 import { PlaidClient } from "../../psp/plaid.client";
@@ -100,7 +98,6 @@ const getRandomConsumer = (): Consumer => {
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
-  let smsService: SMSService;
   let consumerRepo: IConsumerRepo;
   let notificationService: NotificationService;
   let otpService: OTPService;
@@ -121,7 +118,6 @@ describe("ConsumerService", () => {
     otpService = getMockOTPServiceWithDefaults();
     paymentService = getMockPaymentServiceWithDefaults();
     plaidClient = getMockPlaidClientWithDefaults();
-    smsService = getMockSmsServiceWithDefaults();
     sanctionedCryptoWalletService = getMockSanctionedCryptoWalletServiceWithDefaults();
     circleClient = getMockCircleClientWithDefaults();
     qrService = getMockQRServiceWithDefaults();
@@ -152,10 +148,6 @@ describe("ConsumerService", () => {
         {
           provide: NotificationService,
           useFactory: () => instance(notificationService),
-        },
-        {
-          provide: SMSService,
-          useFactory: () => instance(smsService),
         },
         {
           provide: OTPService,
@@ -1092,10 +1084,15 @@ describe("ConsumerService", () => {
   describe("sendOtpToPhone", () => {
     it("should send otp to given phone number with given context", async () => {
       const phone = "+12434252";
-      when(smsService.sendSMS(phone, anyString())).thenResolve();
+      when(notificationService.sendNotification(anyString(), anything())).thenResolve();
       when(otpService.saveOTP(anyString(), anyString(), anyNumber())).thenResolve();
       await consumerService.sendOtpToPhone("123", phone);
-      verify(smsService.sendSMS(phone, anyString())).once();
+      verify(
+        notificationService.sendNotification(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT, {
+          phone: phone,
+          otp: "123",
+        }),
+      ).once();
       verify(otpService.saveOTP(phone, IdentityType.CONSUMER, 111111)).once();
     });
   });

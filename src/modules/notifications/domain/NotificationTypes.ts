@@ -1,6 +1,7 @@
 // TODO: Separate this into what events support notifications on phone, email and webhook with a default preference for each?
 export enum NotificationEventType {
   SEND_OTP_EVENT = "otp",
+  SEND_PHONE_VERIFICATION_CODE_EVENT = "phone.verification.code",
   SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT = "wallet.update.verification.code",
   SEND_WELCOME_MESSAGE_EVENT = "welcome.message",
   SEND_KYC_APPROVED_US_EVENT = "kyc.approved.us",
@@ -28,6 +29,7 @@ export enum NotificationEventType {
 export enum NotificationEventHandler {
   EMAIL = "email",
   WEBHOOK = "webhook",
+  SMS = "sms",
 }
 
 export enum NotificationWorkflowTypes {
@@ -39,3 +41,33 @@ export enum NotificationWorkflowTypes {
   WITHDRAWAL_FAILED_EVENT = "withdrawalFailedEvent",
   TRANSFER_COMPLETED_EVENT = "transferCompletedEvent",
 }
+
+export const preferredNotificationMedium = {
+  [NotificationEventType.SEND_OTP_EVENT]: [NotificationEventHandler.EMAIL, NotificationEventHandler.SMS],
+  [NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT]: [NotificationEventHandler.SMS],
+  [NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT]: [
+    NotificationEventHandler.EMAIL,
+    NotificationEventHandler.SMS,
+  ],
+  [NotificationEventType.SEND_WELCOME_MESSAGE_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_KYC_APPROVED_US_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_KYC_DENIED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_CARD_ADDED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_CARD_ADDITION_FAILED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_CARD_DELETED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_HARD_DECLINE_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_DEPOSIT_FAILED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_COLLECTION_LINK_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT]: [NotificationEventHandler.EMAIL],
+};
