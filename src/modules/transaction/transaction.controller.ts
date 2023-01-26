@@ -124,6 +124,7 @@ export class TransactionController {
       quoteQuery.currency,
       quoteQuery.desiredCurrency,
       quoteQuery.workflowName,
+      quoteQuery.exchangeRateFlags,
     );
   }
 
