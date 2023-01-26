@@ -23,6 +23,7 @@ import { WorkflowFactory } from "./factory/workflow.factory";
 import { IWithdrawalDetailsRepo } from "./repo/withdrawal.details.repo";
 import { InputWithdrawalDetails, WithdrawalDetails } from "./domain/WithdrawalDetails";
 import { DebitBankRequestDTO } from "./dto/transaction.workflow.controller.dto";
+import { BankFactory } from "../psp/factory/bank.factory";
 
 @Injectable()
 export class TransactionService {
@@ -34,6 +35,7 @@ export class TransactionService {
     private readonly exchangeRateService: ExchangeRateService,
     private readonly verificationService: VerificationService,
     private readonly transactionFactory: WorkflowFactory,
+    private readonly bankFactory: BankFactory,
   ) {}
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID: string): Promise<Transaction> {
@@ -302,16 +304,38 @@ export class TransactionService {
     };
   }
 
-  async debitFromBank(debitBankRequest: DebitBankRequestDTO): Promise<Transaction> {
-    const transaction = await this.transactionRepo.getTransactionByID(debitBankRequest.transactionID);
+  async debitFromBank(request: DebitBankRequestDTO): Promise<Transaction> {
+    const [transaction, withdrawal] = await Promise.all([
+      this.getTransactionByTransactionID(request.transactionID),
+      this.getWithdrawalDetails(request.transactionID),
+    ]);
     if (!transaction) {
       throw new ServiceException({
-        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-        message: "Transaction does not exist",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: `Transaction not found: ${request.transactionID}`,
+      });
+    }
+    if (!withdrawal) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: `Withdrawal details not found: ${request.transactionID}`,
       });
     }
 
-    const consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+    const bank = this.bankFactory.getBankImplementation(request.bankName);
+    const debitBankResponse = await bank.debit({
+      amount: request.amount,
+      currency: request.currency,
+      consumerID: transaction.creditConsumerID, // Is the consumer being credited in this transaction?
+      transactionID: request.transactionID,
+      transactionRef: transaction.transactionRef,
+      accountNumber: withdrawal.accountNumber,
+      accountType: withdrawal.accountType,
+      bankCode: withdrawal.bankCode,
+      documentNumber: withdrawal.documentNumber,
+      documentType: withdrawal.documentType,
+    });
+
     return transaction;
   }
 

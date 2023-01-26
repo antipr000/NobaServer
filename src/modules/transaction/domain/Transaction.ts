@@ -28,6 +28,10 @@ export enum WorkflowName {
   WALLET_WITHDRAWAL = "WALLET_WITHDRAWAL",
 }
 
+export enum Bank {
+  MONO = "MONO",
+}
+
 export enum TransactionStatus {
   INITIATED = "INITIATED",
   COMPLETED = "COMPLETED",

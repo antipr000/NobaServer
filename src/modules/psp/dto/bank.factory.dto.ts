@@ -1,13 +1,4 @@
-import { MonoCurrency } from "../domain/Mono";
-
-export type CreateMonoTransactionRequest = {
-  nobaTransactionID: string;
-  amount: number;
-  currency: MonoCurrency;
-  consumerID: string;
-};
-
-export type DebitMonoRequest = {
+export class DebitBankRequestDTO {
   transactionID: string;
   transactionRef: string;
   amount: number;
@@ -18,4 +9,4 @@ export type DebitMonoRequest = {
   accountType: string;
   documentNumber: string;
   documentType: string;
-};
+}

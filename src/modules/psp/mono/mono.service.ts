@@ -62,31 +62,14 @@ export class MonoService {
       });
     }
 
-    const [transaction, withdrawal] = await Promise.all([
-      this.transactionService.getTransactionByTransactionID(request.transactionID),
-      this.transactionService.getWithdrawalDetails(request.transactionID),
-    ]);
-    if (!transaction) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: `Transaction not found: ${request.transactionID}`,
-      });
-    }
-    if (!withdrawal) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: `Withdrawal details not found: ${request.transactionID}`,
-      });
-    }
-
     const [consumer, accountNumber] = await Promise.all([
-      this.consumerService.getConsumer(transaction.creditConsumerID), // Is the consumer being credited in this transaction?
-      this.kmsService.decryptString(withdrawal.accountNumber, KmsKeyType.SSN), // Replace SSN with Account Number KMS config
+      this.consumerService.getConsumer(request.consumerID),
+      this.kmsService.decryptString(request.accountNumber, KmsKeyType.SSN), // Replace SSN with Account Number KMS config
     ]);
     if (!consumer) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: `Consumer not found: ${transaction.creditConsumerID}`,
+        message: `Consumer not found: ${request.consumerID}`,
       });
     }
     if (!accountNumber) {
@@ -101,11 +84,11 @@ export class MonoService {
       transactionRef: request.transactionRef,
       amount: request.amount,
       currency: request.currency,
-      bankCode: withdrawal.bankCode,
-      accountNumber: accountNumber,
-      accountType: withdrawal.accountType,
-      documentNumber: withdrawal.documentNumber,
-      documentType: withdrawal.documentType,
+      bankCode: request.bankCode,
+      accountNumber: request.accountNumber,
+      accountType: request.accountType,
+      documentNumber: request.documentNumber,
+      documentType: request.documentType,
       consumerEmail: consumer.props.email,
       consumerName: `${consumer.props.firstName} ${consumer.props.lastName}`,
     });

@@ -29,9 +29,6 @@ export class MonoDebitRequestDTO {
   transactionID: string;
 
   @ApiProperty()
-  transactionRef: string;
-
-  @ApiProperty()
   amount: number;
 
   @ApiProperty()

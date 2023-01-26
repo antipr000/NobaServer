@@ -54,18 +54,4 @@ export class MonoWorkflowController {
 
     return this.monoWorkflowControllerMappers.convertToMonoTransactionDTO(monoTransaction);
   }
-
-  @Post("/wf/v1/mono/debit")
-  @ApiOperation({ summary: "Debit money from Noba Mono account into consumer account" })
-  @ApiResponse({ status: HttpStatus.OK }) // What should be returned?
-  async debitFromNoba(@Body() request: MonoDebitRequestDTO) {
-    const res = await this.monoService.debitFromNoba({
-      transactionID: request.transactionID,
-      transactionRef: request.transactionRef,
-      amount: request.amount,
-      currency: request.currency,
-    });
-
-    return res;
-  }
 }
