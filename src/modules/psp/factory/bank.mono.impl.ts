@@ -2,14 +2,14 @@ import { ServiceErrorCode, ServiceException } from "../../../core/exception/Serv
 import { Inject } from "@nestjs/common";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { IBankImpl } from "./ibank.impl";
-import { DebitBankRequestDTO } from "../dto/bank.factory.dto";
+import { DebitBankRequestDTO, DebitBankResponseDTO } from "../dto/bank.factory.dto";
 import { MonoService } from "../mono/mono.service";
 
 export class BankMonoImpl implements IBankImpl {
   @Inject()
   private readonly monoService: MonoService;
 
-  async debit(request: DebitBankRequestDTO): Promise<void> {
+  async debit(request: DebitBankRequestDTO): Promise<DebitBankResponseDTO> {
     const withdrawal = await this.monoService.debitFromNoba({
       amount: request.amount,
       currency: request.currency,
@@ -22,6 +22,7 @@ export class BankMonoImpl implements IBankImpl {
       documentNumber: request.documentNumber,
       documentType: request.documentType,
     });
-    throw new Error("Method not implemented.");
+
+    return withdrawal;
   }
 }

@@ -10,3 +10,10 @@ export class DebitBankRequestDTO {
   documentNumber: string;
   documentType: string;
 }
+
+// Contains mono specific fields. This should be expanded to include other banks.
+export class DebitBankResponseDTO {
+  withdrawalID: string;
+  state: string;
+  declinationReason?: string;
+}
