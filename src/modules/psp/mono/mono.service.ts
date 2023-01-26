@@ -27,7 +27,6 @@ export class MonoService {
     @Inject(MONO_REPO_PROVIDER) private readonly monoRepo: IMonoRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly consumerService: ConsumerService,
-    private readonly transactionService: TransactionService,
     private readonly monoClient: MonoClient,
     private readonly monoWebhookHandlers: MonoWebhookHandlers,
   ) {}
