@@ -3,9 +3,9 @@ import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 
 export enum AccountType {
-  SAVINGS = "Savings",
-  CURRENT = "Current",
-  ELECTRONIC_DEPOSIT = "ElectronicDeposit",
+  SAVINGS = "savings_account",
+  CURRENT = "checking_account",
+  ELECTRONIC_DEPOSIT = "electronic_deposit",
 }
 
 export enum DocumentType {

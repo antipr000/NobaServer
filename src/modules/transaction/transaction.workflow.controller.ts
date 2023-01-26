@@ -14,12 +14,10 @@ import { UpdateTransactionRequestDTO } from "./dto/TransactionDTO";
 import { DebitBankRequestDTO, WorkflowTransactionDTO } from "./dto/transaction.workflow.controller.dto";
 import { Transaction } from "./domain/Transaction";
 import { TransactionWorkflowMapper } from "./mapper/transaction.workflow.mapper";
-import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 
 @Controller("wf/v1/transactions")
 @ApiBearerAuth("JWT-auth")
 @ApiTags("Workflow")
-@IsNoApiKeyNeeded()
 export class TransactionWorkflowController {
   @Inject()
   private readonly transactionService: TransactionService;

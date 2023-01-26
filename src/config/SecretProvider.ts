@@ -6,6 +6,7 @@ export class SecretProvider {
   static async loadAWSMasterSecret(secretName: string) {
     const masterSecret = await SecretProvider.fetchSecretFromAWSSecretManager(secretName, true);
     for (const key in masterSecret) {
+      //console.log(`Caching secret "${key}" in global cache.`);
       GLOBAL_SECRETS_CACHE[key] = masterSecret[key];
     }
   }
@@ -17,8 +18,15 @@ export class SecretProvider {
   static async fetchSecretFromAWSSecretManager(secretName: string, master: boolean = false): Promise<any> {
     return new Promise((resolve, reject) => {
       // First check the global cache
-      if (GLOBAL_SECRETS_CACHE[secretName]) {
-        resolve(GLOBAL_SECRETS_CACHE[secretName]);
+      if (!master) {
+        if (GLOBAL_SECRETS_CACHE[secretName]) {
+          resolve(GLOBAL_SECRETS_CACHE[secretName]);
+          return;
+        } else {
+          console.warn(
+            `Secret "${secretName}" is not configured in the master cache. Please define it in the master cache.`,
+          );
+        }
       }
 
       new SecretsManager().getSecretValue({ SecretId: secretName }, function (err, data) {

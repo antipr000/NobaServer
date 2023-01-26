@@ -1,18 +1,6 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Headers,
-  HttpStatus,
-  Inject,
-  NotFoundException,
-  Param,
-  Post,
-  Request,
-} from "@nestjs/common";
+import { Body, Controller, Get, Headers, HttpStatus, Inject, NotFoundException, Param, Post } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { IsNoApiKeyNeeded } from "../../../modules/auth/public.decorator";
 import { Logger } from "winston";
 import { MonoTransaction } from "../domain/Mono";
 import { MonoDebitRequestDTO, MonoTransactionDTO } from "../dto/mono.workflow.controller.dto";
@@ -21,7 +9,6 @@ import { MonoWorkflowControllerMappers } from "./mono.workflow.controller.mapper
 
 @Controller() // This defines the path prefix
 @ApiTags("Workflow")
-@IsNoApiKeyNeeded()
 export class MonoWorkflowController {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
