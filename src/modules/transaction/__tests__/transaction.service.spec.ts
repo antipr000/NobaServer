@@ -37,6 +37,8 @@ import { getMockWalletTransferImplWithDefaults } from "../mocks/mock.wallet.tran
 import { IWithdrawalDetailsRepo } from "../repo/withdrawal.details.repo";
 import { getMockWithdrawalDetailsRepoWithDefaults } from "../mocks/mock.withdrawal.repo";
 import { AccountType, DocumentType, InputWithdrawalDetails, WithdrawalDetails } from "../domain/WithdrawalDetails";
+import { BankFactory } from "../../../modules/psp/factory/bank.factory";
+import { getMockBankFactoryWithDefaults } from "../../../modules/psp/mocks/mock.bank.factory";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -48,6 +50,7 @@ describe("TransactionServiceTests", () => {
   let verificationService: VerificationService;
   let exchangeRateService: ExchangeRateService;
   let workflowFactory: WorkflowFactory;
+  let bankFactory: BankFactory;
   let walletTransferImpl: WalletTransferImpl;
   let withdrawalDetailsRepo: IWithdrawalDetailsRepo;
 
@@ -57,6 +60,7 @@ describe("TransactionServiceTests", () => {
     verificationService = getMockVerificationServiceWithDefaults();
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
     workflowFactory = getMockWorkflowFactoryWithDefaults();
+    bankFactory = getMockBankFactoryWithDefaults();
     walletTransferImpl = getMockWalletTransferImplWithDefaults();
     withdrawalDetailsRepo = getMockWithdrawalDetailsRepoWithDefaults();
 
@@ -87,6 +91,10 @@ describe("TransactionServiceTests", () => {
         {
           provide: WorkflowFactory,
           useFactory: () => instance(workflowFactory),
+        },
+        {
+          provide: BankFactory,
+          useFactory: () => instance(bankFactory),
         },
         {
           provide: WITHDRAWAL_DETAILS_REPO_PROVIDER,
