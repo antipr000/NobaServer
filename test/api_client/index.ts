@@ -50,7 +50,6 @@ export type { LinkedEmployerDTO } from "./models/LinkedEmployerDTO";
 export type { LocationDTO } from "./models/LocationDTO";
 export type { LoginRequestDTO } from "./models/LoginRequestDTO";
 export type { LoginResponseDTO } from "./models/LoginResponseDTO";
-export type { MonoCreditRequestDTO } from "./models/MonoCreditRequestDTO";
 export type { MonoTransactionDTO } from "./models/MonoTransactionDTO";
 export type { NationalIDDTO } from "./models/NationalIDDTO";
 export type { NewAccessTokenRequestDTO } from "./models/NewAccessTokenRequestDTO";

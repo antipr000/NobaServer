@@ -3,7 +3,6 @@
 /* eslint-disable */
 import type { CircleDepositOrWithdrawalRequest } from "../models/CircleDepositOrWithdrawalRequest";
 import type { CircleFundsTransferRequestDTO } from "../models/CircleFundsTransferRequestDTO";
-import type { MonoCreditRequestDTO } from "../models/MonoCreditRequestDTO";
 import type { MonoTransactionDTO } from "../models/MonoTransactionDTO";
 import type { SendNotificationRequestDTO } from "../models/SendNotificationRequestDTO";
 import type { UpdateTransactionRequestDTO } from "../models/UpdateTransactionRequestDTO";
@@ -91,20 +90,6 @@ export class WorkflowService {
       path: {
         nobaTransactionID: nobaTransactionId,
       },
-    });
-  }
-
-  /**
-   * Credits consumer's account using Noba Mono account
-   * @returns any
-   * @throws ApiError
-   */
-  public static withdrawFromNoba({ requestBody }: { requestBody: MonoCreditRequestDTO }): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/wf/v1/mono/credit/{consumerID}",
-      body: requestBody,
-      mediaType: "application/json",
     });
   }
 
