@@ -10,7 +10,7 @@ import { IConsumerRepo } from "../repos/consumer.repo";
 import { SQLConsumerRepo } from "../repos/sql.consumer.repo";
 import { uuid } from "uuidv4";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
-import { WalletStatus } from "@prisma/client";
+import { DocumentVerificationStatus, KYCProvider, KYCStatus, WalletStatus } from "@prisma/client";
 import { Address } from "../domain/Address";
 import { Utils } from "../../../core/utils/Utils";
 import { EmployerService } from "../../../modules/employer/employer.service";
@@ -209,10 +209,8 @@ describe("ConsumerRepoTests", () => {
       const consumer = getRandomUser("firstNameTest");
       const savedConsumer = await consumerRepo.createConsumer(consumer);
 
-      const foundConsumer = await consumerRepo.findConsumersByPublicInfo(savedConsumer.props.firstName, 4);
+      const foundConsumer = await consumerRepo.findConsumersByPublicInfo(savedConsumer.props.firstName, 10);
 
-      console.log(foundConsumer.getValue());
-      console.log(foundConsumer.getValue().length);
       expect(foundConsumer.isSuccess).toBe(true);
       expect(foundConsumer.getValue().length).toBe(1);
     });
@@ -224,21 +222,88 @@ describe("ConsumerRepoTests", () => {
       await consumerRepo.createConsumer(consumer);
       await consumerRepo.createConsumer(consumer2);
       await consumerRepo.createConsumer(consumer3);
-      const foundConsumer = await consumerRepo.findConsumersByPublicInfo("lastNameTest", 2);
+      // Get all 3 consumers
+      const foundConsumer = await consumerRepo.findConsumersByPublicInfo("lastNameTest", 10);
+      expect(foundConsumer.isSuccess).toBe(true);
+      expect(foundConsumer.getValue().length).toBe(3);
+
+      // Get only 1 consumer
+      const foundConsumer2 = await consumerRepo.findConsumersByPublicInfo("lastNameTest", 1);
+      expect(foundConsumer2.isSuccess).toBe(true);
+      expect(foundConsumer2.getValue().length).toBe(1);
+    });
+
+    it("should find consumers by first and last name", async () => {
+      const consumer = getRandomUser("TestFirstName1", "TestLastName1");
+      const consumer2 = getRandomUser("TestFirstName2", "TestLastName2");
+      const consumer3 = getRandomUser("TestFirstName3", "TestLastName3");
+      await consumerRepo.createConsumer(consumer);
+      await consumerRepo.createConsumer(consumer2);
+      await consumerRepo.createConsumer(consumer3);
+
+      // Find just one
+      const foundConsumer = await consumerRepo.findConsumersByPublicInfo("2 2", 10);
+      expect(foundConsumer.isSuccess).toBe(true);
+      expect(foundConsumer.getValue().length).toBe(1);
+
+      // Find all three
+      const foundConsumer2 = await consumerRepo.findConsumersByPublicInfo("TestFirstName TestLastName", 10);
+      expect(foundConsumer2.isSuccess).toBe(true);
+      expect(foundConsumer2.getValue().length).toBe(3);
+    });
+
+    it("should find consumers by handle without $ prefix", async () => {
+      const consumer = getRandomUser();
+      const consumer2 = getRandomUser();
+      const consumer3 = getRandomUser();
+      consumer.props.handle = "handleTest1";
+      consumer2.props.handle = "handleTest2";
+      await consumerRepo.createConsumer(consumer);
+      await consumerRepo.createConsumer(consumer2);
+      await consumerRepo.createConsumer(consumer3);
+      const foundConsumer = await consumerRepo.findConsumersByPublicInfo("handleTest", 10);
       expect(foundConsumer.isSuccess).toBe(true);
       expect(foundConsumer.getValue().length).toBe(2);
     });
 
-    it("should find consumers by handle", async () => {
+    it("should find consumers by handle with $ prefix", async () => {
+      const consumer = getRandomUser();
+      const consumer2 = getRandomUser();
+      const consumer3 = getRandomUser();
+      consumer.props.handle = "dollarHandleTest1";
+      consumer2.props.handle = "dollarHandleTest2";
+      await consumerRepo.createConsumer(consumer);
+      await consumerRepo.createConsumer(consumer2);
+      await consumerRepo.createConsumer(consumer3);
+      const foundConsumer = await consumerRepo.findConsumersByPublicInfo("$dollarHandleTest", 10);
+      expect(foundConsumer.isSuccess).toBe(true);
+      expect(foundConsumer.getValue().length).toBe(2);
+    });
+
+    it("should find consumers by partial handle with $ prefix", async () => {
+      const consumer = getRandomUser();
+      const consumer2 = getRandomUser();
+      const consumer3 = getRandomUser();
+      consumer.props.handle = "HandleTestPartial1";
+      consumer2.props.handle = "HandleTestPartial2";
+      await consumerRepo.createConsumer(consumer);
+      await consumerRepo.createConsumer(consumer2);
+      await consumerRepo.createConsumer(consumer3);
+      const foundConsumer = await consumerRepo.findConsumersByPublicInfo("$Partial", 10);
+      expect(foundConsumer.isSuccess).toBe(true);
+      expect(foundConsumer.getValue().length).toBe(2);
+    });
+
+    it("should not find any consumers with an unknown handle with $ prefix", async () => {
       const consumer = getRandomUser();
       const consumer2 = getRandomUser();
       const consumer3 = getRandomUser();
       await consumerRepo.createConsumer(consumer);
       await consumerRepo.createConsumer(consumer2);
       await consumerRepo.createConsumer(consumer3);
-      const foundConsumer = await consumerRepo.findConsumersByPublicInfo(consumer.props.handle.substring(0, 1), 2);
+      const foundConsumer = await consumerRepo.findConsumersByPublicInfo("$unknown", 10);
       expect(foundConsumer.isSuccess).toBe(true);
-      expect(foundConsumer.getValue().length).toBe(2);
+      expect(foundConsumer.getValue().length).toBe(0);
     });
 
     it("should fail if an exception is thrown", async () => {
@@ -674,7 +739,17 @@ const getRandomUser = (firstName?: string, lastName?: string): Consumer => {
     displayEmail: email.toUpperCase(),
     referralCode: Utils.getAlphaNanoID(15),
     phone: getRandomPhoneNumber(),
-    handle: `@${uuid()}`,
+    handle: `${uuid()}`,
+    isLocked: false,
+    isDisabled: false,
+    verificationData: {
+      kycCheckStatus: KYCStatus.APPROVED,
+      documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+      isSuspectedFraud: false,
+      documentVerificationTimestamp: new Date(),
+      kycVerificationTimestamp: new Date(),
+      provider: KYCProvider.SARDINE,
+    },
   };
   return Consumer.createConsumer(props);
 };

@@ -9,13 +9,35 @@ export class ConsumerRepoMapper {
   toCreateConsumerInput(consumer: Consumer): Prisma.ConsumerCreateInput {
     return {
       id: consumer.props.id,
-      firstName: consumer.props.firstName,
-      lastName: consumer.props.lastName,
-      email: consumer.props.email,
-      displayEmail: consumer.props.displayEmail,
-      phone: consumer.props.phone,
-      handle: consumer.props.handle,
-      referralCode: consumer.props.referralCode,
+      ...(consumer.props.firstName && { firstName: consumer.props.firstName }),
+      ...(consumer.props.lastName && { lastName: consumer.props.lastName }),
+      ...(consumer.props.handle && { handle: consumer.props.handle }),
+      ...(consumer.props.locale && { locale: consumer.props.locale }),
+      ...(consumer.props.referralCode && { referralCode: consumer.props.referralCode }),
+      ...(consumer.props.dateOfBirth && { dateOfBirth: consumer.props.dateOfBirth }),
+      ...(consumer.props.isDisabled && { isDisabled: consumer.props.isDisabled }),
+      ...(consumer.props.isLocked && { isLocked: consumer.props.isLocked }),
+      ...(consumer.props.phone && { phone: consumer.props.phone }),
+      ...(consumer.props.email && { email: consumer.props.email }),
+      ...(consumer.props.displayEmail && { displayEmail: consumer.props.displayEmail }),
+      ...(consumer.props.socialSecurityNumber && {
+        socialSecurityNumber: consumer.props.socialSecurityNumber,
+      }),
+      ...(consumer.props.referredByID && { referredByID: consumer.props.referredByID }),
+      ...(consumer.props.address && {
+        address: {
+          create: {
+            ...consumer.props.address,
+          },
+        },
+      }),
+      ...(consumer.props.verificationData && {
+        verificationData: {
+          create: {
+            ...consumer.props.verificationData,
+          },
+        },
+      }),
     };
   }
 

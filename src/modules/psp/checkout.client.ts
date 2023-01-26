@@ -75,7 +75,7 @@ export class CheckoutClient {
           id: checkoutCustomerID,
         },
       });
-      console.log(instrument);
+
       return {
         instrumentID: instrument["id"],
         scheme: instrument["scheme"],
@@ -254,7 +254,7 @@ export class CheckoutClient {
         }
       });
       if (webhookAlreadyConfigured) {
-        console.log(`Workflow already configured - ${JSON.stringify(workflows)}`);
+        this.logger.info(`Workflow already configured - ${JSON.stringify(workflows)}`);
         return;
       }
 
@@ -300,7 +300,7 @@ export class CheckoutClient {
           },
         })
       ).data.id;
-      console.log(`Workflow created with ID: '${registeredWorkflowId}'`);
+      this.logger.info(`Workflow created with ID: '${registeredWorkflowId}'`);
 
       // const workflows: WorkflowMetadata[] = ((await this.checkoutApi.workflows.getAll()) as any).data;
       // if (workflows.length === 1) {
@@ -313,7 +313,7 @@ export class CheckoutClient {
       // const webhookResponse = await this.checkoutApi.workflows.add(createWorkflowRequest);
       // console.log("Webhook created", webhookResponse);
     } catch (e) {
-      console.log(e, e.response);
+      this.logger.error(e, e.response);
       throw e;
     }
   }
