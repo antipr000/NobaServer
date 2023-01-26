@@ -250,6 +250,11 @@ describe("ConsumerRepoTests", () => {
       const foundConsumer2 = await consumerRepo.findConsumersByPublicInfo("TestFirstName TestLastName", 10);
       expect(foundConsumer2.isSuccess).toBe(true);
       expect(foundConsumer2.getValue().length).toBe(3);
+
+      // Works the same with extra spaces within the search string
+      const foundConsumer3 = await consumerRepo.findConsumersByPublicInfo("TestFirstName    TestLastName   ", 10);
+      expect(foundConsumer3.isSuccess).toBe(true);
+      expect(foundConsumer3.getValue().length).toBe(3);
     });
 
     it("should find consumers by handle without $ prefix", async () => {
@@ -261,9 +266,15 @@ describe("ConsumerRepoTests", () => {
       await consumerRepo.createConsumer(consumer);
       await consumerRepo.createConsumer(consumer2);
       await consumerRepo.createConsumer(consumer3);
+
       const foundConsumer = await consumerRepo.findConsumersByPublicInfo("handleTest", 10);
       expect(foundConsumer.isSuccess).toBe(true);
       expect(foundConsumer.getValue().length).toBe(2);
+
+      // Test that we ignore extra spaces
+      const foundConsumer2 = await consumerRepo.findConsumersByPublicInfo("handleTest  ", 10);
+      expect(foundConsumer2.isSuccess).toBe(true);
+      expect(foundConsumer2.getValue().length).toBe(2);
     });
 
     it("should find consumers by handle with $ prefix", async () => {
@@ -275,9 +286,15 @@ describe("ConsumerRepoTests", () => {
       await consumerRepo.createConsumer(consumer);
       await consumerRepo.createConsumer(consumer2);
       await consumerRepo.createConsumer(consumer3);
+
       const foundConsumer = await consumerRepo.findConsumersByPublicInfo("$dollarHandleTest", 10);
       expect(foundConsumer.isSuccess).toBe(true);
       expect(foundConsumer.getValue().length).toBe(2);
+
+      // Test that we ignore extra spaces
+      const foundConsumer2 = await consumerRepo.findConsumersByPublicInfo("$dollarHandleTest  ", 10);
+      expect(foundConsumer2.isSuccess).toBe(true);
+      expect(foundConsumer2.getValue().length).toBe(2);
     });
 
     it("should find consumers by partial handle with $ prefix", async () => {

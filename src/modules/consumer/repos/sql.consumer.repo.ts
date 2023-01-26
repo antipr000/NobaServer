@@ -83,6 +83,8 @@ export class SQLConsumerRepo implements IConsumerRepo {
   }
 
   async findConsumersByPublicInfo(publicInfoSearch: string, limit: number): Promise<Result<Consumer[]>> {
+    publicInfoSearch = publicInfoSearch.trim();
+
     const handleOnly = publicInfoSearch.startsWith("$");
     const nameOnly = publicInfoSearch.indexOf(" ") > -1;
 
@@ -91,12 +93,12 @@ export class SQLConsumerRepo implements IConsumerRepo {
     let lastName = publicInfoSearch;
 
     if (handleOnly) {
-      handle = publicInfoSearch.substring(1);
+      handle = publicInfoSearch.substring(1).trim();
     }
 
     if (nameOnly) {
-      firstName = publicInfoSearch.split(" ")[0];
-      lastName = publicInfoSearch.split(" ")[1];
+      firstName = publicInfoSearch.split(" ")[0].trim();
+      lastName = publicInfoSearch.split(" ")[1].trim();
     }
 
     // If search term starts with $, sort by handle. Otherwise sort by last name.
