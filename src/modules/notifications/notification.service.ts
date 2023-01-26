@@ -55,7 +55,7 @@ export class NotificationService {
   async sendNotification(eventType: NotificationEventType, payload: NotificationPayload): Promise<void> {
     const notificationEvent = {
       notificationEventType: eventType,
-      notificationEventHandler: this.getNotificaitonMedium(eventType, payload),
+      notificationEventHandler: this.getNotificationMedium(eventType, payload),
     };
 
     if (notificationEvent.notificationEventHandler.length === 0) {
