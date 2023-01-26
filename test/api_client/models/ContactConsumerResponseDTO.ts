@@ -3,7 +3,8 @@
 /* eslint-disable */
 
 export type ContactConsumerResponseDTO = {
-  id: string;
   consumerID: string;
+  firstName: string;
+  lastName: string;
   handle: string;
 };

@@ -67,7 +67,7 @@ export class TransactionService {
     /**
      * filter for a particular transaction status
      */
-    transactionStatus?: "PENDING" | "SUCCESS" | "FAILED" | "IN_PROGRESS";
+    transactionStatus?: "INITIATED" | "COMPLETED" | "FAILED" | "PROCESSING" | "EXPIRED";
   }): CancelablePromise<TransactionsQueryResultDTO> {
     return __request(OpenAPI, {
       method: "GET",
@@ -95,7 +95,7 @@ export class TransactionService {
 
   /**
    * Submits a new transaction
-   * @returns any Transaction ID
+   * @returns TransactionDTO Transaction ID
    * @throws ApiError
    */
   public static initiateTransaction({
@@ -113,7 +113,7 @@ export class TransactionService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<TransactionDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v2/transactions",

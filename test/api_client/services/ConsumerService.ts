@@ -11,9 +11,12 @@ import type { ConsumerLimitsDTO } from "../models/ConsumerLimitsDTO";
 import type { ContactConsumerRequestDTO } from "../models/ContactConsumerRequestDTO";
 import type { ContactConsumerResponseDTO } from "../models/ContactConsumerResponseDTO";
 import type { EmailVerificationOtpRequest } from "../models/EmailVerificationOtpRequest";
+import type { LinkedEmployerDTO } from "../models/LinkedEmployerDTO";
 import type { PhoneVerificationOtpRequest } from "../models/PhoneVerificationOtpRequest";
 import type { PlaidTokenDTO } from "../models/PlaidTokenDTO";
+import type { RegisterWithEmployerDTO } from "../models/RegisterWithEmployerDTO";
 import type { UpdateConsumerRequestDTO } from "../models/UpdateConsumerRequestDTO";
+import type { UpdateEmployerAllocationDTO } from "../models/UpdateEmployerAllocationDTO";
 import type { UpdatePaymentMethodDTO } from "../models/UpdatePaymentMethodDTO";
 import type { UserEmailUpdateRequest } from "../models/UserEmailUpdateRequest";
 import type { UserPhoneUpdateRequest } from "../models/UserPhoneUpdateRequest";
@@ -457,6 +460,45 @@ export class ConsumerService {
   }
 
   /**
+   * Search for consumers based on public information.
+   * @returns ContactConsumerResponseDTO List of consumers that match the search criteria
+   * @throws ApiError
+   */
+  public static searchConsumers({
+    xNobaApiKey,
+    query,
+    xNobaSignature,
+    xNobaTimestamp,
+    limit,
+  }: {
+    xNobaApiKey: string;
+    query: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+    limit?: number;
+  }): CancelablePromise<Array<ContactConsumerResponseDTO>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/consumers/search",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      query: {
+        query: query,
+        limit: limit,
+      },
+      errors: {
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
    * Adds a crypto wallet for the logged-in consumer
    * @returns AddCryptoWalletResponseDTO Notficiation type and created wallet id
    * @throws ApiError
@@ -561,6 +603,98 @@ export class ConsumerService {
       errors: {
         401: `Invalid OTP`,
       },
+    });
+  }
+
+  /**
+   * Links the consumer with an Employer
+   * @returns any Registered Employee record
+   * @throws ApiError
+   */
+  public static registerWithAnEmployer({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    requestBody: RegisterWithEmployerDTO;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/consumers/employers",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+
+  /**
+   * Lists all the Employers the current Consumer is associated with
+   * @returns LinkedEmployerDTO
+   * @throws ApiError
+   */
+  public static listLinkedEmployers({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<Array<LinkedEmployerDTO>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/consumers/employers",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+    });
+  }
+
+  /**
+   * Updates the allocation amount for a specific employer
+   * @returns any
+   * @throws ApiError
+   */
+  public static updateAllocationAmountForAnEmployer({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    requestBody: UpdateEmployerAllocationDTO;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/v1/consumers/employers",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      body: requestBody,
+      mediaType: "application/json",
     });
   }
 
