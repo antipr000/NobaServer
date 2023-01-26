@@ -12,7 +12,7 @@ export const insertNobaAdmin = async (ignore: any, email: string, id: string, ro
   await prisma.$connect();
 
   const admin = await prisma.admin.create({
-    data: { email: email, name: "Test", role: role },
+    data: { id: id, email: email, name: "Test", role: role },
   });
 
   await prisma.$disconnect();

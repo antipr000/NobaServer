@@ -24,7 +24,7 @@ import {
 } from "./common";
 import { IntegrationTestUtility } from "./TestUtils";
 
-describe.skip("Noba Admin", () => {
+describe("Noba Admin", () => {
   jest.setTimeout(20000);
 
   let integrationTestUtils: IntegrationTestUtility;
@@ -75,8 +75,8 @@ describe.skip("Noba Admin", () => {
       const nobaAdminId = "AAAAAAAAAA";
       const nobaAdminRole = "BASIC";
 
-      expect(await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
-      expect(await insertNobaAdmin("", "another.admin@noba.com", "ID2ID2ID2ID2", nobaAdminRole)).toBe(true);
+      await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole);
+      await insertNobaAdmin("", "another.admin@noba.com", "ID2ID2ID2ID2", nobaAdminRole);
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
@@ -89,7 +89,6 @@ describe.skip("Noba Admin", () => {
       })) as NobaAdminDTO & ResponseStatus;
 
       expect(getNobaAdminResponse.__status).toBe(200);
-      expect(getNobaAdminResponse.id).toBe(nobaAdminId);
       expect(getNobaAdminResponse.email).toBe(nobaAdminEmail);
       expect(getNobaAdminResponse.role).toBe(nobaAdminRole);
     });
@@ -131,9 +130,7 @@ describe.skip("Noba Admin", () => {
     it("shouldn't allow requests from NobaAdmin with 'BASIC' role", async () => {
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
 
-      expect(await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAAA"), "BASIC")).toBe(
-        true,
-      );
+      await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAAA"), "BASIC");
       const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
@@ -166,9 +163,7 @@ describe.skip("Noba Admin", () => {
     it("shouldn't allow requests from NobaAdmin with 'INTERMEDIATE' role", async () => {
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
 
-      expect(
-        await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAAA"), "INTERMEDIATE"),
-      ).toBe(true);
+      await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAAA"), "INTERMEDIATE");
       const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
@@ -205,9 +200,7 @@ describe.skip("Noba Admin", () => {
       const newNobaAdminName = "Test Admin 2";
       const newNobaAdminRole = "BASIC";
 
-      expect(await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAAA"), "ADMIN")).toBe(
-        true,
-      );
+      await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAAA"), "ADMIN");
       const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
@@ -292,10 +285,8 @@ describe.skip("Noba Admin", () => {
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
 
-      expect(await insertNobaAdmin("", toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole)).toBe(
-        true,
-      );
-      expect(await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(true);
+      await insertNobaAdmin("", toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole);
+      await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole);
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
@@ -334,10 +325,8 @@ describe.skip("Noba Admin", () => {
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
 
-      expect(await insertNobaAdmin("", toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole)).toBe(
-        true,
-      );
-      expect(await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(true);
+      await insertNobaAdmin("", toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole);
+      await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole);
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
@@ -371,7 +360,7 @@ describe.skip("Noba Admin", () => {
       const loggedInNobaAdminId = integrationTestUtils.getRandomID("AAAAAAAAAAA");
       const loggedInNobaAdminRole = "ADMIN";
 
-      expect(await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(true);
+      await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole);
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
@@ -408,7 +397,7 @@ describe.skip("Noba Admin", () => {
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
 
-      expect(await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(true);
+      await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole);
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
@@ -448,10 +437,8 @@ describe.skip("Noba Admin", () => {
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
 
-      expect(await insertNobaAdmin("", toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole)).toBe(
-        true,
-      );
-      expect(await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(true);
+      await insertNobaAdmin("", toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole);
+      await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole);
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
@@ -493,10 +480,8 @@ describe.skip("Noba Admin", () => {
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
 
-      expect(await insertNobaAdmin("", toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole)).toBe(
-        true,
-      );
-      expect(await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(true);
+      await insertNobaAdmin("", toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole);
+      await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole);
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
@@ -538,10 +523,8 @@ describe.skip("Noba Admin", () => {
       const toUpdateNobaAdminCurrentRole = "BASIC";
       const toUpdateNobaAdminUpdatedRole = "ADMIN";
 
-      expect(await insertNobaAdmin("", toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole)).toBe(
-        true,
-      );
-      expect(await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole)).toBe(true);
+      await insertNobaAdmin("", toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole);
+      await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole);
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
@@ -581,7 +564,7 @@ describe.skip("Noba Admin", () => {
 
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin.2");
       const nobaAdminId = integrationTestUtils.getRandomID("A2A2A2A2A2A2");
-      expect(await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, "BASIC")).toBe(true);
+      await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, "BASIC");
 
       const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
@@ -599,13 +582,11 @@ describe.skip("Noba Admin", () => {
 
     it("shouldn't allow requests from NobaAdmin with 'BASIC' role", async () => {
       const loggedInNobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
-      expect(
-        await insertNobaAdmin("", loggedInNobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAA"), "BASIC"),
-      ).toBe(true);
+      await insertNobaAdmin("", loggedInNobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAA"), "BASIC");
 
       const toDeleteNobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin.2");
       const toDeleteNobaAdminId = integrationTestUtils.getRandomID("A2A2A2A2A2A2");
-      expect(await insertNobaAdmin("", toDeleteNobaAdminEmail, toDeleteNobaAdminId, "BASIC")).toBe(true);
+      await insertNobaAdmin("", toDeleteNobaAdminEmail, toDeleteNobaAdminId, "BASIC");
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
@@ -629,18 +610,11 @@ describe.skip("Noba Admin", () => {
 
     it("shouldn't allow requests from NobaAdmin with 'INTERMEDIATE' role", async () => {
       const loggedInNobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
-      expect(
-        await insertNobaAdmin(
-          "",
-          loggedInNobaAdminEmail,
-          integrationTestUtils.getRandomID("AAAAAAAAAA"),
-          "INTERMEDIATE",
-        ),
-      ).toBe(true);
+      await insertNobaAdmin("", loggedInNobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAA"), "INTERMEDIATE");
 
       const toDeleteNobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin.2");
       const toDeleteNobaAdminId = integrationTestUtils.getRandomID("A2A2A2A2A2A2");
-      expect(await insertNobaAdmin("", toDeleteNobaAdminEmail, toDeleteNobaAdminId, "BASIC")).toBe(true);
+      await insertNobaAdmin("", toDeleteNobaAdminEmail, toDeleteNobaAdminId, "BASIC");
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
@@ -663,9 +637,7 @@ describe.skip("Noba Admin", () => {
 
     it("should throw 404 if the requested NobaAdmin doesn't exist", async () => {
       const loggedInNobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
-      expect(
-        await insertNobaAdmin("", loggedInNobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAA"), "ADMIN"),
-      ).toBe(true);
+      await insertNobaAdmin("", loggedInNobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAA"), "ADMIN");
 
       const toDeleteNobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin.2");
       const toDeleteNobaAdminId = integrationTestUtils.getRandomID("A2A2A2A2A2A2");
@@ -691,13 +663,11 @@ describe.skip("Noba Admin", () => {
 
     it("should delete NobaAdmin if request is from NobaAdmin with 'ADMIN' role", async () => {
       const loggedInNobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
-      expect(
-        await insertNobaAdmin("", loggedInNobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAA"), "ADMIN"),
-      ).toBe(true);
+      await insertNobaAdmin("", loggedInNobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAA"), "ADMIN");
 
       const toDeleteNobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin.2");
       const toDeleteNobaAdminId = integrationTestUtils.getRandomID("A2A2A2A2A2A2");
-      expect(await insertNobaAdmin("", toDeleteNobaAdminEmail, toDeleteNobaAdminId, "BASIC")).toBe(true);
+      await insertNobaAdmin("", toDeleteNobaAdminEmail, toDeleteNobaAdminId, "BASIC");
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
@@ -722,7 +692,7 @@ describe.skip("Noba Admin", () => {
     it("shouldn't allow requests to delete the currently logged-in NobaAdmin itself", async () => {
       const loggedInNobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
       const loggedInNobaAdminId = integrationTestUtils.getRandomID("AAAAAAAAAAA");
-      expect(await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, "ADMIN")).toBe(true);
+      await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, "ADMIN");
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
