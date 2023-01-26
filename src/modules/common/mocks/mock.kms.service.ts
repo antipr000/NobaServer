@@ -1,7 +1,7 @@
 import { mock, when, anything } from "ts-mockito";
 import { KmsService } from "../kms.service";
 
-export const getMockKmsServiceWithDefaults = () => {
+export const getMockKMSServiceWithDefaults = () => {
   const mockKmsService: KmsService = mock(KmsService);
 
   when(mockKmsService.encryptString(anything(), anything())).thenReject(new Error("Not implemented!"));

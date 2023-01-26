@@ -18,7 +18,7 @@ import {
 } from "../domain/Transaction";
 import { ITransactionRepo } from "../repo/transaction.repo";
 import { getMockTransactionRepoWithDefaults } from "../mocks/mock.sql.transaction.repo";
-import { TRANSACTION_REPO_PROVIDER } from "../repo/transaction.repo.module";
+import { TRANSACTION_REPO_PROVIDER, WITHDRAWAL_DETAILS_REPO_PROVIDER } from "../repo/transaction.repo.module";
 import { anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { TransactionService } from "../transaction.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
@@ -40,6 +40,9 @@ import { WorkflowFactory } from "../factory/workflow.factory";
 import { WalletTransferImpl } from "../factory/wallet.transfer.impl";
 import { getMockWorkflowFactoryWithDefaults } from "../mocks/mock.workflow.factory";
 import { getMockWalletTransferImplWithDefaults } from "../mocks/mock.wallet.transfer.impl";
+import { IWithdrawalDetailsRepo } from "../repo/withdrawal.details.repo";
+import { getMockWithdrawalDetailsRepoWithDefaults } from "../mocks/mock.withdrawal.repo";
+import { AccountType, DocumentType, InputWithdrawalDetails, WithdrawalDetails } from "../domain/WithdrawalDetails";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -52,6 +55,7 @@ describe("TransactionServiceTests", () => {
   let exchangeRateService: ExchangeRateService;
   let workflowFactory: WorkflowFactory;
   let walletTransferImpl: WalletTransferImpl;
+  let withdrawalDetailsRepo: IWithdrawalDetailsRepo;
 
   beforeEach(async () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
@@ -60,6 +64,7 @@ describe("TransactionServiceTests", () => {
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
     workflowFactory = getMockWorkflowFactoryWithDefaults();
     walletTransferImpl = getMockWalletTransferImplWithDefaults();
+    withdrawalDetailsRepo = getMockWithdrawalDetailsRepoWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -94,6 +99,10 @@ describe("TransactionServiceTests", () => {
         {
           provide: WorkflowFactory,
           useFactory: () => instance(workflowFactory),
+        },
+        {
+          provide: WITHDRAWAL_DETAILS_REPO_PROVIDER,
+          useFactory: () => instance(withdrawalDetailsRepo),
         },
         TransactionService,
       ],
@@ -562,6 +571,49 @@ describe("TransactionServiceTests", () => {
     expect(async () => await transactionService.updateTransaction(transactionID, {})).rejects.toThrowError(
       ServiceException,
     );
+  });
+
+  describe("getWithdrawalDetails", () => {
+    it("should return withdrawal details", async () => {
+      const withdrawalDetails: WithdrawalDetails = {
+        id: "fake-id",
+        bankCode: "123",
+        accountNumber: "1234",
+        accountType: AccountType.SAVINGS,
+        documentNumber: "1234",
+        documentType: DocumentType.CC,
+        transactionID: "faket-transaction",
+      };
+      when(withdrawalDetailsRepo.getWithdrawalDetailsByTransactionID("fake-transaction")).thenResolve(
+        withdrawalDetails,
+      );
+
+      const response = await transactionService.getWithdrawalDetails("fake-transaction");
+      expect(response).toStrictEqual(withdrawalDetails);
+    });
+  });
+
+  describe("addWithdrawalDetails", () => {
+    it("adds withdrawal details", async () => {
+      const inputDetails: InputWithdrawalDetails = {
+        bankCode: "123",
+        accountNumber: "1234",
+        accountType: AccountType.SAVINGS,
+        documentNumber: "1234",
+        documentType: DocumentType.CC,
+        transactionID: "faket-transaction",
+      };
+
+      const withdrawalDetails: WithdrawalDetails = {
+        ...inputDetails,
+        id: "fake-id",
+      };
+
+      when(withdrawalDetailsRepo.addWithdrawalDetails(deepEqual(inputDetails))).thenResolve(withdrawalDetails);
+
+      const response = await transactionService.addWithdrawalDetails(inputDetails);
+      expect(response).toStrictEqual(withdrawalDetails);
+    });
   });
 });
 

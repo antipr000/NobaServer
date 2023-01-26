@@ -10,11 +10,16 @@ import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { Utils } from "../../../core/utils/Utils";
 import { ContactInfo } from "../domain/ContactInfo";
+import { KmsService } from "../../../modules/common/kms.service";
+import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
   @Inject()
   private readonly prisma: PrismaService;
+
+  @Inject()
+  private readonly kmsService: KmsService;
 
   private readonly mapper: ConsumerRepoMapper;
 
@@ -203,6 +208,12 @@ export class SQLConsumerRepo implements IConsumerRepo {
 
   async updateConsumer(consumerID: string, consumer: Partial<ConsumerProps>): Promise<Consumer> {
     try {
+      if (consumer.socialSecurityNumber) {
+        consumer.socialSecurityNumber = await this.kmsService.encryptString(
+          consumer.socialSecurityNumber,
+          KmsKeyType.SSN,
+        );
+      }
       const updateConsumerInput = this.mapper.toUpdateConsumerInput(consumer);
       const consumerProps = await this.prisma.consumer.update({ where: { id: consumerID }, data: updateConsumerInput });
       return Consumer.createConsumer(consumerProps);
