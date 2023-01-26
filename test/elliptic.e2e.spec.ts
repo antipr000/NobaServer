@@ -18,7 +18,7 @@ import { TransactionStatus } from "../src/modules/transactions/domain/Types";
 import * as ConfigurationUtils from "../src/config/ConfigurationUtils";
 import { IntegrationTestUtility } from "./TestUtils";
 
-describe.skip("Elliptic Integration Test", () => {
+describe("Elliptic Integration Test", () => {
   jest.setTimeout(20000);
 
   let ellipticService: EllipticService;
