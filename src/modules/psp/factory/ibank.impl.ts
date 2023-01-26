@@ -1,5 +1,5 @@
-import { DebitBankRequestDTO, DebitBankResponseDTO } from "../dto/bank.factory.dto";
+import { DebitBankFactoryRequest, DebitBankFactoryResponse } from "../domain/BankFactoryTypes";
 
 export interface IBankImpl {
-  debit(request: DebitBankRequestDTO): Promise<DebitBankResponseDTO>;
+  debit(request: DebitBankFactoryRequest): Promise<DebitBankFactoryResponse>;
 }

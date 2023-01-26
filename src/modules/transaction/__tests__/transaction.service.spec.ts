@@ -39,6 +39,9 @@ import { getMockWithdrawalDetailsRepoWithDefaults } from "../mocks/mock.withdraw
 import { AccountType, DocumentType, InputWithdrawalDetails, WithdrawalDetails } from "../domain/WithdrawalDetails";
 import { BankFactory } from "../../../modules/psp/factory/bank.factory";
 import { getMockBankFactoryWithDefaults } from "../../../modules/psp/mocks/mock.bank.factory";
+import { BankName, DebitBankFactoryRequest } from "../../../modules/psp/domain/BankFactoryTypes";
+import { BankMonoImpl } from "../../../modules/psp/factory/bank.mono.impl";
+import { getMockBankMonoImplWithDefaults } from "../../../modules/psp/mocks/mock.bank.mono.impl";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -50,8 +53,9 @@ describe("TransactionServiceTests", () => {
   let verificationService: VerificationService;
   let exchangeRateService: ExchangeRateService;
   let workflowFactory: WorkflowFactory;
-  let bankFactory: BankFactory;
   let walletTransferImpl: WalletTransferImpl;
+  let bankFactory: BankFactory;
+  let bankMonoImpl: BankMonoImpl;
   let withdrawalDetailsRepo: IWithdrawalDetailsRepo;
 
   beforeEach(async () => {
@@ -60,8 +64,9 @@ describe("TransactionServiceTests", () => {
     verificationService = getMockVerificationServiceWithDefaults();
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
     workflowFactory = getMockWorkflowFactoryWithDefaults();
-    bankFactory = getMockBankFactoryWithDefaults();
     walletTransferImpl = getMockWalletTransferImplWithDefaults();
+    bankFactory = getMockBankFactoryWithDefaults();
+    bankMonoImpl = getMockBankMonoImplWithDefaults();
     withdrawalDetailsRepo = getMockWithdrawalDetailsRepoWithDefaults();
 
     const appConfigurations = {
@@ -567,6 +572,83 @@ describe("TransactionServiceTests", () => {
     expect(async () => await transactionService.updateTransaction(transactionID, {})).rejects.toThrowError(
       ServiceException,
     );
+  });
+
+  describe("debitFromBank", () => {
+    it("should debit from a bank account", async () => {
+      const { transaction } = getRandomTransaction("consumerID", "consumerID2");
+
+      when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(transaction);
+      const withdrawalDetails: WithdrawalDetails = {
+        id: "fake-id",
+        bankCode: "123",
+        accountNumber: "1234",
+        accountType: AccountType.SAVINGS,
+        documentNumber: "1234",
+        documentType: DocumentType.CC,
+        transactionID: transaction.id,
+      };
+      when(withdrawalDetailsRepo.getWithdrawalDetailsByTransactionID(transaction.id)).thenResolve(withdrawalDetails);
+
+      const debitFactoryRequest: DebitBankFactoryRequest = {
+        amount: 100,
+        currency: "USD",
+        bankCode: withdrawalDetails.bankCode,
+        accountNumber: withdrawalDetails.accountNumber,
+        accountType: withdrawalDetails.accountType,
+        documentNumber: withdrawalDetails.documentNumber,
+        documentType: withdrawalDetails.documentType,
+        transactionID: transaction.id,
+        consumerID: transaction.debitConsumerID,
+        transactionRef: transaction.transactionRef,
+      };
+
+      when(bankFactory.getBankImplementation(BankName.MONO)).thenReturn(instance(bankMonoImpl));
+
+      const factoryResponse = {
+        state: "SUCCESS",
+        withdrawalID: "fake-withdrawal-id",
+      };
+      when(bankMonoImpl.debit(deepEqual(debitFactoryRequest))).thenResolve(factoryResponse);
+
+      const debitRequest = {
+        transactionID: transaction.id,
+        amount: 100,
+        currency: "USD",
+        bankName: BankName.MONO,
+      };
+      expect(transactionService.debitFromBank(debitRequest)).resolves.toStrictEqual(factoryResponse);
+    });
+
+    it("should throw a ServiceException if the transaction doesn't exist", async () => {
+      const transactionID = "non-existient-transaction-id";
+      when(transactionRepo.getTransactionByID(transactionID)).thenResolve(null);
+      when(withdrawalDetailsRepo.getWithdrawalDetailsByTransactionID(transactionID)).thenResolve(
+        {} as WithdrawalDetails,
+      );
+
+      const debitRequest = {
+        transactionID: transactionID,
+        amount: 100,
+        currency: "USD",
+        bankName: BankName.MONO,
+      };
+      expect(transactionService.debitFromBank(debitRequest)).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw a ServiceException if the withdrawal details don't exist", async () => {
+      const transactionID = "non-existient-transaction-id";
+      when(transactionRepo.getTransactionByID(transactionID)).thenResolve({} as Transaction);
+      when(withdrawalDetailsRepo.getWithdrawalDetailsByTransactionID(transactionID)).thenResolve(null);
+
+      const debitRequest = {
+        transactionID: transactionID,
+        amount: 100,
+        currency: "USD",
+        bankName: BankName.MONO,
+      };
+      expect(transactionService.debitFromBank(debitRequest)).rejects.toThrowError(ServiceException);
+    });
   });
 
   describe("getWithdrawalDetails", () => {

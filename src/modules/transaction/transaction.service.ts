@@ -22,7 +22,7 @@ import { KYCStatus } from "@prisma/client";
 import { WorkflowFactory } from "./factory/workflow.factory";
 import { IWithdrawalDetailsRepo } from "./repo/withdrawal.details.repo";
 import { InputWithdrawalDetails, WithdrawalDetails } from "./domain/WithdrawalDetails";
-import { DebitBankRequestDTO, DebitBankResponseDTO } from "./dto/transaction.workflow.controller.dto";
+import { DebitBankRequest, DebitBankResponse } from "./domain/Transaction";
 import { BankFactory } from "../psp/factory/bank.factory";
 
 @Injectable()
@@ -304,7 +304,7 @@ export class TransactionService {
     };
   }
 
-  async debitFromBank(request: DebitBankRequestDTO): Promise<DebitBankResponseDTO> {
+  async debitFromBank(request: DebitBankRequest): Promise<DebitBankResponse> {
     const [transaction, withdrawal] = await Promise.all([
       this.getTransactionByTransactionID(request.transactionID),
       this.getWithdrawalDetails(request.transactionID),

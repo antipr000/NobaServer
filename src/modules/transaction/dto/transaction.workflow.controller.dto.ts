@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { BankName } from "../../../modules/psp/domain/BankName";
+import { BankName } from "../../../modules/psp/domain/BankFactoryTypes";
 import { TransactionStatus, WorkflowName } from "../domain/Transaction";
 
 export class WorkflowTransactionDTO {
@@ -46,11 +46,4 @@ export class DebitBankRequestDTO {
 
   @ApiProperty({ enum: BankName })
   bankName: BankName;
-}
-
-// Contains mono specific fields. This should be expanded to include other banks.
-export class DebitBankResponseDTO {
-  withdrawalID: string;
-  state: string;
-  declinationReason?: string;
 }

@@ -12,7 +12,8 @@ import { TransactionWorkflowController } from "../transaction.workflow.controlle
 import { BadRequestException } from "@nestjs/common";
 import { TransactionWorkflowMapper } from "../mapper/transaction.workflow.mapper";
 import { getMockTransactionWorkflowMapperWithDefaults } from "../mocks/mock.transaction.workflow.mapper";
-import { WorkflowTransactionDTO } from "../dto/transaction.workflow.controller.dto";
+import { DebitBankRequestDTO, WorkflowTransactionDTO } from "../dto/transaction.workflow.controller.dto";
+import { BankName } from "../../../modules/psp/domain/BankFactoryTypes";
 
 const getRandomTransaction = (consumerID: string): Transaction => {
   const transaction: Transaction = {
@@ -152,6 +153,27 @@ describe("Transaction Workflow Controller tests", () => {
 
       expect(addEventSpy).toBeCalledTimes(0);
       expect(updateSpy).toBeCalledTimes(0);
+    });
+  });
+
+  describe("debitfrombank", () => {
+    it("should debit from bank", async () => {
+      const consumerID = "testConsumerID";
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      const debitRequestDTO: DebitBankRequestDTO = {
+        amount: 100,
+        currency: "USD",
+        bankName: BankName.MONO,
+        transactionID: transaction.id,
+      };
+
+      when(mockTransactionService.debitFromBank(debitRequestDTO)).thenResolve({
+        state: "Completed",
+        withdrawalID: "test-withdrawal-id",
+      });
+
+      const response = await transactionWorkflowController.debitFromBank(debitRequestDTO);
+      expect(response.withdrawalID).toBe("test-withdrawal-id");
     });
   });
 

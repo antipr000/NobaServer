@@ -1,4 +1,7 @@
-export class DebitBankRequestDTO {
+export enum BankName {
+  MONO = "MONO",
+}
+export type DebitBankFactoryRequest = {
   transactionID: string;
   transactionRef: string;
   amount: number;
@@ -9,11 +12,11 @@ export class DebitBankRequestDTO {
   accountType: string;
   documentNumber: string;
   documentType: string;
-}
+};
 
 // Contains mono specific fields. This should be expanded to include other banks.
-export class DebitBankResponseDTO {
+export type DebitBankFactoryResponse = {
   withdrawalID: string;
   state: string;
   declinationReason?: string;
-}
+};
