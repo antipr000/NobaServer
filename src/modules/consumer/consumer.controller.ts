@@ -100,6 +100,12 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   async isHandleAvailable(@Query("handle") handle: string, @AuthUser() consumer: Consumer): Promise<ConsumerHandleDTO> {
+    if (!handle) {
+      return {
+        isAvailable: false,
+        handle: handle,
+      };
+    }
     return {
       isAvailable: await this.consumerService.isHandleAvailable(handle.toLocaleLowerCase()),
       handle: handle.toLocaleLowerCase(),

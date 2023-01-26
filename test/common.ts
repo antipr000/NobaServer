@@ -5,7 +5,7 @@ import CryptoJS from "crypto-js";
 import { ConsumerProps } from "../src/modules/consumer/domain/Consumer";
 import { ConsumerRepoMapper } from "../src/modules/consumer/mappers/ConsumerRepoMapper";
 
-export const TEST_OTP = 222222;
+export const TEST_OTP = 333333;
 
 export const insertNobaAdmin = async (ignore: any, email: string, id: string, role: string): Promise<Admin> => {
   const prisma = new PrismaClient();
@@ -36,7 +36,7 @@ export const loginAndGetResponse = async (
   identityType: string,
 ): Promise<LoginResponseDTO & ResponseStatus> => {
   const requestBody = {
-    email: email,
+    emailOrPhone: email,
     identityType: identityType as any,
   };
   const TEST_TIMESTAMP = new Date().getTime().toString();
@@ -67,7 +67,7 @@ export const loginAndGetResponse = async (
   })) as LoginResponseDTO & ResponseStatus;
 };
 
-export async function patchConsumer(consumer: Partial<ConsumerProps>, ignore: any) {
+export async function patchConsumer(consumer: Partial<ConsumerProps>) {
   const prisma = new PrismaClient();
   await prisma.$connect();
 

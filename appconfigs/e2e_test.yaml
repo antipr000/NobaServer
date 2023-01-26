@@ -21,9 +21,9 @@ kms:
     purpose: "Noba Onramp app"
     origin: "us-east-1"
   ssn:
-    awsSecretNameForGeneratorKeyArn: "TEST_SSN_GENERATOR_KEY_ARN"
+    awsSecretNameForGeneratorKeyArn: ""
     generatorKeyArn: "bogus-value"
-    awsSecretNameForFollowUpKeyArn: "TEST_SSN_FOLLOW_UP_KEY_1_ARN"
+    awsSecretNameForFollowUpKeyArn: ""
     followUpKeyArn: "bogus-value"
 
 # AWS KMS Encryption key references
