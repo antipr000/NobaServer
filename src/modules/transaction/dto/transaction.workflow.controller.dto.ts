@@ -32,3 +32,14 @@ export class WorkflowTransactionDTO {
   @ApiProperty({ enum: TransactionStatus })
   status: TransactionStatus;
 }
+
+export class DebitBankRequestDTO {
+  @ApiProperty()
+  transactionID: string;
+
+  @ApiProperty()
+  amount: number;
+
+  @ApiProperty()
+  currency: string;
+}

@@ -22,6 +22,7 @@ import { KYCStatus } from "@prisma/client";
 import { WorkflowFactory } from "./factory/workflow.factory";
 import { IWithdrawalDetailsRepo } from "./repo/withdrawal.details.repo";
 import { InputWithdrawalDetails, WithdrawalDetails } from "./domain/WithdrawalDetails";
+import { DebitBankRequestDTO } from "./dto/transaction.workflow.controller.dto";
 
 @Injectable()
 export class TransactionService {
@@ -299,6 +300,19 @@ export class TransactionService {
         ),
       }),
     };
+  }
+
+  async debitFromBank(debitBankRequest: DebitBankRequestDTO): Promise<Transaction> {
+    const transaction = await this.transactionRepo.getTransactionByID(debitBankRequest.transactionID);
+    if (!transaction) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: "Transaction does not exist",
+      });
+    }
+
+    const consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+    return transaction;
   }
 
   async getTransactionEvents(transactionID: string, includeInternalEvents: boolean): Promise<TransactionEvent[]> {
