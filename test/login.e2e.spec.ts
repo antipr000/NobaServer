@@ -57,7 +57,7 @@ describe("Authentication", () => {
     });
   });
 
-  describe.skip("SignUp or Login as CONSUMER", () => {
+  describe("SignUp or Login as CONSUMER", () => {
     it("should be successful", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test+consumer");
 
@@ -125,7 +125,7 @@ describe("Authentication", () => {
         "POST",
         "/v1/auth/login",
         JSON.stringify({
-          email: consumerEmail,
+          emailOrPhone: consumerEmail,
           identityType: "CONSUMER",
         }),
       );
@@ -169,7 +169,7 @@ describe("Authentication", () => {
         "POST",
         "/v1/auth/login",
         JSON.stringify({
-          email: consumerEmail,
+          emailOrPhone: consumerEmail,
           identityType: "CONSUMER",
         }),
       );
@@ -236,7 +236,7 @@ describe("Authentication", () => {
         "POST",
         "/v1/auth/login",
         JSON.stringify({
-          email: consumerEmail,
+          emailOrPhone: consumerEmail,
           identityType: "CONSUMR" as any,
         }),
       );
@@ -253,7 +253,7 @@ describe("Authentication", () => {
     });
   });
 
-  describe.skip("NobaAdmin login", () => {
+  describe("NobaAdmin login", () => {
     it("shouldn't be successful for an unregistered NobaAdmin", async () => {
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
       const signature = computeSignature(
@@ -261,7 +261,7 @@ describe("Authentication", () => {
         "POST",
         "/v1/auth/login",
         JSON.stringify({
-          email: nobaAdminEmail,
+          emailOrPhone: nobaAdminEmail,
           identityType: "NOBA_ADMIN",
         }),
       );
@@ -285,7 +285,7 @@ describe("Authentication", () => {
         "POST",
         "/v1/auth/login",
         JSON.stringify({
-          email: consumerEmail,
+          emailOrPhone: consumerEmail,
           identityType: "CONSUMER",
         }),
       );
@@ -320,14 +320,12 @@ describe("Authentication", () => {
         "POST",
         "/v1/auth/login",
         JSON.stringify({
-          email: nobaAdminEmail,
+          emailOrPhone: nobaAdminEmail,
           identityType: "NOBA_ADMIN",
         }),
       );
 
-      expect(await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAA"), "BASIC")).toBe(
-        true,
-      );
+      await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAA"), "BASIC");
 
       const loginResponse = (await AuthenticationService.loginUser({
         xNobaApiKey: TEST_API_KEY,

@@ -2,18 +2,42 @@ import { Prisma } from "@prisma/client";
 import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
+import { Address } from "../domain/Address";
+import { KYC } from "../domain/KYC";
 
 export class ConsumerRepoMapper {
   toCreateConsumerInput(consumer: Consumer): Prisma.ConsumerCreateInput {
     return {
       id: consumer.props.id,
-      firstName: consumer.props.firstName,
-      lastName: consumer.props.lastName,
-      email: consumer.props.email,
-      displayEmail: consumer.props.displayEmail,
-      phone: consumer.props.phone,
-      handle: consumer.props.handle,
-      referralCode: consumer.props.referralCode,
+      ...(consumer.props.firstName && { firstName: consumer.props.firstName }),
+      ...(consumer.props.lastName && { lastName: consumer.props.lastName }),
+      ...(consumer.props.handle && { handle: consumer.props.handle }),
+      ...(consumer.props.locale && { locale: consumer.props.locale }),
+      ...(consumer.props.referralCode && { referralCode: consumer.props.referralCode }),
+      ...(consumer.props.dateOfBirth && { dateOfBirth: consumer.props.dateOfBirth }),
+      ...(consumer.props.isDisabled && { isDisabled: consumer.props.isDisabled }),
+      ...(consumer.props.isLocked && { isLocked: consumer.props.isLocked }),
+      ...(consumer.props.phone && { phone: consumer.props.phone }),
+      ...(consumer.props.email && { email: consumer.props.email }),
+      ...(consumer.props.displayEmail && { displayEmail: consumer.props.displayEmail }),
+      ...(consumer.props.socialSecurityNumber && {
+        socialSecurityNumber: consumer.props.socialSecurityNumber,
+      }),
+      ...(consumer.props.referredByID && { referredByID: consumer.props.referredByID }),
+      ...(consumer.props.address && {
+        address: {
+          create: {
+            ...consumer.props.address,
+          },
+        },
+      }),
+      ...(consumer.props.verificationData && {
+        verificationData: {
+          create: {
+            ...consumer.props.verificationData,
+          },
+        },
+      }),
     };
   }
 
@@ -35,17 +59,18 @@ export class ConsumerRepoMapper {
       }),
       ...(consumerUpdateProps.referredByID && { referredByID: consumerUpdateProps.referredByID }),
       ...(consumerUpdateProps.address && {
-        address: { upsert: { create: { ...consumerUpdateProps.address }, update: { ...consumerUpdateProps.address } } },
+        address: {
+          upsert: {
+            create: this.toAddressInput(consumerUpdateProps.address),
+            update: this.toAddressInput(consumerUpdateProps.address),
+          },
+        },
       }),
       ...(consumerUpdateProps.verificationData && {
         verificationData: {
           upsert: {
-            update: {
-              ...consumerUpdateProps.verificationData,
-            },
-            create: {
-              ...consumerUpdateProps.verificationData,
-            },
+            update: this.toVerificationDataInput(consumerUpdateProps.verificationData),
+            create: this.toVerificationDataInput(consumerUpdateProps.verificationData),
           },
         },
       }),
@@ -112,6 +137,55 @@ export class ConsumerRepoMapper {
       ...(wallet.name && { name: wallet.name }),
       ...(wallet.status && { status: wallet.status }),
       ...(wallet.riskScore && { riskScore: wallet.riskScore }),
+    };
+  }
+
+  toAddressInput(address: Address): Prisma.AddressCreateWithoutConsumerInput {
+    return {
+      streetLine1: address.streetLine1,
+      ...(address.streetLine2 && { streetLine2: address.streetLine2 }),
+      countryCode: address.countryCode,
+      city: address.city,
+      regionCode: address.regionCode,
+      postalCode: address.postalCode,
+    };
+  }
+
+  toVerificationDataInput(verificationData: KYC): Prisma.KYCCreateWithoutConsumerInput {
+    return {
+      ...(verificationData.documentCheckReference && {
+        documentCheckReference: verificationData.documentCheckReference,
+      }),
+      ...(verificationData.documentVerificationStatus && {
+        documentVerificationStatus: verificationData.documentVerificationStatus,
+      }),
+      ...(verificationData.documentVerificationTimestamp && {
+        documentVerificationTimestamp: verificationData.documentVerificationTimestamp,
+      }),
+      ...(verificationData.isSuspectedFraud && {
+        isSuspectedFraud: verificationData.isSuspectedFraud,
+      }),
+      ...(verificationData.kycCheckReference && {
+        kycCheckReference: verificationData.kycCheckReference,
+      }),
+      ...(verificationData.kycCheckStatus && {
+        kycCheckStatus: verificationData.kycCheckStatus,
+      }),
+      ...(verificationData.kycVerificationTimestamp && {
+        kycVerificationTimestamp: verificationData.kycVerificationTimestamp,
+      }),
+      ...(verificationData.provider && {
+        provider: verificationData.provider,
+      }),
+      ...(verificationData.riskLevel && {
+        riskLevel: verificationData.riskLevel,
+      }),
+      ...(verificationData.sanctionLevel && {
+        sanctionLevel: verificationData.sanctionLevel,
+      }),
+      ...(verificationData.riskRating && {
+        riskRating: verificationData.riskRating,
+      }),
     };
   }
 }

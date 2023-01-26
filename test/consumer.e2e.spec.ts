@@ -11,7 +11,6 @@
  */
 import { setUpEnvironmentVariablesToLoadTheSourceCode } from "./setup";
 const port: number = setUpEnvironmentVariablesToLoadTheSourceCode();
-
 import { ConsumerService } from "./api_client/services/ConsumerService";
 import { ConsumerDTO } from "./api_client/models/ConsumerDTO";
 import {
@@ -27,13 +26,13 @@ import { PlaidTokenDTO } from "./api_client";
 //import { PaymentMethodType } from "../src/modules/consumer/domain/PaymentMethod";
 import { ConsumerHandleDTO } from "./api_client/models/ConsumerHandleDTO";
 import { IntegrationTestUtility } from "./TestUtils";
+import { uuid } from "uuidv4";
 
-describe.skip("Consumers", () => {
+describe("Consumers", () => {
   jest.setTimeout(20000);
 
   let integrationTestUtils: IntegrationTestUtility;
   let TEST_TIMESTAMP;
-
   beforeAll(async () => {
     integrationTestUtils = await IntegrationTestUtility.setUp(port);
     TEST_TIMESTAMP = new Date().getTime().toString();
@@ -48,6 +47,10 @@ describe.skip("Consumers", () => {
   });
 
   describe("GET /consumers/paymentmethods/plaid/token", () => {
+    afterEach(async () => {
+      await integrationTestUtils.reset();
+    });
+
     it("should return 401 if not logged in as any identity", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/paymentmethods/plaid/token", JSON.stringify({}));
       const generatePlaidTokenResponse = (await ConsumerService.generatePlaidToken({
@@ -63,7 +66,7 @@ describe.skip("Consumers", () => {
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
       const nobaAdminId = integrationTestUtils.getRandomID("AAAAAAAAA");
       const nobaAdminRole = "BASIC";
-      expect(await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
+      await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole);
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
@@ -127,7 +130,7 @@ describe.skip("Consumers", () => {
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
       const nobaAdminId = integrationTestUtils.getRandomID("AAAAAAAAA");
       const nobaAdminRole = "BASIC";
-      expect(await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
+      await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole);
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
@@ -174,9 +177,11 @@ describe.skip("Consumers", () => {
 
     it("should return 'false' if the handle is already taken", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-
+      const handle = "fakehandle" + uuid().slice(0, 6);
       const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
+
+      await patchConsumer({ email: consumerEmail, handle: handle });
 
       const getConsumerSignature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
       const getConsumerResponse = (await ConsumerService.getConsumer({
@@ -193,7 +198,7 @@ describe.skip("Consumers", () => {
         JSON.stringify({}),
       );
       const getHandleAvailabilityResponse = (await ConsumerService.isHandleAvailable({
-        handle: getConsumerResponse.handle,
+        handle: handle,
         xNobaApiKey: TEST_API_KEY,
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
@@ -221,7 +226,7 @@ describe.skip("Consumers", () => {
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
       const nobaAdminId = integrationTestUtils.getRandomID("AAAAAAAAA");
       const nobaAdminRole = "BASIC";
-      expect(await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
+      await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole);
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
@@ -255,10 +260,10 @@ describe.skip("Consumers", () => {
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
-      expect(getConsumerResponse.firstName).toBeUndefined();
-      expect(getConsumerResponse.lastName).toBeUndefined();
-      expect(getConsumerResponse.address).toBeUndefined();
-      expect(getConsumerResponse.dateOfBirth).toBeUndefined();
+      expect(getConsumerResponse.firstName).toBeNull();
+      expect(getConsumerResponse.lastName).toBeNull();
+      expect(getConsumerResponse.address).toBeNull();
+      expect(getConsumerResponse.dateOfBirth).toBeNull();
     });
 
     it("should allow signature to validate even with extra request params", async () => {
@@ -280,10 +285,10 @@ describe.skip("Consumers", () => {
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
-      expect(getConsumerResponse.firstName).toBeUndefined();
-      expect(getConsumerResponse.lastName).toBeUndefined();
-      expect(getConsumerResponse.address).toBeUndefined();
-      expect(getConsumerResponse.dateOfBirth).toBeUndefined();
+      expect(getConsumerResponse.firstName).toBeNull();
+      expect(getConsumerResponse.lastName).toBeNull();
+      expect(getConsumerResponse.address).toBeNull();
+      expect(getConsumerResponse.dateOfBirth).toBeNull();
     });
   });
 
@@ -304,7 +309,7 @@ describe.skip("Consumers", () => {
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
       const nobaAdminId = integrationTestUtils.getRandomID("AAAAAAAAA");
       const nobaAdminRole = "BASIC";
-      expect(await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole)).toBe(true);
+      await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole);
 
       const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
@@ -356,9 +361,9 @@ describe.skip("Consumers", () => {
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
-      expect(getConsumerResponse.lastName).toBeUndefined();
-      expect(getConsumerResponse.address).toBeUndefined();
-      expect(getConsumerResponse.dateOfBirth).toBeUndefined();
+      expect(getConsumerResponse.lastName).toBeNull();
+      expect(getConsumerResponse.address).toBeNull();
+      expect(getConsumerResponse.dateOfBirth).toBeNull();
     });
 
     it("should updates 'lastName' if Consumer identity calls this API", async () => {
@@ -398,9 +403,9 @@ describe.skip("Consumers", () => {
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
-      expect(getConsumerResponse.firstName).toBeUndefined();
-      expect(getConsumerResponse.address).toBeUndefined();
-      expect(getConsumerResponse.dateOfBirth).toBeUndefined();
+      expect(getConsumerResponse.firstName).toBeNull();
+      expect(getConsumerResponse.address).toBeNull();
+      expect(getConsumerResponse.dateOfBirth).toBeNull();
     });
 
     it("should updates 'dateOfBirth' if Consumer identity calls this API", async () => {
@@ -440,9 +445,9 @@ describe.skip("Consumers", () => {
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
-      expect(getConsumerResponse.firstName).toBeUndefined();
-      expect(getConsumerResponse.lastName).toBeUndefined();
-      expect(getConsumerResponse.address).toBeUndefined();
+      expect(getConsumerResponse.firstName).toBeNull();
+      expect(getConsumerResponse.lastName).toBeNull();
+      expect(getConsumerResponse.address).toBeNull();
     });
 
     it("should fail with 400 for invalid 'dateOfBirth'", async () => {
@@ -473,13 +478,13 @@ describe.skip("Consumers", () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
-
+      const handle = "fakehandle" + uuid().slice(0, 6);
       let signature = computeSignature(
         TEST_TIMESTAMP,
         "PATCH",
         "/v1/consumers",
         JSON.stringify({
-          handle: "good-handle",
+          handle: handle,
         }),
       );
       const updateConsumerResponse = (await ConsumerService.updateConsumer({
@@ -487,7 +492,7 @@ describe.skip("Consumers", () => {
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
         requestBody: {
-          handle: "good-handle",
+          handle: handle,
         },
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
@@ -501,21 +506,21 @@ describe.skip("Consumers", () => {
 
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.email).toBe(consumerEmail);
-      expect(getConsumerResponse.handle).toBe("good-handle");
+      expect(getConsumerResponse.handle).toBe(handle);
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
-      expect(getConsumerResponse.firstName).toBeUndefined();
-      expect(getConsumerResponse.lastName).toBeUndefined();
-      expect(getConsumerResponse.address).toBeUndefined();
+      expect(getConsumerResponse.firstName).toBeNull();
+      expect(getConsumerResponse.lastName).toBeNull();
+      expect(getConsumerResponse.address).toBeNull();
     });
 
     it("should updates multiple-fields at once if Consumer identity calls this API", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
       const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
-
+      const handle = "changedhandle" + uuid().slice(0, 6);
       let signature = computeSignature(
         TEST_TIMESTAMP,
         "PATCH",
@@ -524,7 +529,7 @@ describe.skip("Consumers", () => {
           dateOfBirth: "1980-02-29",
           lastName: "LASTNAME",
           firstName: "FIRSTNAME",
-          handle: "changed-handle",
+          handle: handle,
         }),
       );
       const updateConsumerResponse = (await ConsumerService.updateConsumer({
@@ -535,7 +540,7 @@ describe.skip("Consumers", () => {
           dateOfBirth: "1980-02-29",
           lastName: "LASTNAME",
           firstName: "FIRSTNAME",
-          handle: "changed-handle",
+          handle: handle,
         },
       })) as ConsumerDTO & ResponseStatus;
       expect(updateConsumerResponse.__status).toBe(200);
@@ -552,12 +557,12 @@ describe.skip("Consumers", () => {
       expect(getConsumerResponse.dateOfBirth).toBe("1980-02-29");
       expect(getConsumerResponse.firstName).toBe("FIRSTNAME");
       expect(getConsumerResponse.lastName).toBe("LASTNAME");
-      expect(getConsumerResponse.handle).toBe("changed-handle");
+      expect(getConsumerResponse.handle).toBe(handle);
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
-      expect(getConsumerResponse.address).toBeUndefined();
+      expect(getConsumerResponse.address).toBeNull();
     });
 
     it("should updates 'address' if Consumer identity calls this API", async () => {
@@ -575,6 +580,8 @@ describe.skip("Consumers", () => {
             streetLine2: "Street Line 2",
             countryCode: "US",
             postalCode: "712356",
+            city: "irvene",
+            regionCode: "CA",
           },
         }),
       );
@@ -588,6 +595,8 @@ describe.skip("Consumers", () => {
             streetLine2: "Street Line 2",
             countryCode: "US",
             postalCode: "712356",
+            city: "irvene",
+            regionCode: "CA",
           },
         },
       })) as ConsumerDTO & ResponseStatus;
@@ -607,18 +616,20 @@ describe.skip("Consumers", () => {
         streetLine2: "Street Line 2",
         countryCode: "US",
         postalCode: "712356",
+        city: "irvene",
+        regionCode: "CA",
       });
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.paymentMethods).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
-      expect(getConsumerResponse.firstName).toBeUndefined();
-      expect(getConsumerResponse.lastName).toBeUndefined();
-      expect(getConsumerResponse.dateOfBirth).toBeUndefined();
+      expect(getConsumerResponse.firstName).toBeNull();
+      expect(getConsumerResponse.lastName).toBeNull();
+      expect(getConsumerResponse.dateOfBirth).toBeNull();
     });
   });
 
-  describe("POST /consumers/paymentmethods", () => {
+  describe.skip("POST /consumers/paymentmethods", () => {
     // it("should return 401 if not logged in as any identity", async () => {
     //   const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/consumers/paymentmethods", JSON.stringify({}));
     //   const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
@@ -690,19 +701,16 @@ describe.skip("Consumers", () => {
         }),
       );
 
-      await patchConsumer(
-        {
-          email: consumerEmail,
-          address: {
-            streetLine1: "123 main st",
-            countryCode: "US",
-            city: "irvene",
-            regionCode: "CA",
-            postalCode: "123456",
-          },
+      await patchConsumer({
+        email: consumerEmail,
+        address: {
+          streetLine1: "123 main st",
+          countryCode: "US",
+          city: "irvene",
+          regionCode: "CA",
+          postalCode: "123456",
         },
-        "",
-      );
+      });
       const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
         xNobaApiKey: TEST_API_KEY,
         xNobaSignature: signature,
@@ -740,9 +748,9 @@ describe.skip("Consumers", () => {
       expect(getConsumerResponse.cryptoWallets).toHaveLength(0);
       expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("NotSubmitted");
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
-      expect(getConsumerResponse.firstName).toBeUndefined();
-      expect(getConsumerResponse.lastName).toBeUndefined();
-      expect(getConsumerResponse.dateOfBirth).toBeUndefined();
+      expect(getConsumerResponse.firstName).toBeNull();
+      expect(getConsumerResponse.lastName).toBeNull();
+      expect(getConsumerResponse.dateOfBirth).toBeNull();
     });
 
     it("should allow addition of payment method when cardName is not provided", async () => {
@@ -750,19 +758,16 @@ describe.skip("Consumers", () => {
       const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
-      await patchConsumer(
-        {
-          email: consumerEmail,
-          address: {
-            streetLine1: "123 main st",
-            countryCode: "US",
-            city: "irvene",
-            regionCode: "CA",
-            postalCode: "123456",
-          },
+      await patchConsumer({
+        email: consumerEmail,
+        address: {
+          streetLine1: "123 main st",
+          countryCode: "US",
+          city: "irvene",
+          regionCode: "CA",
+          postalCode: "123456",
         },
-        "",
-      );
+      });
 
       let signature = computeSignature(
         TEST_TIMESTAMP,
@@ -813,19 +818,16 @@ describe.skip("Consumers", () => {
       const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
-      await patchConsumer(
-        {
-          email: consumerEmail,
-          address: {
-            streetLine1: "123 main st",
-            countryCode: "US",
-            city: "irvene",
-            regionCode: "CA",
-            postalCode: "123456",
-          },
+      await patchConsumer({
+        email: consumerEmail,
+        address: {
+          streetLine1: "123 main st",
+          countryCode: "US",
+          city: "irvene",
+          regionCode: "CA",
+          postalCode: "123456",
         },
-        "",
-      );
+      });
 
       let signature = computeSignature(
         TEST_TIMESTAMP,

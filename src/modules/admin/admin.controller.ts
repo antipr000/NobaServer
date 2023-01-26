@@ -18,7 +18,7 @@ import {
 import { AdminService } from "./admin.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { AdminId } from "../auth/roles.decorator";
+import { AdminId, Roles } from "../auth/roles.decorator";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -48,7 +48,9 @@ import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { AddNobaAdminDTO } from "./dto/AddNobaAdminDTO";
 import { ExchangeRateService } from "../common/exchangerate.service";
 import { ExchangeRateDTO } from "../common/dto/ExchangeRateDTO";
+import { Role } from "../auth/role.enum";
 
+@Roles(Role.NOBA_ADMIN)
 @Controller("v1/admins")
 @ApiBearerAuth("JWT-auth")
 @ApiTags("Admin")
@@ -246,14 +248,14 @@ export class AdminController {
   ): Promise<ExchangeRateDTO[]> {
     const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin)) {
-      throw new ForbiddenException(`User is forbidden from calling this API.`);
+      throw new ForbiddenException("User is forbidden from calling this API.");
     }
 
     if (exchangeRate.bankRate === 0 || exchangeRate.nobaRate === 0) {
       throw new BadRequestException("Exchange rate cannot be zero");
     }
 
-    const insertedExchangeRates = new Array();
+    const insertedExchangeRates = [];
 
     const savedExchangeRate: ExchangeRateDTO = await this.exchangeRateService.createExchangeRate(exchangeRate);
     if (savedExchangeRate == null) {

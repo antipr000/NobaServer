@@ -54,7 +54,7 @@ import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
 import { IDVerificationURLResponseDTO, IDVerificationURLRequestLocale } from "./dto/IDVerificationRequestURLDTO";
 import { AuthUser } from "../auth/auth.decorator";
 
-@Roles(Role.User)
+@Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
 @Controller("v1/verify")
 @ApiTags("Verification")
@@ -246,7 +246,7 @@ export class VerificationController {
   }
 }
 
-@Roles(Role.User)
+@Roles(Role.CONSUMER)
 @Public()
 @Controller("v1/verify/webhook")
 @ApiTags("VerificationWebhooks")

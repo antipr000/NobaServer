@@ -1,4 +1,4 @@
-import { ExecutionContext, Inject, Injectable } from "@nestjs/common";
+import { ExecutionContext, ForbiddenException, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { Reflector } from "@nestjs/core";
 import { Observable } from "rxjs";
@@ -11,6 +11,11 @@ import { ExtractJwt } from "passport-jwt";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { Consumer } from "../consumer/domain/Consumer";
+import { Admin } from "../admin/domain/Admin";
+import { Role } from "./role.enum";
+import { ROLES_KEY } from "./roles.decorator";
+import { AuthenticatedUser } from "./domain/AuthenticatedUser";
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard("jwt") {
@@ -76,5 +81,37 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     }
 
     return super.canActivate(context);
+  }
+
+  handleRequest<TUser = AuthenticatedUser>(err: any, user: TUser, info: any, context: any, status?: any): TUser {
+    const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (!requiredRoles) {
+      return user;
+    }
+
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    const requestingUser = (user as AuthenticatedUser).entity;
+    if (requiredRoles.includes(Role.CONSUMER)) {
+      if (requestingUser instanceof Consumer) {
+        return user;
+      }
+      throw new ForbiddenException();
+    }
+
+    if (requiredRoles.includes(Role.NOBA_ADMIN)) {
+      if (requestingUser instanceof Admin) {
+        return user;
+      }
+      throw new ForbiddenException();
+    }
+
+    throw new ForbiddenException();
   }
 }

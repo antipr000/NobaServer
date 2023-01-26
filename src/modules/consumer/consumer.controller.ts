@@ -58,7 +58,7 @@ import { Employee } from "../employee/domain/Employee";
 import { UpdateEmployerAllocationDTO } from "./dto/UpdateEmployerAllocationDTO";
 import { OptionalLimitQueryDTO } from "../common/dto/OptionalLimitQueryDTO";
 
-@Roles(Role.User)
+@Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
 @Controller("v1/consumers")
 @ApiTags("Consumer")
@@ -100,6 +100,12 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   async isHandleAvailable(@Query("handle") handle: string, @AuthUser() consumer: Consumer): Promise<ConsumerHandleDTO> {
+    if (!handle) {
+      return {
+        isAvailable: false,
+        handle: handle,
+      };
+    }
     return {
       isAvailable: await this.consumerService.isHandleAvailable(handle.toLocaleLowerCase()),
       handle: handle.toLocaleLowerCase(),

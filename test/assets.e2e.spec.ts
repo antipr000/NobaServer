@@ -29,7 +29,7 @@ import { ConfigurationsDTO } from "./api_client/models/ConfigurationsDTO";
 
 const currencyIconBasePath = "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto";
 
-describe.skip("CryptoCurrencies & Locations", () => {
+describe("CryptoCurrencies & Locations", () => {
   jest.setTimeout(20000);
 
   //let mongoServer: MongoMemoryServer;
@@ -40,22 +40,13 @@ describe.skip("CryptoCurrencies & Locations", () => {
   beforeAll(async () => {
     const port = process.env.PORT;
 
-    // Spin up an in-memory mongodb server
-    //mongoServer = await MongoMemoryServer.create();
-    //mongoUri = mongoServer.getUri();
-
-    /*const environmentVaraibles = {
-      MONGO_URI: mongoUri,
-    };*/
     app = await bootstrap({});
     await app.listen(port);
     TEST_TIMESTAMP = new Date().getTime().toString();
   });
 
   afterAll(async () => {
-    //await mongoose.disconnect();
     await app.close();
-    //await mongoServer.stop();
   });
 
   afterEach(async () => {

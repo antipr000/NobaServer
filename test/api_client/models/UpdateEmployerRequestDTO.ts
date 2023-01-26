@@ -2,11 +2,8 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type RegisterEmployerRequestDTO = {
-  name: string;
-  logoURI: string;
-  referralID: string;
-  bubbleID: string;
+export type UpdateEmployerRequestDTO = {
+  logoURI?: string;
   leadDays?: number;
   payrollDays?: Array<string>;
 };

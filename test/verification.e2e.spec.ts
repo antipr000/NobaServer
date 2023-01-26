@@ -31,7 +31,7 @@ import { FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE } from "../src/modules/ver
 import crypto_ts from "crypto";
 import { IntegrationTestUtility } from "./TestUtils";
 
-describe.skip("Verification", () => {
+describe("Verification", () => {
   jest.setTimeout(20000);
 
   let integrationTestUtils: IntegrationTestUtility;
@@ -87,6 +87,7 @@ describe.skip("Verification", () => {
       lastName: "Doe",
       address: {
         streetLine1: "123 main st",
+        streetLine2: "second line",
         countryCode: "IN",
         city: "hyderabad",
         regionCode: "HY",
@@ -180,7 +181,7 @@ describe.skip("Verification", () => {
       expect(deviceVerificationResponse.__status).toBe(404);
     });
 
-    it("should return device verification result", async () => {
+    it.skip("should return device verification result", async () => {
       const sessionKey = "xMjzKsXHebwgQccy7MbPE";
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/verify/device/result", JSON.stringify({}));

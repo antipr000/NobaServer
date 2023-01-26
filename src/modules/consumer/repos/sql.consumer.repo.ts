@@ -3,7 +3,7 @@ import { Result } from "../../../core/logic/Result";
 import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { IConsumerRepo } from "./consumer.repo";
 import { PrismaService } from "../../../infraproviders/PrismaService";
-import { PaymentMethodStatus, WalletStatus } from "@prisma/client";
+import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, Prisma, WalletStatus } from "@prisma/client";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
 import { ConsumerRepoMapper } from "../mappers/ConsumerRepoMapper";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
@@ -83,30 +83,87 @@ export class SQLConsumerRepo implements IConsumerRepo {
   }
 
   async findConsumersByPublicInfo(publicInfoSearch: string, limit: number): Promise<Result<Consumer[]>> {
+    publicInfoSearch = publicInfoSearch.trim();
+
+    const handleOnly = publicInfoSearch.startsWith("$");
+    const nameOnly = publicInfoSearch.indexOf(" ") > -1;
+
+    let handle = publicInfoSearch;
+    let firstName = publicInfoSearch;
+    let lastName = publicInfoSearch;
+
+    if (handleOnly) {
+      handle = publicInfoSearch.substring(1).trim();
+    }
+
+    if (nameOnly) {
+      firstName = publicInfoSearch.split(" ")[0].trim();
+      lastName = publicInfoSearch.split(" ")[1].trim();
+    }
+
+    // If search term starts with $, sort by handle. Otherwise sort by last name.
+    let order: Prisma.ConsumerOrderByWithRelationInput = handleOnly ? { handle: "asc" } : { lastName: "asc" };
+
+    const query: Prisma.ConsumerWhereInput = {
+      isLocked: false,
+      isDisabled: false,
+      verificationData: {
+        kycCheckStatus: KYCStatus.APPROVED,
+        documentVerificationStatus: {
+          in: [DocumentVerificationStatus.APPROVED, DocumentVerificationStatus.NOT_REQUIRED],
+        },
+      },
+    };
+
+    // If a space is provided, it is expected that the firstName and lastName match the terms on either side of the space, so these conditions should not be "OR'd"
+    if (nameOnly) {
+      query.AND = [
+        {
+          firstName: {
+            contains: firstName,
+            mode: "insensitive",
+          },
+        },
+        {
+          lastName: {
+            contains: lastName,
+            mode: "insensitive",
+          },
+        },
+      ];
+    } else {
+      query.OR = [
+        {
+          handle: {
+            contains: handle,
+            mode: "insensitive",
+          },
+        },
+      ];
+
+      if (!handleOnly) {
+        query.OR = [
+          ...query.OR,
+          {
+            firstName: {
+              contains: firstName,
+              mode: "insensitive",
+            },
+          },
+          {
+            lastName: {
+              contains: lastName,
+              mode: "insensitive",
+            },
+          },
+        ];
+      }
+    }
+
     try {
       const consumers = await this.prisma.consumer.findMany({
-        where: {
-          OR: [
-            {
-              handle: {
-                contains: publicInfoSearch,
-                mode: "insensitive",
-              },
-            },
-            {
-              firstName: {
-                contains: publicInfoSearch,
-                mode: "insensitive",
-              },
-            },
-            {
-              lastName: {
-                contains: publicInfoSearch,
-                mode: "insensitive",
-              },
-            },
-          ],
-        },
+        where: query,
+        orderBy: order,
         take: limit,
       });
 

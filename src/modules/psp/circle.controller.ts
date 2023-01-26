@@ -9,7 +9,7 @@ import { Consumer } from "../consumer/domain/Consumer";
 import { CircleService } from "./circle.service";
 import { AuthUser } from "../auth/auth.decorator";
 
-@Roles(Role.User)
+@Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
 @Controller("v1/circle") // This defines the path prefix
 @ApiTags("Consumer") // This determines where it shows up in the swagger docs. Seems fair for this to appear in the Consumer grouping.

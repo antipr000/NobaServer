@@ -112,8 +112,8 @@ export class VerificationService {
     const result: ConsumerVerificationResult = this.idvProvider.processKycVerificationWebhookResult(requestBody);
     if (result.status === KYCStatus.APPROVED || result.status === KYCStatus.REJECTED) {
       const consumer = await this.consumerService.getConsumer(consumerID);
-      const newConsumerData: ConsumerProps = {
-        ...consumer.props,
+      const newConsumerData: Partial<ConsumerProps> = {
+        id: consumer.props.id,
         verificationData: {
           ...consumer.props.verificationData,
           kycCheckStatus: result.status,
