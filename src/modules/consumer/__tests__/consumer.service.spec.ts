@@ -1088,10 +1088,13 @@ describe("ConsumerService", () => {
       when(otpService.saveOTP(anyString(), anyString(), anyNumber())).thenResolve();
       await consumerService.sendOtpToPhone("123", phone);
       verify(
-        notificationService.sendNotification(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT, {
-          phone: phone,
-          otp: "123",
-        }),
+        notificationService.sendNotification(
+          NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT,
+          deepEqual({
+            phone: phone,
+            otp: "111111",
+          }),
+        ),
       ).once();
       verify(otpService.saveOTP(phone, IdentityType.CONSUMER, 111111)).once();
     });

@@ -17,7 +17,7 @@ describe("SMSEventHandler", () => {
 
   jest.setTimeout(30000);
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     currencyService = getMockCurrencyServiceWithDefaults();
     smsClient = getMockSMSClientWithDefaults();
 

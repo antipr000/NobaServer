@@ -44,7 +44,7 @@ describe("EmailEventHandler", () => {
 
   jest.setTimeout(30000);
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     currencyService = getMockCurrencyServiceWithDefaults();
     emailClient = getMockEmailClientWithDefaults();
 
