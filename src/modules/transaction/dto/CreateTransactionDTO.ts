@@ -32,5 +32,5 @@ export class InitiateTransactionDTO {
   memo?: string;
 
   @ApiPropertyOptional({ type: WithdrawalDTO })
-  withdrawlData?: WithdrawalDTO;
+  withdrawalData?: WithdrawalDTO;
 }
