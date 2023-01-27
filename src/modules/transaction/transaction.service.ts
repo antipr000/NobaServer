@@ -119,6 +119,10 @@ export class TransactionService {
     }
 
     const savedTransaction: Transaction = await this.transactionRepo.createTransaction(transaction);
+    this.addWithdrawalDetails({
+      transactionID: savedTransaction.id,
+      ...transactionDetails.withdrawlData,
+    });
 
     // Perform sanctions check
     try {
