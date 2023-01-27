@@ -199,6 +199,7 @@ describe("TransactionServiceTests", () => {
       when(consumerService.getActiveConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerService.getActiveConsumer(consumer2.props.id)).thenResolve(consumer2);
       when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
+      when(withdrawalDetailsRepo.addWithdrawalDetails(anything())).thenResolve(null);
       when(workflowFactory.getWorkflowImplementation(WorkflowName.WALLET_TRANSFER)).thenReturn(
         instance(walletTransferImpl),
       );
