@@ -255,6 +255,7 @@ export class Sardine implements IDVProvider {
     const usdAmount = transaction.creditCurrency == Currency.USD ? transaction.creditAmount : transaction.debitAmount;
 
     let actionType;
+    let checkpoints = ["aml", "payment"];
     switch (transaction.workflowName) {
       case WorkflowName.WALLET_TRANSFER:
         actionType = "transfer";
@@ -271,10 +272,12 @@ export class Sardine implements IDVProvider {
       case WorkflowName.WALLET_WITHDRAWAL:
         actionType = "withdrawal";
         debitSidePaymentMethod = consumerPaymentMethod; // For a withdrawal, set sender to the circle wallet
+        // TODO (CRYPTO-622): populate bank info here in creditSidePaymentMethod
         break;
       case WorkflowName.WALLET_DEPOSIT:
         actionType = "deposit";
         creditSidePaymentMethod = consumerPaymentMethod; // For a deposit, set recipient to the circle wallet
+        checkpoints.push("ach");
         break;
       default:
         // This should never happen
@@ -302,7 +305,7 @@ export class Sardine implements IDVProvider {
           ...(creditSidePaymentMethod && { paymentMethod: creditSidePaymentMethod }),
         },
       },
-      checkpoints: ["aml", "payment"],
+      checkpoints: checkpoints,
     };
 
     try {
