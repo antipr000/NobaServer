@@ -134,8 +134,6 @@ nobaWorkflow:
   awsSecretNameForTaskQueue: "PROD_NOBA_WORKFLOW_TASK_QUEUE"
   clientUrl: ""
   awsSecretNameForClientUrl: "PROD_NOBA_WORKFLOW_CLIENT_URL"
-  # TODO: These secrets don't exist yet - need to create the env then set the secrets
-  # and namespace correctly here and in NobaWorkflow config. https://noba.atlassian.net/browse/CRYPTO-531
   awsSecretForTemporalCloudCertificate: "PROD_TEMPORAL_CLOUD_CERTIFICATE"
   awsSecretForTemporalCloudPrivateKey: "PROD_TEMPORAL_CLOUD_PRIVATE_KEY"
   connectionTimeoutInMs: 1000
