@@ -8,22 +8,22 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { DEPENDENCY_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { DependencyConfigs, EmailClient, SMSClient } from "../../config/configtypes/DependencyConfigs";
-import { StubEmailService } from "./emails/stub.email.service";
-import { SendgridEmailService } from "./emails/sendgrid.email.service";
+import { StubEmailClient } from "./emails/stub.email.client";
+import { SendgridEmailClient } from "./emails/sendgrid.email.client";
 import { SMSEventHandler } from "./sms.event.handler";
-import { StubSMSService } from "./sms/stub.sms.service";
-import { TwilioSMSService } from "./sms/twilio.sms.service";
+import { StubSMSClient } from "./sms/stub.sms.client";
+import { TwilioSMSClient } from "./sms/twilio.sms.service";
 
 // This is made to ensure that the "Sendgrid" quota is not utilised in testing environments.
 export const EmailProvider: Provider = {
-  provide: "EmailService",
+  provide: "EmailClient",
   useFactory: async (customConfigService: CustomConfigService, logger: Logger) => {
     switch (customConfigService.get<DependencyConfigs>(DEPENDENCY_CONFIG_KEY).emailClient) {
       case EmailClient.STUB:
-        return new StubEmailService(logger);
+        return new StubEmailClient(logger);
 
       case EmailClient.SENDGRID:
-        return new SendgridEmailService(customConfigService, logger);
+        return new SendgridEmailClient(customConfigService, logger);
 
       default:
         throw Error("Unexpected Email client.");
@@ -33,14 +33,14 @@ export const EmailProvider: Provider = {
 };
 
 export const SMSProvider: Provider = {
-  provide: "SMSService",
+  provide: "SMSClient",
   useFactory: async (customConfigService: CustomConfigService, logger: Logger) => {
     switch (customConfigService.get<DependencyConfigs>(DEPENDENCY_CONFIG_KEY).smsClient) {
       case SMSClient.STUB:
-        return new StubSMSService(logger);
+        return new StubSMSClient(logger);
 
       case SMSClient.TWILIO:
-        return new TwilioSMSService(customConfigService);
+        return new TwilioSMSClient(customConfigService);
 
       default:
         throw Error("Unexpected Email client.");

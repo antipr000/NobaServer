@@ -5,11 +5,11 @@ import { SENDGRID_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { Logger } from "winston";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { EmailService } from "./email.service";
+import { EmailClient } from "./email.client";
 import { EmailRequest } from "../domain/EmailTypes";
 
 @Injectable()
-export class SendgridEmailService implements EmailService {
+export class SendgridEmailClient implements EmailClient {
   constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
     const sendGridApiKey = configService.get<SendGridConfigs>(SENDGRID_CONFIG_KEY).apiKey;
     sgMail.setApiKey(sendGridApiKey);

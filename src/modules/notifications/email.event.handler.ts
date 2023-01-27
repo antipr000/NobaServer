@@ -20,7 +20,7 @@ import { SendCardAddedEvent } from "./events/SendCardAddedEvent";
 import { SendCardAdditionFailedEvent } from "./events/SendCardAdditionFailedEvent";
 import { SendCardDeletedEvent } from "./events/SendCardDeletedEvent";
 import { SendHardDeclineEvent } from "./events/SendHardDeclineEvent";
-import { EmailService } from "./emails/email.service";
+import { EmailClient } from "./emails/email.client";
 import { SendDepositCompletedEvent } from "./events/SendDepositCompletedEvent";
 import { SendWithdrawalCompletedEvent } from "./events/SendWithdrawalCompletedEvent";
 import { SendDepositInitiatedEvent } from "./events/SendDepositInitiatedEvent";
@@ -39,10 +39,7 @@ export class EmailEventHandler {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  constructor(
-    configService: CustomConfigService,
-    @Inject("EmailService") private readonly emailService: EmailService,
-  ) {}
+  constructor(configService: CustomConfigService, @Inject("EmailClient") private readonly emailClient: EmailClient) {}
 
   @OnEvent(`email.${NotificationEventType.SEND_OTP_EVENT}`)
   public async sendOtp(payload: SendOtpEvent) {
@@ -57,7 +54,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT}`)
@@ -74,7 +71,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_WELCOME_MESSAGE_EVENT}`)
@@ -89,7 +86,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_KYC_APPROVED_US_EVENT}`)
@@ -104,7 +101,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT}`)
@@ -119,7 +116,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_KYC_DENIED_EVENT}`)
@@ -135,7 +132,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT}`)
@@ -154,7 +151,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT}`)
@@ -169,7 +166,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT}`)
@@ -184,7 +181,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT}`)
@@ -199,7 +196,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_CARD_ADDED_EVENT}`)
@@ -217,7 +214,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_CARD_ADDITION_FAILED_EVENT}`)
@@ -234,7 +231,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_CARD_DELETED_EVENT}`)
@@ -252,7 +249,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   // TODO(jira/CRYPTO-604): Fix the parameters once template is ready
@@ -268,7 +265,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT}`)
@@ -296,7 +293,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT}`)
@@ -326,7 +323,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_FAILED_EVENT}`)
@@ -354,7 +351,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT}`)
@@ -382,7 +379,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT}`)
@@ -413,7 +410,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT}`)
@@ -443,7 +440,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT}`)
@@ -464,7 +461,7 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_HARD_DECLINE_EVENT}`)
@@ -486,6 +483,6 @@ export class EmailEventHandler {
       },
     };
 
-    await this.emailService.sendEmail(msg);
+    await this.emailClient.sendEmail(msg);
   }
 }

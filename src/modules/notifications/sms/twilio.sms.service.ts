@@ -1,4 +1,4 @@
-import { SMSService } from "./sms.service";
+import { SMSClient } from "./sms.client";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { Twilio } from "twilio";
 import { TwilioConfigs } from "../../../config/configtypes/TwilioConfigs";
@@ -6,7 +6,7 @@ import { TWILIO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { Injectable } from "@nestjs/common";
 
 @Injectable()
-export class TwilioSMSService implements SMSService {
+export class TwilioSMSClient implements SMSClient {
   private readonly twilioClient;
   private readonly twilioConfigs: TwilioConfigs;
 
