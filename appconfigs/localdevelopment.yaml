@@ -63,6 +63,8 @@ noba:
   privateBearerToken: "gQYtQsKuuqELX3qw0Yy+gcyhlcwYmLMyPKHtVl8wUY6bXaXu41YHn1hSCLSAtZD4RAl9dlRBPazwcwyOVXHlSA=="
   awsSecretKeyForPrivateBearerToken: ""
   awsSecretKeyForAppSecretKey: ""
+  bubbleBearerToken: ""
+  awsSecretKeyForBubbleBearerToken: "TEST_NOBA_BUBBLE_BEARER_TOKEN"
   transaction:
     spreadPercentage: "0.029"
     awsSecretKeyForSpreadPercentage: ""

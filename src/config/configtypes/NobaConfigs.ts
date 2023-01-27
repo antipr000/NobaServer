@@ -14,6 +14,8 @@ import {
   AWS_SECRET_KEY_FOR_NOBA_APP_SECRET_KEY,
   AWS_SECRET_KEY_FOR_NOBA_PRIVATE_BEARER_TOKEN,
   NOBA_PRIVATE_BEARER_TOKEN,
+  NOBA_BUBBLE_BEARER_TOKEN,
+  AWS_SECRET_KEY_FOR_NOBA_BUBBLE_BEARER_TOKEN,
 } from "../ConfigurationUtils";
 
 export interface NobaConfigs {
@@ -22,6 +24,8 @@ export interface NobaConfigs {
   [AWS_SECRET_KEY_FOR_NOBA_PRIVATE_BEARER_TOKEN]: string;
   [NOBA_PRIVATE_BEARER_TOKEN]: string;
   [NOBA_TRANSACTION_CONFIG_KEY]: NobaTransactionConfigs;
+  [NOBA_BUBBLE_BEARER_TOKEN]: string;
+  [AWS_SECRET_KEY_FOR_NOBA_BUBBLE_BEARER_TOKEN]: string;
 }
 
 export interface NobaTransactionConfigs {

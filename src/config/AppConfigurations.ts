@@ -127,6 +127,8 @@ import {
   BUBBLE_BASE_URL,
   BUBBLE_AWS_SECRET_KEY_FOR_BEARER_TOKEN,
   BUBBLE_BEARER_TOKEN,
+  NOBA_BUBBLE_BEARER_TOKEN,
+  AWS_SECRET_KEY_FOR_NOBA_BUBBLE_BEARER_TOKEN,
 } from "./ConfigurationUtils";
 import fs from "fs";
 
@@ -537,9 +539,10 @@ async function configureNobaParameters(
     const errorMessage =
       "\n'Noba' configurations are required. Please configure the Noba environment variables " +
       "in 'appconfigs/<ENV>.yaml' file.\n" +
-      `You should configure the keys "${NOBA_CONFIG_KEY}.${NOBA_TRANSACTION_CONFIG_KEY}" AND ` +
-      `("${NOBA_APP_SECRET_KEY}" or "${AWS_SECRET_KEY_FOR_NOBA_APP_SECRET_KEY}") AND ` +
-      `("${NOBA_PRIVATE_BEARER_TOKEN}" or "${AWS_SECRET_KEY_FOR_NOBA_PRIVATE_BEARER_TOKEN}") AND ` +
+      `You should configure the keys "${NOBA_CONFIG_KEY}.${NOBA_TRANSACTION_CONFIG_KEY}", ` +
+      `("${NOBA_APP_SECRET_KEY}" or "${AWS_SECRET_KEY_FOR_NOBA_APP_SECRET_KEY}"), ` +
+      `("${NOBA_BUBBLE_BEARER_TOKEN}" or "${AWS_SECRET_KEY_FOR_NOBA_BUBBLE_BEARER_TOKEN}"), ` +
+      `("${NOBA_PRIVATE_BEARER_TOKEN}" or "${AWS_SECRET_KEY_FOR_NOBA_PRIVATE_BEARER_TOKEN}"), ` +
       "and populate " +
       `("${SPREAD_PERCENTAGE}" or "${AWS_SECRET_KEY_FOR_SPREAD_PERCENTAGE}"), ` +
       `("${DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE}" or "${AWS_SECRET_KEY_FOR_DYNAMIC_CREDIT_CARD_FEE_PERCENTAGE}"), ` +
@@ -553,6 +556,10 @@ async function configureNobaParameters(
   nobaConfigs.privateBearerToken = await getParameterValue(
     nobaConfigs.awsSecretKeyForPrivateBearerToken,
     nobaConfigs.privateBearerToken,
+  );
+  nobaConfigs.bubbleBearerToken = await getParameterValue(
+    nobaConfigs.awsSecretKeyForBubbleBearerToken,
+    nobaConfigs.bubbleBearerToken,
   );
 
   nobaConfigs.transaction.dynamicCreditCardFeePercentage = Number(

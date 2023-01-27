@@ -75,8 +75,10 @@ export const SARDINE_URI = "sardineBaseUri";
 export const NOBA_CONFIG_KEY = "noba";
 export const NOBA_APP_SECRET_KEY = "appSecretKey";
 export const NOBA_PRIVATE_BEARER_TOKEN = "privateBearerToken";
+export const NOBA_BUBBLE_BEARER_TOKEN = "bubbleBearerToken";
 export const AWS_SECRET_KEY_FOR_NOBA_PRIVATE_BEARER_TOKEN = "awsSecretKeyForPrivateBearerToken";
 export const AWS_SECRET_KEY_FOR_NOBA_APP_SECRET_KEY = "awsSecretKeyForAppSecretKey";
+export const AWS_SECRET_KEY_FOR_NOBA_BUBBLE_BEARER_TOKEN = "awsSecretKeyForBubbleBearerToken";
 
 export const NOBA_TRANSACTION_CONFIG_KEY = "transaction";
 export const SPREAD_PERCENTAGE = "spreadPercentage";

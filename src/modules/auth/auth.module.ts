@@ -14,6 +14,7 @@ import { AdminModule } from "../admin/admin.module";
 import { HeaderValidationService } from "./header.validation.service";
 import { NotificationsModule } from "../notifications/notification.module";
 import { SQLTokenRepo } from "./repo/sql.token.repo";
+import { BubbleWebhookAuthGuard } from "./bubble.webhooks.auth.guard";
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { SQLTokenRepo } from "./repo/sql.token.repo";
     },
     UserAuthService,
     AdminAuthService,
+    BubbleWebhookAuthGuard,
   ],
   controllers: [AuthController],
   exports: [HeaderValidationService],
