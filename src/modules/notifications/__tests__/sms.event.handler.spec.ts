@@ -46,7 +46,7 @@ describe("SMSEventHandler", () => {
     when(smsClient.sendSMS(anyString(), anyString(), anything())).thenResolve();
   });
 
-  it("should call smsService for SendOtp event", async () => {
+  it("should call smsClient for SendOtp event", async () => {
     const payload = new SendOtpEvent({
       email: "fake+user@noba.com",
       phone: "+1234567890",
@@ -60,11 +60,29 @@ describe("SMSEventHandler", () => {
 
     const [recipientPhoneNumber, templateKey, body] = capture(smsClient.sendSMS).last();
     expect(recipientPhoneNumber).toBe(payload.phone);
-    expect(templateKey).toBe("template_send_otp");
+    expect(templateKey).toBe("template_send_otp_en");
     expect(body).toStrictEqual({ otp: "123456" });
   });
 
-  it("should call eventHandler with SendWalletUpdateVerificationCode event", async () => {
+  it("should call smsClient for SendOtp event with spanish template", async () => {
+    const payload = new SendOtpEvent({
+      email: "fake+user@noba.com",
+      phone: "+1234567890",
+      locale: "es",
+      otp: "123456",
+      name: "Fake",
+      handle: "fake-handle",
+    });
+
+    await eventHandler.sendLoginSMS(payload);
+
+    const [recipientPhoneNumber, templateKey, body] = capture(smsClient.sendSMS).last();
+    expect(recipientPhoneNumber).toBe(payload.phone);
+    expect(templateKey).toBe("template_send_otp_es");
+    expect(body).toStrictEqual({ otp: "123456" });
+  });
+
+  it("should call smsClient with SendWalletUpdateVerificationCode event", async () => {
     const payload = new SendWalletUpdateVerificationCodeEvent({
       email: "fake+user@noba.com",
       phone: "+1234567890",
@@ -81,11 +99,11 @@ describe("SMSEventHandler", () => {
 
     const [recipientPhoneNumber, templateKey, body] = capture(smsClient.sendSMS).last();
     expect(recipientPhoneNumber).toBe(payload.phone);
-    expect(templateKey).toBe("template_send_wallet_verification_code");
+    expect(templateKey).toBe("template_send_wallet_verification_code_en");
     expect(body).toStrictEqual({ otp: "123456" });
   });
 
-  it("should call eventHandler with SendPhoneVerificationCode event", async () => {
+  it("should call smsClient with SendPhoneVerificationCode event", async () => {
     const payload = new SendOtpEvent({
       email: undefined,
       phone: "+1234567890",
@@ -98,7 +116,7 @@ describe("SMSEventHandler", () => {
     await eventHandler.sendPhoneVerificationSMS(payload);
     const [recipientPhoneNumber, templateKey, body] = capture(smsClient.sendSMS).last();
     expect(recipientPhoneNumber).toBe(payload.phone);
-    expect(templateKey).toBe("template_send_phone_verification_code");
+    expect(templateKey).toBe("template_send_phone_verification_code_en");
     expect(body).toStrictEqual({ otp: "123456" });
   });
 });
