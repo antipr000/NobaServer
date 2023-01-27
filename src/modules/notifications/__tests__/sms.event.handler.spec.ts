@@ -1,7 +1,7 @@
 import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { anyString, capture, instance, when } from "ts-mockito";
+import { anyString, anything, capture, instance, when } from "ts-mockito";
 import { SendOtpEvent } from "../events/SendOtpEvent";
 import { SendWalletUpdateVerificationCodeEvent } from "../events/SendWalletUpdateVerificationCodeEvent";
 import { CurrencyService } from "../../common/currency.service";
@@ -43,7 +43,7 @@ describe("SMSEventHandler", () => {
     }).compile();
 
     eventHandler = app.get<SMSEventHandler>(SMSEventHandler);
-    when(smsClient.sendSMS(anyString(), anyString())).thenResolve();
+    when(smsClient.sendSMS(anyString(), anyString(), anything())).thenResolve();
   });
 
   it("should call smsService for SendOtp event", async () => {
@@ -58,9 +58,10 @@ describe("SMSEventHandler", () => {
 
     await eventHandler.sendLoginSMS(payload);
 
-    const [recipientPhoneNumber, body] = capture(smsClient.sendSMS).last();
+    const [recipientPhoneNumber, templateKey, body] = capture(smsClient.sendSMS).last();
     expect(recipientPhoneNumber).toBe(payload.phone);
-    expect(body).toBe(`${payload.otp} is your one-time password for Noba login.`);
+    expect(templateKey).toBe("template_send_otp");
+    expect(body).toStrictEqual({ otp: "123456" });
   });
 
   it("should call eventHandler with SendWalletUpdateVerificationCode event", async () => {
@@ -78,9 +79,10 @@ describe("SMSEventHandler", () => {
 
     await eventHandler.sendWalletUpdateVerificationCodeSMS(payload);
 
-    const [recipientPhoneNumber, body] = capture(smsClient.sendSMS).last();
+    const [recipientPhoneNumber, templateKey, body] = capture(smsClient.sendSMS).last();
     expect(recipientPhoneNumber).toBe(payload.phone);
-    expect(body).toBe(`${payload.otp} is your wallet verification code`);
+    expect(templateKey).toBe("template_send_wallet_verification_code");
+    expect(body).toStrictEqual({ otp: "123456" });
   });
 
   it("should call eventHandler with SendPhoneVerificationCode event", async () => {
@@ -94,8 +96,9 @@ describe("SMSEventHandler", () => {
     });
 
     await eventHandler.sendPhoneVerificationSMS(payload);
-    const [recipientPhoneNumber, body] = capture(smsClient.sendSMS).last();
+    const [recipientPhoneNumber, templateKey, body] = capture(smsClient.sendSMS).last();
     expect(recipientPhoneNumber).toBe(payload.phone);
-    expect(body).toBe(`${payload.otp} is your one-time password to verify your phone number with Noba.`);
+    expect(templateKey).toBe("template_send_phone_verification_code");
+    expect(body).toStrictEqual({ otp: "123456" });
   });
 });

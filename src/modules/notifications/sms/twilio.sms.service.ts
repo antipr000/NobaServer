@@ -4,6 +4,7 @@ import { Twilio } from "twilio";
 import { TwilioConfigs } from "../../../config/configtypes/TwilioConfigs";
 import { TWILIO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { Injectable } from "@nestjs/common";
+import { TemplatePayload, smsTemplates } from "./templates.sms";
 
 @Injectable()
 export class TwilioSMSClient implements SMSClient {
@@ -16,11 +17,11 @@ export class TwilioSMSClient implements SMSClient {
     // console.log("print twilio configs", this.twilioConfigs);
   }
 
-  public async sendSMS(recipientPhoneNumber: string, smsBody: string) {
+  public async sendSMS(recipientPhoneNumber: string, templateKey: string, templatePayload: TemplatePayload) {
     await this.twilioClient.messages.create({
       from: this.twilioConfigs.fromPhoneNumber,
       to: recipientPhoneNumber,
-      body: smsBody,
+      body: smsTemplates[templateKey](templatePayload),
     });
   }
 }
