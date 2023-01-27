@@ -96,7 +96,7 @@ export class MonoClient {
         },
         phone: phone,
       },
-      redirect_url: "https://www.noba.com/",
+      redirect_url: "noba://AuthenticatedPrimaryScreen/activityView",
       reference: {
         editable: false,
         required: false,
