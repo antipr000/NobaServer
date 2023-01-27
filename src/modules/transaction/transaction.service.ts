@@ -28,6 +28,8 @@ import { WorkflowFactory } from "./factory/workflow.factory";
 import { IWithdrawalDetailsRepo } from "./repo/withdrawal.details.repo";
 import { InputWithdrawalDetails, WithdrawalDetails } from "./domain/WithdrawalDetails";
 import { ExchangeRateFlags } from "./domain/ExchangeRateFlags";
+import { DebitBankRequest, DebitBankResponse } from "./domain/Transaction";
+import { BankFactory } from "../psp/factory/bank.factory";
 
 @Injectable()
 export class TransactionService {
@@ -38,6 +40,7 @@ export class TransactionService {
     private readonly consumerService: ConsumerService,
     private readonly verificationService: VerificationService,
     private readonly transactionFactory: WorkflowFactory,
+    private readonly bankFactory: BankFactory,
   ) {}
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID: string): Promise<Transaction> {
@@ -121,6 +124,10 @@ export class TransactionService {
     }
 
     const savedTransaction: Transaction = await this.transactionRepo.createTransaction(transaction);
+    this.addWithdrawalDetails({
+      transactionID: savedTransaction.id,
+      ...transactionDetails.withdrawalData,
+    });
 
     // Perform sanctions check
     try {
@@ -285,6 +292,41 @@ export class TransactionService {
         ),
       }),
     };
+  }
+
+  async debitFromBank(request: DebitBankRequest): Promise<DebitBankResponse> {
+    const [transaction, withdrawal] = await Promise.all([
+      this.getTransactionByTransactionID(request.transactionID),
+      this.getWithdrawalDetails(request.transactionID),
+    ]);
+    if (!transaction) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: `Transaction not found: ${request.transactionID}`,
+      });
+    }
+    if (!withdrawal) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: `Withdrawal details not found for transactionID: ${request.transactionID}`,
+      });
+    }
+
+    const bank = this.bankFactory.getBankImplementation(request.bankName);
+    const debitBankResponse = await bank.debit({
+      amount: request.amount,
+      currency: request.currency,
+      consumerID: transaction.debitConsumerID,
+      transactionID: request.transactionID,
+      transactionRef: transaction.transactionRef,
+      accountNumber: withdrawal.accountNumber,
+      accountType: withdrawal.accountType,
+      bankCode: withdrawal.bankCode,
+      documentNumber: withdrawal.documentNumber,
+      documentType: withdrawal.documentType,
+    });
+
+    return debitBankResponse;
   }
 
   async getTransactionEvents(transactionID: string, includeInternalEvents: boolean): Promise<TransactionEvent[]> {

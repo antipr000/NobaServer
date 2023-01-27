@@ -53,12 +53,6 @@ checkout:
   apiUrl: "https://api.checkout.com"
   nobaWebhookUrl: "disabled"
 
-mongo:
-  awsSecretNameForUri: "PROD_DOCUMENT_DB_URI"
-  uri: "bogus-value"
-  sslEnabled: true
-  sslCAPath: rds-combined-ca-bundle.pem #bootstrapped in deploy scripts
-
 sardine:
   awsSecretNameForSardineClientID: "PROD_SARDINE_CLIENT_ID" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   awsSecretNameForSardineSecretKey: "PROD_SARDINE_SECRET"
@@ -73,6 +67,8 @@ noba:
   privateBearerToken: ""
   awsSecretKeyForPrivateBearerToken: "PROD_NOBA_PRIVATE_BEARER_TOKEN"
   awsSecretKeyForAppSecretKey: "PROD_NOBA_APP_SECRET"
+  bubbleBearerToken: ""
+  awsSecretKeyForBubbleBearerToken: "PROD_NOBA_BUBBLE_BEARER_TOKEN"
   transaction:
     spreadPercentage: ""
     awsSecretKeyForSpreadPercentage: "PROD_NOBA_SPREAD_PERCENTAGE"
@@ -138,8 +134,6 @@ nobaWorkflow:
   awsSecretNameForTaskQueue: "PROD_NOBA_WORKFLOW_TASK_QUEUE"
   clientUrl: ""
   awsSecretNameForClientUrl: "PROD_NOBA_WORKFLOW_CLIENT_URL"
-  # TODO: These secrets don't exist yet - need to create the env then set the secrets
-  # and namespace correctly here and in NobaWorkflow config. https://noba.atlassian.net/browse/CRYPTO-531
   awsSecretForTemporalCloudCertificate: "PROD_TEMPORAL_CLOUD_CERTIFICATE"
   awsSecretForTemporalCloudPrivateKey: "PROD_TEMPORAL_CLOUD_PRIVATE_KEY"
   connectionTimeoutInMs: 1000

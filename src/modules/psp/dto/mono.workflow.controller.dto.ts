@@ -23,3 +23,14 @@ export class MonoTransactionDTO {
   @ApiProperty()
   updatedTimestamp: Date;
 }
+
+export class MonoDebitRequestDTO {
+  @ApiProperty()
+  transactionID: string;
+
+  @ApiProperty()
+  amount: number;
+
+  @ApiProperty()
+  currency: string;
+}

@@ -14,7 +14,7 @@ import { StatesMapper } from "./StatesMapper";
 import { Employee } from "../../../modules/employee/domain/Employee";
 import { LinkedEmployerDTO } from "../dto/LinkedEmployerDTO";
 import { EmployerService } from "../../../modules/employer/employer.service";
-import { Employer } from "src/modules/employer/domain/Employer";
+import { Employer } from "../../../modules/employer/domain/Employer";
 import { Injectable } from "@nestjs/common";
 
 @Injectable()

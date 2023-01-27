@@ -1,7 +1,8 @@
-import { Body, Controller, HttpStatus, Inject, Param, Patch, Post } from "@nestjs/common";
+import { Body, Controller, HttpStatus, Inject, Param, Patch, Post, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { BubbleWebhookAuthGuard } from "../auth/bubble.webhooks.auth.guard";
 import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { BubbleService } from "./bubble.service";
 import { RegisterEmployerRequestDTO, UpdateEmployerRequestDTO } from "./dto/bubble.workflow.controller.dto";
@@ -9,13 +10,13 @@ import { RegisterEmployerRequestDTO, UpdateEmployerRequestDTO } from "./dto/bubb
 @Controller("/webhooks/bubble")
 @ApiTags("Webhooks")
 @IsNoApiKeyNeeded()
+@UseGuards(BubbleWebhookAuthGuard)
 export class BubbleWorkflowController {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly bubbleService: BubbleService,
   ) {}
 
-  // TODO: Add Bearer Token based AuthN/AuthZ logic here.
   @Post("/employers")
   @ApiOperation({ summary: "Register the Employer in Noba" })
   @ApiResponse({ status: HttpStatus.CREATED })

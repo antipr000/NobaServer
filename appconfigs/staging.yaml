@@ -46,12 +46,6 @@ twilio:
   authToken: ""
   fromPhoneNumber: "+14246553925"
 
-mongo:
-  awsSecretNameForUri: "STAGING_DOCUMENT_DB_URI"
-  uri: "bogus-value"
-  sslEnabled: true
-  sslCAPath: rds-combined-ca-bundle.pem # bootstrapped in deploy scripts
-
 sardine:
   awsSecretNameForSardineClientID: "TEST_SARDINE_CLIENT_ID" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   awsSecretNameForSardineSecretKey: "TEST_SARDINE_SECRET"
@@ -66,6 +60,8 @@ noba:
   privateBearerToken: ""
   awsSecretKeyForPrivateBearerToken: "TEST_NOBA_PRIVATE_BEARER_TOKEN"
   awsSecretKeyForAppSecretKey: "TEST_NOBA_APP_SECRET"
+  bubbleBearerToken: ""
+  awsSecretKeyForBubbleBearerToken: "TEST_NOBA_BUBBLE_BEARER_TOKEN"
   transaction:
     spreadPercentage: ""
     awsSecretKeyForSpreadPercentage: "TEST_NOBA_SPREAD_PERCENTAGE"
