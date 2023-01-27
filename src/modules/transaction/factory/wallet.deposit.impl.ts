@@ -162,7 +162,7 @@ export class WalletDepositImpl implements IWorkflowImpl {
           nobaRate: nobaRate.toString(),
         };
       } else {
-        const bankFeeCOP = 0;
+        const bankFeeCOP = 500;
         const bankFeeUSD = bankFeeCOP * bankRate;
         const bankFeeUSDRounded = Utils.roundUpToNearest(bankFeeUSD, 0.05);
 
