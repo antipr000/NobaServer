@@ -573,7 +573,8 @@ describe("ConsumerController", () => {
       expect(response.paymentMethodStatus).toBe(AggregatedPaymentMethodState.APPROVED);
     });
 
-    it("should return user status as PERMANENT_HOLD and walletStatus as NOT_SUBMITTED and filtered wallet list when one wallet is REJECTED", async () => {
+    // Skipping as we do not have paymentMethods or wallets
+    it.skip("should return user status as PERMANENT_HOLD and walletStatus as NOT_SUBMITTED and filtered wallet list when one wallet is REJECTED", async () => {
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         firstName: "Mock",
@@ -630,7 +631,8 @@ describe("ConsumerController", () => {
       expect(response.cryptoWallets.length).toBe(1);
     });
 
-    it("should return user status as PENDING, paymentMethodStatus as PENDING and filtered payment method list when payment method is Flagged", async () => {
+    // Skipping as we do not have paymentMethods or wallets
+    it.skip("should return user status as PENDING, paymentMethodStatus as PENDING and filtered payment method list when payment method is Flagged", async () => {
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         firstName: "Mock",
@@ -801,7 +803,8 @@ describe("ConsumerController", () => {
       expect(response.status).toBe(UserState.TEMPORARY_HOLD);
     });
 
-    it("should return status as PERMANENT_HOLD when atleast one payment method is REJECTED", async () => {
+    // Skipping as we do not have paymentMethods or wallets
+    it.skip("should return status as PERMANENT_HOLD when atleast one payment method is REJECTED", async () => {
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         firstName: "Mock",
@@ -849,7 +852,8 @@ describe("ConsumerController", () => {
       expect(response.status).toBe(UserState.PERMANENT_HOLD);
     });
 
-    it("should return user status as ACTION_REQUIRED, paymentMethodStatus as NOT_SUBMITTED and cryptoWalletStatus as NOT_SUBMITTED", async () => {
+    // Skipping as we do not have paymentMethods or wallets
+    it.skip("should return user status as ACTION_REQUIRED, paymentMethodStatus as NOT_SUBMITTED and cryptoWalletStatus as NOT_SUBMITTED", async () => {
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         firstName: "Mock",

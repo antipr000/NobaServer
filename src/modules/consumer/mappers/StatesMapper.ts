@@ -104,8 +104,9 @@ export class StatesMapper {
   }
 
   getUserState(consumer: Consumer, paymentMethods: PaymentMethod[], cryptoWallets: CryptoWallet[]): UserState {
-    const paymentMethodStatus = this.getAggregatedPaymentMethodStatus(paymentMethods);
-    const walletStatus = this.getAggregatedWalletStatus(cryptoWallets);
+    // Post-onramp we do not care about paymentMethodStatus nor walletStatus, so set both to approved for now
+    //const paymentMethodStatus = this.getAggregatedPaymentMethodStatus(paymentMethods);
+    //const walletStatus = this.getAggregatedWalletStatus(cryptoWallets);
 
     const identityVerificationStatus = consumer.props.verificationData?.kycCheckStatus ?? KYCStatus.NOT_SUBMITTED;
 
@@ -119,9 +120,9 @@ export class StatesMapper {
     if (
       consumer.props.isLocked ||
       identityVerificationStatus === KYCStatus.REJECTED ||
-      documentVerificationState === DocumentVerificationState.REJECTED ||
+      documentVerificationState === DocumentVerificationState.REJECTED /*||
       walletStatus === WalletStatus.REJECTED ||
-      paymentMethodStatus === PaymentMethodStatus.REJECTED
+      paymentMethodStatus === PaymentMethodStatus.REJECTED*/
     ) {
       return UserState.PERMANENT_HOLD;
     }
@@ -133,16 +134,16 @@ export class StatesMapper {
     if (
       identityVerificationState === KycVerificationState.APPROVED &&
       (documentVerificationState === DocumentVerificationState.VERIFIED ||
-        documentVerificationState === DocumentVerificationState.NOT_REQUIRED) &&
+        documentVerificationState === DocumentVerificationState.NOT_REQUIRED) /*&&
       paymentMethodStatus === PaymentMethodStatus.APPROVED &&
-      walletStatus === WalletStatus.APPROVED
+      walletStatus === WalletStatus.APPROVED*/
     ) {
       return UserState.APPROVED;
     } else if (
       documentVerificationState === DocumentVerificationState.ACTION_REQUIRED ||
-      identityVerificationState === KycVerificationState.NOT_SUBMITTED ||
+      identityVerificationState === KycVerificationState.NOT_SUBMITTED /*||
       walletStatus === null ||
-      paymentMethodStatus === null
+      paymentMethodStatus === null*/
     ) {
       return UserState.ACTION_REQUIRED;
     }
