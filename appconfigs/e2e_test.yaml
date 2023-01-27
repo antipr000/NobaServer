@@ -58,11 +58,6 @@ twilio:
   authToken: "c34165debbb0a77e3507884e86b88772"
   fromPhoneNumber: "+19894557345"
 
-mongo:
-  awsSecretNameForUri: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  uri: ""
-  sslEnabled: false
-
 sardine:
   awsSecretNameForSardineClientID: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   awsSecretNameForSardineSecretKey: ""

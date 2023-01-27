@@ -49,11 +49,6 @@ twilio:
   authToken: ""
   fromPhoneNumber: "+14246553925"
 
-mongo:
-  awsSecretNameForUri: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  uri: "mongodb+srv://nobamongo:NobaMongo@cluster0.wjsia.mongodb.net/devdb" # This is just the base uri. For dev environments, hostname will be appended (e.g. devdb_myhostname)
-  sslEnabled: false
-
 sardine:
   awsSecretNameForSardineClientID: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   awsSecretNameForSardineSecretKey: ""
