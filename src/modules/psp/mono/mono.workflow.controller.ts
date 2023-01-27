@@ -3,7 +3,7 @@ import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { MonoTransaction } from "../domain/Mono";
-import { MonoTransactionDTO } from "../dto/mono.workflow.controller.dto";
+import { MonoDebitRequestDTO, MonoTransactionDTO } from "../dto/mono.workflow.controller.dto";
 import { MonoService } from "./mono.service";
 import { MonoWorkflowControllerMappers } from "./mono.workflow.controller.mappers";
 

@@ -2,6 +2,7 @@ import { Transaction as PrismaTransactionModel } from "@prisma/client";
 import Joi from "joi";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { KeysRequired } from "../../../modules/common/domain/Types";
+import { BankName } from "../../../modules/psp/domain/BankFactoryTypes";
 
 export class Transaction {
   id: string;
@@ -26,6 +27,10 @@ export enum WorkflowName {
   WALLET_DEPOSIT = "WALLET_DEPOSIT",
   WALLET_TRANSFER = "WALLET_TRANSFER",
   WALLET_WITHDRAWAL = "WALLET_WITHDRAWAL",
+}
+
+export enum Bank {
+  MONO = "MONO",
 }
 
 export enum TransactionStatus {
@@ -58,6 +63,19 @@ export class UpdateTransaction {
   debitCurrency?: string;
   creditCurrency?: string;
   exchangeRate?: number;
+}
+
+export class DebitBankRequest {
+  transactionID: string;
+  amount: number;
+  currency: string;
+  bankName: BankName;
+}
+
+export class DebitBankResponse {
+  withdrawalID: string;
+  state: string;
+  declinationReason?: string;
 }
 
 export const validateInputTransaction = (transaction: InputTransaction) => {

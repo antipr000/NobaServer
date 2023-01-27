@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { BankName } from "../../../modules/psp/domain/BankFactoryTypes";
 import { TransactionStatus, WorkflowName } from "../domain/Transaction";
 
 export class WorkflowTransactionDTO {
@@ -31,4 +32,18 @@ export class WorkflowTransactionDTO {
 
   @ApiProperty({ enum: TransactionStatus })
   status: TransactionStatus;
+}
+
+export class DebitBankRequestDTO {
+  @ApiProperty()
+  transactionID: string;
+
+  @ApiProperty()
+  amount: number;
+
+  @ApiProperty()
+  currency: string;
+
+  @ApiProperty({ enum: BankName })
+  bankName: BankName;
 }

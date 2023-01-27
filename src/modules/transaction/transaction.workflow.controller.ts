@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, HttpStatus, Inject, Param, Patch } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, HttpStatus, Inject, Param, Patch, Post } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -11,7 +11,7 @@ import { TransactionService } from "./transaction.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { UpdateTransactionRequestDTO } from "./dto/TransactionDTO";
-import { WorkflowTransactionDTO } from "./dto/transaction.workflow.controller.dto";
+import { DebitBankRequestDTO, WorkflowTransactionDTO } from "./dto/transaction.workflow.controller.dto";
 import { Transaction } from "./domain/Transaction";
 import { TransactionWorkflowMapper } from "./mapper/transaction.workflow.mapper";
 
@@ -65,5 +65,13 @@ export class TransactionWorkflowController {
   async getTransactionByTransactionID(@Param("transactionID") transactionID: string): Promise<WorkflowTransactionDTO> {
     const transaction: Transaction = await this.transactionService.getTransactionByTransactionID(transactionID);
     return this.transactionWorkflowMapper.toWorkflowTransactionDTO(transaction);
+  }
+
+  @Post("/debitfrombank")
+  @ApiTags("Workflow")
+  @ApiOperation({ summary: "Debit money from Noba bank account into consumer account" })
+  @ApiResponse({ status: HttpStatus.OK, type: WorkflowTransactionDTO })
+  async debitFromBank(@Body() requestBody: DebitBankRequestDTO) {
+    return await this.transactionService.debitFromBank(requestBody);
   }
 }

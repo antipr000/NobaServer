@@ -2,9 +2,9 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { Logger } from "winston";
-import { MonoTransaction, MonoTransactionState } from "../domain/Mono";
+import { MonoCurrency, MonoTransaction, MonoTransactionState, MonoWithdrawal } from "../domain/Mono";
 import { MonoClientCollectionLinkResponse } from "../dto/mono.client.dto";
-import { CreateMonoTransactionRequest } from "../dto/mono.service.dto";
+import { CreateMonoTransactionRequest, DebitMonoRequest } from "../dto/mono.service.dto";
 import { MonoClient } from "./mono.client";
 import { IMonoRepo } from "./repo/mono.repo";
 import { MONO_REPO_PROVIDER } from "./repo/mono.repo.module";
@@ -13,9 +13,16 @@ import { MonoWebhookHandlers } from "./mono.webhook";
 import { CollectionIntentCreditedEvent } from "../dto/mono.webhook.dto";
 import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
 import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { TransactionService } from "../../../modules/transaction/transaction.service";
+import { KmsService } from "../../../modules/common/kms.service";
+import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 
 @Injectable()
 export class MonoService {
+  @Inject()
+  private readonly kmsService: KmsService;
+
   constructor(
     @Inject(MONO_REPO_PROVIDER) private readonly monoRepo: IMonoRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
@@ -44,6 +51,46 @@ export class MonoService {
 
   async getTransactionByCollectionLinkID(collectionLinkID: string): Promise<MonoTransaction | null> {
     return await this.monoRepo.getMonoTransactionByCollectionLinkID(collectionLinkID);
+  }
+
+  async debitFromNoba(request: DebitMonoRequest): Promise<MonoWithdrawal> {
+    if (request.currency !== MonoCurrency.COP) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: `Invalid currency: ${request.currency}. Only COP is supported.`,
+      });
+    }
+
+    const [consumer, accountNumber] = await Promise.all([
+      this.consumerService.getConsumer(request.consumerID),
+      this.kmsService.decryptString(request.accountNumber, KmsKeyType.SSN), // Replace SSN with Account Number KMS config
+    ]);
+    if (!consumer) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: `Consumer not found: ${request.consumerID}`,
+      });
+    }
+    if (!accountNumber) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: `Account number failed decryption: ${accountNumber}`,
+      });
+    }
+
+    return await this.monoClient.transfer({
+      transactionID: request.transactionID,
+      transactionRef: request.transactionRef,
+      amount: request.amount,
+      currency: request.currency,
+      bankCode: request.bankCode,
+      accountNumber: request.accountNumber,
+      accountType: request.accountType,
+      documentNumber: request.documentNumber,
+      documentType: request.documentType,
+      consumerEmail: consumer.props.email,
+      consumerName: `${consumer.props.firstName} ${consumer.props.lastName}`,
+    });
   }
 
   async createMonoTransaction(request: CreateMonoTransactionRequest): Promise<MonoTransaction> {
