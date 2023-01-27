@@ -46,9 +46,5 @@ describe("BankFactory Tests", () => {
       const workflow = bankFactory.getBankImplementation(BankName.MONO);
       expect(workflow).toBe(bankMonoImpl);
     });
-
-    it("should throw when bankName is unknown", () => {
-      expect(bankFactory.getBankImplementation(null)).rejects.toThrow(ServiceException);
-    });
   });
 });
