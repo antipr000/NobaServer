@@ -9,6 +9,7 @@ import {
   MonoClientCollectionLinkResponse,
   MonoTransferRequest,
   MonoTransferResponse,
+  MonoTransferStatusResponse,
 } from "../dto/mono.client.dto";
 import axios from "axios";
 import { fromString as convertToUUIDv4 } from "uuidv4";
@@ -183,6 +184,35 @@ export class MonoClient {
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
         message: "Error while transferring funds from Mono",
+      });
+    }
+  }
+
+  async getTransferStatus(transferID: string): Promise<MonoTransferStatusResponse> {
+    const url = `${this.baseUrl}/${this.apiVersion}/transfers?id=${transferID}`;
+    const headers = {
+      ...this.getAuthorizationHeader(),
+    };
+
+    try {
+      const response = await axios.get(url, { headers });
+      const transfer = response.data.transfers.find((transfer: any) => transfer.id === transferID);
+      if (!transfer) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+          message: "Mono transfer not found",
+        });
+      }
+
+      return {
+        state: transfer.state,
+        lastUpdatedTimestamp: new Date(transfer.updated_at),
+      };
+    } catch (err) {
+      this.logger.error(`Error while fetching the Transfer status from Mono: ${JSON.stringify(err)}`);
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: "Error while fetching the Transfer status from Mono",
       });
     }
   }

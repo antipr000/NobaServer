@@ -9,7 +9,11 @@ import {
   MonoTransactionType,
   MonoWithdrawal,
 } from "../domain/Mono";
-import { MonoClientCollectionLinkResponse, MonoTransferResponse } from "../dto/mono.client.dto";
+import {
+  MonoClientCollectionLinkResponse,
+  MonoTransferResponse,
+  MonoTransferStatusResponse,
+} from "../dto/mono.client.dto";
 import { CreateMonoTransactionRequest, MonoWithdrawalDetails } from "../dto/mono.service.dto";
 import { MonoClient } from "./mono.client";
 import { IMonoRepo } from "./repo/mono.repo";
@@ -53,7 +57,17 @@ export class MonoService {
   ) {}
 
   async getTransactionByNobaTransactionID(nobaTransactionID: string): Promise<MonoTransaction | null> {
-    return await this.monoRepo.getMonoTransactionByNobaTransactionID(nobaTransactionID);
+    let monoTransaction: MonoTransaction = await this.monoRepo.getMonoTransactionByNobaTransactionID(nobaTransactionID);
+    if (!monoTransaction) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    if (monoTransaction.type === MonoTransactionType.WITHDRAWAL) {
+      monoTransaction = await this.refreshWithdrawalState(monoTransaction);
+    }
+    return monoTransaction;
   }
 
   async getSupportedBanks(): Promise<Array<SupportedBanksDTO>> {
@@ -118,6 +132,21 @@ export class MonoService {
           message: `Unknown Mono webhook event: ${JSON.stringify(requestBody)}`,
         });
     }
+  }
+
+  private async refreshWithdrawalState(monoTransaction: MonoTransaction): Promise<MonoTransaction> {
+    const updatedState: MonoTransferStatusResponse = await this.monoClient.getTransferStatus(
+      monoTransaction.withdrawalDetails.transferID,
+    );
+
+    if (updatedState.state !== monoTransaction.state) {
+      await this.monoRepo.updateMonoTransaction(monoTransaction.id, {
+        state: updatedState.state as MonoTransactionState,
+      });
+      monoTransaction.state = updatedState.state as MonoTransactionState;
+    }
+
+    return monoTransaction;
   }
 
   private async processCollectionIntentCreditedEvent(event: CollectionIntentCreditedEvent): Promise<void> {

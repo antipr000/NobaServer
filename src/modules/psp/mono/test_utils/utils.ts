@@ -22,7 +22,7 @@ export const getRandomMonoTransaction = (
     case MonoTransactionType.COLLECTION_LINK_DEPOSIT:
       return {
         id: uuid(),
-        type: MonoTransactionType.WITHDRAWAL,
+        type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
         state: MonoTransactionState.PENDING,
         nobaTransactionID: uuid(),
         collectionLinkDepositDetails: {

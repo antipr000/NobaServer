@@ -175,26 +175,73 @@ describe("MonoServiceTests", () => {
   });
 
   describe("getTransactionByNobaTransactionID", () => {
-    it("should return null if no transaction exists", async () => {
+    it("should throw error if no transaction exists", async () => {
       const nobaTransactionID = uuid();
       when(monoRepo.getMonoTransactionByNobaTransactionID(nobaTransactionID)).thenResolve(null);
 
-      const monoTransaction = await monoService.getTransactionByNobaTransactionID(nobaTransactionID);
-
-      expect(monoTransaction).toBeNull();
+      try {
+        await monoService.getTransactionByNobaTransactionID(nobaTransactionID);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        expect(e.errorCode).toBe(ServiceErrorCode.DOES_NOT_EXIST);
+      }
     });
 
-    it("should return Mono transaction if it exists", async () => {
-      const monoTransaction: MonoTransaction = getRandomMonoTransaction();
-      when(monoRepo.getMonoTransactionByNobaTransactionID(monoTransaction.nobaTransactionID)).thenResolve(
-        monoTransaction,
-      );
+    describe("COLLECTION_LINK_DEPOSIT", () => {
+      it("should return Mono transaction if it exists", async () => {
+        const monoTransaction: MonoTransaction = getRandomMonoTransaction(MonoTransactionType.COLLECTION_LINK_DEPOSIT);
+        when(monoRepo.getMonoTransactionByNobaTransactionID(monoTransaction.nobaTransactionID)).thenResolve(
+          monoTransaction,
+        );
 
-      const returnedMonoTransaction: MonoTransaction = await monoService.getTransactionByNobaTransactionID(
-        monoTransaction.nobaTransactionID,
-      );
+        const returnedMonoTransaction: MonoTransaction = await monoService.getTransactionByNobaTransactionID(
+          monoTransaction.nobaTransactionID,
+        );
 
-      expect(returnedMonoTransaction).toStrictEqual(monoTransaction);
+        expect(returnedMonoTransaction).toStrictEqual(monoTransaction);
+      });
+    });
+
+    describe("WITHDRAWAL", () => {
+      it("should 'refresh', persist to database & then return Mono transaction if it exists", async () => {
+        const monoTransaction: MonoTransaction = getRandomMonoTransaction(MonoTransactionType.WITHDRAWAL);
+        when(monoRepo.getMonoTransactionByNobaTransactionID(monoTransaction.nobaTransactionID)).thenResolve(
+          monoTransaction,
+        );
+        when(monoClient.getTransferStatus(monoTransaction.withdrawalDetails.transferID)).thenResolve({
+          state: MonoTransactionState.SUCCESS,
+          lastUpdatedTimestamp: new Date(),
+        });
+        when(monoRepo.updateMonoTransaction(monoTransaction.id, anything())).thenResolve();
+
+        const returnedMonoTransaction: MonoTransaction = await monoService.getTransactionByNobaTransactionID(
+          monoTransaction.nobaTransactionID,
+        );
+
+        expect(returnedMonoTransaction).toStrictEqual(monoTransaction);
+        verify(monoClient.getTransferStatus(monoTransaction.withdrawalDetails.transferID)).once();
+        verify(
+          monoRepo.updateMonoTransaction(monoTransaction.id, deepEqual({ state: MonoTransactionState.SUCCESS })),
+        ).once();
+      });
+
+      it("shouldn't call update on database if the status is not changed", async () => {
+        const monoTransaction: MonoTransaction = getRandomMonoTransaction(MonoTransactionType.WITHDRAWAL);
+        when(monoRepo.getMonoTransactionByNobaTransactionID(monoTransaction.nobaTransactionID)).thenResolve(
+          monoTransaction,
+        );
+        when(monoClient.getTransferStatus(monoTransaction.withdrawalDetails.transferID)).thenResolve({
+          state: monoTransaction.state,
+          lastUpdatedTimestamp: new Date(),
+        });
+
+        const returnedMonoTransaction: MonoTransaction = await monoService.getTransactionByNobaTransactionID(
+          monoTransaction.nobaTransactionID,
+        );
+
+        expect(returnedMonoTransaction).toStrictEqual(monoTransaction);
+        verify(monoClient.getTransferStatus(monoTransaction.withdrawalDetails.transferID)).once();
+      });
     });
   });
 

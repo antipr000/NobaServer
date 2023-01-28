@@ -34,3 +34,8 @@ export type MonoTransferResponse = {
   batchID: string;
   transferID: string;
 };
+
+export type MonoTransferStatusResponse = {
+  state: string;
+  lastUpdatedTimestamp: Date;
+};

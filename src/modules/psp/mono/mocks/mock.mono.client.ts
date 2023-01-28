@@ -6,5 +6,8 @@ export function getMockMonoClientWithDefaults(): MonoClient {
 
   when(mockMonoClient.createCollectionLink(anything())).thenReject(new Error("Method not implemented"));
   when(mockMonoClient.transfer(anything())).thenReject(new Error("Method not implemented"));
+  when(mockMonoClient.getTransferStatus(anyString())).thenReject(new Error("Method not implemented"));
+  when(mockMonoClient.getSupportedBanks()).thenReject(new Error("Method not implemented"));
+
   return mockMonoClient;
 }
