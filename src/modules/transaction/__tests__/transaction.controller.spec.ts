@@ -570,7 +570,7 @@ describe("Transaction Controller tests", () => {
         exchangeRate: testExchangeRate,
         withdrawalData: {
           accountNumber: "123456789",
-          accountType: AccountType.CURRENT,
+          accountType: AccountType.CHECKING,
           bankCode: "123",
           documentNumber: "123456789",
           documentType: DocumentType.CC,
