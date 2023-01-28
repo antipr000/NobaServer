@@ -31,6 +31,7 @@ export type { CreditCardDTO } from "./models/CreditCardDTO";
 export type { CryptoWalletsDTO } from "./models/CryptoWalletsDTO";
 export type { CurrencyDTO } from "./models/CurrencyDTO";
 export type { DataDTO } from "./models/DataDTO";
+export type { DebitBankRequestDTO } from "./models/DebitBankRequestDTO";
 export type { DeleteNobaAdminDTO } from "./models/DeleteNobaAdminDTO";
 export type { DeviceAttributesDTO } from "./models/DeviceAttributesDTO";
 export type { DeviceBehaviorBiometricsDTO } from "./models/DeviceBehaviorBiometricsDTO";
@@ -83,6 +84,7 @@ export type { UserPhoneUpdateRequest } from "./models/UserPhoneUpdateRequest";
 export type { VerificationDataDTO } from "./models/VerificationDataDTO";
 export type { VerificationResultDTO } from "./models/VerificationResultDTO";
 export type { VerifyOtpRequestDTO } from "./models/VerifyOtpRequestDTO";
+export type { WithdrawalDTO } from "./models/WithdrawalDTO";
 export type { WorkflowTransactionDTO } from "./models/WorkflowTransactionDTO";
 
 export { AdminService } from "./services/AdminService";

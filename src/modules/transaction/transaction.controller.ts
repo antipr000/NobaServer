@@ -119,10 +119,12 @@ export class TransactionController {
   })
   @ApiNotFoundResponse({ description: "Quote for given currency not found" })
   async getQuote(@Query() quoteQuery: QuoteRequestDTO): Promise<QuoteResponseDTO> {
-    return await this.transactionService.calculateExchangeRate(
+    return await this.transactionService.getTransactionQuote(
       quoteQuery.amount,
       quoteQuery.currency,
       quoteQuery.desiredCurrency,
+      quoteQuery.workflowName,
+      quoteQuery.options ?? [],
     );
   }
 

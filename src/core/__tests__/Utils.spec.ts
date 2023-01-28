@@ -145,6 +145,36 @@ describe("Utils", () => {
     });
   });
 
+  describe("roundUpToNearest()", () => {
+    it("It should round up to the nearest .05", () => {
+      expect(Utils.roundUpToNearest(38.0, 0.05)).toEqual(38.0);
+      expect(Utils.roundUpToNearest(38.01, 0.05)).toEqual(38.05);
+      expect(Utils.roundUpToNearest(38.02, 0.05)).toEqual(38.05);
+      expect(Utils.roundUpToNearest(38.03, 0.05)).toEqual(38.05);
+      expect(Utils.roundUpToNearest(38.04, 0.05)).toEqual(38.05);
+      expect(Utils.roundUpToNearest(38.05, 0.05)).toEqual(38.05);
+      expect(Utils.roundUpToNearest(38.06, 0.05)).toEqual(38.1);
+      expect(Utils.roundUpToNearest(38.07, 0.05)).toEqual(38.1);
+      expect(Utils.roundUpToNearest(38.08, 0.05)).toEqual(38.1);
+      expect(Utils.roundUpToNearest(38.09, 0.05)).toEqual(38.1);
+      expect(Utils.roundUpToNearest(38.1, 0.05)).toEqual(38.1);
+    });
+
+    it("It should round up to the nearest 10", () => {
+      expect(Utils.roundUpToNearest(40, 10)).toEqual(40);
+      expect(Utils.roundUpToNearest(41, 10)).toEqual(50);
+      expect(Utils.roundUpToNearest(42, 10)).toEqual(50);
+      expect(Utils.roundUpToNearest(43, 10)).toEqual(50);
+      expect(Utils.roundUpToNearest(44, 10)).toEqual(50);
+      expect(Utils.roundUpToNearest(45, 10)).toEqual(50);
+      expect(Utils.roundUpToNearest(46, 10)).toEqual(50);
+      expect(Utils.roundUpToNearest(47, 10)).toEqual(50);
+      expect(Utils.roundUpToNearest(48, 10)).toEqual(50);
+      expect(Utils.roundUpToNearest(49, 10)).toEqual(50);
+      expect(Utils.roundUpToNearest(50, 10)).toEqual(50);
+    });
+  });
+
   describe("getUsernameFromNameParts()", () => {
     it("It should join names together", () => {
       expect(Utils.getUsernameFromNameParts("Joe", "Cool")).toEqual("Joe Cool");
