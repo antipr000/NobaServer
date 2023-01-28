@@ -127,6 +127,14 @@ describe("WalletTransferImpl Tests", () => {
         ),
       ).once();
     });
+
+    describe("getTransactionQuote", () => {
+      it("should throw an error if this method is called for WALLET_TRANSFER transactions", async () => {
+        expect(
+          async () => await walletTransferImpl.getTransactionQuote(100, Currency.USD, Currency.COP),
+        ).rejects.toThrow(ServiceException);
+      });
+    });
   });
 });
 

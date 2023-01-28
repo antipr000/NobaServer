@@ -1,11 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import {
-  DEPOSIT_FEE_AMOUNT,
-  DEPOSIT_FEE_PERCENTAGE,
-  NOBA_CONFIG_KEY,
-  NOBA_TRANSACTION_CONFIG_KEY,
-  SERVER_LOG_FILE_PATH,
-} from "../../../config/ConfigurationUtils";
+import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { v4 } from "uuid";
@@ -85,12 +79,6 @@ describe("TransactionServiceTests", () => {
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
-      [NOBA_CONFIG_KEY]: {
-        [NOBA_TRANSACTION_CONFIG_KEY]: {
-          [DEPOSIT_FEE_AMOUNT]: 1.99,
-          [DEPOSIT_FEE_PERCENTAGE]: 0.029,
-        },
-      },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 

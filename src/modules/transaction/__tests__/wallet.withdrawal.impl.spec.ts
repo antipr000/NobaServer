@@ -1,5 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
+import {
+  NOBA_CONFIG_KEY,
+  NOBA_TRANSACTION_CONFIG_KEY,
+  SERVER_LOG_FILE_PATH,
+  WITHDRAWAL_MONO_FEE_AMOUNT,
+  WITHDRAWAL_NOBA_FEE_AMOUNT,
+} from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { v4 } from "uuid";
@@ -16,6 +22,9 @@ import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/
 import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { ServiceException } from "../../../core/exception/ServiceException";
 import { WalletWithdrawalImpl } from "../factory/wallet.withdrawal.impl";
+import { TransactionService } from "../transaction.service";
+import { AccountType, DocumentType } from "../domain/WithdrawalDetails";
+import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
 
 describe("WalletWithdrawalImpl Tests", () => {
   jest.setTimeout(20000);
@@ -31,6 +40,12 @@ describe("WalletWithdrawalImpl Tests", () => {
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
+      [NOBA_CONFIG_KEY]: {
+        [NOBA_TRANSACTION_CONFIG_KEY]: {
+          [WITHDRAWAL_MONO_FEE_AMOUNT]: 1000, // In COP
+          [WITHDRAWAL_NOBA_FEE_AMOUNT]: 0.5, // In USD
+        },
+      },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
@@ -71,11 +86,33 @@ describe("WalletWithdrawalImpl Tests", () => {
         expirationTimestamp: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // 24 hrs
         nobaRate: 5,
       };
+
+      /*
+      const transactionQuote: QuoteResponseDTO = {
+        nobaFee: "0.5",
+        processingFee: "2",
+        totalFee: "2.50",
+        nobaRate: "5",
+        quoteAmount: "500",
+        quoteAmountWithFees: "497.50",
+      };*/
+
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
       });
 
       when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.USD, Currency.COP)).thenResolve(exchangeRate);
+
+      /*
+      when(
+        transactionService.getTransactionQuote(
+          transactionDTO.debitAmount,
+          Currency.USD,
+          transactionDTO.creditCurrency,
+          WorkflowName.WALLET_WITHDRAWAL,
+        ),
+      ).thenResolve(transactionQuote);
+      */
 
       const response = await walletWithdrawalImpl.preprocessTransactionParams(transactionDTO, consumer.props.id);
       transactionDTO.debitCurrency = Currency.USD;
@@ -137,7 +174,17 @@ describe("WalletWithdrawalImpl Tests", () => {
       );
     });
 
-    it("should throw ServiceException if exchangeRate is not set", async () => {
+    it("should throw ServiceException if withdrawalData is missing", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(consumer.props.id);
+      delete transactionDTO.withdrawalData;
+
+      await expect(walletWithdrawalImpl.preprocessTransactionParams(transactionDTO, consumer.props.id)).rejects.toThrow(
+        ServiceException,
+      );
+    });
+
+    it("should throw ServiceException if transaction cannot be quoted", async () => {
       const consumer = getRandomConsumer("consumerID");
       const { transactionDTO } = getRandomTransaction(consumer.props.id);
       when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.USD, Currency.COP)).thenResolve(null);
@@ -186,11 +233,11 @@ describe("WalletWithdrawalImpl Tests", () => {
       when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.USD, Currency.COP)).thenResolve(exchangeRate);
       const quote = await walletWithdrawalImpl.getTransactionQuote(50, Currency.USD, Currency.COP);
       expect(quote).toEqual({
-        nobaFee: "0.00",
-        processingFee: "0.60",
-        totalFee: "0.60",
+        nobaFee: "0.50",
+        processingFee: "0.20",
+        totalFee: "0.70",
         quoteAmount: "200000.00",
-        quoteAmountWithFees: "197600.00",
+        quoteAmountWithFees: "197200.00",
         nobaRate: "4000",
       });
     });
@@ -252,6 +299,13 @@ const getRandomTransaction = (
     workflowName: transaction.workflowName,
     exchangeRate: transaction.exchangeRate,
     memo: transaction.memo,
+    withdrawalData: {
+      accountNumber: "123456789",
+      accountType: AccountType.CHECKING,
+      bankCode: "123",
+      documentNumber: "123456789",
+      documentType: DocumentType.CC,
+    },
   };
 
   const inputTransaction: InputTransaction = {

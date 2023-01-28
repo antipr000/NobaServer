@@ -4,7 +4,7 @@ import { KeysRequired } from "../../../modules/common/domain/Types";
 
 export enum AccountType {
   SAVINGS = "savings_account",
-  CURRENT = "checking_account",
+  CHECKING = "checking_account",
   ELECTRONIC_DEPOSIT = "electronic_deposit",
 }
 

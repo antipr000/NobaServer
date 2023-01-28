@@ -25,7 +25,7 @@ import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from 
 import { TransactionEvent } from "../domain/TransactionEvent";
 import { MonoService } from "../../../modules/psp/mono/mono.service";
 import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
-import { ExchangeRateFlags } from "../domain/ExchangeRateFlags";
+import { TransactionFlags } from "../domain/TransactionFlags";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
   const transaction: Transaction = {
@@ -527,7 +527,7 @@ describe("Transaction Controller tests", () => {
         currency: Currency.COP,
         desiredCurrency: Currency.USD,
         workflowName: WorkflowName.WALLET_DEPOSIT,
-        exchangeRateFlags: [],
+        options: [],
       };
 
       when(
@@ -536,7 +536,7 @@ describe("Transaction Controller tests", () => {
           quoteDetails.currency,
           quoteDetails.desiredCurrency,
           quoteDetails.workflowName,
-          deepEqual(quoteDetails.exchangeRateFlags),
+          deepEqual(quoteDetails.options),
         ),
       ).thenResolve({
         nobaFee: "1.99",
@@ -564,7 +564,7 @@ describe("Transaction Controller tests", () => {
         currency: Currency.COP,
         desiredCurrency: Currency.USD,
         workflowName: WorkflowName.WALLET_DEPOSIT,
-        exchangeRateFlags: [ExchangeRateFlags.IS_COLLECTION],
+        options: [TransactionFlags.IS_COLLECTION],
       };
 
       when(
@@ -573,7 +573,7 @@ describe("Transaction Controller tests", () => {
           quoteDetails.currency,
           quoteDetails.desiredCurrency,
           quoteDetails.workflowName,
-          deepEqual(quoteDetails.exchangeRateFlags),
+          deepEqual(quoteDetails.options),
         ),
       ).thenResolve({
         nobaFee: "1.99",
@@ -601,7 +601,7 @@ describe("Transaction Controller tests", () => {
         currency: Currency.COP,
         desiredCurrency: Currency.USD,
         workflowName: WorkflowName.WALLET_DEPOSIT,
-        exchangeRateFlags: [ExchangeRateFlags.IS_COLLECTION],
+        options: [TransactionFlags.IS_COLLECTION],
       };
 
       when(
@@ -610,7 +610,7 @@ describe("Transaction Controller tests", () => {
           quoteDetails.currency,
           quoteDetails.desiredCurrency,
           quoteDetails.workflowName,
-          deepEqual(quoteDetails.exchangeRateFlags),
+          deepEqual(quoteDetails.options),
         ),
       ).thenReject(
         new ServiceException({

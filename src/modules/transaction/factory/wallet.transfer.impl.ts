@@ -4,7 +4,7 @@ import { ServiceErrorCode, ServiceException } from "../../../core/exception/Serv
 import { Transaction } from "../domain/Transaction";
 import { Inject } from "@nestjs/common";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
-import { ExchangeRateFlags } from "../domain/ExchangeRateFlags";
+import { TransactionFlags } from "../domain/TransactionFlags";
 import { Currency } from "../domain/TransactionTypes";
 import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
 
@@ -52,7 +52,7 @@ export class WalletTransferImpl implements IWorkflowImpl {
     return transactionDetails;
   }
 
-  async initiateWorkflow(transaction: Transaction): Promise<void> {
+  async initiateWorkflow(transaction: Transaction, options?: TransactionFlags[]): Promise<void> {
     this.workflowExecutor.executeConsumerWalletTransferWorkflow(
       transaction.debitConsumerID,
       transaction.creditConsumerID,
@@ -65,7 +65,7 @@ export class WalletTransferImpl implements IWorkflowImpl {
     amount: number,
     amountCurrency: Currency,
     desiredCurrency: Currency,
-    exchangeRateFlags?: ExchangeRateFlags[],
+    options?: TransactionFlags[],
   ): Promise<QuoteResponseDTO> {
     throw new ServiceException({
       errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,

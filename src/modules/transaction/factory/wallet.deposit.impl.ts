@@ -5,13 +5,12 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 import { Currency } from "../domain/TransactionTypes";
-import { ExchangeRateDTO } from "../../common/dto/ExchangeRateDTO";
 import { ExchangeRateService } from "../../common/exchangerate.service";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { Transaction } from "../domain/Transaction";
 import { MonoService } from "../../psp/mono/mono.service";
 import { MonoCurrency } from "../../psp/domain/Mono";
-import { ExchangeRateFlags } from "../domain/ExchangeRateFlags";
+import { TransactionFlags } from "../domain/TransactionFlags";
 import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
 import { Utils } from "../../../core/utils/Utils";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
@@ -19,8 +18,12 @@ import { NobaConfigs } from "../../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 
 export class WalletDepositImpl implements IWorkflowImpl {
-  private depositFeeAmount: number;
-  private depositFeePercentage: number;
+  private depositFeeFixedAmount: number;
+  private depositFeeMultiplier: number;
+  private depositNobaFeeAmount: number;
+  private collectionFeeFixedAmount: number;
+  private collectionFeeMultiplier: number;
+  private collectionNobaFeeAmount: number;
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
@@ -29,8 +32,15 @@ export class WalletDepositImpl implements IWorkflowImpl {
     private readonly workflowExecutor: WorkflowExecutor,
     private readonly monoService: MonoService,
   ) {
-    this.depositFeeAmount = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeeAmount;
-    this.depositFeePercentage = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeePercentage;
+    this.depositFeeFixedAmount = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeeFixedAmount;
+    this.depositFeeMultiplier = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeeMultiplier;
+    this.depositNobaFeeAmount = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositNobaFeeAmount;
+    this.collectionFeeFixedAmount =
+      this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.collectionFeeFixedAmount;
+    this.collectionFeeMultiplier =
+      this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.collectionFeeMultiplier;
+    this.collectionNobaFeeAmount =
+      this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.collectionNobaFeeAmount;
   }
 
   async preprocessTransactionParams(
@@ -70,28 +80,23 @@ export class WalletDepositImpl implements IWorkflowImpl {
     transactionDetails.debitConsumerIDOrTag = initiatingConsumer;
     delete transactionDetails.creditConsumerIDOrTag;
 
-    const exchangeRateToUSD: ExchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
+    const isCollection =
+      transactionDetails.options && transactionDetails.options.includes(TransactionFlags.IS_COLLECTION);
+
+    const transactionQuote = await this.getTransactionQuote(
+      transactionDetails.debitAmount,
       transactionDetails.debitCurrency,
       transactionDetails.creditCurrency,
+      isCollection ? [TransactionFlags.IS_COLLECTION] : [],
     );
 
-    if (!exchangeRateToUSD) {
-      this.logger.error(
-        `Database is not seeded properly. Could not find exchange rate for ${transactionDetails.debitCurrency} - ${Currency.USD}`,
-      );
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.UNKNOWN, // 500 error because even though it's "known", it's not expected
-        message: "Could not find exchange rate",
-      });
-    }
-
-    transactionDetails.creditAmount = exchangeRateToUSD.nobaRate * transactionDetails.debitAmount;
-    transactionDetails.exchangeRate = exchangeRateToUSD.nobaRate;
+    transactionDetails.creditAmount = Number(transactionQuote.quoteAmountWithFees);
+    transactionDetails.exchangeRate = Number(transactionQuote.nobaRate);
 
     return transactionDetails;
   }
 
-  async initiateWorkflow(transaction: Transaction): Promise<void> {
+  async initiateWorkflow(transaction: Transaction, options?: TransactionFlags[]): Promise<void> {
     if (transaction.creditConsumerID && transaction.debitConsumerID) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -99,13 +104,16 @@ export class WalletDepositImpl implements IWorkflowImpl {
       });
     }
 
-    // TODO: Add a check for the currency here. Mono should be called "only" for COP currencies.
-    await this.monoService.createMonoTransaction({
-      amount: transaction.debitAmount,
-      currency: transaction.debitCurrency as MonoCurrency,
-      consumerID: transaction.debitConsumerID,
-      nobaTransactionID: transaction.id,
-    });
+    const isCollection = options && options.includes(TransactionFlags.IS_COLLECTION);
+    if (isCollection) {
+      // TODO: Add a check for the currency here. Mono should be called "only" for COP currencies.
+      await this.monoService.createMonoTransaction({
+        amount: transaction.debitAmount,
+        currency: transaction.debitCurrency as MonoCurrency,
+        consumerID: transaction.debitConsumerID,
+        nobaTransactionID: transaction.id,
+      });
+    }
 
     this.workflowExecutor.executeCreditConsumerWalletWorkflow(transaction.id, transaction.transactionRef);
   }
@@ -114,7 +122,7 @@ export class WalletDepositImpl implements IWorkflowImpl {
     amount: number,
     amountCurrency: Currency,
     desiredCurrency: Currency,
-    exchangeRateFlags?: ExchangeRateFlags[],
+    options?: TransactionFlags[],
   ): Promise<QuoteResponseDTO> {
     const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
       amountCurrency,
@@ -131,57 +139,31 @@ export class WalletDepositImpl implements IWorkflowImpl {
     const bankRate = exchangeRateDTO.bankRate;
     const nobaRate = exchangeRateDTO.nobaRate;
 
-    const isCollection = exchangeRateFlags && exchangeRateFlags.includes(ExchangeRateFlags.IS_COLLECTION);
+    const isCollection = options && options.includes(TransactionFlags.IS_COLLECTION);
     if (desiredCurrency === Currency.USD) {
-      // nobaRate = 1/5000 = 0.0002
-      // COP amount Desired: USD
-      // 2.65% + 900 COP + VAT
-      // VAT = 119%
-      // 3.1535% + 1071 COP NOMINALLY
-      if (isCollection) {
-        const bankFeeCOP = 1.19 * (0.0265 * amount + 900);
-        // Convert to USD using bank rate
-        const bankFeeUSD = bankFeeCOP * bankRate;
+      const bankFeeCOP = isCollection
+        ? Number(this.collectionFeeMultiplier * amount) + Number(this.collectionFeeFixedAmount)
+        : Number(this.depositFeeMultiplier * amount) + Number(this.depositFeeFixedAmount);
+      const nobaFeeUSD = isCollection ? this.collectionNobaFeeAmount : this.depositNobaFeeAmount;
 
-        // Round up pesos fee to nearest .05 USD
-        const bankFeeUSDRounded = Utils.roundUpToNearest(bankFeeUSD, 0.05);
+      // Convert to USD using bank rate
+      const bankFeeUSD = bankFeeCOP * bankRate;
+      // Round up pesos fee to nearest .05 USD
+      const bankFeeUSDRounded = Utils.roundUpToNearest(bankFeeUSD, 0.05);
 
-        const nobaFeeUSD = this.depositFeeAmount;
+      const postExchangeAmount = Utils.roundTo2DecimalNumber(amount * nobaRate);
+      const postExchangeAmountWithBankFees = Utils.roundTo2DecimalNumber(
+        postExchangeAmount - nobaFeeUSD - bankFeeUSDRounded,
+      );
 
-        const postExchangeAmount = Utils.roundTo2DecimalNumber(amount * nobaRate);
-        const postExchangeAmountWithBankFees = Utils.roundTo2DecimalNumber(
-          postExchangeAmount - nobaFeeUSD - bankFeeUSDRounded,
-        );
-
-        return {
-          nobaFee: Utils.roundTo2DecimalString(nobaFeeUSD),
-          processingFee: Utils.roundTo2DecimalString(bankFeeUSDRounded),
-          totalFee: Utils.roundTo2DecimalString(nobaFeeUSD + bankFeeUSDRounded),
-          quoteAmount: Utils.roundTo2DecimalString(postExchangeAmount),
-          quoteAmountWithFees: Utils.roundTo2DecimalString(postExchangeAmountWithBankFees),
-          nobaRate: nobaRate.toString(),
-        };
-      } else {
-        const bankFeeCOP = 500;
-        const bankFeeUSD = bankFeeCOP * bankRate;
-        const bankFeeUSDRounded = Utils.roundUpToNearest(bankFeeUSD, 0.05);
-
-        const nobaFeeUSD = this.depositFeeAmount; // Math.min(amount * bankRate * this.depositFeePercentage, this.depositFeeAmount);
-
-        const postExchangeAmount = Utils.roundTo2DecimalNumber(amount * nobaRate);
-        const postExchangeAmountWithBankFees = Utils.roundTo2DecimalNumber(
-          postExchangeAmount - nobaFeeUSD - bankFeeUSDRounded,
-        );
-
-        return {
-          nobaFee: Utils.roundTo2DecimalString(nobaFeeUSD),
-          processingFee: Utils.roundTo2DecimalString(bankFeeUSDRounded),
-          totalFee: Utils.roundTo2DecimalString(nobaFeeUSD + bankFeeUSDRounded),
-          quoteAmount: Utils.roundTo2DecimalString(postExchangeAmount),
-          quoteAmountWithFees: Utils.roundTo2DecimalString(postExchangeAmountWithBankFees),
-          nobaRate: nobaRate.toString(),
-        };
-      }
+      return {
+        nobaFee: Utils.roundTo2DecimalString(nobaFeeUSD),
+        processingFee: Utils.roundTo2DecimalString(bankFeeUSDRounded),
+        totalFee: Utils.roundTo2DecimalString(Number(nobaFeeUSD) + Number(bankFeeUSDRounded)),
+        quoteAmount: Utils.roundTo2DecimalString(postExchangeAmount),
+        quoteAmountWithFees: Utils.roundTo2DecimalString(postExchangeAmountWithBankFees),
+        nobaRate: nobaRate.toString(),
+      };
     } else {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,

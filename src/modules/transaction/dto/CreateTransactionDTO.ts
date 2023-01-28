@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Currency } from "../domain/TransactionTypes";
 import { WorkflowName } from "../domain/Transaction";
 import { WithdrawalDTO } from "./WithdrawalDTO";
+import { TransactionFlags } from "../domain/TransactionFlags";
 
 export class InitiateTransactionDTO {
   @ApiPropertyOptional()
@@ -30,6 +31,9 @@ export class InitiateTransactionDTO {
 
   @ApiPropertyOptional()
   memo?: string;
+
+  @ApiPropertyOptional({ type: TransactionFlags, isArray: true })
+  options?: TransactionFlags[];
 
   @ApiPropertyOptional({ type: WithdrawalDTO })
   withdrawalData?: WithdrawalDTO;

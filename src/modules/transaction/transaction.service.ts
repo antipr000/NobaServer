@@ -27,7 +27,7 @@ import { KYCStatus } from "@prisma/client";
 import { WorkflowFactory } from "./factory/workflow.factory";
 import { IWithdrawalDetailsRepo } from "./repo/withdrawal.details.repo";
 import { InputWithdrawalDetails, WithdrawalDetails } from "./domain/WithdrawalDetails";
-import { ExchangeRateFlags } from "./domain/ExchangeRateFlags";
+import { TransactionFlags } from "./domain/TransactionFlags";
 import { DebitBankRequest, DebitBankResponse } from "./domain/Transaction";
 import { BankFactory } from "../psp/factory/bank.factory";
 
@@ -142,7 +142,7 @@ export class TransactionService {
       }
     }
 
-    await workflowImpl.initiateWorkflow(savedTransaction);
+    await workflowImpl.initiateWorkflow(savedTransaction, transactionDetails.options);
 
     return savedTransaction;
   }
@@ -152,7 +152,7 @@ export class TransactionService {
     amountCurrency: Currency,
     desiredCurrency: Currency,
     workflowName: WorkflowName,
-    exchangeRateFlags: ExchangeRateFlags[],
+    options?: TransactionFlags[],
   ): Promise<QuoteResponseDTO> {
     if (Object.values(Currency).indexOf(amountCurrency) === -1) {
       throw new ServiceException({
@@ -175,7 +175,7 @@ export class TransactionService {
     - Add tier based fees
     */
     const workflowImpl = this.transactionFactory.getWorkflowImplementation(workflowName);
-    return workflowImpl.getTransactionQuote(amount, amountCurrency, desiredCurrency, exchangeRateFlags);
+    return workflowImpl.getTransactionQuote(amount, amountCurrency, desiredCurrency, options);
   }
 
   async updateTransaction(transactionID: string, transactionDetails: UpdateTransactionDTO): Promise<Transaction> {

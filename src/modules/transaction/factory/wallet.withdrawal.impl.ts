@@ -5,17 +5,19 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 import { Currency } from "../domain/TransactionTypes";
-import { ExchangeRateDTO } from "../../common/dto/ExchangeRateDTO";
 import { ExchangeRateService } from "../../common/exchangerate.service";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { Transaction } from "../domain/Transaction";
-import { ExchangeRateFlags } from "../domain/ExchangeRateFlags";
+import { TransactionFlags } from "../domain/TransactionFlags";
 import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
 import { Utils } from "../../../core/utils/Utils";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
+import { NobaConfigs } from "../../../config/configtypes/NobaConfigs";
+import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 
 export class WalletWithdrawalImpl implements IWorkflowImpl {
-  private withdrawalFeeAmount: number;
+  private monoWithdrawalFeeAmount: number;
+  private nobaWithdrawalFeeAmount: number;
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
@@ -23,7 +25,10 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
     private readonly exchangeRateService: ExchangeRateService,
     private readonly workflowExecutor: WorkflowExecutor,
   ) {
-    this.withdrawalFeeAmount = 0; // Eventually pull from config service
+    this.monoWithdrawalFeeAmount =
+      this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.withdrawalMonoFeeAmount;
+    this.nobaWithdrawalFeeAmount =
+      this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.withdrawalNobaFeeAmount;
   }
 
   async preprocessTransactionParams(
@@ -72,38 +77,37 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
       });
     }
 
+    if (!transactionDetails.withdrawalData) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "withdrawalData must be set for WALLET_WITHDRAWAL workflow",
+      });
+    }
+
     transactionDetails.debitCurrency = Currency.USD;
     transactionDetails.debitConsumerIDOrTag = initiatingConsumer;
     delete transactionDetails.creditConsumerIDOrTag;
 
-    const exchangeRateFromUSD: ExchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
+    const transactionQuote = await this.getTransactionQuote(
+      transactionDetails.debitAmount,
       transactionDetails.debitCurrency,
       transactionDetails.creditCurrency,
     );
 
-    if (!exchangeRateFromUSD) {
-      this.logger.error(
-        `Database is not seeded properly. Could not find exchange rate for ${Currency.USD} - ${transactionDetails.debitCurrency}`,
-      );
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.UNKNOWN, // 500 error because even though it's "known", it's not expected
-        message: "Could not find exchange rate",
-      });
-    }
-
-    transactionDetails.creditAmount = exchangeRateFromUSD.nobaRate * transactionDetails.debitAmount;
-    transactionDetails.exchangeRate = exchangeRateFromUSD.nobaRate;
+    transactionDetails.creditAmount = Number(transactionQuote.quoteAmountWithFees);
+    transactionDetails.exchangeRate = Number(transactionQuote.nobaRate);
 
     return transactionDetails;
   }
 
-  async initiateWorkflow(transaction: Transaction): Promise<void> {
+  async initiateWorkflow(transaction: Transaction, options?: TransactionFlags[]): Promise<void> {
     if (transaction.creditConsumerID && transaction.debitConsumerID) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: "Both credit consumer and debit consumer cannot be set for this type of transaction",
       });
     }
+
     this.workflowExecutor.executeDebitConsumerWalletWorkflow(
       transaction.debitConsumerID,
       transaction.debitAmount,
@@ -115,7 +119,7 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
     amount: number,
     amountCurrency: Currency,
     desiredCurrency: Currency,
-    exchangeRateFlags?: ExchangeRateFlags[],
+    options?: TransactionFlags[],
   ): Promise<QuoteResponseDTO> {
     const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
       amountCurrency,
@@ -133,14 +137,9 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
     const nobaRate = exchangeRateDTO.nobaRate;
 
     if (desiredCurrency === Currency.COP) {
-      // Start with amount USD -> Noba Fee -> Noba Rate -> Processing Fee -> COP
-      // Start with amount USD -> Post Exchange amount ->
-      // Noba rate = 5000
-      // 1 USDC FEE
+      const nobaFeeUSD = this.nobaWithdrawalFeeAmount;
 
-      const nobaFeeUSD = this.withdrawalFeeAmount;
-
-      const processingFeeCOP = 2500 * 1.19;
+      const processingFeeCOP = this.monoWithdrawalFeeAmount;
       const processingFeeUSD = Utils.roundTo2DecimalNumber(processingFeeCOP / bankRate); // Ask gal if this could just be 1 USD
       const processingFeeUSDRounded = Utils.roundUpToNearest(processingFeeUSD, 0.05);
 
@@ -153,7 +152,7 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
       return {
         nobaFee: Utils.roundTo2DecimalString(nobaFeeUSD),
         processingFee: Utils.roundTo2DecimalString(processingFeeUSDRounded),
-        totalFee: Utils.roundTo2DecimalString(nobaFeeUSD + processingFeeUSDRounded),
+        totalFee: Utils.roundTo2DecimalString(Number(nobaFeeUSD) + Number(processingFeeUSDRounded)),
         quoteAmount: Utils.roundTo2DecimalString(postExchangeAmount),
         quoteAmountWithFees: Utils.roundTo2DecimalString(postExchangeAmountWithBankFees),
         nobaRate: nobaRate.toString(),

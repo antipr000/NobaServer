@@ -1,7 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import {
-  DEPOSIT_FEE_AMOUNT,
-  DEPOSIT_FEE_PERCENTAGE,
+  DEPOSIT_FEE_FIXED_AMOUNT,
+  DEPOSIT_FEE_MULTIPLIER,
+  DEPOSIT_NOBA_FEE_AMOUNT,
+  COLLECTION_FEE_FIXED_AMOUNT,
+  COLLECTION_FEE_MULTIPLIER,
+  COLLECTION_NOBA_FEE_AMOUNT,
   NOBA_CONFIG_KEY,
   NOBA_TRANSACTION_CONFIG_KEY,
   SERVER_LOG_FILE_PATH,
@@ -25,7 +29,7 @@ import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { WalletDepositImpl } from "../factory/wallet.deposit.impl";
 import { ServiceException } from "../../../core/exception/ServiceException";
 import { MonoCurrency } from "../../../modules/psp/domain/Mono";
-import { ExchangeRateFlags } from "../domain/ExchangeRateFlags";
+import { TransactionFlags } from "../domain/TransactionFlags";
 
 describe("WalletDepositImpl Tests", () => {
   jest.setTimeout(20000);
@@ -45,8 +49,12 @@ describe("WalletDepositImpl Tests", () => {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
       [NOBA_CONFIG_KEY]: {
         [NOBA_TRANSACTION_CONFIG_KEY]: {
-          [DEPOSIT_FEE_AMOUNT]: "1",
-          [DEPOSIT_FEE_PERCENTAGE]: ".05",
+          [DEPOSIT_FEE_FIXED_AMOUNT]: "400", // COP
+          [DEPOSIT_FEE_MULTIPLIER]: ".03",
+          [DEPOSIT_NOBA_FEE_AMOUNT]: ".50",
+          [COLLECTION_FEE_FIXED_AMOUNT]: "500", // COP
+          [COLLECTION_FEE_MULTIPLIER]: ".04",
+          [COLLECTION_NOBA_FEE_AMOUNT]: ".75",
         },
       },
     };
@@ -87,11 +95,11 @@ describe("WalletDepositImpl Tests", () => {
       const consumer = getRandomConsumer("consumerID");
       const { transaction, transactionDTO } = getRandomTransaction(consumer.props.id);
       const exchangeRate: ExchangeRateDTO = {
-        bankRate: 6,
+        bankRate: 0.0002,
         numeratorCurrency: Currency.COP,
         denominatorCurrency: Currency.USD,
         expirationTimestamp: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // 24 hrs
-        nobaRate: 5,
+        nobaRate: 0.00025,
       };
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
@@ -104,8 +112,8 @@ describe("WalletDepositImpl Tests", () => {
         ...transactionDTO,
         creditCurrency: Currency.USD,
         debitConsumerIDOrTag: consumer.props.id,
-        creditAmount: 500,
-        exchangeRate: 5,
+        creditAmount: 11.25,
+        exchangeRate: 0.00025,
       });
     });
 
@@ -177,7 +185,7 @@ describe("WalletDepositImpl Tests", () => {
 
       when(workflowExecutor.executeCreditConsumerWalletWorkflow(anyString(), anyString())).thenResolve();
 
-      await walletDepositImpl.initiateWorkflow(transaction);
+      await walletDepositImpl.initiateWorkflow(transaction, [TransactionFlags.IS_COLLECTION]);
 
       verify(workflowExecutor.executeCreditConsumerWalletWorkflow(transaction.id, transaction.transactionRef)).once();
     });
@@ -194,7 +202,9 @@ describe("WalletDepositImpl Tests", () => {
         creditConsumerID: "fake-id",
       };
 
-      await expect(walletDepositImpl.initiateWorkflow(transaction)).rejects.toThrow(ServiceException);
+      await expect(walletDepositImpl.initiateWorkflow(transaction, [TransactionFlags.IS_COLLECTION])).rejects.toThrow(
+        ServiceException,
+      );
     });
   });
 
@@ -203,15 +213,15 @@ describe("WalletDepositImpl Tests", () => {
       when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD)).thenResolve(exchangeRate);
 
       const quote = await walletDepositImpl.getTransactionQuote(100000, Currency.COP, Currency.USD, [
-        ExchangeRateFlags.IS_COLLECTION,
+        TransactionFlags.IS_COLLECTION,
       ]);
 
       expect(quote).toEqual({
-        nobaFee: "1.00",
-        processingFee: "0.90",
-        totalFee: "10.90",
+        nobaFee: "0.75",
+        processingFee: "0.95",
+        totalFee: "1.70",
         quoteAmount: "25.00",
-        quoteAmountWithFees: "23.10",
+        quoteAmountWithFees: "23.30",
         nobaRate: "0.00025",
       });
     });
@@ -222,11 +232,11 @@ describe("WalletDepositImpl Tests", () => {
       const quote = await walletDepositImpl.getTransactionQuote(100000, Currency.COP, Currency.USD, []);
 
       expect(quote).toEqual({
-        nobaFee: "1.00",
-        processingFee: "0.00",
-        totalFee: "10.00",
+        nobaFee: "0.50",
+        processingFee: "0.75",
+        totalFee: "1.25",
         quoteAmount: "25.00",
-        quoteAmountWithFees: "24.00",
+        quoteAmountWithFees: "23.75",
         nobaRate: "0.00025",
       });
     });
@@ -288,6 +298,7 @@ const getRandomTransaction = (
     workflowName: transaction.workflowName,
     exchangeRate: transaction.exchangeRate,
     memo: transaction.memo,
+    options: [TransactionFlags.IS_COLLECTION],
   };
 
   const inputTransaction: InputTransaction = {
@@ -298,7 +309,7 @@ const getRandomTransaction = (
     sessionKey: transaction.sessionKey,
   };
 
-  transaction.debitAmount = 100;
+  transaction.debitAmount = 50000;
   transaction.debitCurrency = Currency.COP;
   transaction.debitConsumerID = debitConsumerID;
 
