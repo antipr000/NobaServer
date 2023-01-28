@@ -5,5 +5,8 @@
 export type QuoteResponseDTO = {
   quoteAmount: string;
   quoteAmountWithFees: string;
-  exchangeRate: string;
+  nobaRate: string;
+  processingFee: string;
+  nobaFee: string;
+  totalFee: string;
 };

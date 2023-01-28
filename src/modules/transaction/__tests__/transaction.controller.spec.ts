@@ -25,6 +25,7 @@ import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from 
 import { TransactionEvent } from "../domain/TransactionEvent";
 import { MonoService } from "../../../modules/psp/mono/mono.service";
 import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
+import { TransactionFlags } from "../domain/TransactionFlags";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
   const transaction: Transaction = {
@@ -522,32 +523,96 @@ describe("Transaction Controller tests", () => {
   describe("getQuote", () => {
     it("should return quote if all parameters are correct", async () => {
       const quoteDetails: QuoteRequestDTO = {
-        amount: 1,
-        currency: Currency.USD,
-        desiredCurrency: Currency.COP,
+        amount: 5000,
+        currency: Currency.COP,
+        desiredCurrency: Currency.USD,
+        workflowName: WorkflowName.WALLET_DEPOSIT,
+        options: [],
       };
 
-      when(transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP)).thenResolve({
-        exchangeRate: "5000",
-        quoteAmount: "5000",
-        quoteAmountWithFees: "3775",
+      when(
+        transactionService.getTransactionQuote(
+          quoteDetails.amount,
+          quoteDetails.currency,
+          quoteDetails.desiredCurrency,
+          quoteDetails.workflowName,
+          deepEqual(quoteDetails.options),
+        ),
+      ).thenResolve({
+        nobaFee: "1.99",
+        processingFee: "0.00",
+        totalFee: "1.99",
+        quoteAmount: "12.50",
+        quoteAmountWithFees: "10.51",
+        nobaRate: "0.00025",
       });
+
       const response = await transactionController.getQuote(quoteDetails);
       expect(response).toStrictEqual({
-        exchangeRate: "5000",
-        quoteAmount: "5000",
-        quoteAmountWithFees: "3775",
+        nobaFee: "1.99",
+        processingFee: "0.00",
+        totalFee: "1.99",
+        quoteAmount: "12.50",
+        quoteAmountWithFees: "10.51",
+        nobaRate: "0.00025",
+      });
+    });
+
+    it("should correctly pass through the exchange rate flags", async () => {
+      const quoteDetails: QuoteRequestDTO = {
+        amount: 5000,
+        currency: Currency.COP,
+        desiredCurrency: Currency.USD,
+        workflowName: WorkflowName.WALLET_DEPOSIT,
+        options: [TransactionFlags.IS_COLLECTION],
+      };
+
+      when(
+        transactionService.getTransactionQuote(
+          quoteDetails.amount,
+          quoteDetails.currency,
+          quoteDetails.desiredCurrency,
+          quoteDetails.workflowName,
+          deepEqual(quoteDetails.options),
+        ),
+      ).thenResolve({
+        nobaFee: "1.99",
+        processingFee: "0.60",
+        totalFee: "2.59",
+        quoteAmount: "12.50",
+        quoteAmountWithFees: "9.91",
+        nobaRate: "0.00025",
+      });
+
+      const response = await transactionController.getQuote(quoteDetails);
+      expect(response).toStrictEqual({
+        nobaFee: "1.99",
+        processingFee: "0.60",
+        totalFee: "2.59",
+        quoteAmount: "12.50",
+        quoteAmountWithFees: "9.91",
+        nobaRate: "0.00025",
       });
     });
 
     it("should throw ServiceException if exchange rate is not available", async () => {
       const quoteDetails: QuoteRequestDTO = {
-        amount: 1,
-        currency: Currency.USD,
-        desiredCurrency: Currency.COP,
+        amount: 5000,
+        currency: Currency.COP,
+        desiredCurrency: Currency.USD,
+        workflowName: WorkflowName.WALLET_DEPOSIT,
+        options: [TransactionFlags.IS_COLLECTION],
       };
 
-      when(transactionService.calculateExchangeRate(1, Currency.USD, Currency.COP)).thenReject(
+      when(
+        transactionService.getTransactionQuote(
+          quoteDetails.amount,
+          quoteDetails.currency,
+          quoteDetails.desiredCurrency,
+          quoteDetails.workflowName,
+          deepEqual(quoteDetails.options),
+        ),
+      ).thenReject(
         new ServiceException({
           errorCode: ServiceErrorCode.DOES_NOT_EXIST,
           message: "Exchange rate not available",
