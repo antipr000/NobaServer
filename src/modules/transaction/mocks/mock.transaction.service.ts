@@ -1,4 +1,4 @@
-import { anyString, anything, mock, when } from "ts-mockito";
+import { anyNumber, anyString, anything, mock, when } from "ts-mockito";
 import { TransactionService } from "../transaction.service";
 
 export function getMockTransactionServiceWithDefaults(): TransactionService {
@@ -23,6 +23,10 @@ export function getMockTransactionServiceWithDefaults(): TransactionService {
   when(mockTransactionService.updateTransaction(anyString(), anything())).thenReject(
     new Error("Method not implemented"),
   );
+
+  when(
+    mockTransactionService.getTransactionQuote(anyNumber(), anything(), anything(), anything(), anything()),
+  ).thenReject(new Error("Method not implemented"));
 
   return mockTransactionService;
 }

@@ -1,5 +1,11 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { InputTransaction, Transaction, TransactionStatus, UpdateTransaction } from "./domain/Transaction";
+import {
+  InputTransaction,
+  Transaction,
+  TransactionStatus,
+  UpdateTransaction,
+  WorkflowName,
+} from "./domain/Transaction";
 import { TransactionFilterOptionsDTO } from "./dto/TransactionFilterOptionsDTO";
 import { InitiateTransactionDTO } from "./dto/CreateTransactionDTO";
 import { ITransactionRepo } from "./repo/transaction.repo";
@@ -12,7 +18,6 @@ import { ServiceErrorCode, ServiceException } from "../../core/exception/Service
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { Currency } from "./domain/TransactionTypes";
 import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";
-import { ExchangeRateService } from "../common/exchangerate.service";
 import { AddTransactionEventDTO, TransactionEventDTO } from "./dto/TransactionEventDTO";
 import { InputTransactionEvent, TransactionEvent } from "./domain/TransactionEvent";
 import { UpdateTransactionDTO } from "./dto/TransactionDTO";
@@ -22,6 +27,7 @@ import { KYCStatus } from "@prisma/client";
 import { WorkflowFactory } from "./factory/workflow.factory";
 import { IWithdrawalDetailsRepo } from "./repo/withdrawal.details.repo";
 import { InputWithdrawalDetails, WithdrawalDetails } from "./domain/WithdrawalDetails";
+import { TransactionFlags } from "./domain/TransactionFlags";
 import { DebitBankRequest, DebitBankResponse } from "./domain/Transaction";
 import { BankFactory } from "../psp/factory/bank.factory";
 
@@ -32,7 +38,6 @@ export class TransactionService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     @Inject(WITHDRAWAL_DETAILS_REPO_PROVIDER) private readonly withdrawalDetailsRepo: IWithdrawalDetailsRepo,
     private readonly consumerService: ConsumerService,
-    private readonly exchangeRateService: ExchangeRateService,
     private readonly verificationService: VerificationService,
     private readonly transactionFactory: WorkflowFactory,
     private readonly bankFactory: BankFactory,
@@ -139,15 +144,17 @@ export class TransactionService {
       }
     }
 
-    await workflowImpl.initiateWorkflow(savedTransaction);
+    await workflowImpl.initiateWorkflow(savedTransaction, transactionDetails.options);
 
     return savedTransaction;
   }
 
-  async calculateExchangeRate(
+  async getTransactionQuote(
     amount: number,
     amountCurrency: Currency,
     desiredCurrency: Currency,
+    workflowName: WorkflowName,
+    options?: TransactionFlags[],
   ): Promise<QuoteResponseDTO> {
     if (Object.values(Currency).indexOf(amountCurrency) === -1) {
       throw new ServiceException({
@@ -163,35 +170,14 @@ export class TransactionService {
       });
     }
 
-    const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
-      amountCurrency,
-      desiredCurrency,
-    );
-
-    if (!exchangeRateDTO) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-        message: "No exchange rate found for currency pair",
-      });
-    }
-
-    const exchangeRate = exchangeRateDTO.nobaRate;
-    let desiredAmount = 0;
-    let desiredAmountWithFees = 0;
-    if (desiredCurrency === Currency.COP) {
-      desiredAmount = amount * exchangeRate;
-      desiredAmountWithFees = desiredAmount - 1.19 * (0.0265 * desiredAmount + 900);
-    } else {
-      desiredAmount = amount * exchangeRate;
-      const baseCurrencyWithFees = amount - 1.19 * (0.0265 * amount + 900);
-      desiredAmountWithFees = baseCurrencyWithFees * exchangeRate;
-    }
-
-    return {
-      quoteAmount: Utils.roundTo2DecimalString(desiredAmount),
-      quoteAmountWithFees: Utils.roundTo2DecimalString(desiredAmountWithFees),
-      exchangeRate: exchangeRate.toString(),
-    };
+    /* Investigate: 
+    - Add global parameters to control processing fees
+    - Add global parameters to control noba fees
+    - Add consumer check for user promos
+    - Add tier based fees
+    */
+    const workflowImpl = this.transactionFactory.getWorkflowImplementation(workflowName);
+    return workflowImpl.getTransactionQuote(amount, amountCurrency, desiredCurrency, options);
   }
 
   async updateTransaction(transactionID: string, transactionDetails: UpdateTransactionDTO): Promise<Transaction> {

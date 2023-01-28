@@ -76,6 +76,22 @@ noba:
     awsSecretKeyForFixedCreditCardFee: ""
     slippageAllowedPercentage: ".02"
     awsSecretKeyForSlippageAllowedPercentage: ""
+    collectionFeeMultiplier: "0.031135"
+    awsSecretKeyForCollectionFeeMultiplier: ""
+    collectionFeeFixedAmount: "1062"
+    awsSecretKeyForCollectionFeeFixedAmount: ""
+    collectionNobaFeeAmount: "0"
+    awsSecretKeyForCollectionNobaFeeAmount: ""
+    depositFeeMultiplier: "1"
+    awsSecretKeyForDepositFeeMultiplier: ""
+    depositFeeFixedAmount: "500"
+    awsSecretKeyForDepositFeeFixedAmount: ""
+    depositNobaFeeAmount: "0"
+    awsSecretKeyForDepositNobaFeeAmount: ""
+    withdrawalMonoFeeAmount: "2975"
+    awsSecretKeyForWithdrawalMonoFeeAmount: ""
+    withdrawalNobaFeeAmount: "0"
+    awsSecretKeyForWithdrawalNobaFeeAmount: ""
 
 zerohash:
   awsSecretNameForApiKey: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files

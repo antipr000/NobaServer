@@ -129,6 +129,14 @@ import {
   BUBBLE_BEARER_TOKEN,
   NOBA_BUBBLE_BEARER_TOKEN,
   AWS_SECRET_KEY_FOR_NOBA_BUBBLE_BEARER_TOKEN,
+  COLLECTION_FEE_FIXED_AMOUNT,
+  COLLECTION_FEE_MULTIPLIER,
+  AWS_SECRET_KEY_FOR_COLLECTION_FEE_FIXED_AMOUNT,
+  AWS_SECRET_KEY_FOR_COLLECTION_FEE_MULTIPLIER,
+  WITHDRAWAL_MONO_FEE_AMOUNT,
+  WITHDRAWAL_NOBA_FEE_AMOUNT,
+  AWS_SECRET_KEY_FOR_WITHDRAWAL_MONO_FEE_AMOUNT,
+  AWS_SECRET_KEY_FOR_WITHDRAWAL_NOBA_FEE_AMOUNT,
 } from "./ConfigurationUtils";
 import fs from "fs";
 
@@ -561,7 +569,6 @@ async function configureNobaParameters(
     nobaConfigs.awsSecretKeyForBubbleBearerToken,
     nobaConfigs.bubbleBearerToken,
   );
-
   nobaConfigs.transaction.dynamicCreditCardFeePercentage = Number(
     await getParameterValue(
       nobaConfigs.transaction.awsSecretKeyForDynamicCreditCardFeePercentage,
@@ -591,6 +598,62 @@ async function configureNobaParameters(
     await getParameterValue(
       nobaConfigs.transaction.awsSecretKeyForSlippageAllowedPercentage,
       nobaConfigs.transaction.slippageAllowedPercentage.toString(),
+    ),
+  );
+
+  nobaConfigs.transaction.depositFeeFixedAmount = Number(
+    await getParameterValue(
+      nobaConfigs.transaction.awsSecretKeyForDepositFeeFixedAmount,
+      nobaConfigs.transaction.depositFeeFixedAmount.toString(),
+    ),
+  );
+
+  nobaConfigs.transaction.depositFeeMultiplier = Number(
+    await getParameterValue(
+      nobaConfigs.transaction.awsSecretKeyForDepositFeeMultiplier,
+      nobaConfigs.transaction.depositFeeMultiplier.toString(),
+    ),
+  );
+
+  nobaConfigs.transaction.depositNobaFeeAmount = Number(
+    await getParameterValue(
+      nobaConfigs.transaction.awsSecretKeyForDepositNobaFeeAmount,
+      nobaConfigs.transaction.depositNobaFeeAmount.toString(),
+    ),
+  );
+
+  nobaConfigs.transaction.collectionFeeFixedAmount = Number(
+    await getParameterValue(
+      nobaConfigs.transaction.awsSecretKeyForCollectionFeeFixedAmount,
+      nobaConfigs.transaction.collectionFeeFixedAmount.toString(),
+    ),
+  );
+
+  nobaConfigs.transaction.collectionFeeMultiplier = Number(
+    await getParameterValue(
+      nobaConfigs.transaction.awsSecretKeyForCollectionFeeMultiplier,
+      nobaConfigs.transaction.collectionFeeMultiplier.toString(),
+    ),
+  );
+
+  nobaConfigs.transaction.collectionNobaFeeAmount = Number(
+    await getParameterValue(
+      nobaConfigs.transaction.awsSecretKeyForCollectionNobaFeeAmount,
+      nobaConfigs.transaction.collectionNobaFeeAmount.toString(),
+    ),
+  );
+
+  nobaConfigs.transaction.withdrawalMonoFeeAmount = Number(
+    await getParameterValue(
+      nobaConfigs.transaction.awsSecretKeyForWithdrawalMonoFeeAmount,
+      nobaConfigs.transaction.withdrawalMonoFeeAmount.toString(),
+    ),
+  );
+
+  nobaConfigs.transaction.withdrawalNobaFeeAmount = Number(
+    await getParameterValue(
+      nobaConfigs.transaction.awsSecretKeyForWithdrawalNobaFeeAmount,
+      nobaConfigs.transaction.withdrawalNobaFeeAmount.toString(),
     ),
   );
 

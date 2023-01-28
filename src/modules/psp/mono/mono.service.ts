@@ -84,7 +84,7 @@ export class MonoService {
       amount: request.amount,
       currency: request.currency,
       bankCode: request.bankCode,
-      accountNumber: request.accountNumber,
+      accountNumber: accountNumber,
       accountType: request.accountType,
       documentNumber: request.documentNumber,
       documentType: request.documentType,

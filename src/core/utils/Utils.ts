@@ -22,13 +22,24 @@ export class Utils {
     return this.round(num, decimals);
   }
 
-  private static round(num, decimalPlaces: number): string {
+  private static round(num: number, decimalPlaces: number): string {
     const shift = function (value, exponent: number) {
       value = (value + "e").split("e");
       return +(value[0] + "e" + (+value[1] + (exponent || 0)));
     };
     const n = shift(num, +decimalPlaces);
     return shift(Math.round(n), -decimalPlaces).toFixed(decimalPlaces);
+  }
+
+  /**
+   * Rounds num up to the nearest 'nearest' number. For example, if num is 1.2 and nearest is 0.5, the result will be 1.5.
+   * @param num Number to round up to the nearest 'nearest' number
+   * @param nearest Nearest fractional number to round up to
+   * @returns
+   */
+  public static roundUpToNearest(num: number, nearest: number): number {
+    const multiplier = 1 / nearest;
+    return Math.ceil(num * multiplier) / multiplier;
   }
 
   static generateLowercaseUUID(removeDashes = false): string {

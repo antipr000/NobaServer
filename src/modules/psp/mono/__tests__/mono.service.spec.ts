@@ -4,15 +4,21 @@ import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { uuid } from "uuidv4";
 import { IMonoRepo } from "../repo/mono.repo";
-import { MonoCurrency, MonoTransaction, MonoTransactionCreateRequest, MonoTransactionState } from "../../domain/Mono";
+import {
+  MonoCurrency,
+  MonoTransaction,
+  MonoTransactionCreateRequest,
+  MonoTransactionState,
+  MonoWithdrawal,
+} from "../../domain/Mono";
 import { MonoClient } from "../mono.client";
 import { getMockMonoRepoWithDefaults } from "../mocks/mock.mono.repo";
 import { getMockMonoClientWithDefaults } from "../mocks/mock.mono.client";
 import { MONO_REPO_PROVIDER } from "../repo/mono.repo.module";
 import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { MonoService } from "../mono.service";
-import { MonoClientCollectionLinkRequest } from "../../dto/mono.client.dto";
-import { CreateMonoTransactionRequest } from "../../dto/mono.service.dto";
+import { MonoClientCollectionLinkRequest, MonoTransferRequest } from "../../dto/mono.client.dto";
+import { CreateMonoTransactionRequest, DebitMonoRequest } from "../../dto/mono.service.dto";
 import { InternalServiceErrorException } from "../../../../core/exception/CommonAppException";
 import { Consumer } from "../../../../modules/consumer/domain/Consumer";
 import { ConsumerService } from "../../../../modules/consumer/consumer.service";
@@ -22,6 +28,8 @@ import { getMockMonoWebhookHandlersWithDefaults } from "../mocks/mock.mono.webho
 import { CollectionIntentCreditedEvent } from "../../dto/mono.webhook.dto";
 import { getMockKMSServiceWithDefaults } from "../../../../modules/common/mocks/mock.kms.service";
 import { KmsService } from "../../../../modules/common/kms.service";
+import { KmsKeyType } from "../../../../config/configtypes/KmsConfigs";
+import { ServiceException } from "../../../../core/exception/ServiceException";
 
 const getRandomMonoTransaction = (): MonoTransaction => {
   return {
@@ -399,6 +407,139 @@ describe("MonoServiceTests", () => {
       );
 
       verify(monoRepo.updateMonoTransaction(anyString(), anything())).never();
+    });
+  });
+  describe("debitFromNoba", () => {
+    it("should debit from NOBA account", async () => {
+      const consumer = Consumer.createConsumer({
+        email: "fake@fake.com",
+        firstName: "first",
+        lastName: "last",
+      });
+      const decryptedAccount = "1234567";
+      const encryptedAccount = "encryptedAccount";
+      const debitMonoRequest: DebitMonoRequest = {
+        amount: 100,
+        currency: MonoCurrency.COP,
+        accountNumber: encryptedAccount,
+        accountType: "accountType",
+        bankCode: "fake",
+        consumerID: consumer.props.id,
+        documentNumber: "123456",
+        documentType: "CC",
+        transactionID: "transactionID",
+        transactionRef: "transactionRef",
+      };
+
+      const transferRequest: MonoTransferRequest = {
+        amount: debitMonoRequest.amount,
+        currency: MonoCurrency.COP,
+        accountNumber: decryptedAccount,
+        accountType: debitMonoRequest.accountType,
+        bankCode: debitMonoRequest.bankCode,
+        consumerEmail: consumer.props.email,
+        consumerName: "first last",
+        documentNumber: debitMonoRequest.documentNumber,
+        documentType: debitMonoRequest.documentType,
+        transactionID: debitMonoRequest.transactionID,
+        transactionRef: debitMonoRequest.transactionRef,
+      };
+
+      when(consumerService.getConsumer(debitMonoRequest.consumerID)).thenResolve(consumer);
+      when(kmsService.decryptString(encryptedAccount, KmsKeyType.SSN)).thenResolve(decryptedAccount);
+
+      const withdrawal = {
+        state: "SUCCESS",
+        withdrawalID: "withdrawalID",
+      };
+      when(monoClient.transfer(deepEqual(transferRequest))).thenResolve(withdrawal);
+
+      const monoWithdrawal: MonoWithdrawal = await monoService.debitFromNoba(debitMonoRequest);
+
+      expect(monoWithdrawal).toStrictEqual(withdrawal);
+    });
+
+    it("should throw ServiceException if currency is not COP", async () => {
+      const consumer = Consumer.createConsumer({
+        email: "fake@fake.com",
+        firstName: "first",
+        lastName: "last",
+      });
+
+      const decryptedAccount = "1234567";
+      const encryptedAccount = "encryptedAccount";
+      const debitMonoRequest: DebitMonoRequest = {
+        amount: 100,
+        currency: null,
+        accountNumber: encryptedAccount,
+        accountType: "accountType",
+
+        bankCode: "fake",
+        consumerID: consumer.props.id,
+        documentNumber: "123456",
+        documentType: "CC",
+        transactionID: "transactionID",
+        transactionRef: "transactionRef",
+      };
+
+      when(consumerService.getConsumer(debitMonoRequest.consumerID)).thenResolve(consumer);
+      when(kmsService.decryptString(encryptedAccount, KmsKeyType.SSN)).thenResolve(decryptedAccount);
+
+      await expect(monoService.debitFromNoba(debitMonoRequest)).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException if consumer is not found", async () => {
+      const consumer = Consumer.createConsumer({
+        email: "fake@fake.com",
+        firstName: "first",
+        lastName: "last",
+      });
+      const decryptedAccount = "1234567";
+      const encryptedAccount = "encryptedAccount";
+      const debitMonoRequest: DebitMonoRequest = {
+        amount: 100,
+        currency: MonoCurrency.COP,
+        accountNumber: encryptedAccount,
+        accountType: "accountType",
+        bankCode: "fake",
+        consumerID: consumer.props.id,
+        documentNumber: "123456",
+        documentType: "CC",
+        transactionID: "transactionID",
+        transactionRef: "transactionRef",
+      };
+
+      when(consumerService.getConsumer(debitMonoRequest.consumerID)).thenResolve(null);
+      when(kmsService.decryptString(encryptedAccount, KmsKeyType.SSN)).thenResolve(decryptedAccount);
+
+      await expect(monoService.debitFromNoba(debitMonoRequest)).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException if account number decryption fails", async () => {
+      const consumer = Consumer.createConsumer({
+        email: "fake@fake.com",
+        firstName: "first",
+        lastName: "last",
+      });
+
+      const encryptedAccount = "encryptedAccount";
+      const debitMonoRequest: DebitMonoRequest = {
+        amount: 100,
+        currency: MonoCurrency.COP,
+        accountNumber: encryptedAccount,
+        accountType: "accountType",
+        bankCode: "fake",
+        consumerID: consumer.props.id,
+        documentNumber: "123456",
+        documentType: "CC",
+        transactionID: "transactionID",
+        transactionRef: "transactionRef",
+      };
+
+      when(consumerService.getConsumer(debitMonoRequest.consumerID)).thenResolve(consumer);
+      when(kmsService.decryptString(encryptedAccount, KmsKeyType.SSN)).thenResolve(null);
+
+      await expect(monoService.debitFromNoba(debitMonoRequest)).rejects.toThrowError(ServiceException);
     });
   });
 });

@@ -8,5 +8,14 @@ export class QuoteResponseDTO {
   quoteAmountWithFees: string;
 
   @ApiProperty()
-  exchangeRate: string;
+  nobaRate: string;
+
+  @ApiProperty()
+  processingFee: string;
+
+  @ApiProperty()
+  nobaFee: string;
+
+  @ApiProperty()
+  totalFee: string;
 }
