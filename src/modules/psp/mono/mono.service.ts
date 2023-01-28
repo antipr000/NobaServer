@@ -141,7 +141,7 @@ export class MonoService {
 
     if (updatedState.state !== monoTransaction.state) {
       await this.monoRepo.updateMonoTransaction(monoTransaction.id, {
-        state: updatedState.state as MonoTransactionState,
+        state: updatedState.state,
       });
       monoTransaction.state = updatedState.state as MonoTransactionState;
     }

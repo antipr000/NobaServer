@@ -42,8 +42,12 @@ export enum MonoCurrency {
 
 export enum MonoTransactionState {
   PENDING = "PENDING",
+  IN_PROGRESS = "IN_PROGRESS",
   SUCCESS = "SUCCESS",
   EXPIRED = "EXPIRED",
+  DECLINED = "DECLINED",
+  CANCELLED = "CANCELLED",
+  DUPLICATED = "DUPLICATED",
 }
 
 export enum MonoTransactionType {

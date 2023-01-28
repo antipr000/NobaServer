@@ -17,6 +17,7 @@ import { InternalServiceErrorException } from "../../../core/exception/CommonApp
 import { Utils } from "../../../core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
+import { MonoTransactionState } from "../domain/Mono";
 
 @Injectable()
 export class MonoClient {
@@ -204,8 +205,23 @@ export class MonoClient {
         });
       }
 
+      const externalTransactionStateToInternalState: Record<string, MonoTransactionState> = {
+        created: MonoTransactionState.PENDING,
+        in_progress: MonoTransactionState.IN_PROGRESS,
+        approved: MonoTransactionState.SUCCESS,
+        declined: MonoTransactionState.DECLINED,
+        cancelled: MonoTransactionState.CANCELLED,
+        duplicated: MonoTransactionState.DUPLICATED,
+      };
+      if (!externalTransactionStateToInternalState[transfer.state]) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.UNKNOWN,
+          message: `Unknown Mono transfer state: ${transfer.state}`,
+        });
+      }
+
       return {
-        state: transfer.state,
+        state: externalTransactionStateToInternalState[transfer.state],
         lastUpdatedTimestamp: new Date(transfer.updated_at),
       };
     } catch (err) {

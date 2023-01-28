@@ -1,4 +1,4 @@
-import { MonoCurrency } from "../domain/Mono";
+import { MonoCurrency, MonoTransactionState } from "../domain/Mono";
 
 export type MonoClientCollectionLinkRequest = {
   transactionID: string;
@@ -36,6 +36,6 @@ export type MonoTransferResponse = {
 };
 
 export type MonoTransferStatusResponse = {
-  state: string;
+  state: MonoTransactionState;
   lastUpdatedTimestamp: Date;
 };
