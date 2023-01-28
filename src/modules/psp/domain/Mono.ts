@@ -65,6 +65,7 @@ export class MonoTransactionSaveRequest {
 export class MonoTransactionUpdateRequest {
   monoPaymentTransactionID?: string;
   state?: MonoTransactionState;
+  declinationReason?: string;
 }
 
 export const validateSaveMonoTransactionRequest = (transaction: MonoTransactionSaveRequest) => {
@@ -106,6 +107,7 @@ export const validateUpdateMonoTransactionRequest = (transaction: MonoTransactio
     state: Joi.string()
       .optional()
       .valid(...Object.values(MonoTransactionState)),
+    declinationReason: Joi.string().optional(),
   };
 
   const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({

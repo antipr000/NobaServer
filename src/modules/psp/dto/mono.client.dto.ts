@@ -37,5 +37,6 @@ export type MonoTransferResponse = {
 
 export type MonoTransferStatusResponse = {
   state: MonoTransactionState;
+  declinationReason?: string;
   lastUpdatedTimestamp: Date;
 };

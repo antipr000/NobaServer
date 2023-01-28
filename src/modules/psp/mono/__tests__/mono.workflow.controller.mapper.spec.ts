@@ -31,7 +31,7 @@ describe("MonoWorkflowControllerMappersTest", () => {
   });
 
   describe("convertToMonoTransactionDTO", () => {
-    it("should map all the fields correctly for COLLECTION_LINK_DEPOSIT transanctions", () => {
+    it("should map all the fields correctly for COLLECTION_LINK_DEPOSIT transactions", () => {
       const monoTransaction: MonoTransaction = {
         id: "ID",
         nobaTransactionID: "nobaTransactionID",

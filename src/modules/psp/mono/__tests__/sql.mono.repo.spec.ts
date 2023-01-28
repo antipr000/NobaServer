@@ -402,7 +402,7 @@ describe("SqlMonoRepoTests", () => {
       expect(retrievedMonoTransactionFromDB).toEqual(retrievedMonoTransaction);
     });
 
-    it("should update the 'monoTransactionID' of Mono transaction if it exists", async () => {
+    it("should update the 'monoPaymentTransactionID' of Mono transaction if it exists", async () => {
       const nobaTransactionID: string = await createTestNobaTransaction(prismaService);
       const monoTransactionRequest: MonoTransactionSaveRequest = getRandomMonoTransaction(
         nobaTransactionID,
@@ -426,6 +426,36 @@ describe("SqlMonoRepoTests", () => {
       );
       expect(retrievedMonoTransaction.collectionLinkDepositDetails.collectionURL).toEqual(
         monoTransaction.collectionLinkDepositDetails.collectionURL,
+      );
+      expect(retrievedMonoTransaction.createdTimestamp).toEqual(monoTransaction.createdTimestamp);
+      expect(retrievedMonoTransaction.nobaTransactionID).toEqual(monoTransaction.nobaTransactionID);
+      expect(retrievedMonoTransaction.id).toEqual(monoTransaction.id);
+
+      const retrievedMonoTransactionFromDB = await monoRepo.getMonoTransactionByNobaTransactionID(nobaTransactionID);
+      expect(retrievedMonoTransactionFromDB).toEqual(retrievedMonoTransaction);
+    });
+
+    it("should update the 'declinationReason' of Mono transaction if it exists", async () => {
+      const nobaTransactionID: string = await createTestNobaTransaction(prismaService);
+      const monoTransactionRequest: MonoTransactionSaveRequest = getRandomMonoTransaction(
+        nobaTransactionID,
+        MonoTransactionType.WITHDRAWAL,
+      );
+      const monoTransaction: MonoTransaction = await monoRepo.createMonoTransaction(monoTransactionRequest);
+
+      const updatedMonoTransaction: MonoTransactionUpdateRequest = {
+        declinationReason: "DECLINATION_REASON",
+      };
+
+      const retrievedMonoTransaction = await monoRepo.updateMonoTransaction(monoTransaction.id, updatedMonoTransaction);
+      expect(retrievedMonoTransaction.withdrawalDetails.declinationReason).toEqual("DECLINATION_REASON");
+      expect(retrievedMonoTransaction.updatedTimestamp).not.toEqual(monoTransaction.updatedTimestamp);
+
+      expect(retrievedMonoTransaction.state).toEqual(monoTransaction.state);
+      expect(retrievedMonoTransaction.collectionLinkDepositDetails).toBeUndefined();
+      expect(retrievedMonoTransaction.withdrawalDetails.batchID).toEqual(monoTransaction.withdrawalDetails.batchID);
+      expect(retrievedMonoTransaction.withdrawalDetails.transferID).toEqual(
+        monoTransaction.withdrawalDetails.transferID,
       );
       expect(retrievedMonoTransaction.createdTimestamp).toEqual(monoTransaction.createdTimestamp);
       expect(retrievedMonoTransaction.nobaTransactionID).toEqual(monoTransaction.nobaTransactionID);

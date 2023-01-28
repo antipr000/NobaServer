@@ -84,6 +84,7 @@ export class SqlMonoRepo implements IMonoRepo {
       const transactionUpdate: Prisma.MonoUpdateInput = {
         ...(request.state && { state: request.state }),
         ...(request.monoPaymentTransactionID && { monoPaymentTransactionID: request.monoPaymentTransactionID }),
+        ...(request.declinationReason && { declinationReason: request.declinationReason }),
       };
 
       const returnedTransaction: PrismaMonoModel = await this.prismaService.mono.update({

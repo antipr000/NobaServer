@@ -142,6 +142,7 @@ export class MonoService {
     if (updatedState.state !== monoTransaction.state) {
       await this.monoRepo.updateMonoTransaction(monoTransaction.id, {
         state: updatedState.state,
+        ...(updatedState.declinationReason && { declinationReason: updatedState.declinationReason }),
       });
       monoTransaction.state = updatedState.state as MonoTransactionState;
     }

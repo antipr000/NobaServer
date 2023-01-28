@@ -223,6 +223,7 @@ export class MonoClient {
       return {
         state: externalTransactionStateToInternalState[transfer.state],
         lastUpdatedTimestamp: new Date(transfer.updated_at),
+        declinationReason: transfer.declination_reason,
       };
     } catch (err) {
       this.logger.error(`Error while fetching the Transfer status from Mono: ${JSON.stringify(err)}`);
