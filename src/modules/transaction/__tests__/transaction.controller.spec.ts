@@ -25,6 +25,8 @@ import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from 
 import { TransactionEvent } from "../domain/TransactionEvent";
 import { MonoService } from "../../../modules/psp/mono/mono.service";
 import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
+import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
+import { AccountType, DocumentType } from "../domain/WithdrawalDetails";
 import { TransactionFlags } from "../domain/TransactionFlags";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
@@ -467,7 +469,7 @@ describe("Transaction Controller tests", () => {
   });
 
   describe("initiateTransaction", () => {
-    it("should return transaction id of the initiated transaction if all parameters are correct", async () => {
+    it("should return transaction of the initiated transaction if all parameters are correct", async () => {
       const consumerID = "testConsumerID";
       const consumer = getRandomConsumer(consumerID);
       const creditConsumer = getRandomConsumer("creditConsumerID");
@@ -508,6 +510,71 @@ describe("Transaction Controller tests", () => {
         workflowName: WorkflowName.WALLET_DEPOSIT,
         debitCurrency: Currency.COP,
         debitAmount: 100,
+      };
+
+      when(transactionService.initiateTransaction(deepEqual(orderDetails), consumerID, "fake-session")).thenResolve(
+        transaction,
+      );
+
+      const response = await transactionController.initiateTransaction("fake-session", orderDetails, consumer);
+
+      expect(response).toStrictEqual(expectedResult);
+    });
+
+    it("should return transaction of the initiated transaction if all parameters(and optional) are correct", async () => {
+      const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
+      const testMemo = "testing this memo.";
+      const testExchangeRate = 5000;
+      const creditConsumer = getRandomConsumer("creditConsumerID");
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      transaction.creditConsumerID = creditConsumer.props.id;
+      transaction.memo = testMemo;
+      transaction.exchangeRate = testExchangeRate;
+
+      when(consumerService.getConsumer(creditConsumer.props.id)).thenResolve(creditConsumer);
+
+      const expectedResult: TransactionDTO = {
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        creditConsumer: {
+          id: creditConsumer.props.id,
+          firstName: creditConsumer.props.firstName,
+          handle: creditConsumer.props.handle,
+          lastName: creditConsumer.props.lastName,
+        },
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: testExchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: testMemo,
+        transactionEvents: undefined,
+      };
+
+      const orderDetails: InitiateTransactionDTO = {
+        debitConsumerIDOrTag: "$soham",
+        workflowName: WorkflowName.WALLET_DEPOSIT,
+        debitCurrency: Currency.COP,
+        debitAmount: 100,
+        memo: testMemo,
+        exchangeRate: testExchangeRate,
+        withdrawalData: {
+          accountNumber: "123456789",
+          accountType: AccountType.CHECKING,
+          bankCode: "123",
+          documentNumber: "123456789",
+          documentType: DocumentType.CC,
+        },
       };
 
       when(transactionService.initiateTransaction(deepEqual(orderDetails), consumerID, "fake-session")).thenResolve(

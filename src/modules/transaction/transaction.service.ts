@@ -70,7 +70,6 @@ export class TransactionService {
     initiatingConsumer: string,
     sessionKey: string,
   ): Promise<Transaction> {
-    // TODO: Add more validations around required amounts/currencies
     if (!initiatingConsumer) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -124,10 +123,13 @@ export class TransactionService {
     }
 
     const savedTransaction: Transaction = await this.transactionRepo.createTransaction(transaction);
-    this.addWithdrawalDetails({
-      transactionID: savedTransaction.id,
-      ...transactionDetails.withdrawalData,
-    });
+
+    if (transactionDetails.withdrawalData) {
+      this.addWithdrawalDetails({
+        transactionID: savedTransaction.id,
+        ...transactionDetails.withdrawalData,
+      });
+    }
 
     // Perform sanctions check
     try {
