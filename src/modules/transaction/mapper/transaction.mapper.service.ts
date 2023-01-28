@@ -55,7 +55,10 @@ export class TransactionMappingService {
       updatedTimestamp: transaction.updatedTimestamp,
       memo: transaction.memo,
       transactionEvents: transactionEvents?.map(event => this.toTransactionEventDTO(event)),
-      ...(monoTransaction && { paymentCollectionLink: monoTransaction.collectionURL }),
+      ...(monoTransaction &&
+        monoTransaction.collectionLinkDepositDetails && {
+          paymentCollectionLink: monoTransaction.collectionLinkDepositDetails.collectionURL,
+        }),
     };
   }
 

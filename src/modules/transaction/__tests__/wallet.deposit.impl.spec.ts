@@ -18,7 +18,7 @@ import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/
 import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { WalletDepositImpl } from "../factory/wallet.deposit.impl";
 import { ServiceException } from "../../../core/exception/ServiceException";
-import { MonoCurrency } from "../../../modules/psp/domain/Mono";
+import { MonoCurrency, MonoTransactionType } from "../../../modules/psp/domain/Mono";
 
 describe("WalletDepositImpl Tests", () => {
   jest.setTimeout(20000);
@@ -154,6 +154,7 @@ describe("WalletDepositImpl Tests", () => {
       when(
         monoService.createMonoTransaction(
           deepEqual({
+            type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
             amount: transaction.debitAmount,
             currency: transaction.debitCurrency as MonoCurrency,
             consumerID: transaction.debitConsumerID,

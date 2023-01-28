@@ -169,9 +169,10 @@ export class MonoClient {
       const transferResponse = response.data.transfers[0]; // Should only be one transfer
 
       return {
-        withdrawalID: transferResponse.batch.id,
         state: transferResponse.batch.state, // There are many states, should we check against them?
         declinationReason: transferResponse.declination_reason,
+        batchID: transferResponse.batch.id,
+        transferID: transferResponse.id,
       };
     } catch (err) {
       this.logger.error(

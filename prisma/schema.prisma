@@ -268,18 +268,25 @@ model TransactionEvent {
 }
 
 model Mono {
-  id                String      @id @default(uuid())
-  monoTransactionID String?
-  collectionLinkID  String      @unique()
-  collectionURL     String
-  state             String
-  nobaTransactionID String      @unique()
-  transaction       Transaction @relation(fields: [nobaTransactionID], references: [id], onDelete: Cascade)
-  createdTimestamp  DateTime?   @default(now()) // Marking optional so we don't need to set in tests
-  updatedTimestamp  DateTime?   @updatedAt // Marking optional so we don't need to set in tests
+  id                       String      @id @default(uuid())
+  monoTransactionID        String? // [DEPRECATED] Use `monoPaymentTransactionID` instead.
+  monoPaymentTransactionID String?
+  collectionLinkID         String?
+  collectionURL            String?
+  type                     String
+  transferID               String?
+  batchID                  String?
+  declinationReason        String?
+  state                    String
+  nobaTransactionID        String      @unique()
+  transaction              Transaction @relation(fields: [nobaTransactionID], references: [id], onDelete: Cascade)
+  createdTimestamp         DateTime?   @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp         DateTime?   @updatedAt // Marking optional so we don't need to set in tests
+
+  // Can't add @unique() on 'collectionLinkID' or 'transferID'
+  // See https://github.com/prisma/prisma/issues/3387 for more details.
 
   @@index([nobaTransactionID])
-  @@index([monoTransactionID])
 }
 
 model Token {

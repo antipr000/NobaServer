@@ -6,10 +6,10 @@ import { Logger } from "winston";
 import {
   convertToDomainTransaction,
   MonoTransaction,
-  MonoTransactionCreateRequest,
+  MonoTransactionSaveRequest,
   MonoTransactionState,
   MonoTransactionUpdateRequest,
-  validateCreateMonoTransactionRequest,
+  validateSaveMonoTransactionRequest,
   validateMonoTransaction,
   validateUpdateMonoTransactionRequest,
 } from "../../domain/Mono";
@@ -27,8 +27,8 @@ export class SqlMonoRepo implements IMonoRepo {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  async createMonoTransaction(request: MonoTransactionCreateRequest): Promise<MonoTransaction> {
-    validateCreateMonoTransactionRequest(request);
+  async createMonoTransaction(request: MonoTransactionSaveRequest): Promise<MonoTransaction> {
+    validateSaveMonoTransactionRequest(request);
 
     let savedTransaction: MonoTransaction = null;
 
@@ -41,9 +41,18 @@ export class SqlMonoRepo implements IMonoRepo {
             id: request.nobaTransactionID,
           },
         },
-        collectionLinkID: request.collectionLinkID,
-        collectionURL: request.collectionURL,
+        type: request.type,
         state: MonoTransactionState.PENDING,
+
+        ...(request.collectionLinkDepositDetails && {
+          collectionLinkID: request.collectionLinkDepositDetails.collectionLinkID,
+          collectionURL: request.collectionLinkDepositDetails.collectionURL,
+        }),
+        ...(request.withdrawalDetails && {
+          transferID: request.withdrawalDetails.transferID,
+          batchID: request.withdrawalDetails.batchID,
+          declinationReason: request.withdrawalDetails.declinationReason,
+        }),
       };
 
       const returnedTransaction: PrismaMonoModel = await this.prismaService.mono.create({
@@ -74,7 +83,7 @@ export class SqlMonoRepo implements IMonoRepo {
     try {
       const transactionUpdate: Prisma.MonoUpdateInput = {
         ...(request.state && { state: request.state }),
-        ...(request.monoTransactionID && { monoTransactionID: request.monoTransactionID }),
+        ...(request.monoPaymentTransactionID && { monoPaymentTransactionID: request.monoPaymentTransactionID }),
       };
 
       const returnedTransaction: PrismaMonoModel = await this.prismaService.mono.update({
@@ -119,7 +128,7 @@ export class SqlMonoRepo implements IMonoRepo {
 
   async getMonoTransactionByCollectionLinkID(collectionLinkID: string): Promise<MonoTransaction> {
     try {
-      const returnedTransaction: PrismaMonoModel = await this.prismaService.mono.findUnique({
+      const returnedTransaction: PrismaMonoModel = await this.prismaService.mono.findFirst({
         where: {
           collectionLinkID: collectionLinkID,
         },

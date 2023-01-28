@@ -29,7 +29,8 @@ export type MonoTransferRequest = {
 };
 
 export type MonoTransferResponse = {
-  withdrawalID: string;
   state: string;
   declinationReason?: string;
+  batchID: string;
+  transferID: string;
 };
