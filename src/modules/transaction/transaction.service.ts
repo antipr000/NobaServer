@@ -65,7 +65,6 @@ export class TransactionService {
     initiatingConsumer: string,
     sessionKey: string,
   ): Promise<Transaction> {
-    // TODO: Add more validations around required amounts/currencies
     if (!initiatingConsumer) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
