@@ -5,7 +5,6 @@ import { CreditCardService } from "./creditcard.service";
 import { CurrencyService } from "./currency.service";
 import { LocationService } from "./location.service";
 import { KmsService } from "./kms.service";
-import { SMSService } from "./sms.service";
 import { ConfigurationProviderService } from "./configuration.provider.service";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { EllipticService } from "./elliptic.service";
@@ -21,7 +20,6 @@ import { ExchangeRateService } from "./exchangerate.service";
   imports: [InfraProvidersModule],
   providers: [
     CsvService,
-    SMSService,
     KmsService,
     CurrencyService,
     CreditCardService,
@@ -47,7 +45,6 @@ import { ExchangeRateService } from "./exchangerate.service";
   ],
   exports: [
     CsvService,
-    SMSService,
     KmsService,
     CurrencyService,
     ExchangeRateService,

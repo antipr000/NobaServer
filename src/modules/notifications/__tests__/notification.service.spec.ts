@@ -28,6 +28,7 @@ import { SendWalletTransferEvent } from "../events/SendWalletTransferEvent";
 import { SendWithdrawalCompletedEvent } from "../events/SendWithdrawalCompletedEvent";
 import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 import { SendWithdrawalInitiatedEvent } from "../events/SendWithdrawalInitiatedEvent";
+import { SendPhoneVerificationCodeEvent } from "../events/SendPhoneVerificationCodeEvent";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -65,7 +66,7 @@ describe("NotificationService", () => {
     notificationService = app.get<NotificationService>(NotificationService);
   });
 
-  it("should create email event for otp event when partnerID is missing", async () => {
+  it("should create email event for otp event when phone is missing", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
     await notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, {
       email: "fake+user@noba.com",
@@ -77,6 +78,7 @@ describe("NotificationService", () => {
 
     const sendOtpEvent = new SendOtpEvent({
       email: "fake+user@noba.com",
+      phone: undefined,
       locale: "en",
       otp: "123456",
       name: "Fake",
@@ -86,7 +88,80 @@ describe("NotificationService", () => {
     verify(eventEmitter.emitAsync(`email.${NotificationEventType.SEND_OTP_EVENT}`, deepEqual(sendOtpEvent))).once();
   });
 
-  it("should emit Email event for 'SEND_KYC_APPROVED_US_EVENT' when partner record does not exist", async () => {
+  it("should create sms event for otp event when phone is present", async () => {
+    when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+    await notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, {
+      phone: "+1234567890",
+      locale: "en",
+      otp: "123456",
+      firstName: "Fake",
+      handle: "fake-handle",
+    });
+
+    const sendOtpEvent = new SendOtpEvent({
+      email: undefined,
+      phone: "+1234567890",
+      locale: "en",
+      otp: "123456",
+      name: "Fake",
+      handle: "fake-handle",
+    });
+
+    verify(eventEmitter.emitAsync(`sms.${NotificationEventType.SEND_OTP_EVENT}`, deepEqual(sendOtpEvent))).once();
+  });
+
+  it("should emit SMS event for 'SEND_PHONE_VERIFICATION_CODE_EVENT'", async () => {
+    when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+    const sendPhoneVerificationCodeEvent = new SendPhoneVerificationCodeEvent({
+      phone: "+1234567890",
+      locale: "en",
+      otp: "123456",
+      name: "Fake",
+      handle: "fake-handle",
+    });
+    await notificationService.sendNotification(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT, {
+      phone: "+1234567890",
+      locale: "en",
+      otp: "123456",
+      firstName: "Fake",
+      handle: "fake-handle",
+      email: undefined,
+    });
+
+    verify(
+      eventEmitter.emitAsync(
+        `sms.${NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT}`,
+        deepEqual(sendPhoneVerificationCodeEvent),
+      ),
+    ).once();
+  });
+
+  it("should not emit any event for 'SEND_PHONE_VERIFICATION_CODE_EVENT' when phone is missing", async () => {
+    when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+    const sendPhoneVerificationCodeEvent = new SendPhoneVerificationCodeEvent({
+      phone: undefined,
+      locale: "en",
+      otp: "123456",
+      name: "Fake",
+      handle: "fake-handle",
+    });
+    await notificationService.sendNotification(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT, {
+      email: "fake+email@noba.com",
+      locale: "en",
+      otp: "123456",
+      firstName: "Fake",
+      handle: "fake-handle",
+    });
+
+    verify(
+      eventEmitter.emitAsync(
+        `sms.${NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT}`,
+        deepEqual(sendPhoneVerificationCodeEvent),
+      ),
+    ).never();
+  });
+
+  it("should emit Email event for 'SEND_KYC_APPROVED_US_EVENT'", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
     await notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, {
       email: "fake+user@noba.com",

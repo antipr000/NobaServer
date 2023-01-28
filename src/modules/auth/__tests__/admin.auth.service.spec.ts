@@ -4,8 +4,6 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../src/core/utils/WinstonModule";
 import { AdminService } from "../../../../src/modules/admin/admin.service";
 import { getMockAdminServiceWithDefaults } from "../../../../src/modules/admin/mocks/MockAdminService";
-import { getMockSmsServiceWithDefaults } from "../../../../src/modules/common/mocks/mock.sms.service";
-import { SMSService } from "../../../../src/modules/common/sms.service";
 import { instance, when } from "ts-mockito";
 import { AdminAuthService } from "../admin.auth.service";
 import { InternalServerErrorException, NotFoundException, UnauthorizedException } from "@nestjs/common";
@@ -23,7 +21,6 @@ describe("AdminAuthService", () => {
 
   let mockAdminService: AdminService;
   let mockOTPService: OTPService;
-  let mockSmsService: SMSService;
   let mockNotificationService: NotificationService;
   let mockTokenRepo: ITokenRepo;
 
@@ -38,7 +35,6 @@ describe("AdminAuthService", () => {
     mockAdminService = getMockAdminServiceWithDefaults();
     mockOTPService = getMockOTPServiceWithDefaults();
     mockNotificationService = getMockNotificationServiceWithDefaults();
-    mockSmsService = getMockSmsServiceWithDefaults();
     mockTokenRepo = getMockTokenRepoWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
@@ -67,10 +63,6 @@ describe("AdminAuthService", () => {
         {
           provide: NotificationService,
           useFactory: () => instance(mockNotificationService),
-        },
-        {
-          provide: SMSService,
-          useFactory: () => instance(mockSmsService),
         },
         AdminAuthService,
       ],

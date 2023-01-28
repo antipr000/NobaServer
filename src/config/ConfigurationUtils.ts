@@ -158,6 +158,7 @@ export const PLAID_AWS_SECRET_KEY_FOR_CLIENT_ID = "awsSecretNameForClientID";
 
 export const DEPENDENCY_CONFIG_KEY = "dependencies";
 export const DEPENDENCY_EMAIL_CLIENT = "emailClient";
+export const DEPENDENCY_SMS_CLIENT = "smsClient";
 
 export const CIRCLE_CONFIG_KEY = "circle";
 export const CIRCLE_ENVIRONMENT = "env";

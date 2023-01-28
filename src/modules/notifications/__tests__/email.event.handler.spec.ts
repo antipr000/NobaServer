@@ -20,9 +20,9 @@ import { CurrencyService } from "../../common/currency.service";
 import { getMockCurrencyServiceWithDefaults } from "../../common/mocks/mock.currency.service";
 import { EmailTemplates } from "../domain/EmailTemplates";
 import { Utils } from "../../../core/utils/Utils";
-import { EmailService } from "../emails/email.service";
-import { EventHandler } from "../event.handler";
-import { getMockEmailServiceWithDefaults } from "../mocks/mock.email.service";
+import { EmailClient } from "../emails/email.client";
+import { EmailEventHandler } from "../email.event.handler";
+import { getMockEmailClientWithDefaults } from "../mocks/mock.email.client";
 import { SendDepositCompletedEvent } from "../events/SendDepositCompletedEvent";
 import { SendDepositFailedEvent } from "../events/SendDepositFailedEvent";
 import { SendDepositInitiatedEvent } from "../events/SendDepositInitiatedEvent";
@@ -33,10 +33,10 @@ import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent";
 import { SendCollectionCompletedEvent } from "../events/SendCollectionCompletedEvent";
 
-describe("EventHandlerService", () => {
+describe("EmailEventHandler", () => {
   let currencyService: CurrencyService;
-  let emailService: EmailService;
-  let eventHandler: EventHandler;
+  let emailClient: EmailClient;
+  let eventHandler: EmailEventHandler;
 
   const SUPPORT_URL = "help.noba.com";
   const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -46,7 +46,7 @@ describe("EventHandlerService", () => {
 
   beforeEach(async () => {
     currencyService = getMockCurrencyServiceWithDefaults();
-    emailService = getMockEmailServiceWithDefaults();
+    emailClient = getMockEmailClientWithDefaults();
 
     process.env = {
       ...process.env,
@@ -69,20 +69,21 @@ describe("EventHandlerService", () => {
           useFactory: () => instance(currencyService),
         },
         {
-          provide: "EmailService",
-          useFactory: () => instance(emailService),
+          provide: "EmailClient",
+          useFactory: () => instance(emailClient),
         },
-        EventHandler,
+        EmailEventHandler,
       ],
     }).compile();
 
-    eventHandler = app.get<EventHandler>(EventHandler);
-    when(emailService.sendEmail(anything())).thenResolve();
+    eventHandler = app.get<EmailEventHandler>(EmailEventHandler);
+    when(emailClient.sendEmail(anything())).thenResolve();
   });
 
   it("should call emailService with SendOtp event", async () => {
     const payload = new SendOtpEvent({
       email: "fake+user@noba.com",
+      phone: undefined,
       locale: "en",
       otp: "123456",
       name: "Fake",
@@ -91,7 +92,7 @@ describe("EventHandlerService", () => {
 
     await eventHandler.sendOtp(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -107,6 +108,7 @@ describe("EventHandlerService", () => {
   it("should call eventHandler with SendWalletUpdateVerificationCode event", async () => {
     const payload = new SendWalletUpdateVerificationCodeEvent({
       email: "fake+user@noba.com",
+      phone: undefined,
       locale: "en",
       otp: "123456",
       name: "Fake",
@@ -118,7 +120,7 @@ describe("EventHandlerService", () => {
 
     await eventHandler.sendWalletUpdateVerificationCode(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -143,7 +145,7 @@ describe("EventHandlerService", () => {
 
     await eventHandler.sendWelcomeMessage(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -166,7 +168,7 @@ describe("EventHandlerService", () => {
 
     await eventHandler.sendKycApprovedUSEmail(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -189,7 +191,7 @@ describe("EventHandlerService", () => {
 
     await eventHandler.sendKycApprovedNonUSEmail(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -211,7 +213,7 @@ describe("EventHandlerService", () => {
     });
     await eventHandler.sendKycDeniedEmail(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -234,7 +236,7 @@ describe("EventHandlerService", () => {
     });
     await eventHandler.sendKycPendingOrFlaggedEmail(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual;
   });
 
@@ -249,7 +251,7 @@ describe("EventHandlerService", () => {
 
     await eventHandler.sendDocVerificationPendingEmail(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -272,7 +274,7 @@ describe("EventHandlerService", () => {
 
     await eventHandler.sendDocVerificationRejectedEmail(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -294,7 +296,7 @@ describe("EventHandlerService", () => {
     });
     await eventHandler.sendDocVerificationFailedTechEmail(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -318,7 +320,7 @@ describe("EventHandlerService", () => {
     });
     await eventHandler.sendCardAddedEmail(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -344,7 +346,7 @@ describe("EventHandlerService", () => {
     });
     await eventHandler.sendCardAdditionFailedEmail(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -370,7 +372,7 @@ describe("EventHandlerService", () => {
     });
     await eventHandler.sendCardDeletedEmail(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -396,7 +398,7 @@ describe("EventHandlerService", () => {
 
     await eventHandler.sendCollectionCompletedEvent(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -429,7 +431,7 @@ describe("EventHandlerService", () => {
       Utils.roundTo2DecimalNumber(payload.params.processingFees) -
       Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -471,7 +473,7 @@ describe("EventHandlerService", () => {
       Utils.roundTo2DecimalNumber(payload.params.processingFees) -
       Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -513,7 +515,7 @@ describe("EventHandlerService", () => {
       Utils.roundTo2DecimalNumber(payload.params.processingFees) -
       Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -555,7 +557,7 @@ describe("EventHandlerService", () => {
       Utils.roundTo2DecimalNumber(payload.params.processingFees) -
       Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -596,7 +598,7 @@ describe("EventHandlerService", () => {
       Utils.roundTo2DecimalNumber(payload.params.processingFees) -
       Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -639,7 +641,7 @@ describe("EventHandlerService", () => {
       Utils.roundTo2DecimalNumber(payload.params.processingFees) -
       Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -675,7 +677,7 @@ describe("EventHandlerService", () => {
 
     await eventHandler.sendTransferCompletedEmail(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
@@ -710,7 +712,7 @@ describe("EventHandlerService", () => {
 
     await eventHandler.sendHardDeclineEmail(payload);
 
-    const [emailRequest] = capture(emailService.sendEmail).last();
+    const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: NOBA_COMPLIANCE_EMAIL,
       from: SENDER_EMAIL,
