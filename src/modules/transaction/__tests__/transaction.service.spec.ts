@@ -199,7 +199,6 @@ describe("TransactionServiceTests", () => {
       when(consumerService.getActiveConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerService.getActiveConsumer(consumer2.props.id)).thenResolve(consumer2);
       when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
-      when(withdrawalDetailsRepo.addWithdrawalDetails(anything())).thenResolve(null);
       when(workflowFactory.getWorkflowImplementation(WorkflowName.WALLET_TRANSFER)).thenReturn(
         instance(walletTransferImpl),
       );
@@ -217,6 +216,74 @@ describe("TransactionServiceTests", () => {
       expect(returnedTransaction).toEqual(transaction);
 
       // IMPORTANT TO VERIFY THIS CORRECTLY :)
+      const [propagatedTransactionToSave] = capture(transactionRepo.createTransaction).last();
+      expect(propagatedTransactionToSave).toEqual({
+        transactionRef: transaction.transactionRef,
+        workflowName: "WALLET_TRANSFER",
+        debitConsumerID: "consumerID",
+        creditConsumerID: "consumerID2",
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.debitAmount, // as exchange rate is always 1.
+        debitCurrency: "USD",
+        creditCurrency: "USD",
+        exchangeRate: 1, // Always 1 for wallet transfer
+        sessionKey: transaction.sessionKey,
+        memo: transaction.memo,
+      });
+    });
+
+    it("should add optional withdrawal details to repo during transaction", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const consumer2 = getRandomConsumer("consumerID2");
+      const { transaction, transactionDTO } = getRandomTransaction(consumer.props.id, consumer2.props.id);
+      jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
+        return transaction.transactionRef;
+      });
+
+      const withdrawalData = {
+        accountNumber: "12345",
+        accountType: AccountType.SAVINGS,
+        bankCode: "BOFA",
+        documentNumber: "123456789",
+        documentType: DocumentType.CC,
+      };
+
+      const processedTransactionDTO: InitiateTransactionDTO = {
+        ...transactionDTO,
+        debitConsumerIDOrTag: consumer.props.id,
+        creditAmount: transactionDTO.debitAmount,
+        creditCurrency: transactionDTO.debitCurrency,
+        exchangeRate: 1,
+        withdrawalData: withdrawalData,
+      };
+      when(consumerService.getActiveConsumer(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getActiveConsumer(consumer2.props.id)).thenResolve(consumer2);
+      when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
+      when(
+        withdrawalDetailsRepo.addWithdrawalDetails(
+          deepEqual({
+            transactionID: transaction.id,
+            ...withdrawalData,
+          }),
+        ),
+      ).thenResolve(null); // Not being used right now
+      when(workflowFactory.getWorkflowImplementation(WorkflowName.WALLET_TRANSFER)).thenReturn(
+        instance(walletTransferImpl),
+      );
+
+      when(walletTransferImpl.preprocessTransactionParams(deepEqual(transactionDTO), consumer.props.id)).thenResolve(
+        processedTransactionDTO,
+      );
+      when(walletTransferImpl.initiateWorkflow(deepEqual(transaction))).thenResolve();
+
+      const returnedTransaction = await transactionService.initiateTransaction(
+        transactionDTO,
+        consumer.props.id,
+        transaction.sessionKey,
+      );
+
+      expect(returnedTransaction).toEqual(transaction);
+
       const [propagatedTransactionToSave] = capture(transactionRepo.createTransaction).last();
       expect(propagatedTransactionToSave).toEqual({
         transactionRef: transaction.transactionRef,
