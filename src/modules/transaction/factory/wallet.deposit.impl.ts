@@ -104,27 +104,17 @@ export class WalletDepositImpl implements IWorkflowImpl {
       });
     }
 
-<<<<<<< HEAD
     // TODO: Add a check for the currency here. Mono should be called "only" for COP currencies.
-    await this.monoService.createMonoTransaction({
-      type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
-      amount: transaction.debitAmount,
-      currency: transaction.debitCurrency as MonoCurrency,
-      consumerID: transaction.debitConsumerID,
-      nobaTransactionID: transaction.id,
-    });
-=======
     const isCollection = options && options.includes(TransactionFlags.IS_COLLECTION);
     if (isCollection) {
-      // TODO: Add a check for the currency here. Mono should be called "only" for COP currencies.
       await this.monoService.createMonoTransaction({
+        type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
         amount: transaction.debitAmount,
         currency: transaction.debitCurrency as MonoCurrency,
         consumerID: transaction.debitConsumerID,
         nobaTransactionID: transaction.id,
       });
     }
->>>>>>> ebe0ea5d463ab6412dd1099b6ef6919cb89e5102
 
     this.workflowExecutor.executeCreditConsumerWalletWorkflow(transaction.id, transaction.transactionRef);
   }
