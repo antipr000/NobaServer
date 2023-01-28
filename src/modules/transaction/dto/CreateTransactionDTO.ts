@@ -32,7 +32,7 @@ export class InitiateTransactionDTO {
   @ApiPropertyOptional()
   memo?: string;
 
-  @ApiPropertyOptional({ type: TransactionFlags, isArray: true })
+  @ApiPropertyOptional({ enum: TransactionFlags, isArray: true })
   options?: TransactionFlags[];
 
   @ApiPropertyOptional({ type: WithdrawalDTO })
