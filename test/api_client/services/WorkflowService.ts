@@ -3,7 +3,6 @@
 /* eslint-disable */
 import type { CircleDepositOrWithdrawalRequest } from "../models/CircleDepositOrWithdrawalRequest";
 import type { CircleFundsTransferRequestDTO } from "../models/CircleFundsTransferRequestDTO";
-import type { DebitBankRequestDTO } from "../models/DebitBankRequestDTO";
 import type { MonoTransactionDTO } from "../models/MonoTransactionDTO";
 import type { SendNotificationRequestDTO } from "../models/SendNotificationRequestDTO";
 import type { UpdateTransactionRequestDTO } from "../models/UpdateTransactionRequestDTO";
@@ -57,24 +56,6 @@ export class WorkflowService {
       path: {
         transactionID: transactionId,
       },
-    });
-  }
-
-  /**
-   * Debit money from Noba bank account into consumer account
-   * @returns WorkflowTransactionDTO
-   * @throws ApiError
-   */
-  public static debitFromBank({
-    requestBody,
-  }: {
-    requestBody: DebitBankRequestDTO;
-  }): CancelablePromise<WorkflowTransactionDTO> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/wf/v1/transactions/debitfrombank",
-      body: requestBody,
-      mediaType: "application/json",
     });
   }
 

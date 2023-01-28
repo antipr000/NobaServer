@@ -143,22 +143,18 @@ export class TransactionService {
     amount,
     currency,
     desiredCurrency,
-    workflowName,
     xNobaSignature,
     xNobaTimestamp,
-    exchangeRateFlags,
   }: {
     xNobaApiKey: string;
     amount: number;
     currency: "USD" | "COP";
     desiredCurrency: "USD" | "COP";
-    workflowName: "WALLET_DEPOSIT" | "WALLET_TRANSFER" | "WALLET_WITHDRAWAL";
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-    exchangeRateFlags?: Array<"IS_COLLECTION">;
   }): CancelablePromise<QuoteResponseDTO> {
     return __request(OpenAPI, {
       method: "GET",
@@ -172,8 +168,6 @@ export class TransactionService {
         amount: amount,
         currency: currency,
         desiredCurrency: desiredCurrency,
-        workflowName: workflowName,
-        exchangeRateFlags: exchangeRateFlags,
       },
       errors: {
         404: `Quote for given currency not found`,

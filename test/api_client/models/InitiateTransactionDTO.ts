@@ -2,8 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { WithdrawalDTO } from "./WithdrawalDTO";
-
 export type InitiateTransactionDTO = {
   debitConsumerIDOrTag?: string;
   creditConsumerIDOrTag?: string;
@@ -14,5 +12,4 @@ export type InitiateTransactionDTO = {
   creditAmount?: number;
   exchangeRate?: number;
   memo?: string;
-  withdrawalData?: WithdrawalDTO;
 };
