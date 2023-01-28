@@ -1,4 +1,10 @@
 export const SMSTemplate = {
+  getOrDefault: (templateObject: object, locale: string): string => {
+    if (!templateObject[locale]) {
+      return templateObject["en"];
+    }
+    return templateObject[locale];
+  },
   LOGIN_OTP_SMS: {
     en: "template_send_otp_en",
     es: "template_send_otp_es",

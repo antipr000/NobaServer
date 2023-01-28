@@ -17,7 +17,7 @@ describe("SMSEventHandler", () => {
 
   jest.setTimeout(30000);
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     currencyService = getMockCurrencyServiceWithDefaults();
     smsClient = getMockSMSClientWithDefaults();
 
@@ -79,6 +79,24 @@ describe("SMSEventHandler", () => {
     const [recipientPhoneNumber, templateKey, body] = capture(smsClient.sendSMS).last();
     expect(recipientPhoneNumber).toBe(payload.phone);
     expect(templateKey).toBe("template_send_otp_es");
+    expect(body).toStrictEqual({ otp: "123456" });
+  });
+
+  it("should call smsClient for SendOtp event with en template when template for locale is not available", async () => {
+    const payload = new SendOtpEvent({
+      email: "fake+user@noba.com",
+      phone: "+1234567890",
+      locale: "ru",
+      otp: "123456",
+      name: "Fake",
+      handle: "fake-handle",
+    });
+
+    await eventHandler.sendLoginSMS(payload);
+
+    const [recipientPhoneNumber, templateKey, body] = capture(smsClient.sendSMS).last();
+    expect(recipientPhoneNumber).toBe(payload.phone);
+    expect(templateKey).toBe("template_send_otp_en");
     expect(body).toStrictEqual({ otp: "123456" });
   });
 

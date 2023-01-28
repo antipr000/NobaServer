@@ -1050,6 +1050,47 @@ describe("ConsumerService", () => {
       ).once();
     });
 
+    it("should add new crypto wallet with phone as preferred notification medium", async () => {
+      const email = "mock-user@noba.com";
+      const walletID = "fake-wallet-id";
+
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        firstName: "Fake",
+        lastName: "Name",
+        email: email,
+        displayEmail: email,
+        phone: "+1234567890",
+      });
+
+      const wallet = CryptoWallet.createCryptoWallet({
+        id: walletID,
+        address: "fake-address",
+        status: WalletStatus.PENDING,
+        consumerID: consumer.props.id,
+      });
+
+      when(otpService.saveOTP(consumer.props.phone, IdentityType.CONSUMER, 111111)).thenResolve();
+      when(consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(null);
+      when(consumerRepo.addCryptoWallet(anything())).thenResolve();
+      await consumerService.addOrUpdateCryptoWallet(consumer, wallet, NotificationMethod.PHONE);
+
+      verify(consumerRepo.addCryptoWallet(deepEqual(wallet))).once();
+
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
+          deepEqual({
+            phone: consumer.props.phone,
+            otp: "111111",
+            walletAddress: wallet.props.address,
+            firstName: consumer.props.firstName,
+            nobaUserID: consumer.props.id,
+          }),
+        ),
+      ).once();
+    });
+
     it("should update the 'status' field of CryptoWallet if it's already there", async () => {
       const email = "mock-user@noba.com";
       const walletID = "fake-wallet-id";

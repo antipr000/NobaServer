@@ -13,22 +13,34 @@ export class SMSEventHandler {
 
   @OnEvent(`sms.${NotificationEventType.SEND_OTP_EVENT}`)
   public async sendLoginSMS(payload: SendOtpEvent) {
-    await this.smsClient.sendSMS(payload.phone, SMSTemplate.LOGIN_OTP_SMS[payload.locale ?? "en"], {
-      otp: payload.otp,
-    });
+    await this.smsClient.sendSMS(
+      payload.phone,
+      SMSTemplate.getOrDefault(SMSTemplate.LOGIN_OTP_SMS, payload.locale ?? "en"),
+      {
+        otp: payload.otp,
+      },
+    );
   }
 
   @OnEvent(`sms.${NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT}`)
   public async sendPhoneVerificationSMS(payload: SendOtpEvent) {
-    await this.smsClient.sendSMS(payload.phone, SMSTemplate.PHONE_VERIFICATION_CODE_SMS[payload.locale ?? "en"], {
-      otp: payload.otp,
-    });
+    await this.smsClient.sendSMS(
+      payload.phone,
+      SMSTemplate.getOrDefault(SMSTemplate.PHONE_VERIFICATION_CODE_SMS, payload.locale ?? "en"),
+      {
+        otp: payload.otp,
+      },
+    );
   }
 
   @OnEvent(`sms.${NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT}`)
   public async sendWalletUpdateVerificationCodeSMS(payload: SendWalletUpdateVerificationCodeEvent) {
-    await this.smsClient.sendSMS(payload.phone, SMSTemplate.WALLET_VERIFICATION_CODE_SMS[payload.locale ?? "en"], {
-      otp: payload.otp,
-    });
+    await this.smsClient.sendSMS(
+      payload.phone,
+      SMSTemplate.getOrDefault(SMSTemplate.WALLET_VERIFICATION_CODE_SMS, payload.locale ?? "en"),
+      {
+        otp: payload.otp,
+      },
+    );
   }
 }

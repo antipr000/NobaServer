@@ -36,7 +36,7 @@ describe("NotificationService", () => {
 
   jest.setTimeout(30000);
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     eventEmitter = getMockEventEmitterWithDefaults();
 
     process.env = {
