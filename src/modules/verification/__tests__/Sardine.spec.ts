@@ -347,7 +347,7 @@ describe("SardineTests", () => {
   });
 
   describe("transactionVerification", () => {
-    it("[OTHER] Should return status APPROVED when transaction is low risk (other)", async () => {
+    it("[OTHER] Should return status APPROVED when transaction is low risk (other) - WALLET_DEPOSIT", async () => {
       const consumerID1 = "consumer-1";
       const consumerID2 = "consumer-2";
       const transactionVerification: TransactionVerification = {
@@ -392,6 +392,135 @@ describe("SardineTests", () => {
       expect(response.idvProviderRiskLevel).toBe("low");
       expect(response.pepLevel).toBeFalsy();
       expect(response.sanctionLevel).toBeFalsy();
+    });
+
+    it("[OTHER] Should return status APPROVED when transaction is low risk (other) - WALLET_WITHDRAWAL", async () => {
+      const consumerID1 = "consumer-1";
+      const consumerID2 = "consumer-2";
+      const transactionVerification: TransactionVerification = {
+        transactionID: "transaction-1",
+        debitConsumerID: consumerID1,
+        creditConsumerID: consumerID2,
+        debitAmount: 100,
+        debitCurrency: "USD",
+        creditAmount: 100,
+        creditCurrency: "USD",
+        workflowName: WorkflowName.WALLET_WITHDRAWAL,
+      };
+
+      const consumer = Consumer.createConsumer({
+        id: consumerID1,
+        email: "fake+consumer@noba.com",
+        verificationData: {
+          kycCheckStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
+          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
+        },
+      });
+
+      when(circleService.getOrCreateWallet("consumer-1")).thenResolve("wallet-1");
+
+      const responsePromise = sardine.transactionVerification(
+        FAKE_GOOD_TRANSACTION.data.sessionKey,
+        consumer,
+        transactionVerification,
+      );
+      await sleep(500);
+      expect(mockAxios.post).toHaveBeenCalled();
+
+      mockAxios.mockResponse(FAKE_GOOD_TRANSACTION);
+
+      const response = await responsePromise;
+
+      expect(response.status).toBe(KYCStatus.APPROVED);
+      expect(response.idvProviderRiskLevel).toBe("low");
+      expect(response.pepLevel).toBeFalsy();
+      expect(response.sanctionLevel).toBeFalsy();
+    });
+
+    it("[OTHER] Should return status APPROVED when transaction is low risk (other) - WALLET_TRANSFER", async () => {
+      const consumerID1 = "consumer-1";
+      const consumerID2 = "consumer-2";
+      const transactionVerification: TransactionVerification = {
+        transactionID: "transaction-1",
+        debitConsumerID: consumerID1,
+        creditConsumerID: consumerID2,
+        debitAmount: 100,
+        debitCurrency: "USD",
+        creditAmount: 100,
+        creditCurrency: "USD",
+        workflowName: WorkflowName.WALLET_TRANSFER,
+      };
+
+      const consumer = Consumer.createConsumer({
+        id: consumerID1,
+        email: "fake+consumer@noba.com",
+        verificationData: {
+          kycCheckStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
+          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
+        },
+      });
+
+      when(circleService.getOrCreateWallet("consumer-1")).thenResolve("wallet-1");
+      when(circleService.getOrCreateWallet("consumer-2")).thenResolve("wallet-2");
+
+      const responsePromise = sardine.transactionVerification(
+        FAKE_GOOD_TRANSACTION.data.sessionKey,
+        consumer,
+        transactionVerification,
+      );
+      await sleep(500);
+      expect(mockAxios.post).toHaveBeenCalled();
+
+      mockAxios.mockResponse(FAKE_GOOD_TRANSACTION);
+
+      const response = await responsePromise;
+
+      expect(response.status).toBe(KYCStatus.APPROVED);
+      expect(response.idvProviderRiskLevel).toBe("low");
+      expect(response.pepLevel).toBeFalsy();
+      expect(response.sanctionLevel).toBeFalsy();
+    });
+
+    it("[OTHER] Should throw an error if the workflow name is unknown", async () => {
+      const consumerID1 = "consumer-1";
+      const consumerID2 = "consumer-2";
+      const transactionVerification: TransactionVerification = {
+        transactionID: "transaction-1",
+        debitConsumerID: consumerID1,
+        creditConsumerID: consumerID2,
+        debitAmount: 100,
+        debitCurrency: "USD",
+        creditAmount: 100,
+        creditCurrency: "USD",
+        workflowName: "Unknown" as WorkflowName,
+      };
+
+      const consumer = Consumer.createConsumer({
+        id: consumerID1,
+        email: "fake+consumer@noba.com",
+        verificationData: {
+          kycCheckStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
+          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
+        },
+      });
+
+      when(circleService.getOrCreateWallet("consumer-1")).thenResolve("wallet-1");
+
+      expect(async () => {
+        await sardine.transactionVerification(FAKE_GOOD_TRANSACTION.data.sessionKey, consumer, transactionVerification);
+      }).rejects.toThrow(Error);
     });
 
     it.skip("[CARD] Should return status APPROVED when transaction is low risk (card)", async () => {
