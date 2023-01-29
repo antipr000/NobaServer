@@ -82,7 +82,7 @@ noba:
     awsSecretKeyForCollectionFeeFixedAmount: ""
     collectionNobaFeeAmount: "0"
     awsSecretKeyForCollectionNobaFeeAmount: ""
-    depositFeeMultiplier: "1"
+    depositFeeMultiplier: "0"
     awsSecretKeyForDepositFeeMultiplier: ""
     depositFeeFixedAmount: "500"
     awsSecretKeyForDepositFeeFixedAmount: ""

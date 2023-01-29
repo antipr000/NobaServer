@@ -94,13 +94,6 @@ describe("WalletDepositImpl Tests", () => {
     it("should preprocess a WALLET_DEPOSIT transaction", async () => {
       const consumer = getRandomConsumer("consumerID");
       const { transaction, transactionDTO } = getRandomTransaction(consumer.props.id);
-      const exchangeRate: ExchangeRateDTO = {
-        bankRate: 0.0002,
-        numeratorCurrency: Currency.COP,
-        denominatorCurrency: Currency.USD,
-        expirationTimestamp: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // 24 hrs
-        nobaRate: 0.00025,
-      };
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
       });
@@ -112,9 +105,19 @@ describe("WalletDepositImpl Tests", () => {
         ...transactionDTO,
         creditCurrency: Currency.USD,
         debitConsumerIDOrTag: consumer.props.id,
-        creditAmount: 11.25,
+        creditAmount: 11.2,
         exchangeRate: 0.00025,
       });
+    });
+
+    it("should throw ServiceException if the amount is too low (after fees you'd get a negative amount)", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(consumer.props.id);
+
+      transactionDTO.debitAmount = 0.25;
+      await expect(walletDepositImpl.preprocessTransactionParams(transactionDTO, consumer.props.id)).rejects.toThrow(
+        "AMOUNT_TOO_LOW",
+      );
     });
 
     it("should throw ServiceException if creditConsumerIDOrTag is set", async () => {
@@ -240,6 +243,13 @@ describe("WalletDepositImpl Tests", () => {
         quoteAmountWithFees: "23.75",
         nobaRate: "0.00025",
       });
+    });
+
+    it("should throw ServiceException if the amount is too low (after fees you'd get a negative amount)", async () => {
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD)).thenResolve(exchangeRate);
+      expect(async () => {
+        await walletDepositImpl.getTransactionQuote(1, Currency.COP, Currency.USD);
+      }).rejects.toThrow("AMOUNT_TOO_LOW");
     });
 
     it("should throw a ServiceException if exchange rate is undefined", async () => {

@@ -42,8 +42,8 @@ describe("WalletWithdrawalImpl Tests", () => {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
       [NOBA_CONFIG_KEY]: {
         [NOBA_TRANSACTION_CONFIG_KEY]: {
-          [WITHDRAWAL_MONO_FEE_AMOUNT]: 1000, // In COP
-          [WITHDRAWAL_NOBA_FEE_AMOUNT]: 0.5, // In USD
+          [WITHDRAWAL_MONO_FEE_AMOUNT]: 3000, // In COP
+          [WITHDRAWAL_NOBA_FEE_AMOUNT]: 1.5, // In USD
         },
       },
     };
@@ -79,23 +79,6 @@ describe("WalletWithdrawalImpl Tests", () => {
     it("should preprocess a WALLET_WITHDRAWAL transaction", async () => {
       const consumer = getRandomConsumer("consumerID");
       const { transaction, transactionDTO } = getRandomTransaction(consumer.props.id);
-      const exchangeRate: ExchangeRateDTO = {
-        bankRate: 6,
-        numeratorCurrency: Currency.USD,
-        denominatorCurrency: Currency.COP,
-        expirationTimestamp: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // 24 hrs
-        nobaRate: 5,
-      };
-
-      /*
-      const transactionQuote: QuoteResponseDTO = {
-        nobaFee: "0.5",
-        processingFee: "2",
-        totalFee: "2.50",
-        nobaRate: "5",
-        quoteAmount: "500",
-        quoteAmountWithFees: "497.50",
-      };*/
 
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
@@ -103,25 +86,24 @@ describe("WalletWithdrawalImpl Tests", () => {
 
       when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.USD, Currency.COP)).thenResolve(exchangeRate);
 
-      /*
-      when(
-        transactionService.getTransactionQuote(
-          transactionDTO.debitAmount,
-          Currency.USD,
-          transactionDTO.creditCurrency,
-          WorkflowName.WALLET_WITHDRAWAL,
-        ),
-      ).thenResolve(transactionQuote);
-      */
-
       const response = await walletWithdrawalImpl.preprocessTransactionParams(transactionDTO, consumer.props.id);
       transactionDTO.debitCurrency = Currency.USD;
       transactionDTO.debitConsumerIDOrTag = consumer.props.id;
       delete transactionDTO.creditConsumerIDOrTag;
-      transactionDTO.creditAmount = 500;
+      transactionDTO.creditAmount = 5000;
       transactionDTO.exchangeRate = 5;
 
       expect(response).toStrictEqual(transactionDTO);
+    });
+
+    it("should throw ServiceException if the amount is too low (after fees you'd get a negative amount)", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(consumer.props.id);
+
+      transactionDTO.debitAmount = 0.25;
+      await expect(walletWithdrawalImpl.preprocessTransactionParams(transactionDTO, consumer.props.id)).rejects.toThrow(
+        "AMOUNT_TOO_LOW",
+      );
     });
 
     it("should throw ServiceException if creditConsumerIDOrTag is set", async () => {
@@ -233,13 +215,20 @@ describe("WalletWithdrawalImpl Tests", () => {
       when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.USD, Currency.COP)).thenResolve(exchangeRate);
       const quote = await walletWithdrawalImpl.getTransactionQuote(50, Currency.USD, Currency.COP);
       expect(quote).toEqual({
-        nobaFee: "0.50",
-        processingFee: "0.20",
-        totalFee: "0.70",
+        nobaFee: "1.50",
+        processingFee: "0.60",
+        totalFee: "2.10",
         quoteAmount: "200000.00",
-        quoteAmountWithFees: "197200.00",
+        quoteAmountWithFees: "191600.00",
         nobaRate: "4000",
       });
+    });
+
+    it("should throw ServiceException if the amount is too low (after fees you'd get a negative amount)", async () => {
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.USD, Currency.COP)).thenResolve(exchangeRate);
+      expect(async () => {
+        await walletWithdrawalImpl.getTransactionQuote(1, Currency.USD, Currency.COP);
+      }).rejects.toThrow("AMOUNT_TOO_LOW");
     });
 
     it("should throw a ServiceException if exchange rate is undefined", async () => {
@@ -285,7 +274,7 @@ const getRandomTransaction = (
 ): { transaction: Transaction; transactionDTO: InitiateTransactionDTO; inputTransaction: InputTransaction } => {
   const transaction: Transaction = {
     transactionRef: Utils.generateLowercaseUUID(true),
-    exchangeRate: 1,
+    exchangeRate: 4000,
     status: TransactionStatus.INITIATED,
     workflowName: WorkflowName.WALLET_WITHDRAWAL,
     id: v4(),

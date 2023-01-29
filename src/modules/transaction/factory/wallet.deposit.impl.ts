@@ -157,6 +157,13 @@ export class WalletDepositImpl implements IWorkflowImpl {
         postExchangeAmount - nobaFeeUSD - bankFeeUSDRounded,
       );
 
+      if (postExchangeAmountWithBankFees < 0) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: "AMOUNT_TOO_LOW",
+        });
+      }
+
       return {
         nobaFee: Utils.roundTo2DecimalString(nobaFeeUSD),
         processingFee: Utils.roundTo2DecimalString(bankFeeUSDRounded),
