@@ -9,6 +9,7 @@ import {
   MonoClientCollectionLinkResponse,
   MonoTransferRequest,
   MonoTransferResponse,
+  MonoTransferStatusResponse,
 } from "../dto/mono.client.dto";
 import axios from "axios";
 import { fromString as convertToUUIDv4 } from "uuidv4";
@@ -16,6 +17,7 @@ import { InternalServiceErrorException } from "../../../core/exception/CommonApp
 import { Utils } from "../../../core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
+import { MonoTransactionState } from "../domain/Mono";
 
 @Injectable()
 export class MonoClient {
@@ -169,9 +171,10 @@ export class MonoClient {
       const transferResponse = response.data.transfers[0]; // Should only be one transfer
 
       return {
-        withdrawalID: transferResponse.batch.id,
         state: transferResponse.batch.state, // There are many states, should we check against them?
         declinationReason: transferResponse.declination_reason,
+        batchID: transferResponse.batch.id,
+        transferID: transferResponse.id,
       };
     } catch (err) {
       this.logger.error(
@@ -182,6 +185,51 @@ export class MonoClient {
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
         message: "Error while transferring funds from Mono",
+      });
+    }
+  }
+
+  async getTransferStatus(transferID: string): Promise<MonoTransferStatusResponse> {
+    const url = `${this.baseUrl}/${this.apiVersion}/transfers?id=${transferID}`;
+    const headers = {
+      ...this.getAuthorizationHeader(),
+    };
+
+    try {
+      const response = await axios.get(url, { headers });
+      const transfer = response.data.transfers.find((transfer: any) => transfer.id === transferID);
+      if (!transfer) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+          message: "Mono transfer not found",
+        });
+      }
+
+      const externalTransactionStateToInternalState: Record<string, MonoTransactionState> = {
+        created: MonoTransactionState.PENDING,
+        in_progress: MonoTransactionState.IN_PROGRESS,
+        approved: MonoTransactionState.SUCCESS,
+        declined: MonoTransactionState.DECLINED,
+        cancelled: MonoTransactionState.CANCELLED,
+        duplicated: MonoTransactionState.DUPLICATED,
+      };
+      if (!externalTransactionStateToInternalState[transfer.state]) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.UNKNOWN,
+          message: `Unknown Mono transfer state: ${transfer.state}`,
+        });
+      }
+
+      return {
+        state: externalTransactionStateToInternalState[transfer.state],
+        lastUpdatedTimestamp: new Date(transfer.updated_at),
+        declinationReason: transfer.declination_reason,
+      };
+    } catch (err) {
+      this.logger.error(`Error while fetching the Transfer status from Mono: ${JSON.stringify(err)}`);
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: "Error while fetching the Transfer status from Mono",
       });
     }
   }

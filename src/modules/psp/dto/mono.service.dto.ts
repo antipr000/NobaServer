@@ -1,20 +1,18 @@
-import { MonoCurrency } from "../domain/Mono";
+import { MonoCurrency, MonoTransactionType } from "../domain/Mono";
 
 export type CreateMonoTransactionRequest = {
   nobaTransactionID: string;
   amount: number;
   currency: MonoCurrency;
   consumerID: string;
+  type: MonoTransactionType;
+  nobaPublicTransactionRef?: string;
+  withdrawalDetails?: MonoWithdrawalDetails;
 };
 
-export type DebitMonoRequest = {
-  transactionID: string;
-  transactionRef: string;
-  amount: number;
-  currency: string;
-  consumerID: string;
+export type MonoWithdrawalDetails = {
   bankCode: string;
-  accountNumber: string;
+  encryptedAccountNumber: string;
   accountType: string;
   documentNumber: string;
   documentType: string;

@@ -3,7 +3,7 @@ import { SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { MonoWorkflowControllerMappers } from "../mono.workflow.controller.mappers";
-import { MonoTransaction, MonoTransactionState } from "../../domain/Mono";
+import { MonoTransaction, MonoTransactionState, MonoTransactionType } from "../../domain/Mono";
 import { MonoTransactionDTO } from "../../dto/mono.workflow.controller.dto";
 
 describe("MonoWorkflowControllerMappersTest", () => {
@@ -31,16 +31,19 @@ describe("MonoWorkflowControllerMappersTest", () => {
   });
 
   describe("convertToMonoTransactionDTO", () => {
-    it("should map all the fields correctly", () => {
+    it("should map all the fields correctly for COLLECTION_LINK_DEPOSIT transactions", () => {
       const monoTransaction: MonoTransaction = {
-        collectionLinkID: "collectionLinkID",
-        collectionURL: `https://mono.com/collections`,
+        id: "ID",
+        nobaTransactionID: "nobaTransactionID",
+        type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
+        state: MonoTransactionState.SUCCESS,
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
-        nobaTransactionID: "nobaTransactionID",
-        state: MonoTransactionState.PENDING,
-        id: "ID",
-        monoTransactionID: "monoTransactionID",
+        collectionLinkDepositDetails: {
+          collectionLinkID: "collectionLinkID",
+          collectionURL: `https://mono.com/collections`,
+          monoPaymentTransactionID: "monoPaymentTransactionID",
+        },
       };
 
       const monoTransactionDTO: MonoTransactionDTO =
@@ -48,10 +51,46 @@ describe("MonoWorkflowControllerMappersTest", () => {
 
       expect(monoTransactionDTO).toEqual({
         id: "ID",
-        collectionLinkID: "collectionLinkID",
         nobaTransactionID: "nobaTransactionID",
-        state: "PENDING",
-        monoTransactionID: "monoTransactionID",
+        state: "SUCCESS",
+        type: "COLLECTION_LINK_DEPOSIT",
+        collectionLinkDepositDetails: {
+          collectionLinkID: "collectionLinkID",
+          monoPaymentTransactionID: "monoPaymentTransactionID",
+        },
+        createdTimestamp: monoTransaction.createdTimestamp,
+        updatedTimestamp: monoTransaction.updatedTimestamp,
+      });
+    });
+
+    it("should map all the fields correctly for WITHDRAWAL transanctions", () => {
+      const monoTransaction: MonoTransaction = {
+        id: "ID",
+        nobaTransactionID: "nobaTransactionID",
+        type: MonoTransactionType.WITHDRAWAL,
+        state: MonoTransactionState.SUCCESS,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        withdrawalDetails: {
+          transferID: "transferID",
+          batchID: "batchID",
+          declinationReason: "declinationReason",
+        },
+      };
+
+      const monoTransactionDTO: MonoTransactionDTO =
+        monoWorkflowControllerMappers.convertToMonoTransactionDTO(monoTransaction);
+
+      expect(monoTransactionDTO).toEqual({
+        id: "ID",
+        nobaTransactionID: "nobaTransactionID",
+        state: "SUCCESS",
+        type: "WITHDRAWAL",
+        withdrawalDetails: {
+          transferID: "transferID",
+          batchID: "batchID",
+          declinationReason: "declinationReason",
+        },
         createdTimestamp: monoTransaction.createdTimestamp,
         updatedTimestamp: monoTransaction.updatedTimestamp,
       });

@@ -1,5 +1,24 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { MonoTransactionState } from "../domain/Mono";
+import { MonoTransactionState, MonoTransactionType } from "../domain/Mono";
+
+export class MonoCollectionLinkDepositsDTO {
+  @ApiProperty()
+  collectionLinkID: string;
+
+  @ApiPropertyOptional()
+  monoPaymentTransactionID?: string;
+}
+
+export class MonoWithdrawalsDTO {
+  @ApiProperty()
+  transferID: string;
+
+  @ApiProperty()
+  batchID: string;
+
+  @ApiPropertyOptional()
+  declinationReason?: string;
+}
 
 export class MonoTransactionDTO {
   @ApiProperty()
@@ -8,14 +27,17 @@ export class MonoTransactionDTO {
   @ApiProperty()
   nobaTransactionID: string;
 
-  @ApiPropertyOptional()
-  monoTransactionID?: string;
+  @ApiProperty({ enum: Object.keys(MonoTransactionType) })
+  type: MonoTransactionType;
 
   @ApiProperty({ enum: Object.keys(MonoTransactionState) })
   state: MonoTransactionState;
 
-  @ApiProperty()
-  collectionLinkID: string;
+  @ApiPropertyOptional()
+  collectionLinkDepositDetails?: MonoCollectionLinkDepositsDTO;
+
+  @ApiPropertyOptional()
+  withdrawalDetails?: MonoWithdrawalsDTO;
 
   @ApiProperty()
   createdTimestamp: Date;

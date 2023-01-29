@@ -1,28 +1,34 @@
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 import { Inject } from "@nestjs/common";
-import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { IBankImpl } from "./ibank.impl";
 import { DebitBankFactoryRequest, DebitBankFactoryResponse } from "../domain/BankFactoryTypes";
 import { MonoService } from "../mono/mono.service";
+import { MonoCurrency, MonoTransactionType } from "../domain/Mono";
 
 export class BankMonoImpl implements IBankImpl {
   @Inject()
   private readonly monoService: MonoService;
 
   async debit(request: DebitBankFactoryRequest): Promise<DebitBankFactoryResponse> {
-    const withdrawal = await this.monoService.debitFromNoba({
+    const withdrawal = await this.monoService.createMonoTransaction({
+      type: MonoTransactionType.WITHDRAWAL,
       amount: request.amount,
-      currency: request.currency,
-      transactionID: request.transactionID,
-      transactionRef: request.transactionRef,
+      currency: request.currency as MonoCurrency,
+      nobaTransactionID: request.transactionID,
+      nobaPublicTransactionRef: request.transactionRef,
       consumerID: request.consumerID,
-      bankCode: request.bankCode,
-      accountNumber: request.accountNumber,
-      accountType: request.accountType,
-      documentNumber: request.documentNumber,
-      documentType: request.documentType,
+      withdrawalDetails: {
+        bankCode: request.bankCode,
+        encryptedAccountNumber: request.accountNumber,
+        accountType: request.accountType,
+        documentNumber: request.documentNumber,
+        documentType: request.documentType,
+      },
     });
 
-    return withdrawal;
+    return {
+      withdrawalID: withdrawal.id,
+      state: withdrawal.state,
+      declinationReason: withdrawal.withdrawalDetails.declinationReason,
+    };
   }
 }

@@ -5,14 +5,29 @@ import { MonoTransactionDTO } from "../dto/mono.workflow.controller.dto";
 @Injectable()
 export class MonoWorkflowControllerMappers {
   convertToMonoTransactionDTO(monoTransaction: MonoTransaction): MonoTransactionDTO {
-    return {
+    const result: MonoTransactionDTO = {
       id: monoTransaction.id,
-      collectionLinkID: monoTransaction.collectionLinkID,
+      type: monoTransaction.type,
       nobaTransactionID: monoTransaction.nobaTransactionID,
       state: monoTransaction.state,
-      monoTransactionID: monoTransaction.monoTransactionID,
       createdTimestamp: monoTransaction.createdTimestamp,
       updatedTimestamp: monoTransaction.updatedTimestamp,
     };
+
+    if (monoTransaction.collectionLinkDepositDetails) {
+      result.collectionLinkDepositDetails = {
+        collectionLinkID: monoTransaction.collectionLinkDepositDetails.collectionLinkID,
+        monoPaymentTransactionID: monoTransaction.collectionLinkDepositDetails.monoPaymentTransactionID,
+      };
+    }
+    if (monoTransaction.withdrawalDetails) {
+      result.withdrawalDetails = {
+        transferID: monoTransaction.withdrawalDetails.transferID,
+        batchID: monoTransaction.withdrawalDetails.batchID,
+        declinationReason: monoTransaction.withdrawalDetails.declinationReason,
+      };
+    }
+
+    return result;
   }
 }

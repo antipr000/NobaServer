@@ -3,7 +3,7 @@ import { SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { MonoWorkflowControllerMappers } from "../mono.workflow.controller.mappers";
-import { MonoTransaction, MonoTransactionState } from "../../domain/Mono";
+import { MonoTransaction, MonoTransactionState, MonoTransactionType } from "../../domain/Mono";
 import { MonoTransactionDTO } from "../../dto/mono.workflow.controller.dto";
 import { MonoWorkflowController } from "../mono.workflow.controller";
 import { anyString, anything, capture, instance, when } from "ts-mockito";
@@ -69,21 +69,27 @@ describe("MonoWorkflowControllerTests", () => {
   describe("getMonoTransactionByNobaTransactionID", () => {
     it("should take the MonoTransaction from service and forwards it to mappers", async () => {
       const monoTransaction: MonoTransaction = {
-        collectionLinkID: "collectionLinkID",
-        collectionURL: `https://mono.com/collections`,
+        id: "ID",
+        nobaTransactionID: "nobaTransactionID",
+        type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
+        state: MonoTransactionState.SUCCESS,
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
-        nobaTransactionID: "nobaTransactionID",
-        state: MonoTransactionState.PENDING,
-        id: "ID",
-        monoTransactionID: "monoTransactionID",
+        collectionLinkDepositDetails: {
+          collectionLinkID: "collectionLinkID",
+          collectionURL: `https://mono.com/collections`,
+          monoPaymentTransactionID: "monoPaymentTransactionID",
+        },
       };
       const monoTransactionDTO: MonoTransactionDTO = {
-        id: monoTransaction.id,
-        collectionLinkID: monoTransaction.collectionLinkID,
-        nobaTransactionID: monoTransaction.nobaTransactionID,
-        state: monoTransaction.state,
-        monoTransactionID: monoTransaction.monoTransactionID,
+        id: "ID",
+        nobaTransactionID: "nobaTransactionID",
+        state: "SUCCESS" as MonoTransactionState,
+        type: "COLLECTION_LINK_DEPOSIT" as MonoTransactionType,
+        collectionLinkDepositDetails: {
+          collectionLinkID: "collectionLinkID",
+          monoPaymentTransactionID: "monoPaymentTransactionID",
+        },
         createdTimestamp: monoTransaction.createdTimestamp,
         updatedTimestamp: monoTransaction.updatedTimestamp,
       };

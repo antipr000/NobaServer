@@ -9,7 +9,7 @@ import { ExchangeRateService } from "../../common/exchangerate.service";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { Transaction } from "../domain/Transaction";
 import { MonoService } from "../../psp/mono/mono.service";
-import { MonoCurrency } from "../../psp/domain/Mono";
+import { MonoCurrency, MonoTransactionType } from "../../psp/domain/Mono";
 import { TransactionFlags } from "../domain/TransactionFlags";
 import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
 import { Utils } from "../../../core/utils/Utils";
@@ -104,10 +104,11 @@ export class WalletDepositImpl implements IWorkflowImpl {
       });
     }
 
+    // TODO: Add a check for the currency here. Mono should be called "only" for COP currencies.
     const isCollection = options && options.includes(TransactionFlags.IS_COLLECTION);
     if (isCollection) {
-      // TODO: Add a check for the currency here. Mono should be called "only" for COP currencies.
       await this.monoService.createMonoTransaction({
+        type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
         amount: transaction.debitAmount,
         currency: transaction.debitCurrency as MonoCurrency,
         consumerID: transaction.debitConsumerID,
