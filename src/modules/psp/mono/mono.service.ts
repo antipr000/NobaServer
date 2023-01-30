@@ -23,7 +23,7 @@ import { MonoWebhookHandlers } from "./mono.webhook";
 import { CollectionIntentCreditedEvent } from "../dto/mono.webhook.dto";
 import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
 import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { KmsService } from "../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 

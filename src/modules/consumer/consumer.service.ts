@@ -39,7 +39,7 @@ import { randomBytes } from "crypto";
 import { QRService } from "../common/qrcode.service";
 import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
 import { findFlag } from "country-list-with-dial-code-and-flag";
-import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { EmployeeService } from "../employee/employee.service";
 import { EmployerService } from "../employer/employer.service";
 import { Employer } from "../employer/domain/Employer";

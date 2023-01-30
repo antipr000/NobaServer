@@ -3,10 +3,10 @@ import Joi from "joi";
 import { TransactionSubmissionException } from "../../modules/transactions/exceptions/TransactionSubmissionException";
 import { Logger } from "winston";
 import { AppExceptionCode, ApplicationException, BadRequestError } from "./CommonAppException";
-import { serviceToHTTP } from "./mappers/serviceToHTTP";
-import { ServiceException } from "./ServiceException";
-import { repoToHTTP } from "./mappers/repoToHTTP";
-import { RepoException } from "./RepoException";
+import { serviceToHTTP } from "./mappers/service.http";
+import { ServiceException } from "./service.exception";
+import { repoToHTTP } from "./mappers/repo.http";
+import { RepoException } from "./repo.exception";
 
 export function convertToHTTPException(logger: Logger, exception: any): HttpException {
   if (Joi.isError(exception)) {

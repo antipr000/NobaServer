@@ -9,7 +9,7 @@ import { AxiosResponse } from "axios";
 import { CircleWithdrawalRequest, CircleWithdrawalResponse, CircleWithdrawalStatusMap } from "./domain/CircleTypes";
 import { fromString as convertToUUIDv4 } from "uuidv4";
 import { Utils } from "../../core/utils/Utils";
-import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 
 @Injectable()
 export class CircleClient {

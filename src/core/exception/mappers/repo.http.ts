@@ -1,6 +1,6 @@
 import { HttpException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { Logger } from "winston";
-import { RepoErrorCode, RepoException } from "../RepoException";
+import { RepoErrorCode, RepoException } from "../repo.exception";
 
 export function repoToHTTP(logger: Logger, exception: RepoException) {
   switch (exception.errorCode) {

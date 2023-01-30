@@ -9,7 +9,7 @@ import { ICircleRepo } from "../repos/circle.repo";
 import { getMockCircleRepoWithDefaults } from "../mocks/mock.circle.repo";
 import { Result } from "../../../core/logic/Result";
 import { Circle } from "../domain/Circle";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { CircleWithdrawalStatus } from "../domain/CircleTypes";
 
 describe("CircleService", () => {

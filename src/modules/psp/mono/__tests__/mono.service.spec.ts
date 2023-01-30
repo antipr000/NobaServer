@@ -30,7 +30,7 @@ import { CollectionIntentCreditedEvent } from "../../dto/mono.webhook.dto";
 import { getMockKMSServiceWithDefaults } from "../../../../modules/common/mocks/mock.kms.service";
 import { KmsService } from "../../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../../config/configtypes/KmsConfigs";
-import { ServiceErrorCode, ServiceException } from "../../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../../core/exception/service.exception";
 import { getRandomMonoTransaction } from "../test_utils/utils";
 
 describe("MonoServiceTests", () => {

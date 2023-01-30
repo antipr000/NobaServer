@@ -47,7 +47,7 @@ import {
 } from "@prisma/client";
 import { QRService } from "../../../modules/common/qrcode.service";
 import { getMockQRServiceWithDefaults } from "../../../modules/common/mocks/mock.qr.service";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { EmployeeService } from "../../../modules/employee/employee.service";
 import { EmployerService } from "../../../modules/employer/employer.service";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";

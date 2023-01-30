@@ -14,7 +14,7 @@ import {
   validateUpdateMonoTransactionRequest,
 } from "../../domain/Mono";
 import { IMonoRepo } from "./mono.repo";
-import { RepoErrorCode, RepoException } from "../../../../core/exception/RepoException";
+import { RepoErrorCode, RepoException } from "../../../../core/exception/repo.exception";
 
 @Injectable()
 export class SqlMonoRepo implements IMonoRepo {

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { Logger } from "winston";
 import { Employee, EmployeeAllocationCurrency } from "./domain/Employee";
 import { IEmployeeRepo } from "./repo/employee.repo";
