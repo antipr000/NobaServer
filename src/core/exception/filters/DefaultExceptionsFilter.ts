@@ -2,7 +2,7 @@ import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from "@nestjs/co
 import { exceptions, Logger } from "winston";
 import { convertToHTTPException } from "../ExceptionToHTTPExceptionMap";
 import Joi from "joi";
-import { BaseException } from "../BaseException";
+import { BaseException } from "../base.exception";
 
 @Catch()
 export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
