@@ -1,17 +1,12 @@
-import { Body, Controller, Headers, HttpStatus, Inject, Post } from "@nestjs/common";
+import { Body, Controller, ForbiddenException, Headers, HttpStatus, Inject, Post } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import {
-  PaymentCapturedWebhookData,
-  PaymentCapturePendingWebhookData,
-  PaymentPendingWebhookData,
-} from "./domain/CheckoutTypes";
 import { CheckoutWebhooksMapper } from "./mapper/checkout.webhooks";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CheckoutConfigs } from "../../config/configtypes/CheckoutConfigs";
 import { CHECKOUT_CONFIG_KEY } from "../../config/ConfigurationUtils";
-import { ITransactionRepo } from "../transactions/repo/TransactionRepo";
+import { ITransactionRepo } from "../transaction/repo/transaction.repo";
 import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { createHmac } from "crypto";
 import { TRANSACTION_REPO_PROVIDER } from "../transaction/repo/transaction.repo.module";
@@ -35,7 +30,8 @@ export class PaymentWebhooksController {
   @ApiOperation({ summary: "Checks if the transaction parameters are valid" })
   @ApiResponse({ status: HttpStatus.OK })
   async consumePaymentWebhooks(@Body() requestBody, @Headers() headers) {
-    this.logger.info(`Received Checkout webhook event with ID: '${requestBody.id}'`);
+    throw new ForbiddenException("This endpoint is not available");
+    /* this.logger.info(`Received Checkout webhook event with ID: '${requestBody.id}'`);
 
     let isValidRequest = true;
     const requiredFields = ["type", "id", "data"];
@@ -118,7 +114,7 @@ export class PaymentWebhooksController {
         this.logger.error(`Invalid 'type' in Checkout webhook event: "${JSON.stringify(requestBody)}"`);
         return;
       }
-    }
+    }*/
   }
 
   private IsAuthenticRequest(body, receivedSignature: string): boolean {

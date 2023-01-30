@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Consumer } from "../consumer/domain/Consumer";
-import { ITransactionRepo } from "../transactions/repo/TransactionRepo";
+import { ITransactionRepo } from "../transaction/repo/transaction.repo";
 import { TransactionAllowedStatus } from "../transactions/domain/TransactionAllowedStatus";
 import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
@@ -181,7 +181,7 @@ export class LimitsService {
     }
 
     // Check for unsettled exposure limit
-    if (paymentMethodType === PaymentMethodType.ACH && limitProfile.props.unsettledExposure) {
+    /*if (paymentMethodType === PaymentMethodType.ACH && limitProfile.props.unsettledExposure) {
       // TODO: Fix this
       // const achPaymentMethodIds = consumer.props.paymentMethods
       //   .filter(pMethod => pMethod.type === PaymentMethodType.ACH)
@@ -203,7 +203,7 @@ export class LimitsService {
           rangeMin: minRemaining,
         };
       }
-    }
+    }*/
 
     // TODO(CRYPTO-393): Add wallet exposure check
     return {

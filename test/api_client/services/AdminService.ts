@@ -7,7 +7,6 @@ import type { ConsumerDTO } from "../models/ConsumerDTO";
 import type { DeleteNobaAdminDTO } from "../models/DeleteNobaAdminDTO";
 import type { ExchangeRateDTO } from "../models/ExchangeRateDTO";
 import type { NobaAdminDTO } from "../models/NobaAdminDTO";
-import type { TransactionDTO } from "../models/TransactionDTO";
 import type { TransactionStatsDTO } from "../models/TransactionStatsDTO";
 import type { UpdateNobaAdminDTO } from "../models/UpdateNobaAdminDTO";
 
@@ -45,53 +44,6 @@ export class AdminService {
         "x-noba-api-key": xNobaApiKey,
         "x-noba-signature": xNobaSignature,
         "x-noba-timestamp": xNobaTimestamp,
-      },
-    });
-  }
-
-  /**
-   * Gets all transactions filtered by the specified date range
-   * @returns TransactionDTO All transactions within the specified date range
-   * @throws ApiError
-   */
-  public static getAllTransactions({
-    xNobaApiKey,
-    adminId,
-    startDate,
-    endDate,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    adminId: string;
-    /**
-     * Format: YYYY-MM-DD, example: 2010-04-27
-     */
-    startDate: string;
-    /**
-     * Format: YYYY-MM-DD, example: 2010-04-27
-     */
-    endDate: string;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<Array<TransactionDTO>> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/v1/admins/{adminID}/transactions",
-      path: {
-        adminID: adminId,
-      },
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
-      query: {
-        startDate: startDate,
-        endDate: endDate,
       },
     });
   }

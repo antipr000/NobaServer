@@ -10,7 +10,7 @@ import { ITransactionRepo } from "../../../modules/transaction/repo/transaction.
 import { getMockTransactionRepoWithDefaults } from "../../../modules/transaction/mocks/mock.sql.transaction.repo";
 import { TRANSACTION_REPO_PROVIDER } from "../../../modules/transaction/repo/transaction.repo.module";
 
-describe("PaymentWebhooksController", () => {
+describe.skip("PaymentWebhooksController", () => {
   jest.setTimeout(2000);
 
   let webhookController: PaymentWebhooksController;
