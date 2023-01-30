@@ -3,18 +3,9 @@ import { bootstrap } from "../src/server";
 import { clearAccessTokenForNextRequests } from "./common";
 import { PrismaClient } from "@prisma/client";
 
-export class IntegrationTestUtility {
-  private port: number;
-  private postgres_connection_string: string;
-  private app: INestApplication;
-
-  static async setUp(port: number): Promise<IntegrationTestUtility> {
-    const setup = new IntegrationTestUtility();
-    setup.port = port;
-    setup.app = await bootstrap({});
-    await setup.app.listen(setup.port);
-    return setup;
-  }
+export abstract class TestUtility {
+  protected port: number;
+  protected app: INestApplication;
 
   async reset(): Promise<void> {
     clearAccessTokenForNextRequests();
@@ -55,5 +46,15 @@ export class IntegrationTestUtility {
 
   getRandomID(base: string): string {
     return `${base}.${Math.random()}`;
+  }
+}
+
+export class IntegrationTestUtility extends TestUtility {
+  static async setUp(port: number): Promise<IntegrationTestUtility> {
+    const setup = new IntegrationTestUtility();
+    setup.port = port;
+    setup.app = await bootstrap({});
+    await setup.app.listen(setup.port);
+    return setup;
   }
 }
