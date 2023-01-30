@@ -28,8 +28,9 @@ import { WorkflowFactory } from "./factory/workflow.factory";
 import { IWithdrawalDetailsRepo } from "./repo/withdrawal.details.repo";
 import { InputWithdrawalDetails, WithdrawalDetails } from "./domain/WithdrawalDetails";
 import { TransactionFlags } from "./domain/TransactionFlags";
-import { DebitBankRequest, DebitBankResponse } from "./domain/Transaction";
+import { DebitBankResponse } from "./domain/Transaction";
 import { BankFactory } from "../psp/factory/bank.factory";
+import { BankName } from "../psp/domain/BankFactoryTypes";
 
 @Injectable()
 export class TransactionService {
@@ -296,30 +297,30 @@ export class TransactionService {
     };
   }
 
-  async debitFromBank(request: DebitBankRequest): Promise<DebitBankResponse> {
+  async debitFromBank(transactionID: string): Promise<DebitBankResponse> {
     const [transaction, withdrawal] = await Promise.all([
-      this.getTransactionByTransactionID(request.transactionID),
-      this.getWithdrawalDetails(request.transactionID),
+      this.getTransactionByTransactionID(transactionID),
+      this.getWithdrawalDetails(transactionID),
     ]);
     if (!transaction) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
-        message: `Transaction not found: ${request.transactionID}`,
+        message: `Transaction not found: ${transactionID}`,
       });
     }
     if (!withdrawal) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
-        message: `Withdrawal details not found for transactionID: ${request.transactionID}`,
+        message: `Withdrawal details not found for transactionID: ${transactionID}`,
       });
     }
 
-    const bank = this.bankFactory.getBankImplementation(request.bankName);
+    const bank = this.bankFactory.getBankImplementation(BankName.MONO);
     const debitBankResponse = await bank.debit({
-      amount: request.amount,
-      currency: request.currency,
+      amount: transaction.creditAmount,
+      currency: transaction.creditCurrency,
       consumerID: transaction.debitConsumerID,
-      transactionID: request.transactionID,
+      transactionID: transactionID,
       transactionRef: transaction.transactionRef,
       accountNumber: withdrawal.accountNumber,
       accountType: withdrawal.accountType,

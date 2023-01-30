@@ -72,6 +72,6 @@ export class TransactionWorkflowController {
   @ApiOperation({ summary: "Debit money from Noba bank account into consumer account" })
   @ApiResponse({ status: HttpStatus.OK, type: WorkflowTransactionDTO })
   async debitFromBank(@Body() requestBody: DebitBankRequestDTO) {
-    return await this.transactionService.debitFromBank(requestBody);
+    return await this.transactionService.debitFromBank(requestBody.transactionID);
   }
 }

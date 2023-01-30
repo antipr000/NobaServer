@@ -13,7 +13,6 @@ import { BadRequestException } from "@nestjs/common";
 import { TransactionWorkflowMapper } from "../mapper/transaction.workflow.mapper";
 import { getMockTransactionWorkflowMapperWithDefaults } from "../mocks/mock.transaction.workflow.mapper";
 import { DebitBankRequestDTO, WorkflowTransactionDTO } from "../dto/transaction.workflow.controller.dto";
-import { BankName } from "../../../modules/psp/domain/BankFactoryTypes";
 
 const getRandomTransaction = (consumerID: string): Transaction => {
   const transaction: Transaction = {
@@ -161,13 +160,10 @@ describe("Transaction Workflow Controller tests", () => {
       const consumerID = "testConsumerID";
       const transaction: Transaction = getRandomTransaction(consumerID);
       const debitRequestDTO: DebitBankRequestDTO = {
-        amount: 100,
-        currency: "USD",
-        bankName: BankName.MONO,
         transactionID: transaction.id,
       };
 
-      when(mockTransactionService.debitFromBank(debitRequestDTO)).thenResolve({
+      when(mockTransactionService.debitFromBank(transaction.id)).thenResolve({
         state: "Completed",
         withdrawalID: "test-withdrawal-id",
       });
