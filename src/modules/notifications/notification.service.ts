@@ -31,11 +31,15 @@ import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
 import { SendWalletTransferEvent } from "./events/SendWalletTransferEvent";
 import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
 import { SendPhoneVerificationCodeEvent } from "./events/SendPhoneVerificationCodeEvent";
+import { IPushtokenRepo } from "./repos/pushtoken.repo";
 
 @Injectable()
 export class NotificationService {
   @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger;
   constructor(private readonly eventEmitter: EventEmitter2) {}
+
+  @Inject("PushtokenRepo")
+  private readonly pushtokenRepo: IPushtokenRepo;
 
   private getNotificationMedium(
     eventType: NotificationEventType,
@@ -67,6 +71,15 @@ export class NotificationService {
       const eventName = `${eventHandler}.${eventType}`;
       this.createEvent(eventName, eventType, payload);
     });
+  }
+
+  async subscribeToPushNotifications(consumerID: string, pushToken: string): Promise<string> {
+    const existingPushTokens = await this.pushtokenRepo.getPushTokens(consumerID);
+    if (existingPushTokens.indexOf(pushToken) === -1) {
+      return this.pushtokenRepo.addPushToken(consumerID, pushToken);
+    }
+
+    return;
   }
 
   private createEvent(eventName: string, eventType: NotificationEventType, payload: NotificationPayload) {
