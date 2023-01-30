@@ -2,6 +2,8 @@ import { BaseException, ExceptionConstructor } from "./BaseException";
 
 export const enum RepoErrorCode {
   NOT_FOUND = "Item was not found in database",
+  INVALID_DATABASE_RECORD = "Invalid database record",
+  DATABASE_INTERNAL_ERROR = "Database internal error",
   UNKNOWN = "Unknown error has occured",
 }
 
