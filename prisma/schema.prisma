@@ -49,6 +49,7 @@ model Consumer {
   debitTransactions    Transaction[]   @relation("debitConsumer")
   creditTransactions   Transaction[]   @relation("creditConsumer")
   Employee             Employee[]
+  pushTokens           Pushtoken[]
 
   @@index([email])
   @@index([handle])
@@ -362,6 +363,17 @@ model WithdrawalDetails {
   transactionID  String      @unique()
 
   @@index([transactionID])
+}
+
+model Pushtoken {
+  id               String    @id @default(uuid())
+  consumer         Consumer  @relation(fields: [consumerID], references: [id], onDelete: Cascade)
+  consumerID       String    @unique()
+  pushtoken        String    @unique()
+  createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
+
+  @@index([consumerID, pushtoken])
 }
 
 enum IdentityType {
