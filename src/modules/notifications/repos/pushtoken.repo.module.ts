@@ -1,7 +1,6 @@
 import { Module } from "@nestjs/common";
 import { InfraProvidersModule } from "../../../infraproviders/infra.module";
 import { SQLPushtokenRepo } from "./sql.pushtoken.repo";
-import { CommonModule } from "../../../modules/common/common.module";
 
 const PushtokenRepoProvider = {
   provide: "PushtokenRepo",
@@ -9,7 +8,7 @@ const PushtokenRepoProvider = {
 };
 
 @Module({
-  imports: [InfraProvidersModule, CommonModule],
+  imports: [InfraProvidersModule],
   controllers: [],
   providers: [PushtokenRepoProvider],
   exports: [PushtokenRepoProvider],
