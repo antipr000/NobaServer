@@ -29,7 +29,6 @@ Table Consumer {
   debitTransactions Transaction [not null]
   creditTransactions Transaction [not null]
   Employee Employee [not null]
-  pushTokens Pushtoken [not null]
 }
 
 Table Address {
@@ -315,15 +314,6 @@ Table WithdrawalDetails {
   transactionID String [unique, not null]
 }
 
-Table Pushtoken {
-  id String [pk]
-  consumer Consumer [not null]
-  consumerID String [unique, not null]
-  pushtoken String [unique, not null]
-  createdTimestamp DateTime [default: `now()`]
-  updatedTimestamp DateTime
-}
-
 Enum IdentityType {
   CONSUMER
   NOBA_ADMIN
@@ -417,5 +407,3 @@ Ref: TransactionEvent.transactionID > Transaction.id [delete: Cascade]
 Ref: Mono.nobaTransactionID - Transaction.id [delete: Cascade]
 
 Ref: WithdrawalDetails.transactionID > Transaction.id [delete: Cascade]
-
-Ref: Pushtoken.consumerID > Consumer.id [delete: Cascade]
