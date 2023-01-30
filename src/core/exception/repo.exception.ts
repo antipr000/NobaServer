@@ -1,4 +1,4 @@
-import { BaseException, ExceptionConstructor } from "./BaseException";
+import { BaseException, ExceptionConstructor } from "./base.exception";
 
 export const enum RepoErrorCode {
   NOT_FOUND = "Item was not found in database",
