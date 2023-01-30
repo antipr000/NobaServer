@@ -6,7 +6,7 @@ import { AppExceptionCode, ApplicationException, BadRequestError } from "./Commo
 import { serviceToHTTP } from "./mappers/serviceToHTTP";
 import { ServiceException } from "./ServiceException";
 import { repoToHTTP } from "./mappers/repoToHTTP";
-import { RepoException } from "./RepoExpcetion";
+import { RepoException } from "./RepoException";
 
 export function convertToHTTPException(logger: Logger, exception: any): HttpException {
   if (Joi.isError(exception)) {
