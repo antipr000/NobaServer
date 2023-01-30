@@ -12,6 +12,6 @@ const PushtokenRepoProvider = {
   imports: [InfraProvidersModule, CommonModule],
   controllers: [],
   providers: [PushtokenRepoProvider],
-  exports: [],
+  exports: [PushtokenRepoProvider],
 })
 export class PushtokenRepoModule {}
