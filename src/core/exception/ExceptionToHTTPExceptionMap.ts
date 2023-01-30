@@ -5,6 +5,8 @@ import { Logger } from "winston";
 import { AppExceptionCode, ApplicationException, BadRequestError } from "./CommonAppException";
 import { serviceToHTTP } from "./mappers/serviceToHTTP";
 import { ServiceException } from "./ServiceException";
+import { repoToHTTP } from "./mappers/repoToHTTP";
+import { RepoException } from "./RepoExpcetion";
 
 export function convertToHTTPException(logger: Logger, exception: any): HttpException {
   if (Joi.isError(exception)) {
@@ -17,9 +19,10 @@ export function convertToHTTPException(logger: Logger, exception: any): HttpExce
 
   //TODO can something leak here? I guess when this app calls some other service and if that service throws HTTPException with sensitive information
   if (exception instanceof HttpException) return exception;
-
-  if (exception instanceof ServiceException) {
+  else if (exception instanceof ServiceException) {
     return serviceToHTTP(logger, exception);
+  } else if (exception instanceof RepoException) {
+    return repoToHTTP(logger, exception);
   }
 
   // This should be refactored to RepositoryException
