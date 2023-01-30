@@ -13,7 +13,7 @@ import { uuid } from "uuidv4";
 import { createTestConsumer } from "../../../modules/consumer/test_utils/test.utils";
 import { AccountType, DocumentType, InputWithdrawalDetails } from "../domain/WithdrawalDetails";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
-import { ServiceException } from "../../../core/exception/service.exception";
+import { RepoException } from "../../../core/exception/repo.exception";
 
 describe("SQLWithdrawalDetailsRepo tests", () => {
   jest.setTimeout(20000);
@@ -87,12 +87,10 @@ describe("SQLWithdrawalDetailsRepo tests", () => {
       await expect(withdrawalDetailsRepo.addWithdrawalDetails(inputWithdrawalDetails)).rejects.toThrowError();
     });
 
-    it("should throw ServiceException if transactionID is invalid", async () => {
+    it("should throw RepoException if transactionID is invalid", async () => {
       const inputWithdrawalDetails = createFakeWithdrawalDetails("invalid-transaction-id");
 
-      await expect(withdrawalDetailsRepo.addWithdrawalDetails(inputWithdrawalDetails)).rejects.toThrow(
-        ServiceException,
-      );
+      await expect(withdrawalDetailsRepo.addWithdrawalDetails(inputWithdrawalDetails)).rejects.toThrow(RepoException);
     });
   });
 
