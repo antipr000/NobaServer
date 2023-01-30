@@ -17,7 +17,7 @@ import { Currency } from "../domain/TransactionTypes";
 import { LimitsService } from "../limits.service";
 import { getMockLimitsServiceWithDefaults } from "../mocks/mock.limits.service";
 import { QuoteRequestDTO } from "../dto/QuoteRequestDTO";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { IncludeEventTypes, TransactionEventDTO } from "../dto/TransactionEventDTO";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";

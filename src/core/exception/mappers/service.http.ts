@@ -9,7 +9,7 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { Logger } from "winston";
-import { ServiceErrorCode, ServiceException } from "../ServiceException";
+import { ServiceErrorCode, ServiceException } from "../service.exception";
 
 export function serviceToHTTP(logger: Logger, exception: ServiceException) {
   switch (exception.errorCode) {

@@ -4,7 +4,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { anyString, anything, capture, instance, when } from "ts-mockito";
 import { uuid } from "uuidv4";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { Employer } from "../../../modules/employer/domain/Employer";
 import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
 import { EmployerService } from "../../../modules/employer/employer.service";

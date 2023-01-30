@@ -14,7 +14,7 @@ import { Logger } from "winston";
 import { TRANSACTION_REPO_PROVIDER, WITHDRAWAL_DETAILS_REPO_PROVIDER } from "./repo/transaction.repo.module";
 import { Utils } from "../../core/utils/Utils";
 import { ConsumerService } from "../consumer/consumer.service";
-import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { Currency } from "./domain/TransactionTypes";
 import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";

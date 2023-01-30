@@ -18,7 +18,7 @@ import {
   validateUpdateEmployeeRequest,
 } from "../domain/Employee";
 import { IEmployeeRepo } from "./employee.repo";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 @Injectable()
 export class SqlEmployeeRepo implements IEmployeeRepo {

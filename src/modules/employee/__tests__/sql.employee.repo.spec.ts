@@ -10,7 +10,7 @@ import { createTestEmployer } from "../../../modules/employer/test_utils/test.ut
 import { Employee, EmployeeAllocationCurrency, EmployeeCreateRequest } from "../domain/Employee";
 import { IEmployeeRepo } from "../repo/employee.repo";
 import { SqlEmployeeRepo } from "../repo/sql.employee.repo";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 const getAllEmployeeRecords = async (prismaService: PrismaService): Promise<PrismaEmployeeModel[]> => {
   return prismaService.employee.findMany({});

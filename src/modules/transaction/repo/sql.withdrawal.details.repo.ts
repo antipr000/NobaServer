@@ -10,7 +10,7 @@ import {
 } from "../domain/WithdrawalDetails";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { KmsService } from "../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 

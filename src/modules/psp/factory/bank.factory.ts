@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { BankName } from "../domain/BankFactoryTypes";
 import { BankMonoImpl } from "./bank.mono.impl";
 import { IBankImpl } from "./ibank.impl";

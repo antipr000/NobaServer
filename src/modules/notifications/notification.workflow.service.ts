@@ -3,7 +3,7 @@ import { NotificationEventType, NotificationWorkflowTypes } from "./domain/Notif
 import { ConsumerService } from "../consumer/consumer.service";
 import { TransactionService } from "../transaction/transaction.service";
 import { NotificationService } from "./notification.service";
-import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NotificationPayload, prepareNotificationPayload } from "./domain/NotificationPayload";

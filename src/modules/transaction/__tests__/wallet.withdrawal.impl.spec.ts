@@ -20,7 +20,7 @@ import { Utils } from "../../../core/utils/Utils";
 import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
-import { ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceException } from "../../../core/exception/service.exception";
 import { WalletWithdrawalImpl } from "../factory/wallet.withdrawal.impl";
 import { TransactionService } from "../transaction.service";
 import { AccountType, DocumentType } from "../domain/WithdrawalDetails";

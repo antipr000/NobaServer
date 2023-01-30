@@ -1,6 +1,6 @@
 import { Mono as PrismaMonoModel } from "@prisma/client";
 import Joi from "joi";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 
 export class MonoTransaction {

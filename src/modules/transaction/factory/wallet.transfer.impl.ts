@@ -1,6 +1,6 @@
 import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { IWorkflowImpl } from "./iworkflow.impl";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { Transaction } from "../domain/Transaction";
 import { Inject } from "@nestjs/common";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";

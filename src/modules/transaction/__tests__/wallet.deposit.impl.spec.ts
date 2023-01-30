@@ -27,7 +27,7 @@ import { MonoService } from "../../../modules/psp/mono/mono.service";
 import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
 import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { WalletDepositImpl } from "../factory/wallet.deposit.impl";
-import { ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceException } from "../../../core/exception/service.exception";
 import { MonoCurrency, MonoTransactionType } from "../../../modules/psp/domain/Mono";
 import { TransactionFlags } from "../domain/TransactionFlags";
 

@@ -9,7 +9,7 @@ import { EMPLOYEE_REPO_PROVIDER } from "../repo/employee.repo.module";
 import { anything, capture, instance, when } from "ts-mockito";
 import { EmployeeService } from "../employee.service";
 import { uuid } from "uuidv4";
-import { ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceException } from "../../../core/exception/service.exception";
 
 const getRandomEmployee = (): Employee => {
   const employee: Employee = {

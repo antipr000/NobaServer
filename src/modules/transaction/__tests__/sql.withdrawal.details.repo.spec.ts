@@ -13,7 +13,7 @@ import { uuid } from "uuidv4";
 import { createTestConsumer } from "../../../modules/consumer/test_utils/test.utils";
 import { AccountType, DocumentType, InputWithdrawalDetails } from "../domain/WithdrawalDetails";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
-import { ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceException } from "../../../core/exception/service.exception";
 
 describe("SQLWithdrawalDetailsRepo tests", () => {
   jest.setTimeout(20000);

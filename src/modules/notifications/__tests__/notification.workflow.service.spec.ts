@@ -17,7 +17,7 @@ import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consum
 import { NotificationEventType, NotificationWorkflowTypes } from "../domain/NotificationTypes";
 import { TransactionNotificationPayloadMapper } from "../domain/TransactionNotificationParameters";
 import { prepareNotificationPayload } from "../domain/NotificationPayload";
-import { ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceException } from "../../../core/exception/service.exception";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
