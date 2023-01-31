@@ -153,4 +153,39 @@ describe("Onboarding consumer flow", () => {
     expect(getConsumerResponse.status).toBe(200);
     expect(getConsumerResponse.data.email).toBe(email);
   });
+
+  it("should get user information after logging in", async () => {
+    // This is sample test showing usage of prepareOnboardedConsumer. Remove it once it is used in other flows
+
+    const email = await testUtils.prepareOnboardedConsumer();
+    // Should login and not create new record if not present
+    const loginResponse = await testUtils.post("/v1/auth/login", {
+      emailOrPhone: email,
+      identityType: "CONSUMER",
+      autoCreate: false,
+    });
+
+    expect(loginResponse.status).toBe(201);
+
+    const verifyOtpResponse = await testUtils.post("/v1/auth/verifyotp", {
+      emailOrPhone: email,
+      identityType: "CONSUMER",
+      otp: TEST_OTP,
+      includeRefreshToken: true,
+    });
+
+    expect(verifyOtpResponse.status).toBe(201);
+    expect(verifyOtpResponse.data.accessToken).toBeTruthy();
+    expect(verifyOtpResponse.data.refreshToken).toBeTruthy();
+
+    setAccessTokenForTheNextRequests(verifyOtpResponse.data.accessToken);
+
+    const getConsumerResponse = await testUtils.get("/v1/consumers");
+
+    expect(getConsumerResponse.status).toBe(200);
+    expect(getConsumerResponse.data.email).toBe(email);
+    expect(getConsumerResponse.data.kycVerificationData.kycVerificationStatus).toBe("Approved");
+    expect(getConsumerResponse.data.documentVerificationData.documentVerificationStatus).toBe("Verified");
+    expect(getConsumerResponse.data.address.countryCode).toBe("CO");
+  });
 });
