@@ -417,11 +417,11 @@ export class ConsumerController {
     status: HttpStatus.OK,
     description: "Successfully unsubscribed from push notifications",
   })
-  async unsubscribeToPushNotifications(
+  async unsubscribeFromPushNotifications(
     @Param("pushToken") pushToken: string,
     @AuthUser() consumer: Consumer,
   ): Promise<void> {
-    await this.consumerService.subscribeToPushNotifications(consumer.props.id, pushToken);
+    await this.consumerService.unsubscribeFromPushNotifications(consumer.props.id, pushToken);
   }
 
   @Post("/wallets")
