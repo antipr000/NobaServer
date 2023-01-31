@@ -73,13 +73,13 @@ export class NotificationService {
     });
   }
 
-  async subscribeToPushNotifications(consumerID: string, pushToken: string): Promise<string> {
-    const existingPushTokens = await this.pushtokenRepo.getPushTokens(consumerID);
-    if (existingPushTokens.indexOf(pushToken) === -1) {
-      return this.pushtokenRepo.addPushToken(consumerID, pushToken);
+  async subscribeToPushNotifications(consumerID: string, pushtoken: string): Promise<string> {
+    const existingPushTokenID = await this.pushtokenRepo.getPushToken(consumerID, pushtoken);
+    if (!existingPushTokenID) {
+      return this.pushtokenRepo.addPushToken(consumerID, pushtoken);
     }
 
-    return;
+    return existingPushTokenID;
   }
 
   private createEvent(eventName: string, eventType: NotificationEventType, payload: NotificationPayload) {
