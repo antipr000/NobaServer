@@ -13,7 +13,7 @@ import { SendgridEmailClient } from "./emails/sendgrid.email.client";
 import { SMSEventHandler } from "./sms.event.handler";
 import { StubSMSClient } from "./sms/stub.sms.client";
 import { TwilioSMSClient } from "./sms/twilio.sms.service";
-import { PushtokenRepoModule } from "./repos/pushtoken.repo.module";
+import { PushTokenRepoModule } from "./repos/pushtoken.repo.module";
 
 // This is made to ensure that the "Sendgrid" quota is not utilised in testing environments.
 export const EmailProvider: Provider = {
@@ -51,7 +51,7 @@ export const SMSProvider: Provider = {
 };
 
 @Module({
-  imports: [ConfigModule, CommonModule, PushtokenRepoModule],
+  imports: [ConfigModule, CommonModule, PushTokenRepoModule],
   controllers: [],
   providers: [NotificationService, EmailEventHandler, SMSEventHandler, EmailProvider, SMSProvider],
   exports: [NotificationService],

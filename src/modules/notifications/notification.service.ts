@@ -31,15 +31,15 @@ import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
 import { SendWalletTransferEvent } from "./events/SendWalletTransferEvent";
 import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
 import { SendPhoneVerificationCodeEvent } from "./events/SendPhoneVerificationCodeEvent";
-import { IPushtokenRepo } from "./repos/pushtoken.repo";
+import { IPushTokenRepo } from "./repos/pushtoken.repo";
 
 @Injectable()
 export class NotificationService {
   @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger;
   constructor(private readonly eventEmitter: EventEmitter2) {}
 
-  @Inject("PushtokenRepo")
-  private readonly pushtokenRepo: IPushtokenRepo;
+  @Inject("PushTokenRepo")
+  private readonly pushTokenRepo: IPushTokenRepo;
 
   private getNotificationMedium(
     eventType: NotificationEventType,
@@ -73,10 +73,10 @@ export class NotificationService {
     });
   }
 
-  async subscribeToPushNotifications(consumerID: string, pushtoken: string): Promise<string> {
-    const existingPushTokenID = await this.pushtokenRepo.getPushToken(consumerID, pushtoken);
+  async subscribeToPushNotifications(consumerID: string, pushToken: string): Promise<string> {
+    const existingPushTokenID = await this.pushTokenRepo.getPushToken(consumerID, pushToken);
     if (!existingPushTokenID) {
-      return this.pushtokenRepo.addPushToken(consumerID, pushtoken);
+      return this.pushTokenRepo.addPushToken(consumerID, pushToken);
     }
 
     return existingPushTokenID;

@@ -1,16 +1,16 @@
 import { Module } from "@nestjs/common";
 import { InfraProvidersModule } from "../../../infraproviders/infra.module";
-import { SQLPushtokenRepo } from "./sql.pushtoken.repo";
+import { SQLPushTokenRepo } from "./sql.pushtoken.repo";
 
-const PushtokenRepoProvider = {
-  provide: "PushtokenRepo",
-  useClass: SQLPushtokenRepo,
+const PushTokenRepoProvider = {
+  provide: "PushTokenRepo",
+  useClass: SQLPushTokenRepo,
 };
 
 @Module({
   imports: [InfraProvidersModule],
   controllers: [],
-  providers: [PushtokenRepoProvider],
-  exports: [PushtokenRepoProvider],
+  providers: [PushTokenRepoProvider],
+  exports: [PushTokenRepoProvider],
 })
-export class PushtokenRepoModule {}
+export class PushTokenRepoModule {}
