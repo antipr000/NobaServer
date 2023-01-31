@@ -10,6 +10,7 @@ import {
   MonoTransactionSaveRequest,
   MonoTransactionState,
   MonoTransactionType,
+  TERMINAL_STATES,
 } from "../../domain/Mono";
 import { MonoClient } from "../mono.client";
 import { getMockMonoRepoWithDefaults } from "../mocks/mock.mono.repo";
@@ -222,6 +223,26 @@ describe("MonoServiceTests", () => {
         verify(
           monoRepo.updateMonoTransaction(monoTransaction.id, deepEqual({ state: MonoTransactionState.SUCCESS })),
         ).once();
+      });
+
+      it("shouldn't call Mono client if the MonoTransaction is already in a terminal state", async () => {
+        const monoTransaction: MonoTransaction = getRandomMonoTransaction(MonoTransactionType.WITHDRAWAL);
+
+        TERMINAL_STATES.forEach(terminalState => async () => {
+          monoTransaction.state = terminalState;
+          when(monoRepo.getMonoTransactionByNobaTransactionID(monoTransaction.nobaTransactionID)).thenResolve(
+            monoTransaction,
+          );
+
+          const returnedMonoTransaction: MonoTransaction = await monoService.getTransactionByNobaTransactionID(
+            monoTransaction.nobaTransactionID,
+          );
+
+          expect(returnedMonoTransaction).toStrictEqual(monoTransaction);
+
+          verify(monoClient.getTransferStatus(anything())).never();
+          verify(monoRepo.updateMonoTransaction(anything(), anything())).never();
+        });
       });
 
       it("shouldn't call update on database if the status is not changed", async () => {

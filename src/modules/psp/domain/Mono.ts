@@ -50,14 +50,15 @@ export enum MonoTransactionState {
   DUPLICATED = "DUPLICATED",
 }
 
+export const TERMINAL_STATES = [
+  MonoTransactionState.SUCCESS,
+  MonoTransactionState.EXPIRED,
+  MonoTransactionState.DECLINED,
+  MonoTransactionState.CANCELLED,
+  MonoTransactionState.DUPLICATED,
+];
 export const isTerminalState = (state: MonoTransactionState): boolean => {
-  return [
-    MonoTransactionState.SUCCESS,
-    MonoTransactionState.EXPIRED,
-    MonoTransactionState.DECLINED,
-    MonoTransactionState.CANCELLED,
-    MonoTransactionState.DUPLICATED,
-  ].includes(state);
+  return TERMINAL_STATES.includes(state);
 };
 
 export enum MonoTransactionType {
