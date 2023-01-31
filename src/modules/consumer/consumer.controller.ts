@@ -396,7 +396,7 @@ export class ConsumerController {
     });
   }
 
-  @Post("/subscribe/push")
+  @Post("/subscribe/push/:pushToken")
   @ApiOperation({ summary: "Subscribe to push notifications" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -405,7 +405,20 @@ export class ConsumerController {
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid push notification details" })
   async subscribeToPushNotifications(
-    @Param("walletID") pushToken: string,
+    @Param("pushToken") pushToken: string,
+    @AuthUser() consumer: Consumer,
+  ): Promise<void> {
+    await this.consumerService.subscribeToPushNotifications(consumer.props.id, pushToken);
+  }
+
+  @Post("/unsubscribe/push/:pushToken")
+  @ApiOperation({ summary: "Unsubscribe from push notifications" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Successfully unsubscribed from push notifications",
+  })
+  async unsubscribeToPushNotifications(
+    @Param("pushToken") pushToken: string,
     @AuthUser() consumer: Consumer,
   ): Promise<void> {
     await this.consumerService.subscribeToPushNotifications(consumer.props.id, pushToken);
