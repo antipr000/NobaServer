@@ -50,6 +50,16 @@ export enum MonoTransactionState {
   DUPLICATED = "DUPLICATED",
 }
 
+export const isTerminalState = (state: MonoTransactionState): boolean => {
+  return [
+    MonoTransactionState.SUCCESS,
+    MonoTransactionState.EXPIRED,
+    MonoTransactionState.DECLINED,
+    MonoTransactionState.CANCELLED,
+    MonoTransactionState.DUPLICATED,
+  ].includes(state);
+};
+
 export enum MonoTransactionType {
   COLLECTION_LINK_DEPOSIT = "COLLECTION_LINK_DEPOSIT",
   WITHDRAWAL = "WITHDRAWAL",
