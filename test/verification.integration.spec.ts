@@ -117,7 +117,7 @@ describe("Verification", () => {
       requestBody: consumerInformation,
     })) as VerificationResultDTO & ResponseStatus;
 
-    expect(getVerifyConsumerInformationResponse.__status).toBe(201);
+    expect(getVerifyConsumerInformationResponse.__status).toBe(200);
     expect(getVerifyConsumerInformationResponse.status).toBe("Approved");
 
     signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
