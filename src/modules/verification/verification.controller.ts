@@ -90,6 +90,7 @@ export class VerificationController {
   @ApiOperation({
     summary: "Verifies consumer-provided information",
   })
+  @HttpCode(HttpStatus.OK)
   @ApiResponse({ status: HttpStatus.OK, type: VerificationResultDTO, description: "Verification result" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async verifyConsumer(
@@ -108,6 +109,7 @@ export class VerificationController {
   @Post("/document")
   @ApiConsumes("multipart/form-data")
   @ApiOperation({ summary: "Verifies consumer uploaded identification documents" })
+  @HttpCode(HttpStatus.ACCEPTED)
   @ApiResponse({
     status: HttpStatus.ACCEPTED,
     type: String,

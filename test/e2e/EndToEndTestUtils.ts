@@ -45,4 +45,13 @@ export class EndToEndTestUtils extends TestUtility {
       },
     });
   }
+
+  async patch(endpoint: string, body: any): Promise<AxiosResponse> {
+    return this.apiClient.patch(endpoint, body, {
+      headers: {
+        Authorization: `Bearer ${process.env.ACCESS_TOKEN}`,
+        ...(await this.calculateSignatureHeaders("PATCH", endpoint, JSON.stringify(body))),
+      },
+    });
+  }
 }
