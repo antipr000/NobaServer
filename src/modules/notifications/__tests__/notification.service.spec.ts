@@ -31,6 +31,7 @@ import { SendWithdrawalInitiatedEvent } from "../events/SendWithdrawalInitiatedE
 import { SendPhoneVerificationCodeEvent } from "../events/SendPhoneVerificationCodeEvent";
 import { IPushTokenRepo } from "../repos/pushtoken.repo";
 import { getMockPushTokenRepoWithDefaults } from "../mocks/mock.pushtoken.repo";
+import { ServiceException } from "../../../core/exception/ServiceException";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -90,7 +91,21 @@ describe("NotificationService", () => {
     });
   });
 
-  describe("unsubscribeFromPushNotifications", () => {});
+  describe("unsubscribeFromPushNotifications", () => {
+    it("should unsubscribe to push notifications", async () => {
+      when(pushTokenRepo.deletePushToken("test-consumer-id", "test-push-token")).thenResolve("deleted-push-token-id");
+      expect(notificationService.unsubscribeFromPushNotifications("test-consumer-id", "test-push-token")).resolves.toBe(
+        "deleted-push-token-id",
+      );
+    });
+
+    it("should not unsubscribe to push notifications if not subscribed", async () => {
+      when(pushTokenRepo.deletePushToken("test-consumer-id", "test-push-token")).thenResolve(undefined);
+      expect(
+        notificationService.unsubscribeFromPushNotifications("test-consumer-id", "test-push-token"),
+      ).rejects.toThrow(ServiceException);
+    });
+  });
 
   it("should create email event for otp event when phone is missing", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
