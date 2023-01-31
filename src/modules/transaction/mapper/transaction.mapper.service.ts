@@ -41,10 +41,9 @@ export class TransactionMappingService {
 
     let monoTransaction: MonoTransaction;
 
-    if (
-      transaction.workflowName == WorkflowName.WALLET_DEPOSIT ||
-      transaction.workflowName == WorkflowName.WALLET_WITHDRAWAL
-    ) {
+    // We only need to fetch the Mono transaction for WALLET_DEPOSIT transactions
+    // as they are the only ones that have a collection link
+    if (transaction.workflowName == WorkflowName.WALLET_DEPOSIT) {
       try {
         monoTransaction = await this.monoService.getTransactionByNobaTransactionID(transaction.id);
       } catch (e) {

@@ -93,27 +93,15 @@ export class TransactionService {
       transactionRef: Utils.generateLowercaseUUID(true),
     };
 
-    try {
-      // Ensure that consumers on both side of the transaction are in good standing
-      if (transactionDetails.creditConsumerIDOrTag) {
-        const consumer = await this.consumerService.getActiveConsumer(transactionDetails.creditConsumerIDOrTag);
-        transaction.creditConsumerID = consumer.props.id;
-      }
+    // Ensure that consumers on both side of the transaction are in good standing
+    if (transactionDetails.creditConsumerIDOrTag) {
+      const consumer = await this.consumerService.getActiveConsumer(transactionDetails.creditConsumerIDOrTag);
+      transaction.creditConsumerID = consumer.props.id;
+    }
 
-      if (transactionDetails.debitConsumerIDOrTag) {
-        const consumer = await this.consumerService.getActiveConsumer(transactionDetails.debitConsumerIDOrTag);
-        transaction.debitConsumerID = consumer.props.id;
-      }
-    } catch (error) {
-      if (error instanceof ServiceException && error.errorCode === ServiceErrorCode.SEMANTIC_VALIDATION) {
-        throw new ServiceException({
-          // Rewrite semantic validations with the service's own terminology, otherwise let it bubble up
-          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-          message: "Unable to execute transaction at this time as user is invalid or unable to perform transactions.",
-        });
-      } else {
-        throw error;
-      }
+    if (transactionDetails.debitConsumerIDOrTag) {
+      const consumer = await this.consumerService.getActiveConsumer(transactionDetails.debitConsumerIDOrTag);
+      transaction.debitConsumerID = consumer.props.id;
     }
 
     if (transaction.creditConsumerID === transaction.debitConsumerID) {

@@ -10,7 +10,6 @@ import {
   MonoTransactionSaveRequest,
   MonoTransactionState,
   MonoTransactionType,
-  MonoWithdrawal,
 } from "../../domain/Mono";
 import { MonoClient } from "../mono.client";
 import { getMockMonoRepoWithDefaults } from "../mocks/mock.mono.repo";
@@ -18,7 +17,7 @@ import { getMockMonoClientWithDefaults } from "../mocks/mock.mono.client";
 import { MONO_REPO_PROVIDER } from "../repo/mono.repo.module";
 import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { MonoService } from "../mono.service";
-import { MonoClientCollectionLinkRequest, MonoTransferRequest } from "../../dto/mono.client.dto";
+import { MonoClientCollectionLinkRequest } from "../../dto/mono.client.dto";
 import { CreateMonoTransactionRequest } from "../../dto/mono.service.dto";
 import { InternalServiceErrorException } from "../../../../core/exception/CommonAppException";
 import { Consumer } from "../../../../modules/consumer/domain/Consumer";
