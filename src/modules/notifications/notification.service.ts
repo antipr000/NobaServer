@@ -32,6 +32,7 @@ import { SendWalletTransferEvent } from "./events/SendWalletTransferEvent";
 import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
 import { SendPhoneVerificationCodeEvent } from "./events/SendPhoneVerificationCodeEvent";
 import { IPushTokenRepo } from "./repos/pushtoken.repo";
+import { ServiceErrorCode, ServiceException } from "src/core/exception/ServiceException";
 
 @Injectable()
 export class NotificationService {
@@ -80,6 +81,18 @@ export class NotificationService {
     }
 
     return existingPushTokenID;
+  }
+
+  async unsubscribeFromPushNotifications(consumerID: string, pushToken: string): Promise<string> {
+    const deletedPushTokenID = await this.pushTokenRepo.deletePushToken(consumerID, pushToken);
+    if (!deletedPushTokenID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: "Failed to delete push token",
+      });
+    }
+
+    return deletedPushTokenID;
   }
 
   private createEvent(eventName: string, eventType: NotificationEventType, payload: NotificationPayload) {

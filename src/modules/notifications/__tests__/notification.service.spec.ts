@@ -90,6 +90,8 @@ describe("NotificationService", () => {
     });
   });
 
+  describe("unsubscribeFromPushNotifications", () => {});
+
   it("should create email event for otp event when phone is missing", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
     await notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, {
