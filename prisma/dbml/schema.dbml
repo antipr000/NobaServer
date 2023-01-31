@@ -319,9 +319,13 @@ Table PushToken {
   id String [pk]
   consumer Consumer [not null]
   consumerID String [not null]
-  pushToken String [unique, not null]
+  pushToken String [not null]
   createdTimestamp DateTime [default: `now()`]
   updatedTimestamp DateTime
+
+  indexes {
+    (consumerID, pushToken) [unique]
+  }
 }
 
 Enum IdentityType {

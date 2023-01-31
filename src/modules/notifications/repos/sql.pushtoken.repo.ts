@@ -50,4 +50,25 @@ export class SQLPushTokenRepo implements IPushTokenRepo {
       // throw here
     }
   }
+
+  async deletePushToken(consumerID: string, pushToken: string): Promise<string> {
+    try {
+      const deletedPushToken = await this.prisma.pushToken.delete({
+        where: {
+          consumerID_pushToken: {
+            consumerID: consumerID,
+            pushToken: pushToken,
+          },
+        },
+      });
+      if (!deletedPushToken) {
+        return null;
+      }
+
+      return deletedPushToken.id;
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      // throw here
+    }
+  }
 }

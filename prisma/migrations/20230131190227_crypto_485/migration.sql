@@ -10,10 +10,7 @@ CREATE TABLE "PushToken" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "PushToken_pushToken_key" ON "PushToken"("pushToken");
-
--- CreateIndex
-CREATE INDEX "PushToken_consumerID_pushToken_idx" ON "PushToken"("consumerID", "pushToken");
+CREATE UNIQUE INDEX "PushToken_consumerID_pushToken_key" ON "PushToken"("consumerID", "pushToken");
 
 -- AddForeignKey
 ALTER TABLE "PushToken" ADD CONSTRAINT "PushToken_consumerID_fkey" FOREIGN KEY ("consumerID") REFERENCES "Consumer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
