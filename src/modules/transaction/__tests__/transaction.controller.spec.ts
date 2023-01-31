@@ -28,6 +28,7 @@ import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/
 import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { AccountType, DocumentType } from "../domain/WithdrawalDetails";
 import { TransactionFlags } from "../domain/TransactionFlags";
+import { MonoTransaction, MonoTransactionState, MonoTransactionType } from "../../../modules/psp/domain/Mono";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
   const transaction: Transaction = {
@@ -279,6 +280,59 @@ describe("Transaction Controller tests", () => {
         updatedTimestamp: transaction.updatedTimestamp,
         memo: transaction.memo,
         transactionEvents: undefined,
+      };
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it("should return transaction with paymentCollectionLink for WALLET_DEPOSIT", async () => {
+      const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+
+      const monoTransaction: MonoTransaction = {
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        id: "monoTransactionID",
+        nobaTransactionID: transaction.id,
+        state: MonoTransactionState.SUCCESS,
+        type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
+        collectionLinkDepositDetails: {
+          collectionURL: "collectionURL",
+          collectionLinkID: "collectionLinkID",
+        },
+      };
+
+      when(monoService.getTransactionByNobaTransactionID(anything())).thenResolve(monoTransaction);
+
+      const result: TransactionDTO = await transactionController.getTransaction(
+        IncludeEventTypes.NONE,
+        transactionRef,
+        consumer,
+      );
+      const expectedResult: TransactionDTO = {
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        creditConsumer: null,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: undefined,
+        paymentCollectionLink: monoTransaction.collectionLinkDepositDetails.collectionURL,
       };
 
       expect(result).toStrictEqual(expectedResult);

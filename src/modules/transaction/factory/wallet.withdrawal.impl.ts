@@ -108,11 +108,7 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
       });
     }
 
-    this.workflowExecutor.executeDebitConsumerWalletWorkflow(
-      transaction.debitConsumerID,
-      transaction.debitAmount,
-      transaction.transactionRef,
-    );
+    this.workflowExecutor.executeDebitConsumerWalletWorkflow(transaction.id, transaction.id);
   }
 
   async getTransactionQuote(

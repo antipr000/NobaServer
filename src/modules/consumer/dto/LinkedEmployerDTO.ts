@@ -12,4 +12,10 @@ export class LinkedEmployerDTO {
 
   @ApiProperty()
   employerReferralID: string;
+
+  @ApiProperty()
+  leadDays: number;
+
+  @ApiProperty()
+  payrollDays: number[];
 }

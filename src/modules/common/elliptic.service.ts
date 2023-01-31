@@ -6,7 +6,7 @@ import { Logger } from "winston";
 import { EllipticConfigs } from "../../config/configtypes/EllipticConfig";
 import { ELLIPTIC_CONFIG_KEY, isProductionEnvironment } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { Transaction } from "../transactions/domain/Transaction";
+import { Transaction } from "../transaction/domain/Transaction";
 import { CHAINTYPE_ERC20, CurrencyService } from "./currency.service";
 import {
   ellipticSupportedCurrencies,
@@ -85,7 +85,8 @@ export class EllipticService {
   }
 
   public async transactionAnalysis(transaction: Transaction): Promise<WalletExposureResponse> {
-    const assetType: string = await this.getAssetType(transaction.props.leg2);
+    throw new Error("Elliptic is not supported in this version of Noba");
+    /*const assetType: string = await this.getAssetType(transaction.props.leg2);
 
     let output_params = {};
     if (ellipticSupportedCurrenciesWithOutputType.includes(assetType)) {
@@ -122,6 +123,6 @@ export class EllipticService {
       this.logger.info(
         `Bypassing call to elliptic in lower environment but would've sent (${path}): ${JSON.stringify(requestBody)}`,
       );
-    }
+    }*/
   }
 }

@@ -138,11 +138,11 @@ nobaWorkflow:
   taskQueue: "NOBA_TASK_QUEUE"
   awsSecretNameForTaskQueue: "TEST_NOBA_WORKFLOW_TASK_QUEUE"
   clientUrl: ""
-  awsSecretNameForClientUrl: "TEST_NOBA_WORKFLOW_CLIENT_URL"
-  awsSecretForTemporalCloudCertificate: ""
-  awsSecretForTemporalCloudPrivateKey: ""
+  awsSecretNameForClientUrl: "TEST_NOBA_WORKFLOW_AWSDEV_URL"
+  awsSecretForTemporalCloudCertificate: "TEST_TEMPORAL_CLOUD_CERTIFICATE"
+  awsSecretForTemporalCloudPrivateKey: "TEST_TEMPORAL_CLOUD_PRIVATE_KEY"
   connectionTimeoutInMs: 1000
-  namespace: "dev"
+  namespace: "awsdev.h4n3l"
 
 dependencies:
   emailClient: "SENDGRID"

@@ -7,4 +7,6 @@ export type LinkedEmployerDTO = {
   employerLogoURI: string;
   allocationAmountInPesos: number;
   employerReferralID: string;
+  leadDays: number;
+  payrollDays: Array<string>;
 };

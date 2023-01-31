@@ -14,7 +14,7 @@ import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { NotificationService } from "../notifications/notification.service";
 import { PaymentService } from "../psp/payment.service";
-import { Transaction } from "../transactions/domain/Transaction";
+import { Transaction } from "../transaction/domain/Transaction";
 import { Consumer, ConsumerProps } from "./domain/Consumer";
 import { PaymentMethod, PaymentMethodProps } from "./domain/PaymentMethod";
 import { CryptoWallet } from "./domain/CryptoWallet";
@@ -742,6 +742,27 @@ export class ConsumerService {
     await this.bubbleService.updateEmployeeAllocationInBubble(employee.id, allocationAmountInPesos);
 
     return result;
+  }
+
+  async sendEmployerRequestEmail(email: string, locale: string): Promise<void> {
+    if (!email) {
+      throw new ServiceException({
+        message: "Email address is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    if (!Utils.isValidEmail(email)) {
+      throw new ServiceException({
+        message: "Email address is invalid",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    await this.notificationService.sendNotification(NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT, {
+      email: email,
+      locale: locale,
+    });
   }
 
   getVerificationStatus(consumer: Consumer): UserVerificationStatus {

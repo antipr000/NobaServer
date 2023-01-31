@@ -18,15 +18,9 @@ export class SecretProvider {
   static async fetchSecretFromAWSSecretManager(secretName: string, master: boolean = false): Promise<any> {
     return new Promise((resolve, reject) => {
       // First check the global cache
-      if (!master) {
-        if (GLOBAL_SECRETS_CACHE[secretName]) {
-          resolve(GLOBAL_SECRETS_CACHE[secretName]);
-          return;
-        } else {
-          console.warn(
-            `Secret "${secretName}" is not configured in the master cache. Please define it in the master cache.`,
-          );
-        }
+      if (GLOBAL_SECRETS_CACHE[secretName]) {
+        resolve(GLOBAL_SECRETS_CACHE[secretName]);
+        return;
       }
 
       new SecretsManager().getSecretValue({ SecretId: secretName }, function (err, data) {
@@ -38,6 +32,14 @@ export class SecretProvider {
         } else {
           // Depending on whether the secret is a string or binary, one of these fields will be populated.
           if ("SecretString" in data) {
+            if (!master) {
+              // Only warn here, as if it's a base64 encoded string, those can't go in the master cache and must be loaded separately.
+              // For instance, private or public key blocks.
+              console.warn(
+                `Secret "${secretName}" is not configured in the master cache. Please define it in the master cache.`,
+              );
+            }
+
             try {
               const secretKeyValue = JSON.parse(data.SecretString);
               if (master) {

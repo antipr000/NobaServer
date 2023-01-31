@@ -50,6 +50,10 @@ export class Utils {
     return removeDashes ? uuid.replace(/-/g, "") : uuid;
   }
 
+  static generateUUID(): string {
+    return randomUUID();
+  }
+
   static generateBase64String(numBytes: number): string {
     return randomBytes(numBytes).toString("base64");
   }
@@ -57,6 +61,14 @@ export class Utils {
   static isEmail(emailOrPhone: string) {
     if (!emailOrPhone) throw new Error("emailOrPhone is required to check if the string is an email");
     return emailOrPhone.includes("@");
+  }
+
+  static isValidEmail(email: string): boolean {
+    if (!email) return false;
+
+    const emailRegEx =
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return emailRegEx.test(email);
   }
 
   static generateOTP(): number {

@@ -1829,4 +1829,43 @@ describe("ConsumerService", () => {
       expect(response).toEqual(employee);
     });
   });
+  describe("sendEmployerRequestEmail", () => {
+    it("should throw ServiceException if email address is empty", async () => {
+      try {
+        await consumerService.sendEmployerRequestEmail(null, null);
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("Email address is required"));
+        expect(err.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
+      }
+    });
+
+    it("should throw ServiceException if email address is invalid", async () => {
+      try {
+        await consumerService.sendEmployerRequestEmail("bademail", null);
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("Email address is invalid"));
+        expect(err.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
+      }
+    });
+
+    it("should send a notification", async () => {
+      const email = "rosie@noba.com";
+      const locale = "en";
+      await consumerService.sendEmployerRequestEmail(email, locale);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT,
+
+          deepEqual({
+            email: email,
+            locale: locale,
+          }),
+        ),
+      ).once();
+    });
+  });
 });

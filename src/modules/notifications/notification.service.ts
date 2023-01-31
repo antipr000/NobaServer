@@ -31,6 +31,7 @@ import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
 import { SendWalletTransferEvent } from "./events/SendWalletTransferEvent";
 import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
 import { SendPhoneVerificationCodeEvent } from "./events/SendPhoneVerificationCodeEvent";
+import { SendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
 import { IPushTokenRepo } from "./repos/pushtoken.repo";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
 
@@ -391,6 +392,13 @@ export class NotificationService {
             responseCode: payload.responseCode,
             responseSummary: payload.responseSummary,
           }),
+        );
+        break;
+
+      case NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT:
+        this.eventEmitter.emitAsync(
+          eventName,
+          new SendEmployerRequestEvent({ email: payload.email, locale: payload.locale }),
         );
         break;
       default:

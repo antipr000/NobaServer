@@ -3,11 +3,11 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { Logger } from "winston";
 import {
+  isTerminalState,
   MonoCurrency,
   MonoTransaction,
   MonoTransactionState,
   MonoTransactionType,
-  MonoWithdrawal,
 } from "../domain/Mono";
 import {
   MonoClientCollectionLinkResponse,
@@ -64,7 +64,7 @@ export class MonoService {
       });
     }
 
-    if (monoTransaction.type === MonoTransactionType.WITHDRAWAL) {
+    if (monoTransaction.type === MonoTransactionType.WITHDRAWAL && !isTerminalState(monoTransaction.state)) {
       monoTransaction = await this.refreshWithdrawalState(monoTransaction);
     }
     return monoTransaction;
@@ -144,7 +144,7 @@ export class MonoService {
         state: updatedState.state,
         ...(updatedState.declinationReason && { declinationReason: updatedState.declinationReason }),
       });
-      monoTransaction.state = updatedState.state as MonoTransactionState;
+      monoTransaction.state = updatedState.state;
     }
 
     return monoTransaction;

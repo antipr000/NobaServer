@@ -229,6 +229,7 @@ describe("VerificationService", () => {
           riskRating: consumerVerificationResult.idvProviderRiskLevel,
         },
         socialSecurityNumber: consumerInformation.nationalID.number,
+        createdTimestamp: new Date(),
       };
 
       when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
@@ -919,6 +920,8 @@ function getFakeConsumer(): Consumer {
       isSuspectedFraud: false,
       consumerID: "fake-consumer-1234",
     },
+    createdTimestamp: new Date(),
+    updatedTimestamp: new Date(),
   });
 }
 

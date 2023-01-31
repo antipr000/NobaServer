@@ -46,11 +46,15 @@ export class VerificationService {
     if (consumerInformation.dateOfBirth && !isValidDateOfBirth(consumerInformation.dateOfBirth)) {
       throw new BadRequestException("dateOfBirth should be valid and of the format YYYY-MM-DD");
     }
+
+    const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
+
+    // Augment request with created timestamp info for verification provider
+    consumerInformation.createdTimestampMillis = consumer.props.createdTimestamp.getTime();
     const result: ConsumerVerificationResult = await this.idvProvider.verifyConsumerInformation(
       sessionKey,
       consumerInformation,
     );
-    const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
     const newConsumerData: ConsumerProps = {
       ...consumer.props,
       address: consumerInformation.address,
