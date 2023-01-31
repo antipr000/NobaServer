@@ -32,7 +32,7 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { TransactionStatsDTO } from "./dto/TransactionStats";
-import { TransactionDTO } from "../transactions/dto/TransactionDTO";
+import { TransactionDTO } from "../transaction/dto/TransactionDTO";
 import { TransactionsFilterDTO } from "./dto/TransactionsFilterDTO";
 import { NobaAdminDTO } from "./dto/NobaAdminDTO";
 import { Admin } from "./domain/Admin";
@@ -86,8 +86,8 @@ export class AdminController {
     return this.adminService.getTransactionStatus();
   }
 
-  // TODO: Add proper AuthN & AuthZ
-  @Public()
+  // TODO: Needs to be rewritten for new Transaction model
+  /* @Public()
   @Get(`/:${AdminId}/transactions`)
   @ApiOperation({ summary: "Gets all transactions filtered by the specified date range" })
   @ApiResponse({
@@ -100,7 +100,7 @@ export class AdminController {
     @Query() filterQuery: TransactionsFilterDTO,
   ): Promise<TransactionDTO[]> {
     return this.adminService.getAllTransactions(filterQuery.startDate, filterQuery.endDate);
-  }
+  }*/
 
   @Post("/")
   @ApiOperation({ summary: "Creates a new Noba admin with the specified role" })

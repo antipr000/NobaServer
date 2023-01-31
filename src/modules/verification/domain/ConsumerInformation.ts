@@ -8,6 +8,7 @@ export type NationalID = {
 
 export type ConsumerInformation = {
   userID: string;
+  createdTimestampMillis?: number;
   firstName: string;
   lastName: string;
   address: Address;

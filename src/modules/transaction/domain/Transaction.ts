@@ -65,13 +65,6 @@ export class UpdateTransaction {
   exchangeRate?: number;
 }
 
-export class DebitBankRequest {
-  transactionID: string;
-  amount: number;
-  currency: string;
-  bankName: BankName;
-}
-
 export class DebitBankResponse {
   withdrawalID: string;
   state: string;

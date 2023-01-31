@@ -108,11 +108,7 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
       });
     }
 
-    this.workflowExecutor.executeDebitConsumerWalletWorkflow(
-      transaction.debitConsumerID,
-      transaction.debitAmount,
-      transaction.transactionRef,
-    );
+    this.workflowExecutor.executeDebitConsumerWalletWorkflow(transaction.id, transaction.id);
   }
 
   async getTransactionQuote(
@@ -140,7 +136,7 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
       const nobaFeeUSD = this.nobaWithdrawalFeeAmount;
 
       const processingFeeCOP = this.monoWithdrawalFeeAmount;
-      const processingFeeUSD = Utils.roundTo2DecimalNumber(processingFeeCOP / bankRate); // Ask gal if this could just be 1 USD
+      const processingFeeUSD = Utils.roundTo2DecimalNumber(processingFeeCOP / bankRate);
       const processingFeeUSDRounded = Utils.roundUpToNearest(processingFeeUSD, 0.05);
 
       // Do fees get calculated postExchange or preExchange?
@@ -148,6 +144,13 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
       const postExchangeAmountWithBankFees = Utils.roundTo2DecimalNumber(
         (amount - nobaFeeUSD - processingFeeUSDRounded) * nobaRate,
       );
+
+      if (postExchangeAmountWithBankFees < 0) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: "AMOUNT_TOO_LOW",
+        });
+      }
 
       return {
         nobaFee: Utils.roundTo2DecimalString(nobaFeeUSD),

@@ -595,6 +595,10 @@ describe("TransactionServiceTests", () => {
   describe("debitFromBank", () => {
     it("should debit from a bank account", async () => {
       const { transaction } = getRandomTransaction("consumerID", "consumerID2");
+      transaction.creditAmount = 111;
+      transaction.creditCurrency = "USD";
+      transaction.debitAmount = 222;
+      transaction.debitCurrency = "COP";
 
       when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(transaction);
       const withdrawalDetails: WithdrawalDetails = {
@@ -608,8 +612,21 @@ describe("TransactionServiceTests", () => {
       };
       when(withdrawalDetailsRepo.getWithdrawalDetailsByTransactionID(transaction.id)).thenResolve(withdrawalDetails);
 
-      const debitFactoryRequest: DebitBankFactoryRequest = {
-        amount: 100,
+      const returnedBankMonoImpl = instance(bankMonoImpl);
+      when(bankFactory.getBankImplementation(BankName.MONO)).thenReturn(returnedBankMonoImpl);
+
+      const factoryResponse = {
+        state: "SUCCESS",
+        withdrawalID: "fake-withdrawal-id",
+      };
+      when(bankMonoImpl.debit(anything())).thenResolve(factoryResponse);
+
+      const response = await transactionService.debitFromBank(transaction.id);
+
+      expect(response).toStrictEqual(factoryResponse);
+      const [debitRequest] = capture(bankMonoImpl.debit).last();
+      expect(debitRequest).toEqual({
+        amount: 111,
         currency: "USD",
         bankCode: withdrawalDetails.bankCode,
         accountNumber: withdrawalDetails.accountNumber,
@@ -619,23 +636,7 @@ describe("TransactionServiceTests", () => {
         transactionID: transaction.id,
         consumerID: transaction.debitConsumerID,
         transactionRef: transaction.transactionRef,
-      };
-
-      when(bankFactory.getBankImplementation(BankName.MONO)).thenReturn(instance(bankMonoImpl));
-
-      const factoryResponse = {
-        state: "SUCCESS",
-        withdrawalID: "fake-withdrawal-id",
-      };
-      when(bankMonoImpl.debit(deepEqual(debitFactoryRequest))).thenResolve(factoryResponse);
-
-      const debitRequest = {
-        transactionID: transaction.id,
-        amount: 100,
-        currency: "USD",
-        bankName: BankName.MONO,
-      };
-      expect(transactionService.debitFromBank(debitRequest)).resolves.toStrictEqual(factoryResponse);
+      });
     });
 
     it("should throw a ServiceException if the transaction doesn't exist", async () => {
@@ -645,13 +646,7 @@ describe("TransactionServiceTests", () => {
         {} as WithdrawalDetails,
       );
 
-      const debitRequest = {
-        transactionID: transactionID,
-        amount: 100,
-        currency: "USD",
-        bankName: BankName.MONO,
-      };
-      expect(transactionService.debitFromBank(debitRequest)).rejects.toThrowError(ServiceException);
+      expect(transactionService.debitFromBank(transactionID)).rejects.toThrowError(ServiceException);
     });
 
     it("should throw a ServiceException if the withdrawal details don't exist", async () => {
@@ -659,13 +654,7 @@ describe("TransactionServiceTests", () => {
       when(transactionRepo.getTransactionByID(transactionID)).thenResolve({} as Transaction);
       when(withdrawalDetailsRepo.getWithdrawalDetailsByTransactionID(transactionID)).thenResolve(null);
 
-      const debitRequest = {
-        transactionID: transactionID,
-        amount: 100,
-        currency: "USD",
-        bankName: BankName.MONO,
-      };
-      expect(transactionService.debitFromBank(debitRequest)).rejects.toThrowError(ServiceException);
+      expect(transactionService.debitFromBank(transactionID)).rejects.toThrowError(ServiceException);
     });
   });
 

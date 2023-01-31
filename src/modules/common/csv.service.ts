@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { stringify } from "csv-stringify";
 import fs from "fs";
 import { tmpdir } from "os";
-import { TransactionDTO } from "../transactions/dto/TransactionDTO";
+import { TransactionDTO } from "../transaction/dto/TransactionDTO";
 
 // TODO: Make it generic to scale to all DTOs.
 @Injectable()

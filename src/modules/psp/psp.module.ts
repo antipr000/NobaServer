@@ -22,9 +22,9 @@ import { CircleWorkflowController } from "./circle.workflow.controller";
 export const CheckoutClientProvider: Provider = {
   provide: CheckoutClient,
   useFactory: async (customConfigService: CustomConfigService, logger: Logger) => {
-    const checkoutClient = new CheckoutClient(customConfigService, logger);
+    /* const checkoutClient = new CheckoutClient(customConfigService, logger);
     await checkoutClient.registerACHWebhooks();
-    return checkoutClient;
+    return checkoutClient;*/
   },
   inject: [CustomConfigService, WINSTON_MODULE_PROVIDER],
 };

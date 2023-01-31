@@ -37,13 +37,4 @@ export class WorkflowTransactionDTO {
 export class DebitBankRequestDTO {
   @ApiProperty()
   transactionID: string;
-
-  @ApiProperty()
-  amount: number;
-
-  @ApiProperty()
-  currency: string;
-
-  @ApiProperty({ enum: BankName })
-  bankName: BankName;
 }

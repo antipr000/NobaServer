@@ -244,4 +244,49 @@ describe("Utils", () => {
       expect(id.length).toEqual(15);
     });
   });
+
+  describe("isEmail", () => {
+    it("should return true if value contains @", () => {
+      expect(Utils.isEmail("rosie@noba.com")).toEqual(true);
+    });
+
+    it("should return false if value does not contain @", () => {
+      expect(Utils.isEmail("rosienoba")).toEqual(false);
+    });
+
+    it("should throw an Error if no input value is provided", () => {
+      try {
+        Utils.isEmail(null);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toEqual(new Error("emailOrPhone is required to check if the string is an email"));
+      }
+    });
+  });
+
+  describe("isValidEmail", () => {
+    it("Should return true for valid email formats", () => {
+      const validEmails = [
+        "rosie@noba.com",
+        "rosie+test@noba.com",
+        "rosie@noba.co",
+        "rosie-dog@noba.co",
+        "rosie+test-dog@noba.com",
+      ];
+      validEmails.forEach(email => {
+        expect(Utils.isValidEmail(email)).toEqual(true);
+      });
+    });
+
+    it("Should return true for invalid email formats", () => {
+      const invalidEmails = ["Rosie Noba", "rosie@noba", "rosienoba.com", "rosie@noba@com"];
+      invalidEmails.forEach(email => {
+        expect(Utils.isValidEmail(email)).toEqual(false);
+      });
+    });
+
+    it("Should return true for no email provided", () => {
+      expect(Utils.isValidEmail(null)).toEqual(false);
+    });
+  });
 });

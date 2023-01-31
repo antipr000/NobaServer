@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { Transaction } from "../domain/Transaction";
+import { Transaction, WorkflowName } from "../domain/Transaction";
 import { ConsumerInformationDTO, TransactionDTO } from "../dto/TransactionDTO";
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
@@ -7,6 +7,7 @@ import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { TransactionEvent } from "../domain/TransactionEvent";
 import { MonoTransaction } from "../../../modules/psp/domain/Mono";
 import { MonoService } from "../../../modules/psp/mono/mono.service";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 
 @Injectable()
 export class TransactionMappingService {
@@ -38,7 +39,19 @@ export class TransactionMappingService {
           : await this.consumerService.getConsumer(transaction.creditConsumerID);
     }
 
-    const monoTransaction: MonoTransaction = await this.monoService.getTransactionByNobaTransactionID(transaction.id);
+    let monoTransaction: MonoTransaction;
+
+    // We only need to fetch the Mono transaction for WALLET_DEPOSIT transactions
+    // as they are the only ones that have a collection link
+    if (transaction.workflowName == WorkflowName.WALLET_DEPOSIT) {
+      try {
+        monoTransaction = await this.monoService.getTransactionByNobaTransactionID(transaction.id);
+      } catch (e) {
+        if (e instanceof ServiceException && e.errorCode === ServiceErrorCode.DOES_NOT_EXIST) {
+          // no-op - this is expected for some transactions
+        }
+      }
+    }
 
     return {
       transactionRef: transaction.transactionRef,

@@ -1,7 +1,6 @@
 import { Utils } from "../../../core/utils/Utils";
 import { Mapper } from "../../../core/infra/Mapper";
 import { Transaction } from "../domain/Transaction";
-import { TransactionDTO } from "../dto/TransactionDTO";
 
 export class TransactionMapper implements Mapper<Transaction> {
   // TODO: Move this calculation as a part of transaction object

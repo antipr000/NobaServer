@@ -2,7 +2,7 @@ import { Injectable, Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Consumer } from "../consumer/domain/Consumer";
-import { PaymentMethodType, PaymentProvider } from "@prisma/client";
+import { PaymentProvider } from "@prisma/client";
 import { AddPaymentMethodDTO } from "../consumer/dto/AddPaymentMethodDTO";
 import { PaymentMethod } from "../consumer/domain/PaymentMethod";
 import { PaymentMethodStatus } from "@prisma/client";
@@ -13,19 +13,15 @@ import {
   REASON_CODE_SOFT_DECLINE_NO_CRYPTO,
 } from "../transactions/domain/CheckoutConstants";
 import { CardFailureExceptionText, CardProcessingException } from "../consumer/CardProcessingException";
-import { BINValidity, CardType } from "../common/dto/CreditCardDTO";
+import { BINValidity } from "../common/dto/CreditCardDTO";
 import { CreditCardService } from "../common/creditcard.service";
 import { CheckoutResponseData } from "../common/domain/CheckoutResponseData";
 import { AddPaymentMethodResponse } from "./domain/AddPaymentMethodResponse";
-import { Transaction } from "../transactions/domain/Transaction";
-import { PaymentRequestResponse, FiatTransactionStatus } from "../consumer/domain/Types";
-import { Utils } from "../../core/utils/Utils";
+import { FiatTransactionStatus } from "../consumer/domain/Types";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
-import creditCardType from "credit-card-type";
 import { CheckoutClient } from "./checkout.client";
 import { HandlePaymentResponse } from "./domain/CardServiceTypes";
-import { PspACHPaymentResponse, PspCardPaymentResponse } from "./domain/PspPaymentResponse";
 import { PlaidClient } from "./plaid.client";
 
 @Injectable()
@@ -80,6 +76,7 @@ export class PaymentService {
     throw new Error("Not implemented");
   }
 
+  /* TODO: Incompatible with new Noba product. Will need to be rewritten if we bring back the onramp functionality.
   public async requestCheckoutPayment(
     consumer: Consumer,
     transaction: Transaction,
@@ -93,6 +90,7 @@ export class PaymentService {
     }
   }
 
+  
   private async makeCardPayment(consumer: Consumer, transaction: Transaction): Promise<PaymentRequestResponse> {
     const paymentResponse: PspCardPaymentResponse = await this.checkoutClient.makeCardPayment(
       Utils.roundTo2DecimalNumber(transaction.props.leg1Amount) * 100,
@@ -188,7 +186,7 @@ export class PaymentService {
       status: PaymentMethodStatus.APPROVED,
       responseCode: response.response_code,
     };
-  }
+  }*/
 
   async getFiatPaymentStatus(paymentId: string): Promise<FiatTransactionStatus> {
     const status = await this.checkoutClient.getPaymentDetails(paymentId);

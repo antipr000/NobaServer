@@ -152,8 +152,10 @@ export class ConsumerMapper implements Mapper<Consumer> {
       linkedEmployers.push({
         employerName: employer.name,
         employerLogoURI: employer.logoURI,
-        employerReferralID: employer.referralID,
         allocationAmountInPesos: employee.allocationAmount,
+        employerReferralID: employer.referralID,
+        leadDays: employer.leadDays,
+        payrollDays: employer.payrollDays,
       });
     }
     return linkedEmployers;

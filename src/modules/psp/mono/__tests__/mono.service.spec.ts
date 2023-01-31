@@ -10,7 +10,7 @@ import {
   MonoTransactionSaveRequest,
   MonoTransactionState,
   MonoTransactionType,
-  MonoWithdrawal,
+  TERMINAL_STATES,
 } from "../../domain/Mono";
 import { MonoClient } from "../mono.client";
 import { getMockMonoRepoWithDefaults } from "../mocks/mock.mono.repo";
@@ -18,7 +18,7 @@ import { getMockMonoClientWithDefaults } from "../mocks/mock.mono.client";
 import { MONO_REPO_PROVIDER } from "../repo/mono.repo.module";
 import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { MonoService } from "../mono.service";
-import { MonoClientCollectionLinkRequest, MonoTransferRequest } from "../../dto/mono.client.dto";
+import { MonoClientCollectionLinkRequest } from "../../dto/mono.client.dto";
 import { CreateMonoTransactionRequest } from "../../dto/mono.service.dto";
 import { InternalServiceErrorException } from "../../../../core/exception/CommonAppException";
 import { Consumer } from "../../../../modules/consumer/domain/Consumer";
@@ -223,6 +223,26 @@ describe("MonoServiceTests", () => {
         verify(
           monoRepo.updateMonoTransaction(monoTransaction.id, deepEqual({ state: MonoTransactionState.SUCCESS })),
         ).once();
+      });
+
+      it("shouldn't call Mono client if the MonoTransaction is already in a terminal state", async () => {
+        const monoTransaction: MonoTransaction = getRandomMonoTransaction(MonoTransactionType.WITHDRAWAL);
+
+        TERMINAL_STATES.forEach(terminalState => async () => {
+          monoTransaction.state = terminalState;
+          when(monoRepo.getMonoTransactionByNobaTransactionID(monoTransaction.nobaTransactionID)).thenResolve(
+            monoTransaction,
+          );
+
+          const returnedMonoTransaction: MonoTransaction = await monoService.getTransactionByNobaTransactionID(
+            monoTransaction.nobaTransactionID,
+          );
+
+          expect(returnedMonoTransaction).toStrictEqual(monoTransaction);
+
+          verify(monoClient.getTransferStatus(anything())).never();
+          verify(monoRepo.updateMonoTransaction(anything(), anything())).never();
+        });
       });
 
       it("shouldn't call update on database if the status is not changed", async () => {
