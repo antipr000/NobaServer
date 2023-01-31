@@ -15,10 +15,10 @@ export class SQLPushTokenRepo implements IPushTokenRepo {
 
   async getPushToken(consumerID: string, pushToken: string): Promise<string> {
     try {
-      const consumerPushToken = await this.prisma.pushtoken.findFirst({
+      const consumerPushToken = await this.prisma.pushToken.findFirst({
         where: {
           consumerID: consumerID,
-          pushtoken: pushToken,
+          pushToken: pushToken,
         },
       });
       if (!consumerPushToken) {
@@ -34,10 +34,10 @@ export class SQLPushTokenRepo implements IPushTokenRepo {
 
   async addPushToken(consumerID: string, pushToken: string): Promise<string> {
     try {
-      const createdPushToken = await this.prisma.pushtoken.create({
+      const createdPushToken = await this.prisma.pushToken.create({
         data: {
           consumerID: consumerID,
-          pushtoken: pushToken,
+          pushToken: pushToken,
         },
       });
       if (!createdPushToken) {

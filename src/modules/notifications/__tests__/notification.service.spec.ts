@@ -29,15 +29,18 @@ import { SendWithdrawalCompletedEvent } from "../events/SendWithdrawalCompletedE
 import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 import { SendWithdrawalInitiatedEvent } from "../events/SendWithdrawalInitiatedEvent";
 import { SendPhoneVerificationCodeEvent } from "../events/SendPhoneVerificationCodeEvent";
+import { IPushTokenRepo } from "../repos/pushtoken.repo";
+import { getMockPushTokenRepoWithDefaults } from "../mocks/mock.pushtoken.repo";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
   let eventEmitter: EventEmitter2;
-
+  let pushTokenRepo: IPushTokenRepo;
   jest.setTimeout(30000);
 
   beforeEach(async () => {
     eventEmitter = getMockEventEmitterWithDefaults();
+    pushTokenRepo = getMockPushTokenRepoWithDefaults();
 
     process.env = {
       ...process.env,
@@ -60,10 +63,31 @@ describe("NotificationService", () => {
           provide: EventEmitter2,
           useFactory: () => instance(eventEmitter),
         },
+        {
+          provide: "PushTokenRepo",
+          useFactory: () => instance(pushTokenRepo),
+        },
       ],
     }).compile();
 
     notificationService = app.get<NotificationService>(NotificationService);
+  });
+
+  describe("subscribeToPushNotifications", () => {
+    it("should subscribe to push notifications", async () => {
+      when(pushTokenRepo.getPushToken("test-consumer-id", "test-push-token")).thenResolve(undefined);
+      when(pushTokenRepo.addPushToken("test-consumer-id", "test-push-token")).thenResolve("push-token-id");
+      expect(notificationService.subscribeToPushNotifications("test-consumer-id", "test-push-token")).resolves.toBe(
+        "push-token-id",
+      );
+    });
+
+    it("should not subscribe to push notifications if already subscribed", async () => {
+      when(pushTokenRepo.getPushToken("test-consumer-id", "test-push-token")).thenResolve("push-token-id");
+      expect(notificationService.subscribeToPushNotifications("test-consumer-id", "test-push-token")).resolves.toBe(
+        "push-token-id",
+      );
+    });
   });
 
   it("should create email event for otp event when phone is missing", async () => {
