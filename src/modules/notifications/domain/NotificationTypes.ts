@@ -24,6 +24,7 @@ export enum NotificationEventType {
   SEND_TRANSFER_COMPLETED_EVENT = "transfer.completed",
   SEND_COLLECTION_LINK_EVENT = "collection.link",
   SEND_COLLECTION_COMPLETED_EVENT = "collection.completed",
+  SEND_EMPLOYER_REQUEST_EVENT = "employee.request",
 }
 
 export enum NotificationEventHandler {
@@ -70,4 +71,5 @@ export const preferredNotificationMedium = {
   [NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_COLLECTION_LINK_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT]: [NotificationEventHandler.EMAIL],
 };

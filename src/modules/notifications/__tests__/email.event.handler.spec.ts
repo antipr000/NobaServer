@@ -32,6 +32,7 @@ import { TransactionParameters } from "../domain/TransactionNotificationParamete
 import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent";
 import { SendCollectionCompletedEvent } from "../events/SendCollectionCompletedEvent";
+import { SendEmployerRequestEvent } from "../events/SendEmployerRequestEvent";
 
 describe("EmailEventHandler", () => {
   let currencyService: CurrencyService;
@@ -728,6 +729,23 @@ describe("EmailEventHandler", () => {
         response_code: payload.responseCode,
         summary: payload.responseSummary,
       },
+    });
+  });
+
+  it("should call eventHandler with SendEmployerRequest event", async () => {
+    const payload = new SendEmployerRequestEvent({
+      email: "fake+user@noba.com",
+      locale: "en",
+    });
+
+    await eventHandler.sendEmployerRequestEmail(payload);
+
+    const [emailRequest] = capture(emailClient.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.EMPLOYER_REQUEST_EMAIL[payload.locale],
+      dynamicTemplateData: {},
     });
   });
 });

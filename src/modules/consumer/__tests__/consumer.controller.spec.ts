@@ -1118,7 +1118,7 @@ describe("ConsumerController", () => {
   });
 
   describe("updateAllocationAmountForAnEmployer", () => {
-    it("should forwards the call to consumerService", async () => {
+    it("should forward the call to consumerService", async () => {
       const consumer = getRandomConsumer();
       when(consumerService.updateEmployerAllocationAmount("employerReferralID", consumer.props.id, 1478)).thenResolve();
 
@@ -1126,6 +1126,15 @@ describe("ConsumerController", () => {
         employerReferralID: "employerReferralID",
         allocationAmountInPesos: 1478,
       });
+    });
+  });
+
+  describe("postEmployerRequestEmail", () => {
+    it("should forwards the call to consumerService", async () => {
+      const consumer = getRandomConsumer();
+      when(consumerService.sendEmployerRequestEmail("rosie@noba.com", consumer.props.locale)).thenResolve();
+
+      await consumerController.postEmployerRequestEmail({ email: "rosie@noba.com" }, consumer);
     });
   });
 });

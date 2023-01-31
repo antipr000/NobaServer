@@ -736,6 +736,27 @@ export class ConsumerService {
     return result;
   }
 
+  async sendEmployerRequestEmail(email: string, locale: string): Promise<void> {
+    if (!email) {
+      throw new ServiceException({
+        message: "Email address is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    if (!Utils.isValidEmail(email)) {
+      throw new ServiceException({
+        message: "Email address is invalid",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    await this.notificationService.sendNotification(NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT, {
+      email: email,
+      locale: locale,
+    });
+  }
+
   getVerificationStatus(consumer: Consumer): UserVerificationStatus {
     // TODO: Write logic for verification status based on current modifications of users verification data
     throw new Error("Method not implemented");

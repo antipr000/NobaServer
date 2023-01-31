@@ -29,6 +29,7 @@ import { SendWithdrawalInitiatedEvent } from "./events/SendWithdrawalInitiatedEv
 import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
 import { SendTransferCompletedEvent } from "./events/SendTransferCompletedEvent";
 import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
+import { SendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -481,6 +482,18 @@ export class EmailEventHandler {
         response_code: payload.responseCode,
         summary: payload.responseSummary,
       },
+    };
+
+    await this.emailClient.sendEmail(msg);
+  }
+
+  @OnEvent(`email.${NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT}`)
+  public async sendEmployerRequestEmail(payload: SendEmployerRequestEvent) {
+    const msg = {
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.EMPLOYER_REQUEST_EMAIL[payload.locale ?? "en"],
+      dynamicTemplateData: {}, // Leaving empty because we don't need any dynamic data
     };
 
     await this.emailClient.sendEmail(msg);

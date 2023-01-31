@@ -57,6 +57,7 @@ import { LinkedEmployerDTO } from "./dto/LinkedEmployerDTO";
 import { Employee } from "../employee/domain/Employee";
 import { UpdateEmployerAllocationDTO } from "./dto/UpdateEmployerAllocationDTO";
 import { OptionalLimitQueryDTO } from "../common/dto/OptionalLimitQueryDTO";
+import { RequestEmployerDTO } from "./dto/RequestEmployerDTO";
 
 @Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
@@ -507,6 +508,20 @@ export class ConsumerController {
       consumer.props.id,
       requestBody.allocationAmountInPesos,
     );
+  }
+
+  @Post("/employers/request")
+  @ApiOperation({ summary: "Request employer to join Noba" })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: "Email Sent",
+  })
+  async postEmployerRequestEmail(
+    @Body() requestBody: RequestEmployerDTO,
+    @AuthUser() consumer: Consumer,
+  ): Promise<void> {
+    // Use consumer's locale to drive the language of the request email
+    await this.consumerService.sendEmployerRequestEmail(requestBody.email, consumer.props.locale);
   }
 
   @Get("/qrcode")
