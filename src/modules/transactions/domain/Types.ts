@@ -37,21 +37,6 @@ export enum TransactionStatus {
   FAILED = "FAILED",
 }
 
-// **** Do not change the enum values as they are used to create SQS queues ***
-export enum TransactionQueueName {
-  PendingTransactionValidation = "PendingTransactionValidation",
-  FiatTransactionInitiator = "FiatTransactionInitiator",
-  FiatTransactionInitiated = "FiatTransactionInitiated",
-  FiatTransactionCompleted = "FiatTransactionCompleted",
-  CryptoTransactionInitiated = "CryptoTransactionInitiated",
-  CryptoTransactionCompleted = "CryptoTransactionCompleted",
-  InternalTransferInitiated = "InternalTransferInitiated",
-  InternalTransferInitiator = "InternalTransferInitiator",
-  TransactionCompleted = "TransactionCompleted",
-  TransactionFailed = "TransactionFailed",
-  OnChainPendingTransaction = "OnChainPendingTransaction",
-}
-
 export interface TransactionStateAttributes {
   transactionStatus: TransactionStatus;
   transactionType: TransactionType[];
@@ -61,99 +46,6 @@ export interface TransactionStateAttributes {
   // Do consider the latency due to queue processing delay & traffic.
   maxAllowedMilliSecondsInThisStatus: number;
 }
-
-export const allTransactionAttributes: TransactionStateAttributes[] = [
-  {
-    transactionStatus: TransactionStatus.PENDING,
-    transactionType: [TransactionType.ONRAMP, TransactionType.NOBA_WALLET, TransactionType.INTERNAL_WITHDRAWAL],
-    processingQueue: TransactionQueueName.PendingTransactionValidation,
-    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
-    maxAllowedMilliSecondsInThisStatus: 5 * 60 * 1000, // 5 mins.
-  },
-  {
-    transactionStatus: TransactionStatus.VALIDATION_PASSED,
-    transactionType: [TransactionType.ONRAMP, TransactionType.NOBA_WALLET],
-    processingQueue: TransactionQueueName.FiatTransactionInitiator,
-    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
-    maxAllowedMilliSecondsInThisStatus: 5 * 60 * 1000, // 5 mins.
-  },
-  {
-    transactionStatus: TransactionStatus.VALIDATION_PASSED,
-    transactionType: [TransactionType.INTERNAL_WITHDRAWAL],
-    processingQueue: TransactionQueueName.InternalTransferInitiator,
-    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
-    maxAllowedMilliSecondsInThisStatus: 5 * 60 * 1000, // 5 mins.
-  },
-  {
-    transactionStatus: TransactionStatus.FIAT_INCOMING_INITIATED,
-    transactionType: [TransactionType.ONRAMP, TransactionType.NOBA_WALLET],
-    processingQueue: TransactionQueueName.FiatTransactionInitiated,
-    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
-    maxAllowedMilliSecondsInThisStatus: 5 * 60 * 1000, // 5 mins.
-  },
-  {
-    transactionStatus: TransactionStatus.FIAT_INCOMING_COMPLETED,
-    transactionType: [TransactionType.ONRAMP, TransactionType.NOBA_WALLET],
-    processingQueue: TransactionQueueName.FiatTransactionCompleted,
-    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
-    maxAllowedMilliSecondsInThisStatus: 10 * 60 * 1000, // 10 mins.
-  },
-  {
-    transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATING,
-    transactionType: [TransactionType.ONRAMP, TransactionType.NOBA_WALLET],
-    processingQueue: TransactionQueueName.FiatTransactionCompleted,
-    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
-    maxAllowedMilliSecondsInThisStatus: 10 * 60 * 1000, // 10 mins.
-  },
-  {
-    transactionStatus: TransactionStatus.INTERNAL_TRANSFER_PENDING,
-    transactionType: [TransactionType.INTERNAL_WITHDRAWAL],
-    processingQueue: TransactionQueueName.InternalTransferInitiated,
-    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
-    maxAllowedMilliSecondsInThisStatus: 5 * 60 * 1000, // 5 mins.
-  },
-  {
-    transactionStatus: TransactionStatus.CRYPTO_OUTGOING_INITIATED,
-    transactionType: [TransactionType.ONRAMP, TransactionType.NOBA_WALLET],
-    processingQueue: TransactionQueueName.CryptoTransactionInitiated,
-    waitTimeInMilliSecondsBeforeRequeue: 30 * 1000, // 30 seconds.
-    maxAllowedMilliSecondsInThisStatus: 15 * 60 * 1000, // 15 mins.
-  },
-  {
-    transactionStatus: TransactionStatus.CRYPTO_OUTGOING_COMPLETED,
-    transactionType: [TransactionType.ONRAMP, TransactionType.NOBA_WALLET],
-    processingQueue: TransactionQueueName.OnChainPendingTransaction,
-    waitTimeInMilliSecondsBeforeRequeue: 2 * 60 * 1000, // 2 mins.
-    maxAllowedMilliSecondsInThisStatus: 2 * 60 * 60 * 1000, // 2 hrs.
-  },
-
-  // **************************************************************
-  // *                                                            *
-  // *                      ERROR SCENARIOS                       *
-  // *                                                            *
-  // **************************************************************
-  {
-    transactionStatus: TransactionStatus.VALIDATION_FAILED,
-    transactionType: [TransactionType.ONRAMP, TransactionType.NOBA_WALLET, TransactionType.INTERNAL_WITHDRAWAL],
-    processingQueue: TransactionQueueName.TransactionFailed,
-    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
-    maxAllowedMilliSecondsInThisStatus: 5 * 60 * 1000, // 5 mins.
-  },
-  {
-    transactionStatus: TransactionStatus.FIAT_INCOMING_FAILED,
-    transactionType: [TransactionType.ONRAMP, TransactionType.NOBA_WALLET],
-    processingQueue: TransactionQueueName.TransactionFailed,
-    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
-    maxAllowedMilliSecondsInThisStatus: 5 * 60 * 1000, // 5 mins.
-  },
-  {
-    transactionStatus: TransactionStatus.CRYPTO_OUTGOING_FAILED,
-    transactionType: [TransactionType.ONRAMP, TransactionType.NOBA_WALLET],
-    processingQueue: TransactionQueueName.TransactionFailed,
-    waitTimeInMilliSecondsBeforeRequeue: 10 * 1000, // 10 seconds.
-    maxAllowedMilliSecondsInThisStatus: 5 * 60 * 1000, // 5 mins.
-  },
-];
 
 export enum CryptoTransactionStatus {
   PENDING = "pending",

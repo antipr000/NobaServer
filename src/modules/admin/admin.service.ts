@@ -3,9 +3,6 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { IAdminRepo } from "./repos/transactions/sql.admin.repo";
 import { TransactionStatsDTO } from "./dto/TransactionStats";
-import { TransactionDTO } from "../transactions/dto/TransactionDTO";
-import { Transaction } from "../transactions/domain/Transaction";
-import { TransactionMapper } from "../transactions/mapper/TransactionMapper";
 import { Admin, AllRoles, isValidRole } from "./domain/Admin";
 
 @Injectable()
@@ -16,20 +13,19 @@ export class AdminService {
   @Inject("AdminTransactionRepo")
   private readonly adminRepo: IAdminRepo;
 
-  private readonly transactionsMapper: TransactionMapper;
-
-  constructor() {
-    this.transactionsMapper = new TransactionMapper();
-  }
+  constructor() {}
 
   async getTransactionStatus(): Promise<TransactionStatsDTO> {
     return this.adminRepo.getTransactionStats();
   }
 
+  /*
+  TODO: This needs to be rewritten to consider the Consumer parameter required in the mapping service
   async getAllTransactions(startDate: string, endDate: string): Promise<TransactionDTO[]> {
     const transactions: Transaction[] = await this.adminRepo.getAllTransactions(startDate, endDate);
-    return transactions.map(transaction => this.transactionsMapper.toDTO(transaction));
+    return transactions.map(transaction => this.transactionMapperService.toTransactionDTO(transaction));
   }
+  */
 
   async addNobaAdmin(nobaAdmin: Admin): Promise<Admin> {
     const adminWithSameEmail = await this.adminRepo.getNobaAdminByEmail(nobaAdmin.props.email);

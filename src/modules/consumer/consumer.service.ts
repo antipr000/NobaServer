@@ -14,7 +14,7 @@ import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { NotificationService } from "../notifications/notification.service";
 import { PaymentService } from "../psp/payment.service";
-import { Transaction } from "../transactions/domain/Transaction";
+import { Transaction } from "../transaction/domain/Transaction";
 import { Consumer, ConsumerProps } from "./domain/Consumer";
 import { PaymentMethod, PaymentMethodProps } from "./domain/PaymentMethod";
 import { CryptoWallet } from "./domain/CryptoWallet";

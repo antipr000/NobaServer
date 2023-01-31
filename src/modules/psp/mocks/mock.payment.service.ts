@@ -7,9 +7,6 @@ export function getMockPaymentServiceWithDefaults(): PaymentService {
   when(paymentService.addPaymentMethod(anything(), anything())).thenReject(new Error("Not implemented!"));
   when(paymentService.getFiatPaymentStatus(anyString())).thenReject(new Error("Not implemented!"));
   when(paymentService.removePaymentMethod(anyString())).thenReject(new Error("Not implemented!"));
-  when(paymentService.requestCheckoutPayment(anything(), anything(), anything())).thenReject(
-    new Error("Not implemented!"),
-  );
 
   return paymentService;
 }

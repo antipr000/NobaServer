@@ -1,4 +1,4 @@
-import { nanoid } from "nanoid";
+import { randomUUID } from "crypto"; // built-in node crypto, not from npm
 import Joi from "joi";
 import { KeysRequired } from "../../modules/common/domain/Types";
 
@@ -18,8 +18,9 @@ export abstract class Entity<T extends BaseProps> {
     this.props = props;
   }
 
+  // TODO(CRYPTO-551): Remove this method completely
   public static getNewID(): string {
-    return nanoid();
+    return randomUUID();
   }
 
   public static isEntity(v: any): v is Entity<any> {
