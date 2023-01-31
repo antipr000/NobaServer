@@ -1,4 +1,4 @@
 export interface IPushtokenRepo {
-  getPushTokens(consumerID: string): Promise<string[]>;
+  getPushToken(consumerID: string, pushToken: string): Promise<string>;
   addPushToken(consumerID: string, pushToken: string): Promise<string>;
 }

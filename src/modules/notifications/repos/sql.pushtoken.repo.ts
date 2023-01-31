@@ -1,6 +1,7 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PrismaService } from "../../../infraproviders/PrismaService";
+import { IPushtokenRepo } from "./pushtoken.repo";
 
 @Injectable()
 export class SQLPushtokenRepo implements IPushtokenRepo {
@@ -12,12 +13,12 @@ export class SQLPushtokenRepo implements IPushtokenRepo {
 
   constructor() {}
 
-  async getPushToken(consumerID: string, pushTokenID: string): Promise<string> {
+  async getPushToken(consumerID: string, pushtoken: string): Promise<string> {
     try {
-      const consumerPushtoken = await this.prisma.pushtoken.findUnique({
+      const consumerPushtoken = await this.prisma.pushtoken.findFirst({
         where: {
-          id: consumerID,
-          pushtoken: pushTokenID,
+          consumerID: consumerID,
+          pushtoken: pushtoken,
         },
       });
       if (!consumerPushtoken) {
@@ -31,27 +32,22 @@ export class SQLPushtokenRepo implements IPushtokenRepo {
     }
   }
 
-  async addPushToken(consumerID: string, pushToken: string): Promise<void> {
-    const consumer = await this.prisma.consumer.findUnique({
-      where: {
-        id: consumerID,
-      },
-      select: {
-        pushTokens: true,
-      },
-    });
-    if (consumer.pushTokens.includes(pushToken)) {
-      return;
-    }
-    await this.prisma.consumer.update({
-      where: {
-        id: consumerID,
-      },
-      data: {
-        pushTokens: {
-          push: pushToken,
+  async addPushToken(consumerID: string, pushtoken: string): Promise<string> {
+    try {
+      const createdPushtoken = await this.prisma.pushtoken.create({
+        data: {
+          consumerID: consumerID,
+          pushtoken: pushtoken,
         },
-      },
-    });
+      });
+      if (!createdPushtoken) {
+        return null;
+      }
+
+      return createdPushtoken.id;
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      // throw here
+    }
   }
 }
