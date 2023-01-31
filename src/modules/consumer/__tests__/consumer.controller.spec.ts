@@ -405,6 +405,28 @@ describe("ConsumerController", () => {
     });
   });
 
+  describe("subscribeToPushNotifications", () => {
+    it("should subscribe to push notifications", async () => {
+      const consumer = Consumer.createConsumer({
+        email: "mock@noba.com",
+      });
+
+      when(consumerService.subscribeToPushNotifications(consumer.props.id, "push-token")).thenResolve();
+      expect(consumerController.subscribeToPushNotifications("push-token", consumer)).resolves.toBe(undefined);
+    });
+  });
+
+  describe("unsubscribeFromPushNotifications", () => {
+    it("should unsubscribe from push notifications", async () => {
+      const consumer = Consumer.createConsumer({
+        email: "mock@noba.com",
+      });
+
+      when(consumerService.unsubscribeFromPushNotifications(consumer.props.id, "push-token")).thenResolve();
+      expect(consumerController.unsubscribeFromPushNotifications("push-token", consumer)).resolves.toBe(undefined);
+    });
+  });
+
   describe("email", () => {
     it("should add or update email", async () => {
       const consumer = Consumer.createConsumer({
