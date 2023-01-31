@@ -10,6 +10,7 @@ export type Address = {
 
 export type Customer = {
   id: string;
+  createdAtMillis?: number;
   firstName?: string;
   middleName?: string;
   lastName?: string;
@@ -265,6 +266,7 @@ export type Feedback = {
   reason?: string;
   description?: string;
   processor?: string;
+  timeMillis?: number;
 };
 
 export type FeedbackRequest = {

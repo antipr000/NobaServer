@@ -44,6 +44,7 @@ import { WorkflowName } from "../../../modules/transaction/domain/Transaction";
 import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
 import { TransactionVerification } from "../domain/TransactionVerification";
 import { CircleService } from "../../../modules/psp/circle.service";
+import { Utils } from "../../../core/utils/Utils";
 
 @Injectable()
 export class Sardine implements IDVProvider {
@@ -80,6 +81,7 @@ export class Sardine implements IDVProvider {
       sessionKey: sessionKey,
       customer: {
         id: consumerInfo.userID,
+        createdAtMillis: consumerInfo.createdTimestampMillis,
         firstName: consumerInfo.firstName,
         lastName: consumerInfo.lastName,
         dateOfBirth: consumerInfo.dateOfBirth,
@@ -255,7 +257,7 @@ export class Sardine implements IDVProvider {
     const usdAmount = transaction.creditCurrency == Currency.USD ? transaction.creditAmount : transaction.debitAmount;
 
     let actionType;
-    let checkpoints = ["aml", "payment"];
+    let checkpoints = ["aml", "customer"];
     switch (transaction.workflowName) {
       case WorkflowName.WALLET_TRANSFER:
         actionType = "transfer";
@@ -607,8 +609,9 @@ export class Sardine implements IDVProvider {
       const payload: FeedbackRequest = {
         sessionKey: sessionKey,
         feedback: {
-          id: sessionKey,
-          type: FeedbackType.KYC,
+          id: Utils.generateUUID(),
+          type: FeedbackType.ONBOARDING,
+          timeMillis: Date.now(),
           status: result.status === KYCStatus.APPROVED ? FeedbackStatus.APPROVED : FeedbackStatus.DECLINED,
         },
       };
@@ -624,8 +627,9 @@ export class Sardine implements IDVProvider {
       const payload: FeedbackRequest = {
         sessionKey: sessionKey,
         feedback: {
-          id: sessionKey,
-          type: FeedbackType.KYC,
+          id: Utils.generateUUID(),
+          type: FeedbackType.ONBOARDING,
+          timeMillis: Date.now(),
           status:
             result.status === DocumentVerificationStatus.APPROVED || DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
               ? FeedbackStatus.APPROVED
@@ -651,6 +655,7 @@ export class Sardine implements IDVProvider {
         feedback: {
           id: transactionID,
           type: FeedbackType.AUTHORIZATION,
+          timeMillis: Date.now(),
           status: FeedbackStatus.DECLINED,
           reason: errorCode,
           description: errorDescription,

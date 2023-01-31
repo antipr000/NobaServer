@@ -50,6 +50,10 @@ export class Utils {
     return removeDashes ? uuid.replace(/-/g, "") : uuid;
   }
 
+  static generateUUID(): string {
+    return randomUUID();
+  }
+
   static generateBase64String(numBytes: number): string {
     return randomBytes(numBytes).toString("base64");
   }
