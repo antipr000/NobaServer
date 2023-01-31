@@ -7,7 +7,7 @@ import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { TransactionEvent } from "../domain/TransactionEvent";
 import { MonoTransaction } from "../../../modules/psp/domain/Mono";
 import { MonoService } from "../../../modules/psp/mono/mono.service";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 @Injectable()
 export class TransactionMappingService {
