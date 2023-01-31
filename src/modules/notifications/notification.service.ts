@@ -32,7 +32,7 @@ import { SendWalletTransferEvent } from "./events/SendWalletTransferEvent";
 import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
 import { SendPhoneVerificationCodeEvent } from "./events/SendPhoneVerificationCodeEvent";
 import { IPushTokenRepo } from "./repos/pushtoken.repo";
-import { ServiceErrorCode, ServiceException } from "src/core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
 
 @Injectable()
 export class NotificationService {
