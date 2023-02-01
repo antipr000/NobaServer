@@ -53,7 +53,7 @@ export class BubbleService {
       logoURI: request.logoURI,
       bubbleID: request.bubbleID,
       ...(request.leadDays && { leadDays: request.leadDays }),
-      ...(request.payrollDays && { payrollDays: request.payrollDays }),
+      ...(request.payrollDates && { payrollDays: request.payrollDates }),
     });
 
     return employer.id;
@@ -71,7 +71,7 @@ export class BubbleService {
     await this.employerService.updateEmployer(employer.id, {
       leadDays: request.leadDays,
       logoURI: request.logoURI,
-      payrollDays: request.payrollDays,
+      payrollDates: request.payrollDates,
     });
   }
 }
