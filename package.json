@@ -34,6 +34,7 @@
     "@circle-fin/circle-sdk": "^1.2.0",
     "@ethersproject/bignumber": "^5.7.0",
     "@ethersproject/units": "^5.7.0",
+    "@mermaid-js/mermaid-cli": "^9.3.0",
     "@nestjs/common": "^8.4.7",
     "@nestjs/config": "^2.1.0",
     "@nestjs/core": "^8.4.7",
@@ -80,6 +81,7 @@
     "pg": "^8.8.0",
     "plaid": "^11.0.0",
     "prisma": "^4.9.0",
+    "prisma-erd-generator": "^1.2.5",
     "qrcode": "^1.5.1",
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.2",
@@ -94,7 +96,6 @@
     "winston": "^3.3.3"
   },
   "devDependencies": {
-    "@mermaid-js/mermaid-cli": "^9.3.0",
     "@nestjs/cli": "^8.2.8",
     "@nestjs/testing": "^9.2.1",
     "@types/aws-sdk": "^2.7.0",
@@ -122,7 +123,6 @@
     "jest-cli": "^29.3.1",
     "jest-mock-axios": "^4.6.1",
     "prettier": "^2.6.2",
-    "prisma-erd-generator": "^1.2.5",
     "ts-jest": "29.0.3",
     "ts-loader": "^9.3.1",
     "typescript": "^4.9.4",
