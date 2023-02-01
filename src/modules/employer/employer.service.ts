@@ -25,25 +25,6 @@ export class EmployerService {
     }
   }
 
-  private validatePayrollDays(payrollDays: number[]): void {
-    const badSchedules = payrollDays.filter(schedule => schedule < 1 || schedule > 31);
-    const duplicateSchedules = payrollDays.filter((schedule, index) => payrollDays.indexOf(schedule) !== index);
-
-    if (badSchedules.length > 0) {
-      throw new ServiceException({
-        message: `Invalid payment schedules: ${badSchedules}`,
-        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-      });
-    }
-
-    if (duplicateSchedules.length > 0) {
-      throw new ServiceException({
-        message: `Duplicate payment schedules: ${duplicateSchedules}`,
-        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-      });
-    }
-  }
-
   async createEmployer(request: CreateEmployerRequestDTO): Promise<Employer> {
     // Note - Don't replace it with "0". It will be treated as false.
     if (request.leadDays === undefined || request.leadDays === null) {
@@ -51,18 +32,13 @@ export class EmployerService {
     }
     this.validateLeadDays(request.leadDays);
 
-    if (!request.payrollDays || request.payrollDays.length === 0) {
-      request.payrollDays = [31];
-    }
-    this.validatePayrollDays(request.payrollDays);
-
     return this.employerRepo.createEmployer({
       name: request.name,
       logoURI: request.logoURI,
       referralID: request.referralID,
       bubbleID: request.bubbleID,
       leadDays: request.leadDays,
-      payrollDays: request.payrollDays,
+      payrollDates: request.payrollDates,
     });
   }
 
@@ -82,15 +58,12 @@ export class EmployerService {
     if (request.leadDays !== undefined && request.leadDays !== null) {
       this.validateLeadDays(request.leadDays);
     }
-    if (request.payrollDays) {
-      this.validatePayrollDays(request.payrollDays);
-    }
 
     return this.employerRepo.updateEmployer(id, {
       ...(request.logoURI && { logoURI: request.logoURI }),
       ...(request.referralID && { referralID: request.referralID }),
       ...(request.leadDays && { leadDays: request.leadDays }),
-      ...(request.payrollDays && { payrollDays: request.payrollDays }),
+      ...(request.payrollDates && { payrollDates: request.payrollDates }),
     });
   }
 
