@@ -75,6 +75,10 @@ export class SQLPushTokenRepo implements IPushTokenRepo {
       return deletedPushToken.id;
     } catch (err) {
       this.logger.error(JSON.stringify(err));
+      if (err.code === "P2025") {
+        // Record to delete does not exist
+        return null;
+      }
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Failed to delete push token for consumerID: ${consumerID} and pushToken: ${pushToken}`,

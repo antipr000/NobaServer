@@ -5,5 +5,6 @@ export function getMockPushTokenRepoWithDefaults() {
   const pushTokenRepo = mock(SQLPushTokenRepo);
   when(pushTokenRepo.getPushToken(anyString(), anyString())).thenReject(new Error("Not implemented!"));
   when(pushTokenRepo.addPushToken(anyString(), anyString())).thenReject(new Error("Not implemented!"));
+  when(pushTokenRepo.deletePushToken(anyString(), anyString())).thenReject(new Error("Not implemented!"));
   return pushTokenRepo;
 }
