@@ -1,4 +1,4 @@
-import { setAccessTokenForTheNextRequests } from "../common";
+import { clearAccessTokenForNextRequests, setAccessTokenForTheNextRequests } from "../common";
 import { setUpEnvironmentVariablesToLoadTheSourceCode } from "../setup";
 const port: number = setUpEnvironmentVariablesToLoadTheSourceCode();
 
@@ -121,6 +121,7 @@ describe("Onboarding consumer flow", () => {
     expect(getConsumerResponse.data.documentVerificationData.documentVerificationStatus).toBe("NotSubmitted");
 
     // Login again with the same email
+    clearAccessTokenForNextRequests();
     const loginResponse = await testUtils.post("/v1/auth/login", {
       emailOrPhone: email,
       identityType: "CONSUMER",
