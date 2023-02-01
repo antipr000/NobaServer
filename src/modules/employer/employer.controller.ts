@@ -33,11 +33,13 @@ export class EmployerController {
     if (!employer) {
       throw new NotFoundException("Employer not found");
     }
+
     return {
       name: employer.name,
       logoURI: employer.logoURI,
       leadDays: employer.leadDays,
       payrollDays: employer.payrollDays,
+      nextPayrollDate: null, // calculate,
     };
   }
 }

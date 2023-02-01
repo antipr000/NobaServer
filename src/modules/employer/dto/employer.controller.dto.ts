@@ -12,4 +12,7 @@ export class EmployerDTO {
 
   @ApiProperty()
   payrollDays: number[];
+
+  @ApiProperty()
+  nextPayrollDate: Date;
 }

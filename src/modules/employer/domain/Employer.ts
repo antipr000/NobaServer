@@ -10,6 +10,7 @@ export class Employer {
   bubbleID: string;
   leadDays: number;
   payrollDays: number[];
+  payrollDates: Date[];
   createdTimestamp: Date;
   updatedTimestamp: Date;
 }
