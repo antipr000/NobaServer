@@ -34,12 +34,17 @@ export class EmployerController {
       throw new NotFoundException("Employer not found");
     }
 
+    const payrollDatesAsc = employer.payrollDates.sort((a, b) => a.getTime() - b.getTime());
+    const futurePayrollDates = payrollDatesAsc.filter(
+      date => date.getTime() > Date.now() + employer.leadDays * 24 * 60 * 60 * 1000,
+    );
+
     return {
       name: employer.name,
       logoURI: employer.logoURI,
       leadDays: employer.leadDays,
-      payrollDays: employer.payrollDays,
-      nextPayrollDate: null, // calculate,
+      payrollDates: payrollDatesAsc,
+      nextPayrollDate: futurePayrollDates[0],
     };
   }
 }
