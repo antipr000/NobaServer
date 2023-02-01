@@ -6,16 +6,17 @@ generator client {
 }
 
 // See https://www.npmjs.com/package/prisma-erd-generator
-generator erd {
-  provider = "prisma-erd-generator"
-  theme    = "forest"
-  output   = "./generated/erd.svg"
-}
+// TODO(CRYPTO-672) Commented out as errors occurred on AWS instances
+// generator erd {
+//   provider = "prisma-erd-generator"
+//   theme    = "forest"
+//   output   = "./generated/erd.svg"
+// }
 
-generator erdmd {
-  provider = "prisma-erd-generator"
-  output   = "./generated/erd.md"
-}
+// generator erdmd {
+//   provider = "prisma-erd-generator"
+//   output   = "./generated/erd.md"
+// }
 
 datasource db {
   provider = "postgresql"
