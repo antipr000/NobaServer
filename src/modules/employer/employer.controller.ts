@@ -1,4 +1,4 @@
-import { Body, Controller, HttpStatus, Inject, NotFoundException, Param, Post } from "@nestjs/common";
+import { Body, Controller, HttpStatus, Inject, NotFoundException, Param, Get } from "@nestjs/common";
 import { ApiBearerAuth, ApiHeaders, ApiNotFoundResponse, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
@@ -20,7 +20,7 @@ export class EmployerController {
   @Inject()
   private readonly employerService: EmployerService;
 
-  @Post("/:referralID")
+  @Get("/:referralID")
   @ApiOperation({ summary: "Retrieve employer details by referral ID" })
   @ApiResponse({
     status: HttpStatus.OK,
