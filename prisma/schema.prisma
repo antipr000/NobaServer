@@ -5,17 +5,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
-generator dbml {
-  provider = "prisma-dbml-generator"
+// See https://www.npmjs.com/package/prisma-erd-generator
+generator erd {
+  provider = "prisma-erd-generator"
+  theme    = "forest"
 }
-
-// generator prismaClassGenerator {
-//   provider      = "prisma-class-generator"
-//   dryRun        = false
-//   output        = "../src/generated/domain"
-//   useSwagger    = false
-//   makeIndexFile = false
-// }
 
 datasource db {
   provider = "postgresql"
