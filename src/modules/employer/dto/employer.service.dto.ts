@@ -4,12 +4,12 @@ export type CreateEmployerRequestDTO = {
   referralID: string;
   bubbleID: string;
   leadDays?: number;
-  payrollDays?: number[];
+  payrollDates?: Date[];
 };
 
 export type UpdateEmployerRequestDTO = {
   logoURI?: string;
   referralID?: string;
   leadDays?: number;
-  payrollDays?: number[];
+  payrollDates?: Date[];
 };

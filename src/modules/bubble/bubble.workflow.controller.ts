@@ -27,7 +27,7 @@ export class BubbleWorkflowController {
       name: requestBody.name,
       referralID: requestBody.referralID,
       leadDays: requestBody.leadDays,
-      payrollDays: requestBody.payrollDays,
+      payrollDates: requestBody.payrollDates,
     });
     return nobaEmployerID;
   }

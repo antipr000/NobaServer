@@ -4,11 +4,11 @@ export type RegisterEmployerRequest = {
   referralID: string;
   bubbleID: string;
   leadDays?: number;
-  payrollDays?: number[];
+  payrollDates?: Date[];
 };
 
 export type UpdateNobaEmployerRequest = {
   logoURI?: string;
   leadDays?: number;
-  payrollDays?: number[];
+  payrollDates?: Date[];
 };

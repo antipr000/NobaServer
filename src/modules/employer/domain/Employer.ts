@@ -9,7 +9,6 @@ export class Employer {
   referralID: string;
   bubbleID: string;
   leadDays: number;
-  payrollDays: number[];
   payrollDates: Date[];
   createdTimestamp: Date;
   updatedTimestamp: Date;
@@ -21,14 +20,14 @@ export class EmployerCreateRequest {
   referralID: string;
   bubbleID: string;
   leadDays: number;
-  payrollDays: number[];
+  payrollDates: Date[];
 }
 
 export class EmployerUpdateRequest {
   logoURI?: string;
   referralID?: string;
   leadDays?: number;
-  payrollDays?: number[];
+  payrollDates?: Date[];
 }
 
 export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) => {
@@ -38,7 +37,7 @@ export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) =
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
     leadDays: Joi.number().required(),
-    payrollDays: Joi.array().items(Joi.number()).required(),
+    payrollDates: Joi.array().items(Joi.date()).required(),
   };
 
   const employerJoiSchema = Joi.object(employerJoiValidationKeys).options({
@@ -53,7 +52,7 @@ export const validateUpdateEmployerRequest = (employer: EmployerUpdateRequest) =
     logoURI: Joi.string().optional(),
     referralID: Joi.string().optional(),
     leadDays: Joi.number().optional(),
-    payrollDays: Joi.array().items(Joi.number()).optional(),
+    payrollDates: Joi.array().items(Joi.date()).optional(),
   };
 
   const employerJoiSchema = Joi.object(employerJoiValidationKeys).options({
@@ -71,7 +70,7 @@ export const validateEmployer = (employer: Employer) => {
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
     leadDays: Joi.number().required(),
-    payrollDays: Joi.array().items(Joi.number()).required(),
+    payrollDates: Joi.array().items(Joi.date()).required(),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
   };
@@ -91,7 +90,7 @@ export const convertToDomainEmployer = (employer: PrismaEmployerModel): Employer
     referralID: employer.referralID,
     bubbleID: employer.bubbleID,
     leadDays: employer.leadDays,
-    payrollDays: employer.payrollDays,
+    payrollDates: employer.payrollDates,
     createdTimestamp: employer.createdTimestamp,
     updatedTimestamp: employer.updatedTimestamp,
   };
