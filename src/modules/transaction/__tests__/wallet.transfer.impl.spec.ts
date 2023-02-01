@@ -54,16 +54,17 @@ describe("WalletTransferImpl Tests", () => {
   describe("preprocessTransactionParams", () => {
     it("should preprocess a WALLET_TRANSFER transaction", async () => {
       const consumer = getRandomConsumer("consumerID");
-      const { transactionDTO } = getRandomTransaction(consumer.props.id, "fake-consumer-2");
+      const { transactionDTO, inputTransaction, transaction } = getRandomTransaction(
+        consumer.props.id,
+        "fake-consumer-2",
+      );
+
+      jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
+        return transaction.transactionRef;
+      });
 
       const response = await walletTransferImpl.preprocessTransactionParams(transactionDTO, consumer.props.id);
-      expect(response).toStrictEqual({
-        ...transactionDTO,
-        debitConsumerIDOrTag: consumer.props.id,
-        creditAmount: transactionDTO.debitAmount,
-        creditCurrency: transactionDTO.debitCurrency,
-        exchangeRate: 1,
-      });
+      expect(response).toStrictEqual(inputTransaction);
     });
 
     it("should throw ServiceException if debitConsumerIDOrTag is set", async () => {
@@ -166,6 +167,7 @@ const getRandomTransaction = (
     memo: "New transaction",
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    transactionFees: [],
   };
 
   const transactionDTO: InitiateTransactionDTO = {
@@ -179,7 +181,7 @@ const getRandomTransaction = (
     workflowName: transaction.workflowName,
     exchangeRate: transaction.exchangeRate,
     memo: transaction.memo,
-    sessionKey: transaction.sessionKey,
+    transactionFees: [],
   };
 
   transaction.debitAmount = 100;
@@ -193,8 +195,6 @@ const getRandomTransaction = (
 
   inputTransaction.debitAmount = transaction.debitAmount;
   inputTransaction.debitCurrency = transaction.debitCurrency;
-  inputTransaction.debitConsumerID = transaction.debitConsumerID;
-  inputTransaction.creditConsumerID = transaction.creditConsumerID;
   inputTransaction.creditAmount = transaction.debitAmount;
   inputTransaction.creditCurrency = transaction.debitCurrency;
 

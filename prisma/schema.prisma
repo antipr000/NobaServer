@@ -272,7 +272,7 @@ model TransactionFee {
   id            String      @id @default(uuid())
   transaction   Transaction @relation(fields: [transactionID], references: [id], onDelete: Cascade)
   transactionID String
-  type          FeeType
+  type          String
   amount        Float
   currency      String
   timestamp     DateTime?   @default(now()) // Marking optional so we don't need to set in tests
@@ -435,9 +435,4 @@ enum TransactionType {
 
 enum TokenType {
   REFRESH_TOKEN
-}
-
-enum FeeType {
-  NOBA
-  PROCESSING
 }

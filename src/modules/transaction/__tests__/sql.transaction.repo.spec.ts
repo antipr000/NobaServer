@@ -21,6 +21,7 @@ import {
   NotFoundError,
 } from "../../../core/exception/CommonAppException";
 import { InputTransactionEvent } from "../domain/TransactionEvent";
+import { FeeType } from "../domain/TransactionFee";
 
 const getAllTransactionRecords = async (prismaService: PrismaService): Promise<PrismaTransactionModel[]> => {
   return prismaService.transaction.findMany({});
@@ -37,6 +38,13 @@ const getRandomTransaction = (consumerID: string, isCreditTransaction = false): 
     memo: "New transaction",
     sessionKey: uuid(),
     workflowName: WorkflowName.WALLET_DEPOSIT,
+    transactionFees: [
+      {
+        amount: 10,
+        currency: "USD",
+        type: FeeType.PROCESSING,
+      },
+    ],
   };
 
   if (isCreditTransaction) {
@@ -118,6 +126,8 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction.exchangeRate).toBe(inputTransaction.exchangeRate);
       expect(returnedTransaction.memo).toBe(inputTransaction.memo);
       expect(returnedTransaction.sessionKey).toBe(inputTransaction.sessionKey);
+      expect(returnedTransaction.transactionFees).toHaveLength(1);
+      expect(returnedTransaction.transactionFees[0].type).toBe(FeeType.PROCESSING);
 
       expect(allTransactionRecords.length).toBe(1);
       expect(allTransactionRecords[0]).toStrictEqual({
@@ -163,6 +173,8 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction.exchangeRate).toBe(inputTransaction.exchangeRate);
       expect(returnedTransaction.memo).toBe(inputTransaction.memo);
       expect(returnedTransaction.sessionKey).toBe(inputTransaction.sessionKey);
+      expect(returnedTransaction.transactionFees).toHaveLength(1);
+      expect(returnedTransaction.transactionFees[0].type).toBe(FeeType.PROCESSING);
 
       expect(allTransactionRecords.length).toBe(1);
       expect(allTransactionRecords[0]).toStrictEqual({
@@ -557,12 +569,15 @@ describe("PostgresTransactionRepoTests", () => {
       expect(result7.totalItems).toBe(3);
       expect(result7.totalPages).toBe(2);
 
-      const olderTransaction = getRandomTransaction(consumerID);
-      await prismaService.transaction.create({
+      const olderTransaction = await transactionRepo.createTransaction(getRandomTransaction(consumerID));
+
+      await prismaService.transaction.update({
         data: {
-          ...olderTransaction,
           createdTimestamp: new Date("2020-01-01"),
           updatedTimestamp: new Date("2020-01-01"),
+        },
+        where: {
+          id: olderTransaction.id,
         },
       });
 
@@ -602,29 +617,31 @@ describe("PostgresTransactionRepoTests", () => {
     it("should return transactions in descending order of createdTimestamp", async () => {
       const consumerID = await createTestConsumer(prismaService);
 
-      const transaction1 = getRandomTransaction(consumerID);
-      const transaction2 = getRandomTransaction(consumerID);
-      const transaction3 = getRandomTransaction(consumerID);
+      const transaction1 = await transactionRepo.createTransaction(getRandomTransaction(consumerID));
+      const transaction2 = await transactionRepo.createTransaction(getRandomTransaction(consumerID));
+      const transaction3 = await transactionRepo.createTransaction(getRandomTransaction(consumerID));
 
-      await prismaService.transaction.create({
+      await prismaService.transaction.update({
         data: {
-          ...transaction1,
           createdTimestamp: new Date("2020-01-01"),
         },
+        where: {
+          id: transaction1.id,
+        },
       });
 
-      await prismaService.transaction.create({
+      await prismaService.transaction.update({
         data: {
-          ...transaction2,
           createdTimestamp: new Date("2020-01-05"),
         },
+        where: { id: transaction2.id },
       });
 
-      await prismaService.transaction.create({
+      await prismaService.transaction.update({
         data: {
-          ...transaction3,
           createdTimestamp: new Date("2020-01-03"),
         },
+        where: { id: transaction3.id },
       });
 
       const result = await transactionRepo.getFilteredTransactions({

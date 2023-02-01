@@ -10,7 +10,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { v4 } from "uuid";
 import { InputTransaction, Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
-import { anyNumber, anyString, instance, verify, when } from "ts-mockito";
+import { anyString, instance, verify, when } from "ts-mockito";
 import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { Currency } from "../domain/TransactionTypes";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
@@ -19,12 +19,10 @@ import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consum
 import { Utils } from "../../../core/utils/Utils";
 import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
-import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { ServiceException } from "../../../core/exception/service.exception";
 import { WalletWithdrawalImpl } from "../factory/wallet.withdrawal.impl";
-import { TransactionService } from "../transaction.service";
 import { AccountType, DocumentType } from "../domain/WithdrawalDetails";
-import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
+import { FeeType } from "../domain/TransactionFee";
 
 describe("WalletWithdrawalImpl Tests", () => {
   jest.setTimeout(20000);
@@ -78,7 +76,7 @@ describe("WalletWithdrawalImpl Tests", () => {
   describe("preprocessTransactionParams", () => {
     it("should preprocess a WALLET_WITHDRAWAL transaction", async () => {
       const consumer = getRandomConsumer("consumerID");
-      const { transaction, transactionDTO } = getRandomTransaction(consumer.props.id);
+      const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(consumer.props.id);
 
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
@@ -87,13 +85,8 @@ describe("WalletWithdrawalImpl Tests", () => {
       when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.USD, Currency.COP)).thenResolve(exchangeRate);
 
       const response = await walletWithdrawalImpl.preprocessTransactionParams(transactionDTO, consumer.props.id);
-      transactionDTO.debitCurrency = Currency.USD;
-      transactionDTO.debitConsumerIDOrTag = consumer.props.id;
-      delete transactionDTO.creditConsumerIDOrTag;
-      transactionDTO.creditAmount = 5000;
-      transactionDTO.exchangeRate = 5;
 
-      expect(response).toStrictEqual(transactionDTO);
+      expect(response).toStrictEqual(inputTransaction);
     });
 
     it("should throw ServiceException if the amount is too low (after fees you'd get a negative amount)", async () => {
@@ -276,6 +269,22 @@ const getRandomTransaction = (
     memo: "New transaction",
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    transactionFees: [
+      {
+        id: v4(),
+        type: FeeType.NOBA,
+        amount: 1.5,
+        currency: Currency.USD,
+        timestamp: new Date(),
+      },
+      {
+        id: v4(),
+        type: FeeType.PROCESSING,
+        currency: Currency.USD,
+        amount: 0.6,
+        timestamp: new Date(),
+      },
+    ],
   };
 
   const transactionDTO: InitiateTransactionDTO = {
@@ -296,7 +305,18 @@ const getRandomTransaction = (
     workflowName: transaction.workflowName,
     exchangeRate: transaction.exchangeRate,
     memo: transaction.memo,
-    sessionKey: transaction.sessionKey,
+    transactionFees: [
+      {
+        amount: 1.5,
+        currency: Currency.USD,
+        type: FeeType.NOBA,
+      },
+      {
+        amount: 0.6,
+        currency: Currency.USD,
+        type: FeeType.PROCESSING,
+      },
+    ],
   };
 
   transaction.debitAmount = 100;
@@ -308,9 +328,10 @@ const getRandomTransaction = (
   transactionDTO.debitConsumerIDOrTag = transaction.debitConsumerID;
   transactionDTO.creditCurrency = transaction.creditCurrency as Currency;
 
-  inputTransaction.debitAmount = transaction.debitAmount;
-  inputTransaction.debitConsumerID = transaction.debitConsumerID;
+  inputTransaction.creditAmount = 391600;
+  inputTransaction.debitCurrency = transaction.debitCurrency;
   inputTransaction.creditCurrency = transaction.creditCurrency;
+  inputTransaction.debitAmount = transaction.debitAmount;
 
   return { transaction, transactionDTO, inputTransaction };
 };

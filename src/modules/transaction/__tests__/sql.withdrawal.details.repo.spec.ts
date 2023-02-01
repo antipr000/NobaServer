@@ -14,6 +14,8 @@ import { createTestConsumer } from "../../../modules/consumer/test_utils/test.ut
 import { AccountType, DocumentType, InputWithdrawalDetails } from "../domain/WithdrawalDetails";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { RepoException } from "../../../core/exception/repo.exception";
+import { FeeType } from "../domain/TransactionFee";
+import { Prisma } from "@prisma/client";
 
 describe("SQLWithdrawalDetailsRepo tests", () => {
   jest.setTimeout(20000);
@@ -140,6 +142,13 @@ const getRandomTransaction = (consumerID: string): InputTransaction => {
     debitAmount: 100,
     debitCurrency: "USD",
     debitConsumerID: consumerID,
+    transactionFees: [
+      {
+        amount: 10,
+        currency: "USD",
+        type: FeeType.NOBA,
+      },
+    ],
   };
 
   return transaction;
@@ -147,9 +156,43 @@ const getRandomTransaction = (consumerID: string): InputTransaction => {
 
 const createFakeTransaction = async (prismaService: PrismaService): Promise<string> => {
   const consumerID = await createTestConsumer(prismaService);
-  const transaction = getRandomTransaction(consumerID);
+  const inputTransaction = getRandomTransaction(consumerID);
+  const transactionInput: Prisma.TransactionCreateInput = {
+    transactionRef: inputTransaction.transactionRef,
+    workflowName: inputTransaction.workflowName,
+    ...(inputTransaction.debitConsumerID && {
+      debitConsumer: {
+        connect: {
+          id: inputTransaction.debitConsumerID,
+        },
+      },
+    }),
+    ...(inputTransaction.creditConsumerID && {
+      creditConsumer: {
+        connect: {
+          id: inputTransaction.creditConsumerID,
+        },
+      },
+    }),
+    ...(inputTransaction.debitAmount && { debitAmount: inputTransaction.debitAmount }),
+    ...(inputTransaction.creditAmount && { creditAmount: inputTransaction.creditAmount }),
+    ...(inputTransaction.debitCurrency && { debitCurrency: inputTransaction.debitCurrency }),
+    ...(inputTransaction.creditCurrency && { creditCurrency: inputTransaction.creditCurrency }),
+    ...(inputTransaction.memo && { memo: inputTransaction.memo }),
+    ...(inputTransaction.sessionKey && { sessionKey: inputTransaction.sessionKey }),
+    exchangeRate: inputTransaction.exchangeRate,
+    transactionFees: {
+      create: inputTransaction.transactionFees.map(transactionFee => {
+        return {
+          amount: transactionFee.amount,
+          currency: transactionFee.currency,
+          type: transactionFee.type,
+        };
+      }),
+    },
+  };
   const savedTransaction = await prismaService.transaction.create({
-    data: transaction,
+    data: transactionInput,
   });
   return savedTransaction.id;
 };

@@ -12,7 +12,8 @@ import { TransactionWorkflowController } from "../transaction.workflow.controlle
 import { BadRequestException } from "@nestjs/common";
 import { TransactionWorkflowMapper } from "../mapper/transaction.workflow.mapper";
 import { getMockTransactionWorkflowMapperWithDefaults } from "../mocks/mock.transaction.workflow.mapper";
-import { DebitBankRequestDTO, WorkflowTransactionDTO } from "../dto/transaction.workflow.controller.dto";
+import { DebitBankRequestDTO } from "../dto/transaction.workflow.controller.dto";
+import { FeeType } from "../domain/TransactionFee";
 
 const getRandomTransaction = (consumerID: string): Transaction => {
   const transaction: Transaction = {
@@ -28,6 +29,15 @@ const getRandomTransaction = (consumerID: string): Transaction => {
     debitAmount: 100,
     debitCurrency: "USD",
     debitConsumerID: consumerID,
+    transactionFees: [
+      {
+        amount: 10,
+        currency: "USD",
+        type: FeeType.NOBA,
+        id: uuid(),
+        timestamp: new Date(),
+      },
+    ],
   };
   return transaction;
 };

@@ -29,6 +29,7 @@ import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { AccountType, DocumentType } from "../domain/WithdrawalDetails";
 import { TransactionFlags } from "../domain/TransactionFlags";
 import { MonoTransaction, MonoTransactionState, MonoTransactionType } from "../../../modules/psp/domain/Mono";
+import { FeeType } from "../domain/TransactionFee";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
   const transaction: Transaction = {
@@ -41,6 +42,15 @@ const getRandomTransaction = (consumerID: string, isCreditTransaction = false): 
     memo: "New transaction",
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    transactionFees: [
+      {
+        amount: 10,
+        currency: "USD",
+        type: FeeType.NOBA,
+        id: uuid(),
+        timestamp: new Date(),
+      },
+    ],
   };
 
   if (isCreditTransaction) {

@@ -1,6 +1,11 @@
-import { FeeType, TransactionFee as PrismaTransactionFeeModel } from "@prisma/client";
+import { TransactionFee as PrismaTransactionFeeModel } from "@prisma/client";
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
+
+export enum FeeType {
+  PROCESSING = "PROCESSING",
+  NOBA = "NOBA",
+}
 
 export class InputTransactionFee {
   amount: number;
@@ -17,7 +22,7 @@ export const inputTransactionFeeJoiValidationKeys: KeysRequired<InputTransaction
   amount: Joi.number().required(),
   currency: Joi.string().required(),
   type: Joi.string()
-    .valid(...Object.keys(FeeType))
+    .valid(...Object.values(FeeType))
     .required(),
 };
 
@@ -27,7 +32,7 @@ export const transactionFeeJoiValidationKeys: KeysRequired<TransactionFee> = {
   amount: Joi.number().required(),
   currency: Joi.string().required(),
   type: Joi.string()
-    .valid(...Object.keys(FeeType))
+    .valid(...Object.values(FeeType))
     .required(),
 };
 
@@ -37,7 +42,7 @@ export const convertToDomainTransactionFee = (transactionFee: PrismaTransactionF
     timestamp: transactionFee.timestamp,
     amount: transactionFee.amount,
     currency: transactionFee.currency,
-    type: transactionFee.type,
+    type: transactionFee.type as FeeType,
   };
 
   return domainTransactionFee;

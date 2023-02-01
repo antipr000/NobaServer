@@ -14,7 +14,7 @@ import { Utils } from "../../../core/utils/Utils";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { NobaConfigs } from "../../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
-import { FeeType } from "@prisma/client";
+import { FeeType } from "../domain/TransactionFee";
 
 export class WalletWithdrawalImpl implements IWorkflowImpl {
   private monoWithdrawalFeeAmount: number;

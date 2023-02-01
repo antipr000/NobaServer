@@ -25,11 +25,11 @@ import { ExchangeRateService } from "../../../modules/common/exchangerate.servic
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 import { MonoService } from "../../../modules/psp/mono/mono.service";
 import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
-import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { WalletDepositImpl } from "../factory/wallet.deposit.impl";
 import { ServiceException } from "../../../core/exception/service.exception";
 import { MonoCurrency, MonoTransactionType } from "../../../modules/psp/domain/Mono";
 import { TransactionFlags } from "../domain/TransactionFlags";
+import { FeeType } from "../domain/TransactionFee";
 
 describe("WalletDepositImpl Tests", () => {
   jest.setTimeout(20000);
@@ -93,7 +93,7 @@ describe("WalletDepositImpl Tests", () => {
   describe("preprocessTransactionParams", () => {
     it("should preprocess a WALLET_DEPOSIT transaction", async () => {
       const consumer = getRandomConsumer("consumerID");
-      const { transaction, transactionDTO } = getRandomTransaction(consumer.props.id);
+      const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(consumer.props.id);
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
       });
@@ -101,13 +101,7 @@ describe("WalletDepositImpl Tests", () => {
       when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD)).thenResolve(exchangeRate);
 
       const response = await walletDepositImpl.preprocessTransactionParams(transactionDTO, consumer.props.id);
-      expect(response).toStrictEqual({
-        ...transactionDTO,
-        creditCurrency: Currency.USD,
-        debitConsumerIDOrTag: consumer.props.id,
-        creditAmount: 11.2,
-        exchangeRate: 0.00025,
-      });
+      expect(response).toStrictEqual(inputTransaction);
     });
 
     it("should throw ServiceException if the amount is too low (after fees you'd get a negative amount)", async () => {
@@ -303,6 +297,22 @@ const getRandomTransaction = (
     memo: "New transaction",
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    transactionFees: [
+      {
+        id: v4(),
+        type: FeeType.NOBA,
+        amount: 0.75,
+        currency: Currency.USD,
+        timestamp: new Date(),
+      },
+      {
+        id: v4(),
+        type: FeeType.PROCESSING,
+        currency: Currency.USD,
+        amount: 0.55,
+        timestamp: new Date(),
+      },
+    ],
   };
 
   const transactionDTO: InitiateTransactionDTO = {
@@ -315,14 +325,24 @@ const getRandomTransaction = (
   const inputTransaction: InputTransaction = {
     transactionRef: transaction.transactionRef,
     workflowName: transaction.workflowName,
-    exchangeRate: transaction.exchangeRate,
+    exchangeRate: 0.00025,
     memo: transaction.memo,
-    sessionKey: transaction.sessionKey,
+    transactionFees: [
+      {
+        amount: 0.75,
+        currency: Currency.USD,
+        type: FeeType.NOBA,
+      },
+      {
+        amount: 0.55,
+        currency: Currency.USD,
+        type: FeeType.PROCESSING,
+      },
+    ],
   };
 
   transaction.debitAmount = 50000;
   transaction.debitCurrency = Currency.COP;
-  transaction.debitConsumerID = debitConsumerID;
 
   transactionDTO.debitAmount = transaction.debitAmount;
   transactionDTO.debitCurrency = transaction.debitCurrency as Currency;
@@ -330,9 +350,8 @@ const getRandomTransaction = (
 
   inputTransaction.debitAmount = transaction.debitAmount;
   inputTransaction.debitCurrency = transaction.debitCurrency;
-  inputTransaction.debitConsumerID = transaction.debitConsumerID;
-  inputTransaction.creditAmount = transaction.debitAmount;
-  inputTransaction.creditCurrency = transaction.debitCurrency;
+  inputTransaction.creditAmount = 11.2;
+  inputTransaction.creditCurrency = Currency.USD;
 
   return { transaction, transactionDTO, inputTransaction };
 };
