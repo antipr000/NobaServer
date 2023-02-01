@@ -210,7 +210,10 @@ describe("SqlEmployerRepoTests", () => {
       const employer = getRandomEmployer();
       const createdEmployer = await employerRepo.createEmployer(employer);
 
-      const payrollDates = [new Date(Date.now() - 24 * 60 * 60 * 1000), new Date(Date.now() + 24 * 60 * 60 * 1000)];
+      const payrollDates = [
+        new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        new Date(Date.now() + 17 * 24 * 60 * 60 * 1000),
+      ];
       const updatedEmployer = await employerRepo.updateEmployer(createdEmployer.id, {
         payrollDates: payrollDates,
       });
