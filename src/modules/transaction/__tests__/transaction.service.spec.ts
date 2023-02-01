@@ -616,7 +616,7 @@ describe("TransactionServiceTests", () => {
       when(withdrawalDetailsRepo.getWithdrawalDetailsByTransactionID(transaction.id)).thenResolve(withdrawalDetails);
 
       const returnedBankMonoImpl = instance(bankMonoImpl);
-      when(bankFactory.getBankImplementationByCurrency(transaction.debitCurrency)).thenReturn(returnedBankMonoImpl);
+      when(bankFactory.getBankImplementationByCurrency(transaction.creditCurrency)).thenReturn(returnedBankMonoImpl);
 
       const factoryResponse = {
         state: "SUCCESS",
