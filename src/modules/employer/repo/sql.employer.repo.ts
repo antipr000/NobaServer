@@ -40,7 +40,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
         bubbleID: request.bubbleID,
         logoURI: request.logoURI,
         leadDays: request.leadDays,
-        payrollDays: request.payrollDays,
+        payrollDates: request.payrollDates,
       };
 
       const returnedEmployer: EmployerPrismaModel = await this.prismaService.employer.create({
@@ -73,7 +73,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
         ...(request.logoURI && { logoURI: request.logoURI }),
         ...(request.referralID && { referralID: request.referralID }),
         ...(request.leadDays && { leadDays: request.leadDays }),
-        ...(request.payrollDays && { payrollDays: request.payrollDays }),
+        ...(request.payrollDates && { payrollDays: request.payrollDates }),
       };
 
       const returnedEmployer: EmployerPrismaModel = await this.prismaService.employer.update({

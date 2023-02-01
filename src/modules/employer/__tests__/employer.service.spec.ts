@@ -273,46 +273,19 @@ describe("EmployerServiceTests", () => {
       });
     });
 
-    const invalidPayrollDaysUpdateRequests = [
-      {
-        payrollDays: [0],
-      },
-      {
-        payrollDays: [1, 15, 32],
-      },
-      {
-        payrollDays: [15, 15],
-      },
-      {
-        payrollDays: [15, 0],
-      },
-    ];
-    test.each(invalidPayrollDaysUpdateRequests)(
-      "should throw ServiceException if payrollDays is set to: %s",
-      async invalidPayrollDaysUpdateRequest => {
-        const employer = getRandomEmployer();
-        employer.payrollDays = invalidPayrollDaysUpdateRequest.payrollDays;
-
-        try {
-          const updatedEmployer = await employerService.updateEmployer(employer.id, invalidPayrollDaysUpdateRequest);
-          expect(true).toBeFalsy();
-        } catch (err) {
-          expect(err).toBeInstanceOf(ServiceException);
-          expect(err.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
-          expect(err.message).toEqual(expect.stringContaining("payment schedules"));
-        }
-      },
-    );
-
     it("should update all the fields", async () => {
       const employer = getRandomEmployer();
       when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
 
+      const payrollDates = [
+        new Date(Date.now() + 16 * 24 * 60 * 60 * 1000),
+        new Date(Date.now() + 29 * 24 * 60 * 60 * 1000),
+      ];
       const updatedEmployer = await employerService.updateEmployer(employer.id, {
         logoURI: "https://new-logo-uri.com",
         referralID: "new-referral-id",
         leadDays: 4,
-        payrollDays: [16, 29],
+        payrollDates: payrollDates,
       });
 
       expect(updatedEmployer).toEqual(employer);
@@ -323,7 +296,7 @@ describe("EmployerServiceTests", () => {
         logoURI: "https://new-logo-uri.com",
         referralID: "new-referral-id",
         leadDays: 4,
-        payrollDays: [16, 29],
+        payrollDays: payrollDates,
       });
     });
 
