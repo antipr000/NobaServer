@@ -10,9 +10,9 @@ import {
 } from "../domain/WithdrawalDetails";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
 import { KmsService } from "../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
+import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
 
 @Injectable()
 export class SQLWithdrawalDetailsRepo implements IWithdrawalDetailsRepo {
@@ -69,8 +69,8 @@ export class SQLWithdrawalDetailsRepo implements IWithdrawalDetailsRepo {
       return savedWithdrawalDetails;
     } catch (e) {
       this.logger.error(`Failed to save withdrawal details: ${JSON.stringify(e)}}`);
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: "Failed to save withdrawal details",
       });
     }

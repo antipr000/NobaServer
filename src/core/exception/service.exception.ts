@@ -1,4 +1,4 @@
-import { BaseException, ExceptionConstructor } from "./BaseException";
+import { BaseException, ExceptionConstructor } from "./base.exception";
 
 export const enum ServiceErrorCode {
   SEMANTIC_VALIDATION = "Semantic validation error",

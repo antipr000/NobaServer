@@ -3,7 +3,7 @@ import { IExchangeRateRepo } from "./repo/exchangerate.repo";
 import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
 import { InputExchangeRate } from "./domain/ExchangeRate";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 
 @Injectable()
 export class ExchangeRateService {

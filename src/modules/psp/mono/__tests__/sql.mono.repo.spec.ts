@@ -15,7 +15,7 @@ import {
   MonoTransactionUpdateRequest,
 } from "../../domain/Mono";
 import { createTestNobaTransaction } from "../../../transaction/test_utils/test.utils";
-import { DatabaseInternalErrorException } from "../../../../core/exception/CommonAppException";
+import { RepoException } from "../../../../core/exception/repo.exception";
 
 const getAllTransactionRecords = async (prismaService: PrismaService): Promise<PrismaMonoModel[]> => {
   return prismaService.mono.findMany({});
@@ -96,9 +96,7 @@ describe("SqlMonoRepoTests", () => {
         MonoTransactionType.COLLECTION_LINK_DEPOSIT,
       );
 
-      await expect(monoRepo.createMonoTransaction(monoTransactionRequest)).rejects.toThrowError(
-        DatabaseInternalErrorException,
-      );
+      await expect(monoRepo.createMonoTransaction(monoTransactionRequest)).rejects.toThrowError(RepoException);
     });
 
     it("should throw an error if tried to insert a transaction with duplicate nobaTransactionID", async () => {
@@ -109,9 +107,7 @@ describe("SqlMonoRepoTests", () => {
       );
       await monoRepo.createMonoTransaction(monoTransactionRequest);
 
-      await expect(monoRepo.createMonoTransaction(monoTransactionRequest)).rejects.toThrowError(
-        DatabaseInternalErrorException,
-      );
+      await expect(monoRepo.createMonoTransaction(monoTransactionRequest)).rejects.toThrowError(RepoException);
     });
 
     describe("COLLECTION_LINK_DEPOSIT", () => {

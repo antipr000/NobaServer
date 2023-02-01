@@ -21,7 +21,7 @@ import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { Currency } from "../domain/TransactionTypes";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { Utils } from "../../../core/utils/Utils";
-import { ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceException } from "../../../core/exception/service.exception";
 import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";

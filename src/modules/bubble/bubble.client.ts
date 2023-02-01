@@ -6,7 +6,7 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Logger } from "winston";
 import { NewEmployeeRegisterRequest } from "./dto/bubble.client.dto";
 import axios from "axios";
-import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 
 @Injectable()
 export class BubbleClient {

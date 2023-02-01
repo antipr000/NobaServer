@@ -7,7 +7,7 @@ import { BankFactory } from "../factory/bank.factory";
 import { BankMonoImpl } from "../factory/bank.mono.impl";
 import { getMockBankMonoImplWithDefaults } from "../mocks/mock.bank.mono.impl";
 import { BankName } from "../domain/BankFactoryTypes";
-import { ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceException } from "../../../core/exception/service.exception";
 
 describe("BankFactory Tests", () => {
   jest.setTimeout(20000);

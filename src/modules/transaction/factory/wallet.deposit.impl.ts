@@ -3,7 +3,7 @@ import { IWorkflowImpl } from "./iworkflow.impl";
 import { Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { Currency } from "../domain/TransactionTypes";
 import { ExchangeRateService } from "../../common/exchangerate.service";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";

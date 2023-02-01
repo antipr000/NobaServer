@@ -9,7 +9,7 @@ import { anything, capture, instance, when } from "ts-mockito";
 import { EmployerService } from "../employer.service";
 import { uuid } from "uuidv4";
 import { Employer } from "../domain/Employer";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
