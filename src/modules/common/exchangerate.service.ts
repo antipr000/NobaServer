@@ -70,12 +70,12 @@ export class ExchangeRateService {
       if (rate == null) {
         rate = await this.exchangeRateRepo.getExchangeRateForCurrencyPair(numeratorCurrency, denominatorCurrency);
         this.logger.error(
-          formatAlertLog(
-            AlertKey.STALE_FX_RATES,
-            `No exchange rate found for currency pair "${numeratorCurrency}-${denominatorCurrency}" that is not expired. Using rate that expired on ${rate.expirationTimestamp.toISOString()} with values of: bankRate=${
+          formatAlertLog({
+            key: AlertKey.STALE_FX_RATES,
+            message: `No exchange rate found for currency pair "${numeratorCurrency}-${denominatorCurrency}" that is not expired. Using rate that expired on ${rate.expirationTimestamp.toISOString()} with values of: bankRate=${
               rate.bankRate
             }, nobaRate=${rate.nobaRate}`,
-          ),
+          }),
         );
       }
 

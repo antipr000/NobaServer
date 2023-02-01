@@ -4,6 +4,11 @@ export enum AlertKey {
   STALE_FX_RATES = "STALE_FX_RATES",
 }
 
-export function formatAlertLog(alertKey: AlertKey, alertMessage: string): string {
-  return `[${alertKey}] - ${alertMessage}`;
+export class Alert {
+  key: AlertKey;
+  message: string;
+}
+
+export function formatAlertLog(alert: Alert): string {
+  return `CRITICAL ALERT! ${JSON.stringify(alert)}`;
 }
