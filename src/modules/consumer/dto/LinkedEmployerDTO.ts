@@ -17,7 +17,7 @@ export class LinkedEmployerDTO {
   leadDays: number;
 
   @ApiProperty()
-  payrollDays: number[];
+  payrollDates: Date[];
 
   @ApiProperty()
   nextPayrollDate: Date;
