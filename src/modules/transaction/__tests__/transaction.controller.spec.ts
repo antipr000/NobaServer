@@ -29,6 +29,7 @@ import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { AccountType, DocumentType } from "../domain/WithdrawalDetails";
 import { TransactionFlags } from "../domain/TransactionFlags";
 import { MonoTransaction, MonoTransactionState, MonoTransactionType } from "../../../modules/psp/domain/Mono";
+import { FeeType } from "../domain/TransactionFee";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
   const transaction: Transaction = {
@@ -41,6 +42,15 @@ const getRandomTransaction = (consumerID: string, isCreditTransaction = false): 
     memo: "New transaction",
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    transactionFees: [
+      {
+        amount: 10,
+        currency: "USD",
+        type: FeeType.NOBA,
+        id: uuid(),
+        timestamp: new Date(),
+      },
+    ],
   };
 
   if (isCreditTransaction) {
@@ -160,6 +170,14 @@ describe("Transaction Controller tests", () => {
         updatedTimestamp: transaction.updatedTimestamp,
         memo: transaction.memo,
         transactionEvents: undefined,
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
       };
 
       expect(result).toStrictEqual(expectedResult);
@@ -197,6 +215,14 @@ describe("Transaction Controller tests", () => {
         updatedTimestamp: transaction.updatedTimestamp,
         memo: transaction.memo,
         transactionEvents: undefined,
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
       };
 
       expect(result).toStrictEqual(expectedResult);
@@ -243,6 +269,14 @@ describe("Transaction Controller tests", () => {
         updatedTimestamp: transaction.updatedTimestamp,
         memo: transaction.memo,
         transactionEvents: undefined,
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
       };
 
       expect(result).toStrictEqual(expectedResult);
@@ -280,6 +314,14 @@ describe("Transaction Controller tests", () => {
         updatedTimestamp: transaction.updatedTimestamp,
         memo: transaction.memo,
         transactionEvents: undefined,
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
       };
 
       expect(result).toStrictEqual(expectedResult);
@@ -333,6 +375,14 @@ describe("Transaction Controller tests", () => {
         memo: transaction.memo,
         transactionEvents: undefined,
         paymentCollectionLink: monoTransaction.collectionLinkDepositDetails.collectionURL,
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
       };
 
       expect(result).toStrictEqual(expectedResult);
@@ -423,6 +473,14 @@ describe("Transaction Controller tests", () => {
         updatedTimestamp: transaction.updatedTimestamp,
         memo: transaction.memo,
         transactionEvents: transactionEventsToReturn,
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
       };
 
       expect(result).toStrictEqual(expectedResult);
@@ -462,6 +520,14 @@ describe("Transaction Controller tests", () => {
         updatedTimestamp: transaction.updatedTimestamp,
         memo: transaction.memo,
         transactionEvents: [],
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
       };
 
       expect(result).toStrictEqual(expectedResult);
@@ -557,6 +623,14 @@ describe("Transaction Controller tests", () => {
         updatedTimestamp: transaction.updatedTimestamp,
         memo: transaction.memo,
         transactionEvents: undefined,
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
       };
 
       const orderDetails = {
@@ -613,6 +687,14 @@ describe("Transaction Controller tests", () => {
         updatedTimestamp: transaction.updatedTimestamp,
         memo: testMemo,
         transactionEvents: undefined,
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
       };
 
       const orderDetails: InitiateTransactionDTO = {

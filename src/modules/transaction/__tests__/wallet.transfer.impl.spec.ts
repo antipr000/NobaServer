@@ -3,7 +3,7 @@ import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { v4 } from "uuid";
-import { InputTransaction, Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
+import { Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
 import { anyNumber, anyString, instance, verify, when } from "ts-mockito";
 import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { Currency } from "../domain/TransactionTypes";
@@ -13,6 +13,7 @@ import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consum
 import { Utils } from "../../../core/utils/Utils";
 import { ServiceException } from "../../../core/exception/service.exception";
 import { WalletTransferImpl } from "../factory/wallet.transfer.impl";
+import { ProcessedTransactionDTO } from "../dto/ProcessedTransactionDTO";
 
 describe("WalletTransferImpl Tests", () => {
   jest.setTimeout(20000);
@@ -54,16 +55,17 @@ describe("WalletTransferImpl Tests", () => {
   describe("preprocessTransactionParams", () => {
     it("should preprocess a WALLET_TRANSFER transaction", async () => {
       const consumer = getRandomConsumer("consumerID");
-      const { transactionDTO } = getRandomTransaction(consumer.props.id, "fake-consumer-2");
+      const { transactionDTO, inputTransaction, transaction } = getRandomTransaction(
+        consumer.props.id,
+        "fake-consumer-2",
+      );
+
+      jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
+        return transaction.transactionRef;
+      });
 
       const response = await walletTransferImpl.preprocessTransactionParams(transactionDTO, consumer.props.id);
-      expect(response).toStrictEqual({
-        ...transactionDTO,
-        debitConsumerIDOrTag: consumer.props.id,
-        creditAmount: transactionDTO.debitAmount,
-        creditCurrency: transactionDTO.debitCurrency,
-        exchangeRate: 1,
-      });
+      expect(response).toStrictEqual(inputTransaction);
     });
 
     it("should throw ServiceException if debitConsumerIDOrTag is set", async () => {
@@ -155,7 +157,7 @@ const getRandomConsumer = (consumerID: string): Consumer => {
 const getRandomTransaction = (
   debitConsumerID: string,
   creditConsumerID: string,
-): { transaction: Transaction; transactionDTO: InitiateTransactionDTO; inputTransaction: InputTransaction } => {
+): { transaction: Transaction; transactionDTO: InitiateTransactionDTO; inputTransaction: ProcessedTransactionDTO } => {
   const transaction: Transaction = {
     transactionRef: Utils.generateLowercaseUUID(true),
     exchangeRate: 1,
@@ -166,6 +168,7 @@ const getRandomTransaction = (
     memo: "New transaction",
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    transactionFees: [],
   };
 
   const transactionDTO: InitiateTransactionDTO = {
@@ -174,12 +177,11 @@ const getRandomTransaction = (
     memo: transaction.memo,
   };
 
-  const inputTransaction: InputTransaction = {
-    transactionRef: transaction.transactionRef,
+  const inputTransaction: ProcessedTransactionDTO = {
     workflowName: transaction.workflowName,
     exchangeRate: transaction.exchangeRate,
     memo: transaction.memo,
-    sessionKey: transaction.sessionKey,
+    transactionFees: [],
   };
 
   transaction.debitAmount = 100;
@@ -193,8 +195,6 @@ const getRandomTransaction = (
 
   inputTransaction.debitAmount = transaction.debitAmount;
   inputTransaction.debitCurrency = transaction.debitCurrency;
-  inputTransaction.debitConsumerID = transaction.debitConsumerID;
-  inputTransaction.creditConsumerID = transaction.creditConsumerID;
   inputTransaction.creditAmount = transaction.debitAmount;
   inputTransaction.creditCurrency = transaction.debitCurrency;
 

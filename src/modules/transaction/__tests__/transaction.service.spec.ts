@@ -43,9 +43,10 @@ import { getMockWalletWithdrawalImplWithDefaults } from "../mocks/mock.wallet.wi
 import { getMockWalletDepositImplWithDefaults } from "../mocks/mock.wallet.deposit.impl";
 import { BankFactory } from "../../../modules/psp/factory/bank.factory";
 import { getMockBankFactoryWithDefaults } from "../../../modules/psp/mocks/mock.bank.factory";
-import { BankName, DebitBankFactoryRequest } from "../../../modules/psp/domain/BankFactoryTypes";
+import { BankName } from "../../../modules/psp/domain/BankFactoryTypes";
 import { BankMonoImpl } from "../../../modules/psp/factory/bank.mono.impl";
 import { getMockBankMonoImplWithDefaults } from "../../../modules/psp/mocks/mock.bank.mono.impl";
+import { FeeType } from "../domain/TransactionFee";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -192,18 +193,14 @@ describe("TransactionServiceTests", () => {
     it("should initiate a WALLET_TRANSFER transaction", async () => {
       const consumer = getRandomConsumer("consumerID");
       const consumer2 = getRandomConsumer("consumerID2");
-      const { transaction, transactionDTO } = getRandomTransaction(consumer.props.id, consumer2.props.id);
+      const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(
+        consumer.props.id,
+        consumer2.props.id,
+      );
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
       });
 
-      const processedTransactionDTO: InitiateTransactionDTO = {
-        ...transactionDTO,
-        debitConsumerIDOrTag: consumer.props.id,
-        creditAmount: transactionDTO.debitAmount,
-        creditCurrency: transactionDTO.debitCurrency,
-        exchangeRate: 1,
-      };
       when(consumerService.getActiveConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerService.getActiveConsumer(consumer2.props.id)).thenResolve(consumer2);
       when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
@@ -211,7 +208,7 @@ describe("TransactionServiceTests", () => {
         instance(walletTransferImpl),
       );
       when(walletTransferImpl.preprocessTransactionParams(deepEqual(transactionDTO), consumer.props.id)).thenResolve(
-        processedTransactionDTO,
+        inputTransaction,
       );
       when(walletTransferImpl.initiateWorkflow(deepEqual(transaction))).thenResolve();
 
@@ -225,7 +222,7 @@ describe("TransactionServiceTests", () => {
 
       // IMPORTANT TO VERIFY THIS CORRECTLY :)
       const [propagatedTransactionToSave] = capture(transactionRepo.createTransaction).last();
-      expect(propagatedTransactionToSave).toEqual({
+      expect(propagatedTransactionToSave).toStrictEqual({
         transactionRef: transaction.transactionRef,
         workflowName: "WALLET_TRANSFER",
         debitConsumerID: "consumerID",
@@ -237,13 +234,23 @@ describe("TransactionServiceTests", () => {
         exchangeRate: 1, // Always 1 for wallet transfer
         sessionKey: transaction.sessionKey,
         memo: transaction.memo,
+        transactionFees: [
+          {
+            amount: 1,
+            currency: "USD",
+            type: "PROCESSING",
+          },
+        ],
       });
     });
 
     it("should add optional withdrawal details to repo during transaction", async () => {
       const consumer = getRandomConsumer("consumerID");
       const consumer2 = getRandomConsumer("consumerID2");
-      const { transaction, transactionDTO } = getRandomTransaction(consumer.props.id, consumer2.props.id);
+      const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(
+        consumer.props.id,
+        consumer2.props.id,
+      );
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
       });
@@ -256,14 +263,6 @@ describe("TransactionServiceTests", () => {
         documentType: DocumentType.CC,
       };
 
-      const processedTransactionDTO: InitiateTransactionDTO = {
-        ...transactionDTO,
-        debitConsumerIDOrTag: consumer.props.id,
-        creditAmount: transactionDTO.debitAmount,
-        creditCurrency: transactionDTO.debitCurrency,
-        exchangeRate: 1,
-        withdrawalData: withdrawalData,
-      };
       when(consumerService.getActiveConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerService.getActiveConsumer(consumer2.props.id)).thenResolve(consumer2);
       when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
@@ -280,7 +279,7 @@ describe("TransactionServiceTests", () => {
       );
 
       when(walletTransferImpl.preprocessTransactionParams(deepEqual(transactionDTO), consumer.props.id)).thenResolve(
-        processedTransactionDTO,
+        inputTransaction,
       );
       when(walletTransferImpl.initiateWorkflow(deepEqual(transaction))).thenResolve();
 
@@ -293,7 +292,7 @@ describe("TransactionServiceTests", () => {
       expect(returnedTransaction).toEqual(transaction);
 
       const [propagatedTransactionToSave] = capture(transactionRepo.createTransaction).last();
-      expect(propagatedTransactionToSave).toEqual({
+      expect(propagatedTransactionToSave).toStrictEqual({
         transactionRef: transaction.transactionRef,
         workflowName: "WALLET_TRANSFER",
         debitConsumerID: "consumerID",
@@ -305,29 +304,33 @@ describe("TransactionServiceTests", () => {
         exchangeRate: 1, // Always 1 for wallet transfer
         sessionKey: transaction.sessionKey,
         memo: transaction.memo,
+        transactionFees: [
+          {
+            amount: 1,
+            currency: "USD",
+            type: "PROCESSING",
+          },
+        ],
       });
     });
 
     it("should throw an exception if creditConsumerID of WALLET_TRANSFER is same as current user", async () => {
       const consumer = getRandomConsumer("consumerID");
-      const { transaction, transactionDTO } = getRandomTransaction(consumer.props.id, consumer.props.id);
+      const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(
+        consumer.props.id,
+        consumer.props.id,
+      );
       jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
         return transaction.transactionRef;
       });
-      const processedTransactionDTO: InitiateTransactionDTO = {
-        ...transactionDTO,
-        debitConsumerIDOrTag: consumer.props.id,
-        creditAmount: transactionDTO.debitAmount,
-        creditCurrency: transactionDTO.debitCurrency,
-        exchangeRate: 1,
-      };
+
       when(consumerService.getActiveConsumer(consumer.props.id)).thenResolve(consumer);
       when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
       when(workflowFactory.getWorkflowImplementation(WorkflowName.WALLET_TRANSFER)).thenReturn(
         instance(walletTransferImpl),
       );
       when(walletTransferImpl.preprocessTransactionParams(deepEqual(transactionDTO), consumer.props.id)).thenResolve(
-        processedTransactionDTO,
+        inputTransaction,
       );
 
       await expect(
@@ -749,6 +752,15 @@ const getRandomTransaction = (
     memo: "New transaction",
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    transactionFees: [
+      {
+        id: v4(),
+        amount: 1,
+        currency: Currency.USD,
+        type: FeeType.PROCESSING,
+        timestamp: new Date(),
+      },
+    ],
   };
 
   const transactionDTO: InitiateTransactionDTO = {
@@ -763,6 +775,13 @@ const getRandomTransaction = (
     exchangeRate: transaction.exchangeRate,
     memo: transaction.memo,
     sessionKey: transaction.sessionKey,
+    transactionFees: [
+      {
+        amount: 1,
+        currency: Currency.USD,
+        type: FeeType.PROCESSING,
+      },
+    ],
   };
 
   transaction.debitAmount = 100;

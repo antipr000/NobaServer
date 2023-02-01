@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { TransactionStatus, WorkflowName } from "../domain/Transaction";
 import { AddTransactionEventDTO, TransactionEventDTO } from "./TransactionEventDTO";
+import { FeeType } from "../domain/TransactionFee";
 
 export class ConsumerInformationDTO {
   @ApiProperty({ description: "The unique identifier of the user" })
@@ -14,6 +15,17 @@ export class ConsumerInformationDTO {
 
   @ApiPropertyOptional({ description: "The handle or 'tag' of the user, without $ prefix" })
   handle: string;
+}
+
+export class TransactionFeeDTO {
+  @ApiProperty()
+  amount: number;
+
+  @ApiProperty({ enum: FeeType })
+  type: FeeType;
+
+  @ApiProperty()
+  currency: string;
 }
 
 export class TransactionDTO {
@@ -65,6 +77,16 @@ export class TransactionDTO {
     isArray: true,
   })
   transactionEvents?: TransactionEventDTO[];
+
+  @ApiProperty({
+    description: "A list of fees that have been applied to this transaction",
+    type: TransactionFeeDTO,
+    isArray: true,
+  })
+  transactionFees: TransactionFeeDTO[];
+
+  @ApiProperty()
+  totalFees: number;
 }
 
 export class UpdateTransactionDTO {

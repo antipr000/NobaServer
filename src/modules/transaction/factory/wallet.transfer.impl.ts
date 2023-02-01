@@ -7,6 +7,7 @@ import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { TransactionFlags } from "../domain/TransactionFlags";
 import { Currency } from "../domain/TransactionTypes";
 import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
+import { ProcessedTransactionDTO } from "../dto/ProcessedTransactionDTO";
 
 export class WalletTransferImpl implements IWorkflowImpl {
   @Inject()
@@ -15,7 +16,7 @@ export class WalletTransferImpl implements IWorkflowImpl {
   async preprocessTransactionParams(
     transactionDetails: InitiateTransactionDTO,
     initiatingConsumer: string,
-  ): Promise<InitiateTransactionDTO> {
+  ): Promise<ProcessedTransactionDTO> {
     if (transactionDetails.debitConsumerIDOrTag) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -49,7 +50,16 @@ export class WalletTransferImpl implements IWorkflowImpl {
     transactionDetails.creditCurrency = transactionDetails.debitCurrency;
     transactionDetails.exchangeRate = 1;
 
-    return transactionDetails;
+    return {
+      creditAmount: transactionDetails.creditAmount,
+      creditCurrency: transactionDetails.creditCurrency,
+      debitAmount: transactionDetails.debitAmount,
+      debitCurrency: transactionDetails.debitCurrency,
+      exchangeRate: transactionDetails.exchangeRate,
+      workflowName: transactionDetails.workflowName,
+      memo: transactionDetails.memo,
+      transactionFees: [],
+    };
   }
 
   async initiateWorkflow(transaction: Transaction, options?: TransactionFlags[]): Promise<void> {

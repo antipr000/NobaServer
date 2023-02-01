@@ -6,10 +6,17 @@ generator client {
 }
 
 // See https://www.npmjs.com/package/prisma-erd-generator
-generator erd {
-  provider = "prisma-erd-generator"
-  theme    = "forest"
-}
+// TODO(CRYPTO-672) Commented out as errors occurred on AWS instances
+// generator erd {
+//   provider = "prisma-erd-generator"
+//   theme    = "forest"
+//   output   = "./generated/erd.svg"
+// }
+
+// generator erdmd {
+//   provider = "prisma-erd-generator"
+//   output   = "./generated/erd.md"
+// }
 
 datasource db {
   provider = "postgresql"
@@ -244,6 +251,7 @@ model Transaction {
   transactionEvents TransactionEvent[]
   Mono              Mono?
   WithdrawalDetails WithdrawalDetails[]
+  transactionFees   TransactionFee[]
 }
 
 model TransactionEvent {
@@ -260,6 +268,16 @@ model TransactionEvent {
   param3        String?
   param4        String?
   param5        String?
+}
+
+model TransactionFee {
+  id            String      @id @default(uuid())
+  transaction   Transaction @relation(fields: [transactionID], references: [id], onDelete: Cascade)
+  transactionID String
+  type          String
+  amount        Float
+  currency      String
+  timestamp     DateTime?   @default(now()) // Marking optional so we don't need to set in tests
 }
 
 model Mono {

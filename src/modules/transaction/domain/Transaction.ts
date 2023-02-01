@@ -1,8 +1,15 @@
-import { Transaction as PrismaTransactionModel } from "@prisma/client";
+import { Transaction as PrismaTransactionModel, TransactionFee as PrismaTransactionFeeModel } from "@prisma/client";
 import Joi from "joi";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { KeysRequired } from "../../../modules/common/domain/Types";
-import { BankName } from "../../../modules/psp/domain/BankFactoryTypes";
+import {
+  FeeType,
+  InputTransactionFee,
+  TransactionFee,
+  convertToDomainTransactionFee,
+  inputTransactionFeeJoiValidationKeys,
+  transactionFeeJoiValidationKeys,
+} from "./TransactionFee";
 
 export class Transaction {
   id: string;
@@ -18,6 +25,7 @@ export class Transaction {
   exchangeRate: number;
   memo?: string;
   sessionKey: string;
+  transactionFees: TransactionFee[];
   createdTimestamp?: Date;
   updatedTimestamp?: Date;
 }
@@ -53,6 +61,7 @@ export class InputTransaction {
   exchangeRate: number;
   memo?: string;
   sessionKey: string;
+  transactionFees: InputTransactionFee[];
 }
 
 export class UpdateTransaction {
@@ -86,6 +95,7 @@ export const validateInputTransaction = (transaction: InputTransaction) => {
     exchangeRate: Joi.number().required(),
     sessionKey: Joi.string().required(),
     memo: Joi.string().optional().allow(null, ""),
+    transactionFees: Joi.array().items(inputTransactionFeeJoiValidationKeys).required(),
   };
 
   const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({
@@ -122,6 +132,7 @@ export const validateSavedTransaction = (transaction: Transaction) => {
     memo: Joi.string().optional().allow(null),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
+    transactionFees: Joi.array().items(transactionFeeJoiValidationKeys).required(),
   };
 
   const transactionJoiSchema = Joi.object(transactionJoiValidationKeys).options({
@@ -152,7 +163,11 @@ export const validateUpdateTransaction = (transaction: UpdateTransaction) => {
   return Joi.attempt(transaction, transactionJoiSchema);
 };
 
-export const convertToDomainTransaction = (transaction: PrismaTransactionModel): Transaction => {
+export const convertToDomainTransaction = (
+  transaction: PrismaTransactionModel & {
+    transactionFees: PrismaTransactionFeeModel[];
+  },
+): Transaction => {
   const domainTransaction: Transaction = {
     id: transaction.id,
     transactionRef: transaction.transactionRef,
@@ -169,7 +184,16 @@ export const convertToDomainTransaction = (transaction: PrismaTransactionModel):
     memo: transaction.memo,
     createdTimestamp: transaction.createdTimestamp,
     updatedTimestamp: transaction.updatedTimestamp,
+    transactionFees: transaction.transactionFees.map(transactionFee => convertToDomainTransactionFee(transactionFee)),
   };
 
   return domainTransaction;
+};
+
+export const getFee = (transaction: Transaction, feeType: FeeType): TransactionFee => {
+  return transaction.transactionFees.find(transactionFee => transactionFee.type === feeType)[0];
+};
+
+export const getTotalFees = (transaction: Transaction): number => {
+  return transaction.transactionFees.reduce((total, transactionFee) => total + transactionFee.amount, 0);
 };

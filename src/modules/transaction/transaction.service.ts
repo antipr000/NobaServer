@@ -12,7 +12,6 @@ import { ITransactionRepo } from "./repo/transaction.repo";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { TRANSACTION_REPO_PROVIDER, WITHDRAWAL_DETAILS_REPO_PROVIDER } from "./repo/transaction.repo.module";
-import { Utils } from "../../core/utils/Utils";
 import { ConsumerService } from "../consumer/consumer.service";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
@@ -31,6 +30,8 @@ import { TransactionFlags } from "./domain/TransactionFlags";
 import { DebitBankResponse } from "./domain/Transaction";
 import { BankFactory } from "../psp/factory/bank.factory";
 import { BankName } from "../psp/domain/BankFactoryTypes";
+import { Utils } from "../../core/utils/Utils";
+import { ProcessedTransactionDTO } from "./dto/ProcessedTransactionDTO";
 
 @Injectable()
 export class TransactionService {
@@ -79,19 +80,18 @@ export class TransactionService {
     }
     const workflowImpl = this.transactionFactory.getWorkflowImplementation(transactionDetails.workflowName);
 
-    transactionDetails = await workflowImpl.preprocessTransactionParams(transactionDetails, initiatingConsumer);
+    const partialTransaction: ProcessedTransactionDTO = await workflowImpl.preprocessTransactionParams(
+      transactionDetails,
+      initiatingConsumer,
+    );
 
     const transaction: InputTransaction = {
-      creditAmount: transactionDetails.creditAmount,
-      creditCurrency: transactionDetails.creditCurrency,
-      debitAmount: transactionDetails.debitAmount,
-      debitCurrency: transactionDetails.debitCurrency,
-      exchangeRate: transactionDetails.exchangeRate,
-      workflowName: transactionDetails.workflowName,
-      memo: transactionDetails.memo,
-      sessionKey: sessionKey,
+      ...partialTransaction,
       transactionRef: Utils.generateLowercaseUUID(true),
+      sessionKey: sessionKey,
     };
+
+    transaction.sessionKey = sessionKey;
 
     // Ensure that consumers on both side of the transaction are in good standing
     if (transactionDetails.creditConsumerIDOrTag) {

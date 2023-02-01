@@ -2,19 +2,11 @@ import { INestApplication } from "@nestjs/common";
 import { bootstrap } from "../src/server";
 import { clearAccessTokenForNextRequests } from "./common";
 import { PrismaClient } from "@prisma/client";
+import { v4 } from "uuid";
 
-export class IntegrationTestUtility {
-  private port: number;
-  private postgres_connection_string: string;
-  private app: INestApplication;
-
-  static async setUp(port: number): Promise<IntegrationTestUtility> {
-    const setup = new IntegrationTestUtility();
-    setup.port = port;
-    setup.app = await bootstrap({});
-    await setup.app.listen(setup.port);
-    return setup;
-  }
+export abstract class TestUtility {
+  protected port: number;
+  protected app: INestApplication;
 
   async reset(): Promise<void> {
     clearAccessTokenForNextRequests();
@@ -55,5 +47,27 @@ export class IntegrationTestUtility {
 
   getRandomID(base: string): string {
     return `${base}.${Math.random()}`;
+  }
+
+  getRandomHandle(base: string): string {
+    return `${base}${v4().slice(0, 8).replace("-", "0")}`;
+  }
+
+  getRandomPhoneNumber(extension: string): string {
+    if (extension === "57") {
+      return `+${extension}1615${Math.floor(Math.random() * 9000) + 1000}`;
+    } else {
+      return `+${extension}${Math.floor(Math.random() * 9000000000) + 1000000000}`;
+    }
+  }
+}
+
+export class IntegrationTestUtility extends TestUtility {
+  static async setUp(port: number): Promise<IntegrationTestUtility> {
+    const setup = new IntegrationTestUtility();
+    setup.port = port;
+    setup.app = await bootstrap({});
+    await setup.app.listen(setup.port);
+    return setup;
   }
 }

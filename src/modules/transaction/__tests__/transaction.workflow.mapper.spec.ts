@@ -6,6 +6,7 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TransactionWorkflowMapper } from "../mapper/transaction.workflow.mapper";
 import { Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
 import { WorkflowTransactionDTO } from "../dto/transaction.workflow.controller.dto";
+import { FeeType } from "../domain/TransactionFee";
 
 describe("TransactionWorkflowMapperTest", () => {
   jest.setTimeout(20000);
@@ -49,6 +50,15 @@ describe("TransactionWorkflowMapperTest", () => {
         creditCurrency: "USD",
         creditConsumerID: "creditConsumerID",
         transactionRef: "transactionRef",
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+            id: "id",
+            timestamp: new Date(),
+          },
+        ],
       };
 
       const workflowTransactionDTO: WorkflowTransactionDTO =

@@ -9,11 +9,11 @@
  * to be set before any of it's class is even
  * imported.
  */
-import { setUpEnvironmentVariablesToLoadTheSourceCode } from "./setup";
+import { setUpEnvironmentVariablesToLoadTheSourceCode } from "../setup";
 const port: number = setUpEnvironmentVariablesToLoadTheSourceCode();
 
-import { computeSignature, loginAndGetResponse, setAccessTokenForTheNextRequests, TEST_API_KEY } from "./common";
-import { ResponseStatus } from "./api_client/core/request";
+import { computeSignature, loginAndGetResponse, setAccessTokenForTheNextRequests, TEST_API_KEY } from "../common";
+import { ResponseStatus } from "../api_client/core/request";
 import {
   CaseNotificationWebhookRequestDTO,
   ConsumerDTO,
@@ -25,11 +25,11 @@ import {
   VerificationResultDTO,
   VerificationService,
   VerificationWebhooksService,
-} from "./api_client";
+} from "../api_client";
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE } from "../src/modules/verification/integrations/fakes/FakeSardineResponses";
+import { FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE } from "../../src/modules/verification/integrations/fakes/FakeSardineResponses";
 import crypto_ts from "crypto";
-import { IntegrationTestUtility } from "./TestUtils";
+import { IntegrationTestUtility } from "../TestUtils";
 
 describe("Verification", () => {
   jest.setTimeout(20000);
@@ -117,7 +117,7 @@ describe("Verification", () => {
       requestBody: consumerInformation,
     })) as VerificationResultDTO & ResponseStatus;
 
-    expect(getVerifyConsumerInformationResponse.__status).toBe(201);
+    expect(getVerifyConsumerInformationResponse.__status).toBe(200);
     expect(getVerifyConsumerInformationResponse.status).toBe("Approved");
 
     signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));

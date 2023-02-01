@@ -16,6 +16,8 @@ import { Utils } from "../../../core/utils/Utils";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { NobaConfigs } from "../../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
+import { FeeType } from "../domain/TransactionFee";
+import { ProcessedTransactionDTO } from "../dto/ProcessedTransactionDTO";
 
 export class WalletDepositImpl implements IWorkflowImpl {
   private depositFeeFixedAmount: number;
@@ -46,7 +48,7 @@ export class WalletDepositImpl implements IWorkflowImpl {
   async preprocessTransactionParams(
     transactionDetails: InitiateTransactionDTO,
     initiatingConsumer: string,
-  ): Promise<InitiateTransactionDTO> {
+  ): Promise<ProcessedTransactionDTO> {
     if (transactionDetails.creditConsumerIDOrTag) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -83,6 +85,13 @@ export class WalletDepositImpl implements IWorkflowImpl {
     const isCollection =
       transactionDetails.options && transactionDetails.options.includes(TransactionFlags.IS_COLLECTION);
 
+    if (!isCollection) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "WALLET_DEPOSIT workflow only supports collection link",
+      });
+    }
+
     const transactionQuote = await this.getTransactionQuote(
       transactionDetails.debitAmount,
       transactionDetails.debitCurrency,
@@ -93,7 +102,27 @@ export class WalletDepositImpl implements IWorkflowImpl {
     transactionDetails.creditAmount = Number(transactionQuote.quoteAmountWithFees);
     transactionDetails.exchangeRate = Number(transactionQuote.nobaRate);
 
-    return transactionDetails;
+    return {
+      creditAmount: transactionDetails.creditAmount,
+      creditCurrency: transactionDetails.creditCurrency,
+      debitAmount: transactionDetails.debitAmount,
+      debitCurrency: transactionDetails.debitCurrency,
+      exchangeRate: transactionDetails.exchangeRate,
+      workflowName: transactionDetails.workflowName,
+      memo: transactionDetails.memo,
+      transactionFees: [
+        {
+          amount: Number(transactionQuote.nobaFee),
+          currency: Currency.USD,
+          type: FeeType.NOBA,
+        },
+        {
+          amount: Number(transactionQuote.processingFee),
+          currency: Currency.USD,
+          type: FeeType.PROCESSING,
+        },
+      ],
+    };
   }
 
   async initiateWorkflow(transaction: Transaction, options?: TransactionFlags[]): Promise<void> {
