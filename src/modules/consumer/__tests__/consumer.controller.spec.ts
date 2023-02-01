@@ -50,7 +50,11 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 1,
-    payrollDays: [1, 15],
+    payrollDates: [
+      new Date(Date.now() - 24 * 60 * 60 * 1000),
+      new Date(Date.now()),
+      new Date(Date.now() + 24 * 60 * 60 * 1000),
+    ],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -1094,7 +1098,7 @@ describe("ConsumerController", () => {
             allocationAmountInPesos: employee1.allocationAmount,
             employerReferralID: employer1.referralID,
             leadDays: employer1.leadDays,
-            payrollDays: employer1.payrollDays,
+            payrollDays: employer1.payrollDates,
           },
           {
             employerName: employer2.name,
@@ -1102,7 +1106,7 @@ describe("ConsumerController", () => {
             allocationAmountInPesos: employee2.allocationAmount,
             employerReferralID: employer2.referralID,
             leadDays: employer2.leadDays,
-            payrollDays: employer2.payrollDays,
+            payrollDays: employer2.payrollDates,
           },
           {
             employerName: employer3.name,
@@ -1110,7 +1114,7 @@ describe("ConsumerController", () => {
             allocationAmountInPesos: employee3.allocationAmount,
             employerReferralID: employer3.referralID,
             leadDays: employer3.leadDays,
-            payrollDays: employer3.payrollDays,
+            payrollDays: employer3.payrollDates,
           },
         ]),
       );

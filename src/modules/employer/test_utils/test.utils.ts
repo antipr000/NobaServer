@@ -1,13 +1,13 @@
 import { PrismaService } from "../../../infraproviders/PrismaService";
-import { uuid } from "uuidv4";
+import { v4 } from "uuid";
 
 export const createTestEmployer = async (prismaService: PrismaService): Promise<string> => {
   const savedEmployer = await prismaService.employer.create({
     data: {
-      name: uuid(),
-      bubbleID: uuid(),
+      name: v4(),
+      bubbleID: v4(),
       logoURI: "https://www.google.com",
-      referralID: uuid(),
+      referralID: v4(),
       leadDays: 1,
       payrollDates: [
         new Date(Date.now() - 24 * 60 * 60 * 1000),
