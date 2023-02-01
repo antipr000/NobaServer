@@ -33,7 +33,7 @@ import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEv
 import { SendPhoneVerificationCodeEvent } from "./events/SendPhoneVerificationCodeEvent";
 import { SendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
 import { IPushTokenRepo } from "./repos/pushtoken.repo";
-import { ServiceErrorCode, ServiceException } from "../../core/exception/ServiceException";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 
 @Injectable()
 export class NotificationService {

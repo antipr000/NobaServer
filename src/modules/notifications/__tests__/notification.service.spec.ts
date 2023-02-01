@@ -31,7 +31,7 @@ import { SendWithdrawalInitiatedEvent } from "../events/SendWithdrawalInitiatedE
 import { SendPhoneVerificationCodeEvent } from "../events/SendPhoneVerificationCodeEvent";
 import { IPushTokenRepo } from "../repos/pushtoken.repo";
 import { getMockPushTokenRepoWithDefaults } from "../mocks/mock.pushtoken.repo";
-import { ServiceException } from "../../../core/exception/ServiceException";
+import { ServiceException } from "../../../core/exception/service.exception";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
