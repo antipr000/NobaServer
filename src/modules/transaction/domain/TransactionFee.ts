@@ -20,7 +20,7 @@ export class TransactionFee extends InputTransactionFee {
 
 export const inputTransactionFeeJoiValidationKeys: KeysRequired<InputTransactionFee> = {
   amount: Joi.number().required(),
-  currency: Joi.string().required(),
+  currency: Joi.string().length(3).required(),
   type: Joi.string()
     .valid(...Object.values(FeeType))
     .required(),
@@ -30,7 +30,7 @@ export const transactionFeeJoiValidationKeys: KeysRequired<TransactionFee> = {
   id: Joi.string().required(),
   timestamp: Joi.date().required(),
   amount: Joi.number().required(),
-  currency: Joi.string().required(),
+  currency: Joi.string().length(3).required(),
   type: Joi.string()
     .valid(...Object.values(FeeType))
     .required(),

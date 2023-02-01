@@ -7,7 +7,7 @@ import { ServiceErrorCode, ServiceException } from "../../../core/exception/serv
 import { Currency } from "../domain/TransactionTypes";
 import { ExchangeRateService } from "../../common/exchangerate.service";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
-import { InputTransaction, Transaction } from "../domain/Transaction";
+import { Transaction } from "../domain/Transaction";
 import { TransactionFlags } from "../domain/TransactionFlags";
 import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
 import { Utils } from "../../../core/utils/Utils";
@@ -15,6 +15,7 @@ import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { NobaConfigs } from "../../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { FeeType } from "../domain/TransactionFee";
+import { ProcessedTransactionDTO } from "../dto/ProcessedTransactionDTO";
 
 export class WalletWithdrawalImpl implements IWorkflowImpl {
   private monoWithdrawalFeeAmount: number;
@@ -35,7 +36,7 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
   async preprocessTransactionParams(
     transactionDetails: InitiateTransactionDTO,
     initiatingConsumer: string,
-  ): Promise<InputTransaction> {
+  ): Promise<ProcessedTransactionDTO> {
     /* 
       For a withdrawal, the following are true:
         1. We set the debitConsumerIDOrTag to the initiating consumer (the consumer who is withdrawing)
@@ -98,7 +99,7 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
     transactionDetails.creditAmount = Number(transactionQuote.quoteAmountWithFees);
     transactionDetails.exchangeRate = Number(transactionQuote.nobaRate);
 
-    const transaction: InputTransaction = {
+    return {
       creditAmount: transactionDetails.creditAmount,
       creditCurrency: transactionDetails.creditCurrency,
       debitAmount: transactionDetails.debitAmount,
@@ -106,7 +107,6 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
       exchangeRate: transactionDetails.exchangeRate,
       workflowName: transactionDetails.workflowName,
       memo: transactionDetails.memo,
-      transactionRef: Utils.generateLowercaseUUID(true),
       transactionFees: [
         {
           amount: Number(transactionQuote.nobaFee),
@@ -120,8 +120,6 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
         },
       ],
     };
-
-    return transaction;
   }
 
   async initiateWorkflow(transaction: Transaction, options?: TransactionFlags[]): Promise<void> {

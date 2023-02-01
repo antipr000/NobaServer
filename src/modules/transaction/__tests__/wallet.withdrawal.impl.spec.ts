@@ -9,7 +9,7 @@ import {
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { v4 } from "uuid";
-import { InputTransaction, Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
+import { Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
 import { anyString, instance, verify, when } from "ts-mockito";
 import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { Currency } from "../domain/TransactionTypes";
@@ -23,6 +23,7 @@ import { ServiceException } from "../../../core/exception/service.exception";
 import { WalletWithdrawalImpl } from "../factory/wallet.withdrawal.impl";
 import { AccountType, DocumentType } from "../domain/WithdrawalDetails";
 import { FeeType } from "../domain/TransactionFee";
+import { ProcessedTransactionDTO } from "../dto/ProcessedTransactionDTO";
 
 describe("WalletWithdrawalImpl Tests", () => {
   jest.setTimeout(20000);
@@ -258,7 +259,7 @@ const getRandomConsumer = (consumerID: string): Consumer => {
 
 const getRandomTransaction = (
   debitConsumerID: string,
-): { transaction: Transaction; transactionDTO: InitiateTransactionDTO; inputTransaction: InputTransaction } => {
+): { transaction: Transaction; transactionDTO: InitiateTransactionDTO; inputTransaction: ProcessedTransactionDTO } => {
   const transaction: Transaction = {
     transactionRef: Utils.generateLowercaseUUID(true),
     exchangeRate: 4000,
@@ -300,8 +301,7 @@ const getRandomTransaction = (
     },
   };
 
-  const inputTransaction: InputTransaction = {
-    transactionRef: transaction.transactionRef,
+  const inputTransaction: ProcessedTransactionDTO = {
     workflowName: transaction.workflowName,
     exchangeRate: transaction.exchangeRate,
     memo: transaction.memo,

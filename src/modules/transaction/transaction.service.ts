@@ -30,6 +30,8 @@ import { TransactionFlags } from "./domain/TransactionFlags";
 import { DebitBankResponse } from "./domain/Transaction";
 import { BankFactory } from "../psp/factory/bank.factory";
 import { BankName } from "../psp/domain/BankFactoryTypes";
+import { Utils } from "../../core/utils/Utils";
+import { ProcessedTransactionDTO } from "./dto/ProcessedTransactionDTO";
 
 @Injectable()
 export class TransactionService {
@@ -78,10 +80,16 @@ export class TransactionService {
     }
     const workflowImpl = this.transactionFactory.getWorkflowImplementation(transactionDetails.workflowName);
 
-    const transaction: InputTransaction = await workflowImpl.preprocessTransactionParams(
+    const partialTransaction: ProcessedTransactionDTO = await workflowImpl.preprocessTransactionParams(
       transactionDetails,
       initiatingConsumer,
     );
+
+    const transaction: InputTransaction = {
+      ...partialTransaction,
+      transactionRef: Utils.generateLowercaseUUID(true),
+      sessionKey: sessionKey,
+    };
 
     transaction.sessionKey = sessionKey;
 

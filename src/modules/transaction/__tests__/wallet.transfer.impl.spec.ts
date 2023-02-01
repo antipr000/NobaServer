@@ -3,7 +3,7 @@ import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { v4 } from "uuid";
-import { InputTransaction, Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
+import { Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
 import { anyNumber, anyString, instance, verify, when } from "ts-mockito";
 import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { Currency } from "../domain/TransactionTypes";
@@ -13,6 +13,7 @@ import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consum
 import { Utils } from "../../../core/utils/Utils";
 import { ServiceException } from "../../../core/exception/service.exception";
 import { WalletTransferImpl } from "../factory/wallet.transfer.impl";
+import { ProcessedTransactionDTO } from "../dto/ProcessedTransactionDTO";
 
 describe("WalletTransferImpl Tests", () => {
   jest.setTimeout(20000);
@@ -156,7 +157,7 @@ const getRandomConsumer = (consumerID: string): Consumer => {
 const getRandomTransaction = (
   debitConsumerID: string,
   creditConsumerID: string,
-): { transaction: Transaction; transactionDTO: InitiateTransactionDTO; inputTransaction: InputTransaction } => {
+): { transaction: Transaction; transactionDTO: InitiateTransactionDTO; inputTransaction: ProcessedTransactionDTO } => {
   const transaction: Transaction = {
     transactionRef: Utils.generateLowercaseUUID(true),
     exchangeRate: 1,
@@ -176,8 +177,7 @@ const getRandomTransaction = (
     memo: transaction.memo,
   };
 
-  const inputTransaction: InputTransaction = {
-    transactionRef: transaction.transactionRef,
+  const inputTransaction: ProcessedTransactionDTO = {
     workflowName: transaction.workflowName,
     exchangeRate: transaction.exchangeRate,
     memo: transaction.memo,

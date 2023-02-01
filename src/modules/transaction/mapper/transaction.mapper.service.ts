@@ -1,6 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { Transaction, WorkflowName } from "../domain/Transaction";
-import { ConsumerInformationDTO, TransactionDTO } from "../dto/TransactionDTO";
+import { Transaction, WorkflowName, getTotalFees } from "../domain/Transaction";
+import { ConsumerInformationDTO, TransactionDTO, TransactionFeeDTO } from "../dto/TransactionDTO";
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
@@ -8,6 +8,7 @@ import { TransactionEvent } from "../domain/TransactionEvent";
 import { MonoTransaction } from "../../../modules/psp/domain/Mono";
 import { MonoService } from "../../../modules/psp/mono/mono.service";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
+import { TransactionFee } from "../domain/TransactionFee";
 
 @Injectable()
 export class TransactionMappingService {
@@ -68,10 +69,20 @@ export class TransactionMappingService {
       updatedTimestamp: transaction.updatedTimestamp,
       memo: transaction.memo,
       transactionEvents: transactionEvents?.map(event => this.toTransactionEventDTO(event)),
+      totalFees: getTotalFees(transaction),
+      transactionFees: transaction.transactionFees?.map(fee => this.toTransactionFeesDTO(fee)),
       ...(monoTransaction &&
         monoTransaction.collectionLinkDepositDetails && {
           paymentCollectionLink: monoTransaction.collectionLinkDepositDetails.collectionURL,
         }),
+    };
+  }
+
+  toTransactionFeesDTO(transactionFees: TransactionFee): TransactionFeeDTO {
+    return {
+      amount: transactionFees.amount,
+      currency: transactionFees.currency,
+      type: transactionFees.type,
     };
   }
 

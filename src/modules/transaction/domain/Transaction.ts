@@ -3,6 +3,7 @@ import Joi from "joi";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 import {
+  FeeType,
   InputTransactionFee,
   TransactionFee,
   convertToDomainTransactionFee,
@@ -59,7 +60,7 @@ export class InputTransaction {
   creditAmount?: number;
   exchangeRate: number;
   memo?: string;
-  sessionKey?: string; // Marking it optional here but Joi validates it to be required. This gives us flexibility to populate it later
+  sessionKey: string;
   transactionFees: InputTransactionFee[];
 }
 
@@ -187,4 +188,12 @@ export const convertToDomainTransaction = (
   };
 
   return domainTransaction;
+};
+
+export const getFee = (transaction: Transaction, feeType: FeeType): TransactionFee => {
+  return transaction.transactionFees.find(transactionFee => transactionFee.type === feeType)[0];
+};
+
+export const getTotalFees = (transaction: Transaction): number => {
+  return transaction.transactionFees.reduce((total, transactionFee) => total + transactionFee.amount, 0);
 };

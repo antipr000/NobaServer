@@ -1,13 +1,13 @@
 import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { IWorkflowImpl } from "./iworkflow.impl";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
-import { InputTransaction, Transaction } from "../domain/Transaction";
+import { Transaction } from "../domain/Transaction";
 import { Inject } from "@nestjs/common";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { TransactionFlags } from "../domain/TransactionFlags";
 import { Currency } from "../domain/TransactionTypes";
 import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
-import { Utils } from "../../../core/utils/Utils";
+import { ProcessedTransactionDTO } from "../dto/ProcessedTransactionDTO";
 
 export class WalletTransferImpl implements IWorkflowImpl {
   @Inject()
@@ -16,7 +16,7 @@ export class WalletTransferImpl implements IWorkflowImpl {
   async preprocessTransactionParams(
     transactionDetails: InitiateTransactionDTO,
     initiatingConsumer: string,
-  ): Promise<InputTransaction> {
+  ): Promise<ProcessedTransactionDTO> {
     if (transactionDetails.debitConsumerIDOrTag) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -50,7 +50,7 @@ export class WalletTransferImpl implements IWorkflowImpl {
     transactionDetails.creditCurrency = transactionDetails.debitCurrency;
     transactionDetails.exchangeRate = 1;
 
-    const transaction: InputTransaction = {
+    return {
       creditAmount: transactionDetails.creditAmount,
       creditCurrency: transactionDetails.creditCurrency,
       debitAmount: transactionDetails.debitAmount,
@@ -58,11 +58,8 @@ export class WalletTransferImpl implements IWorkflowImpl {
       exchangeRate: transactionDetails.exchangeRate,
       workflowName: transactionDetails.workflowName,
       memo: transactionDetails.memo,
-      transactionRef: Utils.generateLowercaseUUID(true),
       transactionFees: [],
     };
-
-    return transaction;
   }
 
   async initiateWorkflow(transaction: Transaction, options?: TransactionFlags[]): Promise<void> {

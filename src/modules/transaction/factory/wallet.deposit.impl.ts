@@ -7,7 +7,7 @@ import { ServiceErrorCode, ServiceException } from "../../../core/exception/serv
 import { Currency } from "../domain/TransactionTypes";
 import { ExchangeRateService } from "../../common/exchangerate.service";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
-import { InputTransaction, Transaction } from "../domain/Transaction";
+import { Transaction } from "../domain/Transaction";
 import { MonoService } from "../../psp/mono/mono.service";
 import { MonoCurrency, MonoTransactionType } from "../../psp/domain/Mono";
 import { TransactionFlags } from "../domain/TransactionFlags";
@@ -17,6 +17,7 @@ import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { NobaConfigs } from "../../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { FeeType } from "../domain/TransactionFee";
+import { ProcessedTransactionDTO } from "../dto/ProcessedTransactionDTO";
 
 export class WalletDepositImpl implements IWorkflowImpl {
   private depositFeeFixedAmount: number;
@@ -47,7 +48,7 @@ export class WalletDepositImpl implements IWorkflowImpl {
   async preprocessTransactionParams(
     transactionDetails: InitiateTransactionDTO,
     initiatingConsumer: string,
-  ): Promise<InputTransaction> {
+  ): Promise<ProcessedTransactionDTO> {
     if (transactionDetails.creditConsumerIDOrTag) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -94,7 +95,7 @@ export class WalletDepositImpl implements IWorkflowImpl {
     transactionDetails.creditAmount = Number(transactionQuote.quoteAmountWithFees);
     transactionDetails.exchangeRate = Number(transactionQuote.nobaRate);
 
-    const transaction: InputTransaction = {
+    return {
       creditAmount: transactionDetails.creditAmount,
       creditCurrency: transactionDetails.creditCurrency,
       debitAmount: transactionDetails.debitAmount,
@@ -102,7 +103,6 @@ export class WalletDepositImpl implements IWorkflowImpl {
       exchangeRate: transactionDetails.exchangeRate,
       workflowName: transactionDetails.workflowName,
       memo: transactionDetails.memo,
-      transactionRef: Utils.generateLowercaseUUID(true),
       transactionFees: [
         {
           amount: Number(transactionQuote.nobaFee),
@@ -116,8 +116,6 @@ export class WalletDepositImpl implements IWorkflowImpl {
         },
       ],
     };
-
-    return transaction;
   }
 
   async initiateWorkflow(transaction: Transaction, options?: TransactionFlags[]): Promise<void> {
