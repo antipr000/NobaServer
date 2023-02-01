@@ -19,7 +19,7 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 5,
-    payrollDays: [1, 15],
+    payrollDates: [new Date(Date.now() - 24 * 60 * 60 * 1000), new Date(Date.now() + 24 * 60 * 60 * 1000)],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -71,7 +71,7 @@ describe("EmployerServiceTests", () => {
         bubbleID: employer.bubbleID,
         referralID: employer.referralID,
         leadDays: employer.leadDays,
-        payrollDays: employer.payrollDays,
+        payrollDates: employer.payrollDates,
       });
 
       expect(createdEmployer).toEqual(employer);
@@ -83,7 +83,7 @@ describe("EmployerServiceTests", () => {
         referralID: employer.referralID,
         bubbleID: employer.bubbleID,
         leadDays: employer.leadDays,
-        payrollDays: employer.payrollDays,
+        payrollDates: employer.payrollDates,
       });
     });
 
@@ -96,7 +96,7 @@ describe("EmployerServiceTests", () => {
         logoURI: employer.logoURI,
         bubbleID: employer.bubbleID,
         referralID: employer.referralID,
-        payrollDays: employer.payrollDays,
+        payrollDates: employer.payrollDates,
       });
 
       employer.leadDays = 1;
@@ -109,33 +109,7 @@ describe("EmployerServiceTests", () => {
         referralID: employer.referralID,
         bubbleID: employer.bubbleID,
         leadDays: 1,
-        payrollDays: employer.payrollDays,
-      });
-    });
-
-    it("should set default 'payrollDays' as '[31]' if not specified", async () => {
-      const employer = getRandomEmployer();
-      when(employerRepo.createEmployer(anything())).thenResolve(employer);
-
-      const createdEmployer = await employerService.createEmployer({
-        name: employer.name,
-        logoURI: employer.logoURI,
-        bubbleID: employer.bubbleID,
-        referralID: employer.referralID,
-        leadDays: employer.leadDays,
-      });
-
-      employer.payrollDays = [31];
-      expect(createdEmployer).toEqual(employer);
-
-      const [propagatedEmployerCreateRequest] = capture(employerRepo.createEmployer).last();
-      expect(propagatedEmployerCreateRequest).toEqual({
-        name: employer.name,
-        logoURI: employer.logoURI,
-        referralID: employer.referralID,
-        bubbleID: employer.bubbleID,
-        leadDays: employer.leadDays,
-        payrollDays: [31],
+        payrollDates: employer.payrollDates,
       });
     });
 
@@ -151,38 +125,13 @@ describe("EmployerServiceTests", () => {
           bubbleID: employer.bubbleID,
           referralID: employer.referralID,
           leadDays: employer.leadDays,
-          payrollDays: employer.payrollDays,
+          payrollDates: employer.payrollDates,
         });
         expect(true).toBeFalsy();
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);
         expect(err.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
         expect(err.message).toEqual(expect.stringContaining("Lead days"));
-      }
-    });
-
-    it("should throw error if the payrollDays is invalid", async () => {
-      const variousInvalidpayrollDays: number[][] = [[0], [1, 15, 32], [15, 15], [15, 0]];
-
-      for (const invalidpayrollDays of variousInvalidpayrollDays) {
-        const employer = getRandomEmployer();
-        employer.payrollDays = invalidpayrollDays as any;
-
-        try {
-          await employerService.createEmployer({
-            name: employer.name,
-            logoURI: employer.logoURI,
-            bubbleID: employer.bubbleID,
-            referralID: employer.referralID,
-            leadDays: employer.leadDays,
-            payrollDays: employer.payrollDays,
-          });
-          expect(true).toBeFalsy();
-        } catch (err) {
-          expect(err).toBeInstanceOf(ServiceException);
-          expect(err.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
-          expect(err.message).toEqual(expect.stringContaining("payment schedules"));
-        }
       }
     });
   });
@@ -260,8 +209,12 @@ describe("EmployerServiceTests", () => {
       const employer = getRandomEmployer();
       when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
 
+      const payrollDates = [
+        new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        new Date(Date.now() + 17 * 24 * 60 * 60 * 1000),
+      ];
       const updatedEmployer = await employerService.updateEmployer(employer.id, {
-        payrollDays: [16, 29],
+        payrollDates: payrollDates,
       });
 
       expect(updatedEmployer).toEqual(employer);
@@ -269,7 +222,7 @@ describe("EmployerServiceTests", () => {
       const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
       expect(employerID).toEqual(employer.id);
       expect(propagatedEmployerUpdateRequest).toEqual({
-        payrollDays: [16, 29],
+        payrollDates: payrollDates,
       });
     });
 
@@ -296,7 +249,7 @@ describe("EmployerServiceTests", () => {
         logoURI: "https://new-logo-uri.com",
         referralID: "new-referral-id",
         leadDays: 4,
-        payrollDays: payrollDates,
+        payrollDates: payrollDates,
       });
     });
 

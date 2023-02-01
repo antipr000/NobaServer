@@ -21,7 +21,7 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 5,
-    payrollDays: [1, 15],
+    payrollDates: [new Date(Date.now() - 24 * 60 * 60 * 1000), new Date(Date.now() + 24 * 60 * 60 * 1000)],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -79,7 +79,7 @@ describe("EmployerControllerTests", () => {
         name: employer.name,
         logoURI: employer.logoURI,
         leadDays: employer.leadDays,
-        payrollDays: employer.payrollDays,
+        payrollDates: employer.payrollDates,
       });
     });
 
