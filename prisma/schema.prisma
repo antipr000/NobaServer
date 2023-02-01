@@ -249,6 +249,7 @@ model Transaction {
   transactionEvents TransactionEvent[]
   Mono              Mono?
   WithdrawalDetails WithdrawalDetails[]
+  transactionFees   TransactionFee[]
 }
 
 model TransactionEvent {
@@ -265,6 +266,16 @@ model TransactionEvent {
   param3        String?
   param4        String?
   param5        String?
+}
+
+model TransactionFee {
+  id            String      @id @default(uuid())
+  transaction   Transaction @relation(fields: [transactionID], references: [id], onDelete: Cascade)
+  transactionID String
+  type          FeeType
+  amount        Float
+  currency      String
+  timestamp     DateTime?   @default(now()) // Marking optional so we don't need to set in tests
 }
 
 model Mono {
@@ -424,4 +435,9 @@ enum TransactionType {
 
 enum TokenType {
   REFRESH_TOKEN
+}
+
+enum FeeType {
+  NOBA
+  PROCESSING
 }

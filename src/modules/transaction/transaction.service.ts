@@ -12,7 +12,6 @@ import { ITransactionRepo } from "./repo/transaction.repo";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { TRANSACTION_REPO_PROVIDER, WITHDRAWAL_DETAILS_REPO_PROVIDER } from "./repo/transaction.repo.module";
-import { Utils } from "../../core/utils/Utils";
 import { ConsumerService } from "../consumer/consumer.service";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
@@ -79,19 +78,12 @@ export class TransactionService {
     }
     const workflowImpl = this.transactionFactory.getWorkflowImplementation(transactionDetails.workflowName);
 
-    transactionDetails = await workflowImpl.preprocessTransactionParams(transactionDetails, initiatingConsumer);
+    const transaction: InputTransaction = await workflowImpl.preprocessTransactionParams(
+      transactionDetails,
+      initiatingConsumer,
+    );
 
-    const transaction: InputTransaction = {
-      creditAmount: transactionDetails.creditAmount,
-      creditCurrency: transactionDetails.creditCurrency,
-      debitAmount: transactionDetails.debitAmount,
-      debitCurrency: transactionDetails.debitCurrency,
-      exchangeRate: transactionDetails.exchangeRate,
-      workflowName: transactionDetails.workflowName,
-      memo: transactionDetails.memo,
-      sessionKey: sessionKey,
-      transactionRef: Utils.generateLowercaseUUID(true),
-    };
+    transaction.sessionKey = sessionKey;
 
     // Ensure that consumers on both side of the transaction are in good standing
     if (transactionDetails.creditConsumerIDOrTag) {

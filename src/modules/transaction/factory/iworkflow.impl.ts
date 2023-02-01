@@ -1,5 +1,5 @@
 import { TransactionFlags } from "../domain/TransactionFlags";
-import { Transaction, WorkflowName } from "../domain/Transaction";
+import { InputTransaction, Transaction } from "../domain/Transaction";
 import { Currency } from "../domain/TransactionTypes";
 import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
@@ -8,7 +8,7 @@ export interface IWorkflowImpl {
   preprocessTransactionParams(
     transactionDetails: InitiateTransactionDTO,
     initiatingConsumer: string,
-  ): Promise<InitiateTransactionDTO>;
+  ): Promise<InputTransaction>;
 
   initiateWorkflow(transaction: Transaction, options?: TransactionFlags[]): Promise<void>;
 

@@ -1,6 +1,7 @@
 import {
   Prisma,
   Transaction as PrismaTransactionModel,
+  TransactionFee as PrismaTransactionFeeModel,
   TransactionEvent as PrismaTransactionEventModel,
 } from "@prisma/client";
 import { Inject, Injectable } from "@nestjs/common";
@@ -32,6 +33,10 @@ import {
   validateInputTransactionEvent,
   validateSavedTransactionEvent,
 } from "../domain/TransactionEvent";
+
+type TransactionResponseType = PrismaTransactionModel & {
+  transactionFees: PrismaTransactionFeeModel[];
+};
 
 @Injectable()
 export class SQLTransactionRepo implements ITransactionRepo {
@@ -72,10 +77,20 @@ export class SQLTransactionRepo implements ITransactionRepo {
         ...(inputTransaction.memo && { memo: inputTransaction.memo }),
         ...(inputTransaction.sessionKey && { sessionKey: inputTransaction.sessionKey }),
         exchangeRate: inputTransaction.exchangeRate,
+        transactionFees: {
+          create: inputTransaction.transactionFees.map(transactionFee => {
+            return {
+              amount: transactionFee.amount,
+              currency: transactionFee.currency,
+              type: transactionFee.type,
+            };
+          }),
+        },
       };
 
-      const returnedTransaction: PrismaTransactionModel = await this.prismaService.transaction.create({
+      const returnedTransaction: TransactionResponseType = await this.prismaService.transaction.create({
         data: transactionInput,
+        include: { transactionFees: true },
       });
       savedTransaction = convertToDomainTransaction(returnedTransaction);
     } catch (err) {
@@ -98,13 +113,14 @@ export class SQLTransactionRepo implements ITransactionRepo {
 
   async getTransactionByID(transactionID: string): Promise<Transaction> {
     try {
-      const returnedTransaction: PrismaTransactionModel = await this.prismaService.transaction.findUnique({
+      const returnedTransaction: TransactionResponseType = await this.prismaService.transaction.findUnique({
         where: {
           id: transactionID,
         },
         include: {
           debitConsumer: false,
           creditConsumer: false,
+          transactionFees: true,
         },
       });
 
@@ -120,13 +136,14 @@ export class SQLTransactionRepo implements ITransactionRepo {
 
   async getTransactionByTransactionRef(transactionRef: string): Promise<Transaction> {
     try {
-      const returnedTransaction: PrismaTransactionModel = await this.prismaService.transaction.findUnique({
+      const returnedTransaction: TransactionResponseType = await this.prismaService.transaction.findUnique({
         where: {
           transactionRef: transactionRef,
         },
         include: {
           debitConsumer: false,
           creditConsumer: false,
+          transactionFees: true,
         },
       });
 
@@ -171,6 +188,9 @@ export class SQLTransactionRepo implements ITransactionRepo {
       orderBy: {
         createdTimestamp: "desc",
       },
+      include: {
+        transactionFees: true,
+      },
     };
 
     return await paginator(this.prismaService.transaction, filterQuery);
@@ -193,11 +213,14 @@ export class SQLTransactionRepo implements ITransactionRepo {
         ...(updateTransaction.creditCurrency && { creditCurrency: updateTransaction.creditCurrency }),
       };
 
-      const returnedTransaction: PrismaTransactionModel = await this.prismaService.transaction.update({
+      const returnedTransaction: TransactionResponseType = await this.prismaService.transaction.update({
         where: {
           id: transactionID,
         },
         data: transactionUpdate,
+        include: {
+          transactionFees: true,
+        },
       });
 
       return convertToDomainTransaction(returnedTransaction);

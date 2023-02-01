@@ -7,7 +7,7 @@ import { ServiceErrorCode, ServiceException } from "../../../core/exception/serv
 import { Currency } from "../domain/TransactionTypes";
 import { ExchangeRateService } from "../../common/exchangerate.service";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
-import { Transaction } from "../domain/Transaction";
+import { InputTransaction, Transaction } from "../domain/Transaction";
 import { MonoService } from "../../psp/mono/mono.service";
 import { MonoCurrency, MonoTransactionType } from "../../psp/domain/Mono";
 import { TransactionFlags } from "../domain/TransactionFlags";
@@ -16,6 +16,7 @@ import { Utils } from "../../../core/utils/Utils";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { NobaConfigs } from "../../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
+import { FeeType } from "@prisma/client";
 
 export class WalletDepositImpl implements IWorkflowImpl {
   private depositFeeFixedAmount: number;
@@ -46,7 +47,7 @@ export class WalletDepositImpl implements IWorkflowImpl {
   async preprocessTransactionParams(
     transactionDetails: InitiateTransactionDTO,
     initiatingConsumer: string,
-  ): Promise<InitiateTransactionDTO> {
+  ): Promise<InputTransaction> {
     if (transactionDetails.creditConsumerIDOrTag) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -93,7 +94,30 @@ export class WalletDepositImpl implements IWorkflowImpl {
     transactionDetails.creditAmount = Number(transactionQuote.quoteAmountWithFees);
     transactionDetails.exchangeRate = Number(transactionQuote.nobaRate);
 
-    return transactionDetails;
+    const transaction: InputTransaction = {
+      creditAmount: transactionDetails.creditAmount,
+      creditCurrency: transactionDetails.creditCurrency,
+      debitAmount: transactionDetails.debitAmount,
+      debitCurrency: transactionDetails.debitCurrency,
+      exchangeRate: transactionDetails.exchangeRate,
+      workflowName: transactionDetails.workflowName,
+      memo: transactionDetails.memo,
+      transactionRef: Utils.generateLowercaseUUID(true),
+      transactionFees: [
+        {
+          amount: Number(transactionQuote.nobaFee),
+          currency: Currency.USD,
+          type: FeeType.NOBA,
+        },
+        {
+          amount: Number(transactionQuote.processingFee),
+          currency: Currency.USD,
+          type: FeeType.PROCESSING,
+        },
+      ],
+    };
+
+    return transaction;
   }
 
   async initiateWorkflow(transaction: Transaction, options?: TransactionFlags[]): Promise<void> {
