@@ -85,6 +85,13 @@ export class WalletDepositImpl implements IWorkflowImpl {
     const isCollection =
       transactionDetails.options && transactionDetails.options.includes(TransactionFlags.IS_COLLECTION);
 
+    if (!isCollection) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "WALLET_DEPOSIT workflow only supports collection link",
+      });
+    }
+
     const transactionQuote = await this.getTransactionQuote(
       transactionDetails.debitAmount,
       transactionDetails.debitCurrency,

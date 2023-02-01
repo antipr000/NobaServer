@@ -163,6 +163,16 @@ describe("WalletDepositImpl Tests", () => {
         ServiceException,
       );
     });
+
+    it("should throw ServiceException if collection link is not set. (Required for now)", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transactionDTO } = getRandomTransaction(consumer.props.id);
+      transactionDTO.options = [];
+      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD)).thenResolve(exchangeRate);
+      await expect(walletDepositImpl.preprocessTransactionParams(transactionDTO, consumer.props.id)).rejects.toThrow(
+        ServiceException,
+      );
+    });
   });
 
   describe("initiateWorkflow", () => {
