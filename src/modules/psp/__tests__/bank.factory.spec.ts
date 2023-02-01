@@ -47,4 +47,11 @@ describe("BankFactory Tests", () => {
       expect(workflow).toBe(bankMonoImpl);
     });
   });
+
+  describe("getBankImplementationByCurrency", () => {
+    it("should return BankMonoImpl when currency is COP", () => {
+      const workflow = bankFactory.getBankImplementationByCurrency("COP");
+      expect(workflow).toBe(bankMonoImpl);
+    });
+  });
 });
