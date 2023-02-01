@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { IPushTokenRepo } from "./pushtoken.repo";
 
@@ -28,7 +29,10 @@ export class SQLPushTokenRepo implements IPushTokenRepo {
       return consumerPushToken.id;
     } catch (err) {
       this.logger.error(JSON.stringify(err));
-      // throw here
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: `Failed to get push token for consumerID: ${consumerID} and pushToken: ${pushToken}`,
+      });
     }
   }
 
@@ -47,7 +51,10 @@ export class SQLPushTokenRepo implements IPushTokenRepo {
       return createdPushToken.id;
     } catch (err) {
       this.logger.error(JSON.stringify(err));
-      // throw here
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: `Failed to add push token for consumerID: ${consumerID} and pushToken: ${pushToken}`,
+      });
     }
   }
 
@@ -68,7 +75,10 @@ export class SQLPushTokenRepo implements IPushTokenRepo {
       return deletedPushToken.id;
     } catch (err) {
       this.logger.error(JSON.stringify(err));
-      // throw here
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: `Failed to delete push token for consumerID: ${consumerID} and pushToken: ${pushToken}`,
+      });
     }
   }
 }
