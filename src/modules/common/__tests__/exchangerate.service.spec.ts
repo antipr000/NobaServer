@@ -31,9 +31,13 @@ describe("ExchangeRateService", () => {
     }).compile();
 
     exchangeRateService = app.get<ExchangeRateService>(ExchangeRateService);
+
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2020, 3, 1));
   });
 
   afterAll(async () => {
+    jest.useRealTimers();
     await app.close();
   });
 
@@ -48,7 +52,7 @@ describe("ExchangeRateService", () => {
         denominatorCurrency: "COP",
         bankRate: 5000,
         nobaRate: 4000,
-        expirationTimestamp: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // 24 hours from now
+        expirationTimestamp: new Date(Date.now() + 36 * 60 * 60 * 1000), // 36 hours from now
       };
 
       when(
@@ -84,7 +88,7 @@ describe("ExchangeRateService", () => {
         denominatorCurrency: "COP",
         bankRate: 5000,
         nobaRate: 4000,
-        expirationTimestamp: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // 24 hours from now
+        expirationTimestamp: new Date(new Date().getTime() + 36 * 60 * 60 * 1000), // 36 hours from now
       };
 
       when(
@@ -109,7 +113,7 @@ describe("ExchangeRateService", () => {
         denominatorCurrency: "COP",
         bankRate: 5000,
         nobaRate: 4000,
-        expirationTimestamp: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // 24 hours from now
+        expirationTimestamp: new Date(new Date().getTime() + 36 * 60 * 60 * 1000), // 36 hours from now
       };
 
       when(
@@ -134,7 +138,7 @@ describe("ExchangeRateService", () => {
         numeratorCurrency: "USD",
         denominatorCurrency: "COP",
         bankRate: 5000,
-        expirationTimestamp: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // 24 hours from now
+        expirationTimestamp: new Date(new Date().getTime() + 36 * 60 * 60 * 1000), // 36 hours from now
       };
 
       when(
@@ -154,9 +158,9 @@ describe("ExchangeRateService", () => {
       expect(true).toBe(true);
     });
 
-    it("Should set expirationTimestamp to 24 hours from now if not provided", async () => {
+    it("Should set expirationTimestamp to 36 hours from now if not provided", async () => {
       const currentTime = Date.now();
-      const tomorrowTime = new Date(currentTime + 24 * 60 * 60 * 1000);
+      const tomorrowTime = new Date(currentTime + 36 * 60 * 60 * 1000);
       const exchangeRateDTO: ExchangeRateDTO = {
         numeratorCurrency: "USD",
         denominatorCurrency: "COP",
@@ -181,7 +185,6 @@ describe("ExchangeRateService", () => {
 
       when(exchangeRateRepo.createExchangeRate(deepEqual(inputExchangeRate))).thenResolve(createdExchangeRate);
 
-      jest.spyOn(Date, "now").mockImplementationOnce(() => currentTime);
       const newExchangeRate = await exchangeRateService.createExchangeRate(exchangeRateDTO);
 
       expect(newExchangeRate).toEqual({
@@ -208,10 +211,12 @@ describe("ExchangeRateService", () => {
         denominatorCurrency: "COP",
         bankRate: 5000,
         nobaRate: 4000,
-        expirationTimestamp: new Date(createdTimestamp.getTime() + 24 * 60 * 60 * 1000), // 24 hours from now
+        expirationTimestamp: new Date(createdTimestamp.getTime() + 36 * 60 * 60 * 1000), // 36 hours from now
       };
 
-      when(exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
+      when(exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "COP", deepEqual(new Date()))).thenResolve(
+        exchangeRate,
+      );
 
       const returnExchangeRate = await exchangeRateService.getExchangeRateForCurrencyPair("USD", "COP");
 
@@ -220,22 +225,54 @@ describe("ExchangeRateService", () => {
         denominatorCurrency: "COP",
         bankRate: 5000,
         nobaRate: 4000,
-        expirationTimestamp: new Date(createdTimestamp.getTime() + 24 * 60 * 60 * 1000), // 24 hours from now
+        expirationTimestamp: new Date(createdTimestamp.getTime() + 36 * 60 * 60 * 1000), // 36 hours from now
       };
 
       expect(returnExchangeRate).toStrictEqual(expectedExchangeRateDTO);
     });
 
-    it("Should return null when unable to find exchange rate", async () => {
-      when(exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "XXX")).thenResolve(null);
+    it("Should return null when unable to find any exchange rate", async () => {
+      when(exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "XXX", deepEqual(new Date()))).thenResolve(null);
 
       const returnExchangeRate = await exchangeRateService.getExchangeRateForCurrencyPair("USD", "XXX");
 
       expect(returnExchangeRate).toBe(null);
     });
 
+    it("Should return most recently-expired exchange rate when unable to find current exchange rate", async () => {
+      const createdTimestamp = new Date();
+      const updatedTimestamp = new Date();
+      const id = "exchange-rate-1";
+
+      const expiredExchangeRate: ExchangeRate = {
+        id: id,
+        createdTimestamp: createdTimestamp,
+        updatedTimestamp: updatedTimestamp,
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 4000,
+        nobaRate: 3000,
+        expirationTimestamp: new Date(createdTimestamp.getTime() - 36 * 60 * 60 * 1000), // 36 hours in the past
+      };
+
+      when(exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "COP", deepEqual(new Date()))).thenResolve(null);
+      when(exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(expiredExchangeRate);
+
+      const returnExchangeRate = await exchangeRateService.getExchangeRateForCurrencyPair("USD", "COP");
+
+      const expectedExchangeRateDTO: ExchangeRateDTO = {
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 4000,
+        nobaRate: 3000,
+        expirationTimestamp: new Date(createdTimestamp.getTime() - 36 * 60 * 60 * 1000), // 36 hours in the past
+      };
+
+      expect(returnExchangeRate).toStrictEqual(expectedExchangeRateDTO);
+    });
+
     it("Should return null when an error is thrown", async () => {
-      when(exchangeRateRepo.getExchangeRateForCurrencyPair("XXX", "YYY")).thenThrow(
+      when(exchangeRateRepo.getExchangeRateForCurrencyPair("XXX", "YYY", deepEqual(new Date()))).thenThrow(
         new Error("Error getting exchange rate"),
       );
 

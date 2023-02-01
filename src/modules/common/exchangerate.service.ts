@@ -4,6 +4,7 @@ import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
 import { InputExchangeRate } from "./domain/ExchangeRate";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
+import { AlertKey, formatAlertLog } from "../../core/system.alerts";
 
 @Injectable()
 export class ExchangeRateService {
@@ -21,7 +22,7 @@ export class ExchangeRateService {
 
     // Default the expiration timestamp to 1 day
     if (exchangeRateDTO.expirationTimestamp == null) {
-      exchangeRateDTO.expirationTimestamp = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+      exchangeRateDTO.expirationTimestamp = new Date(Date.now() + 36 * 60 * 60 * 1000); // 36 hours from now
     }
 
     const exchangeRate: InputExchangeRate = {
@@ -58,9 +59,25 @@ export class ExchangeRateService {
     denominatorCurrency: string,
   ): Promise<ExchangeRateDTO> {
     // Clean existing otps for identifier if any
+    const date = new Date();
     try {
-      const rate = await this.exchangeRateRepo.getExchangeRateForCurrencyPair(numeratorCurrency, denominatorCurrency);
-      if (rate == null) return null;
+      let rate = await this.exchangeRateRepo.getExchangeRateForCurrencyPair(
+        numeratorCurrency,
+        denominatorCurrency,
+        date,
+      );
+
+      if (rate == null) {
+        rate = await this.exchangeRateRepo.getExchangeRateForCurrencyPair(numeratorCurrency, denominatorCurrency);
+        this.logger.error(
+          formatAlertLog(
+            AlertKey.STALE_FX_RATES,
+            `No exchange rate found for currency pair "${numeratorCurrency}-${denominatorCurrency}" that is not expired. Using rate that expired on ${rate.expirationTimestamp.toISOString()} with values of: bankRate=${
+              rate.bankRate
+            }, nobaRate=${rate.nobaRate}`,
+          ),
+        );
+      }
 
       return {
         numeratorCurrency: rate.numeratorCurrency,

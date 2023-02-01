@@ -56,15 +56,21 @@ export class SQLExchangeRateRepo implements IExchangeRateRepo {
     return savedExchangeRate;
   }
 
-  async getExchangeRateForCurrencyPair(numeratorCurrency: string, denominatorCurrency: string): Promise<ExchangeRate> {
+  async getExchangeRateForCurrencyPair(
+    numeratorCurrency: string,
+    denominatorCurrency: string,
+    expirationFilter?: Date,
+  ): Promise<ExchangeRate> {
     try {
       const exchangeRate: PrismaExchangeRateModel = await this.prismaService.exchangeRate.findFirst({
         where: {
           numeratorCurrency: numeratorCurrency.toUpperCase(),
           denominatorCurrency: denominatorCurrency.toUpperCase(),
-          expirationTimestamp: {
-            gte: new Date(),
-          },
+          ...(expirationFilter && {
+            expirationTimestamp: {
+              gte: expirationFilter,
+            },
+          }),
         },
         orderBy: {
           // The 'where' clause takes care of only getting exchange rates that have not expired

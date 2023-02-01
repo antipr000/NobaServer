@@ -29,9 +29,13 @@ describe("SQLExchangeRateRepo", () => {
 
     exchangeRateRepo = app.get<SQLExchangeRateRepo>(SQLExchangeRateRepo);
     prismaService = app.get<PrismaService>(PrismaService);
+
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2020, 3, 1));
   });
 
   afterAll(async () => {
+    jest.useRealTimers();
     await app.close();
   });
 
@@ -59,7 +63,7 @@ describe("SQLExchangeRateRepo", () => {
       });
 
       // Then find it
-      const exchangeRateFound = await exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "COP");
+      const exchangeRateFound = await exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "COP", new Date());
 
       expect(exchangeRateFound).not.toBeNull();
       expect(exchangeRateFound).toStrictEqual({
@@ -218,7 +222,7 @@ describe("SQLExchangeRateRepo", () => {
       expect(createdExchangeRate3).not.toBeNull();
 
       // Then find the latest (should be createdExchangeRate2)
-      const exchangeRateFound = await exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "TST");
+      const exchangeRateFound = await exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "TST", new Date());
 
       expect(exchangeRateFound).not.toBeNull();
       expect(exchangeRateFound).toStrictEqual({
@@ -234,7 +238,7 @@ describe("SQLExchangeRateRepo", () => {
     });
 
     it("Should return null if exchange rate is not found", async () => {
-      const exchangeRateFound = await exchangeRateRepo.getExchangeRateForCurrencyPair("XXX", "YYY");
+      const exchangeRateFound = await exchangeRateRepo.getExchangeRateForCurrencyPair("XXX", "YYY", new Date());
 
       expect(exchangeRateFound).toBeNull();
     });
@@ -251,6 +255,7 @@ describe("SQLExchangeRateRepo", () => {
       const exchangeRateFound = await exchangeRateRepo.getExchangeRateForCurrencyPair(
         inputExchangeRate.numeratorCurrency,
         inputExchangeRate.denominatorCurrency,
+        new Date(),
       );
 
       expect(exchangeRateFound).toBeNull();
@@ -261,7 +266,7 @@ describe("SQLExchangeRateRepo", () => {
         throw new Error("Error");
       });
 
-      const exchangeRateFound = await exchangeRateRepo.getExchangeRateForCurrencyPair("XXX", "YYY");
+      const exchangeRateFound = await exchangeRateRepo.getExchangeRateForCurrencyPair("XXX", "YYY", new Date());
 
       expect(exchangeRateFound).toBeNull();
     });
