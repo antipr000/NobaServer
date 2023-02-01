@@ -70,13 +70,13 @@ export class EmployerService {
     if (!id) {
       throw new ServiceException({
         message: "ID is required",
-        errorCode: ServiceErrorCode.UNKNOWN,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
     if (Object.keys(request).length === 0) {
       throw new ServiceException({
         message: "No fields to update",
-        errorCode: ServiceErrorCode.UNKNOWN,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
     if (request.leadDays !== undefined && request.leadDays !== null) {
@@ -98,7 +98,7 @@ export class EmployerService {
     if (!id) {
       throw new ServiceException({
         message: "ID is required",
-        errorCode: ServiceErrorCode.UNKNOWN,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
 
@@ -109,7 +109,7 @@ export class EmployerService {
     if (!referralID) {
       throw new ServiceException({
         message: "referralID is required",
-        errorCode: ServiceErrorCode.UNKNOWN,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
 
@@ -120,7 +120,7 @@ export class EmployerService {
     if (!bubbleID) {
       throw new ServiceException({
         message: "bubbleID is required",
-        errorCode: ServiceErrorCode.UNKNOWN,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
 
