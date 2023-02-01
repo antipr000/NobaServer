@@ -9,20 +9,20 @@
  * to be set before any of it's class is even
  * imported.
  */
-import { setUpEnvironmentVariablesToLoadTheSourceCode } from "./setup";
+import { setUpEnvironmentVariablesToLoadTheSourceCode } from "../setup";
 const port: number = setUpEnvironmentVariablesToLoadTheSourceCode();
 
-import { ResponseStatus } from "./api_client/core/request";
-import { AdminService, DeleteNobaAdminDTO } from "./api_client";
-import { NobaAdminDTO } from "../src/modules/admin/dto/NobaAdminDTO";
+import { ResponseStatus } from "../api_client/core/request";
+import { AdminService, DeleteNobaAdminDTO } from "../api_client";
+import { NobaAdminDTO } from "../../src/modules/admin/dto/NobaAdminDTO";
 import {
   computeSignature,
   insertNobaAdmin,
   loginAndGetResponse,
   setAccessTokenForTheNextRequests,
   TEST_API_KEY,
-} from "./common";
-import { IntegrationTestUtility } from "./TestUtils";
+} from "../common";
+import { IntegrationTestUtility } from "../TestUtils";
 
 describe("Noba Admin", () => {
   jest.setTimeout(20000);

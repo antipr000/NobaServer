@@ -2,7 +2,6 @@ import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { bootstrap } from "../../src/server";
 import { TestUtility } from "../TestUtils";
 import { TEST_API_KEY, computeSignature } from "../common";
-import { Prisma, PrismaClient } from "@prisma/client";
 
 export class EndToEndTestUtils extends TestUtility {
   private apiClient: AxiosInstance;
@@ -54,55 +53,5 @@ export class EndToEndTestUtils extends TestUtility {
         ...(await this.calculateSignatureHeaders("PATCH", endpoint, JSON.stringify(body))),
       },
     });
-  }
-
-  async prepareOnboardedConsumer(): Promise<string> {
-    const email = this.getRandomEmail("john.doe");
-    const phone = this.getRandomPhoneNumber("57");
-    const handle = this.getRandomHandle("john.doe");
-
-    const prisma = new PrismaClient();
-    await prisma.$connect();
-
-    const consumerCreateInput: Prisma.ConsumerCreateInput = {
-      email,
-      phone,
-      handle,
-      referralCode: this.getRandomID("referralCode"),
-      firstName: "John",
-      lastName: "Doe",
-      displayEmail: email,
-      locale: "en",
-      dateOfBirth: "1990-01-01",
-      address: {
-        create: {
-          streetLine1: "123 Main St",
-          streetLine2: "Apt 1",
-          city: "Bogota",
-          regionCode: "BO",
-          countryCode: "CO",
-          postalCode: "123456",
-        },
-      },
-      verificationData: {
-        create: {
-          kycCheckReference: this.getRandomID("kyc"),
-          documentCheckReference: this.getRandomID("document"),
-          provider: "SARDINE",
-          riskLevel: "LOW",
-          riskRating: "1.0",
-          kycCheckStatus: "APPROVED",
-          documentVerificationStatus: "APPROVED",
-          kycVerificationTimestamp: new Date(),
-          documentVerificationTimestamp: new Date(),
-        },
-      },
-    };
-
-    await prisma.consumer.create({
-      data: consumerCreateInput,
-    });
-
-    return email;
   }
 }

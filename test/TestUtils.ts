@@ -2,7 +2,7 @@ import { INestApplication } from "@nestjs/common";
 import { bootstrap } from "../src/server";
 import { clearAccessTokenForNextRequests } from "./common";
 import { PrismaClient } from "@prisma/client";
-import { uuid } from "uuidv4";
+import { v4 } from "uuid";
 
 export abstract class TestUtility {
   protected port: number;
@@ -50,7 +50,7 @@ export abstract class TestUtility {
   }
 
   getRandomHandle(base: string): string {
-    return `${base}${uuid().slice(0, 8).replace("-", "0")}`;
+    return `${base}${v4().slice(0, 8).replace("-", "0")}`;
   }
 
   getRandomPhoneNumber(extension: string): string {

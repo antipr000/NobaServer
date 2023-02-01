@@ -41,11 +41,11 @@ jobs:
         env:
           DATABASE_URL: postgresql://e2e_user:pass@localhost:5456/Noba_E2E?connect_timeout=300
         run: yarn prisma-clean-init
-      
-      - name: E2E Tests
+
+      - name: Integration tests
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           DATABASE_URL: postgresql://e2e_user:pass@localhost:5456/Noba_E2E?connect_timeout=300
-        run: yarn test:e2e
+        run: yarn test:integration

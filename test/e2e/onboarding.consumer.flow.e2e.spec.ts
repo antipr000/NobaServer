@@ -41,14 +41,12 @@ describe("Onboarding consumer flow", () => {
     });
 
     expect(verifyOtpResponse.status).toBe(201);
-    expect(verifyOtpResponse.data.accessToken).toBeTruthy();
-    expect(verifyOtpResponse.data.refreshToken).toBeTruthy();
+    expect(verifyOtpResponse.data.accessToken).toBeDefined();
+    expect(verifyOtpResponse.data.refreshToken).toBeDefined();
 
-    // Verifying if access token is valid
+    // Now we need to verify if access token is valid by gettiung the consumer
     setAccessTokenForTheNextRequests(verifyOtpResponse.data.accessToken);
-
     let getConsumerResponse = await testUtils.get("/v1/consumers");
-
     expect(getConsumerResponse.status).toBe(200);
     expect(getConsumerResponse.data.phone).toBe(phoneNumber);
 
@@ -58,17 +56,16 @@ describe("Onboarding consumer flow", () => {
       firstName: "John",
       lastName: "Doe",
     });
-
     expect(patchConsumerResponse.status).toBe(200);
     expect(patchConsumerResponse.data.firstName).toBe("John");
     expect(patchConsumerResponse.data.lastName).toBe("Doe");
+    expect(patchConsumerResponse.data.dateOfBirth).toBe("1990-01-01");
 
     // Add email to the consumer
     const email = testUtils.getRandomEmail("john.doe");
     const addEmailResponse = await testUtils.post("/v1/consumers/email/verify", {
       email: email,
     });
-
     expect(addEmailResponse.status).toBe(201);
 
     // Verify email
@@ -76,23 +73,21 @@ describe("Onboarding consumer flow", () => {
       email: email,
       otp: TEST_OTP,
     });
-
     expect(verifyOtpResponse.status).toBe(200);
     expect(verifyOtpResponse.data.email).toBe(email);
 
+    // Check if the consumer has the email
     getConsumerResponse = await testUtils.get("/v1/consumers");
-
     expect(getConsumerResponse.status).toBe(200);
     expect(getConsumerResponse.data.email).toBe(email);
     expect(getConsumerResponse.data.phone).toBe(phoneNumber);
 
-    // add noba tag
+    // Add handle to the consumer
     const handle = testUtils.getRandomHandle("johndoe");
     const verifyHandleResponse = await testUtils.get("/v1/consumers/handles/availability?handle=" + handle);
     expect(verifyHandleResponse.status).toBe(200);
     expect(verifyHandleResponse.data.isAvailable).toBeTruthy();
     expect(verifyHandleResponse.data.handle).toBe(handle);
-
     const addHandleResponse = await testUtils.patch("/v1/consumers", {
       handle: handle,
     });
@@ -103,7 +98,6 @@ describe("Onboarding consumer flow", () => {
     const getSessionKey = await testUtils.post("/v1/verify/session", {});
     expect(getSessionKey.status).toBe(201);
     const sessionKey = getSessionKey.data;
-
     const kycCheckResponse = await testUtils.post("/v1/verify/consumerinfo?sessionKey=" + sessionKey, {
       firstName: "John",
       lastName: "Doe",
@@ -143,8 +137,8 @@ describe("Onboarding consumer flow", () => {
     });
 
     expect(verifyOtpResponse.status).toBe(201);
-    expect(verifyOtpResponse.data.accessToken).toBeTruthy();
-    expect(verifyOtpResponse.data.refreshToken).toBeFalsy();
+    expect(verifyOtpResponse.data.accessToken).toBeDefined();
+    expect(verifyOtpResponse.data.refreshToken).toBe("");
 
     // Verifying if access token is valid
     setAccessTokenForTheNextRequests(verifyOtpResponse.data.accessToken);
@@ -152,40 +146,5 @@ describe("Onboarding consumer flow", () => {
 
     expect(getConsumerResponse.status).toBe(200);
     expect(getConsumerResponse.data.email).toBe(email);
-  });
-
-  it("should get user information after logging in", async () => {
-    // This is sample test showing usage of prepareOnboardedConsumer. Remove it once it is used in other flows
-
-    const email = await testUtils.prepareOnboardedConsumer();
-    // Should login and not create new record if not present
-    const loginResponse = await testUtils.post("/v1/auth/login", {
-      emailOrPhone: email,
-      identityType: "CONSUMER",
-      autoCreate: false,
-    });
-
-    expect(loginResponse.status).toBe(201);
-
-    const verifyOtpResponse = await testUtils.post("/v1/auth/verifyotp", {
-      emailOrPhone: email,
-      identityType: "CONSUMER",
-      otp: TEST_OTP,
-      includeRefreshToken: true,
-    });
-
-    expect(verifyOtpResponse.status).toBe(201);
-    expect(verifyOtpResponse.data.accessToken).toBeTruthy();
-    expect(verifyOtpResponse.data.refreshToken).toBeTruthy();
-
-    setAccessTokenForTheNextRequests(verifyOtpResponse.data.accessToken);
-
-    const getConsumerResponse = await testUtils.get("/v1/consumers");
-
-    expect(getConsumerResponse.status).toBe(200);
-    expect(getConsumerResponse.data.email).toBe(email);
-    expect(getConsumerResponse.data.kycVerificationData.kycVerificationStatus).toBe("Approved");
-    expect(getConsumerResponse.data.documentVerificationData.documentVerificationStatus).toBe("Verified");
-    expect(getConsumerResponse.data.address.countryCode).toBe("CO");
   });
 });

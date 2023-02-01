@@ -9,15 +9,15 @@
  * to be set before any of it's class is even
  * imported.
  */
-import { setUpEnvironmentVariablesToLoadTheSourceCode } from "./setup";
+import { setUpEnvironmentVariablesToLoadTheSourceCode } from "../setup";
 const port: number = setUpEnvironmentVariablesToLoadTheSourceCode();
 
-import { AuthenticationService, LoginRequestDTO, VerifyOtpRequestDTO, LoginResponseDTO } from "./api_client";
-import { ConsumerService } from "./api_client/services/ConsumerService";
-import { ConsumerDTO } from "./api_client/models/ConsumerDTO";
-import { computeSignature, insertNobaAdmin, setAccessTokenForTheNextRequests, TEST_OTP, TEST_API_KEY } from "./common";
-import { ResponseStatus } from "./api_client/core/request";
-import { IntegrationTestUtility } from "./TestUtils";
+import { AuthenticationService, LoginRequestDTO, VerifyOtpRequestDTO, LoginResponseDTO } from "../api_client";
+import { ConsumerService } from "../api_client/services/ConsumerService";
+import { ConsumerDTO } from "../api_client/models/ConsumerDTO";
+import { computeSignature, insertNobaAdmin, setAccessTokenForTheNextRequests, TEST_OTP, TEST_API_KEY } from "../common";
+import { ResponseStatus } from "../api_client/core/request";
+import { IntegrationTestUtility } from "../TestUtils";
 
 describe("Authentication", () => {
   jest.setTimeout(20000);
