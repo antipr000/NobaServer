@@ -20,4 +20,16 @@ export class BankFactory {
         });
     }
   }
+
+  getBankImplementationByCurrency(currency: string): IBankImpl {
+    switch (currency) {
+      case "COP":
+        return this.getBankImplementation(BankName.MONO);
+      default:
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: "Invalid currency",
+        });
+    }
+  }
 }

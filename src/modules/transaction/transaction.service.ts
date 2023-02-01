@@ -303,7 +303,7 @@ export class TransactionService {
       });
     }
 
-    const bank = this.bankFactory.getBankImplementation(BankName.MONO);
+    const bank = this.bankFactory.getBankImplementationByCurrency(transaction.creditCurrency);
     const debitBankResponse = await bank.debit({
       amount: transaction.creditAmount,
       currency: transaction.creditCurrency,
