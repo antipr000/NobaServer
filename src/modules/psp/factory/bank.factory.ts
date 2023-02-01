@@ -28,7 +28,7 @@ export class BankFactory {
       default:
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-          message: "Invalid currency",
+          message: "No supported bank for currency",
         });
     }
   }
