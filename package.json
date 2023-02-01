@@ -20,12 +20,13 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test:prisma-migrate": "yarn prisma-migrate-deploy && yarn test:unit",
-    "test": "yarn test:unit && yarn test:e2e",
+    "test": "yarn test:unit && yarn test:integration && yarn test:e2e",
     "test:unit": "jest --runInBand --verbose --silent=False",
     "test:watch": "jest --watch",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:cov": "yarn test:unit --coverage",
-    "test:e2e": "jest --verbose --silent --runInBand --config ./test/jest-e2e.json",
+    "test:integration": "jest --verbose --silent --runInBand --config ./test/integration/jest-integration.json",
+    "test:e2e": "jest --verbose --silent --runInBand --config ./test/e2e/jest-e2e.json",
     "gen-test-api-client": "npx openapi-typescript-codegen --useOptions --input ./swagger-internal.json --output ./test/api_client/ --useUnionTypes --exportCore false -c axios && npx prettier --write ."
   },
   "dependencies": {

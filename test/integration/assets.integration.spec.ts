@@ -9,23 +9,23 @@
  * to be set before any of it's class is even
  * imported.
  */
-import { setUpEnvironmentVariablesToLoadTheSourceCode } from "./setup";
+import { setUpEnvironmentVariablesToLoadTheSourceCode } from "../setup";
 setUpEnvironmentVariablesToLoadTheSourceCode();
 
 import { BadRequestException, INestApplication } from "@nestjs/common";
 //import { MongoMemoryServer } from "mongodb-memory-server";
 //import mongoose from "mongoose";
-import { bootstrap } from "../src/server";
+import { bootstrap } from "../../src/server";
 import {
   clearAccessTokenForNextRequests,
   computeSignature,
   loginAndGetResponse,
   setAccessTokenForTheNextRequests,
   TEST_API_KEY,
-} from "./common";
-import { ResponseStatus } from "./api_client/core/request";
-import { AssetsService, CurrencyDTO, LocationDTO } from "./api_client";
-import { ConfigurationsDTO } from "./api_client/models/ConfigurationsDTO";
+} from "../common";
+import { ResponseStatus } from "../api_client/core/request";
+import { AssetsService, CurrencyDTO, LocationDTO } from "../api_client";
+import { ConfigurationsDTO } from "../api_client/models/ConfigurationsDTO";
 
 const currencyIconBasePath = "https://dj61eezhizi5l.cloudfront.net/assets/images/currency-logos/crypto";
 
