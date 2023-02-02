@@ -66,7 +66,7 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 1,
-    payrollDays: [30],
+    payrollDates: [new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };

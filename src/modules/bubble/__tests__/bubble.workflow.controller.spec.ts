@@ -93,7 +93,7 @@ describe("BubbleWorkflowControllerTests", () => {
         logoURI: "logoURI",
         name: "name",
         referralID: "referralID",
-        payrollDays: [5],
+        payrollDates: [new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)],
       };
       when(bubbleService.registerEmployerInNoba(anything())).thenResolve("nobaEmployerID");
 
@@ -107,7 +107,7 @@ describe("BubbleWorkflowControllerTests", () => {
         logoURI: "logoURI",
         name: "name",
         referralID: "referralID",
-        payrollDays: [5],
+        payrollDates: [new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)],
       });
     });
   });
