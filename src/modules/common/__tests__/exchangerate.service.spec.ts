@@ -8,6 +8,7 @@ import { ExchangeRateService } from "../exchangerate.service";
 import { getMockExchangeRateRepoWithDefaults } from "../mocks/mock.exchangerate.repo";
 import { IExchangeRateRepo } from "../repo/exchangerate.repo";
 import { ServiceException } from "../../../core/exception/service.exception";
+import * as alertUtils from "../../../core/system.alerts";
 
 describe("ExchangeRateService", () => {
   let exchangeRateService: ExchangeRateService;
@@ -257,6 +258,7 @@ describe("ExchangeRateService", () => {
 
       when(exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "COP", deepEqual(new Date()))).thenResolve(null);
       when(exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(expiredExchangeRate);
+      const alertLogSpy = jest.spyOn(alertUtils, "formatAlertLog");
 
       const returnExchangeRate = await exchangeRateService.getExchangeRateForCurrencyPair("USD", "COP");
 
@@ -268,6 +270,7 @@ describe("ExchangeRateService", () => {
         expirationTimestamp: new Date(createdTimestamp.getTime() - 36 * 60 * 60 * 1000), // 36 hours in the past
       };
 
+      expect(alertLogSpy).toHaveBeenCalledWith(expect.objectContaining({ key: "STALE_FX_RATES" }));
       expect(returnExchangeRate).toStrictEqual(expectedExchangeRateDTO);
     });
 
