@@ -9,22 +9,10 @@ export class BankFactory {
   @Inject()
   private readonly bankMonoImpl: BankMonoImpl;
 
-  getBankImplementation(bankName: BankName): IBankImpl {
-    switch (bankName) {
-      case BankName.MONO:
-        return this.bankMonoImpl;
-      default:
-        throw new ServiceException({
-          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-          message: "Invalid bank name",
-        });
-    }
-  }
-
   getBankImplementationByCurrency(currency: string): IBankImpl {
     switch (currency) {
       case "COP":
-        return this.getBankImplementation(BankName.MONO);
+        return this.bankMonoImpl;
       default:
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
