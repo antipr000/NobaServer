@@ -9,11 +9,7 @@ export const createTestEmployer = async (prismaService: PrismaService): Promise<
       logoURI: "https://www.google.com",
       referralID: v4(),
       leadDays: 1,
-      payrollDates: [
-        new Date(Date.now() - 24 * 60 * 60 * 1000),
-        new Date(Date.now()),
-        new Date(Date.now() + 24 * 60 * 60 * 1000),
-      ],
+      payrollDates: ["2020-02-29", "2020-03-01", "2020-03-02"],
     },
   });
 
