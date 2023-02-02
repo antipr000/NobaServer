@@ -9,7 +9,7 @@ import {
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NOBA_WORKFLOW_CONFIG_KEY } from "../../config/ConfigurationUtils";
-
+import { WorkflowName } from "./workflow";
 @Injectable()
 export class WorkflowExecutor {
   private workflowConfigs: NobaWorkflowConfig;
@@ -57,21 +57,21 @@ export class WorkflowExecutor {
     return handle.workflowId;
   }
 
-  public async executeDebitConsumerWalletWorkflow(transactionID: string, workflowID: string): Promise<string> {
-    return await this.executeWorkflow("DebitConsumerWallet", workflowID, [transactionID]);
+  public async executeWalletWithdrawalWorkflow(transactionID: string, workflowID: string): Promise<string> {
+    return await this.executeWorkflow(WorkflowName.WALLET_WITHDRAWAL, workflowID, [transactionID]);
   }
 
-  public async executeCreditConsumerWalletWorkflow(transactionID: string, workflowID: string): Promise<string> {
-    return await this.executeWorkflow("CreditConsumerWallet", workflowID, [transactionID]);
+  public async executeWalletDepositWorkflow(transactionID: string, workflowID: string): Promise<string> {
+    return await this.executeWorkflow(WorkflowName.WALLET_DEPOSIT, workflowID, [transactionID]);
   }
 
-  public async executeConsumerWalletTransferWorkflow(
+  public async executeWalletTransferWorkflow(
     sourceConsumerID: string,
     destinationConsumerID: string,
     amount: number,
     workflowID: string,
   ): Promise<string> {
-    return await this.executeWorkflow("ConsumerWalletTransfer", workflowID, [
+    return await this.executeWorkflow(WorkflowName.WALLET_TRANSFER, workflowID, [
       sourceConsumerID,
       destinationConsumerID,
       amount,

@@ -175,11 +175,11 @@ describe("WalletWithdrawalImpl Tests", () => {
       const consumer = getRandomConsumer("consumerID");
       const { transaction } = getRandomTransaction(consumer.props.id);
 
-      when(workflowExecutor.executeDebitConsumerWalletWorkflow(anyString(), anyString())).thenResolve();
+      when(workflowExecutor.executeWalletWithdrawalWorkflow(anyString(), anyString())).thenResolve();
 
       await walletWithdrawalImpl.initiateWorkflow(transaction);
 
-      verify(workflowExecutor.executeDebitConsumerWalletWorkflow(transaction.id, transaction.id)).once();
+      verify(workflowExecutor.executeWalletWithdrawalWorkflow(transaction.id, transaction.id)).once();
     });
 
     it("should throw ServiceException if both credit and debit consumer id is set", async () => {

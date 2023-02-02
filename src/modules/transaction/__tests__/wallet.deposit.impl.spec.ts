@@ -192,11 +192,11 @@ describe("WalletDepositImpl Tests", () => {
         ),
       ).thenResolve();
 
-      when(workflowExecutor.executeCreditConsumerWalletWorkflow(anyString(), anyString())).thenResolve();
+      when(workflowExecutor.executeWalletDepositWorkflow(anyString(), anyString())).thenResolve();
 
       await walletDepositImpl.initiateWorkflow(transaction, [TransactionFlags.IS_COLLECTION]);
 
-      verify(workflowExecutor.executeCreditConsumerWalletWorkflow(transaction.id, transaction.transactionRef)).once();
+      verify(workflowExecutor.executeWalletDepositWorkflow(transaction.id, transaction.transactionRef)).once();
     });
 
     it("should throw ServiceException if both credit and debit consumer id is set", async () => {

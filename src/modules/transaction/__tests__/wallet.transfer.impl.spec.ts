@@ -115,13 +115,13 @@ describe("WalletTransferImpl Tests", () => {
       const { transaction } = getRandomTransaction(consumer.props.id, "fake-consumer-2");
 
       when(
-        workflowExecutor.executeConsumerWalletTransferWorkflow(anyString(), anyString(), anyNumber(), anyString()),
+        workflowExecutor.executeWalletTransferWorkflow(anyString(), anyString(), anyNumber(), anyString()),
       ).thenResolve();
 
       await walletTransferImpl.initiateWorkflow(transaction);
 
       verify(
-        workflowExecutor.executeConsumerWalletTransferWorkflow(
+        workflowExecutor.executeWalletTransferWorkflow(
           transaction.debitConsumerID,
           transaction.creditConsumerID,
           transaction.debitAmount,

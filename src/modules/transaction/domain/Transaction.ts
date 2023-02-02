@@ -10,6 +10,7 @@ import {
   inputTransactionFeeJoiValidationKeys,
   transactionFeeJoiValidationKeys,
 } from "./TransactionFee";
+import { WorkflowName as TemporalWorkflowName } from "../../../infra/temporal/workflow";
 
 export class Transaction {
   id: string;
@@ -30,13 +31,6 @@ export class Transaction {
   updatedTimestamp?: Date;
 }
 
-// Format - DEBIT_TO_CREDIT
-export enum WorkflowName {
-  WALLET_DEPOSIT = "WALLET_DEPOSIT",
-  WALLET_TRANSFER = "WALLET_TRANSFER",
-  WALLET_WITHDRAWAL = "WALLET_WITHDRAWAL",
-}
-
 export enum Bank {
   MONO = "MONO",
 }
@@ -48,6 +42,10 @@ export enum TransactionStatus {
   PROCESSING = "PROCESSING",
   EXPIRED = "EXPIRED",
 }
+
+// This basically aliases the Transaction's WorkflowName to TemporalWorkflowName
+export type WorkflowName = TemporalWorkflowName;
+export const WorkflowName = { ...TemporalWorkflowName };
 
 export class InputTransaction {
   transactionRef: string;

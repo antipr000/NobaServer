@@ -3,13 +3,13 @@ import { WorkflowExecutor } from "../workflow.executor";
 
 export function getMockWorkflowExecutorWithDefaults(): WorkflowExecutor {
   const workflowExecutor = mock(WorkflowExecutor);
-  when(
-    workflowExecutor.executeConsumerWalletTransferWorkflow(anyString(), anyString(), anyNumber(), anyString()),
-  ).thenReject(new Error("Not implemented!"));
-  when(workflowExecutor.executeCreditConsumerWalletWorkflow(anyString(), anyString())).thenReject(
+  when(workflowExecutor.executeWalletTransferWorkflow(anyString(), anyString(), anyNumber(), anyString())).thenReject(
     new Error("Not implemented!"),
   );
-  when(workflowExecutor.executeDebitConsumerWalletWorkflow(anyString(), anyString())).thenReject(
+  when(workflowExecutor.executeWalletDepositWorkflow(anyString(), anyString())).thenReject(
+    new Error("Not implemented!"),
+  );
+  when(workflowExecutor.executeWalletWithdrawalWorkflow(anyString(), anyString())).thenReject(
     new Error("Not implemented!"),
   );
   return workflowExecutor;

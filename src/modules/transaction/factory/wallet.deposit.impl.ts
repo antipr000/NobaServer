@@ -145,7 +145,7 @@ export class WalletDepositImpl implements IWorkflowImpl {
       });
     }
 
-    this.workflowExecutor.executeCreditConsumerWalletWorkflow(transaction.id, transaction.transactionRef);
+    this.workflowExecutor.executeWalletDepositWorkflow(transaction.id, transaction.transactionRef);
   }
 
   async getTransactionQuote(
