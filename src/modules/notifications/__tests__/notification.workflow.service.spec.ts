@@ -240,6 +240,7 @@ function getRandomTransaction(
     memo: "New transaction",
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    transactionFees: [],
   };
 
   switch (workflowName) {
