@@ -26,7 +26,7 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 1,
-    payrollDates: [new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)],
+    payrollDates: ["2020-03-01"],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -286,10 +286,7 @@ describe("BubbleServiceTests", () => {
 
     it("should update the 'payrollDays' of employer in Noba", async () => {
       const employer: Employer = getRandomEmployer();
-      const updatedPayrollDates = [
-        new Date(Date.now() + 17 * 24 * 60 * 60 * 1000),
-        new Date(Date.now() + 19 * 24 * 60 * 60 * 1000),
-      ];
+      const updatedPayrollDates = ["2020-03-17", "2020-03-19"];
 
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(employerService.updateEmployer(anyString(), anything())).thenResolve();
