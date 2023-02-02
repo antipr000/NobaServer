@@ -6,4 +6,4 @@
 */
 -- AlterTable
 ALTER TABLE "Employer" DROP COLUMN "payrollDays",
-ADD COLUMN     "payrollDates" TIMESTAMP(3)[];
+ADD COLUMN     "payrollDates" DATE[];

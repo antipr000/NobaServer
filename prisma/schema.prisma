@@ -96,7 +96,7 @@ model Employer {
   referralID       String     @unique()
   bubbleID         String     @unique()
   leadDays         Int?
-  payrollDates     DateTime[]
+  payrollDates     DateTime[] @db.Date
   Employee         Employee[]
 
   @@index([referralID])
