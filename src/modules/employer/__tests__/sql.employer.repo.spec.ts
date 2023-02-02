@@ -46,13 +46,9 @@ describe("SqlEmployerRepoTests", () => {
 
     employerRepo = app.get<SqlEmployerRepo>(SqlEmployerRepo);
     prismaService = app.get<PrismaService>(PrismaService);
-
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date(2020, 3, 1));
   });
 
   afterAll(async () => {
-    jest.useRealTimers();
     app.close();
   });
 
@@ -291,7 +287,8 @@ describe("SqlEmployerRepoTests", () => {
       const employer2 = getRandomEmployer();
       employer2.leadDays = 13;
       employer2.payrollDates = ["2020-03-13", "2020-04-01"];
-      const createdEmployer2 = await employerRepo.createEmployer(employer2);
+      // Add a second employer just to ensure it doesn't get returned
+      await employerRepo.createEmployer(employer2);
 
       const foundEmployer = await employerRepo.getEmployerByID(createdEmployer1.id);
 
