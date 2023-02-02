@@ -9,7 +9,7 @@ export class Employer {
   referralID: string;
   bubbleID: string;
   leadDays: number;
-  payrollDates: Date[];
+  payrollDates: string[];
   createdTimestamp: Date;
   updatedTimestamp: Date;
 }
@@ -20,14 +20,14 @@ export class EmployerCreateRequest {
   referralID: string;
   bubbleID: string;
   leadDays: number;
-  payrollDates: Date[];
+  payrollDates: string[];
 }
 
 export class EmployerUpdateRequest {
   logoURI?: string;
   referralID?: string;
   leadDays?: number;
-  payrollDates?: Date[];
+  payrollDates?: string[];
 }
 
 export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) => {
@@ -37,7 +37,7 @@ export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) =
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
     leadDays: Joi.number().required(),
-    payrollDates: Joi.array().items(Joi.date()).required(),
+    payrollDates: Joi.array().items(Joi.string()).required(),
   };
 
   const employerJoiSchema = Joi.object(employerJoiValidationKeys).options({
@@ -52,7 +52,7 @@ export const validateUpdateEmployerRequest = (employer: EmployerUpdateRequest) =
     logoURI: Joi.string().optional(),
     referralID: Joi.string().optional(),
     leadDays: Joi.number().optional(),
-    payrollDates: Joi.array().items(Joi.date()).optional(),
+    payrollDates: Joi.array().items(Joi.string()).optional(),
   };
 
   const employerJoiSchema = Joi.object(employerJoiValidationKeys).options({
@@ -70,7 +70,7 @@ export const validateEmployer = (employer: Employer) => {
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
     leadDays: Joi.number().required(),
-    payrollDates: Joi.array().items(Joi.date()).required(),
+    payrollDates: Joi.array().items(Joi.string()).required(),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
   };
