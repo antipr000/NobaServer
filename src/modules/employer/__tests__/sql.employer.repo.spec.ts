@@ -15,6 +15,11 @@ const getAllEmployerRecords = async (prismaService: PrismaService): Promise<Pris
 };
 
 const getRandomEmployer = (): EmployerCreateRequest => {
+  var todaysDate = new Date();
+  todaysDate.setHours(0);
+  todaysDate.setMinutes(0);
+  todaysDate.setSeconds(0);
+  todaysDate.setMilliseconds(0);
   const employee: EmployerCreateRequest = {
     bubbleID: uuid(),
     name: "Test Employer",
@@ -22,12 +27,11 @@ const getRandomEmployer = (): EmployerCreateRequest => {
     logoURI: "https://www.google.com",
     leadDays: 5,
     payrollDates: [
-      new Date(Date.now() - 24 * 60 * 60 * 1000),
-      new Date(Date.now()),
-      new Date(Date.now() + 24 * 60 * 60 * 1000),
+      new Date(todaysDate.getTime() - 24 * 60 * 60 * 1000),
+      todaysDate,
+      new Date(todaysDate.getTime() + 24 * 60 * 60 * 1000),
     ],
   };
-
   return employee;
 };
 
