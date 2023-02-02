@@ -50,11 +50,7 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 1,
-    payrollDates: [
-      new Date(Date.now() - 24 * 60 * 60 * 1000),
-      new Date(Date.now()),
-      new Date(Date.now() + 24 * 60 * 60 * 1000),
-    ],
+    payrollDates: ["2020-03-02", "2020-03-01", "2020-02-29"],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -93,6 +89,11 @@ describe("ConsumerController", () => {
 
   jest.setTimeout(30000);
 
+  beforeAll(async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2020, 3, 1));
+  });
+
   beforeEach(async () => {
     consumerService = getMockConsumerServiceWithDefaults();
     plaidClient = getMockPlaidClientWithDefaults();
@@ -120,6 +121,10 @@ describe("ConsumerController", () => {
 
     consumerController = app.get<ConsumerController>(ConsumerController);
     consumerMapper = app.get<ConsumerMapper>(ConsumerMapper);
+  });
+
+  afterAll(async () => {
+    jest.useRealTimers();
   });
 
   describe("consumer controller tests", () => {
@@ -1101,14 +1106,14 @@ describe("ConsumerController", () => {
       const defaultPayrollDates = defaultEmployer.payrollDates;
 
       const employer1 = getRandomEmployer(); // before lead days
-      employer1.payrollDates.push(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000));
+      employer1.payrollDates.push("2020-03-04");
 
       const employer2 = getRandomEmployer(); // after lead days
       employer2.leadDays = 0;
 
       const employer3 = getRandomEmployer(); // asc sort
-      employer3.payrollDates.push(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
-      const sortedEmployer3PayrollDates = [new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)].concat(defaultPayrollDates);
+      employer3.payrollDates.push("2020-02-23");
+      const sortedEmployer3PayrollDates = ["2020-02-23"].concat(defaultPayrollDates);
 
       const employee1 = getRandomEmployee(consumer.props.id, employer1.id);
       const employee2 = getRandomEmployee(consumer.props.id, employer2.id);
