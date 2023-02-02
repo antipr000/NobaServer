@@ -72,11 +72,16 @@ export class EmployerService {
       this.validateLeadDays(request.leadDays);
     }
 
+    let payrollDates: Date[] = [];
+    if (request.payrollDates) {
+      payrollDates = this.sanitizePayrollDates(request.payrollDates);
+    }
+
     return this.employerRepo.updateEmployer(id, {
       ...(request.logoURI && { logoURI: request.logoURI }),
       ...(request.referralID && { referralID: request.referralID }),
       ...(request.leadDays && { leadDays: request.leadDays }),
-      ...(request.payrollDates && { payrollDates: request.payrollDates }),
+      ...(request.payrollDates && { payrollDates: payrollDates }),
     });
   }
 

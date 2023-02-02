@@ -10,5 +10,5 @@ export type RegisterEmployerRequest = {
 export type UpdateNobaEmployerRequest = {
   logoURI?: string;
   leadDays?: number;
-  payrollDates?: Date[];
+  payrollDates?: string[];
 };

@@ -11,5 +11,5 @@ export type UpdateEmployerRequestDTO = {
   logoURI?: string;
   referralID?: string;
   leadDays?: number;
-  payrollDates?: Date[];
+  payrollDates?: string[];
 };

@@ -28,5 +28,5 @@ export class UpdateEmployerRequestDTO {
   leadDays?: number;
 
   @ApiPropertyOptional()
-  payrollDates?: Date[];
+  payrollDates?: string[];
 }
