@@ -21,7 +21,7 @@ const getRandomEmployer = (): EmployerCreateRequest => {
     referralID: uuid(),
     logoURI: "https://www.google.com",
     leadDays: 5,
-    payrollDates: [new Date("2020-03-02"), new Date("2020-03-01"), new Date("2020-02-29")],
+    payrollDates: ["2020-03-02", "2020-03-01", "2020-02-29"],
   };
   return employee;
 };
@@ -209,7 +209,7 @@ describe("SqlEmployerRepoTests", () => {
       const employer = getRandomEmployer();
       const createdEmployer = await employerRepo.createEmployer(employer);
 
-      const payrollDates = [new Date("2020-03-14"), new Date("2020-03-15")];
+      const payrollDates = ["2020-03-14", "2020-03-15"];
       const updatedEmployer = await employerRepo.updateEmployer(createdEmployer.id, {
         payrollDates: payrollDates,
       });
@@ -290,7 +290,7 @@ describe("SqlEmployerRepoTests", () => {
 
       const employer2 = getRandomEmployer();
       employer2.leadDays = 13;
-      employer2.payrollDates = [new Date("2020-03-13"), new Date("2020-04-01")];
+      employer2.payrollDates = ["2020-03-13", "2020-04-01"];
       const createdEmployer2 = await employerRepo.createEmployer(employer2);
 
       const foundEmployer = await employerRepo.getEmployerByID(createdEmployer1.id);

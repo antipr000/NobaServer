@@ -25,12 +25,22 @@ export class EmployerService {
     }
   }
 
+  private sanitizePayrollDates(payrollDates: string[]): string[] {
+    // TODO: Strip times off
+    return payrollDates;
+  }
+
   async createEmployer(request: CreateEmployerRequestDTO): Promise<Employer> {
     // Note - Don't replace it with "0". It will be treated as false.
     if (request.leadDays === undefined || request.leadDays === null) {
       request.leadDays = 1;
     }
     this.validateLeadDays(request.leadDays);
+
+    let payrollDates: string[] = [];
+    if (request.payrollDates) {
+      payrollDates = this.sanitizePayrollDates(request.payrollDates);
+    }
 
     return this.employerRepo.createEmployer({
       name: request.name,
@@ -57,6 +67,11 @@ export class EmployerService {
     }
     if (request.leadDays !== undefined && request.leadDays !== null) {
       this.validateLeadDays(request.leadDays);
+    }
+
+    let payrollDates: string[] = [];
+    if (request.payrollDates) {
+      payrollDates = this.sanitizePayrollDates(request.payrollDates);
     }
 
     return this.employerRepo.updateEmployer(id, {

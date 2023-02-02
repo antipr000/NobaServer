@@ -19,7 +19,7 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 5,
-    payrollDates: [new Date(Date.now() - 24 * 60 * 60 * 1000), new Date(Date.now() + 24 * 60 * 60 * 1000)],
+    payrollDates: ["2020-02-05", "2020-03-25"],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -54,9 +54,12 @@ describe("EmployerServiceTests", () => {
     }).compile();
 
     employerService = app.get<EmployerService>(EmployerService);
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2020, 3, 1));
   });
 
   afterEach(async () => {
+    jest.useFakeTimers();
     app.close();
   });
 
@@ -209,10 +212,7 @@ describe("EmployerServiceTests", () => {
       const employer = getRandomEmployer();
       when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
 
-      const payrollDates = [
-        new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        new Date(Date.now() + 17 * 24 * 60 * 60 * 1000),
-      ];
+      const payrollDates = ["2020-03-04", "2020-03-18"];
       const updatedEmployer = await employerService.updateEmployer(employer.id, {
         payrollDates: payrollDates,
       });
@@ -230,10 +230,7 @@ describe("EmployerServiceTests", () => {
       const employer = getRandomEmployer();
       when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
 
-      const payrollDates = [
-        new Date(Date.now() + 16 * 24 * 60 * 60 * 1000),
-        new Date(Date.now() + 29 * 24 * 60 * 60 * 1000),
-      ];
+      const payrollDates = ["2020-03-17", "2020-03-30"];
       const updatedEmployer = await employerService.updateEmployer(employer.id, {
         logoURI: "https://new-logo-uri.com",
         referralID: "new-referral-id",

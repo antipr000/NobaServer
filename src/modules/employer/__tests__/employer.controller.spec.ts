@@ -21,7 +21,7 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 5,
-    payrollDates: [new Date(Date.now() - 24 * 60 * 60 * 1000), new Date(Date.now() + 24 * 60 * 60 * 1000)],
+    payrollDates: ["2020-02-29", "2020-03-02"],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -62,9 +62,12 @@ describe("EmployerControllerTests", () => {
     }).compile();
 
     employerController = app.get<EmployerController>(EmployerController);
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2020, 3, 1));
   });
 
   afterEach(async () => {
+    jest.useRealTimers();
     app.close();
   });
 
@@ -85,10 +88,7 @@ describe("EmployerControllerTests", () => {
 
     it("should return the employer by referral ID with next payroll date before lead days", async () => {
       const employer: Employer = getRandomEmployer();
-      employer.payrollDates = [
-        new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
-        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      ];
+      employer.payrollDates = ["2020-03-16", "2020-04-01"];
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
 
       const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
@@ -103,10 +103,7 @@ describe("EmployerControllerTests", () => {
 
     it("should return the employer by referral ID with next payroll date after lead days", async () => {
       const employer: Employer = getRandomEmployer();
-      employer.payrollDates = [
-        new Date(Date.now() + 0 * 24 * 60 * 60 * 1000),
-        new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-      ];
+      employer.payrollDates = ["2020-03-01", "2020-03-11"];
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
 
       const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
@@ -121,16 +118,8 @@ describe("EmployerControllerTests", () => {
 
     it("should return the employer by referral ID with ascending sort payroll dates", async () => {
       const employer: Employer = getRandomEmployer();
-      employer.payrollDates = [
-        new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-        new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
-        new Date(Date.now()),
-      ];
-      const payrollDates = [
-        new Date(Date.now()),
-        new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-        new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
-      ];
+      employer.payrollDates = ["2020-03-11", "2020-03-21", "2020-03-01"];
+      const payrollDates = ["2020-03-01", "2020-03-11", "2020-03-21"];
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
 
       const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
