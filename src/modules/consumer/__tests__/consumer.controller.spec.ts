@@ -1075,9 +1075,18 @@ describe("ConsumerController", () => {
     it("should return a list of linked employers", async () => {
       const consumer = getRandomConsumer();
 
-      const employer1 = getRandomEmployer();
-      const employer2 = getRandomEmployer();
-      const employer3 = getRandomEmployer();
+      const defaultEmployer = getRandomEmployer();
+      const defaultPayrollDates = defaultEmployer.payrollDates;
+
+      const employer1 = getRandomEmployer(); // before lead days
+      employer1.payrollDates.push(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000));
+
+      const employer2 = getRandomEmployer(); // after lead days
+      employer2.leadDays = 0;
+
+      const employer3 = getRandomEmployer(); // asc sort
+      employer3.payrollDates.push(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+      const sortedEmployer3PayrollDates = [new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)].concat(defaultPayrollDates);
 
       const employee1 = getRandomEmployee(consumer.props.id, employer1.id);
       const employee2 = getRandomEmployee(consumer.props.id, employer2.id);
@@ -1099,6 +1108,7 @@ describe("ConsumerController", () => {
             employerReferralID: employer1.referralID,
             leadDays: employer1.leadDays,
             payrollDates: employer1.payrollDates,
+            nextPayrollDate: employer1.payrollDates[3],
           },
           {
             employerName: employer2.name,
@@ -1107,6 +1117,7 @@ describe("ConsumerController", () => {
             employerReferralID: employer2.referralID,
             leadDays: employer2.leadDays,
             payrollDates: employer2.payrollDates,
+            nextPayrollDate: employer1.payrollDates[2],
           },
           {
             employerName: employer3.name,
@@ -1114,7 +1125,7 @@ describe("ConsumerController", () => {
             allocationAmountInPesos: employee3.allocationAmount,
             employerReferralID: employer3.referralID,
             leadDays: employer3.leadDays,
-            payrollDates: employer3.payrollDates,
+            payrollDates: sortedEmployer3PayrollDates,
           },
         ]),
       );

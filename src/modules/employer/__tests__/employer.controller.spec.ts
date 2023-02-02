@@ -83,6 +83,65 @@ describe("EmployerControllerTests", () => {
       });
     });
 
+    it("should return the employer by referral ID with next payroll date before lead days", async () => {
+      const employer: Employer = getRandomEmployer();
+      employer.payrollDates = [
+        new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      ];
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+
+      const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
+      expect(foundEmployer).toEqual({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        leadDays: employer.leadDays,
+        payrollDates: employer.payrollDates,
+        nextPayrollDate: employer.payrollDates[0],
+      });
+    });
+
+    it("should return the employer by referral ID with next payroll date after lead days", async () => {
+      const employer: Employer = getRandomEmployer();
+      employer.payrollDates = [
+        new Date(Date.now() + 0 * 24 * 60 * 60 * 1000),
+        new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      ];
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+
+      const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
+      expect(foundEmployer).toEqual({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        leadDays: employer.leadDays,
+        payrollDates: employer.payrollDates,
+        nextPayrollDate: employer.payrollDates[1],
+      });
+    });
+
+    it("should return the employer by referral ID with ascending sort payroll dates", async () => {
+      const employer: Employer = getRandomEmployer();
+      employer.payrollDates = [
+        new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+        new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
+        new Date(Date.now()),
+      ];
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+
+      const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
+      expect(foundEmployer).toEqual({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        leadDays: employer.leadDays,
+        payrollDates: [
+          new Date(Date.now()),
+          new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+          new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
+        ],
+        nextPayrollDate: employer.payrollDates[1],
+      });
+    });
+
     it("should throw a 404 if employer is not found", async () => {
       const referralID = "12345";
       when(employerService.getEmployerByReferralID(referralID)).thenResolve(null);

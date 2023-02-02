@@ -1813,6 +1813,7 @@ describe("ConsumerService", () => {
       expect(response).toEqual(employee);
     });
   });
+
   describe("sendEmployerRequestEmail", () => {
     it("should throw ServiceException if email address is empty", async () => {
       try {
