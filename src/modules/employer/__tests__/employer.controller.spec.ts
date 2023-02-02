@@ -126,6 +126,11 @@ describe("EmployerControllerTests", () => {
         new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
         new Date(Date.now()),
       ];
+      const payrollDates = [
+        new Date(Date.now()),
+        new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+        new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
+      ];
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
 
       const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
@@ -133,11 +138,7 @@ describe("EmployerControllerTests", () => {
         name: employer.name,
         logoURI: employer.logoURI,
         leadDays: employer.leadDays,
-        payrollDates: [
-          new Date(Date.now()),
-          new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-          new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
-        ],
+        payrollDates: payrollDates,
         nextPayrollDate: employer.payrollDates[1],
       });
     });
