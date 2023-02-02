@@ -15,22 +15,13 @@ const getAllEmployerRecords = async (prismaService: PrismaService): Promise<Pris
 };
 
 const getRandomEmployer = (): EmployerCreateRequest => {
-  var todaysDate = new Date();
-  todaysDate.setHours(0);
-  todaysDate.setMinutes(0);
-  todaysDate.setSeconds(0);
-  todaysDate.setMilliseconds(0);
   const employee: EmployerCreateRequest = {
     bubbleID: uuid(),
     name: "Test Employer",
     referralID: uuid(),
     logoURI: "https://www.google.com",
     leadDays: 5,
-    payrollDates: [
-      new Date(todaysDate.getTime() - 24 * 60 * 60 * 1000),
-      todaysDate,
-      new Date(todaysDate.getTime() + 24 * 60 * 60 * 1000),
-    ],
+    payrollDates: [new Date("2020-03-02"), new Date("2020-03-01"), new Date("2020-02-29")],
   };
   return employee;
 };
@@ -55,9 +46,13 @@ describe("SqlEmployerRepoTests", () => {
 
     employerRepo = app.get<SqlEmployerRepo>(SqlEmployerRepo);
     prismaService = app.get<PrismaService>(PrismaService);
+
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2020, 3, 1));
   });
 
   afterAll(async () => {
+    jest.useRealTimers();
     app.close();
   });
 
@@ -214,10 +209,7 @@ describe("SqlEmployerRepoTests", () => {
       const employer = getRandomEmployer();
       const createdEmployer = await employerRepo.createEmployer(employer);
 
-      const payrollDates = [
-        new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        new Date(Date.now() + 17 * 24 * 60 * 60 * 1000),
-      ];
+      const payrollDates = [new Date("2020-03-14"), new Date("2020-03-15")];
       const updatedEmployer = await employerRepo.updateEmployer(createdEmployer.id, {
         payrollDates: payrollDates,
       });
@@ -298,10 +290,7 @@ describe("SqlEmployerRepoTests", () => {
 
       const employer2 = getRandomEmployer();
       employer2.leadDays = 13;
-      employer2.payrollDates = [
-        new Date(Date.now() + 12 * 24 * 60 * 60 * 1000),
-        new Date(Date.now() + 28 * 24 * 60 * 60 * 1000),
-      ];
+      employer2.payrollDates = [new Date("2020-03-13"), new Date("2020-04-01")];
       const createdEmployer2 = await employerRepo.createEmployer(employer2);
 
       const foundEmployer = await employerRepo.getEmployerByID(createdEmployer1.id);
