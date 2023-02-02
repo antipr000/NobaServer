@@ -107,7 +107,7 @@ describe("BubbleWorkflowControllerTests", () => {
         logoURI: "logoURI",
         name: "name",
         referralID: "referralID",
-        payrollDates: [new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)],
+        payrollDates: requestBody.payrollDates,
       });
     });
   });
