@@ -54,12 +54,9 @@ describe("EmployerServiceTests", () => {
     }).compile();
 
     employerService = app.get<EmployerService>(EmployerService);
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date(2020, 3, 1));
   });
 
   afterEach(async () => {
-    jest.useFakeTimers();
     app.close();
   });
 
