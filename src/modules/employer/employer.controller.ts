@@ -34,10 +34,11 @@ export class EmployerController {
       throw new NotFoundException("Employer not found");
     }
 
-    const payrollDatesAsc = employer.payrollDates.sort((a, b) => a - b);
-    const futurePayrollDates = payrollDatesAsc.filter(
-      date => date.getTime() > Date.now() + employer.leadDays * 24 * 60 * 60 * 1000,
-    );
+    const payrollDatesAsc = employer.payrollDates.sort(); // Naturally sorts strings in ascending order
+    const now = new Date().setHours(0, 0, 0, 0);
+    const futurePayrollDates = payrollDatesAsc.filter(date => {
+      return new Date(date) > new Date(now + employer.leadDays * 24 * 60 * 60 * 1000);
+    });
 
     return {
       name: employer.name,

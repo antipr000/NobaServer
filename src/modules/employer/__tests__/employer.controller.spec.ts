@@ -21,7 +21,7 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 5,
-    payrollDates: ["2020-02-29", "2020-03-02"],
+    payrollDates: ["2020-03-02T00:00:00Z+0", "2020-02-29T00:00:00Z+0"],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -63,7 +63,7 @@ describe("EmployerControllerTests", () => {
 
     employerController = app.get<EmployerController>(EmployerController);
     jest.useFakeTimers();
-    jest.setSystemTime(new Date(2020, 3, 1));
+    jest.setSystemTime(new Date("2020-03-01"));
   });
 
   afterEach(async () => {
@@ -88,7 +88,7 @@ describe("EmployerControllerTests", () => {
 
     it("should return the employer by referral ID with next payroll date before lead days", async () => {
       const employer: Employer = getRandomEmployer();
-      employer.payrollDates = ["2020-03-16", "2020-04-01"];
+      employer.payrollDates = ["2020-04-01", "2020-03-16"];
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
 
       const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
