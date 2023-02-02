@@ -149,22 +149,24 @@ export class ConsumerMapper implements Mapper<Consumer> {
 
     for (const employee of employees) {
       const employer: Employer = await this.employerService.getEmployerByID(employee.employerID);
-      const payrollDatesAsc = employer.payrollDates.sort((a, b) => a.localeCompare(b));
+      const payrollDatesAsc = employer.payrollDates.sort();
       const now = new Date().setHours(0, 0, 0, 0);
       const futurePayrollDates = payrollDatesAsc.filter(date => {
-        console.log(new Date(date));
-        console.log(new Date(now + employer.leadDays * 24 * 60 * 60 * 1000));
         return new Date(date) > new Date(now + employer.leadDays * 24 * 60 * 60 * 1000);
       });
-      linkedEmployers.push({
+      const linkedEmployer: LinkedEmployerDTO = {
         employerName: employer.name,
         employerLogoURI: employer.logoURI,
         allocationAmountInPesos: employee.allocationAmount,
         employerReferralID: employer.referralID,
         leadDays: employer.leadDays,
         payrollDates: payrollDatesAsc,
-        nextPayrollDate: futurePayrollDates[0],
-      });
+      };
+      if (futurePayrollDates.length > 0) {
+        linkedEmployer["nextPayrollDate"] = futurePayrollDates[0];
+      }
+
+      linkedEmployers.push(linkedEmployer);
     }
     return linkedEmployers;
   }

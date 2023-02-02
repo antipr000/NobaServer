@@ -50,7 +50,7 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 1,
-    payrollDates: ["2020-03-02", "2020-03-01", "2020-02-29"],
+    payrollDates: ["2020-02-29", "2020-03-01", "2020-03-02"],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -91,7 +91,7 @@ describe("ConsumerController", () => {
 
   beforeAll(async () => {
     jest.useFakeTimers();
-    jest.setSystemTime(new Date(2020, 3, 1));
+    jest.setSystemTime(new Date(2020, 2, 1));
   });
 
   beforeEach(async () => {
