@@ -53,7 +53,7 @@ export class BubbleService {
       logoURI: request.logoURI,
       bubbleID: request.bubbleID,
       ...(request.leadDays && { leadDays: request.leadDays }),
-      ...(request.payrollDates && { payrollDays: request.payrollDates }),
+      ...(request.payrollDates && { payrollDates: request.payrollDates }),
     });
 
     return employer.id;

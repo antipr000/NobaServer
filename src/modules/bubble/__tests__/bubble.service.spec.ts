@@ -26,7 +26,7 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 1,
-    payrollDays: [30],
+    payrollDates: [new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
@@ -156,7 +156,7 @@ describe("BubbleServiceTests", () => {
         logoURI: employer.logoURI,
         referralID: employer.referralID,
         leadDays: employer.leadDays,
-        payrollDays: employer.payrollDays,
+        payrollDates: employer.payrollDates,
       });
 
       expect(result).toEqual(employer.id);
@@ -168,7 +168,7 @@ describe("BubbleServiceTests", () => {
         logoURI: employer.logoURI,
         referralID: employer.referralID,
         leadDays: employer.leadDays,
-        payrollDays: employer.payrollDays,
+        payrollDates: employer.payrollDates,
       });
     });
 
@@ -182,7 +182,7 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
-        payrollDays: employer.payrollDays,
+        payrollDates: employer.payrollDates,
       });
 
       expect(result).toEqual(employer.id);
@@ -193,7 +193,7 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
-        payrollDays: employer.payrollDays,
+        payrollDates: employer.payrollDates,
       });
     });
 
@@ -286,18 +286,21 @@ describe("BubbleServiceTests", () => {
 
     it("should update the 'payrollDays' of employer in Noba", async () => {
       const employer: Employer = getRandomEmployer();
-      const updatedPayrollDays = [17, 19];
+      const updatedPayrollDates = [
+        new Date(Date.now() + 17 * 24 * 60 * 60 * 1000),
+        new Date(Date.now() + 19 * 24 * 60 * 60 * 1000),
+      ];
 
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(employerService.updateEmployer(anyString(), anything())).thenResolve();
 
-      await bubbleService.updateEmployerInNoba(employer.referralID, { payrollDays: updatedPayrollDays });
+      await bubbleService.updateEmployerInNoba(employer.referralID, { payrollDates: updatedPayrollDates });
 
       const [propagatedEmployerIDToEmployerService, propagatedLeadDaysToEmployerService] = capture(
         employerService.updateEmployer,
       ).last();
       expect(propagatedEmployerIDToEmployerService).toEqual(employer.id);
-      expect(propagatedLeadDaysToEmployerService).toEqual({ payrollDays: updatedPayrollDays });
+      expect(propagatedLeadDaysToEmployerService).toEqual({ payrollDates: updatedPayrollDates });
     });
 
     it("should update the 'logoURI' of employer in Noba", async () => {
