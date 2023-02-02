@@ -402,6 +402,14 @@ export class ConsumerService {
     return this.consumerRepo.getConsumerIDByReferralCode(referralCode);
   }
 
+  async subscribeToPushNotifications(consumerID: string, pushToken: string): Promise<string> {
+    return this.notificationService.subscribeToPushNotifications(consumerID, pushToken);
+  }
+
+  async unsubscribeFromPushNotifications(consumerID: string, pushToken: string): Promise<string> {
+    return this.notificationService.unsubscribeFromPushNotifications(consumerID, pushToken);
+  }
+
   async addPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<PaymentMethod> {
     const addPaymentMethodResponse: AddPaymentMethodResponse = await this.paymentService.addPaymentMethod(
       consumer,

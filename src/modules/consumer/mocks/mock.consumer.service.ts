@@ -22,6 +22,12 @@ export function getMockConsumerServiceWithDefaults(): ConsumerService {
     new Error("Method not implemented"),
   );
   when(mockConsumerService.updatePaymentMethod(anything(), anything())).thenReject(new Error("Method not implemented"));
+  when(mockConsumerService.subscribeToPushNotifications(anything(), anyString())).thenReject(
+    new Error("Method not implemented"),
+  );
+  when(mockConsumerService.unsubscribeFromPushNotifications(anything(), anyString())).thenReject(
+    new Error("Method not implemented"),
+  );
   when(mockConsumerService.getCryptoWallet(anything(), anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerService.addOrUpdateCryptoWallet(anything(), anything(), anything())).thenReject(
     new Error("Method not implemented"),

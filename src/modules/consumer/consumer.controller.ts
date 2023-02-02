@@ -397,6 +397,34 @@ export class ConsumerController {
     });
   }
 
+  @Post("/subscribe/push/:pushToken")
+  @ApiOperation({ summary: "Subscribe to push notifications" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Successfully subscribed to push notifications",
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid push notification details" })
+  async subscribeToPushNotifications(
+    @Param("pushToken") pushToken: string,
+    @AuthUser() consumer: Consumer,
+  ): Promise<void> {
+    await this.consumerService.subscribeToPushNotifications(consumer.props.id, pushToken);
+  }
+
+  @Post("/unsubscribe/push/:pushToken")
+  @ApiOperation({ summary: "Unsubscribe from push notifications" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Successfully unsubscribed from push notifications",
+  })
+  async unsubscribeFromPushNotifications(
+    @Param("pushToken") pushToken: string,
+    @AuthUser() consumer: Consumer,
+  ): Promise<void> {
+    await this.consumerService.unsubscribeFromPushNotifications(consumer.props.id, pushToken);
+  }
+
   @Post("/wallets")
   @ApiOperation({ summary: "Adds a crypto wallet for the logged-in consumer" })
   @ApiResponse({

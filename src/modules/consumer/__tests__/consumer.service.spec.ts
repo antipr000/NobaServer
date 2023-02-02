@@ -747,6 +747,22 @@ describe("ConsumerService", () => {
     });
   });
 
+  describe("subscribeToPushNotifications", () => {
+    it("should subscribe to push notifications", async () => {
+      when(notificationService.subscribeToPushNotifications("consumer-id", "push-token")).thenResolve("push-token-id");
+      expect(await consumerService.subscribeToPushNotifications("consumer-id", "push-token")).toBe("push-token-id");
+    });
+  });
+
+  describe("unsubscribeToPushNotifications", () => {
+    it("should unsubscribe to push notifications", async () => {
+      when(notificationService.unsubscribeFromPushNotifications("consumer-id", "push-token")).thenResolve(
+        "push-token-id",
+      );
+      expect(await consumerService.unsubscribeFromPushNotifications("consumer-id", "push-token")).toBe("push-token-id");
+    });
+  });
+
   describe("updatePaymentMethod", () => {
     it("should update payment method for consumer", async () => {
       const email = "mock-user@noba.com";

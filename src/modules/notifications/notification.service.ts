@@ -32,11 +32,16 @@ import { SendWalletTransferEvent } from "./events/SendWalletTransferEvent";
 import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
 import { SendPhoneVerificationCodeEvent } from "./events/SendPhoneVerificationCodeEvent";
 import { SendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
+import { IPushTokenRepo } from "./repos/pushtoken.repo";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 
 @Injectable()
 export class NotificationService {
   @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger;
   constructor(private readonly eventEmitter: EventEmitter2) {}
+
+  @Inject("PushTokenRepo")
+  private readonly pushTokenRepo: IPushTokenRepo;
 
   private getNotificationMedium(
     eventType: NotificationEventType,
@@ -68,6 +73,27 @@ export class NotificationService {
       const eventName = `${eventHandler}.${eventType}`;
       this.createEvent(eventName, eventType, payload);
     });
+  }
+
+  async subscribeToPushNotifications(consumerID: string, pushToken: string): Promise<string> {
+    const existingPushTokenID = await this.pushTokenRepo.getPushToken(consumerID, pushToken);
+    if (!existingPushTokenID) {
+      return this.pushTokenRepo.addPushToken(consumerID, pushToken);
+    }
+
+    return existingPushTokenID;
+  }
+
+  async unsubscribeFromPushNotifications(consumerID: string, pushToken: string): Promise<string> {
+    const deletedPushTokenID = await this.pushTokenRepo.deletePushToken(consumerID, pushToken);
+    if (!deletedPushTokenID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: "Failed to delete push token",
+      });
+    }
+
+    return deletedPushTokenID;
   }
 
   private createEvent(eventName: string, eventType: NotificationEventType, payload: NotificationPayload) {
