@@ -139,10 +139,10 @@ nobaWorkflow:
   awsSecretNameForTaskQueue: "TEST_NOBA_WORKFLOW_TASK_QUEUE"
   clientUrl: ""
   awsSecretNameForClientUrl: "TEST_NOBA_WORKFLOW_CLIENT_URL"
-  awsSecretForTemporalCloudCertificate: ""
-  awsSecretForTemporalCloudPrivateKey: ""
+  awsSecretForTemporalCloudCertificate: "TEST_TEMPORAL_CLOUD_CERTIFICATE"
+  awsSecretForTemporalCloudPrivateKey: "TEST_TEMPORAL_CLOUD_PRIVATE_KEY"
   connectionTimeoutInMs: 1000
-  namespace: "sandbox"
+  namespace: "sandbox.h4n3l"
 
 mono:
   bearerToken: ""
