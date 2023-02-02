@@ -25,6 +25,14 @@ export class EmployerService {
     }
   }
 
+  private sanitizePayrollDates(payrollDates: string[]): Date[] {
+    return payrollDates.map(date => {
+      const sanitizedDate = new Date(date);
+      sanitizedDate.setHours(0, 0, 0, 0);
+      return sanitizedDate;
+    });
+  }
+
   async createEmployer(request: CreateEmployerRequestDTO): Promise<Employer> {
     // Note - Don't replace it with "0". It will be treated as false.
     if (request.leadDays === undefined || request.leadDays === null) {
@@ -32,13 +40,18 @@ export class EmployerService {
     }
     this.validateLeadDays(request.leadDays);
 
+    let payrollDates: Date[] = [];
+    if (request.payrollDates) {
+      payrollDates = this.sanitizePayrollDates(request.payrollDates);
+    }
+
     return this.employerRepo.createEmployer({
       name: request.name,
       logoURI: request.logoURI,
       referralID: request.referralID,
       bubbleID: request.bubbleID,
       leadDays: request.leadDays,
-      payrollDates: request.payrollDates,
+      payrollDates: payrollDates,
     });
   }
 
