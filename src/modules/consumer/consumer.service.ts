@@ -135,18 +135,27 @@ export class ConsumerService {
     // Only alpha-numeric characters and "-"  and 22 characters
     const regex = new RegExp("^[a-zA-Z0-9ñáéíóúü][a-zA-Z0-9ñáéíóúü-]{2,22}$");
     if (handle.length < 3 || handle.length > 22) {
-      throw new BadRequestException("'handle' should be between 3 and 22 charcters long.");
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "'handle' should be between 3 and 22 charcters long.",
+      });
     }
+
+    console.log(handle);
     if (!regex.test(handle)) {
-      throw new BadRequestException(
-        "'handle' can't start with an '-' and can only contain alphanumeric characters & '-'.",
-      );
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "'handle' can't start with an '-' and can only contain alphanumeric characters & '-'.",
+      });
     }
 
     const filter = new BadWordFilter({ placeHolder: "$" });
     const cleanedHandle = filter.clean(handle);
     if (cleanedHandle.indexOf("$") !== -1) {
-      throw new BadRequestException("Specified 'handle' is reserved. Please choose a different one.");
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Specified 'handle' is reserved. Please choose a different one.",
+      });
     }
   }
 
@@ -204,6 +213,17 @@ export class ConsumerService {
     // Else if the handle is being set NOW, we need to validate it.
     if (!consumer.props.handle && consumer.props.firstName && consumer.props.lastName) {
       consumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
+      let counter = 0;
+      while (!(await this.isHandleAvailable(consumerProps.handle))) {
+        if (counter > 5) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+            message: "Could not generate a handle.",
+          });
+        }
+
+        consumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
+      }
     } else if (consumerProps.handle !== undefined && consumerProps.handle !== null) {
       this.analyseHandle(consumerProps.handle);
     }
