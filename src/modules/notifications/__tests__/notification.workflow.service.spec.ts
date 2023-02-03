@@ -18,6 +18,7 @@ import { NotificationEventType, NotificationWorkflowTypes } from "../domain/Noti
 import { TransactionNotificationPayloadMapper } from "../domain/TransactionNotificationParameters";
 import { prepareNotificationPayload } from "../domain/NotificationPayload";
 import { ServiceException } from "../../../core/exception/service.exception";
+import { FeeType } from "../../../modules/transaction/domain/TransactionFee";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -179,27 +180,20 @@ describe("NotificationService", () => {
         transaction.id,
       );
 
-      const transactionNotificationPayload =
-        transactionNotificationMapper.toTransferCompletedNotificationParameters(transaction);
+      const transactionNotificationPayload = transactionNotificationMapper.toTransferCompletedNotificationParameters(
+        transaction,
+        consumer,
+        consumer2,
+      );
 
       const notificationPayload = prepareNotificationPayload(consumer, {
         transferCompletedParams: transactionNotificationPayload,
       });
 
-      const notificationPayload2 = prepareNotificationPayload(consumer2, {
-        transferCompletedParams: transactionNotificationPayload,
-      });
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
           deepEqual(notificationPayload),
-        ),
-      ).once();
-
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
-          deepEqual(notificationPayload2),
         ),
       ).once();
     });
@@ -240,7 +234,22 @@ function getRandomTransaction(
     memo: "New transaction",
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
-    transactionFees: [],
+    transactionFees: [
+      {
+        id: v4(),
+        timestamp: new Date(),
+        amount: 0.37,
+        type: FeeType.PROCESSING,
+        currency: "USD",
+      },
+      {
+        id: v4(),
+        timestamp: new Date(),
+        amount: 0.2,
+        type: FeeType.NOBA,
+        currency: "USD",
+      },
+    ],
   };
 
   switch (workflowName) {

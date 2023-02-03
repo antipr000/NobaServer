@@ -80,6 +80,8 @@ export class NotificationWorkflowService {
         payload = prepareNotificationPayload(consumer, {
           transferCompletedParams: transactionPayload,
         });
+        // We need a different template for receiver
+        await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.COLLECTION_COMPLETED_EVENT:
         consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
