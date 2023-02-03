@@ -179,7 +179,7 @@ describe("WalletWithdrawalImpl Tests", () => {
 
       await walletWithdrawalImpl.initiateWorkflow(transaction);
 
-      verify(workflowExecutor.executeWalletWithdrawalWorkflow(transaction.id, transaction.id)).once();
+      verify(workflowExecutor.executeWalletWithdrawalWorkflow(transaction.id, transaction.transactionRef)).once();
     });
 
     it("should throw ServiceException if both credit and debit consumer id is set", async () => {
