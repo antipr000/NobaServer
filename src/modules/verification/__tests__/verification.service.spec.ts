@@ -236,6 +236,7 @@ describe("VerificationService", () => {
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
+      when(consumerService.findConsumersByContactInfo(anything())).thenResolve([]);
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
 
@@ -289,6 +290,7 @@ describe("VerificationService", () => {
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
+      when(consumerService.findConsumersByContactInfo(anything())).thenResolve([]);
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
 
@@ -344,6 +346,7 @@ describe("VerificationService", () => {
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
+      when(consumerService.findConsumersByContactInfo(anything())).thenResolve([]);
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
 
@@ -399,6 +402,7 @@ describe("VerificationService", () => {
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
+      when(consumerService.findConsumersByContactInfo(anything())).thenResolve([]);
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
 
       const result = await verificationService.verifyConsumerInformation(

@@ -21,6 +21,7 @@ import { NotificationEventType } from "../notifications/domain/NotificationTypes
 import { IDVerificationURLRequestLocale } from "./dto/IDVerificationRequestURLDTO";
 import { isValidDateOfBirth } from "../../core/utils/DateUtils";
 import { TransactionVerification } from "./domain/TransactionVerification";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 
 @Injectable()
 export class VerificationService {
@@ -74,6 +75,21 @@ export class VerificationService {
       socialSecurityNumber: consumerInformation.nationalID ? consumerInformation.nationalID.number : undefined,
     };
     const isUS = consumerInformation.address.countryCode === "US";
+    const consumers = await this.consumerService.findConsumersByContactInfo([
+      {
+        phoneNumbers: [
+          { digits: consumerInformation.phoneNumber, countryCode: consumerInformation.address.countryCode },
+        ],
+        emails: [consumerInformation.email],
+      },
+    ]);
+    if (consumers.length > 1) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Consumer with this phone number or email already exists",
+      });
+    }
+
     const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
     if (result.status === KYCStatus.APPROVED) {
       await this.idvProvider.postConsumerFeedback(sessionKey, result);
