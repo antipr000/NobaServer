@@ -260,7 +260,7 @@ describe("VerificationService", () => {
       ).once();
     });
 
-    it("should verify ConsumerInformation when idvProvider returns APPROVED for US user", async () => {
+    it("should throw exception if user exists with duplicate email or phone", async () => {
       const consumer = getFakeConsumer();
       const consumerInformation = getFakeConsumerInformation(consumer, "US");
 
