@@ -534,6 +534,46 @@ describe("ConsumerService", () => {
       expect(returnedResult.props.handle).toBeDefined();
     });
 
+    it("should throw error if unable to generate a handle", async () => {
+      const email = "mock-user@noba.com";
+      const firstName = "test.test";
+      const lastName = "Last";
+
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+      });
+
+      const updatedConsumerData = Consumer.createConsumer({
+        ...consumer.props,
+        firstName: firstName,
+        lastName: lastName,
+        handle: "<PLACEHOLDER_AS_HANDLE_IS_RANDOM>",
+      });
+      when(consumerRepo.isHandleTaken(anyString())).thenResolve(true);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(
+        consumerRepo.updateConsumer(
+          consumer.props.id,
+          deepEqual({
+            id: consumer.props.id,
+            firstName: firstName,
+            lastName: lastName,
+          }),
+        ),
+      ).thenResolve(updatedConsumerData);
+
+      expect(
+        consumerService.updateConsumer({
+          id: consumer.props.id,
+          firstName: firstName,
+          lastName: lastName,
+        }),
+      ).rejects.toThrow(ServiceException);
+    });
+
     it("should throw error if user does not exist", async () => {
       const consumerId = "fake-consumer-1";
 

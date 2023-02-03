@@ -141,7 +141,6 @@ export class ConsumerService {
       });
     }
 
-    console.log(handle);
     if (!regex.test(handle)) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -223,6 +222,7 @@ export class ConsumerService {
         }
 
         consumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
+        counter++;
       }
     } else if (consumerProps.handle !== undefined && consumerProps.handle !== null) {
       this.analyseHandle(consumerProps.handle);
