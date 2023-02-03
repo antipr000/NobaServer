@@ -189,7 +189,7 @@ export const convertToDomainTransaction = (
 };
 
 export const getFee = (transaction: Transaction, feeType: FeeType): TransactionFee => {
-  return transaction.transactionFees.find(transactionFee => transactionFee.type === feeType)[0];
+  return transaction.transactionFees.find(transactionFee => transactionFee.type === feeType);
 };
 
 export const getTotalFees = (transaction: Transaction): number => {
