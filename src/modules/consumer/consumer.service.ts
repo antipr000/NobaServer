@@ -194,7 +194,7 @@ export class ConsumerService {
 
   generateDefaultHandle(firstName: string, lastName: string): string {
     const randomAppend = Math.random().toString(36).substring(2, 5).toUpperCase();
-    const handle = `${firstName}-${lastName.substring(0, 2)}${randomAppend}`;
+    const handle = `${firstName.replace(".", "")}-${lastName.substring(0, 2)}${randomAppend}`;
     return this.removeAllUnsupportedHandleCharacters(handle);
   }
 
@@ -204,6 +204,7 @@ export class ConsumerService {
     // If we don't have a handle, but we do have a first name, then we can generate a handle.
     // Else if the handle is being set NOW, we need to validate it.
     if (!consumer.props.handle && consumer.props.firstName && consumer.props.lastName) {
+      console.log(consumer.props.firstName, consumer.props.lastName);
       consumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
     } else if (consumerProps.handle !== undefined && consumerProps.handle !== null) {
       this.analyseHandle(consumerProps.handle);
