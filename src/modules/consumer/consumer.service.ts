@@ -200,11 +200,9 @@ export class ConsumerService {
 
   async updateConsumer(consumerProps: Partial<ConsumerProps>): Promise<Consumer> {
     const consumer = await this.getConsumer(consumerProps.id);
-
     // If we don't have a handle, but we do have a first name, then we can generate a handle.
     // Else if the handle is being set NOW, we need to validate it.
     if (!consumer.props.handle && consumer.props.firstName && consumer.props.lastName) {
-      console.log(consumer.props.firstName, consumer.props.lastName);
       consumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
     } else if (consumerProps.handle !== undefined && consumerProps.handle !== null) {
       this.analyseHandle(consumerProps.handle);
@@ -215,6 +213,7 @@ export class ConsumerService {
       ...consumerProps,
     });
 
+    console.log("what");
     const updatedConsumer = await this.consumerRepo.updateConsumer(consumer.props.id, consumerProps);
     return updatedConsumer;
   }

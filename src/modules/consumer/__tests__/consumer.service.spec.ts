@@ -492,6 +492,7 @@ describe("ConsumerService", () => {
         id: "mock-consumer-1",
         email: email,
         firstName: firstName,
+        lastName: lastName,
       });
 
       const updatedConsumerData = Consumer.createConsumer({
@@ -509,7 +510,7 @@ describe("ConsumerService", () => {
             id: consumer.props.id,
             firstName: firstName,
             lastName: lastName,
-            handle: anything(),
+            handle: anyString(),
           }),
         ),
       ).thenResolve(updatedConsumerData);
