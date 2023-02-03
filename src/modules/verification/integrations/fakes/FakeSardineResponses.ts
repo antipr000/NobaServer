@@ -794,3 +794,8 @@ export const FAKE_DEVICE_INFORMATION_RESPONSE: SardineDeviceInformationResponse 
     mockLevel: "high",
   },
 };
+
+export const FAKE_422_VALIDATION_ERROR = {
+  sessionKey: "session-key-1",
+  message: "Validation error in input data",
+};

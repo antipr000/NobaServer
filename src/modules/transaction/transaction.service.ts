@@ -123,7 +123,15 @@ export class TransactionService {
     // Perform sanctions check
     try {
       // If it passes, simple return. If it fails, an exception will be thrown
-      await this.validateForSanctions(initiatingConsumer, savedTransaction);
+      if (!(await this.validateForSanctions(initiatingConsumer, savedTransaction))) {
+        await this.transactionRepo.updateTransactionByTransactionID(savedTransaction.id, {
+          status: TransactionStatus.FAILED,
+        });
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+          message: "Transaction failed due to sanctions check",
+        });
+      }
     } catch (e) {
       if (e instanceof ServiceException) {
         await this.transactionRepo.updateTransactionByTransactionID(savedTransaction.id, {
@@ -186,7 +194,7 @@ export class TransactionService {
     return await this.transactionRepo.updateTransactionByTransactionID(transactionID, transactionUpdate);
   }
 
-  private async validateForSanctions(consumerID: string, transaction: Transaction) {
+  private async validateForSanctions(consumerID: string, transaction: Transaction): Promise<boolean> {
     // Check Sardine for sanctions
     const sardineTransactionInformation: TransactionVerification = {
       transactionID: transaction.id,
@@ -199,28 +207,40 @@ export class TransactionService {
       creditCurrency: transaction.creditCurrency,
     };
 
-    const consumer = await this.consumerService.getConsumer(consumerID);
-    const result = await this.verificationService.transactionVerification(
-      transaction.sessionKey,
-      consumer,
-      sardineTransactionInformation,
-    );
-
-    if (result.status !== KYCStatus.APPROVED) {
-      this.logger.debug(
-        `Failed to make transaction. Reason: KYC Provider has tagged the transaction as high risk. ${JSON.stringify(
-          result,
-        )}`,
+    try {
+      const consumer = await this.consumerService.getConsumer(consumerID);
+      const result = await this.verificationService.transactionVerification(
+        transaction.sessionKey,
+        consumer,
+        sardineTransactionInformation,
       );
 
-      this.addTransactionEvent(transaction.id, {
-        message: "Transaction has been detected to be high risk",
-      });
+      if (result.status !== KYCStatus.APPROVED) {
+        this.logger.debug(
+          `Failed to make transaction. Reason: KYC Provider has tagged the transaction as high risk. ${JSON.stringify(
+            result,
+          )}`,
+        );
 
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
-      });
+        this.addTransactionEvent(transaction.id, {
+          message: "Transaction has been determined to be high risk",
+          details: `Result: ${JSON.stringify(result.status)}`,
+          internal: true,
+        });
+
+        return false;
+      }
+    } catch (e) {
+      if (e instanceof ServiceException) {
+        this.addTransactionEvent(transaction.id, {
+          message: "Error performing transaction verification",
+          details: e.message,
+          internal: true,
+        });
+      }
+      throw e;
     }
+    return true;
   }
 
   async addTransactionEvent(

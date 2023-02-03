@@ -2,9 +2,10 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
-import { Sardine } from "../integrations/Sardine";
+import { Sardine } from "../integrations/sardine.client";
 import mockAxios from "jest-mock-axios";
 import {
+  FAKE_422_VALIDATION_ERROR,
   FAKE_DEVICE_INFORMATION_RESPONSE,
   FAKE_DOCUMENT_SUBMISSION_RESPONSE,
   FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
@@ -49,13 +50,13 @@ import {
   PaymentProvider,
   PaymentMethodStatus,
 } from "@prisma/client";
-import { ConsumerService } from "../../../modules/consumer/consumer.service";
-import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
-import { PaymentMethod } from "../../../modules/consumer/domain/PaymentMethod";
+import { ConsumerService } from "../../consumer/consumer.service";
+import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.consumer.service";
+import { PaymentMethod } from "../../consumer/domain/PaymentMethod";
 import { TransactionVerification } from "../domain/TransactionVerification";
-import { WorkflowName } from "../../../modules/transaction/domain/Transaction";
-import { CircleService } from "../../../modules/psp/circle.service";
-import { getMockCircleServiceWithDefaults } from "../../../modules/psp/mocks/mock.circle.service";
+import { WorkflowName } from "../../transaction/domain/Transaction";
+import { CircleService } from "../../psp/circle.service";
+import { getMockCircleServiceWithDefaults } from "../../psp/mocks/mock.circle.service";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -904,6 +905,57 @@ describe("SardineTests", () => {
       } catch (e) {
         expect(e).toBeInstanceOf(BadRequestException);
         expect(e.message).toBe("Network Error");
+      }
+    });
+
+    it("Should throw BadRequestException if Sardine returns a 422 error", async () => {
+      const consumerID1 = "consumer-1";
+      const consumerID2 = "consumer-2";
+      const transactionVerification: TransactionVerification = {
+        transactionID: "transaction-1",
+        debitConsumerID: consumerID1,
+        creditConsumerID: consumerID2,
+        debitAmount: 100,
+        debitCurrency: "USD",
+        creditAmount: 100,
+        creditCurrency: "USD",
+        workflowName: WorkflowName.WALLET_DEPOSIT,
+      };
+
+      const consumer = Consumer.createConsumer({
+        id: consumerID1,
+        email: "fake+consumer@noba.com",
+        verificationData: {
+          kycCheckStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
+          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
+        },
+      });
+
+      when(circleService.getOrCreateWallet(consumerID1)).thenResolve("wallet-1");
+      const responsePromise = sardine.transactionVerification(
+        FAKE_GOOD_TRANSACTION.data.sessionKey,
+        consumer,
+        transactionVerification,
+      );
+      await sleep(500);
+      expect(mockAxios.post).toHaveBeenCalled();
+      mockAxios.mockError({
+        response: {
+          status: 422,
+          data: FAKE_422_VALIDATION_ERROR,
+        },
+      });
+
+      try {
+        await responsePromise;
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(JSON.parse(e.message)).toEqual(FAKE_422_VALIDATION_ERROR);
       }
     });
   });

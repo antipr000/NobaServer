@@ -21,7 +21,7 @@ import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { Currency } from "../domain/TransactionTypes";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { Utils } from "../../../core/utils/Utils";
-import { ServiceException } from "../../../core/exception/service.exception";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";
@@ -43,10 +43,12 @@ import { getMockWalletWithdrawalImplWithDefaults } from "../mocks/mock.wallet.wi
 import { getMockWalletDepositImplWithDefaults } from "../mocks/mock.wallet.deposit.impl";
 import { BankFactory } from "../../../modules/psp/factory/bank.factory";
 import { getMockBankFactoryWithDefaults } from "../../../modules/psp/mocks/mock.bank.factory";
-import { BankName } from "../../../modules/psp/domain/BankFactoryTypes";
 import { BankMonoImpl } from "../../../modules/psp/factory/bank.mono.impl";
 import { getMockBankMonoImplWithDefaults } from "../../../modules/psp/mocks/mock.bank.mono.impl";
 import { FeeType } from "../domain/TransactionFee";
+import { ConsumerVerificationResult } from "../../../modules/verification/domain/VerificationResult";
+import { TransactionVerification } from "../../../modules/verification/domain/TransactionVerification";
+import { SeverityLevel } from "../../../core/exception/base.exception";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -244,7 +246,7 @@ describe("TransactionServiceTests", () => {
       });
     });
 
-    it("should add optional withdrawal details to repo during transaction", async () => {
+    it("should fail to validate against the IDV provider, write a TransactionEvent, and move to FAILED", async () => {
       const consumer = getRandomConsumer("consumerID");
       const consumer2 = getRandomConsumer("consumerID2");
       const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(
@@ -255,33 +257,187 @@ describe("TransactionServiceTests", () => {
         return transaction.transactionRef;
       });
 
-      const withdrawalData = {
-        accountNumber: "12345",
-        accountType: AccountType.SAVINGS,
-        bankCode: "BOFA",
-        documentNumber: "123456789",
-        documentType: DocumentType.CC,
+      when(consumerService.getActiveConsumer(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getActiveConsumer(consumer2.props.id)).thenResolve(consumer2);
+      when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
+      when(workflowFactory.getWorkflowImplementation(WorkflowName.WALLET_TRANSFER)).thenReturn(
+        instance(walletTransferImpl),
+      );
+      when(walletTransferImpl.preprocessTransactionParams(deepEqual(transactionDTO), consumer.props.id)).thenResolve(
+        inputTransaction,
+      );
+      when(walletTransferImpl.initiateWorkflow(deepEqual(transaction))).thenResolve();
+
+      const verificationResult: ConsumerVerificationResult = {
+        status: "FAILED" as any,
       };
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+      const transactionVerification: TransactionVerification = {
+        transactionID: transaction.id,
+        debitConsumerID: transaction.debitConsumerID,
+        creditConsumerID: transaction.creditConsumerID,
+        workflowName: transaction.workflowName,
+        debitAmount: transaction.debitAmount,
+        debitCurrency: transaction.debitCurrency,
+        creditAmount: transaction.creditAmount,
+        creditCurrency: transaction.creditCurrency,
+      };
+      when(
+        verificationService.transactionVerification(
+          transaction.sessionKey,
+          consumer,
+          deepEqual(transactionVerification),
+        ),
+      ).thenResolve(verificationResult);
+
+      when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(transaction);
+
+      const transactionEventToAdd: TransactionEventDTO = {
+        message: "Transaction has been determined to be high risk",
+        details: `Result: "FAILED"`,
+        internal: true,
+      };
+
+      const inputTransactionEvent: InputTransactionEvent = {
+        transactionID: transaction.id,
+        internal: transactionEventToAdd.internal,
+        message: transactionEventToAdd.message,
+        details: transactionEventToAdd.details,
+      };
+
+      const timestamp = new Date();
+      when(transactionRepo.addTransactionEvent(deepEqual(inputTransactionEvent))).thenResolve({
+        ...inputTransactionEvent,
+        id: "event-id",
+        timestamp: timestamp,
+      });
+
+      when(
+        transactionRepo.updateTransactionByTransactionID(
+          transaction.id,
+          deepEqual({
+            status: TransactionStatus.FAILED,
+          }),
+        ),
+      ).thenResolve();
+
+      expect(async () => {
+        await transactionService.initiateTransaction(transactionDTO, consumer.props.id, transaction.sessionKey);
+      }).rejects.toThrow(ServiceException);
+    });
+
+    it("should get an error from IDV provider, write a TransactionEvent, and move to FAILED", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const consumer2 = getRandomConsumer("consumerID2");
+      const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(
+        consumer.props.id,
+        consumer2.props.id,
+      );
+      jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
+        return transaction.transactionRef;
+      });
 
       when(consumerService.getActiveConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerService.getActiveConsumer(consumer2.props.id)).thenResolve(consumer2);
+      when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
+      when(workflowFactory.getWorkflowImplementation(WorkflowName.WALLET_TRANSFER)).thenReturn(
+        instance(walletTransferImpl),
+      );
+      when(walletTransferImpl.preprocessTransactionParams(deepEqual(transactionDTO), consumer.props.id)).thenResolve(
+        inputTransaction,
+      );
+      when(walletTransferImpl.initiateWorkflow(deepEqual(transaction))).thenResolve();
+
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+      const transactionVerification: TransactionVerification = {
+        transactionID: transaction.id,
+        debitConsumerID: transaction.debitConsumerID,
+        creditConsumerID: transaction.creditConsumerID,
+        workflowName: transaction.workflowName,
+        debitAmount: transaction.debitAmount,
+        debitCurrency: transaction.debitCurrency,
+        creditAmount: transaction.creditAmount,
+        creditCurrency: transaction.creditCurrency,
+      };
+      when(
+        verificationService.transactionVerification(
+          transaction.sessionKey,
+          consumer,
+          deepEqual(transactionVerification),
+        ),
+      ).thenThrow(
+        new ServiceException({
+          message: "Sardine request failed",
+          errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+          severity: SeverityLevel.HIGH,
+        }),
+      );
+
+      when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(transaction);
+
+      const transactionEventToAdd: TransactionEventDTO = {
+        message: "Error performing transaction verification",
+        details: `Sardine request failed`,
+        internal: true,
+      };
+
+      const inputTransactionEvent: InputTransactionEvent = {
+        transactionID: transaction.id,
+        internal: transactionEventToAdd.internal,
+        message: transactionEventToAdd.message,
+        details: transactionEventToAdd.details,
+      };
+
+      const timestamp = new Date();
+      when(transactionRepo.addTransactionEvent(deepEqual(inputTransactionEvent))).thenResolve({
+        ...inputTransactionEvent,
+        id: "event-id",
+        timestamp: timestamp,
+      });
+
+      when(
+        transactionRepo.updateTransactionByTransactionID(
+          transaction.id,
+          deepEqual({
+            status: TransactionStatus.FAILED,
+          }),
+        ),
+      ).thenResolve();
+
+      expect(async () => {
+        await transactionService.initiateTransaction(transactionDTO, consumer.props.id, transaction.sessionKey);
+      }).rejects.toThrow(ServiceException);
+    });
+
+    it("should add optional withdrawal details to repo during transaction", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(
+        consumer.props.id,
+        undefined,
+        WorkflowName.WALLET_WITHDRAWAL,
+      );
+      jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
+        return transaction.transactionRef;
+      });
+
+      when(consumerService.getActiveConsumer(consumer.props.id)).thenResolve(consumer);
       when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
       when(
         withdrawalDetailsRepo.addWithdrawalDetails(
           deepEqual({
             transactionID: transaction.id,
-            ...withdrawalData,
+            ...transactionDTO.withdrawalData,
           }),
         ),
       ).thenResolve(null); // Not being used right now
-      when(workflowFactory.getWorkflowImplementation(WorkflowName.WALLET_TRANSFER)).thenReturn(
-        instance(walletTransferImpl),
+      when(workflowFactory.getWorkflowImplementation(WorkflowName.WALLET_WITHDRAWAL)).thenReturn(
+        instance(walletWithdrawalImpl),
       );
 
-      when(walletTransferImpl.preprocessTransactionParams(deepEqual(transactionDTO), consumer.props.id)).thenResolve(
+      when(walletWithdrawalImpl.preprocessTransactionParams(deepEqual(transactionDTO), consumer.props.id)).thenResolve(
         inputTransaction,
       );
-      when(walletTransferImpl.initiateWorkflow(deepEqual(transaction))).thenResolve();
+      when(walletWithdrawalImpl.initiateWorkflow(deepEqual(transaction))).thenResolve();
 
       const returnedTransaction = await transactionService.initiateTransaction(
         transactionDTO,
@@ -292,16 +448,15 @@ describe("TransactionServiceTests", () => {
       expect(returnedTransaction).toEqual(transaction);
 
       const [propagatedTransactionToSave] = capture(transactionRepo.createTransaction).last();
-      expect(propagatedTransactionToSave).toStrictEqual({
+      expect(propagatedTransactionToSave).toEqual({
         transactionRef: transaction.transactionRef,
-        workflowName: "WALLET_TRANSFER",
+        workflowName: "WALLET_WITHDRAWAL",
         debitConsumerID: "consumerID",
-        creditConsumerID: "consumerID2",
         debitAmount: transaction.debitAmount,
-        creditAmount: transaction.debitAmount, // as exchange rate is always 1.
+        creditAmount: transaction.creditAmount,
         debitCurrency: "USD",
-        creditCurrency: "USD",
-        exchangeRate: 1, // Always 1 for wallet transfer
+        creditCurrency: "COP",
+        exchangeRate: 1,
         sessionKey: transaction.sessionKey,
         memo: transaction.memo,
         transactionFees: [
@@ -584,15 +739,15 @@ describe("TransactionServiceTests", () => {
 
       expect(updatedTransaction.status).toEqual(updateTransactionDTO.status);
     });
-  });
 
-  it("should throw a ServiceException if the transaction doesn't exist", async () => {
-    const transactionID = "non-existient-transaction-id";
-    when(transactionRepo.getTransactionByID(transactionID)).thenResolve(null);
+    it("should throw a ServiceException if the transaction doesn't exist", async () => {
+      const transactionID = "non-existient-transaction-id";
+      when(transactionRepo.getTransactionByID(transactionID)).thenResolve(null);
 
-    expect(async () => await transactionService.updateTransaction(transactionID, {})).rejects.toThrowError(
-      ServiceException,
-    );
+      expect(async () => await transactionService.updateTransaction(transactionID, {})).rejects.toThrowError(
+        ServiceException,
+      );
+    });
   });
 
   describe("debitFromBank", () => {
@@ -741,17 +896,58 @@ const getRandomConsumer = (consumerID: string): Consumer => {
 const getRandomTransaction = (
   debitConsumerID: string,
   creditConsumerID: string,
+  workflowName: WorkflowName = WorkflowName.WALLET_TRANSFER,
 ): { transaction: Transaction; transactionDTO: InitiateTransactionDTO; inputTransaction: InputTransaction } => {
+  let exchangeRate;
+  let debitCurrency;
+  let creditCurrency;
+  let debitAmount;
+  let creditAmount;
+  let withdrawalData;
+  switch (workflowName) {
+    case WorkflowName.WALLET_TRANSFER:
+      exchangeRate = 1;
+      debitCurrency = Currency.USD;
+      creditCurrency = Currency.USD;
+      debitAmount = 100;
+      creditAmount = 100;
+      break;
+    case WorkflowName.WALLET_DEPOSIT:
+      exchangeRate = getCOPUSDExchangeRate().nobaRate;
+      debitCurrency = Currency.COP;
+      creditCurrency = Currency.USD;
+      debitAmount = 100;
+      creditAmount = 100;
+      break;
+    case WorkflowName.WALLET_WITHDRAWAL:
+      exchangeRate = getUSDCOPExchangeRate().nobaRate;
+      debitCurrency = Currency.USD;
+      creditCurrency = Currency.COP;
+      debitAmount = 100;
+      creditAmount = 100;
+      withdrawalData = {
+        accountNumber: "12345",
+        accountType: AccountType.SAVINGS,
+        bankCode: "BOFA",
+        documentNumber: "123456789",
+        documentType: DocumentType.CC,
+      };
+      break;
+    default:
+      throw new Error("Invalid workflow name");
+  }
+
   const transaction: Transaction = {
     transactionRef: Utils.generateLowercaseUUID(true),
-    exchangeRate: 1,
+    exchangeRate: exchangeRate,
     status: TransactionStatus.INITIATED,
-    workflowName: WorkflowName.WALLET_TRANSFER,
+    workflowName: workflowName,
     id: v4(),
     sessionKey: v4(),
     memo: "New transaction",
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    ...(withdrawalData && { withdrawalData }),
     transactionFees: [
       {
         id: v4(),
@@ -767,6 +963,7 @@ const getRandomTransaction = (
     workflowName: transaction.workflowName,
     exchangeRate: transaction.exchangeRate,
     memo: transaction.memo,
+    ...(withdrawalData && { withdrawalData }),
   };
 
   const inputTransaction: InputTransaction = {
@@ -784,21 +981,24 @@ const getRandomTransaction = (
     ],
   };
 
-  transaction.debitAmount = 100;
-  transaction.debitCurrency = "USD";
-  transaction.debitConsumerID = debitConsumerID;
-  transaction.creditConsumerID = creditConsumerID;
+  transaction.debitAmount = debitAmount;
+  transaction.debitCurrency = debitCurrency;
+  transaction.creditAmount = creditAmount;
+  transaction.creditCurrency = creditCurrency;
+  if (debitConsumerID) transaction.debitConsumerID = debitConsumerID;
+  if (creditConsumerID) transaction.creditConsumerID = creditConsumerID;
 
   transactionDTO.debitAmount = transaction.debitAmount;
-  transactionDTO.debitCurrency = Currency.USD;
+  transactionDTO.debitCurrency = transaction.debitCurrency as any;
+  transactionDTO.debitConsumerIDOrTag = transaction.debitConsumerID;
   transactionDTO.creditConsumerIDOrTag = transaction.creditConsumerID;
 
   inputTransaction.debitAmount = transaction.debitAmount;
   inputTransaction.debitCurrency = transaction.debitCurrency;
   inputTransaction.debitConsumerID = transaction.debitConsumerID;
   inputTransaction.creditConsumerID = transaction.creditConsumerID;
-  inputTransaction.creditAmount = transaction.debitAmount;
-  inputTransaction.creditCurrency = transaction.debitCurrency;
+  inputTransaction.creditAmount = transaction.creditAmount;
+  inputTransaction.creditCurrency = transaction.creditCurrency;
 
   return { transaction, transactionDTO, inputTransaction };
 };

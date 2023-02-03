@@ -21,6 +21,8 @@ import { NotificationEventType } from "../notifications/domain/NotificationTypes
 import { IDVerificationURLRequestLocale } from "./dto/IDVerificationRequestURLDTO";
 import { isValidDateOfBirth } from "../../core/utils/DateUtils";
 import { TransactionVerification } from "./domain/TransactionVerification";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
+import { SeverityLevel } from "../../core/exception/base.exception";
 
 @Injectable()
 export class VerificationService {
@@ -329,7 +331,27 @@ export class VerificationService {
     consumer: Consumer,
     transactionVerification: TransactionVerification,
   ): Promise<ConsumerVerificationResult> {
-    const result = await this.idvProvider.transactionVerification(sessionKey, consumer, transactionVerification);
+    let result;
+    try {
+      result = await this.idvProvider.transactionVerification(sessionKey, consumer, transactionVerification);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new ServiceException({
+          message: error.message,
+          errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+          severity: SeverityLevel.HIGH,
+        });
+      }
+      throw error;
+    }
+
+    if (!result) {
+      throw new ServiceException({
+        message: "Unknown error performing transaction verification against IDV provider",
+        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+        severity: SeverityLevel.HIGH,
+      });
+    }
 
     const newConsumerData: ConsumerProps = {
       ...consumer.props,
