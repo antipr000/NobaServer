@@ -33,6 +33,7 @@ import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent";
 import { SendCollectionCompletedEvent } from "../events/SendCollectionCompletedEvent";
 import { SendEmployerRequestEvent } from "../events/SendEmployerRequestEvent";
+import { WorkflowName } from "../../../modules/transaction/domain/Transaction";
 
 describe("EmailEventHandler", () => {
   let currencyService: CurrencyService;
@@ -416,20 +417,14 @@ describe("EmailEventHandler", () => {
       email: "fake+user@noba.com",
       name: "First",
       handle: "fake-handle",
-      params: {
-        ...getTransactionParams(),
-        debitAmount: "USD",
-        creditAmount: "COP",
-        debitCurrency: 10,
-        exchangeRate: 0.0025,
-      },
+      params: getTransactionParams(WorkflowName.WALLET_DEPOSIT),
       locale: "en",
     });
 
     await eventHandler.sendDepositCompletedEmail(payload);
     const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
+      Utils.roundTo2DecimalNumber(payload.params.creditAmount) +
+      Utils.roundTo2DecimalNumber(payload.params.processingFees) +
       Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
     const [emailRequest] = capture(emailClient.sendEmail).last();
@@ -439,15 +434,17 @@ describe("EmailEventHandler", () => {
       templateId: EmailTemplates.DEPOSIT_SUCCESSFUL_EMAIL["en"],
       dynamicTemplateData: {
         firstName: payload.name,
-        debitAmount: payload.params.debitAmount,
-        creditAmount: payload.params.creditAmount,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: "COP",
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: "USDC",
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        subtotal: subtotal,
-        fiatCurrencyCode: payload.params.fiatCurrencyCode,
-        processingFees: payload.params.processingFees,
+        subtotal: Utils.roundTo2DecimalString(subtotal),
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
       },
     });
   });
@@ -458,20 +455,16 @@ describe("EmailEventHandler", () => {
       name: "First",
       handle: "fake-handle",
       params: {
-        ...getTransactionParams(),
-        debitAmount: "USD",
-        creditAmount: "COP",
-        debitCurrency: 10,
-        exchangeRate: 0.0025,
-        reasonDeclined: "Reason",
+        ...getTransactionParams(WorkflowName.WALLET_DEPOSIT),
+        reasonDeclined: "Failed",
       },
       locale: "en",
     });
 
     await eventHandler.sendDepositFailedEmail(payload);
     const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
+      Utils.roundTo2DecimalNumber(payload.params.creditAmount) +
+      Utils.roundTo2DecimalNumber(payload.params.processingFees) +
       Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
     const [emailRequest] = capture(emailClient.sendEmail).last();
@@ -481,14 +474,17 @@ describe("EmailEventHandler", () => {
       templateId: EmailTemplates.DEPOSIT_FAILED_EMAIL["en"],
       dynamicTemplateData: {
         firstName: payload.name,
-        totalPrice: payload.params.totalPrice,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: "COP",
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: "USDC",
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        subtotal: subtotal,
-        fiatCurrencyCode: payload.params.fiatCurrencyCode,
-        processingFees: payload.params.processingFees,
+        subtotal: Utils.roundTo2DecimalString(subtotal),
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
         reasonDeclined: payload.params.reasonDeclined,
       },
     });
@@ -500,20 +496,15 @@ describe("EmailEventHandler", () => {
       name: "First",
       handle: "fake-handle",
       params: {
-        ...getTransactionParams(),
-        debitAmount: 1,
-        creditAmount: 5000,
-        debitCurrency: "USD",
-        exchangeRate: 0.0025,
-        reasonDeclined: "Reason",
+        ...getTransactionParams(WorkflowName.WALLET_DEPOSIT),
       },
       locale: "en",
     });
 
     await eventHandler.sendDepositInitiatedEmail(payload);
     const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
+      Utils.roundTo2DecimalNumber(payload.params.creditAmount) +
+      Utils.roundTo2DecimalNumber(payload.params.processingFees) +
       Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
     const [emailRequest] = capture(emailClient.sendEmail).last();
@@ -523,17 +514,17 @@ describe("EmailEventHandler", () => {
       templateId: EmailTemplates.DEPOSIT_INITIATED_EMAIL["en"],
       dynamicTemplateData: {
         firstName: payload.name,
-        totalPrice: payload.params.totalPrice,
-        debitCurrency: payload.params.debitCurrency,
-        creditAmount: payload.params.creditAmount,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: "COP",
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: "USDC",
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        subtotal: subtotal,
-        fiatCurrencyCode: payload.params.fiatCurrencyCode,
-        processingFees: payload.params.processingFees,
-        nobaFee: payload.params.nobaFees,
+        subtotal: Utils.roundTo2DecimalString(subtotal),
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
       },
     });
   });
@@ -544,17 +535,14 @@ describe("EmailEventHandler", () => {
       name: "First",
       handle: "fake-handle",
       params: {
-        ...getTransactionParams(),
-        creditAmount: 50000,
-        debitCurrency: 10,
-        exchangeRate: 0.0025,
+        ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
       },
       locale: "en",
     });
 
     await eventHandler.sendWithdrawalCompletedEmail(payload);
     const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
+      Utils.roundTo2DecimalNumber(payload.params.debitAmount) -
       Utils.roundTo2DecimalNumber(payload.params.processingFees) -
       Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
@@ -565,15 +553,17 @@ describe("EmailEventHandler", () => {
       templateId: EmailTemplates.WITHDRAWAL_SUCCESSFUL_EMAIL["en"],
       dynamicTemplateData: {
         firstName: payload.name,
-        creditAmount: payload.params.creditAmount,
-        creditCurrency: payload.params.creditCurrency,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: "USDC",
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: "COP",
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        subtotal: subtotal,
-        fiatCurrencyCode: payload.params.fiatCurrencyCode,
-        processingFees: payload.params.processingFees,
+        subtotal: Utils.roundTo2DecimalString(subtotal),
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
       },
     });
   });
@@ -584,18 +574,14 @@ describe("EmailEventHandler", () => {
       name: "First",
       handle: "fake-handle",
       params: {
-        ...getTransactionParams(),
-        withdrawalAmount: 5000,
-        creditCurrency: "COP",
-        exchangeRate: 0.0025,
-        debitCurrency: "USD",
+        ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
       },
       locale: "en",
     });
 
     await eventHandler.sendWithdrawalInitiatedEmail(payload);
     const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
+      Utils.roundTo2DecimalNumber(payload.params.debitAmount) -
       Utils.roundTo2DecimalNumber(payload.params.processingFees) -
       Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
@@ -606,18 +592,17 @@ describe("EmailEventHandler", () => {
       templateId: EmailTemplates.WITHDRAWAL_INITIATED_EMAIL["en"],
       dynamicTemplateData: {
         firstName: payload.name,
-        withdrawalAmount: payload.params.withdrawalAmount,
-        creditCurrency: payload.params.creditCurrency,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: "USDC",
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: "COP",
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        debitCurrency: payload.params.debitCurrency,
-        subtotal: subtotal,
-        fiatCurrencyCode: payload.params.fiatCurrencyCode,
-        processingFees: payload.params.processingFees,
-        nobaFee: payload.params.nobaFees,
-        totalPrice: payload.params.totalPrice,
+        subtotal: Utils.roundTo2DecimalString(subtotal),
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
       },
     });
   });
@@ -628,9 +613,7 @@ describe("EmailEventHandler", () => {
       name: "First",
       handle: "fake-handle",
       params: {
-        ...getTransactionParams(),
-        exchangeRate: 0.0025,
-        debitCurrency: "USD",
+        ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
         reasonDeclined: "Failed",
       },
       locale: "en",
@@ -638,7 +621,7 @@ describe("EmailEventHandler", () => {
 
     await eventHandler.sendWithdrawalFailedEmail(payload);
     const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
+      Utils.roundTo2DecimalNumber(payload.params.debitAmount) -
       Utils.roundTo2DecimalNumber(payload.params.processingFees) -
       Utils.roundTo2DecimalNumber(payload.params.nobaFees);
 
@@ -649,16 +632,17 @@ describe("EmailEventHandler", () => {
       templateId: EmailTemplates.WITHDRAWAL_FAILED_EMAIL["en"],
       dynamicTemplateData: {
         firstName: payload.name,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: "USDC",
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: "COP",
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        debitCurrency: payload.params.debitCurrency,
-        subtotal: subtotal,
-        fiatCurrencyCode: payload.params.fiatCurrencyCode,
-        processingFees: payload.params.processingFees,
-        nobaFee: payload.params.nobaFees,
-        totalPrice: payload.params.totalPrice,
+        subtotal: Utils.roundTo2DecimalString(subtotal),
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
         reasonDeclined: payload.params.reasonDeclined,
       },
     });
@@ -670,8 +654,11 @@ describe("EmailEventHandler", () => {
       name: "First",
       handle: "fake-handle",
       params: {
-        ...getTransactionParams(),
-        debitAmount: 10,
+        ...getTransactionParams(WorkflowName.WALLET_TRANSFER),
+        creditConsumer_firstName: "Justin",
+        creditConsumer_lastName: "Ashworth",
+        creditConsumer_handle: "justin",
+        debitConsumer_handle: "gal",
       },
       locale: "en",
     });
@@ -684,14 +671,19 @@ describe("EmailEventHandler", () => {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.TRANSFER_SUCCESSFUL_EMAIL["en"],
       dynamicTemplateData: {
+        creditConsumer_firstName: payload.params.creditConsumer_firstName,
+        creditConsumer_lastName: payload.params.creditConsumer_lastName,
+        debitConsumer_handle: payload.params.debitConsumer_handle,
+        creditConsumer_handle: payload.params.creditConsumer_handle,
         firstName: payload.name,
-        debitAmount: payload.params.debitAmount,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: "USDC",
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: "USDC",
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
-        processingFees: payload.params.processingFees,
-        fiatCurrencyCode: payload.params.fiatCurrencyCode,
-        nobaFee: payload.params.nobaFees,
-        totalPrice: payload.params.totalPrice,
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
       },
     });
   });
@@ -750,13 +742,47 @@ describe("EmailEventHandler", () => {
   });
 });
 
-function getTransactionParams(): TransactionParameters {
-  return {
-    transactionRef: "fake-transaction-ref",
-    createdTimestamp: new Date("2020-01-01").toUTCString(),
-    processingFees: 1,
-    nobaFees: 1,
-    totalPrice: 10,
-    fiatCurrencyCode: "COP",
-  };
+function getTransactionParams(workflow: WorkflowName): TransactionParameters {
+  switch (workflow) {
+    case WorkflowName.WALLET_DEPOSIT:
+      return {
+        debitAmount: 5000,
+        debitCurrency: "COP",
+        creditAmount: 1,
+        creditCurrency: "USD",
+        exchangeRate: 0.0025,
+        transactionRef: "transaction-1",
+        createdTimestamp: "2023-02-02T17:54:37.601Z",
+        processingFees: 0.23,
+        nobaFees: 0.34,
+        totalFees: 0.57,
+      };
+
+    case WorkflowName.WALLET_WITHDRAWAL:
+      return {
+        debitAmount: 1,
+        debitCurrency: "USD",
+        creditAmount: 5000,
+        creditCurrency: "COP",
+        exchangeRate: 5000,
+        transactionRef: "transaction-1",
+        createdTimestamp: "2023-02-02T17:54:37.601Z",
+        processingFees: 0.23,
+        nobaFees: 0.34,
+        totalFees: 0.57,
+      };
+    case WorkflowName.WALLET_TRANSFER:
+      return {
+        debitAmount: 10,
+        debitCurrency: "USD",
+        creditAmount: 9.43,
+        creditCurrency: "USD",
+        exchangeRate: 0.0025,
+        transactionRef: "transaction-1",
+        createdTimestamp: "2023-02-02T17:54:37.601Z",
+        processingFees: 0.23,
+        nobaFees: 0.34,
+        totalFees: 0.57,
+      };
+  }
 }

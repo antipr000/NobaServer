@@ -88,7 +88,6 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
 
     transactionDetails.debitCurrency = Currency.USD;
     transactionDetails.debitConsumerIDOrTag = initiatingConsumer;
-    delete transactionDetails.creditConsumerIDOrTag;
 
     const transactionQuote = await this.getTransactionQuote(
       transactionDetails.debitAmount,

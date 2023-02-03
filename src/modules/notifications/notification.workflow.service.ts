@@ -45,7 +45,7 @@ export class NotificationWorkflowService {
     let consumer: Consumer;
     let payload: NotificationPayload;
 
-    const transactionPayload = this.generateTransactionPayload(transaction, notificationWorkflowType);
+    const transactionPayload = await this.generateTransactionPayload(transaction, notificationWorkflowType);
     switch (notificationWorkflowType) {
       case NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT:
         consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
@@ -80,13 +80,6 @@ export class NotificationWorkflowService {
         payload = prepareNotificationPayload(consumer, {
           transferCompletedParams: transactionPayload,
         });
-        await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT, payload);
-
-        consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
-        payload = prepareNotificationPayload(consumer, {
-          transferCompletedParams: transactionPayload,
-        });
-        await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.COLLECTION_COMPLETED_EVENT:
         consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
@@ -104,7 +97,10 @@ export class NotificationWorkflowService {
     }
   }
 
-  private generateTransactionPayload(transaction: Transaction, notificationType: NotificationWorkflowTypes): any {
+  private async generateTransactionPayload(
+    transaction: Transaction,
+    notificationType: NotificationWorkflowTypes,
+  ): Promise<any> {
     switch (notificationType) {
       case NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT:
         return this.transactionNotificationPayloadMapper.toDepositCompletedNotificationParameters(transaction);
@@ -115,7 +111,13 @@ export class NotificationWorkflowService {
       case NotificationWorkflowTypes.WITHDRAWAL_FAILED_EVENT:
         return this.transactionNotificationPayloadMapper.toWithdrawalFailedNotificationParameters(transaction);
       case NotificationWorkflowTypes.TRANSFER_COMPLETED_EVENT:
-        return this.transactionNotificationPayloadMapper.toTransferCompletedNotificationParameters(transaction);
+        const creditConsumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
+        const debitConsumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+        return this.transactionNotificationPayloadMapper.toTransferCompletedNotificationParameters(
+          transaction,
+          debitConsumer,
+          creditConsumer,
+        );
       default:
         return null;
     }

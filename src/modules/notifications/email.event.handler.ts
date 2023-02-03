@@ -35,6 +35,11 @@ const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
 const NOBA_COMPLIANCE_EMAIL = "Noba Compliance <compliance@noba.com>";
 
+const processCurrency = (currency): string => {
+  if (currency === "USD") return "USDC";
+  return currency;
+};
+
 @Injectable()
 export class EmailEventHandler {
   @Inject(WINSTON_MODULE_PROVIDER)
@@ -272,9 +277,7 @@ export class EmailEventHandler {
   @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT}`)
   public async sendDepositCompletedEmail(payload: SendDepositCompletedEvent) {
     const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+      Utils.roundTo2DecimalNumber(payload.params.creditAmount) + Utils.roundTo2DecimalNumber(payload.params.totalFees);
 
     const msg = {
       to: payload.email,
@@ -282,15 +285,17 @@ export class EmailEventHandler {
       templateId: EmailTemplates.DEPOSIT_SUCCESSFUL_EMAIL[payload.locale ?? "en"],
       dynamicTemplateData: {
         firstName: payload.name,
-        debitAmount: payload.params.debitAmount,
-        creditAmount: payload.params.creditAmount,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: processCurrency(payload.params.debitCurrency),
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: processCurrency(payload.params.creditCurrency),
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        subtotal: subtotal,
-        fiatCurrencyCode: payload.params.fiatCurrencyCode,
-        processingFees: payload.params.processingFees,
+        subtotal: Utils.roundTo2DecimalString(subtotal),
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
       },
     };
 
@@ -300,9 +305,7 @@ export class EmailEventHandler {
   @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT}`)
   public async sendDepositInitiatedEmail(payload: SendDepositInitiatedEvent) {
     const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+      Utils.roundTo2DecimalNumber(payload.params.creditAmount) + Utils.roundTo2DecimalNumber(payload.params.totalFees);
 
     const msg = {
       to: payload.email,
@@ -310,17 +313,17 @@ export class EmailEventHandler {
       templateId: EmailTemplates.DEPOSIT_INITIATED_EMAIL[payload.locale ?? "en"],
       dynamicTemplateData: {
         firstName: payload.name,
-        totalPrice: payload.params.totalPrice,
-        debitCurrency: payload.params.debitCurrency,
-        creditAmount: payload.params.creditAmount,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: processCurrency(payload.params.debitCurrency),
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: processCurrency(payload.params.creditCurrency),
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        subtotal: subtotal,
-        fiatCurrencyCode: payload.params.fiatCurrencyCode,
-        processingFees: payload.params.processingFees,
-        nobaFee: payload.params.nobaFees,
+        subtotal: Utils.roundTo2DecimalString(subtotal),
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
       },
     };
 
@@ -330,9 +333,7 @@ export class EmailEventHandler {
   @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_FAILED_EVENT}`)
   public async sendDepositFailedEmail(payload: SendDepositFailedEvent) {
     const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+      Utils.roundTo2DecimalNumber(payload.params.creditAmount) + Utils.roundTo2DecimalNumber(payload.params.totalFees);
 
     const msg = {
       to: payload.email,
@@ -340,14 +341,17 @@ export class EmailEventHandler {
       templateId: EmailTemplates.DEPOSIT_FAILED_EMAIL[payload.locale ?? "en"],
       dynamicTemplateData: {
         firstName: payload.name,
-        totalPrice: payload.params.totalPrice,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: processCurrency(payload.params.debitCurrency),
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: processCurrency(payload.params.creditCurrency),
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        subtotal: subtotal,
-        fiatCurrencyCode: payload.params.fiatCurrencyCode,
-        processingFees: payload.params.processingFees,
+        subtotal: Utils.roundTo2DecimalString(subtotal),
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
         reasonDeclined: payload.params.reasonDeclined,
       },
     };
@@ -358,9 +362,7 @@ export class EmailEventHandler {
   @OnEvent(`email.${NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT}`)
   public async sendWithdrawalCompletedEmail(payload: SendWithdrawalCompletedEvent) {
     const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+      Utils.roundTo2DecimalNumber(payload.params.debitAmount) - Utils.roundTo2DecimalNumber(payload.params.totalFees);
 
     const msg = {
       to: payload.email,
@@ -368,15 +370,17 @@ export class EmailEventHandler {
       templateId: EmailTemplates.WITHDRAWAL_SUCCESSFUL_EMAIL[payload.locale ?? "en"],
       dynamicTemplateData: {
         firstName: payload.name,
-        creditAmount: payload.params.creditAmount,
-        creditCurrency: payload.params.creditCurrency,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: processCurrency(payload.params.debitCurrency),
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: processCurrency(payload.params.creditCurrency),
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        subtotal: subtotal,
-        fiatCurrencyCode: payload.params.fiatCurrencyCode,
-        processingFees: payload.params.processingFees,
+        subtotal: Utils.roundTo2DecimalString(subtotal),
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
       },
     };
 
@@ -386,9 +390,7 @@ export class EmailEventHandler {
   @OnEvent(`email.${NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT}`)
   public async sendWithdrawalInitiatedEmail(payload: SendWithdrawalInitiatedEvent) {
     const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+      Utils.roundTo2DecimalNumber(payload.params.debitAmount) - Utils.roundTo2DecimalNumber(payload.params.totalFees);
 
     const msg = {
       to: payload.email,
@@ -396,18 +398,17 @@ export class EmailEventHandler {
       templateId: EmailTemplates.WITHDRAWAL_INITIATED_EMAIL[payload.locale ?? "en"],
       dynamicTemplateData: {
         firstName: payload.name,
-        withdrawalAmount: payload.params.withdrawalAmount,
-        creditCurrency: payload.params.creditCurrency,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: processCurrency(payload.params.debitCurrency),
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: processCurrency(payload.params.creditCurrency),
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        debitCurrency: payload.params.debitCurrency,
-        subtotal: subtotal,
-        fiatCurrencyCode: payload.params.fiatCurrencyCode,
-        processingFees: payload.params.processingFees,
-        nobaFee: payload.params.nobaFees,
-        totalPrice: payload.params.totalPrice,
+        subtotal: Utils.roundTo2DecimalString(subtotal),
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
       },
     };
 
@@ -417,9 +418,7 @@ export class EmailEventHandler {
   @OnEvent(`email.${NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT}`)
   public async sendWithdrawalFailedEmail(payload: SendWithdrawalFailedEvent) {
     const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.totalPrice) -
-      Utils.roundTo2DecimalNumber(payload.params.processingFees) -
-      Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+      Utils.roundTo2DecimalNumber(payload.params.debitAmount) - Utils.roundTo2DecimalNumber(payload.params.totalFees);
 
     const msg = {
       to: payload.email,
@@ -427,16 +426,17 @@ export class EmailEventHandler {
       templateId: EmailTemplates.WITHDRAWAL_FAILED_EMAIL[payload.locale ?? "en"],
       dynamicTemplateData: {
         firstName: payload.name,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: processCurrency(payload.params.debitCurrency),
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: processCurrency(payload.params.creditCurrency),
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        debitCurrency: payload.params.debitCurrency,
-        subtotal: subtotal,
-        fiatCurrencyCode: payload.params.fiatCurrencyCode,
-        processingFees: payload.params.processingFees,
-        nobaFee: payload.params.nobaFees,
-        totalPrice: payload.params.totalPrice,
+        subtotal: Utils.roundTo2DecimalString(subtotal),
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
         reasonDeclined: payload.params.reasonDeclined,
       },
     };
@@ -451,14 +451,19 @@ export class EmailEventHandler {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.TRANSFER_SUCCESSFUL_EMAIL[payload.locale ?? "en"],
       dynamicTemplateData: {
+        creditConsumer_firstName: payload.params.creditConsumer_firstName,
+        creditConsumer_lastName: payload.params.creditConsumer_lastName,
+        debitConsumer_handle: payload.params.debitConsumer_handle,
+        creditConsumer_handle: payload.params.creditConsumer_handle,
         firstName: payload.name,
-        debitAmount: payload.params.debitAmount,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: processCurrency(payload.params.debitCurrency),
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: processCurrency(payload.params.creditCurrency),
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
-        processingFees: payload.params.processingFees,
-        fiatCurrencyCode: payload.params.fiatCurrencyCode,
-        nobaFee: payload.params.nobaFees,
-        totalPrice: payload.params.totalPrice,
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
       },
     };
 

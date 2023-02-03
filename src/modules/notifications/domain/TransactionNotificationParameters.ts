@@ -1,135 +1,106 @@
-import { Transaction } from "../../../modules/transaction/domain/Transaction";
+import { FeeType } from "../../../modules/transaction/domain/TransactionFee";
+import { Transaction, getFee, getTotalFees } from "../../../modules/transaction/domain/Transaction";
+import { Consumer } from "../../../modules/consumer/domain/Consumer";
 
 export type TransactionParameters = {
   transactionRef: string;
   createdTimestamp: string;
   processingFees: number;
   nobaFees: number;
-  totalPrice: number;
-  fiatCurrencyCode: string;
-};
-
-export interface DepositCompletedNotificationParameters extends TransactionParameters {
   debitAmount: number;
   creditAmount: number;
   debitCurrency: string;
-  exchangeRate: number;
-}
+  creditCurrency: string;
+  totalFees: number;
+  exchangeRate?: number;
+};
 
-export interface DepositFailedNotificationParameters extends DepositCompletedNotificationParameters {
+export type DepositCompletedNotificationParameters = TransactionParameters;
+
+export interface DepositFailedNotificationParameters extends TransactionParameters {
   reasonDeclined: string;
 }
 
-export type DepositInitiatedNotificationParameters = DepositCompletedNotificationParameters;
+export type DepositInitiatedNotificationParameters = TransactionParameters;
 
-export interface WithdrawalCompletedNotificationParameters extends TransactionParameters {
-  creditAmount: number;
-  creditCurrency: string;
-  exchangeRate: number;
-}
+export type WithdrawalCompletedNotificationParameters = TransactionParameters;
 
-export interface WithdrawalIntiatedNotificationParameters extends TransactionParameters {
-  withdrawalAmount: number;
-  creditCurrency: string;
-  exchangeRate: number;
-  debitCurrency: string;
-}
+export type WithdrawalIntiatedNotificationParameters = TransactionParameters;
 
 export interface WithdrawalFailedNotificationParameters extends TransactionParameters {
   reasonDeclined: string;
-  exchangeRate: number;
-  debitCurrency: string;
 }
 
 export interface TransferCompletedNotificationParameters extends TransactionParameters {
-  debitAmount: number;
+  creditConsumer_firstName: string;
+  creditConsumer_lastName: string;
+  debitConsumer_handle: string;
+  creditConsumer_handle: string;
 }
 
 // TODO(jira/CRYPTO-604): Remove hardcoded values and unnecessary fields once templates are ready
 export class TransactionNotificationPayloadMapper {
   toTransactionParams(transaction: Transaction): TransactionParameters {
+    const processingFee = getFee(transaction, FeeType.PROCESSING);
+    const nobaFee = getFee(transaction, FeeType.NOBA);
     return {
       transactionRef: transaction.transactionRef,
       createdTimestamp: transaction.createdTimestamp.toUTCString(),
-      processingFees: 0,
-      nobaFees: 0,
-      fiatCurrencyCode: transaction.debitCurrency,
-      totalPrice: transaction.debitAmount,
+      processingFees: processingFee ? processingFee.amount : 0,
+      nobaFees: nobaFee ? nobaFee.amount : 0,
+      debitAmount: transaction.debitAmount,
+      debitCurrency: transaction.debitCurrency,
+      creditAmount: transaction.creditAmount,
+      creditCurrency: transaction.creditCurrency,
+      exchangeRate: transaction.exchangeRate,
+      totalFees: getTotalFees(transaction),
     };
   }
 
   toDepositInitiatedNotificationParameters(transaction: Transaction): DepositInitiatedNotificationParameters {
-    const transactionParams = this.toTransactionParams(transaction);
-    return {
-      ...transactionParams,
-      debitAmount: transaction.debitAmount,
-      creditAmount: transaction.creditAmount,
-      debitCurrency: transaction.debitCurrency,
-      exchangeRate: transaction.exchangeRate,
-      totalPrice: transaction.creditAmount,
-    };
+    return this.toTransactionParams(transaction);
   }
 
   toDepositCompletedNotificationParameters(transaction: Transaction): DepositCompletedNotificationParameters {
-    const transactionParams = this.toTransactionParams(transaction);
-    return {
-      ...transactionParams,
-      debitAmount: transaction.debitAmount,
-      creditAmount: transaction.creditAmount,
-      debitCurrency: transaction.debitCurrency,
-      exchangeRate: transaction.exchangeRate,
-      totalPrice: transaction.debitAmount,
-    };
+    return this.toTransactionParams(transaction);
   }
 
   toDepositFailedNotificationParameters(transaction: Transaction): DepositFailedNotificationParameters {
-    const depositParams = this.toDepositCompletedNotificationParameters(transaction);
+    const transactionParams = this.toTransactionParams(transaction);
     return {
-      ...depositParams,
-      reasonDeclined: "",
+      ...transactionParams,
+      reasonDeclined: "Something went wrong",
     };
   }
 
   toWithdrawalInitiatedNotificationParameters(transaction: Transaction): WithdrawalIntiatedNotificationParameters {
-    const transactionParams = this.toTransactionParams(transaction);
-    return {
-      ...transactionParams,
-      withdrawalAmount: transaction.debitAmount,
-      creditCurrency: transaction.creditCurrency,
-      exchangeRate: transaction.exchangeRate,
-      debitCurrency: transaction.debitCurrency,
-      totalPrice: transaction.creditAmount,
-    };
+    return this.toTransactionParams(transaction);
   }
 
   toWithdrawalCompletedNotificationParameters(transaction: Transaction): WithdrawalCompletedNotificationParameters {
-    const transactionParams = this.toTransactionParams(transaction);
-    return {
-      ...transactionParams,
-      creditAmount: transaction.creditAmount,
-      creditCurrency: transaction.creditCurrency,
-      exchangeRate: transaction.exchangeRate,
-      totalPrice: transaction.creditAmount,
-    };
+    return this.toTransactionParams(transaction);
   }
 
   toWithdrawalFailedNotificationParameters(transaction: Transaction): WithdrawalFailedNotificationParameters {
     const transactionParams = this.toTransactionParams(transaction);
     return {
       ...transactionParams,
-      reasonDeclined: "",
-      exchangeRate: transaction.exchangeRate,
-      debitCurrency: transaction.debitCurrency,
-      totalPrice: transaction.debitAmount,
+      reasonDeclined: "Something went wrong",
     };
   }
 
-  toTransferCompletedNotificationParameters(transaction: Transaction): TransferCompletedNotificationParameters {
+  toTransferCompletedNotificationParameters(
+    transaction: Transaction,
+    debitConsumer: Consumer,
+    creditConsumer: Consumer,
+  ): TransferCompletedNotificationParameters {
     const transactionParams = this.toTransactionParams(transaction);
     return {
       ...transactionParams,
-      debitAmount: transaction.debitAmount,
-      totalPrice: transaction.creditAmount,
+      creditConsumer_firstName: creditConsumer.props.firstName,
+      creditConsumer_lastName: creditConsumer.props.lastName,
+      creditConsumer_handle: creditConsumer.props.handle,
+      debitConsumer_handle: debitConsumer.props.handle,
     };
   }
 }
