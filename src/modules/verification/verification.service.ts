@@ -192,7 +192,6 @@ export class VerificationService {
     } catch (e) {
       await this.notificationService.sendNotification(
         NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT,
-
         {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
@@ -203,16 +202,12 @@ export class VerificationService {
       throw e;
     }
     const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
-    await this.notificationService.sendNotification(
-      NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
-
-      {
-        firstName: updatedConsumer.props.firstName,
-        lastName: updatedConsumer.props.lastName,
-        nobaUserID: consumer.props.id,
-        email: updatedConsumer.props.displayEmail,
-      },
-    );
+    await this.notificationService.sendNotification(NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT, {
+      firstName: updatedConsumer.props.firstName,
+      lastName: updatedConsumer.props.lastName,
+      nobaUserID: consumer.props.id,
+      email: updatedConsumer.props.displayEmail,
+    });
     return id;
   }
 
@@ -335,14 +330,11 @@ export class VerificationService {
     try {
       result = await this.idvProvider.transactionVerification(sessionKey, consumer, transactionVerification);
     } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw new ServiceException({
-          message: error.message,
-          errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
-          severity: SeverityLevel.HIGH,
-        });
-      }
-      throw error;
+      throw new ServiceException({
+        message: error.message,
+        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+        severity: SeverityLevel.HIGH,
+      });
     }
 
     if (!result) {
