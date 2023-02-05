@@ -41,7 +41,7 @@ import { NotificationEventType } from "../../../modules/notifications/domain/Not
 import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
 import { TransactionVerification } from "../domain/TransactionVerification";
 import { ServiceException } from "../../../core/exception/service.exception";
-import { uuid } from "uuidv4";
+import { v4 } from "uuid";
 
 describe("VerificationService", () => {
   let verificationService: VerificationService;
@@ -111,9 +111,9 @@ describe("VerificationService", () => {
 
   describe("getDeviceVerificationResult", () => {
     it("should return device information", async () => {
-      const sessionKey = uuid();
+      const sessionKey = v4();
       const deviceInfo: SardineDeviceInformationResponse = {
-        id: uuid(),
+        id: v4(),
         level: SardineRiskLevels.LOW,
         sessionKey: sessionKey,
       };
@@ -1030,7 +1030,7 @@ describe("VerificationService", () => {
 });
 
 function getFakeConsumer(firstName = "Fake"): Consumer {
-  const consumerID = uuid();
+  const consumerID = v4();
   return Consumer.createConsumer({
     id: consumerID,
     firstName: firstName,
