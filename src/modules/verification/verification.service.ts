@@ -83,7 +83,7 @@ export class VerificationService {
         emails: [consumerInformation.email],
       },
     ]);
-    if (consumers.length > 0) {
+    if (consumers && consumers.length > 0) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: "Consumer with this phone number or email already exists",
