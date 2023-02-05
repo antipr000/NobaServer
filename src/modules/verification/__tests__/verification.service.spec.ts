@@ -966,11 +966,10 @@ describe("VerificationService", () => {
         new Error(),
       );
 
-      expect(
+      when(notificationService.sendNotification(anything(), anything())).thenResolve();
+      await expect(
         async () => await verificationService.verifyDocument(consumer.props.id, sessionKey, documentInformation),
       ).rejects.toThrow(Error);
-
-      /* TODO: Why doesn't this work?
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT,
@@ -981,7 +980,7 @@ describe("VerificationService", () => {
             email: consumer.props.displayEmail,
           }),
         ),
-      ).once();*/
+      ).once();
     });
   });
 });
