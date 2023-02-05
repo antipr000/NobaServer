@@ -492,6 +492,7 @@ describe("ConsumerService", () => {
         id: "mock-consumer-1",
         email: email,
         firstName: firstName,
+        lastName: lastName,
       });
 
       const updatedConsumerData = Consumer.createConsumer({
@@ -509,10 +510,11 @@ describe("ConsumerService", () => {
             id: consumer.props.id,
             firstName: firstName,
             lastName: lastName,
-            handle: anything(),
+            handle: anyString(),
           }),
         ),
       ).thenResolve(updatedConsumerData);
+      when(consumerRepo.isHandleTaken(anyString())).thenResolve(false);
 
       const returnedResult = await consumerService.updateConsumer({
         id: consumer.props.id,
@@ -530,6 +532,46 @@ describe("ConsumerService", () => {
       expect(updateConsumerCall.handle[0] != "-").toBeTruthy();
 
       expect(returnedResult.props.handle).toBeDefined();
+    });
+
+    it("should throw error if unable to generate a handle", async () => {
+      const email = "mock-user@noba.com";
+      const firstName = "test.test";
+      const lastName = "Last";
+
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+      });
+
+      const updatedConsumerData = Consumer.createConsumer({
+        ...consumer.props,
+        firstName: firstName,
+        lastName: lastName,
+        handle: "<PLACEHOLDER_AS_HANDLE_IS_RANDOM>",
+      });
+      when(consumerRepo.isHandleTaken(anyString())).thenResolve(true);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(
+        consumerRepo.updateConsumer(
+          consumer.props.id,
+          deepEqual({
+            id: consumer.props.id,
+            firstName: firstName,
+            lastName: lastName,
+          }),
+        ),
+      ).thenResolve(updatedConsumerData);
+
+      expect(
+        consumerService.updateConsumer({
+          id: consumer.props.id,
+          firstName: firstName,
+          lastName: lastName,
+        }),
+      ).rejects.toThrow(ServiceException);
     });
 
     it("should throw error if user does not exist", async () => {
@@ -1196,6 +1238,7 @@ describe("ConsumerService", () => {
       when(otpService.checkIfOTPIsValidAndCleanup(phone, IdentityType.CONSUMER, phoneUpdateRequest.otp)).thenResolve(
         true,
       );
+      when(consumerRepo.isHandleTaken(anyString())).thenResolve(false);
       when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anyString(), anything())).thenResolve(expectedUpdatedConsumer);
 
@@ -1440,6 +1483,7 @@ describe("ConsumerService", () => {
       when(otpService.checkIfOTPIsValidAndCleanup(email, IdentityType.CONSUMER, emailUpdateRequest.otp)).thenResolve(
         true,
       );
+      when(consumerRepo.isHandleTaken(anyString())).thenResolve(false);
       when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(consumerRepo.updateConsumer(anyString(), anything())).thenResolve(expectedUpdatedConsumer);
       when(
@@ -1590,7 +1634,7 @@ describe("ConsumerService", () => {
 
   describe("isHandleAvailable", () => {
     it("should throw BadRequestException if 'handle' is less than 3 characters", async () => {
-      expect(async () => await consumerService.isHandleAvailable("ab")).rejects.toThrow(BadRequestException);
+      expect(async () => await consumerService.isHandleAvailable("ab")).rejects.toThrow(ServiceException);
       expect(async () => await consumerService.isHandleAvailable("ab")).rejects.toThrow(
         "'handle' should be between 3 and 22 charcters long.",
       );
@@ -1598,7 +1642,7 @@ describe("ConsumerService", () => {
 
     it("should throw BadRequestException if 'handle' is greater than 22 characters", async () => {
       expect(async () => await consumerService.isHandleAvailable("abcdefghijklmnopqrstuva")).rejects.toThrow(
-        BadRequestException,
+        ServiceException,
       );
       expect(async () => await consumerService.isHandleAvailable("abcdefghijklmnopqrstuva")).rejects.toThrow(
         "'handle' should be between 3 and 22 charcters long.",
@@ -1612,7 +1656,7 @@ describe("ConsumerService", () => {
     });
 
     it("should throw BadRequestException if 'handle' starts with an underscore", async () => {
-      expect(async () => await consumerService.isHandleAvailable("-abcd")).rejects.toThrow(BadRequestException);
+      expect(async () => await consumerService.isHandleAvailable("-abcd")).rejects.toThrow(ServiceException);
       expect(async () => await consumerService.isHandleAvailable("-abcd")).rejects.toThrow(
         "'handle' can't start with an '-' and can only contain alphanumeric characters & '-'.",
       );
@@ -1635,7 +1679,7 @@ describe("ConsumerService", () => {
     });
 
     it("should throw BadRequestException if 'handle' has special characters other than underscore", async () => {
-      expect(async () => await consumerService.isHandleAvailable("ab_")).rejects.toThrow(BadRequestException);
+      expect(async () => await consumerService.isHandleAvailable("ab_")).rejects.toThrow(ServiceException);
       expect(async () => await consumerService.isHandleAvailable("-abcd")).rejects.toThrow(
         "'handle' can't start with an '-' and can only contain alphanumeric characters & '-'.",
       );
@@ -1646,7 +1690,7 @@ describe("ConsumerService", () => {
         await consumerService.isHandleAvailable("pendejo");
         expect(true).toBe(false);
       } catch (err) {
-        expect(err).toBeInstanceOf(BadRequestException);
+        expect(err).toBeInstanceOf(ServiceException);
         expect(err.message).toBe("Specified 'handle' is reserved. Please choose a different one.");
       }
     });
@@ -1656,7 +1700,7 @@ describe("ConsumerService", () => {
         await consumerService.isHandleAvailable("asshole");
         expect(true).toBe(false);
       } catch (err) {
-        expect(err).toBeInstanceOf(BadRequestException);
+        expect(err).toBeInstanceOf(ServiceException);
         expect(err.message).toBe("Specified 'handle' is reserved. Please choose a different one.");
       }
     });

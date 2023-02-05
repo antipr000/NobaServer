@@ -22,6 +22,8 @@ import {
   CaseStatus,
   DocumentVerificationWebhookRequest,
   IdentityDocumentURLResponse,
+  SardineDeviceInformationResponse,
+  SardineRiskLevels,
 } from "../integrations/SardineTypeDefinitions";
 import {
   FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
@@ -39,6 +41,7 @@ import { NotificationEventType } from "../../../modules/notifications/domain/Not
 import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
 import { TransactionVerification } from "../domain/TransactionVerification";
 import { ServiceException } from "../../../core/exception/service.exception";
+import { uuid } from "uuidv4";
 
 describe("VerificationService", () => {
   let verificationService: VerificationService;
@@ -106,7 +109,22 @@ describe("VerificationService", () => {
     verificationService = app.get<VerificationService>(VerificationService);
   });
 
-  describe("verification service tests", () => {
+  describe("getDeviceVerificationResult", () => {
+    it("should return device information", async () => {
+      const sessionKey = uuid();
+      const deviceInfo: SardineDeviceInformationResponse = {
+        id: uuid(),
+        level: SardineRiskLevels.LOW,
+        sessionKey: sessionKey,
+      };
+
+      when(idvProvider.getDeviceVerificationResult(sessionKey)).thenResolve(deviceInfo);
+      const result = await verificationService.getDeviceVerificationResult(sessionKey);
+      expect(result).toEqual(deviceInfo);
+    });
+  });
+
+  describe("createSession", () => {
     it("should return session information", async () => {
       when(verificationRepo.saveVerificationData(anything())).thenResolve(
         VerificationData.createVerificationData({
@@ -507,41 +525,49 @@ describe("VerificationService", () => {
     });
 
     it("should set status as REJECTED when document verification fails because of document invalid size or type", async () => {
-      const consumer = getFakeConsumer();
-      const verificationId = "fake-id";
-      const documentVerificationResult: DocumentVerificationResult = {
-        status: DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE,
-        riskRating: "fake-rating",
-      };
+      const rejectedStatuses = [
+        DocumentVerificationStatus.REJECTED,
+        DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE,
+        DocumentVerificationStatus.REJECTED_DOCUMENT_POOR_QUALITY,
+        DocumentVerificationStatus.REJECTED_DOCUMENT_REQUIRES_RECAPTURE,
+      ];
+      rejectedStatuses.forEach(async rejectedStatus => {
+        const consumer = getFakeConsumer(`first-name-${rejectedStatus}`);
+        const verificationId = "fake-id";
 
-      const newConsumerProps: ConsumerProps = {
-        ...consumer.props,
-        verificationData: {
-          ...consumer.props.verificationData,
-          documentVerificationStatus: DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE,
-        },
-      };
+        const documentVerificationResult: DocumentVerificationResult = {
+          status: rejectedStatus as DocumentVerificationStatus,
+          riskRating: "fake-rating",
+        };
 
-      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(idvProvider.getDocumentVerificationResult(verificationId)).thenResolve(documentVerificationResult);
-      when(consumerService.updateConsumer(deepEqual(newConsumerProps))).thenResolve(
-        Consumer.createConsumer(newConsumerProps),
-      );
+        const newConsumerProps: ConsumerProps = {
+          ...consumer.props,
+          verificationData: {
+            ...consumer.props.verificationData,
+            documentVerificationStatus: rejectedStatus as DocumentVerificationStatus,
+          },
+        };
 
-      const result = await verificationService.getDocumentVerificationResult(consumer.props.id, verificationId);
-      expect(result.status).toBe(DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE);
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
+        when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+        when(idvProvider.getDocumentVerificationResult(verificationId)).thenResolve(documentVerificationResult);
+        when(consumerService.updateConsumer(deepEqual(newConsumerProps))).thenResolve(
+          Consumer.createConsumer(newConsumerProps),
+        );
 
-          deepEqual({
-            firstName: newConsumerProps.firstName,
-            lastName: newConsumerProps.lastName,
-            nobaUserID: newConsumerProps.id,
-            email: newConsumerProps.email,
-          }),
-        ),
-      ).once();
+        const result = await verificationService.getDocumentVerificationResult(consumer.props.id, verificationId);
+        expect(result.status).toEqual(rejectedStatus);
+        verify(
+          notificationService.sendNotification(
+            NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
+            deepEqual({
+              firstName: newConsumerProps.firstName,
+              lastName: newConsumerProps.lastName,
+              nobaUserID: newConsumerProps.id,
+              email: newConsumerProps.email,
+            }),
+          ),
+        ).once();
+      });
     });
   });
 
@@ -743,6 +769,34 @@ describe("VerificationService", () => {
 
       expect(result).toStrictEqual(transactionVerificationResult);
     });
+
+    it("throw a ServiceException if the IDV call results in a BadRequestException", async () => {
+      const consumer = getFakeConsumer();
+      const transactionInformation = getFakeTransactionVerification();
+      const sessionKey = "fake-session-key";
+
+      when(
+        idvProvider.transactionVerification(sessionKey, deepEqual(consumer), deepEqual(transactionInformation)),
+      ).thenThrow(new BadRequestException("Error-message"));
+
+      expect(
+        async () => await verificationService.transactionVerification(sessionKey, consumer, transactionInformation),
+      ).rejects.toThrow(ServiceException);
+    });
+
+    it("throw a ServiceException if the IDV call results an empty result", async () => {
+      const consumer = getFakeConsumer();
+      const transactionInformation = getFakeTransactionVerification();
+      const sessionKey = "fake-session-key";
+
+      when(
+        idvProvider.transactionVerification(sessionKey, deepEqual(consumer), deepEqual(transactionInformation)),
+      ).thenResolve(null);
+
+      expect(
+        async () => await verificationService.transactionVerification(sessionKey, consumer, transactionInformation),
+      ).rejects.toThrow(ServiceException);
+    });
   });
 
   describe("provideTransactionFeedback", () => {
@@ -933,12 +987,11 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
-
           deepEqual({
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
             nobaUserID: consumer.props.id,
-            email: consumer.props.email,
+            email: consumer.props.displayEmail,
           }),
         ),
       ).once();
@@ -946,13 +999,41 @@ describe("VerificationService", () => {
       expect(updateUserArgs.verificationData.documentVerificationStatus).toBe(DocumentVerificationStatus.PENDING);
       expect(updateUserArgs.verificationData.documentCheckReference).toBe(verificationId);
     });
+
+    it("should send a notification and throw an exception if document verification fails", async () => {
+      const consumer = getFakeConsumer();
+      const sessionKey = "fake-session-key";
+      const documentInformation = getFakeDocumentInformation(consumer);
+
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(idvProvider.verifyDocument(sessionKey, deepEqual(documentInformation), deepEqual(consumer))).thenThrow(
+        new Error(),
+      );
+
+      when(notificationService.sendNotification(anything(), anything())).thenResolve();
+      await expect(
+        async () => await verificationService.verifyDocument(consumer.props.id, sessionKey, documentInformation),
+      ).rejects.toThrow(Error);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT,
+          deepEqual({
+            firstName: consumer.props.firstName,
+            lastName: consumer.props.lastName,
+            nobaUserID: consumer.props.id,
+            email: consumer.props.displayEmail,
+          }),
+        ),
+      ).once();
+    });
   });
 });
 
-function getFakeConsumer(): Consumer {
+function getFakeConsumer(firstName = "Fake"): Consumer {
+  const consumerID = uuid();
   return Consumer.createConsumer({
-    id: "fake-consumer-1234",
-    firstName: "Fake",
+    id: consumerID,
+    firstName: firstName,
     lastName: "Consumer",
     email: "fake+consumer@noba.com",
     displayEmail: "fake+consumer@noba.com",
@@ -963,7 +1044,7 @@ function getFakeConsumer(): Consumer {
       documentVerificationTimestamp: new Date(),
       kycVerificationTimestamp: new Date(),
       isSuspectedFraud: false,
-      consumerID: "fake-consumer-1234",
+      consumerID: consumerID,
     },
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),

@@ -135,18 +135,26 @@ export class ConsumerService {
     // Only alpha-numeric characters and "-"  and 22 characters
     const regex = new RegExp("^[a-zA-Z0-9ñáéíóúü][a-zA-Z0-9ñáéíóúü-]{2,22}$");
     if (handle.length < 3 || handle.length > 22) {
-      throw new BadRequestException("'handle' should be between 3 and 22 charcters long.");
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "'handle' should be between 3 and 22 charcters long.",
+      });
     }
+
     if (!regex.test(handle)) {
-      throw new BadRequestException(
-        "'handle' can't start with an '-' and can only contain alphanumeric characters & '-'.",
-      );
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "'handle' can't start with an '-' and can only contain alphanumeric characters & '-'.",
+      });
     }
 
     const filter = new BadWordFilter({ placeHolder: "$" });
     const cleanedHandle = filter.clean(handle);
     if (cleanedHandle.indexOf("$") !== -1) {
-      throw new BadRequestException("Specified 'handle' is reserved. Please choose a different one.");
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Specified 'handle' is reserved. Please choose a different one.",
+      });
     }
   }
 
@@ -192,18 +200,30 @@ export class ConsumerService {
     return consumerResult.getValue();
   }
 
-  generateDefaultHandle(seedString: string): string {
-    const handle = `${seedString.toLowerCase()}`;
-    return this.removeAllUnsupportedHandleCharacters(handle) + randomBytes(7).toString("hex");
+  generateDefaultHandle(firstName: string, lastName: string): string {
+    const randomAppend = Math.random().toString(36).substring(2, 5).toUpperCase();
+    const handle = `${firstName.replace(".", "")}-${lastName.substring(0, 2)}${randomAppend}`;
+    return this.removeAllUnsupportedHandleCharacters(handle);
   }
 
   async updateConsumer(consumerProps: Partial<ConsumerProps>): Promise<Consumer> {
     const consumer = await this.getConsumer(consumerProps.id);
-
     // If we don't have a handle, but we do have a first name, then we can generate a handle.
     // Else if the handle is being set NOW, we need to validate it.
-    if (!consumer.props.handle && consumer.props.firstName) {
-      consumerProps.handle = this.generateDefaultHandle(consumer.props.firstName);
+    if (!consumer.props.handle && consumer.props.firstName && consumer.props.lastName) {
+      consumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
+      let counter = 0;
+      while (!(await this.isHandleAvailable(consumerProps.handle))) {
+        if (counter > 5) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+            message: "Could not generate a handle.",
+          });
+        }
+
+        consumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
+        counter++;
+      }
     } else if (consumerProps.handle !== undefined && consumerProps.handle !== null) {
       this.analyseHandle(consumerProps.handle);
     }

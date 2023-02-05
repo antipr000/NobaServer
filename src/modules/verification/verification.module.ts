@@ -3,7 +3,7 @@ import { VerificationController, VerificationWebhookController } from "./verific
 import { VerificationService } from "./verification.service";
 import { ConfigModule } from "@nestjs/config";
 import { ConsumerModule } from "../consumer/consumer.module";
-import { Sardine } from "./integrations/Sardine";
+import { Sardine } from "./integrations/sardine.client";
 import { SQLVerificationDataRepo } from "./repos/sql.verificationdata.repo";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { CommonModule } from "../common/common.module";

@@ -22,6 +22,7 @@ import { IDVerificationURLRequestLocale } from "./dto/IDVerificationRequestURLDT
 import { isValidDateOfBirth } from "../../core/utils/DateUtils";
 import { TransactionVerification } from "./domain/TransactionVerification";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
+import { SeverityLevel } from "../../core/exception/base.exception";
 
 @Injectable()
 export class VerificationService {
@@ -206,7 +207,6 @@ export class VerificationService {
     } catch (e) {
       await this.notificationService.sendNotification(
         NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT,
-
         {
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,
@@ -217,16 +217,12 @@ export class VerificationService {
       throw e;
     }
     const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
-    await this.notificationService.sendNotification(
-      NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
-
-      {
-        firstName: updatedConsumer.props.firstName,
-        lastName: updatedConsumer.props.lastName,
-        nobaUserID: consumer.props.id,
-        email: updatedConsumer.props.displayEmail,
-      },
-    );
+    await this.notificationService.sendNotification(NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT, {
+      firstName: updatedConsumer.props.firstName,
+      lastName: updatedConsumer.props.lastName,
+      nobaUserID: consumer.props.id,
+      email: updatedConsumer.props.displayEmail,
+    });
     return id;
   }
 
@@ -345,7 +341,24 @@ export class VerificationService {
     consumer: Consumer,
     transactionVerification: TransactionVerification,
   ): Promise<ConsumerVerificationResult> {
-    const result = await this.idvProvider.transactionVerification(sessionKey, consumer, transactionVerification);
+    let result;
+    try {
+      result = await this.idvProvider.transactionVerification(sessionKey, consumer, transactionVerification);
+    } catch (error) {
+      throw new ServiceException({
+        message: error.message,
+        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+        severity: SeverityLevel.HIGH,
+      });
+    }
+
+    if (!result) {
+      throw new ServiceException({
+        message: "Unknown error performing transaction verification against IDV provider",
+        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+        severity: SeverityLevel.HIGH,
+      });
+    }
 
     const newConsumerData: ConsumerProps = {
       ...consumer.props,

@@ -34,16 +34,16 @@ import {
 } from "./SardineTypeDefinitions";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import FormData from "form-data";
-import { Consumer } from "../../../modules/consumer/domain/Consumer";
+import { Consumer } from "../../consumer/domain/Consumer";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { PlaidClient } from "../../../modules/psp/plaid.client";
+import { PlaidClient } from "../../psp/plaid.client";
 import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
-import { ConsumerService } from "../../../modules/consumer/consumer.service";
-import { WorkflowName } from "../../../modules/transaction/domain/Transaction";
-import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
+import { ConsumerService } from "../../consumer/consumer.service";
+import { WorkflowName } from "../../transaction/domain/Transaction";
+import { Currency } from "../../transaction/domain/TransactionTypes";
 import { TransactionVerification } from "../domain/TransactionVerification";
-import { CircleService } from "../../../modules/psp/circle.service";
+import { CircleService } from "../../psp/circle.service";
 import { Utils } from "../../../core/utils/Utils";
 
 @Injectable()
@@ -272,7 +272,7 @@ export class Sardine implements IDVProvider {
         };
         break;
       case WorkflowName.WALLET_WITHDRAWAL:
-        actionType = "withdrawal";
+        actionType = "withdraw";
         debitSidePaymentMethod = consumerPaymentMethod; // For a withdrawal, set sender to the circle wallet
         // TODO (CRYPTO-622): populate bank info here in creditSidePaymentMethod
         break;
@@ -332,8 +332,10 @@ export class Sardine implements IDVProvider {
         idvProviderRiskLevel: data.level,
       };
     } catch (e) {
-      this.logger.error(`Sardine request failed for Transaction validation: ${e}`);
-      throw new BadRequestException(e.message);
+      if (e.response?.status == 422) {
+        this.logger.error(`Sardine request failed for Transaction validation: ${JSON.stringify(e.response.data)}`);
+        throw new BadRequestException(`${JSON.stringify(e.response.data)}`);
+      } else throw new BadRequestException(e);
     }
   }
 

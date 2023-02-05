@@ -1,6 +1,6 @@
 import { anyString, anything, mock, when } from "ts-mockito";
 import { IDVProvider } from "../integrations/IDVProvider";
-import { Sardine } from "../integrations/Sardine";
+import { Sardine } from "../integrations/sardine.client";
 
 export function getMockIdvProviderIntegrationWithDefaults(): IDVProvider {
   const mockIdvProvider = mock(Sardine);
