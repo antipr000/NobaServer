@@ -32,8 +32,6 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { TransactionStatsDTO } from "./dto/TransactionStats";
-import { TransactionDTO } from "../transaction/dto/TransactionDTO";
-import { TransactionsFilterDTO } from "./dto/TransactionsFilterDTO";
 import { NobaAdminDTO } from "./dto/NobaAdminDTO";
 import { Admin } from "./domain/Admin";
 import { AdminMapper } from "./mappers/AdminMapper";

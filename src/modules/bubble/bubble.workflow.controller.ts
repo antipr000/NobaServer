@@ -6,6 +6,8 @@ import { BubbleWebhookAuthGuard } from "../auth/bubble.webhooks.auth.guard";
 import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { BubbleService } from "./bubble.service";
 import { RegisterEmployerRequestDTO, UpdateEmployerRequestDTO } from "./dto/bubble.workflow.controller.dto";
+import { EmployerRegisterResponseDTO } from "./dto/EmployerRegisterResponseDTO";
+import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 
 @Controller("/webhooks/bubble")
 @ApiTags("Webhooks")
@@ -19,8 +21,8 @@ export class BubbleWorkflowController {
 
   @Post("/employers")
   @ApiOperation({ summary: "Register the Employer in Noba" })
-  @ApiResponse({ status: HttpStatus.CREATED })
-  async registerEmployer(@Body() requestBody: RegisterEmployerRequestDTO) {
+  @ApiResponse({ status: HttpStatus.CREATED, type: EmployerRegisterResponseDTO })
+  async registerEmployer(@Body() requestBody: RegisterEmployerRequestDTO): Promise<EmployerRegisterResponseDTO> {
     const nobaEmployerID: string = await this.bubbleService.registerEmployerInNoba({
       bubbleID: requestBody.bubbleID,
       logoURI: requestBody.logoURI,
@@ -29,13 +31,19 @@ export class BubbleWorkflowController {
       leadDays: requestBody.leadDays,
       payrollDates: requestBody.payrollDates,
     });
-    return nobaEmployerID;
+    return {
+      nobaEmployerID,
+    };
   }
 
   @Patch("/employers/:referralID")
   @ApiOperation({ summary: "Update the Employer in Noba" })
-  @ApiResponse({ status: HttpStatus.OK })
-  async updateEmployer(@Body() requestBody: UpdateEmployerRequestDTO, @Param("referralID") referralID: string) {
+  @ApiResponse({ status: HttpStatus.OK, type: BlankResponseDTO })
+  async updateEmployer(
+    @Body() requestBody: UpdateEmployerRequestDTO,
+    @Param("referralID") referralID: string,
+  ): Promise<BlankResponseDTO> {
     await this.bubbleService.updateEmployerInNoba(referralID, requestBody);
+    return {};
   }
 }

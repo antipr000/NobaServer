@@ -53,6 +53,9 @@ import { WebhookHeadersDTO } from "./dto/WebhookHeadersDTO";
 import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
 import { IDVerificationURLResponseDTO, IDVerificationURLRequestLocale } from "./dto/IDVerificationRequestURLDTO";
 import { AuthUser } from "../auth/auth.decorator";
+import { HealthCheckResponseDTO, HealthStatus } from "../common/dto/HealthCheckResponseDTO";
+import { SessionResponseDTO } from "./dto/SessionResponseDTO";
+import { DocumentVerificationResponseDTO } from "./dto/DocumentVerificationResponseDTO";
 
 @Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
@@ -71,19 +74,23 @@ export class VerificationController {
 
   @Get("/")
   @ApiOperation({ summary: "Checks if verification service is up" })
-  @ApiResponse({ status: HttpStatus.OK, description: "Service is up" })
-  async getVerificationStatus(): Promise<string> {
-    return "Verification API is functioning"; // TODO: Should ping Sardine
+  @ApiResponse({ status: HttpStatus.OK, description: "Service is up", type: HealthCheckResponseDTO })
+  async getVerificationStatus(): Promise<HealthCheckResponseDTO> {
+    return {
+      status: HealthStatus.OK,
+    }; // TODO: Should ping Sardine
   }
 
   @Public()
   @Post("/session")
   @ApiOperation({ summary: "Creates a new session for verification" })
-  @ApiResponse({ status: HttpStatus.CREATED, type: String, description: "New session token" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: SessionResponseDTO, description: "New session token" })
   @ApiBadRequestResponse({ description: "Invalid request" })
-  async createSession(): Promise<string> {
+  async createSession(): Promise<SessionResponseDTO> {
     const verificationData = await this.verificationService.createSession();
-    return verificationData.props.id;
+    return {
+      sessionToken: verificationData.props.id,
+    };
   }
 
   @Post("/consumerinfo")
@@ -112,7 +119,7 @@ export class VerificationController {
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiResponse({
     status: HttpStatus.ACCEPTED,
-    type: String,
+    type: DocumentVerificationResponseDTO,
     description: "Document upload result",
   })
   @ApiBody({
@@ -151,7 +158,7 @@ export class VerificationController {
     @UploadedFiles() files: DocumentsFileUploadRequestDTO,
     @Body() requestData: DocVerificationRequestDTO,
     @Request() request,
-  ): Promise<string> {
+  ): Promise<DocumentVerificationResponseDTO> {
     const user: AuthenticatedUser = request.user;
     if (!(user.entity instanceof Consumer)) throw new BadRequestException("This method is only allowed for consumers");
     const consumer: Consumer = user.entity;
@@ -163,7 +170,9 @@ export class VerificationController {
       photoImage: files.photoImage?.length > 0 ? files.photoImage[0] : undefined,
     });
 
-    return result;
+    return {
+      documentCheckReference: result,
+    };
   }
 
   @Get("/document/result/:id")
@@ -248,7 +257,6 @@ export class VerificationController {
   }
 }
 
-@Roles(Role.CONSUMER)
 @Public()
 @Controller("v1/verify/webhook")
 @ApiTags("VerificationWebhooks")

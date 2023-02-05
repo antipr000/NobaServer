@@ -12,8 +12,9 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { UpdateTransactionRequestDTO } from "./dto/TransactionDTO";
 import { DebitBankRequestDTO, WorkflowTransactionDTO } from "./dto/transaction.workflow.controller.dto";
-import { Transaction } from "./domain/Transaction";
+import { DebitBankResponse, Transaction } from "./domain/Transaction";
 import { TransactionWorkflowMapper } from "./mapper/transaction.workflow.mapper";
+import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 
 @Controller("wf/v1/transactions")
 @ApiBearerAuth("JWT-auth")
@@ -34,13 +35,14 @@ export class TransactionWorkflowController {
   @ApiResponse({
     description: "Transaction updated",
     status: HttpStatus.OK,
+    type: BlankResponseDTO,
   })
   @ApiNotFoundResponse({ description: "Requested transaction is not found" })
   @ApiBadRequestResponse({ description: "Improper or misformatted request" })
   async patchTransaction(
     @Body() requestBody: UpdateTransactionRequestDTO,
     @Param("transactionID") transactionID: string,
-  ): Promise<void> {
+  ): Promise<BlankResponseDTO> {
     if (!requestBody.transactionEvent && !requestBody.status) {
       throw new BadRequestException("Nothing to update");
     }
@@ -56,6 +58,7 @@ export class TransactionWorkflowController {
     // No return as this method is intended to be called from a workflow. Also, if we returned
     // the transaction it would mean we would have to call updatTransaction or at least do a lookup
     // even if we are not updating any fields directly on the transaction (e.g. only adding events).
+    return {};
   }
 
   @Get("/:transactionID")
@@ -71,7 +74,7 @@ export class TransactionWorkflowController {
   @ApiTags("Workflow")
   @ApiOperation({ summary: "Debit money from Noba bank account into consumer account" })
   @ApiResponse({ status: HttpStatus.OK, type: WorkflowTransactionDTO })
-  async debitFromBank(@Body() requestBody: DebitBankRequestDTO) {
+  async debitFromBank(@Body() requestBody: DebitBankRequestDTO): Promise<DebitBankResponse> {
     return await this.transactionService.debitFromBank(requestBody.transactionID);
   }
 }

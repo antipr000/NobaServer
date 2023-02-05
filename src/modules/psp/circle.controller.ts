@@ -8,6 +8,7 @@ import { Roles } from "../auth/roles.decorator";
 import { Consumer } from "../consumer/domain/Consumer";
 import { CircleService } from "./circle.service";
 import { AuthUser } from "../auth/auth.decorator";
+import { CircleWalletBalanceResponseDTO, CircleWalletResponseDTO } from "./dto/circle.controller.dto";
 
 @Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
@@ -22,20 +23,25 @@ export class CircleController {
 
   @Post("/wallet")
   @ApiOperation({ summary: "Add circle wallet to current consumer" })
-  @ApiResponse({ status: HttpStatus.CREATED })
+  @ApiResponse({ status: HttpStatus.CREATED, type: CircleWalletResponseDTO })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
-  async addConsumerWallet(@AuthUser() consumer: Consumer) {
+  async addConsumerWallet(@AuthUser() consumer: Consumer): Promise<CircleWalletResponseDTO> {
     const res = await this.circleService.getOrCreateWallet(consumer.props.id);
-    return res;
+    return {
+      walletID: res,
+    };
   }
 
   @Get("/wallet/balance")
   @ApiOperation({ summary: "Get current consumer's circle wallet balance" })
-  @ApiResponse({ status: HttpStatus.OK })
+  @ApiResponse({ status: HttpStatus.OK, type: CircleWalletBalanceResponseDTO })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
-  async getConsumerWalletBalance(@AuthUser() consumer: Consumer) {
+  async getConsumerWalletBalance(@AuthUser() consumer: Consumer): Promise<CircleWalletBalanceResponseDTO> {
     const walletID = await this.circleService.getOrCreateWallet(consumer.props.id);
     const walletBalance = await this.circleService.getWalletBalance(walletID);
-    return walletBalance;
+    return {
+      walletID: walletID,
+      balance: walletBalance,
+    };
   }
 }

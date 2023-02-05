@@ -3,12 +3,11 @@ import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { MonoTransaction } from "../domain/Mono";
-import { MonoDebitRequestDTO, MonoTransactionDTO } from "../dto/mono.workflow.controller.dto";
+import { MonoTransactionDTO } from "../dto/mono.workflow.controller.dto";
 import { MonoService } from "./mono.service";
 import { MonoWorkflowControllerMappers } from "./mono.workflow.controller.mappers";
 
 @Controller() // This defines the path prefix
-@ApiTags("Workflow")
 export class MonoWorkflowController {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
@@ -29,9 +28,12 @@ export class MonoWorkflowController {
   }
 
   @Get("/wf/v1/mono/nobatransactions/:nobaTransactionID")
+  @ApiTags("Workflow")
   @ApiOperation({ summary: "Fetches the Mono Transaction for the specified 'nobaTransactionID'" })
   @ApiResponse({ status: HttpStatus.OK, type: MonoTransactionDTO })
-  async getMonoTransactionByNobaTransactionID(@Param("nobaTransactionID") nobaTransactionID: string) {
+  async getMonoTransactionByNobaTransactionID(
+    @Param("nobaTransactionID") nobaTransactionID: string,
+  ): Promise<MonoTransactionDTO> {
     const monoTransaction: MonoTransaction = await this.monoService.getTransactionByNobaTransactionID(
       nobaTransactionID,
     );

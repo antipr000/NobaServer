@@ -32,6 +32,7 @@ import { UserAuthService } from "./user.auth.service";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { Utils } from "../../core/utils/Utils";
 import { NewAccessTokenRequestDTO } from "./dto/NewAccessTokenRequest";
+import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 
 @Controller("v1/auth")
 @ApiTags("Authentication")
@@ -93,10 +94,10 @@ export class AuthController {
 
   @Public()
   @ApiOperation({ summary: "Logs user in and sends one-time passcode (OTP) to the provided email address" })
-  @ApiResponse({ status: HttpStatus.OK, description: "OTP successfully sent." })
+  @ApiResponse({ status: HttpStatus.OK, description: "OTP successfully sent.", type: BlankResponseDTO })
   @ApiForbiddenResponse({ description: "Access denied" })
   @Post("/login")
-  async loginUser(@Body() requestBody: LoginRequestDTO) {
+  async loginUser(@Body() requestBody: LoginRequestDTO): Promise<BlankResponseDTO> {
     const emailOrPhone = requestBody.emailOrPhone;
     const isEmail = Utils.isEmail(emailOrPhone);
     const isConsumer = requestBody.identityType === consumerIdentityIdentifier;
@@ -132,6 +133,7 @@ export class AuthController {
     const otp = authService.generateOTP();
 
     await authService.saveOtp(emailOrPhone, otp);
-    return authService.sendOtp(emailOrPhone, otp.toString());
+    await authService.sendOtp(emailOrPhone, otp.toString());
+    return {};
   }
 }

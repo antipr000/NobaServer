@@ -52,7 +52,7 @@ describe("VerificationController", () => {
         }),
       );
       const result = await verificationController.createSession();
-      expect(result).toBe("session-code");
+      expect(result.sessionToken).toBe("session-code");
     });
   });
 
