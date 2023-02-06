@@ -396,15 +396,8 @@ export class ConsumerService {
     }
 
     // User is only "active" if they are not locked or disabled and have a KYC status of Approved and doc status is in good standing
-    if (
-      consumer.props.isLocked ||
-      consumer.props.isDisabled ||
-      consumer.props.verificationData == null ||
-      consumer.props.verificationData.kycCheckStatus !== KYCStatus.APPROVED ||
-      (consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.APPROVED &&
-        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.NOT_REQUIRED &&
-        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.LIVE_PHOTO_VERIFIED)
-    ) {
+
+    if (this.isActiveConsumer(consumer)) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: "Unable to transact with this user at this time",
@@ -812,5 +805,20 @@ export class ConsumerService {
     while (result.length < 3) result += "-";
 
     return result.substring(0, 7);
+  }
+
+  private isActiveConsumer(consumer: Consumer): boolean {
+    if (
+      consumer.props.isLocked ||
+      consumer.props.isDisabled ||
+      consumer.props.verificationData == null ||
+      consumer.props.verificationData.kycCheckStatus !== KYCStatus.APPROVED ||
+      (consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.APPROVED &&
+        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.NOT_REQUIRED &&
+        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.LIVE_PHOTO_VERIFIED)
+    ) {
+      return false;
+    }
+    return true;
   }
 }
