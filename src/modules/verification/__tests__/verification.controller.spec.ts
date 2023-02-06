@@ -71,7 +71,6 @@ describe("VerificationController", () => {
         },
         phoneNumber: "+1234567890",
         dateOfBirth: "1990-02-12",
-        email: "test@noba.com",
       };
 
       const consumer = Consumer.createConsumer({
@@ -114,7 +113,6 @@ describe("VerificationController", () => {
         },
         phoneNumber: "+12222222222",
         dateOfBirth: "1990-02-12",
-        email: "fake@noba.com",
       };
 
       const consumer = Consumer.createConsumer({
@@ -157,7 +155,6 @@ describe("VerificationController", () => {
         },
         phoneNumber: "+12222222222",
         dateOfBirth: "1990-02-12",
-        email: "shadyemail@noba.com",
       };
 
       const consumer = Consumer.createConsumer({
