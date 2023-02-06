@@ -21,7 +21,7 @@ services:
     container_name: noba_server
     restart: on-failure
     build:
-      context: .
+      context: ../
       dockerfile: Dockerfile
     depends_on:
       - postgres_db
