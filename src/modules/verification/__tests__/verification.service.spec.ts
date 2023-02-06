@@ -278,7 +278,7 @@ describe("VerificationService", () => {
       ).once();
     });
 
-    it("should throw exception if user exists with duplicate email or phone", async () => {
+    it("should throw exception if user exists with duplicate email", async () => {
       const consumer = getFakeConsumer();
       const consumerInformation = getFakeConsumerInformation(consumer, "US");
 
@@ -289,22 +289,28 @@ describe("VerificationService", () => {
         idvProviderRiskLevel: "fake-risk-rating",
       };
 
-      const newConsumerData: ConsumerProps = {
-        ...consumer.props,
-        address: consumerInformation.address,
-        firstName: consumerInformation.firstName,
-        lastName: consumerInformation.lastName,
-        dateOfBirth: consumerInformation.dateOfBirth,
-        phone: consumerInformation.phoneNumber,
-        verificationData: {
-          ...consumer.props.verificationData,
-          kycCheckStatus: consumerVerificationResult.status,
-          kycVerificationTimestamp: new Date(),
-          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
-          riskRating: consumerVerificationResult.idvProviderRiskLevel,
-        },
-        socialSecurityNumber: consumerInformation.nationalID.number,
-        createdTimestamp: new Date(),
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
+        consumerVerificationResult,
+      );
+      when(consumerService.findConsumersByContactInfo(anything())).thenResolve([consumer]);
+
+      expect(
+        verificationService.verifyConsumerInformation(consumer.props.id, sessionKey, consumerInformation),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw exception if user exists with duplicate phone", async () => {
+      const consumer = getFakeConsumer();
+      const consumerInformation = getFakeConsumerInformation(consumer, "US");
+      consumerInformation.email = null;
+      consumerInformation.phoneNumber = "+1234567890";
+
+      const sessionKey = "fake-session";
+
+      const consumerVerificationResult: ConsumerVerificationResult = {
+        status: KYCStatus.APPROVED,
+        idvProviderRiskLevel: "fake-risk-rating",
       };
 
       when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
