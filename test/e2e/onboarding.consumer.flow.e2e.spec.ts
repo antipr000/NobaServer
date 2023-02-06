@@ -102,7 +102,6 @@ describe("Onboarding consumer flow", () => {
       firstName: "John",
       lastName: "Doe",
       dateOfBirth: "1990-01-01",
-      phoneNumber: phoneNumber,
       address: {
         streetLine1: "Calle 123",
         streetLine2: "Carrera 123",

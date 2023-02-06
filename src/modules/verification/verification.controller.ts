@@ -101,7 +101,6 @@ export class VerificationController {
     const result = await this.verificationService.verifyConsumerInformation(consumer.props.id, sessionKey, {
       ...requestBody,
       userID: consumer.props.id,
-      email: consumer.props.email,
     });
     return this.verificationResponseMapper.toConsumerInformationResultDTO(result);
   }

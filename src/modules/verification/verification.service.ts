@@ -76,19 +76,30 @@ export class VerificationService {
       socialSecurityNumber: consumerInformation.nationalID ? consumerInformation.nationalID.number : undefined,
     };
     const isUS = consumerInformation.address.countryCode === "US";
-    const consumers = await this.consumerService.findConsumersByContactInfo([
-      {
-        phoneNumbers: [
-          { digits: consumerInformation.phoneNumber, countryCode: consumerInformation.address.countryCode },
-        ],
-        emails: [consumerInformation.email],
-      },
-    ]);
-    if (consumers && consumers.length > 0) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: "Consumer with this phone number or email already exists",
+    const consumerContactInfoSearch = {
+      phoneNumbers: [],
+      emails: [],
+    };
+
+    if (consumerInformation.phoneNumber) {
+      consumerContactInfoSearch.phoneNumbers.push({
+        digits: consumerInformation.phoneNumber,
+        countryCode: consumerInformation.address.countryCode,
       });
+    }
+
+    if (consumerInformation.email) {
+      consumerContactInfoSearch.emails.push(consumerInformation.email);
+    }
+
+    const consumers = await this.consumerService.findConsumersByContactInfo([consumerContactInfoSearch]);
+    if (consumers && consumers.length > 0) {
+      if (consumers.some(consumer => consumer)) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: `Consumer with this phone number or email already exists`,
+        });
+      }
     }
 
     const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);

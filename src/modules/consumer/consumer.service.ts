@@ -791,7 +791,7 @@ export class ConsumerService {
   }
 
   private normalizePhoneNumber(digits: string, countryCode: string): string {
-    if (digits[0] === "+") {
+    if (digits && digits[0] === "+") {
       return digits;
     }
 
