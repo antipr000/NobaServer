@@ -17,6 +17,7 @@ import { Utils } from "../../../core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
 import { MonoTransactionState } from "../domain/Mono";
+import { MonoClientErrorCode, MonoClientException } from "../../../core/exception/mono.client.exception";
 
 @Injectable()
 export class MonoClient {
@@ -178,8 +179,8 @@ export class MonoClient {
     } catch (err) {
       if (err.response?.status == 422) {
         this.logger.error(`Mono transfer failed for Transaction validation: ${JSON.stringify(err.response.data)}`);
-        throw new ServiceException({
-          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        throw new MonoClientException({
+          errorCode: MonoClientErrorCode.TRANSFER_FAILED,
           message: `Error while transferring funds from Mono: ${JSON.stringify(err.response.data)}`,
         });
       } else {
