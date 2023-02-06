@@ -360,7 +360,14 @@ export class ConsumerService {
       });
     }
 
-    return consumerResultList.getValue();
+    const activeConsumers = [];
+    consumerResultList.getValue().forEach(consumer => {
+      if (this.isActiveConsumer(consumer)) {
+        activeConsumers.push(consumer);
+      }
+    });
+
+    return activeConsumers;
   }
 
   async findConsumerByEmailOrPhone(emailOrPhone: string): Promise<Result<Consumer>> {
@@ -396,7 +403,6 @@ export class ConsumerService {
     }
 
     // User is only "active" if they are not locked or disabled and have a KYC status of Approved and doc status is in good standing
-
     if (this.isActiveConsumer(consumer)) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
