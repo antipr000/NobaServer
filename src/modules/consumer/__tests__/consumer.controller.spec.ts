@@ -421,7 +421,7 @@ describe("ConsumerController", () => {
       });
 
       when(consumerService.subscribeToPushNotifications(consumer.props.id, "push-token")).thenResolve();
-      expect(consumerController.subscribeToPushNotifications("push-token", consumer)).resolves.toBe(undefined);
+      expect(consumerController.subscribeToPushNotifications("push-token", consumer)).resolves.toStrictEqual({});
     });
   });
 
@@ -432,7 +432,7 @@ describe("ConsumerController", () => {
       });
 
       when(consumerService.unsubscribeFromPushNotifications(consumer.props.id, "push-token")).thenResolve();
-      expect(consumerController.unsubscribeFromPushNotifications("push-token", consumer)).resolves.toBe(undefined);
+      expect(consumerController.unsubscribeFromPushNotifications("push-token", consumer)).resolves.toStrictEqual({});
     });
   });
 

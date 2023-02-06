@@ -33,10 +33,10 @@ describe("CircleWorkflowController", () => {
       expect(result).toEqual({ status: "OK" });
     });
 
-    it("should return DOWN", async () => {
+    it("should return SERVICE_DOWN", async () => {
       when(circleService.checkCircleHealth()).thenResolve(false);
       const result = await circleWorkflowController.healthCheck();
-      expect(result).toEqual({ status: "DOWN" });
+      expect(result).toEqual({ status: "SERVICE_DOWN" });
     });
   });
 

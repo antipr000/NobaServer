@@ -94,7 +94,7 @@ describe("AppController", () => {
 
   describe("appHealth()", () => {
     it("should return success string", async () => {
-      expect(appController.appHealth()).toEqual("We're up and running. How are you?");
+      expect(appController.appHealth()).toEqual({ status: "OK" });
     });
   });
 

@@ -58,6 +58,7 @@ import { Employee } from "../employee/domain/Employee";
 import { UpdateEmployerAllocationDTO } from "./dto/UpdateEmployerAllocationDTO";
 import { OptionalLimitQueryDTO } from "../common/dto/OptionalLimitQueryDTO";
 import { RequestEmployerDTO } from "./dto/RequestEmployerDTO";
+import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 
 @Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
@@ -184,10 +185,14 @@ export class ConsumerController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: "OTP sent to user's phone",
+    type: BlankResponseDTO,
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async requestOtpToUpdatePhone(@AuthUser() consumer: Consumer, @Body() requestBody: PhoneVerificationOtpRequest) {
+  async requestOtpToUpdatePhone(
+    @AuthUser() consumer: Consumer,
+    @Body() requestBody: PhoneVerificationOtpRequest,
+  ): Promise<BlankResponseDTO> {
     const existingConsumer = await this.consumerService.findConsumerByEmailOrPhone(requestBody.phone);
     if (existingConsumer.isSuccess) {
       // Somebody else already has this phone number, so deny update
@@ -195,6 +200,7 @@ export class ConsumerController {
     }
 
     await this.consumerService.sendOtpToPhone(consumer.props.id, requestBody.phone);
+    return {};
   }
 
   @Patch("/email")
@@ -216,17 +222,21 @@ export class ConsumerController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: "OTP sent to user's email address",
+    type: BlankResponseDTO,
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async requestOtpToUpdateEmail(@AuthUser() consumer: Consumer, @Body() requestBody: EmailVerificationOtpRequest) {
+  async requestOtpToUpdateEmail(
+    @AuthUser() consumer: Consumer,
+    @Body() requestBody: EmailVerificationOtpRequest,
+  ): Promise<BlankResponseDTO> {
     const existingConsumer = await this.consumerService.findConsumerByEmailOrPhone(requestBody.email);
     if (existingConsumer.isSuccess) {
       // Somebody else already has this email number, so deny update
       throw new BadRequestException("User already exists with this email address");
     }
-
     await this.consumerService.sendOtpToEmail(requestBody.email, consumer);
+    return {};
   }
 
   @Get("/paymentmethods/plaid/token")
@@ -402,14 +412,16 @@ export class ConsumerController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: "Successfully subscribed to push notifications",
+    type: BlankResponseDTO,
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid push notification details" })
   async subscribeToPushNotifications(
     @Param("pushToken") pushToken: string,
     @AuthUser() consumer: Consumer,
-  ): Promise<void> {
+  ): Promise<BlankResponseDTO> {
     await this.consumerService.subscribeToPushNotifications(consumer.props.id, pushToken);
+    return {};
   }
 
   @Post("/unsubscribe/push/:pushToken")
@@ -417,12 +429,14 @@ export class ConsumerController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: "Successfully unsubscribed from push notifications",
+    type: BlankResponseDTO,
   })
   async unsubscribeFromPushNotifications(
     @Param("pushToken") pushToken: string,
     @AuthUser() consumer: Consumer,
-  ): Promise<void> {
+  ): Promise<BlankResponseDTO> {
     await this.consumerService.unsubscribeFromPushNotifications(consumer.props.id, pushToken);
+    return {};
   }
 
   @Post("/wallets")
@@ -504,16 +518,17 @@ export class ConsumerController {
 
   @Post("/employers")
   @ApiOperation({ summary: "Links the consumer with an Employer" })
-  @ApiResponse({ status: HttpStatus.OK, description: "Registered Employee record" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Registered Employee record", type: BlankResponseDTO })
   async registerWithAnEmployer(
     @Body() requestBody: RegisterWithEmployerDTO,
     @AuthUser() consumer: Consumer,
-  ): Promise<void> {
+  ): Promise<BlankResponseDTO> {
     await this.consumerService.registerWithAnEmployer(
       requestBody.employerReferralID,
       consumer.props.id,
       requestBody.allocationAmountInPesos,
     );
+    return {};
   }
 
   @Get("/employers")
@@ -526,16 +541,17 @@ export class ConsumerController {
 
   @Patch("/employers")
   @ApiOperation({ summary: "Updates the allocation amount for a specific employer" })
-  @ApiResponse({ status: HttpStatus.OK })
+  @ApiResponse({ status: HttpStatus.OK, type: BlankResponseDTO })
   async updateAllocationAmountForAnEmployer(
     @AuthUser() consumer: Consumer,
     @Body() requestBody: UpdateEmployerAllocationDTO,
-  ): Promise<void> {
+  ): Promise<BlankResponseDTO> {
     await this.consumerService.updateEmployerAllocationAmount(
       requestBody.employerReferralID,
       consumer.props.id,
       requestBody.allocationAmountInPesos,
     );
+    return {};
   }
 
   @Post("/employers/request")
@@ -543,18 +559,20 @@ export class ConsumerController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: "Email Sent",
+    type: BlankResponseDTO,
   })
   async postEmployerRequestEmail(
     @Body() requestBody: RequestEmployerDTO,
     @AuthUser() consumer: Consumer,
-  ): Promise<void> {
+  ): Promise<BlankResponseDTO> {
     // Use consumer's locale to drive the language of the request email
     await this.consumerService.sendEmployerRequestEmail(requestBody.email, consumer.props.locale);
+    return {};
   }
 
   @Get("/qrcode")
   @ApiOperation({ summary: "Gets QR code for the logged-in consumer" })
-  @ApiResponse({ status: HttpStatus.OK, description: "Base64 of QR code for the logged-in consumer" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Base64 of QR code for the logged-in consumer", type: QRCodeDTO })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   async getQRCode(@AuthUser() consumer: Consumer, @Query("url") url: string): Promise<QRCodeDTO> {
     return {

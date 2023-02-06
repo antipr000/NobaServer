@@ -35,6 +35,7 @@ import { ExchangeRateService } from "./modules/common/exchangerate.service";
 import { ExchangeRateDTO } from "./modules/common/dto/ExchangeRateDTO";
 import { SupportedBanksDTO } from "./modules/psp/dto/SupportedBanksDTO";
 import { MonoService } from "./modules/psp/mono/mono.service";
+import { HealthCheckResponseDTO, HealthStatus } from "./modules/common/dto/HealthCheckResponseDTO";
 
 @Controller("v1")
 @ApiHeaders(getCommonHeaders())
@@ -52,10 +53,16 @@ export class AppController {
   @IsNoApiKeyNeeded()
   @Get("health")
   @ApiOperation({ summary: "Checks if the Noba service is up and running" })
-  @ApiResponse({ status: HttpStatus.OK, description: "Health status of the Noba service" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Health status of the Noba service",
+    type: HealthCheckResponseDTO,
+  })
   @ApiTags("Health Check")
-  appHealth(): string {
-    return "We're up and running. How are you?"; //Todo implement advance health check like here like db connectivity etc.?
+  appHealth(): HealthCheckResponseDTO {
+    return {
+      status: HealthStatus.OK,
+    };
   }
 
   @Public()

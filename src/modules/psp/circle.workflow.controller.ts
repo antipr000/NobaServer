@@ -1,10 +1,16 @@
-import { Body, Controller, Get, HttpStatus, Inject, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Param, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { CircleService } from "./circle.service";
 import { CircleDepositOrWithdrawalRequest } from "./dto/CircleDepositOrWithdrawalRequest";
 import { CircleFundsTransferRequestDTO } from "./dto/CircleFundsTransferRequestDTO";
+import { HealthCheckResponseDTO, HealthStatus } from "../common/dto/HealthCheckResponseDTO";
+import {
+  CircleWalletBalanceResponseDTO,
+  CircleTransactionDTO,
+  CircleWalletResponseDTO,
+} from "./dto/circle.controller.dto";
 
 @Controller("wf/v1/circle") // This defines the path prefix
 @ApiBearerAuth("JWT-auth")
@@ -17,24 +23,24 @@ export class CircleWorkflowController {
 
   @Get("/health")
   @ApiOperation({ summary: "Health check" })
-  @ApiResponse({ status: HttpStatus.OK })
-  async healthCheck() {
+  @ApiResponse({ status: HttpStatus.OK, type: HealthCheckResponseDTO })
+  async healthCheck(): Promise<HealthCheckResponseDTO> {
     const isCircleServiceRunning = await this.circleService.checkCircleHealth();
     if (isCircleServiceRunning) {
       return {
-        status: "OK",
+        status: HealthStatus.OK,
       };
     } else {
       return {
-        status: "DOWN",
+        status: HealthStatus.SERVICE_DOWN,
       };
     }
   }
 
   @Get("/wallets/consumers/:consumerID")
   @ApiOperation({ summary: "Get consumer's wallet ID" })
-  @ApiResponse({ status: HttpStatus.OK })
-  async getConsumerWalletID(@Param("consumerID") consumerID: string) {
+  @ApiResponse({ status: HttpStatus.OK, type: CircleWalletResponseDTO })
+  async getConsumerWalletID(@Param("consumerID") consumerID: string): Promise<CircleWalletResponseDTO> {
     const res = await this.circleService.getOrCreateWallet(consumerID);
     return {
       walletID: res,
@@ -43,8 +49,8 @@ export class CircleWorkflowController {
 
   @Get("/wallets/master")
   @ApiOperation({ summary: "Get master wallet ID" })
-  @ApiResponse({ status: HttpStatus.OK })
-  async getMasterWalletID(): Promise<any> {
+  @ApiResponse({ status: HttpStatus.OK, type: CircleWalletResponseDTO })
+  async getMasterWalletID(): Promise<CircleWalletResponseDTO> {
     const res = await this.circleService.getMasterWalletID();
     return {
       walletID: res,
@@ -53,8 +59,8 @@ export class CircleWorkflowController {
 
   @Get("/wallets/:walletID/balance")
   @ApiOperation({ summary: "Get consumer's circle wallet balance" })
-  @ApiResponse({ status: HttpStatus.OK })
-  async getWalletBalance(@Param("walletID") walletID: string) {
+  @ApiResponse({ status: HttpStatus.OK, type: CircleWalletBalanceResponseDTO })
+  async getWalletBalance(@Param("walletID") walletID: string): Promise<CircleWalletBalanceResponseDTO> {
     const res = await this.circleService.getWalletBalance(walletID);
     return {
       walletID: walletID,
@@ -63,12 +69,13 @@ export class CircleWorkflowController {
   }
 
   @Post("/wallets/:walletID/debit")
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Debit consumer's circle wallet balance" })
-  @ApiResponse({ status: HttpStatus.OK })
+  @ApiResponse({ status: HttpStatus.OK, type: CircleTransactionDTO })
   async debitWalletBalance(
     @Param("walletID") walletID: string,
     @Body() fundsMovementRequest: CircleDepositOrWithdrawalRequest,
-  ) {
+  ): Promise<CircleTransactionDTO> {
     const res = await this.circleService.debitWalletBalance(
       fundsMovementRequest.workflowID,
       walletID,
@@ -83,11 +90,12 @@ export class CircleWorkflowController {
 
   @Post("/wallets/:walletID/credit")
   @ApiOperation({ summary: "Credit consumer's circle wallet balance" })
-  @ApiResponse({ status: HttpStatus.OK })
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({ status: HttpStatus.OK, type: CircleTransactionDTO })
   async creditWalletBalance(
     @Param("walletID") walletID: string,
     @Body() fundsMovementRequest: CircleDepositOrWithdrawalRequest,
-  ) {
+  ): Promise<CircleTransactionDTO> {
     const res = await this.circleService.creditWalletBalance(
       fundsMovementRequest.workflowID,
       walletID,
@@ -102,11 +110,12 @@ export class CircleWorkflowController {
 
   @Post("/wallets/:walletID/transfer")
   @ApiOperation({ summary: "Transfer funds between circle wallets" })
-  @ApiResponse({ status: HttpStatus.OK })
+  @HttpCode(HttpStatus.OK)
+  @ApiResponse({ status: HttpStatus.OK, type: CircleTransactionDTO })
   async transferFunds(
     @Param("walletID") sourceWalletID: string,
     @Body() transferRequest: CircleFundsTransferRequestDTO,
-  ) {
+  ): Promise<CircleTransactionDTO> {
     const res = await this.circleService.transferFunds(
       transferRequest.workflowID,
       sourceWalletID,

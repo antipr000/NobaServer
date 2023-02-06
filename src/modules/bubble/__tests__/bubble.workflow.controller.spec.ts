@@ -52,7 +52,7 @@ describe("BubbleWorkflowControllerTests", () => {
 
       const result = await bubbleWorkflowController.registerEmployer(requestBody);
 
-      expect(result).toEqual("nobaEmployerID");
+      expect(result.nobaEmployerID).toEqual("nobaEmployerID");
 
       const [bubbleServiceRegisterEmployerInNobaArgs] = capture(bubbleService.registerEmployerInNoba).last();
       expect(bubbleServiceRegisterEmployerInNobaArgs).toEqual({
@@ -75,7 +75,7 @@ describe("BubbleWorkflowControllerTests", () => {
 
       const result = await bubbleWorkflowController.registerEmployer(requestBody);
 
-      expect(result).toEqual("nobaEmployerID");
+      expect(result.nobaEmployerID).toEqual("nobaEmployerID");
 
       const [bubbleServiceRegisterEmployerInNobaArgs] = capture(bubbleService.registerEmployerInNoba).last();
       expect(bubbleServiceRegisterEmployerInNobaArgs).toEqual({
@@ -99,7 +99,7 @@ describe("BubbleWorkflowControllerTests", () => {
 
       const result = await bubbleWorkflowController.registerEmployer(requestBody);
 
-      expect(result).toEqual("nobaEmployerID");
+      expect(result.nobaEmployerID).toEqual("nobaEmployerID");
 
       const [bubbleServiceRegisterEmployerInNobaArgs] = capture(bubbleService.registerEmployerInNoba).last();
       expect(bubbleServiceRegisterEmployerInNobaArgs).toEqual({

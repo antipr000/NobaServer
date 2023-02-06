@@ -1,4 +1,4 @@
-import { Body, Controller, HttpStatus, Inject, NotFoundException, Param, Get } from "@nestjs/common";
+import { Controller, HttpStatus, Inject, NotFoundException, Param, Get } from "@nestjs/common";
 import { ApiBearerAuth, ApiHeaders, ApiNotFoundResponse, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
