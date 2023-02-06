@@ -189,9 +189,9 @@ export class MonoClient {
             requestBody,
           )}`,
         );
-        throw new ServiceException({
-          errorCode: ServiceErrorCode.UNKNOWN,
-          message: "Error while transferring funds from Mono",
+        throw new MonoClientException({
+          errorCode: MonoClientErrorCode.UNKNOWN,
+          message: "Unknown error while transferring funds from Mono",
         });
       }
     }
