@@ -17,16 +17,43 @@ services:
       timeout: 5s
       retries: 5
 
+  # noba_server:
+  #   container_name: noba_server
+  #   restart: on-failure
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - postgres_db
+  #   # network_mode: host
+  #   ports:
+  #     - "8080:8080"
+  #       # entrypoint: docker-entrypoint.sh
+  #   command: sh /docker-entrypoint.sh
+
   noba_server:
     container_name: noba_server
     restart: on-failure
-    build:
-      context: ../
-      dockerfile: e2e_test/Dockerfile
+    image: 210194402305.dkr.ecr.us-east-1.amazonaws.com/noba-server:latest
     depends_on:
       - postgres_db
     # network_mode: host
+    environment:
+      - DATABASE_URL=postgresql://e2e_user:pass@postgres-db:5432/Noba_E2E
+      - NODE_ENV=e2e_test
     ports:
       - "8080:8080"
         # entrypoint: docker-entrypoint.sh
-    command: sh /docker-entrypoint.sh
+    command: sh /e2e_test/docker_entrypoint.sh
+
+  noba_workflow:
+    container_name: noba_workflow
+    restart: on-failure
+    image: 210194402305.dkr.ecr.us-east-1.amazonaws.com/noba-workflow:latest
+    depends_on:
+      - noba_server
+    environment:
+      - WORKFLOW_ENV=e2e_test
+    # network_mode: host
+    # ports:
+        # entrypoint: docker-entrypoint.sh
