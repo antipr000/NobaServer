@@ -58,8 +58,8 @@ export class MonoClient {
       return data["banks"];
     } catch (e) {
       this.logger.error(`Failed to fetch bank list from mono. ${JSON.stringify(e)}`);
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+      throw new MonoClientException({
+        errorCode: MonoClientErrorCode.UNKNOWN,
         message: "Failed to fetch data from Mono",
       });
     }
@@ -207,8 +207,8 @@ export class MonoClient {
       const response = await axios.get(url, { headers });
       const transfer = response.data.transfers.find((transfer: any) => transfer.id === transferID);
       if (!transfer) {
-        throw new ServiceException({
-          errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        throw new MonoClientException({
+          errorCode: MonoClientErrorCode.TRANSFER_NOT_FOUND,
           message: "Mono transfer not found",
         });
       }
@@ -222,8 +222,8 @@ export class MonoClient {
         duplicated: MonoTransactionState.DUPLICATED,
       };
       if (!externalTransactionStateToInternalState[transfer.state]) {
-        throw new ServiceException({
-          errorCode: ServiceErrorCode.UNKNOWN,
+        throw new MonoClientException({
+          errorCode: MonoClientErrorCode.UNKNOWN,
           message: `Unknown Mono transfer state: ${transfer.state}`,
         });
       }
@@ -235,8 +235,8 @@ export class MonoClient {
       };
     } catch (err) {
       this.logger.error(`Error while fetching the Transfer status from Mono: ${JSON.stringify(err)}`);
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.UNKNOWN,
+      throw new MonoClientException({
+        errorCode: MonoClientErrorCode.UNKNOWN,
         message: "Error while fetching the Transfer status from Mono",
       });
     }
