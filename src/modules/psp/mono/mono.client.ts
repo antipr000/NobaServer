@@ -13,7 +13,6 @@ import {
 } from "../dto/mono.client.dto";
 import axios from "axios";
 import { fromString as convertToUUIDv4 } from "uuidv4";
-import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
 import { Utils } from "../../../core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
