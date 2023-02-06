@@ -19,7 +19,9 @@
 FROM --platform=linux/amd64 node:16-alpine
 
 # env NODE_ENV=e2e_test
-# env DATABASE_URL=postgresql://e2e_user:pass@postgres-db:5432/Noba_E2E
+
+# Dummy URL to make "prisma generate" work
+env DATABASE_URL=postgresql://dummy_user:pass@postgres-db:5432/dummy
 
 RUN apk update && apk add bash
 
