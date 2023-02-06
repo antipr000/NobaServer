@@ -403,7 +403,7 @@ export class ConsumerService {
     }
 
     // User is only "active" if they are not locked or disabled and have a KYC status of Approved and doc status is in good standing
-    if (this.isActiveConsumer(consumer)) {
+    if (!this.isActiveConsumer(consumer)) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: "Unable to transact with this user at this time",
