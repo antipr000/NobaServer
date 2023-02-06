@@ -177,15 +177,23 @@ export class MonoClient {
         transferID: transferResponse.id,
       };
     } catch (err) {
-      this.logger.error(
-        `Error while transferring funds from Mono: ${JSON.stringify(err)}. Request body: ${JSON.stringify(
-          requestBody,
-        )}`,
-      );
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.UNKNOWN,
-        message: "Error while transferring funds from Mono",
-      });
+      if (err.response?.status == 422) {
+        this.logger.error(`Mono transfer failed for Transaction validation: ${JSON.stringify(err.response.data)}`);
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: `Error while transferring funds from Mono: ${JSON.stringify(err.response.data)}`,
+        });
+      } else {
+        this.logger.error(
+          `Error while transferring funds from Mono: ${JSON.stringify(err)}. Request body: ${JSON.stringify(
+            requestBody,
+          )}`,
+        );
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.UNKNOWN,
+          message: "Error while transferring funds from Mono",
+        });
+      }
     }
   }
 
