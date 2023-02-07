@@ -1,4 +1,4 @@
-import { BaseException, ExceptionConstructor } from "./base.exception";
+import { BaseException, ExceptionConstructor } from "../../../../core/exception/base.exception";
 
 export const enum MonoClientErrorCode {
   TRANSFER_NOT_FOUND = "Transfer not found",

@@ -7,8 +7,6 @@ import { serviceToHTTP } from "./mappers/service.http";
 import { ServiceException } from "./service.exception";
 import { repoToHTTP } from "./mappers/repo.http";
 import { RepoException } from "./repo.exception";
-import { MonoClientException } from "./mono.client.exception";
-import { monoClientToHTTP } from "./mappers/mono.client.http";
 
 export function convertToHTTPException(logger: Logger, exception: any): HttpException {
   if (Joi.isError(exception)) {
@@ -25,8 +23,6 @@ export function convertToHTTPException(logger: Logger, exception: any): HttpExce
     return serviceToHTTP(logger, exception);
   } else if (exception instanceof RepoException) {
     return repoToHTTP(logger, exception);
-  } else if (exception instanceof MonoClientException) {
-    return monoClientToHTTP(logger, exception);
   }
 
   // This should be refactored to RepositoryException

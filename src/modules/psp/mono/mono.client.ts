@@ -17,7 +17,7 @@ import { Utils } from "../../../core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
 import { MonoTransactionState } from "../domain/Mono";
-import { MonoClientErrorCode, MonoClientException } from "../../../core/exception/mono.client.exception";
+import { MonoClientErrorCode, MonoClientException } from "./exception/mono.client.exception";
 import { InputTransactionEvent } from "../../../modules/transaction/domain/TransactionEvent";
 
 @Injectable()
