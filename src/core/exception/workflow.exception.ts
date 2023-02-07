@@ -12,6 +12,7 @@ export class WorkflowException extends BaseException<WorkflowErrorCode> {
   constructor(params: WorkflowExceptionConstructor) {
     super({
       message: params.message ?? params.errorCode,
+      messageFormat: params.messageFormat,
       errorCode: params.errorCode,
       retry: params.retry,
       severity: params.severity,

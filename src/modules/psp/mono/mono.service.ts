@@ -46,15 +46,22 @@ type WithdrawalRequest = {
 @Injectable()
 export class MonoService {
   @Inject()
-  private readonly kmsService: KmsService;
+  protected readonly kmsService: KmsService;
 
-  constructor(
-    @Inject(MONO_REPO_PROVIDER) private readonly monoRepo: IMonoRepo,
-    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-    private readonly consumerService: ConsumerService,
-    private readonly monoClient: MonoClient,
-    private readonly monoWebhookHandlers: MonoWebhookHandlers,
-  ) {}
+  @Inject(MONO_REPO_PROVIDER)
+  protected readonly monoRepo: IMonoRepo;
+
+  @Inject(WINSTON_MODULE_PROVIDER)
+  protected readonly logger: Logger;
+
+  @Inject()
+  protected readonly consumerService: ConsumerService;
+
+  @Inject()
+  protected readonly monoClient: MonoClient;
+
+  @Inject()
+  protected readonly monoWebhookHandlers: MonoWebhookHandlers;
 
   async getTransactionByNobaTransactionID(nobaTransactionID: string): Promise<MonoTransaction | null> {
     let monoTransaction: MonoTransaction = await this.monoRepo.getMonoTransactionByNobaTransactionID(nobaTransactionID);
