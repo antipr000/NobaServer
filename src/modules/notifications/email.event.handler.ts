@@ -30,6 +30,7 @@ import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
 import { SendTransferCompletedEvent } from "./events/SendTransferCompletedEvent";
 import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
 import { SendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
+import { SendTransferFailedEvent } from "./events/SendTransferFailedEvent";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -464,6 +465,33 @@ export class EmailEventHandler {
         createdTimestamp: payload.params.createdTimestamp,
         processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
         nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+      },
+    };
+
+    await this.emailClient.sendEmail(msg);
+  }
+
+  @OnEvent(`email.${NotificationEventType.SEND_TRANSFER_FAILED_EVENT}`)
+  public async sendTransferFailedEmail(payload: SendTransferFailedEvent) {
+    const msg = {
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.TRANSFER_FAILED_EMAIL[payload.locale ?? "en"],
+      dynamicTemplateData: {
+        creditConsumer_firstName: payload.params.creditConsumer_firstName,
+        creditConsumer_lastName: payload.params.creditConsumer_lastName,
+        debitConsumer_handle: payload.params.debitConsumer_handle,
+        creditConsumer_handle: payload.params.creditConsumer_handle,
+        firstName: payload.name,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: processCurrency(payload.params.debitCurrency),
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: processCurrency(payload.params.creditCurrency),
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        reasonDeclined: payload.params.reasonDeclined,
       },
     };
 

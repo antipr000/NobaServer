@@ -27,8 +27,9 @@ import { SendDepositInitiatedEvent } from "./events/SendDepositInitiatedEvent";
 import { SendDepositFailedEvent } from "./events/SendDepositFailedEvent";
 import { SendWithdrawalCompletedEvent } from "./events/SendWithdrawalCompletedEvent";
 import { SendWithdrawalInitiatedEvent } from "./events/SendWithdrawalInitiatedEvent";
+import { SendTransferCompletedEvent } from "./events/SendTransferCompletedEvent";
+import { SendTransferFailedEvent } from "./events/SendTransferFailedEvent";
 import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
-import { SendWalletTransferEvent } from "./events/SendWalletTransferEvent";
 import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
 import { SendPhoneVerificationCodeEvent } from "./events/SendPhoneVerificationCodeEvent";
 import { SendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
@@ -366,12 +367,25 @@ export class NotificationService {
       case NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
-          new SendWalletTransferEvent({
+          new SendTransferCompletedEvent({
             email: payload.email,
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
             params: payload.transferCompletedParams,
+          }),
+        );
+        break;
+
+      case NotificationEventType.SEND_TRANSFER_FAILED_EVENT:
+        this.eventEmitter.emitAsync(
+          eventName,
+          new SendTransferFailedEvent({
+            email: payload.email,
+            name: payload.firstName,
+            handle: payload.handle,
+            locale: payload.locale,
+            params: payload.transferFailedParams,
           }),
         );
         break;

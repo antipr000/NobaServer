@@ -4,6 +4,7 @@ import {
   DepositFailedNotificationParameters,
   DepositInitiatedNotificationParameters,
   TransferCompletedNotificationParameters,
+  TransferFailedNotificationParameters,
   WithdrawalCompletedNotificationParameters,
   WithdrawalFailedNotificationParameters,
   WithdrawalIntiatedNotificationParameters,
@@ -28,6 +29,7 @@ export type NotificationPayload = {
   withdrawalInitiatedParams?: WithdrawalIntiatedNotificationParameters;
   withdrawalFailedParams?: WithdrawalFailedNotificationParameters;
   transferCompletedParams?: TransferCompletedNotificationParameters;
+  transferFailedParams?: TransferFailedNotificationParameters;
   sessionID?: string;
   transactionID?: string;
   paymentToken?: string;

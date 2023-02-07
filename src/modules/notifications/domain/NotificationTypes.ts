@@ -22,6 +22,7 @@ export enum NotificationEventType {
   SEND_WITHDRAWAL_COMPLETED_EVENT = "withdrawal.completed",
   SEND_WITHDRAWAL_FAILED_EVENT = "withdrawal.failed",
   SEND_TRANSFER_COMPLETED_EVENT = "transfer.completed",
+  SEND_TRANSFER_FAILED_EVENT = "transfer.failed", // TODO: Implement this
   SEND_COLLECTION_LINK_EVENT = "collection.link",
   SEND_COLLECTION_COMPLETED_EVENT = "collection.completed",
   SEND_EMPLOYER_REQUEST_EVENT = "employee.request",
@@ -41,6 +42,7 @@ export enum NotificationWorkflowTypes {
   WITHDRAWAL_COMPLETED_EVENT = "withdrawalCompletedEvent",
   WITHDRAWAL_FAILED_EVENT = "withdrawalFailedEvent",
   TRANSFER_COMPLETED_EVENT = "transferCompletedEvent",
+  TRANSFER_FAILED_EVENT = "transferFailedEvent",
 }
 
 export const preferredNotificationMedium = {
@@ -69,6 +71,7 @@ export const preferredNotificationMedium = {
   [NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_TRANSFER_FAILED_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_COLLECTION_LINK_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT]: [NotificationEventHandler.EMAIL],
