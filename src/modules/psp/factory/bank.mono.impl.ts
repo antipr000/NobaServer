@@ -1,15 +1,15 @@
 import { Inject } from "@nestjs/common";
 import { IBankImpl } from "./ibank.impl";
 import { DebitBankFactoryRequest, DebitBankFactoryResponse } from "../domain/BankFactoryTypes";
-import { MonoService } from "../mono/mono.service";
 import { MonoCurrency, MonoTransactionType } from "../domain/Mono";
+import { MonoWorkflowService } from "../mono/mono.workflow.service";
 
 export class BankMonoImpl implements IBankImpl {
   @Inject()
-  private readonly monoService: MonoService;
+  private readonly monoWorkflowService: MonoWorkflowService;
 
   async debit(request: DebitBankFactoryRequest): Promise<DebitBankFactoryResponse> {
-    const withdrawal = await this.monoService.createMonoTransaction({
+    const withdrawal = await this.monoWorkflowService.createMonoTransaction({
       type: MonoTransactionType.WITHDRAWAL,
       amount: request.amount,
       currency: request.currency as MonoCurrency,

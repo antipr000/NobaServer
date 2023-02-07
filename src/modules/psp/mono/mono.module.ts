@@ -13,7 +13,7 @@ import { MonoWorkflowService } from "./mono.workflow.service";
 @Module({
   imports: [InfraProvidersModule, MonoRepoModule, ConsumerModule, CommonModule],
   controllers: [MonoWorkflowController],
-  providers: [MonoClient, MonoService, MonoWebhookHandlers, MonoWorkflowControllerMappers],
+  providers: [MonoClient, MonoService, MonoWorkflowService, MonoWebhookHandlers, MonoWorkflowControllerMappers],
   exports: [MonoService, MonoWorkflowService],
 })
 export class MonoModule {}
