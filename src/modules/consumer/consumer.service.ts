@@ -210,13 +210,10 @@ export class ConsumerService {
     const consumer = await this.getConsumer(consumerProps.id);
     // If we don't have a handle, but we do have a first name, then we can generate a handle.
     // Else if the handle is being set NOW, we need to validate it.
-    console.log(consumer);
     if (!consumer.props.handle && consumer.props.firstName && consumer.props.lastName) {
       consumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
-      console.log(consumer.props.handle);
       let counter = 0;
       while (!(await this.isHandleAvailable(consumerProps.handle))) {
-        console.log(counter);
         if (counter > 5) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
