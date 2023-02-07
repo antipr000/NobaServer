@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiPropertyOptional } from "@nestjs/swagger";
 
 export enum ALLOWED_DEPTH {
   SHALLOW = "SHALLOW",
@@ -6,6 +6,6 @@ export enum ALLOWED_DEPTH {
 }
 
 export class HealthCheckQueryDTO {
-  @ApiProperty({ enum: ALLOWED_DEPTH })
-  depth: ALLOWED_DEPTH;
+  @ApiPropertyOptional({ enum: ALLOWED_DEPTH })
+  depth?: ALLOWED_DEPTH = ALLOWED_DEPTH.SHALLOW;
 }
