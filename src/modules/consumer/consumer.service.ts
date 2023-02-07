@@ -202,7 +202,9 @@ export class ConsumerService {
 
   generateDefaultHandle(firstName: string, lastName: string): string {
     const randomAppend = Math.random().toString(36).substring(2, 5).toUpperCase();
-    const handle = `${firstName.replace(".", "")}-${lastName.substring(0, 2)}${randomAppend}`;
+    const handle = `${firstName.replaceAll(".", "").substring(0, 10)}-${lastName
+      .replaceAll(".", "")
+      .substring(0, 2)}${randomAppend}`;
     return this.removeAllUnsupportedHandleCharacters(handle);
   }
 
@@ -351,7 +353,6 @@ export class ConsumerService {
 
   async findConsumersByPublicInfo(searchString: string, limit: number): Promise<Consumer[]> {
     const consumerResultList = await this.consumerRepo.findConsumersByPublicInfo(searchString, limit);
-
     if (!consumerResultList.isSuccess) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
@@ -360,7 +361,14 @@ export class ConsumerService {
       });
     }
 
-    return consumerResultList.getValue();
+    const activeConsumers = [];
+    consumerResultList.getValue().forEach(consumer => {
+      if (this.isActiveConsumer(consumer)) {
+        activeConsumers.push(consumer);
+      }
+    });
+
+    return activeConsumers;
   }
 
   async findConsumerByEmailOrPhone(emailOrPhone: string): Promise<Result<Consumer>> {
@@ -396,15 +404,7 @@ export class ConsumerService {
     }
 
     // User is only "active" if they are not locked or disabled and have a KYC status of Approved and doc status is in good standing
-    if (
-      consumer.props.isLocked ||
-      consumer.props.isDisabled ||
-      consumer.props.verificationData == null ||
-      consumer.props.verificationData.kycCheckStatus !== KYCStatus.APPROVED ||
-      (consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.APPROVED &&
-        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.NOT_REQUIRED &&
-        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.LIVE_PHOTO_VERIFIED)
-    ) {
+    if (!this.isActiveConsumer(consumer)) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: "Unable to transact with this user at this time",
@@ -791,7 +791,7 @@ export class ConsumerService {
   }
 
   private normalizePhoneNumber(digits: string, countryCode: string): string {
-    if (digits[0] === "+") {
+    if (digits && digits[0] === "+") {
       return digits;
     }
 
@@ -811,6 +811,21 @@ export class ConsumerService {
     if (result.length < 1) result += "user-";
     while (result.length < 3) result += "-";
 
-    return result.substring(0, 7);
+    return result.substring(0, 16);
+  }
+
+  private isActiveConsumer(consumer: Consumer): boolean {
+    if (
+      consumer.props.isLocked ||
+      consumer.props.isDisabled ||
+      consumer.props.verificationData == null ||
+      consumer.props.verificationData.kycCheckStatus !== KYCStatus.APPROVED ||
+      (consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.APPROVED &&
+        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.NOT_REQUIRED &&
+        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.LIVE_PHOTO_VERIFIED)
+    ) {
+      return false;
+    }
+    return true;
   }
 }

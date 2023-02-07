@@ -41,7 +41,7 @@ import { NotificationEventType } from "../../../modules/notifications/domain/Not
 import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
 import { TransactionVerification } from "../domain/TransactionVerification";
 import { ServiceException } from "../../../core/exception/service.exception";
-import { uuid } from "uuidv4";
+import { v4 } from "uuid";
 
 describe("VerificationService", () => {
   let verificationService: VerificationService;
@@ -111,9 +111,9 @@ describe("VerificationService", () => {
 
   describe("getDeviceVerificationResult", () => {
     it("should return device information", async () => {
-      const sessionKey = uuid();
+      const sessionKey = v4();
       const deviceInfo: SardineDeviceInformationResponse = {
-        id: uuid(),
+        id: v4(),
         level: SardineRiskLevels.LOW,
         sessionKey: sessionKey,
       };
@@ -255,6 +255,7 @@ describe("VerificationService", () => {
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
+      when(consumerService.findConsumersByContactInfo(anything())).thenResolve([]);
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
 
@@ -275,6 +276,52 @@ describe("VerificationService", () => {
           }),
         ),
       ).once();
+    });
+
+    it("should throw exception if user exists with duplicate email", async () => {
+      const consumer = getFakeConsumer();
+      const consumerInformation = getFakeConsumerInformation(consumer, "US");
+
+      const sessionKey = "fake-session";
+
+      const consumerVerificationResult: ConsumerVerificationResult = {
+        status: KYCStatus.APPROVED,
+        idvProviderRiskLevel: "fake-risk-rating",
+      };
+
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
+        consumerVerificationResult,
+      );
+      when(consumerService.findConsumersByContactInfo(anything())).thenResolve([consumer]);
+
+      expect(
+        verificationService.verifyConsumerInformation(consumer.props.id, sessionKey, consumerInformation),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw exception if user exists with duplicate phone", async () => {
+      const consumer = getFakeConsumer();
+      const consumerInformation = getFakeConsumerInformation(consumer, "US");
+      consumerInformation.email = null;
+      consumerInformation.phoneNumber = "+1234567890";
+
+      const sessionKey = "fake-session";
+
+      const consumerVerificationResult: ConsumerVerificationResult = {
+        status: KYCStatus.APPROVED,
+        idvProviderRiskLevel: "fake-risk-rating",
+      };
+
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
+        consumerVerificationResult,
+      );
+      when(consumerService.findConsumersByContactInfo(anything())).thenResolve([consumer]);
+
+      expect(
+        verificationService.verifyConsumerInformation(consumer.props.id, sessionKey, consumerInformation),
+      ).rejects.toThrowError(ServiceException);
     });
 
     it("should verify ConsumerInformation when idvProvider returns APPROVED for non-US user", async () => {
@@ -308,6 +355,7 @@ describe("VerificationService", () => {
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
+      when(consumerService.findConsumersByContactInfo(anything())).thenResolve([]);
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
 
@@ -363,6 +411,7 @@ describe("VerificationService", () => {
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
+      when(consumerService.findConsumersByContactInfo(anything())).thenResolve([]);
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
 
@@ -418,6 +467,7 @@ describe("VerificationService", () => {
       when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
         consumerVerificationResult,
       );
+      when(consumerService.findConsumersByContactInfo(anything())).thenResolve([]);
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
 
       const result = await verificationService.verifyConsumerInformation(
@@ -986,7 +1036,7 @@ describe("VerificationService", () => {
 });
 
 function getFakeConsumer(firstName = "Fake"): Consumer {
-  const consumerID = uuid();
+  const consumerID = v4();
   return Consumer.createConsumer({
     id: consumerID,
     firstName: firstName,

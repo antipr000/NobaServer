@@ -311,6 +311,41 @@ describe("SardineTests", () => {
       expect(response.idvProviderRiskLevel).toBe("low");
     });
 
+    it("Should throw a BadRequestException if Sardine returns a 422 error", async () => {
+      const consumerInformation: ConsumerInformation = {
+        userID: "test-user-1234",
+        firstName: "Test",
+        lastName: "User",
+        address: {
+          streetLine1: "Test street",
+          streetLine2: "Test street line 2",
+          countryCode: "US",
+          city: "CA",
+          regionCode: "RC",
+          postalCode: "123456",
+        },
+        dateOfBirth: "1860-03-03",
+        email: "test+user@noba.com",
+      };
+
+      const responsePromise = sardine.verifyConsumerInformation(KYC_SSN_LOW_RISK.data.sessionKey, consumerInformation);
+      expect(mockAxios.post).toHaveBeenCalled();
+      mockAxios.mockError({
+        response: {
+          status: 422,
+          data: FAKE_422_VALIDATION_ERROR,
+        },
+      });
+
+      try {
+        await responsePromise;
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(JSON.parse(e.message)).toEqual(FAKE_422_VALIDATION_ERROR);
+      }
+    });
+
     it("should thow BadRequestException when Sardine api call fails", async () => {
       const consumerInformation: ConsumerInformation = {
         userID: "test-user-1234",
@@ -1045,6 +1080,51 @@ describe("SardineTests", () => {
         expect(e).toBeInstanceOf(InternalServerErrorException);
       }
     });
+
+    it("should throw an a BadRequestException if Sardine returns a 422 error", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "fake-consumer-1234",
+        email: "fake+consumer@noba.com",
+        firstName: "Fake",
+        lastName: "Consumer",
+
+        address: {
+          streetLine1: "Fake Street",
+          streetLine2: "Fake Street Line 2",
+          countryCode: "US",
+          city: "Maintown",
+          postalCode: "123456",
+          regionCode: "CA",
+        },
+        dateOfBirth: "1960-12-12",
+      });
+
+      mockAxios.post.mockRejectedValueOnce({
+        response: {
+          status: 422,
+          data: FAKE_422_VALIDATION_ERROR,
+        },
+      });
+
+      const responsePromise = sardine.getIdentityDocumentVerificationURL(
+        "session-key",
+        consumer,
+        IDVerificationURLRequestLocale.EN_US,
+        true,
+        true,
+        true,
+      );
+
+      expect(mockAxios.post).toHaveBeenCalled();
+
+      try {
+        await responsePromise;
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(JSON.parse(e.message)).toEqual(FAKE_422_VALIDATION_ERROR);
+      }
+    });
   });
 
   describe("getDocumentVerificationResult", () => {
@@ -1059,6 +1139,24 @@ describe("SardineTests", () => {
 
       const result = await responsePromise;
       expect(result.status).toBe(DocumentVerificationStatus.APPROVED);
+    });
+
+    it("should throw BadRequestException if Sardine returns a 422 error", async () => {
+      mockAxios.get.mockRejectedValueOnce({
+        response: {
+          status: 422,
+          data: FAKE_422_VALIDATION_ERROR,
+        },
+      });
+      const responsePromise = sardine.getDocumentVerificationResult("fake-verification-id");
+
+      try {
+        await responsePromise;
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(JSON.parse(e.message)).toEqual(FAKE_422_VALIDATION_ERROR);
+      }
     });
 
     it("should throw error if axios calls fail", async () => {
@@ -1251,7 +1349,71 @@ describe("SardineTests", () => {
       expect(result).toBe("test-id");
     });
 
-    it("should throw BadRequestException if status code is not 400", async () => {
+    it("should throw BadRequestException if Sardine returns a 422 response", async () => {
+      const fileData: Express.Multer.File = {
+        fieldname: "fake-field",
+        originalname: "fake-name",
+        encoding: "base64",
+        mimetype: ".jpg",
+        size: 1024,
+        stream: new Readable(),
+        destination: "fake-destination",
+        filename: "fake-filename.jpg",
+        path: "fake-path",
+        buffer: Buffer.from("fake-data"),
+      };
+      const documentInformation: DocumentInformation = {
+        userID: "fake-user",
+        documentType: DocumentTypes.DRIVER_LICENSE,
+        documentFrontImage: fileData,
+      };
+
+      const sessionKey = "fake-session";
+
+      const consumer = Consumer.createConsumer({
+        id: "fake-consumer-1234",
+        email: "fake+consumer@noba.com",
+        firstName: "Fake",
+        lastName: "Consumer",
+
+        verificationData: {
+          kycCheckStatus: KYCStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
+          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationTimestamp: new Date(),
+          isSuspectedFraud: false,
+        },
+        address: {
+          streetLine1: "Fake Street",
+          streetLine2: "Fake Street Line 2",
+          countryCode: "US",
+          city: "Maintown",
+          postalCode: "123456",
+          regionCode: "CA",
+        },
+        dateOfBirth: "1960-12-12",
+      });
+      const promise = sardine.verifyDocument(sessionKey, documentInformation, consumer);
+
+      expect(mockAxios.post).toHaveBeenCalled();
+      mockAxios.mockError({
+        response: {
+          status: 422,
+          data: FAKE_422_VALIDATION_ERROR,
+        },
+      });
+
+      try {
+        await promise;
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(JSON.parse(e.message)).toEqual(FAKE_422_VALIDATION_ERROR);
+      }
+    });
+
+    it("should throw BadRequestException if status code is not 400 or 422", async () => {
       const fileData: Express.Multer.File = {
         fieldname: "fake-field",
         originalname: "fake-name",
@@ -1325,6 +1487,26 @@ describe("SardineTests", () => {
       });
       const result = await responsePromise;
       expect(result).toStrictEqual(FAKE_DEVICE_INFORMATION_RESPONSE);
+    });
+
+    it("should throw BadRequestException if Sardine returns a 422 error", async () => {
+      const sessionKey = "fake-session-key";
+      const responsePromise = sardine.getDeviceVerificationResult(sessionKey);
+      expect(mockAxios.post).toHaveBeenCalled();
+      mockAxios.mockError({
+        response: {
+          status: 422,
+          data: FAKE_422_VALIDATION_ERROR,
+        },
+      });
+
+      try {
+        await responsePromise;
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect(JSON.parse(e.message)).toEqual(FAKE_422_VALIDATION_ERROR);
+      }
     });
 
     it("should throw NotFoundException if session key is not found by Sardine", async () => {
@@ -1505,7 +1687,25 @@ describe("SardineTests", () => {
       expect(mockAxios.post).toHaveBeenCalled();
     });
 
-    it("should not throw error if feedback API fails", async () => {
+    it("should throw log a more detailed error if Sardine returns a 422 response code", async () => {
+      const consumerVerificationResult: ConsumerVerificationResult = {
+        status: KYCStatus.APPROVED,
+      };
+
+      const responsePromise = sardine.postConsumerFeedback("fake-session", consumerVerificationResult);
+      expect(mockAxios.post).toHaveBeenCalled();
+      mockAxios.mockError({
+        response: {
+          status: 422,
+          data: FAKE_422_VALIDATION_ERROR,
+        },
+      });
+
+      await responsePromise;
+      expect(true).toBe(true);
+    });
+
+    it("should not throw error if feedback API fails with a non-422 response code", async () => {
       const consumerVerificationResult: ConsumerVerificationResult = {
         status: KYCStatus.APPROVED,
       };
@@ -1535,7 +1735,25 @@ describe("SardineTests", () => {
       expect(mockAxios.post).toHaveBeenCalled();
     });
 
-    it("should not throw error if feedback API fails", async () => {
+    it("should throw log a more detailed error if Sardine returns a 422 response code", async () => {
+      const documentVerificationResult: DocumentVerificationResult = {
+        status: DocumentVerificationStatus.APPROVED,
+      };
+
+      const responsePromise = sardine.postDocumentFeedback("fake-session", documentVerificationResult);
+      expect(mockAxios.post).toHaveBeenCalled();
+      mockAxios.mockError({
+        response: {
+          status: 422,
+          data: FAKE_422_VALIDATION_ERROR,
+        },
+      });
+
+      await responsePromise;
+      expect(true).toBe(true);
+    });
+
+    it("should not throw error if feedback API fails with a non-422 response code", async () => {
       const documentVerificationResult: DocumentVerificationResult = {
         status: DocumentVerificationStatus.APPROVED,
       };
@@ -1561,7 +1779,26 @@ describe("SardineTests", () => {
       expect(mockAxios.post).toHaveBeenCalled();
     });
 
-    it("should not throw error if feedback API fails", async () => {
+    it("should not throw error if feedback API fails with a 422 response code", async () => {
+      const responsePromise = sardine.postTransactionFeedback(
+        "fake-session",
+        "fake-error",
+        "Fake Error",
+        "fake-transaction",
+        "checkout",
+      );
+      expect(mockAxios.post).toHaveBeenCalled();
+      mockAxios.mockError({
+        response: {
+          status: 422,
+          data: FAKE_422_VALIDATION_ERROR,
+        },
+      });
+      await responsePromise;
+      expect(true).toBe(true);
+    });
+
+    it("should not throw error if feedback API fails with a non-422 response code", async () => {
       const responsePromise = sardine.postTransactionFeedback(
         "fake-session",
         "fake-error",

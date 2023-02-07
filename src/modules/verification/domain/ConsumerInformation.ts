@@ -15,5 +15,5 @@ export type ConsumerInformation = {
   phoneNumber?: string;
   dateOfBirth: string;
   nationalID?: NationalID;
-  email: string;
+  email?: string;
 };
