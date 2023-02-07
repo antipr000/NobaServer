@@ -591,7 +591,7 @@ describe("ConsumerService", () => {
   });
 
   describe("generateDefaultHandle", () => {
-    it("should generate a handle", async () => {
+    it("should generate a handle", () => {
       const firstName = "test.test.test.test";
       const lastName = "Last";
 
@@ -610,9 +610,8 @@ describe("ConsumerService", () => {
       expect(secondHalf.length).toEqual(5);
     });
 
-    it("should generate a handle", async () => {
+    it("should generate a handle containing unsupported characters", () => {
       const firstName = "test&()is{}*test";
-      console.log(firstName.length);
       const lastName = "a";
 
       const handle = consumerService.generateDefaultHandle(firstName, lastName);
@@ -628,6 +627,24 @@ describe("ConsumerService", () => {
       expect(firstHalf).toEqual("testis");
       expect(secondHalf.substring(0, 1)).toEqual("a");
       expect(secondHalf.length).toEqual(4);
+    });
+
+    it("should generate a handle containing unsupported characters empty last name", () => {
+      const firstName = "ñáé.íóúü.úü";
+      const lastName = "...";
+
+      const handle = consumerService.generateDefaultHandle(firstName, lastName);
+
+      expect(handle.indexOf(".")).toBe(-1);
+      expect(handle.indexOf("_")).toBe(-1);
+      expect(handle.length).toBeGreaterThanOrEqual(3);
+      expect(handle.length).toBeLessThanOrEqual(16);
+      expect(handle[0] != "-").toBeTruthy();
+      const handleSplit = handle.split("-");
+      const firstHalf = handleSplit[0];
+      const secondHalf = handleSplit[1];
+      expect(firstHalf).toEqual("ñáéíóúüúü");
+      expect(secondHalf.length).toEqual(3);
     });
   });
 
