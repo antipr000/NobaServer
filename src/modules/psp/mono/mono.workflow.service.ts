@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { WorkflowErrorCode, WorkflowException } from "src/core/exception/workflow.exception";
+import { WorkflowErrorCode, WorkflowException } from "../../../core/exception/workflow.exception";
 import { MonoTransaction } from "../domain/Mono";
 import { CreateMonoTransactionRequest } from "../dto/mono.service.dto";
 import { MonoClientException } from "./exception/mono.client.exception";
