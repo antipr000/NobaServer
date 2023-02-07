@@ -1414,6 +1414,14 @@ describe("ConsumerService", () => {
         email: "mock@mock.com",
         firstName: "jon",
         lastName: "doe",
+        verificationData: {
+          provider: KYCProvider.SARDINE,
+          isSuspectedFraud: false,
+          kycCheckStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+          documentVerificationTimestamp: new Date(),
+          kycVerificationTimestamp: new Date(),
+        },
       });
       const consumer2 = Consumer.createConsumer({
         id: "mockConsumer2",
@@ -1421,6 +1429,14 @@ describe("ConsumerService", () => {
         email: "mock2@mock.com",
         firstName: "jon",
         lastName: "snow",
+        verificationData: {
+          provider: KYCProvider.SARDINE,
+          isSuspectedFraud: false,
+          kycCheckStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+          documentVerificationTimestamp: new Date(),
+          kycVerificationTimestamp: new Date(),
+        },
       });
 
       const expectedConsumers = [consumer, consumer2];
@@ -1429,6 +1445,45 @@ describe("ConsumerService", () => {
 
       const consumers = await consumerService.findConsumersByPublicInfo("jon", 3);
       expect(consumers).toEqual(expectedConsumers);
+    });
+
+    it("should only find active consumers by public info", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mockConsumer",
+        phone: "+15559993333",
+        email: "mock@mock.com",
+        firstName: "jon",
+        lastName: "doe",
+        isLocked: true,
+        verificationData: {
+          provider: KYCProvider.SARDINE,
+          isSuspectedFraud: false,
+          kycCheckStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+          documentVerificationTimestamp: new Date(),
+          kycVerificationTimestamp: new Date(),
+        },
+      });
+      const consumer2 = Consumer.createConsumer({
+        id: "mockConsumer2",
+        phone: "+15559993333",
+        email: "mock2@mock.com",
+        firstName: "jon",
+        lastName: "snow",
+        verificationData: {
+          provider: KYCProvider.SARDINE,
+          isSuspectedFraud: true,
+          kycCheckStatus: KYCStatus.FLAGGED,
+          documentVerificationStatus: DocumentVerificationStatus.REJECTED,
+          documentVerificationTimestamp: new Date(),
+          kycVerificationTimestamp: new Date(),
+        },
+      });
+
+      when(consumerRepo.findConsumersByPublicInfo("jon", 3)).thenResolve(Result.ok<Array<Consumer>>([]));
+
+      const consumers = await consumerService.findConsumersByPublicInfo("jon", 3);
+      expect(consumers).toEqual([]);
     });
 
     it("should return empty array if no consumers found", async () => {
