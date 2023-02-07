@@ -1,11 +1,16 @@
-import { ApiProperty } from "@nestjs/swagger";
-
-export enum HealthStatus {
-  OK = "OK",
-  SERVICE_DOWN = "SERVICE_DOWN",
-}
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
 
 export class HealthCheckResponseDTO {
-  @ApiProperty({ enum: HealthStatus })
-  status: HealthStatus;
+  @ApiProperty({ enum: HealthCheckStatus })
+  serverStatus: HealthCheckStatus;
+
+  @ApiPropertyOptional({ enum: HealthCheckStatus })
+  sardineStatus?: HealthCheckStatus;
+
+  @ApiPropertyOptional({ enum: HealthCheckStatus })
+  monoStatus?: HealthCheckStatus;
+
+  @ApiPropertyOptional({ enum: HealthCheckStatus })
+  circleStatus?: HealthCheckStatus;
 }

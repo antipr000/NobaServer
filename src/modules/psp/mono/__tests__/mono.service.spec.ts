@@ -32,6 +32,7 @@ import { KmsService } from "../../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../../config/configtypes/KmsConfigs";
 import { ServiceErrorCode, ServiceException } from "../../../../core/exception/service.exception";
 import { getRandomMonoTransaction } from "../test_utils/utils";
+import { HealthCheckStatus } from "../../../../core/domain/HealthCheckTypes";
 
 describe("MonoServiceTests", () => {
   jest.setTimeout(20000);
@@ -88,6 +89,20 @@ describe("MonoServiceTests", () => {
 
   afterEach(async () => {
     app.close();
+  });
+
+  describe("checkMonoHealth", () => {
+    it("should return status as OK when mono is healthy", async () => {
+      when(monoClient.getHealth()).thenResolve({ status: HealthCheckStatus.OK });
+      const health = await monoService.checkMonoHealth();
+      expect(health.status).toBe(HealthCheckStatus.OK);
+    });
+
+    it("should return status as UNAVAILABLE when mono is healthy", async () => {
+      when(monoClient.getHealth()).thenResolve({ status: HealthCheckStatus.UNAVAILABLE });
+      const health = await monoService.checkMonoHealth();
+      expect(health.status).toBe(HealthCheckStatus.UNAVAILABLE);
+    });
   });
 
   describe("getSupportedBanks", () => {

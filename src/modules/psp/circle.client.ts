@@ -1,5 +1,5 @@
 import { Circle, CircleEnvironments, CreateWalletResponse, TransferErrorCode } from "@circle-fin/circle-sdk";
-import { Inject, Injectable } from "@nestjs/common";
+import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { CircleConfigs } from "../../config/configtypes/CircleConfigs";
 import { CIRCLE_CONFIG_KEY } from "../../config/ConfigurationUtils";
@@ -10,9 +10,11 @@ import { CircleWithdrawalRequest, CircleWithdrawalResponse, CircleWithdrawalStat
 import { fromString as convertToUUIDv4 } from "uuidv4";
 import { Utils } from "../../core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
+import { IClient } from "../../core/domain/IClient";
+import { HealthCheckResponse, HealthCheckStatus } from "../../core/domain/HealthCheckTypes";
 
 @Injectable()
-export class CircleClient {
+export class CircleClient implements IClient {
   private readonly circleApi: Circle;
   private readonly masterWalletID: string;
 
@@ -22,17 +24,27 @@ export class CircleClient {
     this.masterWalletID = circleConfigs.masterWalletID;
   }
 
-  async getMasterWalletID(): Promise<string> {
-    return this.masterWalletID;
-  }
-
-  async checkCircleHealth(): Promise<boolean> {
+  async getHealth(): Promise<HealthCheckResponse> {
     try {
       const response = await this.circleApi.health.ping();
-      return response.status === 200;
+      if (response.status === HttpStatus.OK) {
+        return {
+          status: HealthCheckStatus.OK,
+        };
+      } else {
+        return {
+          status: HealthCheckStatus.UNAVAILABLE,
+        };
+      }
     } catch (e) {
-      return false;
+      return {
+        status: HealthCheckStatus.UNAVAILABLE,
+      };
     }
+  }
+
+  async getMasterWalletID(): Promise<string> {
+    return this.masterWalletID;
   }
 
   async createWallet(idempotencyKey: string): Promise<string> {

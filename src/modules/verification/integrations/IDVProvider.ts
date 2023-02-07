@@ -1,3 +1,4 @@
+import { IClient } from "../../../core/domain/IClient";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
 import { DocumentInformation } from "../domain/DocumentInformation";
@@ -11,7 +12,7 @@ import {
   SardineDeviceInformationResponse,
 } from "./SardineTypeDefinitions";
 
-export interface IDVProvider {
+export interface IDVProvider extends IClient {
   verifyConsumerInformation(sessionKey: string, consumerInfo: ConsumerInformation): Promise<ConsumerVerificationResult>;
 
   verifyDocument(sessionKey: string, documentInfo: DocumentInformation, consumer: Consumer): Promise<string>;

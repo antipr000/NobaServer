@@ -23,6 +23,7 @@ import { isValidDateOfBirth } from "../../core/utils/DateUtils";
 import { TransactionVerification } from "./domain/TransactionVerification";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { SeverityLevel } from "../../core/exception/base.exception";
+import { HealthCheckResponse } from "../../core/domain/HealthCheckTypes";
 
 @Injectable()
 export class VerificationService {
@@ -39,6 +40,10 @@ export class VerificationService {
   private readonly notificationService: NotificationService;
 
   constructor(private consumerService: ConsumerService) {}
+
+  async getHealth(): Promise<HealthCheckResponse> {
+    return this.idvProvider.getHealth();
+  }
 
   async verifyConsumerInformation(
     consumerID: string,
@@ -97,7 +102,7 @@ export class VerificationService {
       if (consumers.some(consumer => consumer)) {
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-          message: `Consumer with this phone number or email already exists`,
+          message: "Consumer with this phone number or email already exists",
         });
       }
     }

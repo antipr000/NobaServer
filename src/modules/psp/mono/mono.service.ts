@@ -26,6 +26,7 @@ import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { KmsService } from "../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
+import { HealthCheckResponse } from "../../../core/domain/HealthCheckTypes";
 
 type CollectionLinkDepositRequest = {
   nobaTransactionID: string;
@@ -55,6 +56,10 @@ export class MonoService {
     private readonly monoClient: MonoClient,
     private readonly monoWebhookHandlers: MonoWebhookHandlers,
   ) {}
+
+  async checkMonoHealth(): Promise<HealthCheckResponse> {
+    return this.monoClient.getHealth();
+  }
 
   async getTransactionByNobaTransactionID(nobaTransactionID: string): Promise<MonoTransaction | null> {
     let monoTransaction: MonoTransaction = await this.monoRepo.getMonoTransactionByNobaTransactionID(nobaTransactionID);
@@ -180,14 +185,14 @@ export class MonoService {
     if (!request.consumer) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-        message: `Consumer not found.`,
+        message: "Consumer not found.",
       });
     }
 
     if (!request.nobaPublicTransactionRef) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: `nobaPublicTransactionRef is required`,
+        message: "nobaPublicTransactionRef is required",
       });
     }
 
@@ -219,7 +224,7 @@ export class MonoService {
     if (!request.consumer) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-        message: `Consumer not found.`,
+        message: "Consumer not found.",
       });
     }
   }
