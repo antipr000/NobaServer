@@ -2,7 +2,7 @@ FROM --platform=linux/amd64 node:16-alpine
 
 # NODE_ENV is not "required" as it is "used" while running the image.
 # env NODE_ENV=e2e_test
-env DATABASE_URL=postgresql://e2e_user:pass@postgres-db:5432/Noba_E2E
+ENV DATABASE_URL=postgresql://e2e_user:pass@postgres-db:5432/Noba_E2E
 
 RUN apk update && apk add bash
 
