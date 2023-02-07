@@ -359,6 +359,23 @@ describe("ConsumerRepoTests", () => {
       expect(foundConsumer.getValue().length).toBe(0);
     });
 
+    it("should not find any non-active consumers", async () => {
+      const consumer = getRandomUser("");
+      consumer.props.verificationData = undefined;
+      const consumer2 = getRandomUser();
+      const consumer3 = getRandomUser();
+      consumer3.props.verificationData = undefined;
+      consumer.props.handle = "handTesting1";
+      consumer2.props.handle = "handTesting2";
+      consumer3.props.handle = "handTesting3";
+      await consumerRepo.createConsumer(consumer);
+      await consumerRepo.createConsumer(consumer2);
+      await consumerRepo.createConsumer(consumer3);
+      const foundConsumer = await consumerRepo.findConsumersByPublicInfo("$handTesting", 10);
+      expect(foundConsumer.isSuccess).toBe(true);
+      expect(foundConsumer.getValue().length).toBe(1);
+    });
+
     it("should fail if an exception is thrown", async () => {
       jest.spyOn(prismaService.consumer, "findMany").mockImplementation(() => {
         throw new Error("Error");
@@ -394,7 +411,6 @@ describe("ConsumerRepoTests", () => {
     });
 
     it("should fail to find consumer", async () => {
-      const consumer = getRandomUser();
       const foundConsumer = await consumerRepo.findConsumerByContactInfo({
         phoneNumbers: ["1234567890"],
         emails: ["fake@mock.com"],
