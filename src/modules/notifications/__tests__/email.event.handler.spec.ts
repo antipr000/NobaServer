@@ -39,6 +39,7 @@ describe("EmailEventHandler", () => {
   let currencyService: CurrencyService;
   let emailClient: EmailClient;
   let eventHandler: EmailEventHandler;
+  let app: TestingModule;
 
   const SUPPORT_URL = "help.noba.com";
   const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -46,7 +47,7 @@ describe("EmailEventHandler", () => {
 
   jest.setTimeout(30000);
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     currencyService = getMockCurrencyServiceWithDefaults();
     emailClient = getMockEmailClientWithDefaults();
 
@@ -55,7 +56,7 @@ describe("EmailEventHandler", () => {
       NODE_ENV: "development",
     };
 
-    const app: TestingModule = await Test.createTestingModule({
+    app = await Test.createTestingModule({
       imports: [
         TestConfigModule.registerAsync({
           [SENDGRID_CONFIG_KEY]: {
@@ -80,6 +81,18 @@ describe("EmailEventHandler", () => {
 
     eventHandler = app.get<EmailEventHandler>(EmailEventHandler);
     when(emailClient.sendEmail(anything())).thenResolve();
+
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2020, 3, 1));
+  });
+
+  afterAll(async () => {
+    jest.useRealTimers();
+    await app.close();
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
   it("should call emailService with SendOtp event", async () => {
