@@ -6,7 +6,7 @@ services:
     restart: on-failure
     build:
       context: ../
-      dockerfile: Dockerfile
+      dockerfile: e2e_test/Dockerfile
     environment:
       - NODE_ENV=e2e_test
       - DATABASE_URL=postgresql://e2e_user:pass@postgres-db:5432/Noba_E2E
