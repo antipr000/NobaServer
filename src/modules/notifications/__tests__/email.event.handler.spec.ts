@@ -713,6 +713,7 @@ describe("EmailEventHandler", () => {
         creditConsumer_lastName: "Ashworth",
         creditConsumer_handle: "justin",
         debitConsumer_handle: "gal",
+        reasonDeclined: "Failed transfer",
       },
       locale: "en",
     });
@@ -738,6 +739,7 @@ describe("EmailEventHandler", () => {
         createdTimestamp: payload.params.createdTimestamp,
         processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
         nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        reasonDeclined: "Failed transfer",
       },
     });
   });
