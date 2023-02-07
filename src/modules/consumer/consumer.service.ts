@@ -202,8 +202,8 @@ export class ConsumerService {
 
   generateDefaultHandle(firstName: string, lastName: string): string {
     const randomAppend = Math.random().toString(36).substring(2, 5).toUpperCase();
-    const handle = `${firstName.replace(".", "").substring(0, 11)}-${lastName
-      .replace(".", "")
+    const handle = `${firstName.replaceAll(".", "").substring(0, 11)}-${lastName
+      .replaceAll(".", "")
       .substring(0, 2)}${randomAppend}`;
     return this.removeAllUnsupportedHandleCharacters(handle);
   }
