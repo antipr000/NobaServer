@@ -351,7 +351,6 @@ export class ConsumerService {
 
   async findConsumersByPublicInfo(searchString: string, limit: number): Promise<Consumer[]> {
     const consumerResultList = await this.consumerRepo.findConsumersByPublicInfo(searchString, limit);
-
     if (!consumerResultList.isSuccess) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
