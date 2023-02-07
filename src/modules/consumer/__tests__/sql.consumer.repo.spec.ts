@@ -225,12 +225,18 @@ describe("ConsumerRepoTests", () => {
       // Get all 3 consumers
       const foundConsumer = await consumerRepo.findConsumersByPublicInfo("lastNameTest", 10);
       expect(foundConsumer.isSuccess).toBe(true);
-      expect(foundConsumer.getValue().length).toBe(3);
+      const foundConsumers = foundConsumer.getValue();
+      expect(foundConsumers.length).toBe(3);
+      foundConsumers.forEach(consumer => {
+        expect(consumer.props.verificationData).toBeDefined();
+      });
 
       // Get only 1 consumer
       const foundConsumer2 = await consumerRepo.findConsumersByPublicInfo("lastNameTest", 1);
       expect(foundConsumer2.isSuccess).toBe(true);
-      expect(foundConsumer2.getValue().length).toBe(1);
+      const foundConsumers2 = foundConsumer2.getValue();
+      expect(foundConsumers2.length).toBe(1);
+      expect(foundConsumers[0].props.verificationData).toBeDefined();
     });
 
     it("should find consumers by first and last name", async () => {
@@ -244,17 +250,27 @@ describe("ConsumerRepoTests", () => {
       // Find just one
       const foundConsumer = await consumerRepo.findConsumersByPublicInfo("2 2", 10);
       expect(foundConsumer.isSuccess).toBe(true);
-      expect(foundConsumer.getValue().length).toBe(1);
+      const foundConsumers = foundConsumer.getValue();
+      expect(foundConsumers.length).toBe(1);
+      expect(foundConsumers[0].props.verificationData).toBeDefined();
 
       // Find all three
       const foundConsumer2 = await consumerRepo.findConsumersByPublicInfo("TestFirstName TestLastName", 10);
       expect(foundConsumer2.isSuccess).toBe(true);
-      expect(foundConsumer2.getValue().length).toBe(3);
+      const foundConsumers2 = foundConsumer2.getValue();
+      expect(foundConsumers2.length).toBe(3);
+      foundConsumers2.forEach(consumer => {
+        expect(consumer.props.verificationData).toBeDefined();
+      });
 
       // Works the same with extra spaces within the search string
       const foundConsumer3 = await consumerRepo.findConsumersByPublicInfo("TestFirstName    TestLastName   ", 10);
       expect(foundConsumer3.isSuccess).toBe(true);
-      expect(foundConsumer3.getValue().length).toBe(3);
+      const foundConsumers3 = foundConsumer3.getValue();
+      expect(foundConsumers3.length).toBe(3);
+      foundConsumers3.forEach(consumer => {
+        expect(consumer.props.verificationData).toBeDefined();
+      });
     });
 
     it("should find consumers by handle without $ prefix", async () => {
@@ -269,12 +285,20 @@ describe("ConsumerRepoTests", () => {
 
       const foundConsumer = await consumerRepo.findConsumersByPublicInfo("handleTest", 10);
       expect(foundConsumer.isSuccess).toBe(true);
-      expect(foundConsumer.getValue().length).toBe(2);
+      const foundConsumers = foundConsumer.getValue();
+      expect(foundConsumers.length).toBe(2);
+      foundConsumers.forEach(consumer => {
+        expect(consumer.props.verificationData).toBeDefined();
+      });
 
       // Test that we ignore extra spaces
       const foundConsumer2 = await consumerRepo.findConsumersByPublicInfo("handleTest  ", 10);
       expect(foundConsumer2.isSuccess).toBe(true);
-      expect(foundConsumer2.getValue().length).toBe(2);
+      const foundConsumers2 = foundConsumer2.getValue();
+      expect(foundConsumers2.length).toBe(2);
+      foundConsumers2.forEach(consumer => {
+        expect(consumer.props.verificationData).toBeDefined();
+      });
     });
 
     it("should find consumers by handle with $ prefix", async () => {
@@ -289,12 +313,20 @@ describe("ConsumerRepoTests", () => {
 
       const foundConsumer = await consumerRepo.findConsumersByPublicInfo("$dollarHandleTest", 10);
       expect(foundConsumer.isSuccess).toBe(true);
-      expect(foundConsumer.getValue().length).toBe(2);
+      const foundConsumers = foundConsumer.getValue();
+      expect(foundConsumers.length).toBe(2);
+      foundConsumers.forEach(consumer => {
+        expect(consumer.props.verificationData).toBeDefined();
+      });
 
       // Test that we ignore extra spaces
       const foundConsumer2 = await consumerRepo.findConsumersByPublicInfo("$dollarHandleTest  ", 10);
       expect(foundConsumer2.isSuccess).toBe(true);
-      expect(foundConsumer2.getValue().length).toBe(2);
+      const foundConsumers2 = foundConsumer2.getValue();
+      expect(foundConsumers2.length).toBe(2);
+      foundConsumers2.forEach(consumer => {
+        expect(consumer.props.verificationData).toBeDefined();
+      });
     });
 
     it("should find consumers by partial handle with $ prefix", async () => {
@@ -308,7 +340,11 @@ describe("ConsumerRepoTests", () => {
       await consumerRepo.createConsumer(consumer3);
       const foundConsumer = await consumerRepo.findConsumersByPublicInfo("$Partial", 10);
       expect(foundConsumer.isSuccess).toBe(true);
-      expect(foundConsumer.getValue().length).toBe(2);
+      const foundConsumers = foundConsumer.getValue();
+      expect(foundConsumers.length).toBe(2);
+      foundConsumers.forEach(consumer => {
+        expect(consumer.props.verificationData).toBeDefined();
+      });
     });
 
     it("should not find any consumers with an unknown handle with $ prefix", async () => {
@@ -321,6 +357,23 @@ describe("ConsumerRepoTests", () => {
       const foundConsumer = await consumerRepo.findConsumersByPublicInfo("$unknown", 10);
       expect(foundConsumer.isSuccess).toBe(true);
       expect(foundConsumer.getValue().length).toBe(0);
+    });
+
+    it("should not find any non-active consumers", async () => {
+      const consumer = getRandomUser("");
+      consumer.props.verificationData = undefined;
+      const consumer2 = getRandomUser();
+      const consumer3 = getRandomUser();
+      consumer3.props.verificationData = undefined;
+      consumer.props.handle = "handTesting1";
+      consumer2.props.handle = "handTesting2";
+      consumer3.props.handle = "handTesting3";
+      await consumerRepo.createConsumer(consumer);
+      await consumerRepo.createConsumer(consumer2);
+      await consumerRepo.createConsumer(consumer3);
+      const foundConsumer = await consumerRepo.findConsumersByPublicInfo("$handTesting", 10);
+      expect(foundConsumer.isSuccess).toBe(true);
+      expect(foundConsumer.getValue().length).toBe(1);
     });
 
     it("should fail if an exception is thrown", async () => {
@@ -358,7 +411,6 @@ describe("ConsumerRepoTests", () => {
     });
 
     it("should fail to find consumer", async () => {
-      const consumer = getRandomUser();
       const foundConsumer = await consumerRepo.findConsumerByContactInfo({
         phoneNumbers: ["1234567890"],
         emails: ["fake@mock.com"],

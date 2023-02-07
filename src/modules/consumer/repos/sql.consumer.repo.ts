@@ -165,6 +165,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
         where: query,
         orderBy: order,
         take: limit,
+        include: { verificationData: true },
       });
 
       return Result.ok(consumers.map(consumer => Consumer.createConsumer(consumer)));
