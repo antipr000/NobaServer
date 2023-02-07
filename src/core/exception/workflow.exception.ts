@@ -1,6 +1,7 @@
-import { BaseException, ExceptionConstructor } from "./base.exception";
+import { BaseException, ExceptionConstructor, MessageFormat } from "./base.exception";
 
 export const enum WorkflowErrorCode {
+  TRANSACTION_FAILED = "Transaction failed",
   UNKNOWN = "Unknown error has occured",
 }
 
@@ -12,7 +13,7 @@ export class WorkflowException extends BaseException<WorkflowErrorCode> {
   constructor(params: WorkflowExceptionConstructor) {
     super({
       message: params.message ?? params.errorCode,
-      messageFormat: params.messageFormat,
+      messageFormat: params.messageFormat ?? MessageFormat.JSON,
       errorCode: params.errorCode,
       retry: params.retry,
       severity: params.severity,
