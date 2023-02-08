@@ -34,7 +34,6 @@ import { Logger } from "winston";
 import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
 import { DocumentsFileUploadRequestDTO, DocVerificationRequestDTO } from "./dto/DocVerificationRequestDTO";
-import { IDVerificationRequestDTO } from "./dto/IDVerificationRequestDTO";
 import { VerificationResultDTO } from "./dto/VerificationResultDTO";
 import { VerificationService } from "./verification.service";
 import { Public } from "../auth/public.decorator";
