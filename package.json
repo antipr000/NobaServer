@@ -15,6 +15,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "dev": "yarn start:dev",
     "start": "cross-env NODE_ENV=development nest start --webpack --webpackPath webpack.config.js",
+    "start:e2e": "cross-env NODE_ENV=e2e_test nest start --webpack --webpackPath webpack.config.js",
     "start:dev": "cross-env NODE_ENV=development nest start --webpack --webpackPath webpack.config.js --watch",
     "start:debug": "nest start --debug  --webpack --webpackPath webpack.config.js --watch",
     "start:prod": "node dist/main",

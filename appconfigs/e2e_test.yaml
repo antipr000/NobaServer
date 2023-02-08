@@ -157,14 +157,14 @@ nobaWorkflow:
   namespace: "e2e_test"
 
 mono:
-  bearerToken: "DUMMY_TOKEN"
-  awsSecretNameForBearerToken: ""
-  baseURL: "https://noba.com"
-  awsSecretNameForBaseURL: ""
-  nobaAccountID: "DUMMY_ACCOUNT"
-  awsSecretNameForNobaAccountID: ""
-  webhookSecret: "DUMMY_WEBHOOK_SECRET"
-  awsSecretNameForWebhookSecret: ""
+  bearerToken: ""
+  awsSecretNameForBearerToken: "TEST_MONO_BEARER_TOKEN"
+  baseURL: ""
+  awsSecretNameForBaseURL: "TEST_MONO_BASE_URL"
+  nobaAccountID: ""
+  awsSecretNameForNobaAccountID: "TEST_MONO_NOBA_ACCOUNT_ID"
+  webhookSecret: ""
+  awsSecretNameForWebhookSecret: "TEST_MONO_WEBHOOK_SECRET"
 
 bubble:
   bearerToken: "DUMMY_TOKEN"

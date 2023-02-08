@@ -9,14 +9,14 @@ import { EmailClient } from "./email.client";
 import { EmailRequest } from "../domain/EmailTypes";
 
 @Injectable()
-export class SendgridEmailClient implements EmailClient {
-  constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
+export class SendgridEmailClient extends EmailClient {
+  constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) logger: Logger) {
+    super(logger);
     const sendGridApiKey = configService.get<SendGridConfigs>(SENDGRID_CONFIG_KEY).apiKey;
     sgMail.setApiKey(sendGridApiKey);
   }
 
-  async sendEmail(request: EmailRequest): Promise<void> {
-    this.logger.debug(`Sending email with following parameters: ${JSON.stringify(request)}`);
+  async sendEmailInternal(request: EmailRequest): Promise<void> {
     await sgMail.send(request);
   }
 }
