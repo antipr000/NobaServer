@@ -22,12 +22,6 @@ export class UpdateAddressDTO {
 
 export class UpdateConsumerRequestDTO {
   @ApiPropertyOptional()
-  email?: string;
-
-  @ApiPropertyOptional()
-  phoneNumber?: string;
-
-  @ApiPropertyOptional()
   firstName?: string;
 
   @ApiPropertyOptional()
