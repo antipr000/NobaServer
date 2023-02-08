@@ -117,7 +117,7 @@ describe("Onboarding consumer flow", () => {
 
     getConsumerResponse = await testUtils.get("/v1/consumers");
     expect(getConsumerResponse.data.kycVerificationData.kycVerificationStatus).toBe("Approved");
-    expect(getConsumerResponse.data.documentVerificationData.documentVerificationStatus).toBe("NotSubmitted");
+    expect(getConsumerResponse.data.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
 
     // Login again with the same email
     clearAccessTokenForNextRequests();
