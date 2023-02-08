@@ -65,18 +65,7 @@ export class WorkflowExecutor {
     return await this.executeWorkflow(WorkflowName.WALLET_DEPOSIT, workflowID, [transactionID]);
   }
 
-  public async executeWalletTransferWorkflow(
-    transactionID: string,
-    sourceConsumerID: string,
-    destinationConsumerID: string,
-    amount: number,
-    workflowID: string,
-  ): Promise<string> {
-    return await this.executeWorkflow(WorkflowName.WALLET_TRANSFER, workflowID, [
-      transactionID,
-      sourceConsumerID,
-      destinationConsumerID,
-      amount,
-    ]);
+  public async executeWalletTransferWorkflow(transactionID: string, workflowID: string): Promise<string> {
+    return await this.executeWorkflow(WorkflowName.WALLET_TRANSFER, workflowID, [transactionID]);
   }
 }
