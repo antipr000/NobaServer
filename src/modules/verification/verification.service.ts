@@ -24,6 +24,7 @@ import { TransactionVerification } from "./domain/TransactionVerification";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { SeverityLevel } from "../../core/exception/base.exception";
 import { HealthCheckResponse } from "../../core/domain/HealthCheckTypes";
+import { NationalIDTypes } from "./domain/NationalIDTypes";
 
 @Injectable()
 export class VerificationService {
@@ -58,6 +59,10 @@ export class VerificationService {
       address: consumer.props.address,
       email: consumer.props.email,
       phoneNumber: consumer.props.phone,
+      nationalID: {
+        type: NationalIDTypes.SOCIAL_SECURITY,
+        number: consumer.props.socialSecurityNumber,
+      },
       createdTimestampMillis: consumer.props.createdTimestamp.getTime(),
     };
     const result: ConsumerVerificationResult = await this.idvProvider.verifyConsumerInformation(
