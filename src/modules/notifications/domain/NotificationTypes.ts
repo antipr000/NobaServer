@@ -22,7 +22,7 @@ export enum NotificationEventType {
   SEND_WITHDRAWAL_COMPLETED_EVENT = "withdrawal.completed",
   SEND_WITHDRAWAL_FAILED_EVENT = "withdrawal.failed",
   SEND_TRANSFER_COMPLETED_EVENT = "transfer.completed",
-  SEND_TRANSFER_FAILED_EVENT = "transfer.failed", // TODO: Implement this
+  SEND_TRANSFER_FAILED_EVENT = "transfer.failed",
   SEND_COLLECTION_LINK_EVENT = "collection.link",
   SEND_COLLECTION_COMPLETED_EVENT = "collection.completed",
   SEND_EMPLOYER_REQUEST_EVENT = "employee.request",
