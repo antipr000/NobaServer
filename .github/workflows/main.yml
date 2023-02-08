@@ -145,19 +145,3 @@ jobs:
           use_existing_version_if_available: "true"
           region: us-east-1
           deployment_package: artifacts.zip
-
-      # TODO: Do this "only" when merged to "main"
-      - name: Build Docker Image
-        run: |
-          cd e2e_test
-          docker-compose build
-
-      - name: Deploy to ECR
-        id: ecr
-        uses: jwalton/gh-ecr-push@v1
-        with:
-          access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          region: us-east-1
-          local-image: e2e_test_noba_server:latest
-          image: noba-server:latest
