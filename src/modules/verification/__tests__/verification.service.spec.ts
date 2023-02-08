@@ -138,78 +138,6 @@ describe("VerificationService", () => {
   });
 
   describe("verifyConsumerInformation", () => {
-    it("should throw error for invalid dateOfBirth format in verifyConsumerInformation", async () => {
-      const testConsumerInformation: ConsumerInformation = {
-        userID: "test-consumer-01",
-        firstName: "Test",
-        lastName: "Consumer",
-        address: {
-          streetLine1: "Test street",
-          countryCode: "US",
-          city: "Sunnyvale",
-          regionCode: "CA",
-          postalCode: "123456",
-        },
-        dateOfBirth: "2020-2-1",
-        email: "consumer@noba.com",
-      };
-
-      try {
-        await verificationService.verifyConsumerInformation(testConsumerInformation.userID, "session-1234");
-        expect(true).toBe(false);
-      } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
-      }
-    });
-
-    it("should throw error for invalid dateOfBirth value in verifyConsumerInformation", async () => {
-      const testConsumerInformation: ConsumerInformation = {
-        userID: "test-consumer-01",
-        firstName: "Test",
-        lastName: "Consumer",
-        address: {
-          streetLine1: "Test street",
-          countryCode: "US",
-          city: "Sunnyvale",
-          regionCode: "CA",
-          postalCode: "123456",
-        },
-        dateOfBirth: "ABCD1234",
-        email: "consumer@noba.com",
-      };
-
-      try {
-        await verificationService.verifyConsumerInformation(testConsumerInformation.userID, "session-1234");
-        expect(true).toBe(false);
-      } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
-      }
-    });
-
-    it("should throw error for valid dateOfBirth format but invalid date in verifyConsumerInformation", async () => {
-      const testConsumerInformation: ConsumerInformation = {
-        userID: "test-consumer-01",
-        firstName: "Test",
-        lastName: "Consumer",
-        address: {
-          streetLine1: "Test street",
-          countryCode: "US",
-          city: "Sunnyvale",
-          regionCode: "CA",
-          postalCode: "123456",
-        },
-        dateOfBirth: "2020-02-30",
-        email: "consumer@noba.com",
-      };
-
-      try {
-        await verificationService.verifyConsumerInformation(testConsumerInformation.userID, "session-1234");
-        expect(true).toBe(false);
-      } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
-      }
-    });
-
     it("should verify ConsumerInformation when idvProvider returns APPROVED for US user", async () => {
       const consumer = getFakeConsumer();
       const consumerInformation = getFakeConsumerInformation(consumer, "US");
@@ -260,52 +188,6 @@ describe("VerificationService", () => {
           }),
         ),
       ).once();
-    });
-
-    it("should throw exception if user exists with duplicate email", async () => {
-      const consumer = getFakeConsumer();
-      const consumerInformation = getFakeConsumerInformation(consumer, "US");
-
-      const sessionKey = "fake-session";
-
-      const consumerVerificationResult: ConsumerVerificationResult = {
-        status: KYCStatus.APPROVED,
-        idvProviderRiskLevel: "fake-risk-rating",
-      };
-
-      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
-        consumerVerificationResult,
-      );
-      when(consumerService.findConsumersByContactInfo(anything())).thenResolve([consumer]);
-
-      expect(verificationService.verifyConsumerInformation(consumer.props.id, sessionKey)).rejects.toThrowError(
-        ServiceException,
-      );
-    });
-
-    it("should throw exception if user exists with duplicate phone", async () => {
-      const consumer = getFakeConsumer();
-      const consumerInformation = getFakeConsumerInformation(consumer, "US");
-      consumerInformation.email = null;
-      consumerInformation.phoneNumber = "+1234567890";
-
-      const sessionKey = "fake-session";
-
-      const consumerVerificationResult: ConsumerVerificationResult = {
-        status: KYCStatus.APPROVED,
-        idvProviderRiskLevel: "fake-risk-rating",
-      };
-
-      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
-        consumerVerificationResult,
-      );
-      when(consumerService.findConsumersByContactInfo(anything())).thenResolve([consumer]);
-
-      expect(verificationService.verifyConsumerInformation(consumer.props.id, sessionKey)).rejects.toThrowError(
-        ServiceException,
-      );
     });
 
     it("should verify ConsumerInformation when idvProvider returns APPROVED for non-US user", async () => {

@@ -66,7 +66,7 @@ export class VerificationService {
       consumerInformation,
     );
 
-    const isUS = consumer.props.address.countryCode === "US";
+    const isUS = consumer.props.address?.countryCode === "US";
     if (result.status === KYCStatus.APPROVED) {
       await this.idvProvider.postConsumerFeedback(sessionKey, result);
       if (isUS) {
