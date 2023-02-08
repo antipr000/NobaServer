@@ -155,11 +155,7 @@ describe("VerificationService", () => {
       };
 
       try {
-        await verificationService.verifyConsumerInformation(
-          testConsumerInformation.userID,
-          "session-1234",
-          testConsumerInformation,
-        );
+        await verificationService.verifyConsumerInformation(testConsumerInformation.userID, "session-1234");
         expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(BadRequestException);
@@ -183,11 +179,7 @@ describe("VerificationService", () => {
       };
 
       try {
-        await verificationService.verifyConsumerInformation(
-          testConsumerInformation.userID,
-          "session-1234",
-          testConsumerInformation,
-        );
+        await verificationService.verifyConsumerInformation(testConsumerInformation.userID, "session-1234");
         expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(BadRequestException);
@@ -211,11 +203,7 @@ describe("VerificationService", () => {
       };
 
       try {
-        await verificationService.verifyConsumerInformation(
-          testConsumerInformation.userID,
-          "session-1234",
-          testConsumerInformation,
-        );
+        await verificationService.verifyConsumerInformation(testConsumerInformation.userID, "session-1234");
         expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(BadRequestException);
@@ -259,11 +247,7 @@ describe("VerificationService", () => {
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
 
-      const result = await verificationService.verifyConsumerInformation(
-        consumer.props.id,
-        sessionKey,
-        consumerInformation,
-      );
+      const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
       expect(result).toStrictEqual(consumerVerificationResult);
       verify(
         notificationService.sendNotification(
@@ -295,9 +279,9 @@ describe("VerificationService", () => {
       );
       when(consumerService.findConsumersByContactInfo(anything())).thenResolve([consumer]);
 
-      expect(
-        verificationService.verifyConsumerInformation(consumer.props.id, sessionKey, consumerInformation),
-      ).rejects.toThrowError(ServiceException);
+      expect(verificationService.verifyConsumerInformation(consumer.props.id, sessionKey)).rejects.toThrowError(
+        ServiceException,
+      );
     });
 
     it("should throw exception if user exists with duplicate phone", async () => {
@@ -319,9 +303,9 @@ describe("VerificationService", () => {
       );
       when(consumerService.findConsumersByContactInfo(anything())).thenResolve([consumer]);
 
-      expect(
-        verificationService.verifyConsumerInformation(consumer.props.id, sessionKey, consumerInformation),
-      ).rejects.toThrowError(ServiceException);
+      expect(verificationService.verifyConsumerInformation(consumer.props.id, sessionKey)).rejects.toThrowError(
+        ServiceException,
+      );
     });
 
     it("should verify ConsumerInformation when idvProvider returns APPROVED for non-US user", async () => {
@@ -359,11 +343,7 @@ describe("VerificationService", () => {
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
 
-      const result = await verificationService.verifyConsumerInformation(
-        consumer.props.id,
-        sessionKey,
-        consumerInformation,
-      );
+      const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
       expect(result).toStrictEqual(consumerVerificationResult);
       verify(
         notificationService.sendNotification(
@@ -415,11 +395,7 @@ describe("VerificationService", () => {
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
 
-      const result = await verificationService.verifyConsumerInformation(
-        consumer.props.id,
-        sessionKey,
-        consumerInformation,
-      );
+      const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
       expect(result).toStrictEqual(consumerVerificationResult);
       verify(
         notificationService.sendNotification(
@@ -470,11 +446,7 @@ describe("VerificationService", () => {
       when(consumerService.findConsumersByContactInfo(anything())).thenResolve([]);
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
 
-      const result = await verificationService.verifyConsumerInformation(
-        consumer.props.id,
-        sessionKey,
-        consumerInformation,
-      );
+      const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
       expect(result).toStrictEqual(consumerVerificationResult);
       verify(
         notificationService.sendNotification(
