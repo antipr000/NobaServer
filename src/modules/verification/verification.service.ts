@@ -61,6 +61,7 @@ export class VerificationService {
       phoneNumber: consumer.props.phone,
       createdTimestampMillis: consumer.props.createdTimestamp.getTime(),
     };
+    console.log(consumerInformation);
     const result: ConsumerVerificationResult = await this.idvProvider.verifyConsumerInformation(
       sessionKey,
       consumerInformation,
@@ -211,6 +212,7 @@ export class VerificationService {
         documentVerificationStatus: result.status,
       },
     };
+    // Do we need to remove update from this one too?
     await this.consumerService.updateConsumer(newConsumerData);
 
     if (

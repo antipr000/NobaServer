@@ -141,7 +141,7 @@ describe("VerificationService", () => {
     it("should verify ConsumerInformation when idvProvider returns APPROVED for US user", async () => {
       const consumer = getFakeConsumer();
       const consumerInformation = getFakeConsumerInformation(consumer, "US");
-
+      console.log(consumerInformation);
       const sessionKey = "fake-session";
 
       const consumerVerificationResult: ConsumerVerificationResult = {
@@ -163,7 +163,6 @@ describe("VerificationService", () => {
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
           riskRating: consumerVerificationResult.idvProviderRiskLevel,
         },
-        socialSecurityNumber: consumerInformation.nationalID.number,
         createdTimestamp: new Date(),
       };
 
@@ -172,7 +171,6 @@ describe("VerificationService", () => {
         consumerVerificationResult,
       );
       when(consumerService.findConsumersByContactInfo(anything())).thenResolve([]);
-      when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
@@ -222,7 +220,6 @@ describe("VerificationService", () => {
         consumerVerificationResult,
       );
       when(consumerService.findConsumersByContactInfo(anything())).thenResolve([]);
-      when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
@@ -266,7 +263,6 @@ describe("VerificationService", () => {
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
           riskRating: consumerVerificationResult.idvProviderRiskLevel,
         },
-        socialSecurityNumber: consumerInformation.nationalID.number,
       };
 
       when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
@@ -274,7 +270,6 @@ describe("VerificationService", () => {
         consumerVerificationResult,
       );
       when(consumerService.findConsumersByContactInfo(anything())).thenResolve([]);
-      when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
@@ -318,7 +313,6 @@ describe("VerificationService", () => {
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
           riskRating: consumerVerificationResult.idvProviderRiskLevel,
         },
-        socialSecurityNumber: consumerInformation.nationalID.number,
       };
 
       when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
@@ -326,7 +320,6 @@ describe("VerificationService", () => {
         consumerVerificationResult,
       );
       when(consumerService.findConsumersByContactInfo(anything())).thenResolve([]);
-      when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
 
       const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
       expect(result).toStrictEqual(consumerVerificationResult);
@@ -889,14 +882,23 @@ describe("VerificationService", () => {
   });
 });
 
-function getFakeConsumer(firstName = "Fake"): Consumer {
+function getFakeConsumer(firstName = "Fake", countryCode = "US"): Consumer {
   const consumerID = v4();
   return Consumer.createConsumer({
     id: consumerID,
     firstName: firstName,
     lastName: "Consumer",
     email: "fake+consumer@noba.com",
+    phone: "+447700900000",
     displayEmail: "fake+consumer@noba.com",
+    address: {
+      streetLine1: "Test street",
+      countryCode: countryCode,
+      city: "Fake City",
+      regionCode: "RC",
+      postalCode: "123456",
+    },
+    dateOfBirth: "1990-03-30",
     verificationData: {
       provider: KYCProvider.SARDINE,
       kycCheckStatus: KYCStatus.NOT_SUBMITTED,
@@ -938,16 +940,11 @@ function getFakeConsumerInformation(consumer: Consumer, countryCode: string): Co
       regionCode: "RC",
       postalCode: "123456",
     },
-    dateOfBirth: "1990-03-30",
+    dateOfBirth: consumer.props.dateOfBirth,
+    phoneNumber: consumer.props.phone,
     email: consumer.props.email,
+    createdTimestampMillis: consumer.props.createdTimestamp.getTime(),
   };
-
-  if (countryCode === "US") {
-    consumerInfo.nationalID = {
-      number: "1234567890",
-      type: NationalIDTypes.SOCIAL_SECURITY,
-    };
-  }
 
   return consumerInfo;
 }
