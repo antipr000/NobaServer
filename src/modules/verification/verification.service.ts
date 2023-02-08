@@ -416,6 +416,10 @@ export class VerificationService {
   }
 
   private needsDocumentVerification(countryCode: string): boolean {
-    return countryCode.toLocaleLowerCase() !== "us";
+    // Currently we don't require doc verification from any user
+    return false;
+
+    // Onramp code
+    // return countryCode.toLocaleLowerCase() !== "us";
   }
 }
