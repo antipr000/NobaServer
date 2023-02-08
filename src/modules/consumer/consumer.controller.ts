@@ -137,8 +137,6 @@ export class ConsumerController {
       }
       const consumerProps: Partial<ConsumerProps> = {
         id: consumer.props.id,
-        ...(requestBody.email && { email: requestBody.email }),
-        ...(requestBody.phoneNumber && { phoneNumber: requestBody.phoneNumber }),
         ...(requestBody.firstName && { firstName: requestBody.firstName }),
         ...(requestBody.lastName && { lastName: requestBody.lastName }),
         ...(requestBody.locale && { locale: requestBody.locale }),

@@ -59,10 +59,6 @@ export class VerificationService {
       address: consumer.props.address,
       email: consumer.props.email,
       phoneNumber: consumer.props.phone,
-      nationalID: {
-        type: NationalIDTypes.SOCIAL_SECURITY,
-        number: consumer.props.socialSecurityNumber,
-      },
       createdTimestampMillis: consumer.props.createdTimestamp.getTime(),
     };
     const result: ConsumerVerificationResult = await this.idvProvider.verifyConsumerInformation(
