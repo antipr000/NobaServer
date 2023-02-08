@@ -36,35 +36,35 @@ awskms:
 #in production we should take it from vault, only for testing here, todo remove or create test api_key with limit on number of emails
 sendgrid:
   awsSecretNameForApiKey: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  apiKey: "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"
+  apiKey: "bogus-value" # For e2e test we stub this out
 
 checkout:
-  awsSecretNameForPublicKey: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  awsSecretNameForSecretKey: ""
-  publicKey: "pk_sbox_m3756a5g3z4ootpdssqy3hxxemv"
-  secretKey: "sk_sbox_xdhkcai4bosm32intni46my5x4j"
+  awsSecretNameForPublicKey: "TEST_CHECKOUT_PUBLIC_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForSecretKey: "TEST_CHECKOUT_SECRET_KEY"
+  publicKey: "bogus-value"
+  secretKey: "bogus-value"
   couponCode: "NY2018"
   partnerId: 123989
   processingChannelId: "pc_ka6ij3qluenufp5eovqqtw4xdu"
-  webhookSignatureKey: "abcd"
-  awsSecretNameForWebhookSignatureKey: ""
+  webhookSignatureKey: "bogus-value"
+  awsSecretNameForWebhookSignatureKey: "TEST_CHECKOUT_WEBHOOK_SIGNATURE_KEY"
   apiUrl: "https://api.sandbox.checkout.com"
-  nobaWebhookUrl: "https://api-sandbox.noba.com/v1/vendors/checkout/webhooks"
+  nobaWebhookUrl: "https://api-dev.noba.com/v1/vendors/checkout/webhooks"
 
-twilio:
+twilio: # We stub out sms client for e2e tests
   awsSecretNameForSID: ""
   awsSecretNameForAuthToken: ""
-  SID: "AC4efa22156849ec40b383a80f45525409"
-  authToken: "c34165debbb0a77e3507884e86b88772"
-  fromPhoneNumber: "+19894557345"
+  SID: "bogus-value"
+  authToken: "bogus-value"
+  fromPhoneNumber: "bogus-value"
 
 sardine:
-  awsSecretNameForSardineClientID: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  awsSecretNameForSardineSecretKey: ""
-  awsSecretNameForSardineWebhookSecretKey: ""
-  clientID: "adf0e6fb-5a53-4140-beed-d26e5d148e16"
-  secretKey: "a699c5e8-463c-42d1-bae4-1b786631f2af"
-  webhookSecretKey: "bogus-value" # Useless in this environment because Sardine is not calling us
+  awsSecretNameForSardineClientID: "TEST_SARDINE_CLIENT_ID" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForSardineSecretKey: "TEST_SARDINE_SECRET"
+  awsSecretNameForSardineWebhookSecretKey: "" # Sardine does not call us for e2e tests so we don't need this
+  clientID: "bogus-value"
+  secretKey: "bogus-value"
+  webhookSecretKey: "bogus-value"
   sardineBaseUri: "https://api.sandbox.sardine.ai"
 
 noba:
@@ -141,10 +141,10 @@ plaid:
 
 circle:
   env: "sandbox"
-  apiKey: "QVBJX0tFWToyZDNhYTVjMGFhZDE5NWYzZDI5ZjU4OTRiYzgwYzg4YToxMmIzYTkwZmYwZGYzYmJmZWEwYzc3MzFiNzJhNzkwMw=="
-  awsSecretNameForApiKey: ""
-  masterWalletID: "1001404309"
-  awsSecretNameForMasterWalletID: ""
+  apiKey: ""
+  awsSecretNameForApiKey: "TEST_CIRCLE_API_KEY"
+  masterWalletID: ""
+  awsSecretNameForMasterWalletID: "TEST_CIRCLE_MASTER_WALLET_ID"
 
 nobaWorkflow:
   taskQueue: "NOBA_TASK_QUEUE"
@@ -164,13 +164,13 @@ mono:
   nobaAccountID: ""
   awsSecretNameForNobaAccountID: "TEST_MONO_NOBA_ACCOUNT_ID"
   webhookSecret: ""
-  awsSecretNameForWebhookSecret: "TEST_MONO_WEBHOOK_SECRET"
+  awsSecretNameForWebhookSecret: "DEV_MONO_WEBHOOK_SECRET"
 
 bubble:
-  bearerToken: "DUMMY_TOKEN"
-  awsSecretNameForBearerToken: ""
-  baseURL: "https://bubble.noba.com"
-  awsSecretNameForBaseURL: ""
+  bearerToken: ""
+  awsSecretNameForBearerToken: "TEST_BUBBLE_BEARER_TOKEN"
+  baseURL: ""
+  awsSecretNameForBaseURL: "TEST_BUBBLE_BASE_URL"
 
 dependencies:
   emailClient: "STUB"
