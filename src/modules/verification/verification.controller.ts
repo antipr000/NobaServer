@@ -53,7 +53,6 @@ import { WebhookHeadersDTO } from "./dto/WebhookHeadersDTO";
 import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
 import { IDVerificationURLResponseDTO, IDVerificationURLRequestLocale } from "./dto/IDVerificationRequestURLDTO";
 import { AuthUser } from "../auth/auth.decorator";
-import { HealthCheckResponseDTO, HealthStatus } from "../common/dto/HealthCheckResponseDTO";
 import { SessionResponseDTO } from "./dto/SessionResponseDTO";
 import { DocumentVerificationResponseDTO } from "./dto/DocumentVerificationResponseDTO";
 
@@ -70,15 +69,6 @@ export class VerificationController {
 
   constructor(private readonly verificationService: VerificationService) {
     this.verificationResponseMapper = new VerificationResponseMapper();
-  }
-
-  @Get("/")
-  @ApiOperation({ summary: "Checks if verification service is up" })
-  @ApiResponse({ status: HttpStatus.OK, description: "Service is up", type: HealthCheckResponseDTO })
-  async getVerificationStatus(): Promise<HealthCheckResponseDTO> {
-    return {
-      status: HealthStatus.OK,
-    }; // TODO: Should ping Sardine
   }
 
   @Public()

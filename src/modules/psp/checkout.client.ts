@@ -11,9 +11,11 @@ import { PspACHPaymentResponse, PspCardPaymentResponse } from "./domain/PspPayme
 import axios from "axios";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Consumer } from "../consumer/domain/Consumer";
+import { IClient } from "../../core/domain/IClient";
+import { HealthCheckResponse, HealthCheckStatus } from "../../core/domain/HealthCheckTypes";
 
 @Injectable()
-export class CheckoutClient {
+export class CheckoutClient implements IClient {
   private readonly checkoutApi: Checkout;
   private readonly checkoutConfigs: CheckoutConfigs;
 
@@ -25,6 +27,12 @@ export class CheckoutClient {
     this.checkoutApi = new Checkout(this.checkoutConfigs.secretKey, {
       pk: this.checkoutConfigs.publicKey,
     });
+  }
+
+  async getHealth(): Promise<HealthCheckResponse> {
+    return {
+      status: HealthCheckStatus.UNAVAILABLE,
+    };
   }
 
   public async createConsumer(email: string): Promise<string> {

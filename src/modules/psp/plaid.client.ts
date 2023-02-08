@@ -30,9 +30,11 @@ import {
   TokenProcessor,
 } from "./domain/PlaidTypes";
 import { Utils } from "../../core/utils/Utils";
+import { IClient } from "../../core/domain/IClient";
+import { HealthCheckResponse, HealthCheckStatus } from "../../core/domain/HealthCheckTypes";
 
 @Injectable()
-export class PlaidClient {
+export class PlaidClient implements IClient {
   private plaidApi: PlaidApi;
   private plaidConfigs: PlaidConfigs;
 
@@ -50,6 +52,12 @@ export class PlaidClient {
       },
     });
     this.plaidApi = new PlaidApi(plaidConfiguration);
+  }
+
+  async getHealth(): Promise<HealthCheckResponse> {
+    return {
+      status: HealthCheckStatus.UNAVAILABLE,
+    };
   }
 
   public async generateLinkToken(request: GenerateLinkTokenRequest): Promise<string> {

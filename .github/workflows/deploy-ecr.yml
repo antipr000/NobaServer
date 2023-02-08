@@ -1,0 +1,53 @@
+name: Deploy to ECR
+
+# Controls when the workflow will run
+on:
+  # Only deploy the changes on push to main branch
+  push:
+    # Bring these back when we are able to maintain multiple versions
+    #tags:
+    #  - "v[0-9]+.[0-9]+.[0-9]+"
+    #  - "*-partner"
+    #  - "*-staging"
+    #  - "sandbox"
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  setup-environment:
+    uses: ./.github/workflows/setup-environment.yml
+
+  builddeploy:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    timeout-minutes: 15 # we expect it to complete much before 15 minutes
+    needs: [setup-environment]
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Restore environment from cache
+        id: restore-environment
+        uses: actions/cache@v3
+        env:
+          cache-name: ${{ github.run_number }}
+        with:
+          path: ./
+          key: ${{ runner.os }}-build-${{ github.run_number }}
+
+      - name: Build Docker Image
+        run: |
+          cd e2e_test
+          docker-compose build
+
+      - name: Deploy to ECR
+        id: ecr
+        uses: jwalton/gh-ecr-push@v1
+        with:
+          access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          region: us-east-1
+          local-image: e2e_test_noba_server:latest
+          image: noba-server:latest

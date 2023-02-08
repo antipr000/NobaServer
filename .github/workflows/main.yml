@@ -60,7 +60,7 @@ jobs:
           version: $version_label
           EOM
 
-          echo "version_label=$version_label" >> $GITHUB_OUTPUT      
+          echo "version_label=$version_label" >> $GITHUB_OUTPUT
 
       - name: Determine where to deploy
         id: check-tag

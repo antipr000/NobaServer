@@ -13,14 +13,15 @@ import {
 } from "../dto/mono.client.dto";
 import axios from "axios";
 import { fromString as convertToUUIDv4 } from "uuidv4";
-import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
 import { Utils } from "../../../core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
 import { MonoTransactionState } from "../domain/Mono";
+import { IClient } from "../../../core/domain/IClient";
+import { HealthCheckResponse, HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
 
 @Injectable()
-export class MonoClient {
+export class MonoClient implements IClient {
   private readonly apiVersion = "v1";
   private readonly expiryTimeInMillis = 15 * 60 * 1000; // 15 minutes
 
@@ -45,6 +46,19 @@ export class MonoClient {
     return {
       "x-idempotency-key": convertToUUIDv4(idempotencyKeySeed),
     };
+  }
+
+  async getHealth(): Promise<HealthCheckResponse> {
+    try {
+      await this.getSupportedBanks();
+      return {
+        status: HealthCheckStatus.OK,
+      };
+    } catch (e) {
+      return {
+        status: HealthCheckStatus.UNAVAILABLE,
+      };
+    }
   }
 
   async getSupportedBanks(): Promise<Array<SupportedBanksDTO>> {

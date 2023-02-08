@@ -24,7 +24,6 @@ import { SendCollectionCompletedEvent } from "../events/SendCollectionCompletedE
 import { SendDepositCompletedEvent } from "../events/SendDepositCompletedEvent";
 import { SendDepositFailedEvent } from "../events/SendDepositFailedEvent";
 import { SendDepositInitiatedEvent } from "../events/SendDepositInitiatedEvent";
-import { SendWalletTransferEvent } from "../events/SendWalletTransferEvent";
 import { SendWithdrawalCompletedEvent } from "../events/SendWithdrawalCompletedEvent";
 import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 import { SendWithdrawalInitiatedEvent } from "../events/SendWithdrawalInitiatedEvent";
@@ -32,6 +31,8 @@ import { SendPhoneVerificationCodeEvent } from "../events/SendPhoneVerificationC
 import { IPushTokenRepo } from "../repos/pushtoken.repo";
 import { getMockPushTokenRepoWithDefaults } from "../mocks/mock.pushtoken.repo";
 import { ServiceException } from "../../../core/exception/service.exception";
+import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent";
+import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -464,12 +465,21 @@ describe("NotificationService", () => {
           break;
 
         case NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT:
-          data = new SendWalletTransferEvent({
+          data = new SendTransferCompletedEvent({
             email: payload.email,
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
             params: payload.transferCompletedParams,
+          });
+          break;
+        case NotificationEventType.SEND_TRANSFER_FAILED_EVENT:
+          data = new SendTransferFailedEvent({
+            email: payload.email,
+            name: payload.firstName,
+            handle: payload.handle,
+            locale: payload.locale,
+            params: payload.transferFailedParams,
           });
           break;
         case NotificationEventType.SEND_HARD_DECLINE_EVENT:

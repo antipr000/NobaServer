@@ -1,4 +1,4 @@
-import { anyNumber, anyString, anything, mock, when } from "ts-mockito";
+import { anyNumber, anyString, mock, when } from "ts-mockito";
 import { CircleService } from "../circle.service";
 
 export function getMockCircleServiceWithDefaults(): CircleService {
