@@ -93,7 +93,7 @@ export class VerificationController {
     };
   }
 
-  @Post("/consumerinfo")
+  @Post("/")
   @ApiOperation({
     summary: "Verifies consumer-provided information",
   })
@@ -102,13 +102,9 @@ export class VerificationController {
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async verifyConsumer(
     @Query("sessionKey") sessionKey: string,
-    @Body() requestBody: IDVerificationRequestDTO,
     @AuthUser() consumer: Consumer,
   ): Promise<VerificationResultDTO> {
-    const result = await this.verificationService.verifyConsumerInformation(consumer.props.id, sessionKey, {
-      ...requestBody,
-      userID: consumer.props.id,
-    });
+    const result = await this.verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
     return this.verificationResponseMapper.toConsumerInformationResultDTO(result);
   }
 

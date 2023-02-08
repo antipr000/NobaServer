@@ -40,100 +40,58 @@ export class VerificationService {
 
   constructor(private consumerService: ConsumerService) {}
 
-  async verifyConsumerInformation(
-    consumerID: string,
-    sessionKey: string,
-    consumerInformation: ConsumerInformation,
-  ): Promise<ConsumerVerificationResult> {
-    if (consumerInformation.dateOfBirth && !isValidDateOfBirth(consumerInformation.dateOfBirth)) {
-      throw new BadRequestException("dateOfBirth should be valid and of the format YYYY-MM-DD");
-    }
-
+  async verifyConsumerInformation(consumerID: string, sessionKey: string): Promise<ConsumerVerificationResult> {
     const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
 
     // Augment request with created timestamp info for verification provider
-    consumerInformation.createdTimestampMillis = consumer.props.createdTimestamp.getTime();
+
+    const consumerInformation: ConsumerInformation = {
+      userID: consumerID,
+      firstName: consumer.props.firstName,
+      lastName: consumer.props.lastName,
+      dateOfBirth: consumer.props.dateOfBirth,
+      address: consumer.props.address,
+      email: consumer.props.email,
+      phoneNumber: consumer.props.phone,
+      createdTimestampMillis: consumer.props.createdTimestamp.getTime(),
+    };
     const result: ConsumerVerificationResult = await this.idvProvider.verifyConsumerInformation(
       sessionKey,
       consumerInformation,
     );
-    const newConsumerData: ConsumerProps = {
-      ...consumer.props,
-      address: consumerInformation.address,
-      firstName: consumerInformation.firstName,
-      lastName: consumerInformation.lastName,
-      dateOfBirth: consumerInformation.dateOfBirth,
-      phone: consumerInformation.phoneNumber,
-      verificationData: {
-        ...consumer.props.verificationData,
-        kycCheckStatus: result.status,
-        kycVerificationTimestamp: new Date(),
-        riskRating: result.idvProviderRiskLevel,
-        documentVerificationStatus: this.needsDocumentVerification(consumerInformation.address.countryCode)
-          ? DocumentVerificationStatus.REQUIRED
-          : DocumentVerificationStatus.NOT_REQUIRED,
-      },
-      socialSecurityNumber: consumerInformation.nationalID ? consumerInformation.nationalID.number : undefined,
-    };
-    const isUS = consumerInformation.address.countryCode === "US";
-    const consumerContactInfoSearch = {
-      phoneNumbers: [],
-      emails: [],
-    };
 
-    if (consumerInformation.phoneNumber) {
-      consumerContactInfoSearch.phoneNumbers.push({
-        digits: consumerInformation.phoneNumber,
-        countryCode: consumerInformation.address.countryCode,
-      });
-    }
-
-    if (consumerInformation.email) {
-      consumerContactInfoSearch.emails.push(consumerInformation.email);
-    }
-
-    const consumers = await this.consumerService.findConsumersByContactInfo([consumerContactInfoSearch]);
-    if (consumers && consumers.length > 0) {
-      if (consumers.some(consumer => consumer)) {
-        throw new ServiceException({
-          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-          message: `Consumer with this phone number or email already exists`,
-        });
-      }
-    }
-
-    const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
+    const isUS = consumer.props.address.countryCode === "US";
     if (result.status === KYCStatus.APPROVED) {
       await this.idvProvider.postConsumerFeedback(sessionKey, result);
       if (isUS) {
         await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, {
-          firstName: updatedConsumer.props.firstName,
-          lastName: updatedConsumer.props.lastName,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
           nobaUserID: consumer.props.id,
-          email: updatedConsumer.props.displayEmail,
+          email: consumer.props.displayEmail,
         });
       } else {
         await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT, {
-          firstName: updatedConsumer.props.firstName,
-          lastName: updatedConsumer.props.lastName,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
           nobaUserID: consumer.props.id,
-          email: updatedConsumer.props.displayEmail,
+          email: consumer.props.displayEmail,
         });
       }
     } else if (result.status === KYCStatus.REJECTED) {
       await this.idvProvider.postConsumerFeedback(sessionKey, result);
       await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_DENIED_EVENT, {
-        firstName: updatedConsumer.props.firstName,
-        lastName: updatedConsumer.props.lastName,
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
         nobaUserID: consumer.props.id,
-        email: updatedConsumer.props.displayEmail,
+        email: consumer.props.displayEmail,
       });
     } else {
       await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT, {
-        firstName: updatedConsumer.props.firstName,
-        lastName: updatedConsumer.props.lastName,
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
         nobaUserID: consumer.props.id,
-        email: updatedConsumer.props.displayEmail,
+        email: consumer.props.displayEmail,
       });
     }
     return result;
