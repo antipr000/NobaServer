@@ -18,8 +18,8 @@
 
 FROM node:16-alpine
 
-env NODE_ENV=e2e_test
-env DATABASE_URL=postgresql://e2e_user:pass@postgres-db:5432/Noba_E2E
+ENV NODE_ENV=e2e_test
+ENV DATABASE_URL=postgresql://e2e_user:pass@postgres-db:5432/Noba_E2E
 
 RUN apk update && apk add bash
 

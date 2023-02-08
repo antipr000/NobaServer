@@ -37,6 +37,11 @@ jobs:
           path: ./
           key: ${{ runner.os }}-build-${{ github.run_number }}
 
+      - name: Attach AWS credentials to the source
+        run: |
+          echo "awsAccessKeyId: \"${{ secrets.AWS_ACCESS_KEY_ID }}\"" >> ./dist/appconfigs/secrets.yaml
+          echo "awsSecretaccessKey: \"${{ secrets.WORKFLOW_AWS_SECRET_ACCESS_KEY }}\"" >> ./dist/appconfigs/secrets.yaml
+
       - name: Build Docker Image
         run: |
           cd e2e_test
