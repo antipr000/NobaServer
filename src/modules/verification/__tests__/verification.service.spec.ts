@@ -140,7 +140,7 @@ describe("VerificationService", () => {
   describe("verifyConsumerInformation", () => {
     it("should verify ConsumerInformation when idvProvider returns APPROVED for US user", async () => {
       const consumer = getFakeConsumer();
-      const consumerInformation = getFakeConsumerInformation(consumer, "US");
+      const consumerInformation = getFakeConsumerInformation(consumer);
       console.log(consumerInformation);
       const sessionKey = "fake-session";
 
@@ -189,9 +189,9 @@ describe("VerificationService", () => {
     });
 
     it("should verify ConsumerInformation when idvProvider returns APPROVED for non-US user", async () => {
-      const consumer = getFakeConsumer();
-      const consumerInformation = getFakeConsumerInformation(consumer, "IN");
-
+      const consumer = getFakeConsumer("fake-consumer-id", "IN");
+      const consumerInformation = getFakeConsumerInformation(consumer);
+      console.log(consumerInformation);
       const sessionKey = "fake-session";
 
       const consumerVerificationResult: ConsumerVerificationResult = {
@@ -240,7 +240,7 @@ describe("VerificationService", () => {
 
     it("should return REJECTED status when Sardine marks consumerInformation as high risk and should send denied email", async () => {
       const consumer = getFakeConsumer();
-      const consumerInformation = getFakeConsumerInformation(consumer, "US");
+      const consumerInformation = getFakeConsumerInformation(consumer);
 
       const sessionKey = "fake-session";
 
@@ -290,7 +290,7 @@ describe("VerificationService", () => {
 
     it("should return PENDING status when Sardine marks consumerInformation as medium risk and should send flagged email", async () => {
       const consumer = getFakeConsumer();
-      const consumerInformation = getFakeConsumerInformation(consumer, "US");
+      const consumerInformation = getFakeConsumerInformation(consumer);
 
       const sessionKey = "fake-session";
 
@@ -928,18 +928,12 @@ function getFakeConsumerWithCountryCode(countryCode: string): Consumer {
   });
 }
 
-function getFakeConsumerInformation(consumer: Consumer, countryCode: string): ConsumerInformation {
+function getFakeConsumerInformation(consumer: Consumer): ConsumerInformation {
   const consumerInfo: ConsumerInformation = {
     userID: consumer.props.id,
-    firstName: "Fake",
-    lastName: "Consumer",
-    address: {
-      streetLine1: "Test street",
-      countryCode: countryCode,
-      city: "Fake City",
-      regionCode: "RC",
-      postalCode: "123456",
-    },
+    firstName: consumer.props.firstName,
+    lastName: consumer.props.lastName,
+    address: consumer.props.address,
     dateOfBirth: consumer.props.dateOfBirth,
     phoneNumber: consumer.props.phone,
     email: consumer.props.email,
