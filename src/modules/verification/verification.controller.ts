@@ -93,7 +93,7 @@ export class VerificationController {
     };
   }
 
-  @Post("/")
+  @Post("/consumer")
   @ApiOperation({
     summary: "Verifies consumer-provided information",
   })
