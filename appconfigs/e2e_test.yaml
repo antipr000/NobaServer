@@ -59,12 +59,12 @@ twilio: # We stub out sms client for e2e tests
   fromPhoneNumber: "bogus-value"
 
 sardine:
-  awsSecretNameForSardineClientID: "TEST_SARDINE_CLIENT_ID" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
-  awsSecretNameForSardineSecretKey: "TEST_SARDINE_SECRET"
-  awsSecretNameForSardineWebhookSecretKey: "" # Sardine does not call us for e2e tests so we don't need this
-  clientID: "bogus-value"
-  secretKey: "bogus-value"
-  webhookSecretKey: "bogus-value"
+  awsSecretNameForSardineClientID: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
+  awsSecretNameForSardineSecretKey: ""
+  awsSecretNameForSardineWebhookSecretKey: ""
+  clientID: "adf0e6fb-5a53-4140-beed-d26e5d148e16"
+  secretKey: "a699c5e8-463c-42d1-bae4-1b786631f2af"
+  webhookSecretKey: "bogus-value" # Useless in this environment because Sardine is not calling us
   sardineBaseUri: "https://api.sandbox.sardine.ai"
 
 noba:
