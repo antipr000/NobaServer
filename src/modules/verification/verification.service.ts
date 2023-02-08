@@ -61,7 +61,6 @@ export class VerificationService {
       phoneNumber: consumer.props.phone,
       createdTimestampMillis: consumer.props.createdTimestamp.getTime(),
     };
-    console.log(consumerInformation);
     const result: ConsumerVerificationResult = await this.idvProvider.verifyConsumerInformation(
       sessionKey,
       consumerInformation,
