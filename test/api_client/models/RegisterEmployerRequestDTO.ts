@@ -8,5 +8,5 @@ export type RegisterEmployerRequestDTO = {
   referralID: string;
   bubbleID: string;
   leadDays?: number;
-  payrollDays?: Array<string>;
+  payrollDates?: Array<string>;
 };

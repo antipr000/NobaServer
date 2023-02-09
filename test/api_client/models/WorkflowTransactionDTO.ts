@@ -4,7 +4,7 @@
 
 export type WorkflowTransactionDTO = {
   id: string;
-  workflowName: "WALLET_DEPOSIT" | "WALLET_TRANSFER" | "WALLET_WITHDRAWAL";
+  workflowName: "WALLET_WITHDRAWAL" | "WALLET_DEPOSIT" | "WALLET_TRANSFER";
   debitConsumerID?: string;
   creditConsumerID?: string;
   debitCurrency: string;

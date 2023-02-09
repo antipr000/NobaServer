@@ -89,7 +89,7 @@ export class Sardine implements IDVProvider {
     sessionKey: string,
     consumerInfo: ConsumerInformation,
   ): Promise<ConsumerVerificationResult> {
-    const flowType = consumerInfo.address.countryCode.toLocaleLowerCase() === "us" ? "kyc-us" : "kyc-non-us";
+    const flowType = consumerInfo.address?.countryCode.toLocaleLowerCase() === "us" ? "kyc-us" : "kyc-non-us";
     const sardineRequest: SardineCustomerRequest = {
       flow: flowType,
       sessionKey: sessionKey,
@@ -99,19 +99,22 @@ export class Sardine implements IDVProvider {
         firstName: consumerInfo.firstName,
         lastName: consumerInfo.lastName,
         dateOfBirth: consumerInfo.dateOfBirth,
-        address: {
-          street1: consumerInfo.address.streetLine1,
-          street2: consumerInfo.address.streetLine2,
-          city: consumerInfo.address.city,
-          regionCode: consumerInfo.address.regionCode,
-          postalCode: consumerInfo.address.postalCode,
-          countryCode: consumerInfo.address.countryCode,
-        },
         emailAddress: consumerInfo.email,
         isEmailVerified: true,
       },
       checkpoints: ["customer"],
     };
+
+    if (consumerInfo.address) {
+      sardineRequest.customer.address = {
+        street1: consumerInfo.address.streetLine1,
+        street2: consumerInfo.address.streetLine2,
+        city: consumerInfo.address.city,
+        regionCode: consumerInfo.address.regionCode,
+        postalCode: consumerInfo.address.postalCode,
+        countryCode: consumerInfo.address.countryCode,
+      };
+    }
 
     if (consumerInfo.nationalID) {
       sardineRequest.customer.taxId = consumerInfo.nationalID.number;

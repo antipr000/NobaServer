@@ -34,7 +34,6 @@ import { Logger } from "winston";
 import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
 import { DocumentsFileUploadRequestDTO, DocVerificationRequestDTO } from "./dto/DocVerificationRequestDTO";
-import { IDVerificationRequestDTO } from "./dto/IDVerificationRequestDTO";
 import { VerificationResultDTO } from "./dto/VerificationResultDTO";
 import { VerificationService } from "./verification.service";
 import { Public } from "../auth/public.decorator";
@@ -83,7 +82,7 @@ export class VerificationController {
     };
   }
 
-  @Post("/consumerinfo")
+  @Post("/consumer")
   @ApiOperation({
     summary: "Verifies consumer-provided information",
   })
@@ -92,13 +91,9 @@ export class VerificationController {
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async verifyConsumer(
     @Query("sessionKey") sessionKey: string,
-    @Body() requestBody: IDVerificationRequestDTO,
     @AuthUser() consumer: Consumer,
   ): Promise<VerificationResultDTO> {
-    const result = await this.verificationService.verifyConsumerInformation(consumer.props.id, sessionKey, {
-      ...requestBody,
-      userID: consumer.props.id,
-    });
+    const result = await this.verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
     return this.verificationResponseMapper.toConsumerInformationResultDTO(result);
   }
 

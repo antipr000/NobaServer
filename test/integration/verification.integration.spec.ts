@@ -20,7 +20,7 @@ import {
   ConsumerService,
   DeviceVerificationResponseDTO,
   DocumentVerificationWebhookRequestDTO,
-  IDVerificationRequestDTO,
+  SessionResponseDTO,
   UpdateConsumerRequestDTO,
   VerificationResultDTO,
   VerificationService,
@@ -60,7 +60,7 @@ describe("Verification", () => {
         xNobaApiKey: TEST_API_KEY,
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
-      })) as string & ResponseStatus;
+      })) as SessionResponseDTO & ResponseStatus;
 
       expect(getSessionKeyResponse.__status).toBe(201);
     });
@@ -75,14 +75,17 @@ describe("Verification", () => {
         xNobaApiKey: TEST_API_KEY,
         xNobaSignature: signature,
         xNobaTimestamp: TEST_TIMESTAMP,
-      })) as string & ResponseStatus;
+      })) as SessionResponseDTO & ResponseStatus;
 
       expect(getSessionKeyResponse.__status).toBe(201);
     });
   });
 
   it("verifies consumer information using Sardine and stores the information against the consumer record for non-US users", async () => {
-    const consumerInformation: IDVerificationRequestDTO = {
+    const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
+    const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+    setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
+    const consumerUpdateRequest: UpdateConsumerRequestDTO = {
       firstName: "Jo",
       lastName: "Doe",
       address: {
@@ -96,27 +99,31 @@ describe("Verification", () => {
       dateOfBirth: "1988-09-09",
     };
 
-    const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-    const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
-    setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
+    const updateSignature = computeSignature(
+      TEST_TIMESTAMP,
+      "PATCH",
+      "/v1/consumers",
+      JSON.stringify(consumerUpdateRequest),
+    );
+    const updateConsumerResponse = (await ConsumerService.updateConsumer({
+      xNobaApiKey: TEST_API_KEY,
+      requestBody: consumerUpdateRequest,
+      xNobaSignature: updateSignature,
+      xNobaTimestamp: TEST_TIMESTAMP,
+    })) as ConsumerDTO & ResponseStatus;
+    expect(updateConsumerResponse.__status).toBe(200);
 
     const sessionKey = "test-session-key";
 
-    let signature = computeSignature(
-      TEST_TIMESTAMP,
-      "POST",
-      "/v1/verify/consumerinfo",
-      JSON.stringify(consumerInformation),
-    );
+    let signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/verify/consumer", JSON.stringify({}));
 
     const getVerifyConsumerInformationResponse = (await VerificationService.verifyConsumer({
       xNobaApiKey: TEST_API_KEY,
       xNobaSignature: signature,
       xNobaTimestamp: TEST_TIMESTAMP,
       sessionKey: sessionKey,
-      requestBody: consumerInformation,
     })) as VerificationResultDTO & ResponseStatus;
-
+    console.log(getVerifyConsumerInformationResponse);
     expect(getVerifyConsumerInformationResponse.__status).toBe(200);
     expect(getVerifyConsumerInformationResponse.status).toBe("Approved");
 
@@ -127,8 +134,6 @@ describe("Verification", () => {
       xNobaTimestamp: TEST_TIMESTAMP,
     })) as ConsumerDTO & ResponseStatus;
 
-    expect(getConsumerResponse.address).toStrictEqual(consumerInformation.address);
-    expect(getConsumerResponse.dateOfBirth).toBe(consumerInformation.dateOfBirth);
     expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("Approved");
     expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
   });
@@ -147,7 +152,7 @@ describe("Verification", () => {
   //     buffer: Buffer.from("fake-data"),
   //   };
   //   const sessionKey = "test-session-key";
-  //   const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/verify/consumerinfo", JSON.stringify({}));
+  //   const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/verify/consumer", JSON.stringify({}));
 
   //   const formData = new FormData();
   //   formData.append("documentType", "driver_license");

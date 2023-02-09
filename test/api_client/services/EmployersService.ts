@@ -28,7 +28,7 @@ export class EmployersService {
     xNobaTimestamp?: string;
   }): CancelablePromise<EmployerDTO> {
     return __request(OpenAPI, {
-      method: "POST",
+      method: "GET",
       url: "/v1/employers/{referralID}",
       path: {
         referralID: referralId,
