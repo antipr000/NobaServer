@@ -9,7 +9,7 @@ import { MonoService } from "./mono.service";
 export class MonoWorkflowService extends MonoService {
   async createMonoTransaction(request: CreateMonoTransactionRequest): Promise<MonoTransaction> {
     try {
-      return super.createMonoTransaction(request);
+      return await super.createMonoTransaction(request);
     } catch (e) {
       if (e instanceof MonoClientException) {
         throw new WorkflowException({

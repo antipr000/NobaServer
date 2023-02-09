@@ -90,7 +90,7 @@ export class MonoClient implements IClient {
 
     // Mono can only accept phone numbers in the format +57XXXXXXXXX and it is a required field, so we need to make sure we send a valid one.
     // This is really only a problem with testing, as in practice our customers should have +57 phone numbers.
-    const phone = request.consumerPhone.startsWith("+57") ? request.consumerPhone : "+573000000000";
+    const phone = request.consumerPhone?.startsWith("+57") ? request.consumerPhone : "+573000000000";
 
     const requestBody = {
       account_id: this.nobaAccountID,
