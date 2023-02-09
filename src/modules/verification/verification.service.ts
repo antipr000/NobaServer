@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { ConsumerService } from "../consumer/consumer.service";
@@ -19,12 +19,10 @@ import {
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { IDVerificationURLRequestLocale } from "./dto/IDVerificationRequestURLDTO";
-import { isValidDateOfBirth } from "../../core/utils/DateUtils";
 import { TransactionVerification } from "./domain/TransactionVerification";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { SeverityLevel } from "../../core/exception/base.exception";
 import { HealthCheckResponse } from "../../core/domain/HealthCheckTypes";
-import { NationalIDTypes } from "./domain/NationalIDTypes";
 
 @Injectable()
 export class VerificationService {
