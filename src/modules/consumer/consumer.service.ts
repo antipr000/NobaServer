@@ -398,7 +398,7 @@ export class ConsumerService {
       if (!consumer) {
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-          message: "Invalid Noba Tag",
+          message: "Invalid Consumer ID",
         });
       }
     }

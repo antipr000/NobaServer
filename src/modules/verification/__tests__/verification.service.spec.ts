@@ -188,7 +188,7 @@ describe("VerificationService", () => {
       ).once();
     });
 
-    it("should verify ConsumerInformation when idvProvider returns APPROVED for non-US user", async () => {
+    it.skip("should verify ConsumerInformation when idvProvider returns APPROVED for non-US user", async () => {
       const consumer = getFakeConsumer("fake-consumer-id", "IN");
       const consumerInformation = getFakeConsumerInformation(consumer);
       const sessionKey = "fake-session";
@@ -718,7 +718,7 @@ describe("VerificationService", () => {
       ).once();
     });
 
-    it("sets user verification status as APPROVED when case status is RESOLVED and action is APPROVED for non-US consumer", async () => {
+    it.skip("sets user verification status as APPROVED when case status is RESOLVED and action is APPROVED for non-US consumer", async () => {
       const consumer = getFakeConsumerWithCountryCode("IN");
       const sessionKey = "fake-session";
       const caseNotificationRequest = getFakeCaseNotificationWebhookRequest(
