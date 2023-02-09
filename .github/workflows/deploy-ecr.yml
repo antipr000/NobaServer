@@ -40,7 +40,7 @@ jobs:
       - name: Attach AWS credentials to the source
         run: |
           echo "awsAccessKeyId: \"${{ secrets.E2E_AWS_ACCESS_KEY_ID }}\"" > ./appconfigs/secrets.yaml
-          echo "awsSecretAccessKey: \"${{ secrets.E2E_SECRET_ACCESS_KEY }}\"" >> ./appconfigs/secrets.yaml
+          echo "awsSecretAccessKey: \"${{ secrets.E2E_AWS_SECRET_ACCESS_KEY }}\"" >> ./appconfigs/secrets.yaml
 
       - name: Build Docker Image
         run: |
