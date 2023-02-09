@@ -4,6 +4,9 @@
 import type { AddCryptoWalletDTO } from "../models/AddCryptoWalletDTO";
 import type { AddCryptoWalletResponseDTO } from "../models/AddCryptoWalletResponseDTO";
 import type { AddPaymentMethodDTO } from "../models/AddPaymentMethodDTO";
+import type { BlankResponseDTO } from "../models/BlankResponseDTO";
+import type { CircleWalletBalanceResponseDTO } from "../models/CircleWalletBalanceResponseDTO";
+import type { CircleWalletResponseDTO } from "../models/CircleWalletResponseDTO";
 import type { ConfirmWalletUpdateDTO } from "../models/ConfirmWalletUpdateDTO";
 import type { ConsumerDTO } from "../models/ConsumerDTO";
 import type { ConsumerHandleDTO } from "../models/ConsumerHandleDTO";
@@ -14,7 +17,9 @@ import type { EmailVerificationOtpRequest } from "../models/EmailVerificationOtp
 import type { LinkedEmployerDTO } from "../models/LinkedEmployerDTO";
 import type { PhoneVerificationOtpRequest } from "../models/PhoneVerificationOtpRequest";
 import type { PlaidTokenDTO } from "../models/PlaidTokenDTO";
+import type { QRCodeDTO } from "../models/QRCodeDTO";
 import type { RegisterWithEmployerDTO } from "../models/RegisterWithEmployerDTO";
+import type { RequestEmployerDTO } from "../models/RequestEmployerDTO";
 import type { UpdateConsumerRequestDTO } from "../models/UpdateConsumerRequestDTO";
 import type { UpdateEmployerAllocationDTO } from "../models/UpdateEmployerAllocationDTO";
 import type { UpdatePaymentMethodDTO } from "../models/UpdatePaymentMethodDTO";
@@ -168,7 +173,7 @@ export class ConsumerService {
 
   /**
    * Sends OTP to user's phone to verify update of user profile
-   * @returns any OTP sent to user's phone
+   * @returns BlankResponseDTO OTP sent to user's phone
    * @throws ApiError
    */
   public static requestOtpToUpdatePhone({
@@ -184,7 +189,7 @@ export class ConsumerService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<BlankResponseDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/consumers/phone/verify",
@@ -240,7 +245,7 @@ export class ConsumerService {
 
   /**
    * Sends OTP to user's email to verify update of user profile
-   * @returns any OTP sent to user's email address
+   * @returns BlankResponseDTO OTP sent to user's email address
    * @throws ApiError
    */
   public static requestOtpToUpdateEmail({
@@ -256,7 +261,7 @@ export class ConsumerService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<BlankResponseDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/consumers/email/verify",
@@ -499,6 +504,76 @@ export class ConsumerService {
   }
 
   /**
+   * Subscribe to push notifications
+   * @returns BlankResponseDTO Successfully subscribed to push notifications
+   * @throws ApiError
+   */
+  public static subscribeToPushNotifications({
+    xNobaApiKey,
+    pushToken,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    pushToken: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<BlankResponseDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/consumers/subscribe/push/{pushToken}",
+      path: {
+        pushToken: pushToken,
+      },
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      errors: {
+        400: `Invalid push notification details`,
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
+   * Unsubscribe from push notifications
+   * @returns BlankResponseDTO Successfully unsubscribed from push notifications
+   * @throws ApiError
+   */
+  public static unsubscribeFromPushNotifications({
+    xNobaApiKey,
+    pushToken,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    pushToken: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<BlankResponseDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/consumers/unsubscribe/push/{pushToken}",
+      path: {
+        pushToken: pushToken,
+      },
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+    });
+  }
+
+  /**
    * Adds a crypto wallet for the logged-in consumer
    * @returns AddCryptoWalletResponseDTO Notficiation type and created wallet id
    * @throws ApiError
@@ -608,7 +683,7 @@ export class ConsumerService {
 
   /**
    * Links the consumer with an Employer
-   * @returns any Registered Employee record
+   * @returns BlankResponseDTO Registered Employee record
    * @throws ApiError
    */
   public static registerWithAnEmployer({
@@ -624,7 +699,7 @@ export class ConsumerService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<BlankResponseDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/consumers/employers",
@@ -668,7 +743,7 @@ export class ConsumerService {
 
   /**
    * Updates the allocation amount for a specific employer
-   * @returns any
+   * @returns BlankResponseDTO
    * @throws ApiError
    */
   public static updateAllocationAmountForAnEmployer({
@@ -684,7 +759,7 @@ export class ConsumerService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<BlankResponseDTO> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/v1/consumers/employers",
@@ -699,8 +774,40 @@ export class ConsumerService {
   }
 
   /**
+   * Request employer to join Noba
+   * @returns BlankResponseDTO Email Sent
+   * @throws ApiError
+   */
+  public static postEmployerRequestEmail({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    requestBody: RequestEmployerDTO;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<BlankResponseDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/consumers/employers/request",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+
+  /**
    * Gets QR code for the logged-in consumer
-   * @returns any Base64 of QR code for the logged-in consumer
+   * @returns QRCodeDTO Base64 of QR code for the logged-in consumer
    * @throws ApiError
    */
   public static getQrCode({
@@ -716,7 +823,7 @@ export class ConsumerService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<QRCodeDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/consumers/qrcode",
@@ -736,7 +843,7 @@ export class ConsumerService {
 
   /**
    * Add circle wallet to current consumer
-   * @returns any
+   * @returns CircleWalletResponseDTO
    * @throws ApiError
    */
   public static addConsumerWallet({
@@ -750,7 +857,7 @@ export class ConsumerService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<CircleWalletResponseDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/circle/wallet",
@@ -767,7 +874,7 @@ export class ConsumerService {
 
   /**
    * Get current consumer's circle wallet balance
-   * @returns any
+   * @returns CircleWalletBalanceResponseDTO
    * @throws ApiError
    */
   public static getConsumerWalletBalance({
@@ -781,7 +888,7 @@ export class ConsumerService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<CircleWalletBalanceResponseDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/circle/wallet/balance",

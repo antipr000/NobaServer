@@ -1,6 +1,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { BlankResponseDTO } from "../models/BlankResponseDTO";
+import type { EmployerRegisterResponseDTO } from "../models/EmployerRegisterResponseDTO";
 import type { RegisterEmployerRequestDTO } from "../models/RegisterEmployerRequestDTO";
 import type { UpdateEmployerRequestDTO } from "../models/UpdateEmployerRequestDTO";
 
@@ -11,10 +13,14 @@ import { request as __request } from "../core/request";
 export class WebhooksService {
   /**
    * Register the Employer in Noba
-   * @returns any
+   * @returns EmployerRegisterResponseDTO
    * @throws ApiError
    */
-  public static registerEmployer({ requestBody }: { requestBody: RegisterEmployerRequestDTO }): CancelablePromise<any> {
+  public static registerEmployer({
+    requestBody,
+  }: {
+    requestBody: RegisterEmployerRequestDTO;
+  }): CancelablePromise<EmployerRegisterResponseDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/webhooks/bubble/employers",
@@ -25,7 +31,7 @@ export class WebhooksService {
 
   /**
    * Update the Employer in Noba
-   * @returns any
+   * @returns BlankResponseDTO
    * @throws ApiError
    */
   public static updateEmployer({
@@ -34,7 +40,7 @@ export class WebhooksService {
   }: {
     referralId: string;
     requestBody: UpdateEmployerRequestDTO;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<BlankResponseDTO> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/webhooks/bubble/employers/{referralID}",

@@ -152,7 +152,7 @@ export class TransactionService {
     amount: number;
     currency: "USD" | "COP";
     desiredCurrency: "USD" | "COP";
-    workflowName: "WALLET_DEPOSIT" | "WALLET_TRANSFER" | "WALLET_WITHDRAWAL";
+    workflowName: "WALLET_WITHDRAWAL" | "WALLET_DEPOSIT" | "WALLET_TRANSFER";
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()

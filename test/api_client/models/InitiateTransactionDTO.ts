@@ -7,7 +7,7 @@ import type { WithdrawalDTO } from "./WithdrawalDTO";
 export type InitiateTransactionDTO = {
   debitConsumerIDOrTag?: string;
   creditConsumerIDOrTag?: string;
-  workflowName: "WALLET_DEPOSIT" | "WALLET_TRANSFER" | "WALLET_WITHDRAWAL";
+  workflowName: "WALLET_WITHDRAWAL" | "WALLET_DEPOSIT" | "WALLET_TRANSFER";
   debitCurrency?: "USD" | "COP";
   debitAmount?: number;
   creditCurrency?: "USD" | "COP";

@@ -4,6 +4,7 @@
 
 import type { ConsumerInformationDTO } from "./ConsumerInformationDTO";
 import type { TransactionEventDTO } from "./TransactionEventDTO";
+import type { TransactionFeeDTO } from "./TransactionFeeDTO";
 
 export type TransactionDTO = {
   /**
@@ -13,7 +14,7 @@ export type TransactionDTO = {
   /**
    * The workflow being used to process this transaction
    */
-  workflowName: "WALLET_DEPOSIT" | "WALLET_TRANSFER" | "WALLET_WITHDRAWAL";
+  workflowName: "WALLET_WITHDRAWAL" | "WALLET_DEPOSIT" | "WALLET_TRANSFER";
   /**
    * The user whose account is being debited
    */
@@ -66,4 +67,9 @@ export type TransactionDTO = {
    * A list of events that have occurred on this transaction
    */
   transactionEvents?: Array<TransactionEventDTO>;
+  /**
+   * A list of fees that have been applied to this transaction
+   */
+  transactionFees: Array<TransactionFeeDTO>;
+  totalFees: number;
 };

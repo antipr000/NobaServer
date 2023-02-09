@@ -1,8 +1,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { BlankResponseDTO } from "../models/BlankResponseDTO";
 import type { CircleDepositOrWithdrawalRequest } from "../models/CircleDepositOrWithdrawalRequest";
 import type { CircleFundsTransferRequestDTO } from "../models/CircleFundsTransferRequestDTO";
+import type { CircleTransactionDTO } from "../models/CircleTransactionDTO";
+import type { CircleWalletBalanceResponseDTO } from "../models/CircleWalletBalanceResponseDTO";
+import type { CircleWalletResponseDTO } from "../models/CircleWalletResponseDTO";
 import type { DebitBankRequestDTO } from "../models/DebitBankRequestDTO";
 import type { MonoTransactionDTO } from "../models/MonoTransactionDTO";
 import type { SendNotificationRequestDTO } from "../models/SendNotificationRequestDTO";
@@ -16,7 +20,7 @@ import { request as __request } from "../core/request";
 export class WorkflowService {
   /**
    * Updates the transaction
-   * @returns any Transaction updated
+   * @returns BlankResponseDTO Transaction updated
    * @throws ApiError
    */
   public static patchTransaction({
@@ -25,7 +29,7 @@ export class WorkflowService {
   }: {
     transactionId: string;
     requestBody: UpdateTransactionRequestDTO;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<BlankResponseDTO> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/wf/v1/transactions/{transactionID}",
@@ -79,21 +83,6 @@ export class WorkflowService {
   }
 
   /**
-   * Handle all the Mono Webhook requests
-   * @returns any
-   * @throws ApiError
-   */
-  public static processWebhookRequests({ monoSignature }: { monoSignature: string }): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/webhooks/mono",
-      headers: {
-        "mono-signature": monoSignature,
-      },
-    });
-  }
-
-  /**
    * Fetches the Mono Transaction for the specified 'nobaTransactionID'
    * @returns MonoTransactionDTO
    * @throws ApiError
@@ -113,23 +102,15 @@ export class WorkflowService {
   }
 
   /**
-   * Health check
-   * @returns any
-   * @throws ApiError
-   */
-  public static healthCheck(): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/wf/v1/circle/health",
-    });
-  }
-
-  /**
    * Get consumer's wallet ID
-   * @returns any
+   * @returns CircleWalletResponseDTO
    * @throws ApiError
    */
-  public static getConsumerWalletId({ consumerId }: { consumerId: string }): CancelablePromise<any> {
+  public static getConsumerWalletId({
+    consumerId,
+  }: {
+    consumerId: string;
+  }): CancelablePromise<CircleWalletResponseDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/wf/v1/circle/wallets/consumers/{consumerID}",
@@ -141,10 +122,10 @@ export class WorkflowService {
 
   /**
    * Get master wallet ID
-   * @returns any
+   * @returns CircleWalletResponseDTO
    * @throws ApiError
    */
-  public static getMasterWalletId(): CancelablePromise<any> {
+  public static getMasterWalletId(): CancelablePromise<CircleWalletResponseDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/wf/v1/circle/wallets/master",
@@ -153,10 +134,14 @@ export class WorkflowService {
 
   /**
    * Get consumer's circle wallet balance
-   * @returns any
+   * @returns CircleWalletBalanceResponseDTO
    * @throws ApiError
    */
-  public static getWalletBalance({ walletId }: { walletId: string }): CancelablePromise<any> {
+  public static getWalletBalance({
+    walletId,
+  }: {
+    walletId: string;
+  }): CancelablePromise<CircleWalletBalanceResponseDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/wf/v1/circle/wallets/{walletID}/balance",
@@ -168,7 +153,7 @@ export class WorkflowService {
 
   /**
    * Debit consumer's circle wallet balance
-   * @returns any
+   * @returns CircleTransactionDTO
    * @throws ApiError
    */
   public static debitWalletBalance({
@@ -177,7 +162,7 @@ export class WorkflowService {
   }: {
     walletId: string;
     requestBody: CircleDepositOrWithdrawalRequest;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<CircleTransactionDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/wf/v1/circle/wallets/{walletID}/debit",
@@ -191,7 +176,7 @@ export class WorkflowService {
 
   /**
    * Credit consumer's circle wallet balance
-   * @returns any
+   * @returns CircleTransactionDTO
    * @throws ApiError
    */
   public static creditWalletBalance({
@@ -200,7 +185,7 @@ export class WorkflowService {
   }: {
     walletId: string;
     requestBody: CircleDepositOrWithdrawalRequest;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<CircleTransactionDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/wf/v1/circle/wallets/{walletID}/credit",
@@ -214,7 +199,7 @@ export class WorkflowService {
 
   /**
    * Transfer funds between circle wallets
-   * @returns any
+   * @returns CircleTransactionDTO
    * @throws ApiError
    */
   public static transferFunds({
@@ -223,7 +208,7 @@ export class WorkflowService {
   }: {
     walletId: string;
     requestBody: CircleFundsTransferRequestDTO;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<CircleTransactionDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/wf/v1/circle/wallets/{walletID}/transfer",
@@ -237,7 +222,7 @@ export class WorkflowService {
 
   /**
    * Send notification from workflow
-   * @returns any
+   * @returns BlankResponseDTO
    * @throws ApiError
    */
   public static sendNotification({
@@ -246,7 +231,7 @@ export class WorkflowService {
   }: {
     notificationType: string;
     requestBody: SendNotificationRequestDTO;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<BlankResponseDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/wf/v1/notification/{notificationType}",
