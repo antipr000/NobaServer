@@ -85,6 +85,35 @@ describe("Verification", () => {
     const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
     const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
     setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
+    const consumerUpdateRequest: UpdateConsumerRequestDTO = {
+      firstName: "Jo",
+      lastName: "Doe",
+      address: {
+        streetLine1: "123 main st",
+        streetLine2: "second line",
+        countryCode: "IN",
+        city: "hyderabad",
+        regionCode: "HY",
+        postalCode: "02747",
+      },
+      dateOfBirth: "1988-09-09",
+    };
+
+    const updateSignature = computeSignature(
+      TEST_TIMESTAMP,
+      "PATCH",
+      "/v1/consumers",
+      JSON.stringify(consumerUpdateRequest),
+    );
+    const updateConsumerResponse = (await ConsumerService.updateConsumer({
+      xNobaApiKey: TEST_API_KEY,
+      requestBody: consumerUpdateRequest,
+      xNobaSignature: updateSignature,
+      xNobaTimestamp: TEST_TIMESTAMP,
+    })) as ConsumerDTO & ResponseStatus;
+    console.error("-----------------------------");
+    console.error(updateConsumerResponse);
+    expect(updateConsumerResponse.__status).toBe(200);
 
     const sessionKey = "test-session-key";
 
