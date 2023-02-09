@@ -1,6 +1,8 @@
 import { randomBytes, randomUUID } from "crypto"; // built-in node crypto, not from npm
 import { customAlphabet } from "nanoid";
 export class Utils {
+  static sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
   static getUsernameFromNameParts(firstName: string, lastName: string): string {
     // Only add a space if first & last name are both present
     return `${firstName ?? ""}${firstName && lastName ? " " : ""}${lastName ?? ""}` ?? "";

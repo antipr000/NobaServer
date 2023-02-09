@@ -5,14 +5,25 @@ import {
   WorkflowClient as TemporalWorkflowClient,
   Connection as TemporalConnection,
   TLSConfig,
+  Connection,
 } from "@temporalio/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NOBA_WORKFLOW_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { WorkflowName } from "./workflow";
+import { AlertKey, formatAlertLog } from "../../core/system.alerts";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
+import { HealthCheckResponse, HealthCheckStatus } from "../../core/domain/HealthCheckTypes";
+import { Utils } from "../../core/utils/Utils";
+
 @Injectable()
 export class WorkflowExecutor {
+  private static CONNECTION_ATTEMPTS = 5;
+  private static RETRY_INTERVAL = 3000; // 3 seconds
+  private static HEALTH_CHECK_WORKFLOW_NAME = "HealthCheck";
   private workflowConfigs: NobaWorkflowConfig;
+  private connection: Connection;
+  private client: TemporalWorkflowClient;
 
   constructor(
     customConfigService: CustomConfigService,
@@ -21,51 +32,144 @@ export class WorkflowExecutor {
     this.workflowConfigs = customConfigService.get<NobaWorkflowConfig>(NOBA_WORKFLOW_CONFIG_KEY);
   }
 
+  private async init(workflowName: String) {
+    let attemptCount = 1;
+    if (!this.client) {
+      while (attemptCount <= WorkflowExecutor.CONNECTION_ATTEMPTS) {
+        try {
+          const tlsSettings: TLSConfig =
+            this.workflowConfigs.temporalCloudCertificate && this.workflowConfigs.temporalCloudPrivateKey
+              ? {
+                  clientCertPair: {
+                    crt: Buffer.from(this.workflowConfigs.temporalCloudCertificate),
+                    key: Buffer.from(this.workflowConfigs.temporalCloudPrivateKey),
+                  },
+                }
+              : undefined;
+
+          this.logger.info(
+            `Connecting to Temporal instance at ${this.workflowConfigs.clientUrl} for workflow ${workflowName}`,
+          );
+          this.connection = await TemporalConnection.connect({
+            tls: tlsSettings,
+            address: this.workflowConfigs.clientUrl,
+            connectTimeout: this.workflowConfigs.connectionTimeoutInMs,
+          });
+
+          this.client = new TemporalWorkflowClient({
+            connection: this.connection,
+            namespace: this.workflowConfigs.namespace,
+          });
+
+          break;
+        } catch (error) {
+          if (attemptCount < WorkflowExecutor.CONNECTION_ATTEMPTS) {
+            this.reset();
+            this.logger.warn(
+              `Unable to connect to Temporal server for workflow ${workflowName}! Retrying in ${
+                WorkflowExecutor.RETRY_INTERVAL / 1000
+              } seconds (${attemptCount}/${WorkflowExecutor.CONNECTION_ATTEMPTS - 1})...`,
+            );
+            await Utils.sleep(WorkflowExecutor.RETRY_INTERVAL);
+            attemptCount++;
+          } else {
+            this.logger.error(
+              formatAlertLog({
+                key: AlertKey.TEMPORAL_DOWN,
+                message: `Failed to connect to Temporal for workflow ${workflowName} with error: ${error}`,
+              }),
+            );
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  private reset() {
+    this.client = null;
+    this.connection = null;
+  }
+
+  async getHealth(): Promise<HealthCheckResponse> {
+    let healthResponse;
+    try {
+      await this.init(WorkflowExecutor.HEALTH_CHECK_WORKFLOW_NAME);
+      healthResponse = await this.connection.healthService.check({});
+
+      /*
+        UNKNOWN = 0,
+        SERVING = 1,
+        NOT_SERVING = 2,
+        SERVICE_UNKNOWN = 3
+      */
+
+      if (healthResponse.status == 1) return { status: HealthCheckStatus.OK };
+    } catch (error) {
+      this.logger.error("Temporal health check failed with response: " + JSON.stringify(healthResponse));
+    }
+
+    return { status: HealthCheckStatus.UNAVAILABLE };
+  }
+
   private async executeWorkflow(
     workflowName: string,
     workflowID: string,
     workflowParamsInOrder: any[],
   ): Promise<string> {
-    const tlsSettings: TLSConfig =
-      this.workflowConfigs.temporalCloudCertificate && this.workflowConfigs.temporalCloudPrivateKey
-        ? {
-            clientCertPair: {
-              crt: Buffer.from(this.workflowConfigs.temporalCloudCertificate),
-              key: Buffer.from(this.workflowConfigs.temporalCloudPrivateKey),
-            },
-          }
-        : undefined;
+    await this.init(workflowName); // No-op if already initialized
 
-    const connection = await TemporalConnection.connect({
-      tls: tlsSettings,
-      address: this.workflowConfigs.clientUrl,
-      connectTimeout: this.workflowConfigs.connectionTimeoutInMs,
-    });
-
-    const client = new TemporalWorkflowClient({
-      connection,
-      namespace: this.workflowConfigs.namespace,
-    });
-
-    const handle = await client.start(workflowName, {
+    const handle = await this.client.start(workflowName, {
       args: [...workflowParamsInOrder],
       taskQueue: this.workflowConfigs.taskQueue,
       workflowId: workflowID,
     });
     this.logger.info(`Started workflow "${workflowName}" with ID: "${handle.workflowId}"`);
-
     return handle.workflowId;
   }
 
+  private async executeWorkflowWrapper(
+    workflowName: string,
+    workflowID: string,
+    workflowParamsInOrder: any[],
+  ): Promise<string> {
+    try {
+      return await this.executeWorkflow(workflowName, workflowID, workflowParamsInOrder);
+    } catch (error) {
+      // Retry once if we get a connection error
+      this.reset();
+      this.logger.warn(
+        `First attempted to execute workflow ${workflowName} failed. Resetting connection and trying again...`,
+      );
+      try {
+        return await this.executeWorkflow(workflowName, workflowID, workflowParamsInOrder);
+      } catch (error) {
+        if (error.message.includes("Failed to connect")) {
+          this.logger.error(
+            formatAlertLog({
+              key: AlertKey.TEMPORAL_DOWN,
+              message: `Unable to contact temporal server. Error: ${JSON.stringify(error)}`,
+            }),
+          );
+        }
+
+        throw new ServiceException({
+          message: `Unable to contact workflow server`,
+          errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+        });
+      }
+    }
+  }
+
   public async executeWalletWithdrawalWorkflow(transactionID: string, workflowID: string): Promise<string> {
-    return await this.executeWorkflow(WorkflowName.WALLET_WITHDRAWAL, workflowID, [transactionID]);
+    return await this.executeWorkflowWrapper(WorkflowName.WALLET_WITHDRAWAL, workflowID, [transactionID]);
   }
 
   public async executeWalletDepositWorkflow(transactionID: string, workflowID: string): Promise<string> {
-    return await this.executeWorkflow(WorkflowName.WALLET_DEPOSIT, workflowID, [transactionID]);
+    return await this.executeWorkflowWrapper(WorkflowName.WALLET_DEPOSIT, workflowID, [transactionID]);
   }
 
   public async executeWalletTransferWorkflow(transactionID: string, workflowID: string): Promise<string> {
-    return await this.executeWorkflow(WorkflowName.WALLET_TRANSFER, workflowID, [transactionID]);
+    return await this.executeWorkflowWrapper(WorkflowName.WALLET_TRANSFER, workflowID, [transactionID]);
   }
 }

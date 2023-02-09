@@ -40,6 +40,7 @@ import { VerificationService } from "./modules/verification/verification.service
 import { HealthCheckStatus } from "./core/domain/HealthCheckTypes";
 import { CircleService } from "./modules/psp/circle.service";
 import { ALLOWED_DEPTH, HealthCheckQueryDTO } from "./modules/common/dto/HealthCheckQueryDTO";
+import { WorkflowExecutor } from "./infra/temporal/workflow.executor";
 
 @Controller("v1")
 @ApiHeaders(getCommonHeaders())
@@ -53,6 +54,7 @@ export class AppController {
     private readonly monoService: MonoService,
     private readonly verificationService: VerificationService,
     private readonly circleService: CircleService,
+    private readonly workflowExecutor: WorkflowExecutor,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -74,11 +76,13 @@ export class AppController {
     const sardineHealth = await this.verificationService.getHealth();
     const circleHealth = await this.circleService.checkCircleHealth();
     const monoHealth = await this.monoService.checkMonoHealth();
+    const temporalHealth = await this.workflowExecutor.getHealth();
     return {
       serverStatus: HealthCheckStatus.OK,
       sardineStatus: sardineHealth.status,
       circleStatus: circleHealth.status,
       monoStatus: monoHealth.status,
+      temporalStatus: temporalHealth.status,
     };
   }
 

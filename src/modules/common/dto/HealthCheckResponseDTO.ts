@@ -13,4 +13,7 @@ export class HealthCheckResponseDTO {
 
   @ApiPropertyOptional({ enum: HealthCheckStatus })
   circleStatus?: HealthCheckStatus;
+
+  @ApiPropertyOptional({ enum: HealthCheckStatus })
+  temporalStatus?: HealthCheckStatus;
 }

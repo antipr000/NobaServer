@@ -12,5 +12,6 @@ export function getMockWorkflowExecutorWithDefaults(): WorkflowExecutor {
   when(workflowExecutor.executeWalletWithdrawalWorkflow(anyString(), anyString())).thenReject(
     new Error("Not implemented!"),
   );
+  when(workflowExecutor.getHealth()).thenReject(new Error("Not implemented!"));
   return workflowExecutor;
 }
