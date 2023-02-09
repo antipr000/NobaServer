@@ -141,7 +141,6 @@ describe("VerificationService", () => {
     it("should verify ConsumerInformation when idvProvider returns APPROVED for US user", async () => {
       const consumer = getFakeConsumer();
       const consumerInformation = getFakeConsumerInformation(consumer);
-      console.log(consumerInformation);
       const sessionKey = "fake-session";
 
       const consumerVerificationResult: ConsumerVerificationResult = {

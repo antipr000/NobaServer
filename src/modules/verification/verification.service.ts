@@ -64,7 +64,7 @@ export class VerificationService {
       sessionKey,
       consumerInformation,
     );
-    const newConsumerData: ConsumerProps = {
+    const verifiedConsumerData: ConsumerProps = {
       ...consumer.props,
       address: consumerInformation.address,
       verificationData: {
@@ -78,7 +78,7 @@ export class VerificationService {
       },
     };
 
-    const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
+    const updatedConsumer = await this.consumerService.updateConsumer(verifiedConsumerData);
 
     const isUS = updatedConsumer.props.address?.countryCode === "US";
     if (result.status === KYCStatus.APPROVED) {
