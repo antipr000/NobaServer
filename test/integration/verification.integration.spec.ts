@@ -111,8 +111,6 @@ describe("Verification", () => {
       xNobaSignature: updateSignature,
       xNobaTimestamp: TEST_TIMESTAMP,
     })) as ConsumerDTO & ResponseStatus;
-    console.error("-----------------------------");
-    console.error(updateConsumerResponse);
     expect(updateConsumerResponse.__status).toBe(200);
 
     const sessionKey = "test-session-key";

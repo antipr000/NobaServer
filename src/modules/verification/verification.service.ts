@@ -50,7 +50,6 @@ export class VerificationService {
     const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
 
     // Augment request with created timestamp info for verification provider
-
     const consumerInformation: ConsumerInformation = {
       userID: consumerID,
       firstName: consumer.props.firstName,
@@ -66,38 +65,54 @@ export class VerificationService {
       consumerInformation,
     );
 
-    const isUS = consumer.props.address?.countryCode === "US";
+    const newConsumerData: ConsumerProps = {
+      ...consumer.props,
+      address: consumerInformation.address,
+      verificationData: {
+        ...consumer.props.verificationData,
+        kycCheckStatus: result.status,
+        kycVerificationTimestamp: new Date(),
+        riskRating: result.idvProviderRiskLevel,
+        documentVerificationStatus: this.needsDocumentVerification(consumerInformation.address.countryCode)
+          ? DocumentVerificationStatus.REQUIRED
+          : DocumentVerificationStatus.NOT_REQUIRED,
+      },
+    };
+
+    const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
+
+    const isUS = updatedConsumer.props.address?.countryCode === "US";
     if (result.status === KYCStatus.APPROVED) {
       await this.idvProvider.postConsumerFeedback(sessionKey, result);
       if (isUS) {
         await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, {
-          firstName: consumer.props.firstName,
-          lastName: consumer.props.lastName,
-          nobaUserID: consumer.props.id,
-          email: consumer.props.displayEmail,
+          firstName: updatedConsumer.props.firstName,
+          lastName: updatedConsumer.props.lastName,
+          nobaUserID: updatedConsumer.props.id,
+          email: updatedConsumer.props.displayEmail,
         });
       } else {
         await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT, {
-          firstName: consumer.props.firstName,
-          lastName: consumer.props.lastName,
-          nobaUserID: consumer.props.id,
-          email: consumer.props.displayEmail,
+          firstName: updatedConsumer.props.firstName,
+          lastName: updatedConsumer.props.lastName,
+          nobaUserID: updatedConsumer.props.id,
+          email: updatedConsumer.props.displayEmail,
         });
       }
     } else if (result.status === KYCStatus.REJECTED) {
       await this.idvProvider.postConsumerFeedback(sessionKey, result);
       await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_DENIED_EVENT, {
-        firstName: consumer.props.firstName,
-        lastName: consumer.props.lastName,
-        nobaUserID: consumer.props.id,
-        email: consumer.props.displayEmail,
+        firstName: updatedConsumer.props.firstName,
+        lastName: updatedConsumer.props.lastName,
+        nobaUserID: updatedConsumer.props.id,
+        email: updatedConsumer.props.displayEmail,
       });
     } else {
       await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT, {
-        firstName: consumer.props.firstName,
-        lastName: consumer.props.lastName,
-        nobaUserID: consumer.props.id,
-        email: consumer.props.displayEmail,
+        firstName: updatedConsumer.props.firstName,
+        lastName: updatedConsumer.props.lastName,
+        nobaUserID: updatedConsumer.props.id,
+        email: updatedConsumer.props.displayEmail,
       });
     }
     return result;
