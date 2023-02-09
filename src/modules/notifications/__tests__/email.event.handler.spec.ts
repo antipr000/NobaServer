@@ -34,11 +34,13 @@ import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent
 import { SendCollectionCompletedEvent } from "../events/SendCollectionCompletedEvent";
 import { SendEmployerRequestEvent } from "../events/SendEmployerRequestEvent";
 import { WorkflowName } from "../../../modules/transaction/domain/Transaction";
+import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 
 describe("EmailEventHandler", () => {
   let currencyService: CurrencyService;
   let emailClient: EmailClient;
   let eventHandler: EmailEventHandler;
+  let app: TestingModule;
 
   const SUPPORT_URL = "help.noba.com";
   const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -46,7 +48,7 @@ describe("EmailEventHandler", () => {
 
   jest.setTimeout(30000);
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     currencyService = getMockCurrencyServiceWithDefaults();
     emailClient = getMockEmailClientWithDefaults();
 
@@ -55,7 +57,7 @@ describe("EmailEventHandler", () => {
       NODE_ENV: "development",
     };
 
-    const app: TestingModule = await Test.createTestingModule({
+    app = await Test.createTestingModule({
       imports: [
         TestConfigModule.registerAsync({
           [SENDGRID_CONFIG_KEY]: {
@@ -80,6 +82,18 @@ describe("EmailEventHandler", () => {
 
     eventHandler = app.get<EmailEventHandler>(EmailEventHandler);
     when(emailClient.sendEmail(anything())).thenResolve();
+
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2020, 3, 1));
+  });
+
+  afterAll(async () => {
+    jest.useRealTimers();
+    await app.close();
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
   it("should call emailService with SendOtp event", async () => {
@@ -684,6 +698,48 @@ describe("EmailEventHandler", () => {
         createdTimestamp: payload.params.createdTimestamp,
         processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
         nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+      },
+    });
+  });
+
+  it("should call eventHandler with SendTransferFailed event", async () => {
+    const payload = new SendTransferFailedEvent({
+      email: "fake+user@noba.com",
+      name: "First",
+      handle: "fake-handle",
+      params: {
+        ...getTransactionParams(WorkflowName.WALLET_TRANSFER),
+        creditConsumer_firstName: "Justin",
+        creditConsumer_lastName: "Ashworth",
+        creditConsumer_handle: "justin",
+        debitConsumer_handle: "gal",
+        reasonDeclined: "Failed transfer",
+      },
+      locale: "en",
+    });
+
+    await eventHandler.sendTransferFailedEmail(payload);
+
+    const [emailRequest] = capture(emailClient.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.TRANSFER_FAILED_EMAIL["en"],
+      dynamicTemplateData: {
+        creditConsumer_firstName: payload.params.creditConsumer_firstName,
+        creditConsumer_lastName: payload.params.creditConsumer_lastName,
+        debitConsumer_handle: payload.params.debitConsumer_handle,
+        creditConsumer_handle: payload.params.creditConsumer_handle,
+        firstName: payload.name,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: "USDC",
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: "USDC",
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        reasonDeclined: "Failed transfer",
       },
     });
   });

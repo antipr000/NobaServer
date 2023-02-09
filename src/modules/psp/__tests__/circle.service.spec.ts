@@ -11,6 +11,7 @@ import { Result } from "../../../core/logic/Result";
 import { Circle } from "../domain/Circle";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { CircleWithdrawalStatus } from "../domain/CircleTypes";
+import { HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
 
 describe("CircleService", () => {
   let circleService: CircleService;
@@ -46,15 +47,15 @@ describe("CircleService", () => {
 
   describe("checkCircleHealth", () => {
     it("should return true when circle client is working", async () => {
-      when(circleClient.checkCircleHealth()).thenResolve(true);
+      when(circleClient.getHealth()).thenResolve({ status: HealthCheckStatus.OK });
       const result = await circleService.checkCircleHealth();
-      expect(result).toEqual(true);
+      expect(result.status).toEqual(HealthCheckStatus.OK);
     });
 
     it("should return false", async () => {
-      when(circleClient.checkCircleHealth()).thenResolve(false);
+      when(circleClient.getHealth()).thenResolve({ status: HealthCheckStatus.UNAVAILABLE });
       const result = await circleService.checkCircleHealth();
-      expect(result).toEqual(false);
+      expect(result.status).toEqual(HealthCheckStatus.UNAVAILABLE);
     });
   });
 

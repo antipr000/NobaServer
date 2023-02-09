@@ -35,7 +35,11 @@ import { ExchangeRateService } from "./modules/common/exchangerate.service";
 import { ExchangeRateDTO } from "./modules/common/dto/ExchangeRateDTO";
 import { SupportedBanksDTO } from "./modules/psp/dto/SupportedBanksDTO";
 import { MonoService } from "./modules/psp/mono/mono.service";
-import { HealthCheckResponseDTO, HealthStatus } from "./modules/common/dto/HealthCheckResponseDTO";
+import { HealthCheckResponseDTO } from "./modules/common/dto/HealthCheckResponseDTO";
+import { VerificationService } from "./modules/verification/verification.service";
+import { HealthCheckStatus } from "./core/domain/HealthCheckTypes";
+import { CircleService } from "./modules/psp/circle.service";
+import { ALLOWED_DEPTH, HealthCheckQueryDTO } from "./modules/common/dto/HealthCheckQueryDTO";
 
 @Controller("v1")
 @ApiHeaders(getCommonHeaders())
@@ -47,6 +51,8 @@ export class AppController {
     private readonly creditCardService: CreditCardService,
     private readonly configurationsProviderService: ConfigurationProviderService,
     private readonly monoService: MonoService,
+    private readonly verificationService: VerificationService,
+    private readonly circleService: CircleService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -59,9 +65,20 @@ export class AppController {
     type: HealthCheckResponseDTO,
   })
   @ApiTags("Health Check")
-  appHealth(): HealthCheckResponseDTO {
+  async appHealth(@Query() query: HealthCheckQueryDTO): Promise<HealthCheckResponseDTO> {
+    if (query.depth === ALLOWED_DEPTH.SHALLOW) {
+      return {
+        serverStatus: HealthCheckStatus.OK,
+      };
+    }
+    const sardineHealth = await this.verificationService.getHealth();
+    const circleHealth = await this.circleService.checkCircleHealth();
+    const monoHealth = await this.monoService.checkMonoHealth();
     return {
-      status: HealthStatus.OK,
+      serverStatus: HealthCheckStatus.OK,
+      sardineStatus: sardineHealth.status,
+      circleStatus: circleHealth.status,
+      monoStatus: monoHealth.status,
     };
   }
 

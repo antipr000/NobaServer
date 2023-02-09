@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  noba_server:
+    container_name: noba_server
+    restart: on-failure
+    build:
+      context: ../
+      dockerfile: e2e_test/Dockerfile
+    environment:
+      - NODE_ENV=e2e_test
+      - DATABASE_URL=postgresql://e2e_user:pass@postgres-db:5432/Noba_E2E
+    ports:
+      - "8080:8080"
+    command: sh /e2e_test/docker_entrypoint.sh

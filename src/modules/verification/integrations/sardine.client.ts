@@ -6,7 +6,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import axios, { AxiosRequestConfig } from "axios";
-import { KYCStatus, DocumentVerificationStatus, WalletStatus } from "@prisma/client";
+import { KYCStatus, DocumentVerificationStatus } from "@prisma/client";
 import { SardineConfigs } from "../../../config/configtypes/SardineConfigs";
 import { SARDINE_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
@@ -45,6 +45,7 @@ import { Currency } from "../../transaction/domain/TransactionTypes";
 import { TransactionVerification } from "../domain/TransactionVerification";
 import { CircleService } from "../../psp/circle.service";
 import { Utils } from "../../../core/utils/Utils";
+import { HealthCheckResponse, HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
 
 @Injectable()
 export class Sardine implements IDVProvider {
@@ -69,6 +70,19 @@ export class Sardine implements IDVProvider {
         password: secretKey,
       },
     };
+  }
+
+  async getHealth(): Promise<HealthCheckResponse> {
+    try {
+      await axios.get(this.BASE_URI + "/v1/geo-coverage", this.getAxiosConfig());
+      return {
+        status: HealthCheckStatus.OK,
+      };
+    } catch (e) {
+      return {
+        status: HealthCheckStatus.UNAVAILABLE,
+      };
+    }
   }
 
   async verifyConsumerInformation(
@@ -202,7 +216,7 @@ export class Sardine implements IDVProvider {
         );
         throw new BadRequestException(`${JSON.stringify(e.response.data)}`);
       } else {
-        this.logger.error(`Sardine request failed to get document verification, returning not found`);
+        this.logger.error("Sardine request failed to get document verification, returning not found");
         throw new NotFoundException();
       }
     }
@@ -272,7 +286,7 @@ export class Sardine implements IDVProvider {
     const usdAmount = transaction.creditCurrency == Currency.USD ? transaction.creditAmount : transaction.debitAmount;
 
     let actionType;
-    let checkpoints = ["aml", "customer"];
+    const checkpoints = ["aml", "customer"];
     switch (transaction.workflowName) {
       case WorkflowName.WALLET_TRANSFER:
         actionType = "transfer";

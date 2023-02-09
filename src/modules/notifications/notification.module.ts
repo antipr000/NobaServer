@@ -41,7 +41,7 @@ export const SMSProvider: Provider = {
         return new StubSMSClient(logger);
 
       case SMSClient.TWILIO:
-        return new TwilioSMSClient(customConfigService);
+        return new TwilioSMSClient(customConfigService, logger);
 
       default:
         throw Error("Unexpected Email client.");

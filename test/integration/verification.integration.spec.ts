@@ -130,7 +130,7 @@ describe("Verification", () => {
     expect(getConsumerResponse.address).toStrictEqual(consumerInformation.address);
     expect(getConsumerResponse.dateOfBirth).toBe(consumerInformation.dateOfBirth);
     expect(getConsumerResponse.kycVerificationData.kycVerificationStatus).toBe("Approved");
-    expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotSubmitted");
+    expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired");
   });
 
   // it("POST /verifyDocument", async () => {

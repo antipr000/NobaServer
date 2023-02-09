@@ -62,6 +62,9 @@ export const EmailTemplates = {
   TRANSFER_SUCCESSFUL_EMAIL: {
     en: "d-1c758bcf9eae40ed83c3cd9152ed17c4",
   },
+  TRANSFER_FAILED_EMAIL: {
+    en: "d-c2f615c6c81147c9b3666cb6fd1c93b8",
+  },
   COLLECTION_LINK_EMAIL: {},
   COLLECTION_COMPLETED_EMAIL: {
     en: "d-0c8d633f6de545c6a562ac8e6d53917d", // TODO(jira/CRYPTO-604): Replace with proper template id once created

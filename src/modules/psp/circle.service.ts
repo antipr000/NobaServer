@@ -5,6 +5,7 @@ import { Logger } from "winston";
 import { CircleClient } from "./circle.client";
 import { ICircleRepo } from "./repos/circle.repo";
 import { UpdateWalletBalanceServiceDTO } from "./domain/UpdateWalletBalanceServiceDTO";
+import { HealthCheckResponse } from "../../core/domain/HealthCheckTypes";
 
 @Injectable()
 export class CircleService {
@@ -17,8 +18,8 @@ export class CircleService {
   @Inject()
   private readonly circleClient: CircleClient;
 
-  public async checkCircleHealth(): Promise<boolean> {
-    return this.circleClient.checkCircleHealth();
+  public async checkCircleHealth(): Promise<HealthCheckResponse> {
+    return this.circleClient.getHealth();
   }
 
   public async getOrCreateWallet(consumerID: string): Promise<string> {

@@ -15,7 +15,7 @@ import { AdminModule } from "./modules/admin/admin.module";
 import { JwtAuthGuard } from "./modules/auth/jwt-auth.guard";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { MonoModule } from "./modules/psp/mono/mono.module";
-import { PspWorkflowModule } from "./modules/psp/psp.module";
+import { PspModule, PspWorkflowModule } from "./modules/psp/psp.module";
 import { PrivateAuthGuard } from "./modules/auth/private-auth.guard";
 import { NotificationWorkflowModule } from "./modules/notifications/notification.workflow.module";
 import { BubbleModule } from "./modules/bubble/bubble.module";
@@ -33,6 +33,7 @@ import { BubbleModule } from "./modules/bubble/bubble.module";
     VerificationWebhookModule,
     TransactionModule,
     AdminModule,
+    PspModule,
     // TODO: Remove this once we have a proper way to handle PSP dependencies.
     MonoModule,
     BubbleModule,

@@ -80,8 +80,15 @@ export class NotificationWorkflowService {
         payload = prepareNotificationPayload(consumer, {
           transferCompletedParams: transactionPayload,
         });
-        // We need a different template for receiver
+        // TODO: We need a different template for receiver so they also get a notification
         await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT, payload);
+        break;
+      case NotificationWorkflowTypes.TRANSFER_FAILED_EVENT:
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+        payload = prepareNotificationPayload(consumer, {
+          transferFailedParams: transactionPayload,
+        });
+        await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_FAILED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.COLLECTION_COMPLETED_EVENT:
         consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
@@ -119,6 +126,14 @@ export class NotificationWorkflowService {
           transaction,
           debitConsumer,
           creditConsumer,
+        );
+      case NotificationWorkflowTypes.TRANSFER_FAILED_EVENT:
+        const creditConsumerFailed = await this.consumerService.getConsumer(transaction.creditConsumerID);
+        const debitConsumerFailed = await this.consumerService.getConsumer(transaction.debitConsumerID);
+        return this.transactionNotificationPayloadMapper.toTransferFailedNotificationParameters(
+          transaction,
+          creditConsumerFailed,
+          debitConsumerFailed,
         );
       default:
         return null;

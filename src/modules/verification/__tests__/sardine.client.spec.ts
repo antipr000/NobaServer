@@ -57,6 +57,7 @@ import { TransactionVerification } from "../domain/TransactionVerification";
 import { WorkflowName } from "../../transaction/domain/Transaction";
 import { CircleService } from "../../psp/circle.service";
 import { getMockCircleServiceWithDefaults } from "../../psp/mocks/mock.circle.service";
+import { HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -106,6 +107,24 @@ describe("SardineTests", () => {
 
   afterEach(() => {
     mockAxios.reset();
+  });
+
+  describe("getHealth", () => {
+    it("Should return status of OK", async () => {
+      const responsePromise = sardine.getHealth();
+      expect(mockAxios.get).toHaveBeenCalled();
+      mockAxios.mockResponse({ data: { status: "OK" } });
+      const response = await responsePromise;
+      expect(response.status).toEqual(HealthCheckStatus.OK);
+    });
+
+    it("Should return status UNAVAILABLE", async () => {
+      const responsePromise = sardine.getHealth();
+      expect(mockAxios.get).toHaveBeenCalled();
+      mockAxios.mockError(new Error("Test error"));
+      const response = await responsePromise;
+      expect(response.status).toEqual(HealthCheckStatus.UNAVAILABLE);
+    });
   });
 
   describe("verifyConsumerInformation", () => {

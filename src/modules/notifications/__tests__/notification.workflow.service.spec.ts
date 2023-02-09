@@ -165,7 +165,7 @@ describe("NotificationService", () => {
       ).once();
     });
 
-    it("should send notification transfer success", async () => {
+    it("should send notification for transfer success", async () => {
       const consumerID = v4();
       const consumerID2 = v4();
       const consumer = getRandomConsumer(consumerID);
@@ -193,6 +193,38 @@ describe("NotificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
+          deepEqual(notificationPayload),
+        ),
+      ).once();
+    });
+
+    it("should send notification for transfer failed", async () => {
+      const consumerID = v4();
+      const consumerID2 = v4();
+      const consumer = getRandomConsumer(consumerID);
+      const consumer2 = getRandomConsumer(consumerID2);
+      const transaction = getRandomTransaction(consumerID, consumerID2, WorkflowName.WALLET_TRANSFER);
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumerID2)).thenResolve(consumer2);
+      when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
+
+      await notificationWorflowService.sendNotification(
+        NotificationWorkflowTypes.TRANSFER_FAILED_EVENT,
+        transaction.id,
+      );
+
+      const transactionNotificationPayload = transactionNotificationMapper.toTransferFailedNotificationParameters(
+        transaction,
+        consumer,
+        consumer2,
+      );
+
+      const notificationPayload = prepareNotificationPayload(consumer, {
+        transferFailedParams: transactionNotificationPayload,
+      });
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_TRANSFER_FAILED_EVENT,
           deepEqual(notificationPayload),
         ),
       ).once();

@@ -38,6 +38,14 @@ export interface TransferCompletedNotificationParameters extends TransactionPara
   creditConsumer_handle: string;
 }
 
+export interface TransferFailedNotificationParameters extends TransactionParameters {
+  creditConsumer_firstName: string;
+  creditConsumer_lastName: string;
+  debitConsumer_handle: string;
+  creditConsumer_handle: string;
+  reasonDeclined: string;
+}
+
 // TODO(jira/CRYPTO-604): Remove hardcoded values and unnecessary fields once templates are ready
 export class TransactionNotificationPayloadMapper {
   toTransactionParams(transaction: Transaction): TransactionParameters {
@@ -69,7 +77,7 @@ export class TransactionNotificationPayloadMapper {
     const transactionParams = this.toTransactionParams(transaction);
     return {
       ...transactionParams,
-      reasonDeclined: "Something went wrong",
+      reasonDeclined: "Something went wrong", // TODO (CRYPTO-698)
     };
   }
 
@@ -85,7 +93,7 @@ export class TransactionNotificationPayloadMapper {
     const transactionParams = this.toTransactionParams(transaction);
     return {
       ...transactionParams,
-      reasonDeclined: "Something went wrong",
+      reasonDeclined: "Something went wrong", // TODO (CRYPTO-698)
     };
   }
 
@@ -101,6 +109,22 @@ export class TransactionNotificationPayloadMapper {
       creditConsumer_lastName: creditConsumer.props.lastName,
       creditConsumer_handle: creditConsumer.props.handle,
       debitConsumer_handle: debitConsumer.props.handle,
+    };
+  }
+
+  toTransferFailedNotificationParameters(
+    transaction: Transaction,
+    debitConsumer: Consumer,
+    creditConsumer: Consumer,
+  ): TransferFailedNotificationParameters {
+    const transactionParams = this.toTransactionParams(transaction);
+    return {
+      ...transactionParams,
+      creditConsumer_firstName: creditConsumer.props.firstName,
+      creditConsumer_lastName: creditConsumer.props.lastName,
+      creditConsumer_handle: creditConsumer.props.handle,
+      debitConsumer_handle: debitConsumer.props.handle,
+      reasonDeclined: "Something went wrong", // TODO (CRYPTO-698)
     };
   }
 }

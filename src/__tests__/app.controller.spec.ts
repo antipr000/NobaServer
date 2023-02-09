@@ -19,6 +19,12 @@ import { getMockExchangeRateServiceWithDefaults } from "../modules/common/mocks/
 import { ExchangeRateService } from "../modules/common/exchangerate.service";
 import { MonoService } from "../modules/psp/mono/mono.service";
 import { getMockMonoServiceWithDefaults } from "../modules/psp/mono/mocks/mock.mono.service";
+import { VerificationService } from "../modules/verification/verification.service";
+import { CircleService } from "../modules/psp/circle.service";
+import { getMockVerificationServiceWithDefaults } from "../modules/verification/mocks/mock.verification.service";
+import { getMockCircleServiceWithDefaults } from "../modules/psp/mocks/mock.circle.service";
+import { HealthCheckStatus } from "../core/domain/HealthCheckTypes";
+import { ALLOWED_DEPTH } from "../modules/common/dto/HealthCheckQueryDTO";
 
 describe("AppController", () => {
   let appController: AppController;
@@ -29,6 +35,8 @@ describe("AppController", () => {
   let mockLocationService: LocationService;
   let mockConfigurationProviderService: ConfigurationProviderService;
   let mockMonoService: MonoService;
+  let mockVerificationService: VerificationService;
+  let mockCircleService: CircleService;
 
   beforeEach(async () => {
     appService = getMockAppServiceWithDefaults();
@@ -38,6 +46,8 @@ describe("AppController", () => {
     mockLocationService = getMockLocationServiceWithDefaults();
     mockConfigurationProviderService = getMockConfigurationProviderServiceWithDefaults();
     mockMonoService = getMockMonoServiceWithDefaults();
+    mockVerificationService = getMockVerificationServiceWithDefaults();
+    mockCircleService = getMockCircleServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -71,6 +81,14 @@ describe("AppController", () => {
           provide: MonoService,
           useFactory: () => instance(mockMonoService),
         },
+        {
+          provide: VerificationService,
+          useFactory: () => instance(mockVerificationService),
+        },
+        {
+          provide: CircleService,
+          useFactory: () => instance(mockCircleService),
+        },
       ],
     }).compile();
 
@@ -93,8 +111,39 @@ describe("AppController", () => {
   };
 
   describe("appHealth()", () => {
-    it("should return success string", async () => {
-      expect(appController.appHealth()).toEqual({ status: "OK" });
+    it("should return health for all clients", async () => {
+      when(mockVerificationService.getHealth()).thenResolve({ status: HealthCheckStatus.OK });
+      when(mockCircleService.checkCircleHealth()).thenResolve({ status: HealthCheckStatus.OK });
+      when(mockMonoService.checkMonoHealth()).thenResolve({ status: HealthCheckStatus.OK });
+      const result = await appController.appHealth({ depth: ALLOWED_DEPTH.DEEP });
+      expect(result).toStrictEqual({
+        serverStatus: HealthCheckStatus.OK,
+        sardineStatus: HealthCheckStatus.OK,
+        circleStatus: HealthCheckStatus.OK,
+        monoStatus: HealthCheckStatus.OK,
+      });
+    });
+
+    it("should report the corresponding client as UNAVAILABLE when it is down", async () => {
+      when(mockVerificationService.getHealth()).thenResolve({ status: HealthCheckStatus.OK });
+      when(mockCircleService.checkCircleHealth()).thenResolve({ status: HealthCheckStatus.UNAVAILABLE });
+      when(mockMonoService.checkMonoHealth()).thenResolve({ status: HealthCheckStatus.OK });
+
+      const result = await appController.appHealth({ depth: ALLOWED_DEPTH.DEEP });
+      expect(result).toStrictEqual({
+        serverStatus: HealthCheckStatus.OK,
+        sardineStatus: HealthCheckStatus.OK,
+        circleStatus: HealthCheckStatus.UNAVAILABLE,
+        monoStatus: HealthCheckStatus.OK,
+      });
+    });
+
+    it("should return serverStatus when depth is SHALLOW", async () => {
+      const result = await appController.appHealth({ depth: ALLOWED_DEPTH.SHALLOW });
+      expect(result.serverStatus).toBe(HealthCheckStatus.OK);
+      expect(result.circleStatus).toBeUndefined();
+      expect(result.monoStatus).toBeUndefined();
+      expect(result.sardineStatus).toBeUndefined();
     });
   });
 

@@ -5,7 +5,6 @@ import { Logger } from "winston";
 import { CircleService } from "./circle.service";
 import { CircleDepositOrWithdrawalRequest } from "./dto/CircleDepositOrWithdrawalRequest";
 import { CircleFundsTransferRequestDTO } from "./dto/CircleFundsTransferRequestDTO";
-import { HealthCheckResponseDTO, HealthStatus } from "../common/dto/HealthCheckResponseDTO";
 import {
   CircleWalletBalanceResponseDTO,
   CircleTransactionDTO,
@@ -20,22 +19,6 @@ export class CircleWorkflowController {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly circleService: CircleService,
   ) {}
-
-  @Get("/health")
-  @ApiOperation({ summary: "Health check" })
-  @ApiResponse({ status: HttpStatus.OK, type: HealthCheckResponseDTO })
-  async healthCheck(): Promise<HealthCheckResponseDTO> {
-    const isCircleServiceRunning = await this.circleService.checkCircleHealth();
-    if (isCircleServiceRunning) {
-      return {
-        status: HealthStatus.OK,
-      };
-    } else {
-      return {
-        status: HealthStatus.SERVICE_DOWN,
-      };
-    }
-  }
 
   @Get("/wallets/consumers/:consumerID")
   @ApiOperation({ summary: "Get consumer's wallet ID" })
