@@ -226,7 +226,6 @@ export class VerificationService {
         documentVerificationStatus: result.status,
       },
     };
-    // Do we need to remove update from this one too?
     await this.consumerService.updateConsumer(newConsumerData);
 
     if (
