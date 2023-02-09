@@ -64,7 +64,6 @@ export class VerificationService {
       sessionKey,
       consumerInformation,
     );
-
     const newConsumerData: ConsumerProps = {
       ...consumer.props,
       address: consumerInformation.address,
