@@ -95,10 +95,7 @@ describe("Onboarding consumer flow", () => {
     expect(addHandleResponse.data.handle).toBe(handle);
 
     // KYC Check flow
-    const getSessionKey = await testUtils.post("/v1/verify/session", {});
-    expect(getSessionKey.status).toBe(201);
-    const sessionKey = getSessionKey.data;
-    const kycCheckResponse = await testUtils.post("/v1/verify/consumerinfo?sessionKey=" + sessionKey, {
+    const consumerUpdateResponse = await testUtils.patch("/v1/consumers", {
       firstName: "John",
       lastName: "Doe",
       dateOfBirth: "1990-01-01",
@@ -111,6 +108,12 @@ describe("Onboarding consumer flow", () => {
         postalCode: "123456",
       },
     });
+    expect(consumerUpdateResponse.status).toBe(200);
+
+    const getSessionKey = await testUtils.post("/v1/verify/session", {});
+    expect(getSessionKey.status).toBe(201);
+    const sessionKey = getSessionKey.data;
+    const kycCheckResponse = await testUtils.post("/v1/verify/consumer?sessionKey=" + sessionKey, {});
 
     expect(kycCheckResponse.status).toBe(200);
     expect(kycCheckResponse.data.status).toBe("Approved");
