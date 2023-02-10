@@ -87,7 +87,7 @@ describe("BubbleWorkflowControllerTests", () => {
       });
     });
 
-    it("should forwards the 'payrollDays' in request to the BubbleService", async () => {
+    it("should forward the 'payrollDates' in request to the BubbleService", async () => {
       const requestBody = {
         bubbleID: "bubbleID",
         logoURI: "logoURI",

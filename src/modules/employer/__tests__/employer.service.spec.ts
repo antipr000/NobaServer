@@ -87,6 +87,38 @@ describe("EmployerServiceTests", () => {
       });
     });
 
+    it("should create an employer with no payroll dates", async () => {
+      const employer = getRandomEmployer();
+      delete employer.payrollDates;
+      when(employerRepo.createEmployer(anything())).thenResolve(employer);
+
+      const createdEmployer = await employerService.createEmployer({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        bubbleID: employer.bubbleID,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+      });
+
+      expect(createdEmployer).toEqual(employer);
+    });
+
+    it("should create an employer with empty payroll dates", async () => {
+      const employer = getRandomEmployer();
+      employer.payrollDates = [];
+      when(employerRepo.createEmployer(anything())).thenResolve(employer);
+
+      const createdEmployer = await employerService.createEmployer({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        bubbleID: employer.bubbleID,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+      });
+
+      expect(createdEmployer).toEqual(employer);
+    });
+
     it("should set default 'leadDays' as '1' if not specified", async () => {
       const employer = getRandomEmployer();
       when(employerRepo.createEmployer(anything())).thenResolve(employer);
