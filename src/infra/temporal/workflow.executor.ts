@@ -1,12 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { NobaWorkflowConfig } from "../../config/configtypes/NobaWorkflowConfig";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import {
-  WorkflowClient as TemporalWorkflowClient,
-  Connection as TemporalConnection,
-  TLSConfig,
-  Connection,
-} from "@temporalio/client";
+import { WorkflowClient, TLSConfig, Connection } from "@temporalio/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NOBA_WORKFLOW_CONFIG_KEY } from "../../config/ConfigurationUtils";
@@ -23,7 +18,7 @@ export class WorkflowExecutor {
   private static HEALTH_CHECK_WORKFLOW_NAME = "HealthCheck";
   private workflowConfigs: NobaWorkflowConfig;
   private connection: Connection;
-  private client: TemporalWorkflowClient;
+  private client: WorkflowClient;
 
   constructor(
     customConfigService: CustomConfigService,
@@ -32,7 +27,7 @@ export class WorkflowExecutor {
     this.workflowConfigs = customConfigService.get<NobaWorkflowConfig>(NOBA_WORKFLOW_CONFIG_KEY);
   }
 
-  private async init(workflowName: String) {
+  private async init(workflowName: string) {
     let attemptCount = 1;
     if (!this.client) {
       while (attemptCount <= WorkflowExecutor.CONNECTION_ATTEMPTS) {
@@ -50,13 +45,13 @@ export class WorkflowExecutor {
           this.logger.info(
             `Connecting to Temporal instance at ${this.workflowConfigs.clientUrl} for workflow ${workflowName}`,
           );
-          this.connection = await TemporalConnection.connect({
+          this.connection = await Connection.connect({
             tls: tlsSettings,
             address: this.workflowConfigs.clientUrl,
             connectTimeout: this.workflowConfigs.connectionTimeoutInMs,
           });
 
-          this.client = new TemporalWorkflowClient({
+          this.client = new WorkflowClient({
             connection: this.connection,
             namespace: this.workflowConfigs.namespace,
           });
