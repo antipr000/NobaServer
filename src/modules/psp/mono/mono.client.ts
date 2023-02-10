@@ -195,7 +195,7 @@ export class MonoClient implements IClient {
     } catch (err) {
       if (err.response?.status == 422) {
         this.logger.error(`Mono transfer failed for Transaction validation: ${JSON.stringify(err.response.data)}`);
-        const transactionEvent: InputTransactionEvent = {
+        const transactionEvent = {
           transactionID: request.transactionID, // assume result is in the database
           message: "Mono transfer failed for Transaction validation",
           details: err.response.data,
