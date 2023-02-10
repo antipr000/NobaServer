@@ -193,7 +193,7 @@ export class MonoClient implements IClient {
         transferID: transferResponse.id,
       };
     } catch (err) {
-      if (err.response?.status == 422) {
+      if (err.response?.status == 422 || err.response?.status == 400) {
         this.logger.error(`Mono transfer failed for Transaction validation: ${JSON.stringify(err.response.data)}`);
         const transactionEvent = {
           transactionID: request.transactionID, // assume result is in the database
@@ -211,9 +211,15 @@ export class MonoClient implements IClient {
             requestBody,
           )}`,
         );
+        const transactionEvent = {
+          transactionID: request.transactionID, // assume result is in the database
+          message: "Mono transfer failed for Transaction validation",
+          details: err.response.data,
+          internal: true,
+        };
         throw new MonoClientException({
           errorCode: MonoClientErrorCode.UNKNOWN,
-          message: "Unknown error while transferring funds from Mono",
+          message: JSON.stringify(transactionEvent),
         });
       }
     }
