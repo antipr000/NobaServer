@@ -1,39 +1,40 @@
+import { anything, instance, when } from "ts-mockito";
+
 class MockTemporalWorkflowClient {}
 
-const healthServiceCheck = jest.fn(async request => {
+const mockHealthServiceCheck = jest.fn(async request => {
   return { status: 2 };
 });
 class MockTemporalHealthService {
-  constructor() {
-    console.log("MockTemporalHealthService.constructor");
-  }
-  check = healthServiceCheck;
+  check = mockHealthServiceCheck;
 }
 
-class MockTemporalConnection {
+const mockTemporalConn = jest.fn(async options => {
+  return mockTemporalConnection;
+});
+
+const mockTemporalConnection = class MockTemporalConnection {
   public static healthService = new MockTemporalHealthService();
-  static async connect(options?): Promise<MockTemporalConnection> {
-    console.log("MockTemporalConnection.connect");
-    return this;
-  }
-}
+  static connect = mockTemporalConn;
+};
+
+class MockTLSConfig {}
 
 jest.mock("@temporalio/client", () => {
   return {
-    Connection: MockTemporalConnection,
+    Connection: mockTemporalConnection,
     WorkflowClient: MockTemporalWorkflowClient,
-    HealthService: MockTemporalHealthService,
+    HealthService: mockHealthServiceCheck,
+    TLSConfig: MockTLSConfig,
   };
 });
 
 import { Test, TestingModule } from "@nestjs/testing";
-//import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { WorkflowExecutor } from "../workflow.executor";
-import { when } from "ts-mockito";
+
 import { HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
-//import * as mockTemporal from "@temporalio/client";
 
 describe("WorkflowExecutor", () => {
   //let app;
@@ -73,15 +74,28 @@ describe("WorkflowExecutor", () => {
     //app.close();
   });
 
-  it("Should perform a health check", async () => {
-    // How to override mocks here for returning different health values?
-    //when(mockHealthService.check({})).thenResolve({ status: 1 });
-    //const mockHealthService = new MockTemporalHealthService();
-    healthServiceCheck.mockResolvedValue({ status: 2 });
-    //const response = await mockHealthService.check({});
-    //console.log("response", JSON.stringify(response));
+  describe("getHealth", () => {
+    it("Should perform a successful health check", async () => {
+      mockHealthServiceCheck.mockResolvedValue({ status: 1 });
 
-    const health = await workflowExecutor.getHealth();
-    expect(health).toEqual({ status: HealthCheckStatus.OK });
+      const health = await workflowExecutor.getHealth();
+      expect(health).toEqual({ status: HealthCheckStatus.OK });
+    });
+
+    it("Should fail a health check", async () => {
+      mockHealthServiceCheck.mockResolvedValue({ status: 2 });
+
+      const health = await workflowExecutor.getHealth();
+      expect(health).toEqual({ status: HealthCheckStatus.UNAVAILABLE });
+    });
+  });
+
+  describe("init", () => {
+    it("Should perform a successful initialization", async () => {
+      //healthServiceCheck.mockResolvedValue({ status: 1 });
+      //when(mockTemporalConn).thenThrow(new Error("This is an error"));
+      //const health = await workflowExecutor.getHealth();
+      //expect(health).toEqual({ status: HealthCheckStatus.OK });
+    });
   });
 });
