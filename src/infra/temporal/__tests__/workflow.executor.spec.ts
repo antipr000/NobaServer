@@ -1,14 +1,19 @@
 class MockTemporalWorkflowClient {}
 
+const healthServiceCheck = jest.fn(async request => {
+  return { status: 2 };
+});
 class MockTemporalHealthService {
-  async check(request?) {
-    return { status: 1 };
+  constructor() {
+    console.log("MockTemporalHealthService.constructor");
   }
+  check = healthServiceCheck;
 }
 
 class MockTemporalConnection {
   public static healthService = new MockTemporalHealthService();
   static async connect(options?): Promise<MockTemporalConnection> {
+    console.log("MockTemporalConnection.connect");
     return this;
   }
 }
@@ -28,7 +33,7 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { WorkflowExecutor } from "../workflow.executor";
 import { when } from "ts-mockito";
 import { HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
-import * as mockTemporal from "@temporalio/client";
+//import * as mockTemporal from "@temporalio/client";
 
 describe("WorkflowExecutor", () => {
   //let app;
@@ -70,6 +75,11 @@ describe("WorkflowExecutor", () => {
 
   it("Should perform a health check", async () => {
     // How to override mocks here for returning different health values?
+    //when(mockHealthService.check({})).thenResolve({ status: 1 });
+    //const mockHealthService = new MockTemporalHealthService();
+    healthServiceCheck.mockResolvedValue({ status: 2 });
+    //const response = await mockHealthService.check({});
+    //console.log("response", JSON.stringify(response));
 
     const health = await workflowExecutor.getHealth();
     expect(health).toEqual({ status: HealthCheckStatus.OK });

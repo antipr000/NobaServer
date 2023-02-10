@@ -91,7 +91,7 @@ export class WorkflowExecutor {
     try {
       await this.init(WorkflowExecutor.HEALTH_CHECK_WORKFLOW_NAME);
       healthResponse = await this.connection.healthService.check({});
-
+      console.log("healthResponse", JSON.stringify(healthResponse));
       /*
         UNKNOWN = 0,
         SERVING = 1,
