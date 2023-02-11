@@ -27,55 +27,63 @@ export class WorkflowExecutor {
     this.workflowConfigs = customConfigService.get<NobaWorkflowConfig>(NOBA_WORKFLOW_CONFIG_KEY);
   }
 
-  private async init(workflowName: string) {
+  /**
+   * Initiates a connection to Temporal. Returns true if success or false if failure. The return
+   * value is
+   * @param workflowName
+   */
+  public async init(workflowName: string): Promise<boolean> {
+    // Already initialized
+    if (this.client) {
+      return true;
+    }
+
     let attemptCount = 1;
-    if (!this.client) {
-      while (attemptCount <= WorkflowExecutor.CONNECTION_ATTEMPTS) {
-        try {
-          const tlsSettings: TLSConfig =
-            this.workflowConfigs.temporalCloudCertificate && this.workflowConfigs.temporalCloudPrivateKey
-              ? {
-                  clientCertPair: {
-                    crt: Buffer.from(this.workflowConfigs.temporalCloudCertificate),
-                    key: Buffer.from(this.workflowConfigs.temporalCloudPrivateKey),
-                  },
-                }
-              : undefined;
+    while (attemptCount <= WorkflowExecutor.CONNECTION_ATTEMPTS) {
+      try {
+        const tlsSettings: TLSConfig =
+          this.workflowConfigs.temporalCloudCertificate && this.workflowConfigs.temporalCloudPrivateKey
+            ? {
+                clientCertPair: {
+                  crt: Buffer.from(this.workflowConfigs.temporalCloudCertificate),
+                  key: Buffer.from(this.workflowConfigs.temporalCloudPrivateKey),
+                },
+              }
+            : undefined;
 
-          this.logger.info(
-            `Connecting to Temporal instance at ${this.workflowConfigs.clientUrl} for workflow ${workflowName}`,
+        this.logger.info(
+          `Connecting to Temporal instance at ${this.workflowConfigs.clientUrl} for workflow ${workflowName}`,
+        );
+        this.connection = await Connection.connect({
+          tls: tlsSettings,
+          address: this.workflowConfigs.clientUrl,
+          connectTimeout: this.workflowConfigs.connectionTimeoutInMs,
+        });
+
+        this.client = new WorkflowClient({
+          connection: this.connection,
+          namespace: this.workflowConfigs.namespace,
+        });
+
+        return true;
+      } catch (error) {
+        if (attemptCount < WorkflowExecutor.CONNECTION_ATTEMPTS) {
+          this.reset();
+          this.logger.warn(
+            `Unable to connect to Temporal server for workflow ${workflowName}! Retrying in ${
+              WorkflowExecutor.RETRY_INTERVAL / 1000
+            } seconds (${attemptCount}/${WorkflowExecutor.CONNECTION_ATTEMPTS - 1})...`,
           );
-          this.connection = await Connection.connect({
-            tls: tlsSettings,
-            address: this.workflowConfigs.clientUrl,
-            connectTimeout: this.workflowConfigs.connectionTimeoutInMs,
-          });
-
-          this.client = new WorkflowClient({
-            connection: this.connection,
-            namespace: this.workflowConfigs.namespace,
-          });
-
-          break;
-        } catch (error) {
-          if (attemptCount < WorkflowExecutor.CONNECTION_ATTEMPTS) {
-            this.reset();
-            this.logger.warn(
-              `Unable to connect to Temporal server for workflow ${workflowName}! Retrying in ${
-                WorkflowExecutor.RETRY_INTERVAL / 1000
-              } seconds (${attemptCount}/${WorkflowExecutor.CONNECTION_ATTEMPTS - 1})...`,
-            );
-            await Utils.sleep(WorkflowExecutor.RETRY_INTERVAL);
-            attemptCount++;
-          } else {
-            this.logger.error(
-              formatAlertLog({
-                key: AlertKey.TEMPORAL_DOWN,
-                message: `Failed to connect to Temporal for workflow ${workflowName} with error: ${error}`,
-              }),
-            );
-            break;
-          }
+          await Utils.sleep(WorkflowExecutor.RETRY_INTERVAL);
+          attemptCount++;
+        } else {
+          this.logger.error(
+            formatAlertLog({
+              key: AlertKey.TEMPORAL_DOWN,
+              message: `Failed to connect to Temporal for workflow ${workflowName} with error: ${error}`,
+            }),
+          );
+          return false;
         }
       }
     }
@@ -89,17 +97,18 @@ export class WorkflowExecutor {
   async getHealth(): Promise<HealthCheckResponse> {
     let healthResponse;
     try {
-      await this.init(WorkflowExecutor.HEALTH_CHECK_WORKFLOW_NAME);
-      healthResponse = await this.connection.healthService.check({});
+      if (await this.init(WorkflowExecutor.HEALTH_CHECK_WORKFLOW_NAME)) {
+        healthResponse = await this.connection.healthService.check({});
 
-      /*
-        UNKNOWN = 0,
-        SERVING = 1,
-        NOT_SERVING = 2,
-        SERVICE_UNKNOWN = 3
-      */
+        /*
+          UNKNOWN = 0,
+          SERVING = 1,
+          NOT_SERVING = 2,
+          SERVICE_UNKNOWN = 3
+        */
 
-      if (healthResponse.status == 1) return { status: HealthCheckStatus.OK };
+        if (healthResponse.status == 1) return { status: HealthCheckStatus.OK };
+      }
     } catch (error) {
       this.logger.error("Temporal health check failed with response: " + JSON.stringify(healthResponse));
     }
@@ -112,15 +121,19 @@ export class WorkflowExecutor {
     workflowID: string,
     workflowParamsInOrder: any[],
   ): Promise<string> {
-    await this.init(workflowName); // No-op if already initialized
-
-    const handle = await this.client.start(workflowName, {
-      args: [...workflowParamsInOrder],
-      taskQueue: this.workflowConfigs.taskQueue,
-      workflowId: workflowID,
-    });
-    this.logger.info(`Started workflow "${workflowName}" with ID: "${handle.workflowId}"`);
-    return handle.workflowId;
+    // Returns true if already initialized or if successfully initialized
+    const initialized = await this.init(workflowName);
+    if (initialized) {
+      const handle = await this.client.start(workflowName, {
+        args: [...workflowParamsInOrder],
+        taskQueue: this.workflowConfigs.taskQueue,
+        workflowId: workflowID,
+      });
+      this.logger.info(`Started workflow "${workflowName}" with ID: "${handle.workflowId}"`);
+      return handle.workflowId;
+    } else {
+      throw Error("Unable to connect"); // Will be caught by executeWorkflowWrapper
+    }
   }
 
   private async executeWorkflowWrapper(
@@ -139,15 +152,6 @@ export class WorkflowExecutor {
       try {
         return await this.executeWorkflow(workflowName, workflowID, workflowParamsInOrder);
       } catch (error) {
-        if (error.message.includes("Failed to connect")) {
-          this.logger.error(
-            formatAlertLog({
-              key: AlertKey.TEMPORAL_DOWN,
-              message: `Unable to contact temporal server. Error: ${JSON.stringify(error)}`,
-            }),
-          );
-        }
-
         throw new ServiceException({
           message: `Unable to contact workflow server`,
           errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
