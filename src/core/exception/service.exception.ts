@@ -25,5 +25,7 @@ export class ServiceException extends BaseException<ServiceErrorCode> {
       severity: params.severity,
       error: params.error,
     });
+
+    Object.setPrototypeOf(this, ServiceException.prototype);
   }
 }

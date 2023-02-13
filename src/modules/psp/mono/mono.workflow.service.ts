@@ -17,7 +17,6 @@ export class MonoWorkflowService extends MonoService {
           message: e.message,
         });
       }
-
       throw e;
     }
   }

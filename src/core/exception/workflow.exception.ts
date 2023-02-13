@@ -19,5 +19,7 @@ export class WorkflowException extends BaseException<WorkflowErrorCode> {
       severity: params.severity,
       error: params.error,
     });
+
+    Object.setPrototypeOf(this, WorkflowException.prototype);
   }
 }

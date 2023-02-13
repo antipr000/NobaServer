@@ -337,6 +337,7 @@ describe("MonoWorkflowServiceTests", () => {
             encryptedAccountNumber: "encryptedAccountNumber",
           },
         };
+
         expect(monoWorkflowService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrow(
           WorkflowException,
         );
