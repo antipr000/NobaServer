@@ -33,6 +33,8 @@ import { KmsKeyType } from "../../../../config/configtypes/KmsConfigs";
 import { ServiceErrorCode, ServiceException } from "../../../../core/exception/service.exception";
 import { getRandomMonoTransaction } from "../test_utils/utils";
 import { MonoWorkflowService } from "../mono.workflow.service";
+import { MonoClientErrorCode, MonoClientException } from "../exception/mono.client.exception";
+import { WorkflowException } from "../../../../core/exception/workflow.exception";
 
 describe("MonoWorkflowServiceTests", () => {
   jest.setTimeout(20000);
@@ -292,6 +294,52 @@ describe("MonoWorkflowServiceTests", () => {
           expect(e.message).toEqual(expect.stringContaining("COP"));
           expect(e.message).toEqual(expect.stringContaining("USD"));
         }
+      });
+
+      it("should throw NobaWorkflowException if MonoClientException is thrown", async () => {
+        const monoTransaction: MonoTransaction = getRandomMonoTransaction(MonoTransactionType.WITHDRAWAL);
+        const consumer: Consumer = Consumer.createConsumer({
+          email: "test@noba.com",
+          id: "CCCCCCCCCC",
+          displayEmail: "test@noba.com",
+          handle: "test",
+          phone: "+1234567890",
+          firstName: "First",
+          lastName: "Last",
+        });
+        when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+
+        const decryptedAccountNumber = "1234567890";
+        when(kmsService.decryptString("encryptedAccountNumber", KmsKeyType.SSN)).thenResolve(decryptedAccountNumber);
+
+        when(monoClient.transfer(anything())).thenResolve({
+          batchID: monoTransaction.withdrawalDetails.batchID,
+          transferID: monoTransaction.withdrawalDetails.transferID,
+          state: "SUCCESS",
+          declinationReason: null,
+        });
+        when(monoRepo.createMonoTransaction(anything())).thenReject(
+          new MonoClientException({ errorCode: MonoClientErrorCode.TRANSFER_FAILED }),
+        );
+
+        const createMonoTransactionRequest: CreateMonoTransactionRequest = {
+          amount: 100,
+          currency: MonoCurrency.COP,
+          nobaTransactionID: monoTransaction.nobaTransactionID,
+          consumerID: consumer.props.id,
+          type: MonoTransactionType.WITHDRAWAL,
+          nobaPublicTransactionRef: "nobaTransactionRef",
+          withdrawalDetails: {
+            accountType: "accountType",
+            bankCode: "bankCode",
+            documentNumber: "documentNumber",
+            documentType: "documentType",
+            encryptedAccountNumber: "encryptedAccountNumber",
+          },
+        };
+        expect(monoWorkflowService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrow(
+          WorkflowException,
+        );
       });
 
       it("should throw ServiceException if the Consumer is not found", async () => {
