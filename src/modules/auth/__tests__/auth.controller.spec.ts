@@ -166,7 +166,7 @@ describe("AuthController", () => {
       when(mockConsumerAuthService.generateOTP(consumerEmail)).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
-      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
+      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(false);
 
       await authController.loginUser({
         emailOrPhone: consumerEmail,
@@ -182,7 +182,7 @@ describe("AuthController", () => {
       when(mockConsumerAuthService.generateOTP(consumerEmail)).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
-      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
+      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(false);
 
       await authController.loginUser({
         emailOrPhone: consumerEmail,
@@ -199,7 +199,7 @@ describe("AuthController", () => {
       when(mockConsumerAuthService.generateOTP(consumerEmail)).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
-      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
+      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(false);
 
       await authController.loginUser({
         emailOrPhone: consumerEmail,
@@ -215,7 +215,7 @@ describe("AuthController", () => {
       when(mockConsumerAuthService.generateOTP(consumerPhone)).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerPhone, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerPhone, otp.toString())).thenResolve();
-      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
+      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(false);
 
       await authController.loginUser({
         emailOrPhone: consumerPhone,
@@ -225,21 +225,22 @@ describe("AuthController", () => {
 
     it("should throw BadRequestException if phone used for noba admin for login", async () => {
       const phone = "+123424242";
-      const identityType: string = consumerIdentityIdentifier;
+      const identityType: string = nobaAdminIdentityIdentifier;
       const otp = 123456;
 
       when(mockConsumerAuthService.generateOTP(phone)).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(phone, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(phone, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
-      try {
-        await authController.loginUser({
-          emailOrPhone: phone,
-          identityType: identityType,
-        });
-      } catch (err) {
-        expect(err).toBeInstanceOf(BadRequestException);
-      }
+
+      expect(
+        async () =>
+          await authController.loginUser({
+            emailOrPhone: phone,
+            identityType: identityType,
+            autoCreate: false,
+          }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it("should throw 'ForbiddenException' if unregistered Consumer tries to log in with autoCreate set to false", async () => {
