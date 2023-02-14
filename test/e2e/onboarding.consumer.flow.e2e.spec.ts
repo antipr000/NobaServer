@@ -127,7 +127,7 @@ describe("Onboarding consumer flow", () => {
     const loginResponse = await testUtils.post("/v1/auth/login", {
       emailOrPhone: email,
       identityType: "CONSUMER",
-      autoCreate: true,
+      autoCreate: false,
     });
 
     expect(loginResponse.status).toBe(201);
