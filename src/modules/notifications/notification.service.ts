@@ -385,7 +385,7 @@ export class NotificationService {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
-            params: payload.transferCompletedParams,
+            params: payload.transferReceivedParams,
           }),
         );
         break;
