@@ -23,6 +23,7 @@ export enum NotificationEventType {
   SEND_WITHDRAWAL_FAILED_EVENT = "withdrawal.failed",
   SEND_TRANSFER_COMPLETED_EVENT = "transfer.completed",
   SEND_TRANSFER_FAILED_EVENT = "transfer.failed",
+  SEND_TRANSFER_RECEIVED_EVENT = "transfer.received",
   SEND_COLLECTION_LINK_EVENT = "collection.link",
   SEND_COLLECTION_COMPLETED_EVENT = "collection.completed",
   SEND_EMPLOYER_REQUEST_EVENT = "employee.request",
@@ -75,4 +76,5 @@ export const preferredNotificationMedium = {
   [NotificationEventType.SEND_COLLECTION_LINK_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT]: [NotificationEventHandler.EMAIL],
 };

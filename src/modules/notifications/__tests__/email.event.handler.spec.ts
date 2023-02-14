@@ -702,6 +702,46 @@ describe("EmailEventHandler", () => {
     });
   });
 
+  it("should call eventHandler with SendTransferReceived event", async () => {
+    const payload = new SendTransferCompletedEvent({
+      email: "fake+user@noba.com",
+      name: "First",
+      handle: "fake-handle",
+      params: {
+        ...getTransactionParams(WorkflowName.WALLET_TRANSFER),
+        creditConsumer_firstName: "Justin",
+        creditConsumer_lastName: "Ashworth",
+        creditConsumer_handle: "justin",
+        debitConsumer_handle: "gal",
+      },
+      locale: "en",
+    });
+
+    await eventHandler.sendTransferReceivedEvent(payload);
+
+    const [emailRequest] = capture(emailClient.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.TRANSFER_RECEIVED_EMAIL["en"],
+      dynamicTemplateData: {
+        creditConsumer_firstName: payload.params.creditConsumer_firstName,
+        creditConsumer_lastName: payload.params.creditConsumer_lastName,
+        debitConsumer_handle: payload.params.debitConsumer_handle,
+        creditConsumer_handle: payload.params.creditConsumer_handle,
+        firstName: payload.name,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: "USDC",
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: "USDC",
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+      },
+    });
+  });
+
   it("should call eventHandler with SendTransferFailed event", async () => {
     const payload = new SendTransferFailedEvent({
       email: "fake+user@noba.com",
