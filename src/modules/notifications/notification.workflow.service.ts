@@ -80,8 +80,18 @@ export class NotificationWorkflowService {
         payload = prepareNotificationPayload(consumer, {
           transferCompletedParams: transactionPayload,
         });
-        // TODO: We need a different template for receiver so they also get a notification
         await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT, payload);
+        const creditConsumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
+        const transferReceivedPayload =
+          this.transactionNotificationPayloadMapper.toTransferReceivedNotificationParameters(
+            transaction,
+            consumer,
+            creditConsumer,
+          );
+        payload = prepareNotificationPayload(creditConsumer, {
+          transferReceivedParams: transferReceivedPayload,
+        });
+        await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.TRANSFER_FAILED_EVENT:
         consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
@@ -91,9 +101,7 @@ export class NotificationWorkflowService {
         await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_FAILED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.COLLECTION_COMPLETED_EVENT:
-        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
-        payload = prepareNotificationPayload(consumer, {});
-        await this.notificationService.sendNotification(NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT, payload);
+        // No need to send email for now as we are already sending deposit completed email
         break;
       default:
         this.logger.error(

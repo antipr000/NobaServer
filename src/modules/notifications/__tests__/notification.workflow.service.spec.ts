@@ -186,14 +186,31 @@ describe("NotificationService", () => {
         consumer2,
       );
 
+      const transferReceivedPayload = transactionNotificationMapper.toTransferReceivedNotificationParameters(
+        transaction,
+        consumer,
+        consumer2,
+      );
+
       const notificationPayload = prepareNotificationPayload(consumer, {
         transferCompletedParams: transactionNotificationPayload,
+      });
+
+      const creditSideNotificationPayload = prepareNotificationPayload(consumer2, {
+        transferReceivedParams: transferReceivedPayload,
       });
 
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
           deepEqual(notificationPayload),
+        ),
+      ).once();
+
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT,
+          deepEqual(creditSideNotificationPayload),
         ),
       ).once();
     });

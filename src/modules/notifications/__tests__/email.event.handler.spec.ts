@@ -35,6 +35,7 @@ import { SendCollectionCompletedEvent } from "../events/SendCollectionCompletedE
 import { SendEmployerRequestEvent } from "../events/SendEmployerRequestEvent";
 import { WorkflowName } from "../../../modules/transaction/domain/Transaction";
 import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
+import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
 
 describe("EmailEventHandler", () => {
   let currencyService: CurrencyService;
@@ -689,6 +690,50 @@ describe("EmailEventHandler", () => {
         creditConsumer_lastName: payload.params.creditConsumer_lastName,
         debitConsumer_handle: payload.params.debitConsumer_handle,
         creditConsumer_handle: payload.params.creditConsumer_handle,
+        firstName: payload.name,
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitCurrency: "USDC",
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditCurrency: "USDC",
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+      },
+    });
+  });
+
+  it("should call eventHandler with SendTransferReceived event", async () => {
+    const payload = new SendTransferReceivedEvent({
+      email: "fake+user@noba.com",
+      name: "First",
+      handle: "fake-handle",
+      params: {
+        ...getTransactionParams(WorkflowName.WALLET_TRANSFER),
+        creditConsumer_firstName: "Justin",
+        creditConsumer_lastName: "Ashworth",
+        creditConsumer_handle: "justin",
+        debitConsumer_handle: "gal",
+        debitConsumer_firstName: "Gal",
+        debitConsumer_lastName: "Ben Chanoch",
+      },
+      locale: "en",
+    });
+
+    await eventHandler.sendTransferReceivedEvent(payload);
+
+    const [emailRequest] = capture(emailClient.sendEmail).last();
+    expect(emailRequest).toStrictEqual({
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.TRANSFER_RECEIVED_EMAIL["en"],
+      dynamicTemplateData: {
+        creditConsumer_firstName: payload.params.creditConsumer_firstName,
+        creditConsumer_lastName: payload.params.creditConsumer_lastName,
+        debitConsumer_handle: payload.params.debitConsumer_handle,
+        creditConsumer_handle: payload.params.creditConsumer_handle,
+        debitConsumer_firstName: payload.params.debitConsumer_firstName,
+        debitConsumer_lastName: payload.params.debitConsumer_lastName,
         firstName: payload.name,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
         debitCurrency: "USDC",
