@@ -257,6 +257,21 @@ describe("AuthController", () => {
       ).rejects.toThrow(ForbiddenException);
     });
 
+    it("should throw 'ForbiddenException' if registered Consumer tries to log in with autoCreate set to true", async () => {
+      const unregisteredConsumer = "rosie@noba.com";
+      const identityType: string = consumerIdentityIdentifier;
+
+      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
+      expect(
+        async () =>
+          await authController.loginUser({
+            emailOrPhone: unregisteredConsumer,
+            identityType: identityType,
+            autoCreate: true,
+          }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
     it("should throw 'ForbiddenException' if unregistered Admin tries to login as 'NOBA_ADMIN'", async () => {
       const unregisteredAdminEmail = "admin@noba.com";
       const identityType: string = nobaAdminIdentityIdentifier;
