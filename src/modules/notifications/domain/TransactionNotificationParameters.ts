@@ -43,6 +43,8 @@ export interface TransferReceivedNotificationParameters extends TransactionParam
   creditConsumer_lastName: string;
   debitConsumer_handle: string;
   creditConsumer_handle: string;
+  debitConsumer_firstName: string;
+  debitConsumer_lastName: string;
 }
 
 export interface TransferFailedNotificationParameters extends TransactionParameters {
@@ -131,6 +133,8 @@ export class TransactionNotificationPayloadMapper {
       creditConsumer_lastName: creditConsumer.props.lastName,
       creditConsumer_handle: creditConsumer.props.handle,
       debitConsumer_handle: debitConsumer.props.handle,
+      debitConsumer_firstName: debitConsumer.props.firstName,
+      debitConsumer_lastName: debitConsumer.props.lastName,
     };
   }
 

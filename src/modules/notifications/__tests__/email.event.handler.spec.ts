@@ -35,6 +35,7 @@ import { SendCollectionCompletedEvent } from "../events/SendCollectionCompletedE
 import { SendEmployerRequestEvent } from "../events/SendEmployerRequestEvent";
 import { WorkflowName } from "../../../modules/transaction/domain/Transaction";
 import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
+import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
 
 describe("EmailEventHandler", () => {
   let currencyService: CurrencyService;
@@ -703,7 +704,7 @@ describe("EmailEventHandler", () => {
   });
 
   it("should call eventHandler with SendTransferReceived event", async () => {
-    const payload = new SendTransferCompletedEvent({
+    const payload = new SendTransferReceivedEvent({
       email: "fake+user@noba.com",
       name: "First",
       handle: "fake-handle",
@@ -713,6 +714,8 @@ describe("EmailEventHandler", () => {
         creditConsumer_lastName: "Ashworth",
         creditConsumer_handle: "justin",
         debitConsumer_handle: "gal",
+        debitConsumer_firstName: "Gal",
+        debitConsumer_lastName: "Ben Chanoch",
       },
       locale: "en",
     });
@@ -729,6 +732,8 @@ describe("EmailEventHandler", () => {
         creditConsumer_lastName: payload.params.creditConsumer_lastName,
         debitConsumer_handle: payload.params.debitConsumer_handle,
         creditConsumer_handle: payload.params.creditConsumer_handle,
+        debitConsumer_firstName: payload.params.debitConsumer_firstName,
+        debitConsumer_lastName: payload.params.debitConsumer_lastName,
         firstName: payload.name,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
         debitCurrency: "USDC",

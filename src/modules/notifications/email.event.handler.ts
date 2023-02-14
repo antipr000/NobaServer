@@ -481,6 +481,8 @@ export class EmailEventHandler {
       dynamicTemplateData: {
         creditConsumer_firstName: payload.params.creditConsumer_firstName,
         creditConsumer_lastName: payload.params.creditConsumer_lastName,
+        debitConsumer_firstName: payload.params.debitConsumer_firstName,
+        debitConsumer_lastName: payload.params.debitConsumer_lastName,
         debitConsumer_handle: payload.params.debitConsumer_handle,
         creditConsumer_handle: payload.params.creditConsumer_handle,
         firstName: payload.name,
