@@ -167,8 +167,14 @@ export class ConsumerService {
     return (await this.consumerRepo.isHandleTaken(handle)) === false;
   }
 
-  private generateOTP(): number {
-    return this.otpOverride ?? Utils.generateOTP();
+  generateOTP(email?: string): number {
+    if (this.otpOverride) {
+      return this.otpOverride;
+    } else if (email === Utils.TEST_USER_EMAIL) {
+      return Utils.get6DigitDate();
+    } else {
+      return Utils.generateOTP();
+    }
   }
 
   // get's consumer object if consumer already exists, otherwise creates a new consumer if createIfNotExists is true
@@ -275,7 +281,7 @@ export class ConsumerService {
   }
 
   async sendOtpToEmail(email: string, consumer: Consumer) {
-    const otp = this.generateOTP();
+    const otp = this.generateOTP(consumer.props.email);
 
     await this.otpService.saveOTP(email, consumerIdentityIdentifier, otp);
 
@@ -566,7 +572,7 @@ export class ConsumerService {
     walletAddress: string,
     notificationMethod: NotificationMethod = NotificationMethod.EMAIL,
   ): Promise<void> {
-    const otp = this.generateOTP();
+    const otp = this.generateOTP(consumer.props.email);
 
     // Set otp reference to consumer email if notification method is email, else set to phone number
     const otpReference = notificationMethod === NotificationMethod.EMAIL ? consumer.props.email : consumer.props.phone;

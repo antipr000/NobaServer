@@ -1,6 +1,8 @@
 import { randomBytes, randomUUID } from "crypto"; // built-in node crypto, not from npm
 import { customAlphabet } from "nanoid";
 export class Utils {
+  static TEST_USER_EMAIL = "rosie@noba.com";
+
   static sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
   static getUsernameFromNameParts(firstName: string, lastName: string): string {
@@ -75,6 +77,15 @@ export class Utils {
 
   static generateOTP(): number {
     return Math.floor(100000 + Math.random() * 900000);
+  }
+
+  static get6DigitDate(): number {
+    const date = new Date();
+    return Number(
+      date.getFullYear().toString().substring(2, 4) +
+        (date.getMonth() + 1).toString().padStart(2, "0") +
+        date.getDate().toString().padStart(2, "0"),
+    );
   }
 
   static stripSpaces(value: string): string {

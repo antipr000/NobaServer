@@ -264,6 +264,13 @@ describe("Utils", () => {
     });
   });
 
+  describe("get6DigitDate", () => {
+    it("Should generate a 6 digit date format", () => {
+      jest.spyOn(Date, "now").mockReturnValueOnce(Date.parse("2023-02-14"));
+      expect(Utils.get6DigitDate()).toEqual(230214);
+    });
+  });
+
   describe("isValidEmail", () => {
     it("Should return true for valid email formats", () => {
       const validEmails = [

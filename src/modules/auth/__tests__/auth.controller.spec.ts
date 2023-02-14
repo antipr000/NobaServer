@@ -147,7 +147,7 @@ describe("AuthController", () => {
       const identityType: string = nobaAdminIdentityIdentifier;
       const otp = 123456;
 
-      when(mockAdminAuthService.generateOTP()).thenReturn(otp);
+      when(mockAdminAuthService.generateOTP(adminEmail)).thenReturn(otp);
       when(mockAdminAuthService.saveOtp(adminEmail, otp)).thenResolve();
       when(mockAdminAuthService.sendOtp(adminEmail, otp.toString())).thenResolve();
       when(mockAdminAuthService.verifyUserExistence(adminEmail)).thenResolve(true);
@@ -163,7 +163,7 @@ describe("AuthController", () => {
       const identityType: string = consumerIdentityIdentifier;
       const otp = 123456;
 
-      when(mockConsumerAuthService.generateOTP()).thenReturn(otp);
+      when(mockConsumerAuthService.generateOTP(consumerEmail)).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
@@ -179,7 +179,7 @@ describe("AuthController", () => {
       const identityType: string = consumerIdentityIdentifier;
       const otp = 123456;
 
-      when(mockConsumerAuthService.generateOTP()).thenReturn(otp);
+      when(mockConsumerAuthService.generateOTP(consumerEmail)).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
@@ -196,7 +196,7 @@ describe("AuthController", () => {
       const identityType: string = consumerIdentityIdentifier;
       const otp = 123456;
 
-      when(mockConsumerAuthService.generateOTP()).thenReturn(otp);
+      when(mockConsumerAuthService.generateOTP(consumerEmail)).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
@@ -212,7 +212,7 @@ describe("AuthController", () => {
       const identityType: string = consumerIdentityIdentifier;
       const otp = 123456;
 
-      when(mockConsumerAuthService.generateOTP()).thenReturn(otp);
+      when(mockConsumerAuthService.generateOTP(consumerPhone)).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerPhone, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerPhone, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
@@ -228,7 +228,7 @@ describe("AuthController", () => {
       const identityType: string = consumerIdentityIdentifier;
       const otp = 123456;
 
-      when(mockConsumerAuthService.generateOTP()).thenReturn(otp);
+      when(mockConsumerAuthService.generateOTP(phone)).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(phone, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(phone, otp.toString())).thenResolve();
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);

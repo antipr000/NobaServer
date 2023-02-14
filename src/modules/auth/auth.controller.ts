@@ -130,7 +130,7 @@ export class AuthController {
       }
     }
 
-    const otp = authService.generateOTP();
+    const otp = authService.generateOTP(emailOrPhone);
 
     await authService.saveOtp(emailOrPhone, otp);
     await authService.sendOtp(emailOrPhone, otp.toString());
