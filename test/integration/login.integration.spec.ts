@@ -70,6 +70,7 @@ describe("Authentication", () => {
       const loginRequestBody: LoginRequestDTO = {
         emailOrPhone: consumerEmail,
         identityType: "CONSUMER",
+        autoCreate: true,
       };
 
       const loginSignature = computeSignature(timestamp, "POST", "/v1/auth/login", JSON.stringify(loginRequestBody));
@@ -101,7 +102,6 @@ describe("Authentication", () => {
         xNobaTimestamp: timestamp,
         requestBody: verifyOtpRequestBody,
       })) as LoginResponseDTO & ResponseStatus;
-      console.log(verifyOtpResponse);
 
       const accessToken = verifyOtpResponse.accessToken;
       const userId = verifyOtpResponse.userID;
@@ -126,6 +126,7 @@ describe("Authentication", () => {
 
     it("should be successful with different cases", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("TEsT+ConSUMer");
+
       let signature = computeSignature(
         timestamp,
         "POST",
@@ -177,6 +178,7 @@ describe("Authentication", () => {
         JSON.stringify({
           emailOrPhone: consumerEmail,
           identityType: "CONSUMER",
+          autoCreate: false,
         }),
       );
 
@@ -187,6 +189,7 @@ describe("Authentication", () => {
         requestBody: {
           emailOrPhone: consumerEmail,
           identityType: "CONSUMER",
+          autoCreate: false,
         },
       })) as LoginResponseDTO & ResponseStatus;
       expect(loginResponse.__status).toBe(201);
@@ -212,7 +215,6 @@ describe("Authentication", () => {
           identityType: "CONSUMER",
         },
       })) as LoginResponseDTO & ResponseStatus;
-      console.log(verifyOtpResponse);
 
       const accessToken = verifyOtpResponse.accessToken;
       const userId = verifyOtpResponse.userID;
