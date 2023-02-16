@@ -2,9 +2,10 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { DeviceVerificationResponseDTO } from "../models/DeviceVerificationResponseDTO";
+import type { DocumentVerificationResponseDTO } from "../models/DocumentVerificationResponseDTO";
 import type { DocumentVerificationResultDTO } from "../models/DocumentVerificationResultDTO";
-import type { IDVerificationRequestDTO } from "../models/IDVerificationRequestDTO";
 import type { IDVerificationURLResponseDTO } from "../models/IDVerificationURLResponseDTO";
+import type { SessionResponseDTO } from "../models/SessionResponseDTO";
 import type { VerificationResultDTO } from "../models/VerificationResultDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -13,36 +14,8 @@ import { request as __request } from "../core/request";
 
 export class VerificationService {
   /**
-   * Checks if verification service is up
-   * @returns any Service is up
-   * @throws ApiError
-   */
-  public static getVerificationStatus({
-    xNobaApiKey,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/v1/verify",
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
-    });
-  }
-
-  /**
    * Creates a new session for verification
-   * @returns string New session token
+   * @returns SessionResponseDTO New session token
    * @throws ApiError
    */
   public static createSession({
@@ -56,7 +29,7 @@ export class VerificationService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<string> {
+  }): CancelablePromise<SessionResponseDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/verify/session",
@@ -79,13 +52,11 @@ export class VerificationService {
   public static verifyConsumer({
     xNobaApiKey,
     sessionKey,
-    requestBody,
     xNobaSignature,
     xNobaTimestamp,
   }: {
     xNobaApiKey: string;
     sessionKey: string;
-    requestBody: IDVerificationRequestDTO;
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
@@ -94,7 +65,7 @@ export class VerificationService {
   }): CancelablePromise<VerificationResultDTO> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/v1/verify/consumerinfo",
+      url: "/v1/verify/consumer",
       headers: {
         "x-noba-api-key": xNobaApiKey,
         "x-noba-signature": xNobaSignature,
@@ -103,8 +74,6 @@ export class VerificationService {
       query: {
         sessionKey: sessionKey,
       },
-      body: requestBody,
-      mediaType: "application/json",
       errors: {
         400: `Invalid request parameters`,
       },
@@ -113,7 +82,7 @@ export class VerificationService {
 
   /**
    * Verifies consumer uploaded identification documents
-   * @returns string Document upload result
+   * @returns DocumentVerificationResponseDTO Document upload result
    * @throws ApiError
    */
   public static verifyDocument({
@@ -139,7 +108,7 @@ export class VerificationService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<string> {
+  }): CancelablePromise<DocumentVerificationResponseDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/verify/document",
@@ -204,10 +173,10 @@ export class VerificationService {
   public static getIdentityDocumentVerificationUrl({
     xNobaApiKey,
     sessionKey,
+    locale,
     requestPoa,
     requestSelfie,
     requestBack,
-    locale,
     xNobaSignature,
     xNobaTimestamp,
   }: {
@@ -216,6 +185,10 @@ export class VerificationService {
      * Unique verification key for this session
      */
     sessionKey: string;
+    /**
+     * Unique verification key for this session
+     */
+    locale: "en-us" | "es-419";
     /**
      * Request proof of address
      */
@@ -228,10 +201,6 @@ export class VerificationService {
      * Request photo of back of ID
      */
     requestBack: boolean;
-    /**
-     * Unique verification key for this session
-     */
-    locale: "en-us" | "es-419";
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
@@ -248,10 +217,10 @@ export class VerificationService {
       },
       query: {
         sessionKey: sessionKey,
+        locale: locale,
         requestPOA: requestPoa,
         requestSelfie: requestSelfie,
         requestBack: requestBack,
-        locale: locale,
       },
       errors: {
         400: `Invalid request parameters`,

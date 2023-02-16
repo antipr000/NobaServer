@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { BlankResponseDTO } from "../models/BlankResponseDTO";
 import type { LoginRequestDTO } from "../models/LoginRequestDTO";
 import type { LoginResponseDTO } from "../models/LoginResponseDTO";
 import type { NewAccessTokenRequestDTO } from "../models/NewAccessTokenRequestDTO";
@@ -83,7 +84,7 @@ export class AuthenticationService {
 
   /**
    * Logs user in and sends one-time passcode (OTP) to the provided email address
-   * @returns any OTP successfully sent.
+   * @returns BlankResponseDTO OTP successfully sent.
    * @throws ApiError
    */
   public static loginUser({
@@ -99,7 +100,7 @@ export class AuthenticationService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<any> {
+  }): CancelablePromise<BlankResponseDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/auth/login",

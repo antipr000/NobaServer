@@ -122,15 +122,21 @@ export class AuthController {
     }
 
     const authService: AuthService = this.getAuthService(requestBody.identityType);
-
+    const userExists = await authService.verifyUserExistence(emailOrPhone);
     if (!autoCreate) {
-      const isLoginAllowed = await authService.verifyUserExistence(emailOrPhone);
-      if (!isLoginAllowed) {
+      // Signin flow
+      if (!userExists) {
         throw new ForbiddenException(`User "${emailOrPhone}" is not registered or not authorized to log in.`);
+      }
+    } else {
+      // Signup flow
+      {
+        if (userExists)
+          throw new ForbiddenException(`User "${emailOrPhone}" is already registered - use log in flow instead.`);
       }
     }
 
-    const otp = authService.generateOTP();
+    const otp = authService.generateOTP(emailOrPhone);
 
     await authService.saveOtp(emailOrPhone, otp);
     await authService.sendOtp(emailOrPhone, otp.toString());

@@ -40,7 +40,7 @@ export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) =
     // Dates should be in YYYY-MM-DD format
     payrollDates: Joi.array()
       .items(Joi.string().pattern(/^\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01])$/))
-      .required(),
+      .optional(),
   };
 
   const employerJoiSchema = Joi.object(employerJoiValidationKeys).options({
@@ -55,7 +55,9 @@ export const validateUpdateEmployerRequest = (employer: EmployerUpdateRequest) =
     logoURI: Joi.string().optional(),
     referralID: Joi.string().optional(),
     leadDays: Joi.number().optional(),
-    payrollDates: Joi.array().items(Joi.string()).optional(),
+    payrollDates: Joi.array()
+      .items(Joi.string().pattern(/^\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01])$/))
+      .optional(),
   };
 
   const employerJoiSchema = Joi.object(employerJoiValidationKeys).options({
@@ -75,7 +77,7 @@ export const validateEmployer = (employer: Employer) => {
     leadDays: Joi.number().required(),
     payrollDates: Joi.array()
       .items(Joi.string().pattern(/^\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01])$/))
-      .required(),
+      .optional(),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
   };

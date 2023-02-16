@@ -8,5 +8,6 @@ export type LinkedEmployerDTO = {
   allocationAmountInPesos: number;
   employerReferralID: string;
   leadDays: number;
-  payrollDays: Array<string>;
+  payrollDates: Array<string>;
+  nextPayrollDate: string;
 };

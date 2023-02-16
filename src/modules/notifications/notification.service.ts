@@ -35,6 +35,7 @@ import { SendPhoneVerificationCodeEvent } from "./events/SendPhoneVerificationCo
 import { SendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
 import { IPushTokenRepo } from "./repos/pushtoken.repo";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
+import { SendTransferReceivedEvent } from "./events/SendTransferReceivedEvent";
 
 @Injectable()
 export class NotificationService {
@@ -373,6 +374,18 @@ export class NotificationService {
             handle: payload.handle,
             locale: payload.locale,
             params: payload.transferCompletedParams,
+          }),
+        );
+        break;
+      case NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT:
+        this.eventEmitter.emitAsync(
+          eventName,
+          new SendTransferReceivedEvent({
+            email: payload.email,
+            name: payload.firstName,
+            handle: payload.handle,
+            locale: payload.locale,
+            params: payload.transferReceivedParams,
           }),
         );
         break;

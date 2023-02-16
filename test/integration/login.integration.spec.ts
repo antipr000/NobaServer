@@ -12,7 +12,13 @@
 import { setUpEnvironmentVariablesToLoadTheSourceCode } from "../setup";
 const port: number = setUpEnvironmentVariablesToLoadTheSourceCode();
 
-import { AuthenticationService, LoginRequestDTO, VerifyOtpRequestDTO, LoginResponseDTO } from "../api_client";
+import {
+  AuthenticationService,
+  LoginRequestDTO,
+  VerifyOtpRequestDTO,
+  LoginResponseDTO,
+  BlankResponseDTO,
+} from "../api_client";
 import { ConsumerService } from "../api_client/services/ConsumerService";
 import { ConsumerDTO } from "../api_client/models/ConsumerDTO";
 import { computeSignature, insertNobaAdmin, setAccessTokenForTheNextRequests, TEST_OTP, TEST_API_KEY } from "../common";
@@ -48,10 +54,10 @@ describe("Authentication", () => {
         identityType: "CONSUMER",
         autoCreate: true,
       };
-      const loginResponse = await AuthenticationService.loginUser({
+      const loginResponse = (await AuthenticationService.loginUser({
         requestBody: loginRequestBody,
         xNobaApiKey: TEST_API_KEY,
-      });
+      })) as LoginResponseDTO & ResponseStatus;
 
       expect(loginResponse.__status).toBe(201);
     });
@@ -64,16 +70,17 @@ describe("Authentication", () => {
       const loginRequestBody: LoginRequestDTO = {
         emailOrPhone: consumerEmail,
         identityType: "CONSUMER",
+        autoCreate: true,
       };
 
       const loginSignature = computeSignature(timestamp, "POST", "/v1/auth/login", JSON.stringify(loginRequestBody));
 
-      const loginResponse = await AuthenticationService.loginUser({
+      const loginResponse = (await AuthenticationService.loginUser({
         xNobaApiKey: TEST_API_KEY,
         xNobaSignature: loginSignature,
         xNobaTimestamp: timestamp,
         requestBody: loginRequestBody,
-      });
+      })) as LoginResponseDTO & ResponseStatus;
       expect(loginResponse.__status).toBe(201);
 
       const verifyOtpRequestBody: VerifyOtpRequestDTO = {
@@ -95,7 +102,6 @@ describe("Authentication", () => {
         xNobaTimestamp: timestamp,
         requestBody: verifyOtpRequestBody,
       })) as LoginResponseDTO & ResponseStatus;
-      console.log(verifyOtpResponse);
 
       const accessToken = verifyOtpResponse.accessToken;
       const userId = verifyOtpResponse.userID;
@@ -120,6 +126,7 @@ describe("Authentication", () => {
 
     it("should be successful with different cases", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("TEsT+ConSUMer");
+
       let signature = computeSignature(
         timestamp,
         "POST",
@@ -171,18 +178,20 @@ describe("Authentication", () => {
         JSON.stringify({
           emailOrPhone: consumerEmail,
           identityType: "CONSUMER",
+          autoCreate: false,
         }),
       );
 
-      const loginResponse = await AuthenticationService.loginUser({
+      const loginResponse = (await AuthenticationService.loginUser({
         xNobaApiKey: TEST_API_KEY,
         xNobaSignature: signature,
         xNobaTimestamp: timestamp,
         requestBody: {
           emailOrPhone: consumerEmail,
           identityType: "CONSUMER",
+          autoCreate: false,
         },
-      });
+      })) as LoginResponseDTO & ResponseStatus;
       expect(loginResponse.__status).toBe(201);
 
       signature = computeSignature(
@@ -206,7 +215,6 @@ describe("Authentication", () => {
           identityType: "CONSUMER",
         },
       })) as LoginResponseDTO & ResponseStatus;
-      console.log(verifyOtpResponse);
 
       const accessToken = verifyOtpResponse.accessToken;
       const userId = verifyOtpResponse.userID;
@@ -240,7 +248,7 @@ describe("Authentication", () => {
           identityType: "CONSUMR" as any,
         }),
       );
-      const loginResponse = await AuthenticationService.loginUser({
+      const loginResponse = (await AuthenticationService.loginUser({
         xNobaApiKey: TEST_API_KEY,
         xNobaSignature: signature,
         xNobaTimestamp: timestamp,
@@ -248,7 +256,7 @@ describe("Authentication", () => {
           emailOrPhone: consumerEmail,
           identityType: "CONSUMR" as any,
         },
-      });
+      })) as BlankResponseDTO & ResponseStatus;
       expect(loginResponse.__status).toBe(400);
     });
   });
@@ -289,7 +297,7 @@ describe("Authentication", () => {
           identityType: "CONSUMER",
         }),
       );
-      const consumerLoginResponse = await AuthenticationService.loginUser({
+      const consumerLoginResponse = (await AuthenticationService.loginUser({
         xNobaApiKey: TEST_API_KEY,
         xNobaSignature: signature,
         xNobaTimestamp: timestamp,
@@ -297,10 +305,10 @@ describe("Authentication", () => {
           emailOrPhone: consumerEmail,
           identityType: "CONSUMER",
         },
-      });
+      })) as BlankResponseDTO & ResponseStatus;
       expect(consumerLoginResponse.__status).toBe(201);
 
-      const adminWithSameConsumerEmailLogin = await AuthenticationService.loginUser({
+      const adminWithSameConsumerEmailLogin = (await AuthenticationService.loginUser({
         xNobaApiKey: TEST_API_KEY,
         xNobaSignature: signature,
         xNobaTimestamp: timestamp,
@@ -308,7 +316,7 @@ describe("Authentication", () => {
           emailOrPhone: consumerEmail,
           identityType: "NOBA_ADMIN",
         },
-      });
+      })) as BlankResponseDTO & ResponseStatus;
       expect(adminWithSameConsumerEmailLogin.__status).toBe(403);
     });
 

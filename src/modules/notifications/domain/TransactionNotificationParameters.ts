@@ -38,6 +38,15 @@ export interface TransferCompletedNotificationParameters extends TransactionPara
   creditConsumer_handle: string;
 }
 
+export interface TransferReceivedNotificationParameters extends TransactionParameters {
+  creditConsumer_firstName: string;
+  creditConsumer_lastName: string;
+  debitConsumer_handle: string;
+  creditConsumer_handle: string;
+  debitConsumer_firstName: string;
+  debitConsumer_lastName: string;
+}
+
 export interface TransferFailedNotificationParameters extends TransactionParameters {
   creditConsumer_firstName: string;
   creditConsumer_lastName: string;
@@ -109,6 +118,23 @@ export class TransactionNotificationPayloadMapper {
       creditConsumer_lastName: creditConsumer.props.lastName,
       creditConsumer_handle: creditConsumer.props.handle,
       debitConsumer_handle: debitConsumer.props.handle,
+    };
+  }
+
+  toTransferReceivedNotificationParameters(
+    transaction: Transaction,
+    debitConsumer: Consumer,
+    creditConsumer: Consumer,
+  ): TransferReceivedNotificationParameters {
+    const transactionParams = this.toTransactionParams(transaction);
+    return {
+      ...transactionParams,
+      creditConsumer_firstName: creditConsumer.props.firstName,
+      creditConsumer_lastName: creditConsumer.props.lastName,
+      creditConsumer_handle: creditConsumer.props.handle,
+      debitConsumer_handle: debitConsumer.props.handle,
+      debitConsumer_firstName: debitConsumer.props.firstName,
+      debitConsumer_lastName: debitConsumer.props.lastName,
     };
   }
 

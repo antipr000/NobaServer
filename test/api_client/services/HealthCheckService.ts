@@ -1,6 +1,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { HealthCheckResponseDTO } from "../models/HealthCheckResponseDTO";
+
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -8,13 +10,14 @@ import { request as __request } from "../core/request";
 export class HealthCheckService {
   /**
    * Checks if the Noba service is up and running
-   * @returns any Health status of the Noba service
+   * @returns HealthCheckResponseDTO Health status of the Noba service
    * @throws ApiError
    */
   public static appHealth({
     xNobaApiKey,
     xNobaSignature,
     xNobaTimestamp,
+    depth,
   }: {
     xNobaApiKey: string;
     xNobaSignature?: string;
@@ -22,7 +25,8 @@ export class HealthCheckService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<any> {
+    depth?: "SHALLOW" | "DEEP";
+  }): CancelablePromise<HealthCheckResponseDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/health",
@@ -30,6 +34,9 @@ export class HealthCheckService {
         "x-noba-api-key": xNobaApiKey,
         "x-noba-signature": xNobaSignature,
         "x-noba-timestamp": xNobaTimestamp,
+      },
+      query: {
+        depth: depth,
       },
     });
   }

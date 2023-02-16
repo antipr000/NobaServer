@@ -19,6 +19,7 @@ import { PspModule, PspWorkflowModule } from "./modules/psp/psp.module";
 import { PrivateAuthGuard } from "./modules/auth/private-auth.guard";
 import { NotificationWorkflowModule } from "./modules/notifications/notification.workflow.module";
 import { BubbleModule } from "./modules/bubble/bubble.module";
+import { TemporalModule } from "./infra/temporal/temporal.module";
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { BubbleModule } from "./modules/bubble/bubble.module";
     TransactionWorkflowModule,
     PspWorkflowModule,
     NotificationWorkflowModule,
+    TemporalModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],

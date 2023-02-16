@@ -25,6 +25,8 @@ import { getMockVerificationServiceWithDefaults } from "../modules/verification/
 import { getMockCircleServiceWithDefaults } from "../modules/psp/mocks/mock.circle.service";
 import { HealthCheckStatus } from "../core/domain/HealthCheckTypes";
 import { ALLOWED_DEPTH } from "../modules/common/dto/HealthCheckQueryDTO";
+import { WorkflowExecutor } from "../infra/temporal/workflow.executor";
+import { getMockWorkflowExecutorWithDefaults } from "../infra/temporal/mocks/mock.workflow.executor";
 
 describe("AppController", () => {
   let appController: AppController;
@@ -37,6 +39,7 @@ describe("AppController", () => {
   let mockMonoService: MonoService;
   let mockVerificationService: VerificationService;
   let mockCircleService: CircleService;
+  let mockWorkflowExecutor: WorkflowExecutor;
 
   beforeEach(async () => {
     appService = getMockAppServiceWithDefaults();
@@ -48,6 +51,7 @@ describe("AppController", () => {
     mockMonoService = getMockMonoServiceWithDefaults();
     mockVerificationService = getMockVerificationServiceWithDefaults();
     mockCircleService = getMockCircleServiceWithDefaults();
+    mockWorkflowExecutor = getMockWorkflowExecutorWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -89,6 +93,10 @@ describe("AppController", () => {
           provide: CircleService,
           useFactory: () => instance(mockCircleService),
         },
+        {
+          provide: WorkflowExecutor,
+          useFactory: () => instance(mockWorkflowExecutor),
+        },
       ],
     }).compile();
 
@@ -115,12 +123,15 @@ describe("AppController", () => {
       when(mockVerificationService.getHealth()).thenResolve({ status: HealthCheckStatus.OK });
       when(mockCircleService.checkCircleHealth()).thenResolve({ status: HealthCheckStatus.OK });
       when(mockMonoService.checkMonoHealth()).thenResolve({ status: HealthCheckStatus.OK });
+      when(mockWorkflowExecutor.getHealth()).thenResolve({ status: HealthCheckStatus.OK });
+
       const result = await appController.appHealth({ depth: ALLOWED_DEPTH.DEEP });
       expect(result).toStrictEqual({
         serverStatus: HealthCheckStatus.OK,
         sardineStatus: HealthCheckStatus.OK,
         circleStatus: HealthCheckStatus.OK,
         monoStatus: HealthCheckStatus.OK,
+        temporalStatus: HealthCheckStatus.OK,
       });
     });
 
@@ -128,6 +139,7 @@ describe("AppController", () => {
       when(mockVerificationService.getHealth()).thenResolve({ status: HealthCheckStatus.OK });
       when(mockCircleService.checkCircleHealth()).thenResolve({ status: HealthCheckStatus.UNAVAILABLE });
       when(mockMonoService.checkMonoHealth()).thenResolve({ status: HealthCheckStatus.OK });
+      when(mockWorkflowExecutor.getHealth()).thenResolve({ status: HealthCheckStatus.OK });
 
       const result = await appController.appHealth({ depth: ALLOWED_DEPTH.DEEP });
       expect(result).toStrictEqual({
@@ -135,6 +147,7 @@ describe("AppController", () => {
         sardineStatus: HealthCheckStatus.OK,
         circleStatus: HealthCheckStatus.UNAVAILABLE,
         monoStatus: HealthCheckStatus.OK,
+        temporalStatus: HealthCheckStatus.OK,
       });
     });
 
@@ -144,6 +157,7 @@ describe("AppController", () => {
       expect(result.circleStatus).toBeUndefined();
       expect(result.monoStatus).toBeUndefined();
       expect(result.sardineStatus).toBeUndefined();
+      expect(result.temporalStatus).toBeUndefined();
     });
   });
 

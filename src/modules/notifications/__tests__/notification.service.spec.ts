@@ -33,6 +33,7 @@ import { getMockPushTokenRepoWithDefaults } from "../mocks/mock.pushtoken.repo";
 import { ServiceException } from "../../../core/exception/service.exception";
 import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent";
 import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
+import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -283,6 +284,7 @@ describe("NotificationService", () => {
       NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT,
       NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT,
       NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
+      NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT,
       NotificationEventType.SEND_HARD_DECLINE_EVENT,
     ];
 
@@ -302,6 +304,7 @@ describe("NotificationService", () => {
       withdrawalFailedParams: {} as any,
       withdrawalInitiatedParams: {} as any,
       transferCompletedParams: {} as any,
+      transferReceivedParams: {} as any,
       sessionID: "fake-session-id",
       transactionID: "fake-transaction-id",
       paymentToken: "fake-payment-token",
@@ -471,6 +474,15 @@ describe("NotificationService", () => {
             handle: payload.handle,
             locale: payload.locale,
             params: payload.transferCompletedParams,
+          });
+          break;
+        case NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT:
+          data = new SendTransferReceivedEvent({
+            email: payload.email,
+            name: payload.firstName,
+            handle: payload.handle,
+            locale: payload.locale,
+            params: payload.transferReceivedParams,
           });
           break;
         case NotificationEventType.SEND_TRANSFER_FAILED_EVENT:

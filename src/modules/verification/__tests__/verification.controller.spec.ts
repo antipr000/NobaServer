@@ -78,23 +78,11 @@ describe("VerificationController", () => {
         email: "test@noba.com",
       });
 
-      when(
-        verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
-      ).thenResolve({
+      when(verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session")).thenResolve({
         status: KYCStatus.APPROVED,
       });
 
-      const result = await verificationController.verifyConsumer(
-        "test-session",
-        {
-          firstName: consumerInfo.firstName,
-          lastName: consumerInfo.lastName,
-          address: consumerInfo.address,
-          phoneNumber: consumerInfo.phoneNumber,
-          dateOfBirth: consumerInfo.dateOfBirth,
-        },
-        consumer,
-      );
+      const result = await verificationController.verifyConsumer("test-session", consumer);
 
       expect(result.status).toBe("Approved");
     });
@@ -120,23 +108,11 @@ describe("VerificationController", () => {
         email: "fake@noba.com",
       });
 
-      when(
-        verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
-      ).thenResolve({
+      when(verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session")).thenResolve({
         status: KYCStatus.REJECTED,
       });
 
-      const result = await verificationController.verifyConsumer(
-        "test-session",
-        {
-          firstName: consumerInfo.firstName,
-          lastName: consumerInfo.lastName,
-          address: consumerInfo.address,
-          phoneNumber: consumerInfo.phoneNumber,
-          dateOfBirth: consumerInfo.dateOfBirth,
-        },
-        consumer,
-      );
+      const result = await verificationController.verifyConsumer("test-session", consumer);
 
       expect(result.status).toBe("Rejected");
     });
@@ -162,23 +138,11 @@ describe("VerificationController", () => {
         email: "shadyemail@noba.com",
       });
 
-      when(
-        verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session", deepEqual(consumerInfo)),
-      ).thenResolve({
+      when(verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session")).thenResolve({
         status: KYCStatus.FLAGGED,
       });
 
-      const result = await verificationController.verifyConsumer(
-        "test-session",
-        {
-          firstName: consumerInfo.firstName,
-          lastName: consumerInfo.lastName,
-          address: consumerInfo.address,
-          phoneNumber: consumerInfo.phoneNumber,
-          dateOfBirth: consumerInfo.dateOfBirth,
-        },
-        consumer,
-      );
+      const result = await verificationController.verifyConsumer("test-session", consumer);
 
       expect(result.status).toBe("Pending");
     });

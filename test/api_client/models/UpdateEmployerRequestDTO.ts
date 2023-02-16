@@ -5,5 +5,5 @@
 export type UpdateEmployerRequestDTO = {
   logoURI?: string;
   leadDays?: number;
-  payrollDays?: Array<string>;
+  payrollDates?: Array<string>;
 };

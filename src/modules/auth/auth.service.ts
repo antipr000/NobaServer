@@ -93,8 +93,14 @@ export abstract class AuthService {
     });
   }
 
-  generateOTP(): number {
-    return this.otpOverride ?? Utils.generateOTP();
+  generateOTP(email?: string): number {
+    if (this.otpOverride) {
+      return this.otpOverride;
+    } else if (email === Utils.TEST_USER_EMAIL) {
+      return Utils.get6DigitDate();
+    } else {
+      return Utils.generateOTP();
+    }
   }
 
   async verifyUserExistence(emailOrPhone: string): Promise<boolean> {

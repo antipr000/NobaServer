@@ -223,6 +223,12 @@ describe("UserAuthService", () => {
         const otp = userAuthService.generateOTP();
         expect(otp).toBe(12345);
       });
+
+      it("should return an OTP of YYMMDD format for the test user", () => {
+        jest.spyOn(Date, "now").mockReturnValueOnce(Date.parse("2023-02-14"));
+        const otp = userAuthService.generateOTP(Utils.TEST_USER_EMAIL);
+        expect(otp).toBe(230214);
+      });
     });
 
     describe("sendOtp", () => {
@@ -332,6 +338,11 @@ describe("UserAuthService", () => {
     describe("generateOtp", () => {
       it("should return default otp as specified in the environment variables", () => {
         const otp = userAuthService.generateOTP();
+        expect(otp).toBe(222222);
+      });
+
+      it("should return default otp as specified in the environment variables even if test user", () => {
+        const otp = userAuthService.generateOTP(Utils.TEST_USER_EMAIL);
         expect(otp).toBe(222222);
       });
     });
