@@ -20,15 +20,18 @@ export class CircleClient implements IClient {
   private readonly circleApi: Circle;
   private readonly masterWalletID: string;
 
+  HOST = "172.31.8.170";
+  HTTP_PORT = "3128";
+  HTTPS_PORT = "3129";
   private httpsHttpAgent =
     getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
       ? null
-      : tunnel.httpsOverHttp({ proxy: { host: "172.31.8.170", port: "3128" } });
+      : tunnel.httpsOverHttp({ proxy: { host: this.HOST, port: this.HTTP_PORT } });
 
   private httpsHttpsAgent =
     getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
       ? null
-      : tunnel.httpsOverHttps({ proxy: { host: "172.31.8.170", port: "3129" } });
+      : tunnel.httpsOverHttps({ proxy: { host: this.HOST, port: this.HTTPS_PORT } });
 
   /* private axiosConfig: AxiosRequestConfig = {
     httpsAgent: this.httpsAgent,
@@ -43,10 +46,18 @@ export class CircleClient implements IClient {
 
   async getHealth(): Promise<HealthCheckResponse> {
     let response;
+
+    try {
+      response = await this.circleApi.health.ping();
+      this.logger.error(`Response 0: ${JSON.stringify(response, null, 1)}`);
+    } catch (e) {
+      this.logger.error(`Error 0: ${JSON.stringify(e, null, 1)}`);
+    }
+
     try {
       response = await this.circleApi.health.ping({
-        httpsAgent: tunnel.httpsOverHttps({ proxy: { host: "172.31.8.170", port: "3129" } }),
-        httpAgent: tunnel.httpsOverHttp({ proxy: { host: "172.31.8.170", port: "3128" } }),
+        httpsAgent: tunnel.httpsOverHttps({ proxy: { host: this.HOST, port: this.HTTPS_PORT } }),
+        httpAgent: tunnel.httpsOverHttp({ proxy: { host: this.HOST, port: this.HTTP_PORT } }),
       });
       this.logger.error(`Response 1: ${JSON.stringify(response, null, 1)}`);
     } catch (e) {
@@ -57,7 +68,7 @@ export class CircleClient implements IClient {
       response = await this.circleApi.health.ping({
         proxy: {
           protocol: "https",
-          host: "172.31.8.170",
+          host: this.HOST,
           port: 3129,
         },
       });
@@ -70,7 +81,7 @@ export class CircleClient implements IClient {
       response = await this.circleApi.health.ping({
         proxy: {
           protocol: "http",
-          host: "172.31.8.170",
+          host: this.HOST,
           port: 3128,
         },
       });
@@ -81,8 +92,8 @@ export class CircleClient implements IClient {
 
     try {
       response = await this.circleApi.health.ping({
-        httpsAgent: tunnel.httpOverHttps({ proxy: { host: "172.31.8.170", port: "3129" } }),
-        httpAgent: tunnel.httpOverHttp({ proxy: { host: "172.31.8.170", port: "3128" } }),
+        httpsAgent: tunnel.httpOverHttps({ proxy: { host: this.HOST, port: this.HTTPS_PORT } }),
+        httpAgent: tunnel.httpOverHttp({ proxy: { host: this.HOST, port: this.HTTP_PORT } }),
       });
       this.logger.error(`Response 4: ${JSON.stringify(response, null, 1)}`);
     } catch (e) {
@@ -91,7 +102,7 @@ export class CircleClient implements IClient {
 
     try {
       response = await this.circleApi.health.ping({
-        httpsAgent: tunnel.httpsOverHttp({ proxy: { host: "172.31.8.170", port: "3129" } }),
+        httpsAgent: tunnel.httpsOverHttp({ proxy: { host: this.HOST, port: this.HTTPS_PORT } }),
       });
       this.logger.error(`Response 5: ${JSON.stringify(response, null, 1)}`);
     } catch (e) {
@@ -100,7 +111,7 @@ export class CircleClient implements IClient {
 
     try {
       response = await this.circleApi.health.ping({
-        httpsAgent: tunnel.httpsOverHttp({ proxy: { host: "172.31.8.170", port: "3128" } }),
+        httpsAgent: tunnel.httpsOverHttp({ proxy: { host: this.HOST, port: this.HTTP_PORT } }),
       });
       this.logger.error(`Response 6: ${JSON.stringify(response, null, 1)}`);
     } catch (e) {
