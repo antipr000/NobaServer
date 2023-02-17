@@ -50,4 +50,4 @@ jobs:
           AWS_REGION: us-east-1
           AWS_DEFAULT_REGION: us-east-1
           DATABASE_URL: postgresql://e2e_user:pass@localhost:5456/Noba_E2E?connect_timeout=300
-        run: yarn test:integration
+        run: yarn test:integration assets --silent=False
