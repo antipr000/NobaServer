@@ -9,10 +9,8 @@ import { Employer } from "../../../modules/employer/domain/Employer";
 import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
 import { EmployerService } from "../../../modules/employer/employer.service";
 import { EmployeeService } from "../../../modules/employee/employee.service";
-import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
-import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { BubbleService } from "../bubble.service";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { BubbleClient } from "../bubble.client";
@@ -172,6 +170,36 @@ describe("BubbleServiceTests", () => {
       });
     });
 
+    it("should register an employer with specified maxAllocationPercent in Noba", async () => {
+      const employer: Employer = getRandomEmployer();
+      employer.maxAllocationPercent = 0.5;
+
+      when(employerService.createEmployer(anything())).thenResolve(employer);
+
+      const result = await bubbleService.registerEmployerInNoba({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+        payrollDates: employer.payrollDates,
+        maxAllocationPercent: employer.maxAllocationPercent,
+      });
+
+      expect(result).toEqual(employer.id);
+
+      const [propagatedEmployerToEmployerService] = capture(employerService.createEmployer).last();
+      expect(propagatedEmployerToEmployerService).toEqual({
+        name: employer.name,
+        bubbleID: employer.bubbleID,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+        payrollDates: employer.payrollDates,
+        maxAllocationPercent: employer.maxAllocationPercent,
+      });
+    });
+
     it("shouldn't forward 'leadDays' if not set in the request to register an employer in Noba", async () => {
       const employer: Employer = getRandomEmployer();
 
@@ -268,20 +296,27 @@ describe("BubbleServiceTests", () => {
   });
 
   describe("updateEmployerInNoba", () => {
-    it("should update the 'leadDays' of employer in Noba", async () => {
+    it("should update the 'leadDays' and 'maxAllocationPercent' of employer in Noba", async () => {
       const employer: Employer = getRandomEmployer();
       const updatedLeadDays = 10;
+      const updatedMaxAllocationPercent = 10;
 
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(employerService.updateEmployer(anyString(), anything())).thenResolve();
 
-      await bubbleService.updateEmployerInNoba(employer.referralID, { leadDays: updatedLeadDays });
+      await bubbleService.updateEmployerInNoba(employer.referralID, {
+        leadDays: updatedLeadDays,
+        maxAllocationPercent: updatedMaxAllocationPercent,
+      });
 
       const [propagatedEmployerIDToEmployerService, propagatedLeadDaysToEmployerService] = capture(
         employerService.updateEmployer,
       ).last();
       expect(propagatedEmployerIDToEmployerService).toEqual(employer.id);
-      expect(propagatedLeadDaysToEmployerService).toEqual({ leadDays: updatedLeadDays });
+      expect(propagatedLeadDaysToEmployerService).toEqual({
+        leadDays: updatedLeadDays,
+        maxAllocationPercent: updatedMaxAllocationPercent,
+      });
     });
 
     it("should update the 'payrollDays' of employer in Noba", async () => {

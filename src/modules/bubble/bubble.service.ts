@@ -52,7 +52,7 @@ export class BubbleService {
       referralID: request.referralID,
       logoURI: request.logoURI,
       bubbleID: request.bubbleID,
-      maxAllocationPercent: request.maxAllocationPercent,
+      ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
       ...(request.leadDays && { leadDays: request.leadDays }),
       ...(request.payrollDates && { payrollDates: request.payrollDates }),
     });

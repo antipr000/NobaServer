@@ -46,7 +46,7 @@ export class EmployerController {
       leadDays: employer.leadDays,
       payrollDates: payrollDatesAsc,
       nextPayrollDate: futurePayrollDates[0],
-      maxAllocationPercent: employer.maxAllocationPercent,
+      ...(employer.maxAllocationPercent && { maxAllocationPercent: employer.maxAllocationPercent }),
     };
   }
 }

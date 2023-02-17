@@ -86,6 +86,22 @@ describe("EmployerControllerTests", () => {
       });
     });
 
+    it("should return maxAllocationPercent when available", async () => {
+      const employer: Employer = getRandomEmployer();
+      employer.maxAllocationPercent = 20;
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+
+      const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
+      expect(foundEmployer).toEqual({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        leadDays: employer.leadDays,
+        payrollDates: employer.payrollDates,
+        maxAllocationPercent: employer.maxAllocationPercent,
+      });
+    });
+
     it("should return the employer by referral ID with next payroll date before lead days", async () => {
       const employer: Employer = getRandomEmployer();
       employer.payrollDates = ["2020-04-01", "2020-03-16"];

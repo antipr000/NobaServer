@@ -4,7 +4,7 @@ export type RegisterEmployerRequest = {
   referralID: string;
   bubbleID: string;
   leadDays?: number;
-  maxAllocationPercent: number;
+  maxAllocationPercent?: number;
   payrollDates?: string[];
 };
 

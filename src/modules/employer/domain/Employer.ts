@@ -9,7 +9,7 @@ export class Employer {
   referralID: string;
   bubbleID: string;
   leadDays: number;
-  maxAllocationPercent: number;
+  maxAllocationPercent?: number;
   payrollDates: string[];
   createdTimestamp: Date;
   updatedTimestamp: Date;
@@ -21,7 +21,7 @@ export class EmployerCreateRequest {
   referralID: string;
   bubbleID: string;
   leadDays: number;
-  maxAllocationPercent: number;
+  maxAllocationPercent?: number;
   payrollDates: string[];
 }
 
@@ -39,7 +39,7 @@ export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) =
     logoURI: Joi.string().required(),
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
-    maxAllocationPercent: Joi.number().required(),
+    maxAllocationPercent: Joi.number().optional(),
     leadDays: Joi.number().required(),
     // Dates should be in YYYY-MM-DD format
     payrollDates: Joi.array()
@@ -80,7 +80,7 @@ export const validateEmployer = (employer: Employer) => {
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
     leadDays: Joi.number().required(),
-    maxAllocationPercent: Joi.number().required(),
+    maxAllocationPercent: Joi.number().optional(),
     payrollDates: Joi.array()
       .items(Joi.string().pattern(/^\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01])$/))
       .optional(),
@@ -102,7 +102,7 @@ export const convertToDomainEmployer = (employer: PrismaEmployerModel): Employer
     logoURI: employer.logoURI,
     referralID: employer.referralID,
     bubbleID: employer.bubbleID,
-    maxAllocationPercent: employer.maxAllocationPercent,
+    ...(employer.maxAllocationPercent && { maxAllocationPercent: employer.maxAllocationPercent }),
     leadDays: employer.leadDays,
     payrollDates: employer.payrollDates,
     createdTimestamp: employer.createdTimestamp,

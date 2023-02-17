@@ -41,7 +41,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
         logoURI: request.logoURI,
         leadDays: request.leadDays,
         payrollDates: request.payrollDates,
-        maxAllocationPercent: request.maxAllocationPercent,
+        ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
       };
 
       const returnedEmployer: EmployerPrismaModel = await this.prismaService.employer.create({

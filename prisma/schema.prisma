@@ -97,7 +97,7 @@ model Employer {
   referralID           String     @unique()
   bubbleID             String     @unique()
   leadDays             Int?
-  maxAllocationPercent Float
+  maxAllocationPercent Float?
   payrollDates         String[]
   Employee             Employee[]
 
@@ -110,7 +110,7 @@ model Employee {
   updatedTimestamp   DateTime? @updatedAt // Marking optional so we don't need to set in tests
   allocationAmount   Float
   allocationCurrency String
-  salary             Float     @default(0)
+  salary             Float?
   employer           Employer  @relation(fields: [employerID], references: [id], onDelete: Cascade)
   employerID         String
   consumer           Consumer  @relation(fields: [consumerID], references: [id], onDelete: Cascade)

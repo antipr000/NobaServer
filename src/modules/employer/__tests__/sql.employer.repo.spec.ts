@@ -67,6 +67,7 @@ describe("SqlEmployerRepoTests", () => {
   describe("createEmployer", () => {
     it("should create a new employer and auto-populate ID, createdTimestamp & updatedTimestamp", async () => {
       const employer = getRandomEmployer();
+
       const createdEmployer = await employerRepo.createEmployer(employer);
 
       expect(createdEmployer).toBeDefined();
@@ -79,10 +80,22 @@ describe("SqlEmployerRepoTests", () => {
       expect(createdEmployer.logoURI).toEqual(employer.logoURI);
       expect(createdEmployer.leadDays).toEqual(employer.leadDays);
       expect(createdEmployer.payrollDates).toEqual(employer.payrollDates);
+      expect(createdEmployer.maxAllocationPercent).toBeUndefined();
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
+      delete allEmployers[0].maxAllocationPercent;
       expect(allEmployers[0]).toEqual(createdEmployer);
+    });
+
+    it("should add maxAllocationPercent if provided", async () => {
+      const employer = getRandomEmployer();
+      employer.maxAllocationPercent = 20;
+
+      const createdEmployer = await employerRepo.createEmployer(employer);
+
+      expect(createdEmployer).toBeDefined();
+      expect(createdEmployer.maxAllocationPercent).toBe(20);
     });
 
     it("should throw an error if the referralID is empty", async () => {
@@ -150,6 +163,32 @@ describe("SqlEmployerRepoTests", () => {
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
+      delete allEmployers[0].maxAllocationPercent;
+      expect(allEmployers[0]).toEqual(updatedEmployer);
+    });
+
+    it("should update 'maxAllocationPercent' of an existing employer", async () => {
+      const employer = getRandomEmployer();
+      const createdEmployer = await employerRepo.createEmployer(employer);
+
+      const updatedEmployer = await employerRepo.updateEmployer(createdEmployer.id, {
+        maxAllocationPercent: 20,
+      });
+
+      expect(updatedEmployer).toBeDefined();
+      expect(updatedEmployer.id).toBeDefined();
+      expect(updatedEmployer.createdTimestamp).toBeDefined();
+      expect(updatedEmployer.updatedTimestamp).toBeDefined();
+      expect(updatedEmployer.bubbleID).toEqual(employer.bubbleID);
+      expect(updatedEmployer.name).toEqual(employer.name);
+      expect(updatedEmployer.referralID).toEqual(employer.referralID);
+      expect(updatedEmployer.logoURI).toEqual(employer.logoURI);
+      expect(updatedEmployer.leadDays).toEqual(employer.leadDays);
+      expect(updatedEmployer.payrollDates).toEqual(employer.payrollDates);
+      expect(updatedEmployer.maxAllocationPercent).toEqual(20);
+
+      const allEmployers = await getAllEmployerRecords(prismaService);
+      expect(allEmployers.length).toEqual(1);
       expect(allEmployers[0]).toEqual(updatedEmployer);
     });
 
@@ -174,6 +213,7 @@ describe("SqlEmployerRepoTests", () => {
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
+      delete allEmployers[0].maxAllocationPercent;
       expect(allEmployers[0]).toEqual(updatedEmployer);
     });
 
@@ -198,6 +238,7 @@ describe("SqlEmployerRepoTests", () => {
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
+      delete allEmployers[0].maxAllocationPercent;
       expect(allEmployers[0]).toEqual(updatedEmployer);
     });
 
@@ -223,6 +264,7 @@ describe("SqlEmployerRepoTests", () => {
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
+      delete allEmployers[0].maxAllocationPercent;
       expect(allEmployers[0]).toEqual(updatedEmployer);
     });
 
@@ -250,6 +292,8 @@ describe("SqlEmployerRepoTests", () => {
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(2);
+      delete allEmployers[0].maxAllocationPercent;
+      delete allEmployers[1].maxAllocationPercent;
       expect(allEmployers).toEqual(expect.arrayContaining([updatedEmployer, createdEmployer2]));
     });
 

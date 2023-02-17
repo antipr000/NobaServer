@@ -39,7 +39,7 @@ export class EmployerService {
       bubbleID: request.bubbleID,
       leadDays: request.leadDays,
       payrollDates: request.payrollDates,
-      maxAllocationPercent: request.maxAllocationPercent,
+      ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
     });
   }
 

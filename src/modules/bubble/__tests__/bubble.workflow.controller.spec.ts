@@ -87,6 +87,32 @@ describe("BubbleWorkflowControllerTests", () => {
       });
     });
 
+    it("should forwards the 'maxAllocationPercent' in request to the BubbleService", async () => {
+      const requestBody = {
+        bubbleID: "bubbleID",
+        logoURI: "logoURI",
+        name: "name",
+        referralID: "referralID",
+        leadDays: 5,
+        maxAllocationPercent: 10,
+      };
+      when(bubbleService.registerEmployerInNoba(anything())).thenResolve("nobaEmployerID");
+
+      const result = await bubbleWorkflowController.registerEmployer(requestBody);
+
+      expect(result.nobaEmployerID).toEqual("nobaEmployerID");
+
+      const [bubbleServiceRegisterEmployerInNobaArgs] = capture(bubbleService.registerEmployerInNoba).last();
+      expect(bubbleServiceRegisterEmployerInNobaArgs).toEqual({
+        bubbleID: "bubbleID",
+        logoURI: "logoURI",
+        name: "name",
+        referralID: "referralID",
+        leadDays: 5,
+        maxAllocationPercent: 10,
+      });
+    });
+
     it("should forward the 'payrollDates' in request to the BubbleService", async () => {
       const requestBody = {
         bubbleID: "bubbleID",
@@ -119,6 +145,7 @@ describe("BubbleWorkflowControllerTests", () => {
         bubbleID: "bubbleID",
         logoURI: "logoURI",
         name: "name",
+        maxAllocationPercent: 10,
       };
       when(bubbleService.updateEmployerInNoba(anyString(), anything())).thenResolve();
 
@@ -131,6 +158,7 @@ describe("BubbleWorkflowControllerTests", () => {
         bubbleID: "bubbleID",
         logoURI: "logoURI",
         name: "name",
+        maxAllocationPercent: 10,
       });
     });
   });
