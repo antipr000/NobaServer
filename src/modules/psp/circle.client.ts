@@ -2,16 +2,17 @@ import { Circle, CircleEnvironments, CreateWalletResponse, TransferErrorCode } f
 import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { CircleConfigs } from "../../config/configtypes/CircleConfigs";
-import { CIRCLE_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { AppEnvironment, CIRCLE_CONFIG_KEY, getEnvironmentName } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Logger } from "winston";
-import { AxiosResponse } from "axios";
+import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { CircleWithdrawalRequest, CircleWithdrawalResponse, CircleWithdrawalStatusMap } from "./domain/CircleTypes";
 import { fromString as convertToUUIDv4 } from "uuidv4";
 import { Utils } from "../../core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { IClient } from "../../core/domain/IClient";
 import { HealthCheckResponse, HealthCheckStatus } from "../../core/domain/HealthCheckTypes";
+import tunnel from "tunnel";
 
 @Injectable()
 export class CircleClient implements IClient {
@@ -25,8 +26,17 @@ export class CircleClient implements IClient {
   }
 
   async getHealth(): Promise<HealthCheckResponse> {
+    const agent =
+      getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
+        ? null
+        : tunnel.httpsOverHttp({ proxy: { host: "http://172.31.8.170", port: "3128" } });
+
+    const config: AxiosRequestConfig = {
+      httpsAgent: agent,
+    };
+
     try {
-      const response = await this.circleApi.health.ping();
+      const response = await this.circleApi.health.ping(config);
       if (response.status === HttpStatus.OK) {
         return {
           status: HealthCheckStatus.OK,

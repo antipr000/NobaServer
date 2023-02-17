@@ -7,7 +7,5 @@ RUN apk add so:libssl.so.1.1
 RUN yarn prisma-migrate-deploy
 RUN yarn prisma db seed
 COPY . .
-ENV HTTP_PROXY="http://172.31.8.170:3128"
-ENV HTTPS_PROXY="https://172.31.8.170:3128"
 EXPOSE 8080
 CMD [ "node", "dist/main.js"]
