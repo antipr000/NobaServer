@@ -22,21 +22,15 @@ export class CircleClient implements IClient {
 
   HOST = "172.31.8.170";
   HTTP_PORT = "3128";
-  HTTPS_PORT = "3128";
   private httpsHttpAgent =
     getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
       ? null
       : tunnel.httpsOverHttp({ proxy: { host: this.HOST, port: this.HTTP_PORT } });
 
-  private httpsHttpsAgent =
-    getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
-      ? null
-      : tunnel.httpsOverHttps({ proxy: { host: this.HOST, port: this.HTTPS_PORT } });
-
-  /* private axiosConfig: AxiosRequestConfig = {
-    httpsAgent: this.httpsAgent,
-    httpAgent: this.httpAgent,
-  };*/
+  private axiosConfig: AxiosRequestConfig = {
+    //httpsAgent: this.httpsAgent,
+    httpAgent: this.httpsHttpAgent,
+  };
 
   constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
     const circleConfigs: CircleConfigs = configService.get<CircleConfigs>(CIRCLE_CONFIG_KEY);
@@ -48,12 +42,12 @@ export class CircleClient implements IClient {
     let response;
 
     try {
-      response = await this.circleApi.health.ping();
+      response = await this.circleApi.health.ping(this.axiosConfig);
       this.logger.error(`Response 0: ${JSON.stringify(response, null, 1)}`);
     } catch (e) {
       this.logger.error(`Error 0: ${JSON.stringify(e, null, 1)}`);
     }
-
+    /*
     try {
       response = await this.circleApi.health.ping({
         httpsAgent: tunnel.httpsOverHttps({ proxy: { host: this.HOST, port: this.HTTPS_PORT } }),
@@ -117,7 +111,7 @@ export class CircleClient implements IClient {
     } catch (e) {
       this.logger.error(`Error 6: ${JSON.stringify(e, null, 1)}`);
     }
-
+*/
     if (response.status === HttpStatus.OK) {
       return {
         status: HealthCheckStatus.OK,
