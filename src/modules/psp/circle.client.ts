@@ -19,6 +19,21 @@ export class CircleClient implements IClient {
   private readonly circleApi: Circle;
   private readonly masterWalletID: string;
 
+  private httpAgent =
+    getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
+      ? null
+      : tunnel.httpsOverHttp({ proxy: { host: "http://172.31.8.170", port: "3128" } });
+
+  private httpsAgent =
+    getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
+      ? null
+      : tunnel.httpsOverHttp({ proxy: { host: "https://172.31.8.170", port: "3128" } });
+
+  private axiosConfig: AxiosRequestConfig = {
+    httpsAgent: this.httpsAgent,
+    httpAgent: this.httpAgent,
+  };
+
   constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
     const circleConfigs: CircleConfigs = configService.get<CircleConfigs>(CIRCLE_CONFIG_KEY);
     this.circleApi = new Circle(circleConfigs.apiKey, CircleEnvironments[circleConfigs.env]);
@@ -26,17 +41,8 @@ export class CircleClient implements IClient {
   }
 
   async getHealth(): Promise<HealthCheckResponse> {
-    const agent =
-      getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
-        ? null
-        : tunnel.httpsOverHttp({ proxy: { host: "http://172.31.8.170", port: "3128" } });
-
-    const config: AxiosRequestConfig = {
-      httpsAgent: agent,
-    };
-
     try {
-      const response = await this.circleApi.health.ping(config);
+      const response = await this.circleApi.health.ping(this.axiosConfig);
       if (response.status === HttpStatus.OK) {
         return {
           status: HealthCheckStatus.OK,
@@ -82,7 +88,13 @@ export class CircleClient implements IClient {
   // It is assumed that Circle is used to store "only" USD balance.
   async getWalletBalance(walletID: string): Promise<number> {
     try {
-      const walletData = await this.circleApi.wallets.getWallet(walletID);
+      const walletData = await this.circleApi.wallets.getWallet(walletID, {
+        proxy: {
+          protocol: "https",
+          host: "172.31.8.170",
+          port: 3128,
+        },
+      });
       this.logger.info(`"getWallet" succeeds with request_id: "${walletData.headers["X-Request-Id"]}"`);
 
       let result = 0;
