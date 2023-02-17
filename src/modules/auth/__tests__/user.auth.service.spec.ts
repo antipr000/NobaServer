@@ -227,7 +227,7 @@ describe("UserAuthService", () => {
       it("should return an OTP of YYMMDD format for the test user", () => {
         jest.spyOn(Date, "now").mockReturnValueOnce(new Date(2023, 1, 14).getTime());
         const otp = userAuthService.generateOTP(Utils.TEST_USER_EMAIL);
-        expect(otp).toBe(230217);
+        expect(otp).toBe(230214);
       });
     });
 
