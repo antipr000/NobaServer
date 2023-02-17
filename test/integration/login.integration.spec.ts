@@ -46,23 +46,6 @@ describe("Authentication", () => {
     await integrationTestUtils.reset();
   });
 
-  describe("Test Login", () => {
-    it("should be successful", async () => {
-      const consumerEmail = integrationTestUtils.getRandomEmail("test+consumer");
-      const loginRequestBody: LoginRequestDTO = {
-        emailOrPhone: consumerEmail,
-        identityType: "CONSUMER",
-        autoCreate: true,
-      };
-      const loginResponse = (await AuthenticationService.loginUser({
-        requestBody: loginRequestBody,
-        xNobaApiKey: TEST_API_KEY,
-      })) as LoginResponseDTO & ResponseStatus;
-
-      expect(loginResponse.__status).toBe(201);
-    });
-  });
-
   describe("SignUp or Login as CONSUMER", () => {
     it("should be successful", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test+consumer");

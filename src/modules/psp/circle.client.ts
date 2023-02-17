@@ -58,8 +58,8 @@ export class CircleClient implements IClient {
       return response.data.data.walletId;
     } catch (err) {
       this.logger.error(
-        `Error while creating the wallet: ${JSON.stringify(err.response.data)}, ${JSON.stringify(
-          err.response.headers,
+        `Error while creating the wallet: ${JSON.stringify(err.response?.data)}, ${JSON.stringify(
+          err.response?.headers,
         )}`,
       );
       throw new ServiceException({
@@ -151,7 +151,7 @@ export class CircleClient implements IClient {
           });
       }
     } catch (err) {
-      this.logger.error(`Error while transferring funds: ${JSON.stringify(err.response.data)}`);
+      this.logger.error(`Error while transferring funds: ${JSON.stringify(err.response?.data)}`);
       if (err instanceof ServiceException) {
         throw err;
       }

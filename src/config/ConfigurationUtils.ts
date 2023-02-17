@@ -222,6 +222,10 @@ export function isProductionEnvironment(): boolean {
   return getEnvironmentName() == AppEnvironment.PROD;
 }
 
+export function isE2ETestEnvironment(): boolean {
+  return getEnvironmentName() == AppEnvironment.E2E_TEST;
+}
+
 export function getPropertyFromEnvironment(key: string) {
   return process.env[key];
 }

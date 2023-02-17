@@ -36,7 +36,7 @@ import { Roles } from "../auth/roles.decorator";
 import { DocumentsFileUploadRequestDTO, DocVerificationRequestDTO } from "./dto/DocVerificationRequestDTO";
 import { VerificationResultDTO } from "./dto/VerificationResultDTO";
 import { VerificationService } from "./verification.service";
-import { Public } from "../auth/public.decorator";
+import { IsNoApiKeyNeeded, Public } from "../auth/public.decorator";
 import { VerificationResponseMapper } from "./mappers/VerificationResponseMapper";
 import { Consumer } from "../consumer/domain/Consumer";
 import { DeviceVerificationResponseDTO } from "./dto/DeviceVerificationResponseDTO";
@@ -241,7 +241,7 @@ export class VerificationController {
   }
 }
 
-@Public()
+@IsNoApiKeyNeeded()
 @Controller("v1/verify/webhook")
 @ApiTags("VerificationWebhooks")
 export class VerificationWebhookController {

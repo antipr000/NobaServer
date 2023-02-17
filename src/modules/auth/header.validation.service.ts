@@ -2,7 +2,7 @@ import { BadRequestException, Inject, Injectable, Logger } from "@nestjs/common"
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import CryptoJS from "crypto-js";
 import { HmacSHA256 } from "crypto-js";
-import { isProductionEnvironment, NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { isE2ETestEnvironment, isProductionEnvironment, NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 
@@ -54,6 +54,6 @@ export class HeaderValidationService {
   }
 
   private shouldValidateHeaders(apiKey: string, timestamp: string, signature: string) {
-    return isProductionEnvironment() || (apiKey && timestamp && signature);
+    return isProductionEnvironment() || (apiKey && timestamp && signature) || isE2ETestEnvironment();
   }
 }
