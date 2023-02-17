@@ -241,7 +241,7 @@ function ensureDevOnlyConfig(environment: AppEnvironment, configs: Record<string
 }
 
 function configureAwsCredentials(environment: AppEnvironment, configs: Record<string, any>): Record<string, any> {
-  if (environment === AppEnvironment.DEV || environment === AppEnvironment.E2E_TEST) {
+  if (environment === AppEnvironment.DEV) {
     // 'DEV' is for local development and hence AWS_ACCESS_KEY_ID & AWS_SECRET_ACCESS_KEY environment variables are required.
     const awsAccessKeyId = configs[AWS_ACCESS_KEY_ID_ATTR];
     const awsSecretAccessKey = configs[AWS_SECRET_ACCESS_KEY_ATTR];
