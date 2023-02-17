@@ -42,13 +42,18 @@ export class CircleClient implements IClient {
   }
 
   async getHealth(): Promise<HealthCheckResponse> {
+    let response;
     try {
-      let response = await this.circleApi.health.ping({
+      response = await this.circleApi.health.ping({
         httpsAgent: tunnel.httpsOverHttps({ proxy: { host: "https://172.31.8.170", port: "3129" } }),
         httpAgent: tunnel.httpsOverHttp({ proxy: { host: "http://172.31.8.170", port: "3128" } }),
       });
-      console.log(`Response 1: ${JSON.stringify(response)}`);
+      this.logger.error(`Response 1: ${JSON.stringify(response)}`);
+    } catch (e) {
+      this.logger.error(`Error 1: ${JSON.stringify(e)}`);
+    }
 
+    try {
       response = await this.circleApi.health.ping({
         proxy: {
           protocol: "https",
@@ -56,8 +61,12 @@ export class CircleClient implements IClient {
           port: 3129,
         },
       });
-      console.log(`Response 2: ${JSON.stringify(response)}`);
+      this.logger.error(`Response 2: ${JSON.stringify(response)}`);
+    } catch (e) {
+      this.logger.error(`Error 2: ${JSON.stringify(e)}`);
+    }
 
+    try {
       response = await this.circleApi.health.ping({
         proxy: {
           protocol: "http",
@@ -65,27 +74,35 @@ export class CircleClient implements IClient {
           port: 3128,
         },
       });
-      console.log(`Response 3: ${JSON.stringify(response)}`);
+      this.logger.error(`Response 3: ${JSON.stringify(response)}`);
+    } catch (e) {
+      this.logger.error(`Error 3: ${JSON.stringify(e)}`);
+    }
 
+    try {
       response = await this.circleApi.health.ping({
         httpsAgent: tunnel.httpOverHttps({ proxy: { host: "https://172.31.8.170", port: "3129" } }),
         httpAgent: tunnel.httpOverHttp({ proxy: { host: "http://172.31.8.170", port: "3128" } }),
       });
-      console.log(`Response 4: ${JSON.stringify(response)}`);
-      if (response.status === HttpStatus.OK) {
-        return {
-          status: HealthCheckStatus.OK,
-        };
-      } else {
-        return {
-          status: HealthCheckStatus.UNAVAILABLE,
-        };
-      }
+      this.logger.error(`Response 4: ${JSON.stringify(response)}`);
     } catch (e) {
+      this.logger.error(`Error 4: ${JSON.stringify(e)}`);
+    }
+
+    if (response.status === HttpStatus.OK) {
+      return {
+        status: HealthCheckStatus.OK,
+      };
+    } else {
       return {
         status: HealthCheckStatus.UNAVAILABLE,
       };
     }
+    /* } catch (e) {
+      return {
+        status: HealthCheckStatus.UNAVAILABLE,
+      };
+    }*/
   }
 
   async getMasterWalletID(): Promise<string> {
