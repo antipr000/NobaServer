@@ -15,4 +15,7 @@ export class EmployerDTO {
 
   @ApiProperty()
   nextPayrollDate: string;
+
+  @ApiProperty()
+  maxAllocationPercent: number;
 }
