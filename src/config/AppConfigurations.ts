@@ -256,6 +256,8 @@ function configureAwsCredentials(environment: AppEnvironment, configs: Record<st
 
     setEnvironmentProperty(AWS_ACCESS_KEY_ID_ENV_VARIABLE, awsAccessKeyId);
     setEnvironmentProperty(AWS_SECRET_ACCESS_KEY_ENV_VARIABLE, awsSecretAccessKey);
+  } else if (environment === AppEnvironment.E2E_TEST) {
+    // Pass through the AWS credentials to the E2E tests as it is in environment variable
   } else {
     // 'STAGING' or 'PROD' will be expected to run in 'EC2' (with a role attached).
     // So, for these environments temporary role credentials will be used for any AWS services.
