@@ -71,7 +71,7 @@ export class MonoClient implements IClient {
       const { data } = await axios.get(url, { headers });
       return data["banks"];
     } catch (e) {
-      this.logger.error(`Failed to fetch bank list from mono. ${JSON.stringify(e)}`);
+      this.logger.error(`Failed to fetch bank list from mono. ${JSON.stringify(e.response?.data)}`);
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
         message: "Failed to fetch data from Mono",
@@ -129,7 +129,9 @@ export class MonoClient implements IClient {
       };
     } catch (err) {
       this.logger.error(
-        `Error while creating collection link: ${JSON.stringify(err)}. Request body: ${JSON.stringify(requestBody)}`,
+        `Error while creating collection link: ${JSON.stringify(err.response?.data)}. Request body: ${JSON.stringify(
+          requestBody,
+        )}`,
       );
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
@@ -192,9 +194,9 @@ export class MonoClient implements IClient {
       };
     } catch (err) {
       this.logger.error(
-        `Error while transferring funds from Mono: ${JSON.stringify(err)}. Request body: ${JSON.stringify(
-          requestBody,
-        )}`,
+        `Error while transferring funds from Mono: ${JSON.stringify(
+          err.response?.data,
+        )}. Request body: ${JSON.stringify(requestBody)}`,
       );
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
@@ -240,7 +242,7 @@ export class MonoClient implements IClient {
         declinationReason: transfer.declination_reason,
       };
     } catch (err) {
-      this.logger.error(`Error while fetching the Transfer status from Mono: ${JSON.stringify(err)}`);
+      this.logger.error(`Error while fetching the Transfer status from Mono: ${JSON.stringify(err.response?.data)}`);
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
         message: "Error while fetching the Transfer status from Mono",
