@@ -80,7 +80,7 @@ export class Utils {
   }
 
   static get6DigitDate(): number {
-    const date = new Date();
+    const date = new Date(Date.now()); // Use this instead of new Date() so we can mock Date.now() in tests
     return Number(
       date.getFullYear().toString().substring(2, 4) +
         (date.getMonth() + 1).toString().padStart(2, "0") +

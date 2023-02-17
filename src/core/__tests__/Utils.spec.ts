@@ -266,7 +266,7 @@ describe("Utils", () => {
 
   describe("get6DigitDate", () => {
     it("Should generate a 6 digit date format", () => {
-      jest.spyOn(Date, "now").mockReturnValueOnce(Date.parse("2023-02-14"));
+      jest.spyOn(Date, "now").mockReturnValueOnce(new Date(2023, 1, 14).getTime());
       expect(Utils.get6DigitDate()).toEqual(230214);
     });
   });
