@@ -48,9 +48,9 @@ export class CircleClient implements IClient {
         httpsAgent: tunnel.httpsOverHttps({ proxy: { host: "https://172.31.8.170", port: "3129" } }),
         httpAgent: tunnel.httpsOverHttp({ proxy: { host: "http://172.31.8.170", port: "3128" } }),
       });
-      this.logger.error(`Response 1: ${JSON.stringify(response)}`);
+      this.logger.error(`Response 1: ${JSON.stringify(response, null, 1)}`);
     } catch (e) {
-      this.logger.error(`Error 1: ${JSON.stringify(e)}`);
+      this.logger.error(`Error 1: ${JSON.stringify(e, null, 1)}`);
     }
 
     try {
@@ -61,9 +61,22 @@ export class CircleClient implements IClient {
           port: 3129,
         },
       });
-      this.logger.error(`Response 2: ${JSON.stringify(response)}`);
+      this.logger.error(`Response 2: ${JSON.stringify(response, null, 1)}`);
     } catch (e) {
-      this.logger.error(`Error 2: ${JSON.stringify(e)}`);
+      this.logger.error(`Error 2: ${JSON.stringify(e, null, 1)}`);
+    }
+
+    try {
+      response = await this.circleApi.health.ping({
+        proxy: {
+          protocol: "http",
+          host: "172.31.8.170",
+          port: 312,
+        },
+      });
+      this.logger.error(`Response 2.1: ${JSON.stringify(response, null, 1)}`);
+    } catch (e) {
+      this.logger.error(`Error 2.1: ${JSON.stringify(e, null, 1)}`);
     }
 
     try {
@@ -74,9 +87,9 @@ export class CircleClient implements IClient {
           port: 3128,
         },
       });
-      this.logger.error(`Response 3: ${JSON.stringify(response)}`);
+      this.logger.error(`Response 3: ${JSON.stringify(response, null, 1)}`);
     } catch (e) {
-      this.logger.error(`Error 3: ${JSON.stringify(e)}`);
+      this.logger.error(`Error 3: ${JSON.stringify(e, null, 1)}`);
     }
 
     try {
@@ -84,9 +97,9 @@ export class CircleClient implements IClient {
         httpsAgent: tunnel.httpOverHttps({ proxy: { host: "https://172.31.8.170", port: "3129" } }),
         httpAgent: tunnel.httpOverHttp({ proxy: { host: "http://172.31.8.170", port: "3128" } }),
       });
-      this.logger.error(`Response 4: ${JSON.stringify(response)}`);
+      this.logger.error(`Response 4: ${JSON.stringify(response, null, 1)}`);
     } catch (e) {
-      this.logger.error(`Error 4: ${JSON.stringify(e)}`);
+      this.logger.error(`Error 4: ${JSON.stringify(e, null, 1)}`);
     }
 
     if (response.status === HttpStatus.OK) {
