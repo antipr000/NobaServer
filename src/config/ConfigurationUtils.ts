@@ -215,15 +215,15 @@ export function getEnvironmentName(): AppEnvironment {
 }
 
 export function isLocalDevEnvironment(): boolean {
-  return getEnvironmentName() == AppEnvironment.DEV;
+  return getEnvironmentName() === AppEnvironment.DEV;
 }
 
 export function isProductionEnvironment(): boolean {
-  return getEnvironmentName() == AppEnvironment.PROD;
+  return getEnvironmentName() === AppEnvironment.PROD;
 }
 
 export function isE2ETestEnvironment(): boolean {
-  return getEnvironmentName() == AppEnvironment.E2E_TEST;
+  return getEnvironmentName() === AppEnvironment.E2E_TEST;
 }
 
 export function getPropertyFromEnvironment(key: string) {
