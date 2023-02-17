@@ -170,7 +170,7 @@ export class ConsumerService {
   generateOTP(email?: string): number {
     if (this.otpOverride) {
       return this.otpOverride;
-    } else if (email === Utils.TEST_USER_EMAIL) {
+    } else if (email?.toLowerCase() === Utils.TEST_USER_EMAIL) {
       return Utils.get6DigitDate();
     } else {
       return Utils.generateOTP();
