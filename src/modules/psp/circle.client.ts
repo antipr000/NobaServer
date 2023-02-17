@@ -22,7 +22,7 @@ export class CircleClient implements IClient {
 
   HOST = "172.31.8.170";
   HTTP_PORT = "3128";
-  HTTPS_PORT = "3129";
+  HTTPS_PORT = "3128";
   private httpsHttpAgent =
     getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
       ? null
