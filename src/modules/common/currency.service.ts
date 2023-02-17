@@ -29,7 +29,6 @@ export class CurrencyService {
       const results = new Array<CurrencyDTO>();
       const parser = parse({ delimiter: ",", columns: true });
       const s3 = new S3({});
-      console.log("Loading currencies from S3", process.env["AWS_ACCESS_KEY_ID"], process.env["AWS_SECRET_ACCESS_KEY"]);
       const options = {
         Bucket: this.configService.get(ASSETS_BUCKET_NAME),
         Key: this.configService.get(SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH),
