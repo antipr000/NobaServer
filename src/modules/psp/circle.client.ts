@@ -23,12 +23,12 @@ export class CircleClient implements IClient {
   private httpsHttpAgent =
     getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
       ? null
-      : tunnel.httpsOverHttp({ proxy: { host: "http://172.31.8.170", port: "3128" } });
+      : tunnel.httpsOverHttp({ proxy: { host: "172.31.8.170", port: "3128" } });
 
   private httpsHttpsAgent =
     getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
       ? null
-      : tunnel.httpsOverHttps({ proxy: { host: "https://172.31.8.170", port: "3129" } });
+      : tunnel.httpsOverHttps({ proxy: { host: "172.31.8.170", port: "3129" } });
 
   /* private axiosConfig: AxiosRequestConfig = {
     httpsAgent: this.httpsAgent,
@@ -45,8 +45,8 @@ export class CircleClient implements IClient {
     let response;
     try {
       response = await this.circleApi.health.ping({
-        httpsAgent: tunnel.httpsOverHttps({ proxy: { host: "https://172.31.8.170", port: "3129" } }),
-        httpAgent: tunnel.httpsOverHttp({ proxy: { host: "http://172.31.8.170", port: "3128" } }),
+        httpsAgent: tunnel.httpsOverHttps({ proxy: { host: "172.31.8.170", port: "3129" } }),
+        httpAgent: tunnel.httpsOverHttp({ proxy: { host: "172.31.8.170", port: "3128" } }),
       });
       this.logger.error(`Response 1: ${JSON.stringify(response, null, 1)}`);
     } catch (e) {
@@ -94,8 +94,8 @@ export class CircleClient implements IClient {
 
     try {
       response = await this.circleApi.health.ping({
-        httpsAgent: tunnel.httpOverHttps({ proxy: { host: "https://172.31.8.170", port: "3129" } }),
-        httpAgent: tunnel.httpOverHttp({ proxy: { host: "http://172.31.8.170", port: "3128" } }),
+        httpsAgent: tunnel.httpOverHttps({ proxy: { host: "172.31.8.170", port: "3129" } }),
+        httpAgent: tunnel.httpOverHttp({ proxy: { host: "172.31.8.170", port: "3128" } }),
       });
       this.logger.error(`Response 4: ${JSON.stringify(response, null, 1)}`);
     } catch (e) {
