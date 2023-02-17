@@ -13,26 +13,27 @@ import { ServiceErrorCode, ServiceException } from "../../core/exception/service
 import { IClient } from "../../core/domain/IClient";
 import { HealthCheckResponse, HealthCheckStatus } from "../../core/domain/HealthCheckTypes";
 import tunnel from "tunnel";
+import { Length } from "class-validator";
 
 @Injectable()
 export class CircleClient implements IClient {
   private readonly circleApi: Circle;
   private readonly masterWalletID: string;
 
-  private httpAgent =
+  private httpsHttpAgent =
     getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
       ? null
       : tunnel.httpsOverHttp({ proxy: { host: "http://172.31.8.170", port: "3128" } });
 
-  private httpsAgent =
+  private httpsHttpsAgent =
     getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
       ? null
-      : tunnel.httpsOverHttp({ proxy: { host: "https://172.31.8.170", port: "3128" } });
+      : tunnel.httpsOverHttps({ proxy: { host: "https://172.31.8.170", port: "3129" } });
 
-  private axiosConfig: AxiosRequestConfig = {
+  /* private axiosConfig: AxiosRequestConfig = {
     httpsAgent: this.httpsAgent,
     httpAgent: this.httpAgent,
-  };
+  };*/
 
   constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
     const circleConfigs: CircleConfigs = configService.get<CircleConfigs>(CIRCLE_CONFIG_KEY);
@@ -42,7 +43,35 @@ export class CircleClient implements IClient {
 
   async getHealth(): Promise<HealthCheckResponse> {
     try {
-      const response = await this.circleApi.health.ping(this.axiosConfig);
+      let response = await this.circleApi.health.ping({
+        httpsAgent: tunnel.httpsOverHttps({ proxy: { host: "https://172.31.8.170", port: "3129" } }),
+        httpAgent: tunnel.httpsOverHttp({ proxy: { host: "http://172.31.8.170", port: "3128" } }),
+      });
+      console.log(`Response 1: ${JSON.stringify(response)}`);
+
+      response = await this.circleApi.health.ping({
+        proxy: {
+          protocol: "https",
+          host: "172.31.8.170",
+          port: 3129,
+        },
+      });
+      console.log(`Response 2: ${JSON.stringify(response)}`);
+
+      response = await this.circleApi.health.ping({
+        proxy: {
+          protocol: "http",
+          host: "172.31.8.170",
+          port: 3128,
+        },
+      });
+      console.log(`Response 3: ${JSON.stringify(response)}`);
+
+      response = await this.circleApi.health.ping({
+        httpsAgent: tunnel.httpOverHttps({ proxy: { host: "https://172.31.8.170", port: "3129" } }),
+        httpAgent: tunnel.httpOverHttp({ proxy: { host: "http://172.31.8.170", port: "3128" } }),
+      });
+      console.log(`Response 4: ${JSON.stringify(response)}`);
       if (response.status === HttpStatus.OK) {
         return {
           status: HealthCheckStatus.OK,
