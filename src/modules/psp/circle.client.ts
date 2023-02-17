@@ -71,19 +71,6 @@ export class CircleClient implements IClient {
         proxy: {
           protocol: "http",
           host: "172.31.8.170",
-          port: 312,
-        },
-      });
-      this.logger.error(`Response 2.1: ${JSON.stringify(response, null, 1)}`);
-    } catch (e) {
-      this.logger.error(`Error 2.1: ${JSON.stringify(e, null, 1)}`);
-    }
-
-    try {
-      response = await this.circleApi.health.ping({
-        proxy: {
-          protocol: "http",
-          host: "172.31.8.170",
           port: 3128,
         },
       });
@@ -100,6 +87,24 @@ export class CircleClient implements IClient {
       this.logger.error(`Response 4: ${JSON.stringify(response, null, 1)}`);
     } catch (e) {
       this.logger.error(`Error 4: ${JSON.stringify(e, null, 1)}`);
+    }
+
+    try {
+      response = await this.circleApi.health.ping({
+        httpsAgent: tunnel.httpsOverHttp({ proxy: { host: "172.31.8.170", port: "3129" } }),
+      });
+      this.logger.error(`Response 5: ${JSON.stringify(response, null, 1)}`);
+    } catch (e) {
+      this.logger.error(`Error 5: ${JSON.stringify(e, null, 1)}`);
+    }
+
+    try {
+      response = await this.circleApi.health.ping({
+        httpsAgent: tunnel.httpsOverHttp({ proxy: { host: "172.31.8.170", port: "3128" } }),
+      });
+      this.logger.error(`Response 6: ${JSON.stringify(response, null, 1)}`);
+    } catch (e) {
+      this.logger.error(`Error 6: ${JSON.stringify(e, null, 1)}`);
     }
 
     if (response.status === HttpStatus.OK) {
