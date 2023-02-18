@@ -67,10 +67,13 @@ export class CircleClient implements IClient {
 
   async createWallet(idempotencyKey: string): Promise<string> {
     try {
-      const response: AxiosResponse<CreateWalletResponse> = await this.circleApi.wallets.createWallet({
-        idempotencyKey: convertToUUIDv4(idempotencyKey),
-        description: idempotencyKey,
-      });
+      const response: AxiosResponse<CreateWalletResponse> = await this.circleApi.wallets.createWallet(
+        {
+          idempotencyKey: convertToUUIDv4(idempotencyKey),
+          description: idempotencyKey,
+        },
+        this.axiosConfig,
+      );
 
       this.logger.info(`"createWallet" succeeds with request_id: "${response.headers["X-Request-Id"]}"`);
       return response.data.data.walletId;
@@ -90,13 +93,7 @@ export class CircleClient implements IClient {
   // It is assumed that Circle is used to store "only" USD balance.
   async getWalletBalance(walletID: string): Promise<number> {
     try {
-      const walletData = await this.circleApi.wallets.getWallet(walletID, {
-        proxy: {
-          protocol: "https",
-          host: "172.31.8.170",
-          port: 3128,
-        },
-      });
+      const walletData = await this.circleApi.wallets.getWallet(walletID, this.axiosConfig);
       this.logger.info(`"getWallet" succeeds with request_id: "${walletData.headers["X-Request-Id"]}"`);
 
       let result = 0;
@@ -133,12 +130,15 @@ export class CircleClient implements IClient {
 
   async transfer(request: CircleWithdrawalRequest): Promise<CircleWithdrawalResponse> {
     try {
-      const transferResponse = await this.circleApi.transfers.createTransfer({
-        idempotencyKey: request.idempotencyKey,
-        source: { id: request.sourceWalletID, type: "wallet" },
-        destination: { id: request.destinationWalletID, type: "wallet" },
-        amount: { amount: Utils.roundTo2DecimalString(request.amount), currency: "USD" },
-      });
+      const transferResponse = await this.circleApi.transfers.createTransfer(
+        {
+          idempotencyKey: request.idempotencyKey,
+          source: { id: request.sourceWalletID, type: "wallet" },
+          destination: { id: request.destinationWalletID, type: "wallet" },
+          amount: { amount: Utils.roundTo2DecimalString(request.amount), currency: "USD" },
+        },
+        this.axiosConfig,
+      );
 
       const transferData = transferResponse.data.data;
       if (transferData.status !== "failed") {
