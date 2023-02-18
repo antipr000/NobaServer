@@ -21,19 +21,18 @@ export class CircleClient implements IClient {
   private readonly masterWalletID: string;
 
   HOST = "172.31.8.170";
-  HTTP_PORT = "3128";
-  private httpsHttpAgent =
+  HTTP_PORT = 3128;
+
+  private axiosConfig: AxiosRequestConfig =
     getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
       ? null
-      : tunnel.httpsOverHttp({ proxy: { host: this.HOST, port: this.HTTP_PORT } });
-
-  private axiosConfig: AxiosRequestConfig = {
-    proxy: {
-      protocol: "https",
-      host: this.HOST,
-      port: 3129,
-    },
-  };
+      : {
+          proxy: {
+            protocol: "http",
+            host: this.HOST,
+            port: this.HTTP_PORT,
+          },
+        };
 
   constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
     const circleConfigs: CircleConfigs = configService.get<CircleConfigs>(CIRCLE_CONFIG_KEY);
@@ -43,6 +42,7 @@ export class CircleClient implements IClient {
 
   async getHealth(): Promise<HealthCheckResponse> {
     try {
+      this.logger.info(`Axios config: ${this.axiosConfig}`);
       const response = await this.circleApi.health.ping(this.axiosConfig);
 
       if (response.status === HttpStatus.OK) {
