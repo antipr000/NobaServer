@@ -20,6 +20,7 @@ export class CircleClient implements IClient {
   private readonly circleApi: Circle;
   private readonly masterWalletID: string;
 
+  // TODO: Move to config yaml
   HOST = "172.31.8.170";
   HTTP_PORT = 3128;
 
@@ -42,7 +43,6 @@ export class CircleClient implements IClient {
 
   async getHealth(): Promise<HealthCheckResponse> {
     try {
-      this.logger.info(`Axios config: ${this.axiosConfig}`);
       const response = await this.circleApi.health.ping(this.axiosConfig);
 
       if (response.status === HttpStatus.OK) {
