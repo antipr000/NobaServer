@@ -28,8 +28,11 @@ export class CircleClient implements IClient {
       : tunnel.httpsOverHttp({ proxy: { host: this.HOST, port: this.HTTP_PORT } });
 
   private axiosConfig: AxiosRequestConfig = {
-    //httpsAgent: this.httpsAgent,
-    httpAgent: this.httpsHttpAgent,
+    proxy: {
+      protocol: "https",
+      host: this.HOST,
+      port: 3129,
+    },
   };
 
   constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
@@ -39,93 +42,23 @@ export class CircleClient implements IClient {
   }
 
   async getHealth(): Promise<HealthCheckResponse> {
-    let response;
+    try {
+      const response = await this.circleApi.health.ping(this.axiosConfig);
 
-    try {
-      response = await this.circleApi.health.ping(this.axiosConfig);
-      this.logger.error(`Response 0: ${JSON.stringify(response, null, 1)}`);
+      if (response.status === HttpStatus.OK) {
+        return {
+          status: HealthCheckStatus.OK,
+        };
+      } else {
+        return {
+          status: HealthCheckStatus.UNAVAILABLE,
+        };
+      }
     } catch (e) {
-      this.logger.error(`Error 0: ${JSON.stringify(e, null, 1)}`);
-    }
-    /*
-    try {
-      response = await this.circleApi.health.ping({
-        httpsAgent: tunnel.httpsOverHttps({ proxy: { host: this.HOST, port: this.HTTPS_PORT } }),
-        httpAgent: tunnel.httpsOverHttp({ proxy: { host: this.HOST, port: this.HTTP_PORT } }),
-      });
-      this.logger.error(`Response 1: ${JSON.stringify(response, null, 1)}`);
-    } catch (e) {
-      this.logger.error(`Error 1: ${JSON.stringify(e, null, 1)}`);
-    }
-
-    try {
-      response = await this.circleApi.health.ping({
-        proxy: {
-          protocol: "https",
-          host: this.HOST,
-          port: 3129,
-        },
-      });
-      this.logger.error(`Response 2: ${JSON.stringify(response, null, 1)}`);
-    } catch (e) {
-      this.logger.error(`Error 2: ${JSON.stringify(e, null, 1)}`);
-    }
-
-    try {
-      response = await this.circleApi.health.ping({
-        proxy: {
-          protocol: "http",
-          host: this.HOST,
-          port: 3128,
-        },
-      });
-      this.logger.error(`Response 3: ${JSON.stringify(response, null, 1)}`);
-    } catch (e) {
-      this.logger.error(`Error 3: ${JSON.stringify(e, null, 1)}`);
-    }
-
-    try {
-      response = await this.circleApi.health.ping({
-        httpsAgent: tunnel.httpOverHttps({ proxy: { host: this.HOST, port: this.HTTPS_PORT } }),
-        httpAgent: tunnel.httpOverHttp({ proxy: { host: this.HOST, port: this.HTTP_PORT } }),
-      });
-      this.logger.error(`Response 4: ${JSON.stringify(response, null, 1)}`);
-    } catch (e) {
-      this.logger.error(`Error 4: ${JSON.stringify(e, null, 1)}`);
-    }
-
-    try {
-      response = await this.circleApi.health.ping({
-        httpsAgent: tunnel.httpsOverHttp({ proxy: { host: this.HOST, port: this.HTTPS_PORT } }),
-      });
-      this.logger.error(`Response 5: ${JSON.stringify(response, null, 1)}`);
-    } catch (e) {
-      this.logger.error(`Error 5: ${JSON.stringify(e, null, 1)}`);
-    }
-
-    try {
-      response = await this.circleApi.health.ping({
-        httpsAgent: tunnel.httpsOverHttp({ proxy: { host: this.HOST, port: this.HTTP_PORT } }),
-      });
-      this.logger.error(`Response 6: ${JSON.stringify(response, null, 1)}`);
-    } catch (e) {
-      this.logger.error(`Error 6: ${JSON.stringify(e, null, 1)}`);
-    }
-*/
-    if (response.status === HttpStatus.OK) {
-      return {
-        status: HealthCheckStatus.OK,
-      };
-    } else {
       return {
         status: HealthCheckStatus.UNAVAILABLE,
       };
     }
-    /* } catch (e) {
-      return {
-        status: HealthCheckStatus.UNAVAILABLE,
-      };
-    }*/
   }
 
   async getMasterWalletID(): Promise<string> {
