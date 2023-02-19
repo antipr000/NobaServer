@@ -149,7 +149,7 @@ circle:
 nobaWorkflow:
   taskQueue: "NOBA_TASK_QUEUE"
   awsSecretNameForTaskQueue: ""
-  clientUrl: "temporal-server:7233"
+  clientUrl: "localhost:7233"
   awsSecretNameForClientUrl: ""
   awsSecretForTemporalCloudCertificate: ""
   awsSecretForTemporalCloudPrivateKey: ""
