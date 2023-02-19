@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { anyString, anything, capture, instance, when } from "ts-mockito";
+import { anyNumber, anyString, anything, capture, instance, when } from "ts-mockito";
 import { uuid } from "uuidv4";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { Employer } from "../../../modules/employer/domain/Employer";
@@ -303,6 +303,7 @@ describe("BubbleServiceTests", () => {
 
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(employerService.updateEmployer(anyString(), anything())).thenResolve();
+      when(employeeService.updateAllocationAmountsForNewMaxAllocationPercent(anyString(), anyNumber())).thenResolve();
 
       await bubbleService.updateEmployerInNoba(employer.referralID, {
         leadDays: updatedLeadDays,
@@ -317,6 +318,13 @@ describe("BubbleServiceTests", () => {
         leadDays: updatedLeadDays,
         maxAllocationPercent: updatedMaxAllocationPercent,
       });
+
+      const [propagatedEmployerIDToEmployeeService, propagatedMaxAllocationPercentToEmployeeService] = capture(
+        employeeService.updateAllocationAmountsForNewMaxAllocationPercent,
+      ).last();
+
+      expect(propagatedEmployerIDToEmployeeService).toEqual(employer.id);
+      expect(propagatedMaxAllocationPercentToEmployeeService).toEqual(updatedMaxAllocationPercent);
     });
 
     it("should update the 'payrollDays' of employer in Noba", async () => {
@@ -362,6 +370,46 @@ describe("BubbleServiceTests", () => {
         expect(err).toBeInstanceOf(ServiceException);
         expect(err.errorCode).toEqual(ServiceErrorCode.DOES_NOT_EXIST);
         expect(err.message).toEqual(expect.stringContaining("No employer found"));
+      }
+    });
+  });
+
+  describe("updateEmployee", () => {
+    it("should update employee", async () => {
+      const employer = getRandomEmployer();
+      const consumer = getRandomConsumer();
+      const employee = getRandomEmployee(consumer.props.id, employer.id);
+
+      when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
+      when(employeeService.updateEmployee(anyString(), anything())).thenResolve();
+
+      await bubbleService.updateEmployee(employee.id, {
+        salary: 1000,
+      });
+
+      const [propagatedEmployeeIDToEmployeeService, propagatedEmployeePropsToEmployeeService] = capture(
+        employeeService.updateEmployee,
+      ).last();
+
+      expect(propagatedEmployeeIDToEmployeeService).toEqual(employee.id);
+      expect(propagatedEmployeePropsToEmployeeService).toEqual({
+        salary: 1000,
+      });
+    });
+
+    it("should throw 'ServiceException' when employee with given ID is not found", async () => {
+      const employeeID = "invalid-employee-id";
+      when(employeeService.getEmployeeByID(employeeID)).thenResolve(null);
+
+      try {
+        await bubbleService.updateEmployee(employeeID, {
+          salary: 1000,
+        });
+        expect(true).toBeFalsy();
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.errorCode).toEqual(ServiceErrorCode.DOES_NOT_EXIST);
+        expect(err.message).toEqual(expect.stringContaining("No employee found"));
       }
     });
   });

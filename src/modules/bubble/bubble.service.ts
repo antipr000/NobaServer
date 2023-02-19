@@ -6,7 +6,11 @@ import { Consumer } from "../consumer/domain/Consumer";
 import { Employee, EmployeeAllocationCurrency } from "../employee/domain/Employee";
 import { EmployeeService } from "../employee/employee.service";
 import { BubbleClient } from "./bubble.client";
-import { RegisterEmployerRequest, UpdateNobaEmployerRequest } from "./dto/bubble.service.dto";
+import {
+  RegisterEmployerRequest,
+  UpdateNobaEmployeeRequest,
+  UpdateNobaEmployerRequest,
+} from "./dto/bubble.service.dto";
 import { EmployerService } from "../employer/employer.service";
 import { Employer } from "../employer/domain/Employer";
 
@@ -74,6 +78,27 @@ export class BubbleService {
       logoURI: request.logoURI,
       payrollDates: request.payrollDates,
       maxAllocationPercent: request.maxAllocationPercent,
+    });
+
+    if (request.maxAllocationPercent) {
+      await this.employeeService.updateAllocationAmountsForNewMaxAllocationPercent(
+        employer.id,
+        request.maxAllocationPercent,
+      );
+    }
+  }
+
+  async updateEmployee(employeeID: string, request: UpdateNobaEmployeeRequest): Promise<void> {
+    const employee = await this.employeeService.getEmployeeByID(employeeID);
+    if (!employee) {
+      throw new ServiceException({
+        message: `No employee found with ID: ${employeeID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    await this.employeeService.updateEmployee(employeeID, {
+      salary: request.salary,
     });
   }
 }

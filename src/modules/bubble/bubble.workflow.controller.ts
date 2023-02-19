@@ -5,7 +5,11 @@ import { Logger } from "winston";
 import { BubbleWebhookAuthGuard } from "../auth/bubble.webhooks.auth.guard";
 import { IsNoApiKeyNeeded } from "../auth/public.decorator";
 import { BubbleService } from "./bubble.service";
-import { RegisterEmployerRequestDTO, UpdateEmployerRequestDTO } from "./dto/bubble.workflow.controller.dto";
+import {
+  RegisterEmployerRequestDTO,
+  UpdateEmployeeRequestDTO,
+  UpdateEmployerRequestDTO,
+} from "./dto/bubble.workflow.controller.dto";
 import { EmployerRegisterResponseDTO } from "./dto/EmployerRegisterResponseDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 
@@ -45,6 +49,17 @@ export class BubbleWorkflowController {
     @Param("referralID") referralID: string,
   ): Promise<BlankResponseDTO> {
     await this.bubbleService.updateEmployerInNoba(referralID, requestBody);
+    return {};
+  }
+
+  @Patch("/employee/:employeeID")
+  @ApiOperation({ summary: "Update the Employee in Noba" })
+  @ApiResponse({ status: HttpStatus.OK, type: BlankResponseDTO })
+  async updateEmployee(
+    @Body() requestBody: UpdateEmployeeRequestDTO,
+    @Param("employeeID") employeeID: string,
+  ): Promise<BlankResponseDTO> {
+    await this.bubbleService.updateEmployee(employeeID, requestBody);
     return {};
   }
 }

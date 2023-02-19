@@ -14,3 +14,7 @@ export type UpdateNobaEmployerRequest = {
   payrollDates?: string[];
   maxAllocationPercent?: number;
 };
+
+export type UpdateNobaEmployeeRequest = {
+  salary: number;
+};

@@ -36,3 +36,8 @@ export class UpdateEmployerRequestDTO {
   @ApiPropertyOptional()
   maxAllocationPercent?: number;
 }
+
+export class UpdateEmployeeRequestDTO {
+  @ApiProperty()
+  salary: number;
+}

@@ -5,9 +5,12 @@ import { Logger } from "winston";
 import { Employee, EmployeeAllocationCurrency } from "./domain/Employee";
 import { IEmployeeRepo } from "./repo/employee.repo";
 import { EMPLOYEE_REPO_PROVIDER } from "./repo/employee.repo.module";
+import { UpdateEmployeeRequestDTO } from "./dto/employee.service.dto";
+import { EmployerService } from "../employer/employer.service";
 
 @Injectable()
 export class EmployeeService {
+  @Inject() private readonly employerService: EmployerService;
   constructor(
     @Inject(EMPLOYEE_REPO_PROVIDER) private readonly employeeRepo: IEmployeeRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
@@ -22,7 +25,7 @@ export class EmployeeService {
     });
   }
 
-  async updateEmployee(employeeID: string, allocationAmount: number): Promise<Employee> {
+  async updateEmployee(employeeID: string, updateRequest: UpdateEmployeeRequestDTO): Promise<Employee> {
     if (!employeeID) {
       throw new ServiceException({
         message: "employeeID is required",
@@ -30,15 +33,20 @@ export class EmployeeService {
       });
     }
 
-    if (!allocationAmount) {
-      throw new ServiceException({
-        message: "allocationAmount is required",
-        errorCode: ServiceErrorCode.UNKNOWN,
-      });
+    const employee = await this.getEmployeeByID(employeeID);
+    const employer = await this.employerService.getEmployerByID(employee.employerID);
+    const maxAllocationPercent = employer.maxAllocationPercent ?? 100;
+
+    const allocationAmount = updateRequest.allocationAmount ?? employee.allocationAmount;
+    const salary = updateRequest.salary ?? employee.salary;
+
+    if (allocationAmount > (maxAllocationPercent * salary) / 100) {
+      updateRequest.allocationAmount = (maxAllocationPercent * salary) / 100;
     }
 
     return this.employeeRepo.updateEmployee(employeeID, {
-      allocationAmount: allocationAmount,
+      ...(updateRequest.allocationAmount && { allocationAmount: updateRequest.allocationAmount }),
+      ...(updateRequest.salary && { salary: updateRequest.salary }),
     });
   }
 
@@ -80,5 +88,21 @@ export class EmployeeService {
     }
 
     return this.employeeRepo.getEmployeesForConsumerID(consumerID);
+  }
+
+  async updateAllocationAmountsForNewMaxAllocationPercent(
+    employerID: string,
+    newAllocationPercent: number,
+  ): Promise<void> {
+    const employees: Employee[] = await this.employeeRepo.getEmployeesForEmployer(employerID);
+    for (const employee of employees) {
+      const maxAllocationAmount = (newAllocationPercent * employee.salary) / 100;
+
+      if (employee.allocationAmount > maxAllocationAmount) {
+        await this.employeeRepo.updateEmployee(employee.id, {
+          allocationAmount: maxAllocationAmount,
+        });
+      }
+    }
   }
 }

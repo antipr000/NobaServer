@@ -6,10 +6,13 @@ import { Employee, EmployeeAllocationCurrency } from "../domain/Employee";
 import { IEmployeeRepo } from "../repo/employee.repo";
 import { getMockEmployeeRepoWithDefaults } from "../mocks/mock.employee.repo";
 import { EMPLOYEE_REPO_PROVIDER } from "../repo/employee.repo.module";
-import { anything, capture, instance, when } from "ts-mockito";
+import { anything, capture, instance, verify, when } from "ts-mockito";
 import { EmployeeService } from "../employee.service";
 import { uuid } from "uuidv4";
 import { ServiceException } from "../../../core/exception/service.exception";
+import { createTestEmployer } from "../../../modules/employer/test_utils/test.utils";
+import { EmployerService } from "../../../modules/employer/employer.service";
+import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
 
 const getRandomEmployee = (): Employee => {
   const employee: Employee = {
@@ -30,10 +33,12 @@ describe("EmployeeServiceTests", () => {
 
   let employeeRepo: IEmployeeRepo;
   let app: TestingModule;
+  let employerService: EmployerService;
   let employeeService: EmployeeService;
 
   beforeEach(async () => {
     employeeRepo = getMockEmployeeRepoWithDefaults();
+    employerService = getMockEmployerServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -46,6 +51,10 @@ describe("EmployeeServiceTests", () => {
         {
           provide: EMPLOYEE_REPO_PROVIDER,
           useFactory: () => instance(employeeRepo),
+        },
+        {
+          provide: EmployerService,
+          useFactory: () => instance(employerService),
         },
         EmployeeService,
       ],
@@ -84,10 +93,50 @@ describe("EmployeeServiceTests", () => {
   describe("updateEmployee", () => {
     it("should update an employee", async () => {
       const employee = getRandomEmployee();
-      const newAllocationAmount = Math.floor(Math.random() * 1000000);
+      const employer = createTestEmployer();
+      employee.employerID = employer.id;
+      employee.allocationAmount = 200;
+
+      employer.maxAllocationPercent = 20;
+
+      const newSalary = 100;
+
+      when(employeeRepo.getEmployeeByID(employee.id)).thenResolve(employee);
+      when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
       when(employeeRepo.updateEmployee(anything(), anything())).thenResolve(employee);
 
-      const updatedEmployee = await employeeService.updateEmployee(employee.id, newAllocationAmount);
+      const updatedEmployee = await employeeService.updateEmployee(employee.id, {
+        salary: newSalary,
+      });
+
+      expect(updatedEmployee).toEqual(employee);
+
+      const [employeeID, propagatedEmployeeUpdateRequest] = capture(employeeRepo.updateEmployee).last();
+      expect(employeeID).toEqual(employee.id);
+      expect(propagatedEmployeeUpdateRequest).toEqual({
+        allocationAmount: 20,
+        salary: newSalary,
+      });
+    });
+
+    it("should update an employee with new allocation amount based on new salary", async () => {
+      const employee = getRandomEmployee();
+      const employer = createTestEmployer();
+      employee.employerID = employer.id;
+
+      employer.maxAllocationPercent = 20;
+
+      const newAllocationAmount = 180;
+      const newSalary = 1000;
+
+      when(employeeRepo.getEmployeeByID(employee.id)).thenResolve(employee);
+      when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
+      when(employeeRepo.updateEmployee(anything(), anything())).thenResolve(employee);
+
+      const updatedEmployee = await employeeService.updateEmployee(employee.id, {
+        allocationAmount: newAllocationAmount,
+        salary: newSalary,
+      });
 
       expect(updatedEmployee).toEqual(employee);
 
@@ -95,24 +144,15 @@ describe("EmployeeServiceTests", () => {
       expect(employeeID).toEqual(employee.id);
       expect(propagatedEmployeeUpdateRequest).toEqual({
         allocationAmount: newAllocationAmount,
+        salary: newSalary,
       });
-    });
-
-    it("should throw an error if allocationAmount is undefined", async () => {
-      const employee = getRandomEmployee();
-
-      try {
-        await employeeService.updateEmployee(employee.id, undefined);
-        expect(true).toBeFalsy();
-      } catch (err) {
-        expect(err).toBeInstanceOf(ServiceException);
-        expect(err.message).toEqual(expect.stringContaining("allocationAmount"));
-      }
     });
 
     it("should throw ServiceException if the ID is undefined or null", async () => {
       try {
-        await employeeService.updateEmployee(undefined, 10.0);
+        await employeeService.updateEmployee(undefined, {
+          allocationAmount: 10.0,
+        });
         expect(true).toBeFalsy();
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);
@@ -120,7 +160,9 @@ describe("EmployeeServiceTests", () => {
       }
 
       try {
-        await employeeService.updateEmployee(null, 100.0);
+        await employeeService.updateEmployee(null, {
+          allocationAmount: 10.0,
+        });
         expect(true).toBeFalsy();
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);
@@ -221,6 +263,88 @@ describe("EmployeeServiceTests", () => {
         expect(err).toBeInstanceOf(ServiceException);
         expect(err.message).toEqual(expect.stringContaining("'employerID'"));
       }
+    });
+  });
+
+  describe("updateAllocationAmountsForNewMaxAllocationPercent", () => {
+    it("should update the allocation amounts for all employees of an employer when max allocation percent changes", async () => {
+      const employee1 = getRandomEmployee();
+      const employee2 = getRandomEmployee();
+      const employee3 = getRandomEmployee();
+
+      const employer = createTestEmployer();
+      employer.maxAllocationPercent = 20;
+
+      employee1.salary = 1000;
+      employee2.salary = 2000;
+      employee3.salary = 3000;
+
+      employee1.allocationAmount = 200;
+      employee2.allocationAmount = 400;
+      employee3.allocationAmount = 600;
+
+      when(employeeRepo.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2, employee3]);
+      when(employeeRepo.updateEmployee(anything(), anything())).thenResolve();
+
+      await employeeService.updateAllocationAmountsForNewMaxAllocationPercent(employer.id, 10);
+
+      const [employeeID1, employeeUpdateRequest1] = capture(employeeRepo.updateEmployee).first();
+      const [employeeID2, employeeUpdateRequest2] = capture(employeeRepo.updateEmployee).second();
+      const [employeeID3, employeeUpdateRequest3] = capture(employeeRepo.updateEmployee).third();
+
+      verify(employeeRepo.updateEmployee(anything(), anything())).times(3);
+
+      expect(employeeID1).toEqual(employee1.id);
+      expect(employeeUpdateRequest1).toEqual({
+        allocationAmount: 100,
+      });
+
+      expect(employeeID2).toEqual(employee2.id);
+      expect(employeeUpdateRequest2).toEqual({
+        allocationAmount: 200,
+      });
+
+      expect(employeeID3).toEqual(employee3.id);
+      expect(employeeUpdateRequest3).toEqual({
+        allocationAmount: 300,
+      });
+    });
+
+    it("should update allocation amounts of only those employees which are exceeding as per new max allocation percent", async () => {
+      const employee1 = getRandomEmployee();
+      const employee2 = getRandomEmployee();
+      const employee3 = getRandomEmployee();
+
+      const employer = createTestEmployer();
+      employer.maxAllocationPercent = 20;
+
+      employee1.salary = 1000;
+      employee2.salary = 2000;
+      employee3.salary = 3000;
+
+      employee1.allocationAmount = 200;
+      employee2.allocationAmount = 400;
+      employee3.allocationAmount = 200; // this employee is not exceeding the new max allocation percent
+
+      when(employeeRepo.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2, employee3]);
+      when(employeeRepo.updateEmployee(anything(), anything())).thenResolve();
+
+      await employeeService.updateAllocationAmountsForNewMaxAllocationPercent(employer.id, 10);
+
+      const [employeeID1, employeeUpdateRequest1] = capture(employeeRepo.updateEmployee).first();
+      const [employeeID2, employeeUpdateRequest2] = capture(employeeRepo.updateEmployee).second();
+
+      verify(employeeRepo.updateEmployee(anything(), anything())).times(2);
+
+      expect(employeeID1).toEqual(employee1.id);
+      expect(employeeUpdateRequest1).toEqual({
+        allocationAmount: 100,
+      });
+
+      expect(employeeID2).toEqual(employee2.id);
+      expect(employeeUpdateRequest2).toEqual({
+        allocationAmount: 200,
+      });
     });
   });
 });

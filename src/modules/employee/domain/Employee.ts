@@ -8,6 +8,7 @@ export class Employee {
   allocationCurrency: EmployeeAllocationCurrency;
   employerID: string;
   consumerID: string;
+  salary?: number;
   createdTimestamp: Date;
   updatedTimestamp: Date;
 }
@@ -23,11 +24,13 @@ export class EmployeeCreateRequest {
   allocationCurrency: EmployeeAllocationCurrency;
   employerID: string;
   consumerID: string;
+  salary?: number;
 }
 
 export class EmployeeUpdateRequest {
   allocationAmount?: number;
   allocationCurrency?: EmployeeAllocationCurrency;
+  salary?: number;
 }
 
 export const validateCreateEmployeeRequest = (employee: EmployeeCreateRequest) => {
@@ -38,6 +41,7 @@ export const validateCreateEmployeeRequest = (employee: EmployeeCreateRequest) =
       .valid(...Object.values(EmployeeAllocationCurrency)),
     consumerID: Joi.string().required(),
     employerID: Joi.string().required(),
+    salary: Joi.number().optional(),
   };
 
   const employeeJoiSchema = Joi.object(employeeJoiValidationKeys).options({
@@ -53,6 +57,7 @@ export const validateUpdateEmployeeRequest = (employee: EmployeeUpdateRequest) =
     allocationCurrency: Joi.string()
       .optional()
       .valid(...Object.values(EmployeeAllocationCurrency)),
+    salary: Joi.number().optional(),
   };
 
   const employeeJoiSchema = Joi.object(employeeJoiValidationKeys).options({
@@ -73,6 +78,7 @@ export const validateEmployee = (employee: Employee) => {
     consumerID: Joi.string().required(),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
+    salary: Joi.number().optional(),
   };
 
   const employeeJoiSchema = Joi.object(employeeJoiValidationKeys).options({
@@ -91,5 +97,6 @@ export const convertToDomainEmployee = (employee: PrismaEmployeeModel): Employee
     consumerID: employee.consumerID,
     createdTimestamp: employee.createdTimestamp,
     updatedTimestamp: employee.updatedTimestamp,
+    ...(employee.salary && { salary: employee.salary }),
   };
 };

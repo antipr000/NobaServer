@@ -162,4 +162,25 @@ describe("BubbleWorkflowControllerTests", () => {
       });
     });
   });
+
+  describe("updateEmployee", () => {
+    it("should forwards the request to the BubbleService", async () => {
+      const employeeID = "employeeID";
+      const requestBody = {
+        salary: 1000,
+      };
+
+      when(bubbleService.updateEmployee(anyString(), anything())).thenResolve();
+
+      await bubbleWorkflowController.updateEmployee(requestBody, employeeID);
+
+      const [bubbleServiceUpdateEmployeeEmployeeIDArgs, bubbleServiceUpdateEmployeeRequestBodyArgs] = capture(
+        bubbleService.updateEmployee,
+      ).last();
+      expect(bubbleServiceUpdateEmployeeEmployeeIDArgs).toEqual("employeeID");
+      expect(bubbleServiceUpdateEmployeeRequestBodyArgs).toEqual({
+        salary: 1000,
+      });
+    });
+  });
 });
