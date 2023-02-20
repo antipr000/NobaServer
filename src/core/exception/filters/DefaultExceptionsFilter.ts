@@ -18,6 +18,7 @@ export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
 
     if (originalException instanceof BaseException) {
       response.header("x-noba-retryable", originalException.retry);
+      response.header("x-noba-message-format", originalException.messageFormat);
     }
 
     //Send HTTP Exception, don't send anything sensitive here i.e. service internal info

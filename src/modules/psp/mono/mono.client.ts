@@ -19,6 +19,8 @@ import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
 import { MonoTransactionState } from "../domain/Mono";
 import { IClient } from "../../../core/domain/IClient";
 import { HealthCheckResponse, HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
+import { MonoClientErrorCode, MonoClientException } from "./exception/mono.client.exception";
+import { InputTransactionEvent } from "../../../modules/transaction/domain/TransactionEvent";
 
 @Injectable()
 export class MonoClient implements IClient {
@@ -72,8 +74,8 @@ export class MonoClient implements IClient {
       return data["banks"];
     } catch (e) {
       this.logger.error(`Failed to fetch bank list from mono. ${JSON.stringify(e.response?.data)}`);
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+      throw new MonoClientException({
+        errorCode: MonoClientErrorCode.UNKNOWN,
         message: "Failed to fetch data from Mono",
       });
     }
@@ -88,7 +90,7 @@ export class MonoClient implements IClient {
 
     // Mono can only accept phone numbers in the format +57XXXXXXXXX and it is a required field, so we need to make sure we send a valid one.
     // This is really only a problem with testing, as in practice our customers should have +57 phone numbers.
-    const phone = request.consumerPhone.startsWith("+57") ? request.consumerPhone : "+573000000000";
+    const phone = request.consumerPhone?.startsWith("+57") ? request.consumerPhone : "+573000000000";
 
     const requestBody = {
       account_id: this.nobaAccountID,
@@ -193,15 +195,35 @@ export class MonoClient implements IClient {
         transferID: transferResponse.id,
       };
     } catch (err) {
-      this.logger.error(
-        `Error while transferring funds from Mono: ${JSON.stringify(
-          err.response?.data,
-        )}. Request body: ${JSON.stringify(requestBody)}`,
-      );
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.UNKNOWN,
-        message: "Error while transferring funds from Mono",
-      });
+      if (err.response?.status == 422 || err.response?.status == 400) {
+        this.logger.error(`Mono transfer failed for Transaction validation: ${JSON.stringify(err.response.data)}`);
+        const transactionEvent = {
+          transactionID: request.transactionID, // assume result is in the database
+          message: "Mono transfer failed for Transaction validation",
+          details: err.response.data,
+          internal: true,
+        };
+        throw new MonoClientException({
+          errorCode: MonoClientErrorCode.TRANSFER_FAILED,
+          message: JSON.stringify(transactionEvent),
+        });
+      } else {
+        this.logger.error(
+          `Error while transferring funds from Mono: ${JSON.stringify(
+            err.response?.data,
+          )}. Request body: ${JSON.stringify(requestBody)}`,
+        );
+        const transactionEvent = {
+          transactionID: request.transactionID, // assume result is in the database
+          message: "Mono transfer failed for Transaction validation",
+          details: err.response.data,
+          internal: true,
+        };
+        throw new MonoClientException({
+          errorCode: MonoClientErrorCode.UNKNOWN,
+          message: JSON.stringify(transactionEvent),
+        });
+      }
     }
   }
 
@@ -215,8 +237,8 @@ export class MonoClient implements IClient {
       const response = await axios.get(url, { headers });
       const transfer = response.data.transfers.find((transfer: any) => transfer.id === transferID);
       if (!transfer) {
-        throw new ServiceException({
-          errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        throw new MonoClientException({
+          errorCode: MonoClientErrorCode.TRANSFER_NOT_FOUND,
           message: "Mono transfer not found",
         });
       }
@@ -230,8 +252,8 @@ export class MonoClient implements IClient {
         duplicated: MonoTransactionState.DUPLICATED,
       };
       if (!externalTransactionStateToInternalState[transfer.state]) {
-        throw new ServiceException({
-          errorCode: ServiceErrorCode.UNKNOWN,
+        throw new MonoClientException({
+          errorCode: MonoClientErrorCode.UNKNOWN,
           message: `Unknown Mono transfer state: ${transfer.state}`,
         });
       }
@@ -243,8 +265,8 @@ export class MonoClient implements IClient {
       };
     } catch (err) {
       this.logger.error(`Error while fetching the Transfer status from Mono: ${JSON.stringify(err.response?.data)}`);
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.UNKNOWN,
+      throw new MonoClientException({
+        errorCode: MonoClientErrorCode.UNKNOWN,
         message: "Error while fetching the Transfer status from Mono",
       });
     }

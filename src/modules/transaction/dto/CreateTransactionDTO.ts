@@ -26,7 +26,7 @@ export class InitiateTransactionDTO {
   @ApiPropertyOptional()
   creditAmount?: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional() // Any particular reason we need this? Should be controlled only by the exchange rate service
   exchangeRate?: number;
 
   @ApiPropertyOptional()
