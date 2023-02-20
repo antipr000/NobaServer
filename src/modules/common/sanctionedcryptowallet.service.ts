@@ -1,8 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { S3 } from "aws-sdk";
+import { S3, GetObjectCommand } from "@aws-sdk/client-s3";
 import { parse } from "csv";
 import { ASSETS_BUCKET_NAME, SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { Readable } from "stream";
 
 @Injectable()
 export class SanctionedCryptoWalletService {
@@ -15,16 +16,24 @@ export class SanctionedCryptoWalletService {
   }
 
   private async loadCryptoWalletsFromS3(): Promise<string[]> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const results = new Array<string>();
       const parser = parse({ delimiter: ",", columns: true });
-      const s3 = new S3();
+      const s3 = new S3({});
       const options = {
         Bucket: this.configService.get(ASSETS_BUCKET_NAME),
         Key: this.configService.get(SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH),
       };
 
-      const readStream = s3.getObject(options).createReadStream();
+      const getObjectCommand = new GetObjectCommand(options);
+
+      const getObjectResult = await s3.send(getObjectCommand);
+
+      const stringifiedResult = await getObjectResult.Body.transformToString();
+
+      const readStream = new Readable();
+      readStream.push(stringifiedResult);
+      readStream.push(null);
       readStream
         .pipe(parser)
         .on("data", data => {

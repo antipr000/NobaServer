@@ -225,8 +225,14 @@ describe("UserAuthService", () => {
       });
 
       it("should return an OTP of YYMMDD format for the test user", () => {
-        jest.spyOn(Date, "now").mockReturnValueOnce(Date.parse("2023-02-14"));
+        jest.spyOn(Date, "now").mockReturnValueOnce(new Date(2023, 1, 14).getTime());
         const otp = userAuthService.generateOTP(Utils.TEST_USER_EMAIL);
+        expect(otp).toBe(230214);
+      });
+
+      it("should return an OTP of YYMMDD format for the test user even if email is uppercase", () => {
+        jest.spyOn(Date, "now").mockReturnValueOnce(new Date(2023, 1, 14).getTime());
+        const otp = userAuthService.generateOTP(Utils.TEST_USER_EMAIL.toUpperCase());
         expect(otp).toBe(230214);
       });
     });

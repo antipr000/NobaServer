@@ -44,6 +44,8 @@ describe("CurrencyService for e2e test", () => {
       NODE_ENV: "e2e_test",
       AWS_ACCESS_KEY_ID: configs.AWS_ACCESS_KEY_ID,
       AWS_SECRET_ACCESS_KEY: configs.AWS_SECRET_ACCESS_KEY,
+      AWS_REGION: "us-east-1",
+      AWS_DEFAULT_REGION: "us-east-1",
     };
 
     const app: TestingModule = await Test.createTestingModule({

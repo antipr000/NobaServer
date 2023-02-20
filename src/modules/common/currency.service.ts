@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { S3 } from "aws-sdk";
+import { GetObjectCommand, S3 } from "@aws-sdk/client-s3";
 import { parse } from "csv";
 import {
   AppEnvironment,
@@ -9,6 +9,7 @@ import {
 } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CurrencyDTO } from "../../modules/common/dto/CurrencyDTO";
+import { Readable } from "stream";
 
 export const CHAINTYPE_ERC20 = "ERC20";
 @Injectable()
@@ -24,16 +25,23 @@ export class CurrencyService {
   private async loadCurrenciesFromS3(): Promise<Array<CurrencyDTO>> {
     const environment: AppEnvironment = getEnvironmentName();
 
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       const results = new Array<CurrencyDTO>();
       const parser = parse({ delimiter: ",", columns: true });
-      const s3 = new S3();
+      const s3 = new S3({});
       const options = {
         Bucket: this.configService.get(ASSETS_BUCKET_NAME),
         Key: this.configService.get(SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH),
       };
 
-      const readStream = s3.getObject(options).createReadStream();
+      const getObjectCommand = new GetObjectCommand(options);
+
+      const getObjectResult = await s3.send(getObjectCommand);
+
+      const stringifiedResult = await getObjectResult.Body.transformToString();
+      const readStream = new Readable();
+      readStream.push(stringifiedResult);
+      readStream.push(null);
       readStream
         .pipe(parser)
         .on("data", data => {

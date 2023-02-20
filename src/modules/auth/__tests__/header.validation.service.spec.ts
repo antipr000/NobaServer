@@ -44,6 +44,8 @@ describe("HeaderValidationService", () => {
         providers: [HeaderValidationService],
       }).compile();
 
+      process.env.NODE_ENV = AppEnvironment.DEV;
+
       headerValidationService = app.get<HeaderValidationService>(HeaderValidationService);
     });
 
@@ -258,7 +260,7 @@ describe("HeaderValidationService", () => {
         controllers: [],
         providers: [HeaderValidationService],
       }).compile();
-
+      process.env.NODE_ENV = AppEnvironment.PROD;
       headerValidationService = app.get<HeaderValidationService>(HeaderValidationService);
     });
 

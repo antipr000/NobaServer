@@ -2,21 +2,38 @@ import { Circle, CircleEnvironments, CreateWalletResponse, TransferErrorCode } f
 import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { CircleConfigs } from "../../config/configtypes/CircleConfigs";
-import { CIRCLE_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { AppEnvironment, CIRCLE_CONFIG_KEY, getEnvironmentName } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Logger } from "winston";
-import { AxiosResponse } from "axios";
+import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { CircleWithdrawalRequest, CircleWithdrawalResponse, CircleWithdrawalStatusMap } from "./domain/CircleTypes";
 import { fromString as convertToUUIDv4 } from "uuidv4";
 import { Utils } from "../../core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { IClient } from "../../core/domain/IClient";
 import { HealthCheckResponse, HealthCheckStatus } from "../../core/domain/HealthCheckTypes";
+import tunnel from "tunnel";
+import { Length } from "class-validator";
 
 @Injectable()
 export class CircleClient implements IClient {
   private readonly circleApi: Circle;
   private readonly masterWalletID: string;
+
+  // TODO: Move to config yaml
+  HOST = "172.31.8.170";
+  HTTP_PORT = 3128;
+
+  private axiosConfig: AxiosRequestConfig =
+    getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
+      ? null
+      : {
+          proxy: {
+            protocol: "http",
+            host: this.HOST,
+            port: this.HTTP_PORT,
+          },
+        };
 
   constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
     const circleConfigs: CircleConfigs = configService.get<CircleConfigs>(CIRCLE_CONFIG_KEY);
@@ -26,7 +43,8 @@ export class CircleClient implements IClient {
 
   async getHealth(): Promise<HealthCheckResponse> {
     try {
-      const response = await this.circleApi.health.ping();
+      const response = await this.circleApi.health.ping(this.axiosConfig);
+
       if (response.status === HttpStatus.OK) {
         return {
           status: HealthCheckStatus.OK,
@@ -49,17 +67,20 @@ export class CircleClient implements IClient {
 
   async createWallet(idempotencyKey: string): Promise<string> {
     try {
-      const response: AxiosResponse<CreateWalletResponse> = await this.circleApi.wallets.createWallet({
-        idempotencyKey: convertToUUIDv4(idempotencyKey),
-        description: idempotencyKey,
-      });
+      const response: AxiosResponse<CreateWalletResponse> = await this.circleApi.wallets.createWallet(
+        {
+          idempotencyKey: convertToUUIDv4(idempotencyKey),
+          description: idempotencyKey,
+        },
+        this.axiosConfig,
+      );
 
       this.logger.info(`"createWallet" succeeds with request_id: "${response.headers["X-Request-Id"]}"`);
       return response.data.data.walletId;
     } catch (err) {
       this.logger.error(
-        `Error while creating the wallet: ${JSON.stringify(err.response.data)}, ${JSON.stringify(
-          err.response.headers,
+        `Error while creating the wallet: ${JSON.stringify(err.response?.data)}, ${JSON.stringify(
+          err.response?.headers,
         )}`,
       );
       throw new ServiceException({
@@ -72,7 +93,7 @@ export class CircleClient implements IClient {
   // It is assumed that Circle is used to store "only" USD balance.
   async getWalletBalance(walletID: string): Promise<number> {
     try {
-      const walletData = await this.circleApi.wallets.getWallet(walletID);
+      const walletData = await this.circleApi.wallets.getWallet(walletID, this.axiosConfig);
       this.logger.info(`"getWallet" succeeds with request_id: "${walletData.headers["X-Request-Id"]}"`);
 
       let result = 0;
@@ -109,12 +130,15 @@ export class CircleClient implements IClient {
 
   async transfer(request: CircleWithdrawalRequest): Promise<CircleWithdrawalResponse> {
     try {
-      const transferResponse = await this.circleApi.transfers.createTransfer({
-        idempotencyKey: request.idempotencyKey,
-        source: { id: request.sourceWalletID, type: "wallet" },
-        destination: { id: request.destinationWalletID, type: "wallet" },
-        amount: { amount: Utils.roundTo2DecimalString(request.amount), currency: "USD" },
-      });
+      const transferResponse = await this.circleApi.transfers.createTransfer(
+        {
+          idempotencyKey: request.idempotencyKey,
+          source: { id: request.sourceWalletID, type: "wallet" },
+          destination: { id: request.destinationWalletID, type: "wallet" },
+          amount: { amount: Utils.roundTo2DecimalString(request.amount), currency: "USD" },
+        },
+        this.axiosConfig,
+      );
 
       const transferData = transferResponse.data.data;
       if (transferData.status !== "failed") {
@@ -151,7 +175,7 @@ export class CircleClient implements IClient {
           });
       }
     } catch (err) {
-      this.logger.error(`Error while transferring funds: ${JSON.stringify(err.response.data)}`);
+      this.logger.error(`Error while transferring funds: ${JSON.stringify(err.response?.data)}`);
       if (err instanceof ServiceException) {
         throw err;
       }
