@@ -37,7 +37,7 @@ import { WorkflowName } from "../../../modules/transaction/domain/Transaction";
 import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
 
-describe("EmailEventHandler", () => {
+describe.each(["en", "es-co"])("EmailEventHandler test for language %s", locale => {
   let currencyService: CurrencyService;
   let emailClient: EmailClient;
   let eventHandler: EmailEventHandler;
@@ -101,7 +101,7 @@ describe("EmailEventHandler", () => {
     const payload = new SendOtpEvent({
       email: "fake+user@noba.com",
       phone: undefined,
-      locale: "en",
+      locale: locale,
       otp: "123456",
       name: "Fake",
       handle: "fake-handle",
@@ -113,7 +113,7 @@ describe("EmailEventHandler", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.OTP_EMAIL["en"], //this is template id for sending otp without any context, see sendgrid dashboard
+      templateId: EmailTemplates.OTP_EMAIL[locale], //this is template id for sending otp without any context, see sendgrid dashboard
       dynamicTemplateData: {
         user: payload.name ?? "",
         user_email: payload.email,
@@ -122,11 +122,11 @@ describe("EmailEventHandler", () => {
     });
   });
 
-  it("should call eventHandler with SendWalletUpdateVerificationCode event", async () => {
+  it("should call eventHandler with SendWalletUpdateVerificationCode event and fallback to 'en' when template for locale not found", async () => {
     const payload = new SendWalletUpdateVerificationCodeEvent({
       email: "fake+user@noba.com",
       phone: undefined,
-      locale: "en",
+      locale: locale,
       otp: "123456",
       name: "Fake",
 
@@ -156,7 +156,7 @@ describe("EmailEventHandler", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      locale: "en",
+      locale: locale,
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -166,7 +166,7 @@ describe("EmailEventHandler", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.WELCOME_EMAIL["en"],
+      templateId: EmailTemplates.WELCOME_EMAIL[locale],
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -179,7 +179,7 @@ describe("EmailEventHandler", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      locale: "en",
+      locale: locale,
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -189,7 +189,7 @@ describe("EmailEventHandler", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_US_EMAIL["en"],
+      templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_US_EMAIL[locale],
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -197,12 +197,12 @@ describe("EmailEventHandler", () => {
     });
   });
 
-  it("should call eventHandler with SendKycApprovedNonUS event", async () => {
+  it("should call eventHandler with SendKycApprovedNonUS event and fallback to 'en' when template for locale not found", async () => {
     const payload = new SendKycApprovedNonUSEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      locale: "en",
+      locale: locale,
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -225,7 +225,7 @@ describe("EmailEventHandler", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      locale: "en",
+      locale: locale,
       nobaUserID: "fake-noba-user-id",
     });
     await eventHandler.sendKycDeniedEmail(payload);
@@ -234,7 +234,7 @@ describe("EmailEventHandler", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.KYC_DENIED_EMAIL["en"],
+      templateId: EmailTemplates.KYC_DENIED_EMAIL[locale],
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -243,12 +243,12 @@ describe("EmailEventHandler", () => {
     });
   });
 
-  it("should call eventHandler with SendKycPendingOrFlagged event", async () => {
+  it("should call eventHandler with SendKycPendingOrFlagged event and fallback to 'en' when template for locale not found", async () => {
     const payload = new SendKycDeniedEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      locale: "en",
+      locale: locale,
       nobaUserID: "fake-noba-user-id",
     });
     await eventHandler.sendKycPendingOrFlaggedEmail(payload);
@@ -262,7 +262,7 @@ describe("EmailEventHandler", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      locale: "en",
+      locale: locale,
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -272,7 +272,7 @@ describe("EmailEventHandler", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.DOC_VERIFICATION_PENDING_EMAIL["en"],
+      templateId: EmailTemplates.DOC_VERIFICATION_PENDING_EMAIL[locale],
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -285,7 +285,7 @@ describe("EmailEventHandler", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      locale: "en",
+      locale: locale,
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -308,7 +308,7 @@ describe("EmailEventHandler", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      locale: "en",
+      locale: locale,
       nobaUserID: "fake-noba-user-id",
     });
     await eventHandler.sendDocVerificationFailedTechEmail(payload);
@@ -330,7 +330,7 @@ describe("EmailEventHandler", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      locale: "en",
+      locale: locale,
       nobaUserID: "fake-noba-user-id",
       cardNetwork: "VISA",
       last4Digits: "1234",
@@ -357,7 +357,7 @@ describe("EmailEventHandler", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      locale: "en",
+      locale: locale,
       nobaUserID: "fake-noba-user-id",
       last4Digits: "1234",
     });
@@ -382,7 +382,7 @@ describe("EmailEventHandler", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      locale: "en",
+      locale: locale,
       nobaUserID: "fake-noba-user-id",
       cardNetwork: "VISA",
       last4Digits: "1234",
@@ -409,7 +409,7 @@ describe("EmailEventHandler", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      locale: "en",
+      locale: locale,
       nobaUserID: "fake-noba-user-id",
     });
 
@@ -433,7 +433,7 @@ describe("EmailEventHandler", () => {
       name: "First",
       handle: "fake-handle",
       params: getTransactionParams(WorkflowName.WALLET_DEPOSIT),
-      locale: "en",
+      locale: locale,
     });
 
     await eventHandler.sendDepositCompletedEmail(payload);
@@ -473,7 +473,7 @@ describe("EmailEventHandler", () => {
         ...getTransactionParams(WorkflowName.WALLET_DEPOSIT),
         reasonDeclined: "Failed",
       },
-      locale: "en",
+      locale: locale,
     });
 
     await eventHandler.sendDepositFailedEmail(payload);
@@ -513,7 +513,7 @@ describe("EmailEventHandler", () => {
       params: {
         ...getTransactionParams(WorkflowName.WALLET_DEPOSIT),
       },
-      locale: "en",
+      locale: locale,
     });
 
     await eventHandler.sendDepositInitiatedEmail(payload);
@@ -552,7 +552,7 @@ describe("EmailEventHandler", () => {
       params: {
         ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
       },
-      locale: "en",
+      locale: locale,
     });
 
     await eventHandler.sendWithdrawalCompletedEmail(payload);
@@ -591,7 +591,7 @@ describe("EmailEventHandler", () => {
       params: {
         ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
       },
-      locale: "en",
+      locale: locale,
     });
 
     await eventHandler.sendWithdrawalInitiatedEmail(payload);
@@ -631,7 +631,7 @@ describe("EmailEventHandler", () => {
         ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
         reasonDeclined: "Failed",
       },
-      locale: "en",
+      locale: locale,
     });
 
     await eventHandler.sendWithdrawalFailedEmail(payload);
@@ -675,7 +675,7 @@ describe("EmailEventHandler", () => {
         creditConsumer_handle: "justin",
         debitConsumer_handle: "gal",
       },
-      locale: "en",
+      locale: locale,
     });
 
     await eventHandler.sendTransferCompletedEmail(payload);
@@ -684,7 +684,7 @@ describe("EmailEventHandler", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.TRANSFER_SUCCESSFUL_EMAIL["en"],
+      templateId: EmailTemplates.TRANSFER_SUCCESSFUL_EMAIL[locale],
       dynamicTemplateData: {
         creditConsumer_firstName: payload.params.creditConsumer_firstName,
         creditConsumer_lastName: payload.params.creditConsumer_lastName,
@@ -717,7 +717,7 @@ describe("EmailEventHandler", () => {
         debitConsumer_firstName: "Gal",
         debitConsumer_lastName: "Ben Chanoch",
       },
-      locale: "en",
+      locale: locale,
     });
 
     await eventHandler.sendTransferReceivedEvent(payload);
@@ -726,7 +726,7 @@ describe("EmailEventHandler", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.TRANSFER_RECEIVED_EMAIL["en"],
+      templateId: EmailTemplates.TRANSFER_RECEIVED_EMAIL[locale],
       dynamicTemplateData: {
         creditConsumer_firstName: payload.params.creditConsumer_firstName,
         creditConsumer_lastName: payload.params.creditConsumer_lastName,
@@ -760,7 +760,7 @@ describe("EmailEventHandler", () => {
         debitConsumer_handle: "gal",
         reasonDeclined: "Failed transfer",
       },
-      locale: "en",
+      locale: locale,
     });
 
     await eventHandler.sendTransferFailedEmail(payload);
@@ -769,7 +769,7 @@ describe("EmailEventHandler", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.TRANSFER_FAILED_EMAIL["en"],
+      templateId: EmailTemplates.TRANSFER_FAILED_EMAIL[locale],
       dynamicTemplateData: {
         creditConsumer_firstName: payload.params.creditConsumer_firstName,
         creditConsumer_lastName: payload.params.creditConsumer_lastName,
@@ -794,7 +794,7 @@ describe("EmailEventHandler", () => {
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
-      locale: "en",
+      locale: locale,
       nobaUserID: "fake-noba-user-id",
       sessionID: "fake-session-id",
       transactionID: "fake-transaction-id",
@@ -828,7 +828,7 @@ describe("EmailEventHandler", () => {
   it("should call eventHandler with SendEmployerRequest event", async () => {
     const payload = new SendEmployerRequestEvent({
       email: "fake+user@noba.com",
-      locale: "en",
+      locale: locale,
     });
 
     await eventHandler.sendEmployerRequestEmail(payload);
@@ -837,7 +837,7 @@ describe("EmailEventHandler", () => {
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.EMPLOYER_REQUEST_EMAIL[payload.locale],
+      templateId: EmailTemplates.EMPLOYER_REQUEST_EMAIL["en"],
       dynamicTemplateData: {},
     });
   });

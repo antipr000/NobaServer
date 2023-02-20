@@ -1,24 +1,35 @@
 export const EmailTemplates = {
+  getOrDefault: (templateObject: object, locale: string): string => {
+    if (!templateObject[locale]) {
+      return templateObject["en"];
+    }
+    return templateObject[locale];
+  },
   OTP_EMAIL: {
     en: "d-62a393f5f89949f5a5a3d244a51ed2e7",
+    "es-co": "d-5e14091f8be44f9bb0689752411163a3",
   },
   WELCOME_EMAIL: {
     en: "d-0c8d633f6de545c6a562ac8e6d53917d",
+    "es-co": "d-cd852911b9014a719cd9c8d3b5b0a841",
   },
   ID_VERIFICATION_SUCCESSFUL_US_EMAIL: {
     en: "d-2d55cada60ab46209d6d5bcfe9c450d7",
+    "es-co": "d-874a99d468ca40b0b42b471d9213e1dd",
   },
   ID_VERIFICATION_SUCCESSFUL_NON_US_EMAIL: {
     en: "d-659a31aa552c41d0b86de43ac3b87c34",
   },
   KYC_DENIED_EMAIL: {
     en: "d-fac2f33374c443cb855641727a735708",
+    "es-co": "d-e1e2826a573c4503a067cdc4cf560ca9",
   },
   KYC_FLAGGED_EMAIL: {
     en: "d-d25d29442cf44338b72e15ea75bcab26",
   },
   DOC_VERIFICATION_PENDING_EMAIL: {
     en: "d-9f03c94f41f64b6ea2ec9343f1bc8b7f",
+    "es-co": "d-df43f46868d946aeb8a660b8eacf609f",
   },
   DOC_VERIFICATION_REJECTED_EMAIL: {
     en: "d-06519883cba548dba2f2202ad58b12fa",
@@ -61,12 +72,15 @@ export const EmailTemplates = {
   },
   TRANSFER_SUCCESSFUL_EMAIL: {
     en: "d-1c758bcf9eae40ed83c3cd9152ed17c4",
+    "es-co": "d-82d724063f4c42ad928a30e7998bcd76",
   },
   TRANSFER_RECEIVED_EMAIL: {
     en: "d-003b215b896947ffa52c90fbafb9b33c",
+    "es-co": "d-e3de834595c44e09983e69db1c4c018e",
   },
   TRANSFER_FAILED_EMAIL: {
     en: "d-c2f615c6c81147c9b3666cb6fd1c93b8",
+    "es-co": "d-d806e77606f04b7fb953aaa728f8ae2a",
   },
   COLLECTION_LINK_EMAIL: {},
   COLLECTION_COMPLETED_EMAIL: {

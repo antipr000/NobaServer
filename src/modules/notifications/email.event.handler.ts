@@ -54,7 +54,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.OTP_EMAIL[payload.locale ?? "en"], //this is template id for sending otp without any context, see sendgrid dashboard
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.OTP_EMAIL, payload.locale ?? "en"), //this is template id for sending otp without any context, see sendgrid dashboard
       dynamicTemplateData: {
         user: payload.name ?? "",
         user_email: payload.email,
@@ -70,7 +70,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.WALLET_UPDATE_OTP[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.WALLET_UPDATE_OTP, payload.locale ?? "en"),
       dynamicTemplateData: {
         user: payload.name ?? "",
         user_email: payload.email,
@@ -87,7 +87,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.WELCOME_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.WELCOME_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -102,7 +102,10 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_US_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(
+        EmailTemplates.ID_VERIFICATION_SUCCESSFUL_US_EMAIL,
+        payload.locale ?? "en",
+      ),
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -117,7 +120,10 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_NON_US_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(
+        EmailTemplates.ID_VERIFICATION_SUCCESSFUL_NON_US_EMAIL,
+        payload.locale ?? "en",
+      ),
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -132,7 +138,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.KYC_DENIED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.KYC_DENIED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -151,7 +157,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.KYC_FLAGGED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.KYC_FLAGGED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -167,7 +173,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.DOC_VERIFICATION_PENDING_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.DOC_VERIFICATION_PENDING_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -182,7 +188,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.DOC_VERIFICATION_REJECTED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.DOC_VERIFICATION_REJECTED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -197,7 +203,10 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.DOC_VERIFICATION_FAILED_TECH_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(
+        EmailTemplates.DOC_VERIFICATION_FAILED_TECH_EMAIL,
+        payload.locale ?? "en",
+      ),
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -212,7 +221,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.CARD_ADDED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.CARD_ADDED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -230,7 +239,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.CARD_ADDITION_FAILED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.CARD_ADDITION_FAILED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -247,7 +256,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.CARD_DELETED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.CARD_DELETED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -266,7 +275,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.COLLECTION_COMPLETED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.COLLECTION_COMPLETED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -284,7 +293,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.DEPOSIT_SUCCESSFUL_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.DEPOSIT_SUCCESSFUL_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         firstName: payload.name,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -312,7 +321,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.DEPOSIT_INITIATED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.DEPOSIT_INITIATED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         firstName: payload.name,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -340,7 +349,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.DEPOSIT_FAILED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.DEPOSIT_FAILED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         firstName: payload.name,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -369,7 +378,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.WITHDRAWAL_SUCCESSFUL_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.WITHDRAWAL_SUCCESSFUL_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         firstName: payload.name,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -397,7 +406,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.WITHDRAWAL_INITIATED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.WITHDRAWAL_INITIATED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         firstName: payload.name,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -425,7 +434,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.WITHDRAWAL_FAILED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.WITHDRAWAL_FAILED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         firstName: payload.name,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -451,7 +460,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.TRANSFER_SUCCESSFUL_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.TRANSFER_SUCCESSFUL_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         creditConsumer_firstName: payload.params.creditConsumer_firstName,
         creditConsumer_lastName: payload.params.creditConsumer_lastName,
@@ -477,7 +486,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.TRANSFER_RECEIVED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.TRANSFER_RECEIVED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         creditConsumer_firstName: payload.params.creditConsumer_firstName,
         creditConsumer_lastName: payload.params.creditConsumer_lastName,
@@ -505,7 +514,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.TRANSFER_FAILED_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.TRANSFER_FAILED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
         creditConsumer_firstName: payload.params.creditConsumer_firstName,
         creditConsumer_lastName: payload.params.creditConsumer_lastName,
@@ -532,7 +541,7 @@ export class EmailEventHandler {
     const msg = {
       to: NOBA_COMPLIANCE_EMAIL,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.NOBA_INTERNAL_HARD_DECLINE[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.NOBA_INTERNAL_HARD_DECLINE, payload.locale ?? "en"),
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -554,7 +563,7 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.EMPLOYER_REQUEST_EMAIL[payload.locale ?? "en"],
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.EMPLOYER_REQUEST_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {}, // Leaving empty because we don't need any dynamic data
     };
 
