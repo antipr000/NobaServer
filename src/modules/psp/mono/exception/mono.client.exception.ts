@@ -1,6 +1,7 @@
 import { BaseException, ExceptionConstructor } from "../../../../core/exception/base.exception";
 
 export const enum MonoClientErrorCode {
+  PHONE_NUMBER_INVALID = "Phone number invalid",
   TRANSFER_NOT_FOUND = "Transfer not found",
   TRANSFER_FAILED = "Transfer failed",
   UNKNOWN = "Unknown error",

@@ -31,6 +31,7 @@ import { ServiceErrorCode, ServiceException } from "../../../core/exception/serv
 import { KmsService } from "../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { HealthCheckResponse } from "../../../core/domain/HealthCheckTypes";
+import { MonoClientErrorCode, MonoClientException } from "./exception/mono.client.exception";
 
 type CollectionLinkDepositRequest = {
   nobaTransactionID: string;
@@ -329,14 +330,36 @@ export class MonoService {
   private async executeDepositUsingCollectionLink(request: CollectionLinkDepositRequest): Promise<MonoTransaction> {
     this.validateCollectionLinkDepositRequest(request);
 
-    const monoCollectionResponse: MonoClientCollectionLinkResponse = await this.monoClient.createCollectionLink({
-      transactionID: request.nobaTransactionID,
-      amount: request.amount,
-      currency: request.currency,
-      consumerEmail: request.consumer.props.email,
-      consumerPhone: request.consumer.props.phone,
-      consumerName: `${request.consumer.props.firstName} ${request.consumer.props.lastName}`,
-    });
+    let monoCollectionResponse: MonoClientCollectionLinkResponse;
+    try {
+      monoCollectionResponse = await this.monoClient.createCollectionLink({
+        transactionID: request.nobaTransactionID,
+        amount: request.amount,
+        currency: request.currency,
+        consumerEmail: request.consumer.props.email,
+        consumerPhone: request.consumer.props.phone,
+        consumerName: `${request.consumer.props.firstName} ${request.consumer.props.lastName}`,
+      });
+    } catch (e) {
+      if (e instanceof MonoClientException) {
+        if (e.errorCode === MonoClientErrorCode.PHONE_NUMBER_INVALID) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: e.message,
+          });
+        }
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+          message: e.message,
+        });
+      }
+
+      this.logger.error(`Mono collection link creation failed: ${e}`);
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: `Mono collection link creation failed: ${e}`,
+      });
+    }
 
     const monoTransaction: MonoTransaction = await this.monoRepo.createMonoTransaction({
       nobaTransactionID: request.nobaTransactionID,
