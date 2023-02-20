@@ -5,7 +5,6 @@ export const enum MonoClientErrorCode {
   TRANSFER_NOT_FOUND = "Transfer not found",
   TRANSFER_FAILED = "Transfer failed",
   UNKNOWN = "Unknown error",
-  // Maybe add a more robust set of error codes here
 }
 
 interface MonoClientExceptionConstructor extends ExceptionConstructor<MonoClientErrorCode> {
