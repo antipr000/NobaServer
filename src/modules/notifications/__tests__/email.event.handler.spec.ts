@@ -36,6 +36,7 @@ import { SendEmployerRequestEvent } from "../events/SendEmployerRequestEvent";
 import { WorkflowName } from "../../../modules/transaction/domain/Transaction";
 import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
+import { SendKycPendingOrFlaggedEvent } from "../events/SendKycPendingOrFlaggedEvent";
 
 describe.each(["en", "es-co"])("EmailEventHandler test for language %s", locale => {
   let currencyService: CurrencyService;
@@ -115,8 +116,7 @@ describe.each(["en", "es-co"])("EmailEventHandler test for language %s", locale 
       from: SENDER_EMAIL,
       templateId: EmailTemplates.OTP_EMAIL[locale], //this is template id for sending otp without any context, see sendgrid dashboard
       dynamicTemplateData: {
-        user: payload.name ?? "",
-        user_email: payload.email,
+        firstName: payload.name ?? "",
         one_time_password: payload.otp,
       },
     });
@@ -167,10 +167,7 @@ describe.each(["en", "es-co"])("EmailEventHandler test for language %s", locale 
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.WELCOME_EMAIL[locale],
-      dynamicTemplateData: {
-        user_email: payload.email,
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-      },
+      dynamicTemplateData: {},
     });
   });
 
@@ -191,8 +188,7 @@ describe.each(["en", "es-co"])("EmailEventHandler test for language %s", locale 
       from: SENDER_EMAIL,
       templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_US_EMAIL[locale],
       dynamicTemplateData: {
-        user_email: payload.email,
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
+        firstName: payload.firstName,
       },
     });
   });
@@ -236,15 +232,13 @@ describe.each(["en", "es-co"])("EmailEventHandler test for language %s", locale 
       from: SENDER_EMAIL,
       templateId: EmailTemplates.KYC_DENIED_EMAIL[locale],
       dynamicTemplateData: {
-        user_email: payload.email,
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        duration: 2, // TODO: Remove hardcoded duration
+        firstName: payload.firstName,
       },
     });
   });
 
-  it("should call eventHandler with SendKycPendingOrFlagged event and fallback to 'en' when template for locale not found", async () => {
-    const payload = new SendKycDeniedEvent({
+  it("should call eventHandler with SendKycPendingOrFlagged event", async () => {
+    const payload = new SendKycPendingOrFlaggedEvent({
       email: "fake+user@noba.com",
       firstName: "Fake",
       lastName: "Name",
@@ -254,7 +248,14 @@ describe.each(["en", "es-co"])("EmailEventHandler test for language %s", locale 
     await eventHandler.sendKycPendingOrFlaggedEmail(payload);
 
     const [emailRequest] = capture(emailClient.sendEmail).last();
-    expect(emailRequest).toStrictEqual;
+    expect(emailRequest).toStrictEqual({
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.KYC_FLAGGED_EMAIL[locale],
+      dynamicTemplateData: {
+        firstName: payload.firstName,
+      },
+    });
   });
 
   it("should call eventHandler with SendDocVerificationPending event", async () => {
@@ -274,8 +275,7 @@ describe.each(["en", "es-co"])("EmailEventHandler test for language %s", locale 
       from: SENDER_EMAIL,
       templateId: EmailTemplates.DOC_VERIFICATION_PENDING_EMAIL[locale],
       dynamicTemplateData: {
-        user_email: payload.email,
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
+        firstName: payload.firstName,
       },
     });
   });

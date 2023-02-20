@@ -56,8 +56,7 @@ export class EmailEventHandler {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.getOrDefault(EmailTemplates.OTP_EMAIL, payload.locale ?? "en"), //this is template id for sending otp without any context, see sendgrid dashboard
       dynamicTemplateData: {
-        user: payload.name ?? "",
-        user_email: payload.email,
+        firstName: payload.name ?? "",
         one_time_password: payload.otp,
       },
     };
@@ -88,10 +87,7 @@ export class EmailEventHandler {
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.getOrDefault(EmailTemplates.WELCOME_EMAIL, payload.locale ?? "en"),
-      dynamicTemplateData: {
-        user_email: payload.email,
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-      },
+      dynamicTemplateData: {},
     };
 
     await this.emailClient.sendEmail(msg);
@@ -107,8 +103,7 @@ export class EmailEventHandler {
         payload.locale ?? "en",
       ),
       dynamicTemplateData: {
-        user_email: payload.email,
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
+        firstName: payload.firstName ?? "",
       },
     };
 
@@ -140,9 +135,7 @@ export class EmailEventHandler {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.getOrDefault(EmailTemplates.KYC_DENIED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
-        user_email: payload.email,
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        duration: 2, // TODO: Remove hardcoded duration
+        firstName: payload.firstName ?? "",
       },
     };
 
@@ -151,17 +144,12 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT}`)
   public async sendKycPendingOrFlaggedEmail(payload: SendKycPendingOrFlaggedEvent) {
-    const minutesFromNow = 10; // TODO: Remove hardcoded minutes
-    const futureDate = new Date(new Date().getTime() + minutesFromNow * 60000).toUTCString();
-
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: EmailTemplates.getOrDefault(EmailTemplates.KYC_FLAGGED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
-        user_email: payload.email,
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        datetimestamp: futureDate,
+        firstName: payload.firstName ?? "",
       },
     };
 
@@ -175,8 +163,7 @@ export class EmailEventHandler {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.getOrDefault(EmailTemplates.DOC_VERIFICATION_PENDING_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
-        user_email: payload.email,
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
+        firstName: payload.firstName ?? "",
       },
     };
 

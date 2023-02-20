@@ -26,6 +26,7 @@ export const EmailTemplates = {
   },
   KYC_FLAGGED_EMAIL: {
     en: "d-d25d29442cf44338b72e15ea75bcab26",
+    "es-co": "d-953a7e77c37941688a871bb30e5e8d76",
   },
   DOC_VERIFICATION_PENDING_EMAIL: {
     en: "d-9f03c94f41f64b6ea2ec9343f1bc8b7f",
