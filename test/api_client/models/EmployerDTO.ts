@@ -8,4 +8,5 @@ export type EmployerDTO = {
   leadDays: number;
   payrollDates: Array<string>;
   nextPayrollDate: string;
+  maxAllocationPercent?: number;
 };
