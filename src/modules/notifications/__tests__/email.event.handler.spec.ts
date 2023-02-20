@@ -38,7 +38,7 @@ import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
 import { SendKycPendingOrFlaggedEvent } from "../events/SendKycPendingOrFlaggedEvent";
 
-describe.each(["en", "es-co"])("EmailEventHandler test for language %s", locale => {
+describe.each(["en", "es_co"])("EmailEventHandler test for language %s", locale => {
   let currencyService: CurrencyService;
   let emailClient: EmailClient;
   let eventHandler: EmailEventHandler;
