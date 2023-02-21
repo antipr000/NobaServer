@@ -85,6 +85,7 @@ export type { TransactionsQueryResultDTO } from "./models/TransactionsQueryResul
 export type { TransactionStatsDTO } from "./models/TransactionStatsDTO";
 export type { UpdateAddressDTO } from "./models/UpdateAddressDTO";
 export type { UpdateConsumerRequestDTO } from "./models/UpdateConsumerRequestDTO";
+export type { UpdateEmployeeRequestDTO } from "./models/UpdateEmployeeRequestDTO";
 export type { UpdateEmployerAllocationDTO } from "./models/UpdateEmployerAllocationDTO";
 export type { UpdateEmployerRequestDTO } from "./models/UpdateEmployerRequestDTO";
 export type { UpdateNobaAdminDTO } from "./models/UpdateNobaAdminDTO";

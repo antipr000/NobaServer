@@ -3,6 +3,7 @@ export type CreateEmployerRequestDTO = {
   logoURI: string;
   referralID: string;
   bubbleID: string;
+  maxAllocationPercent?: number;
   leadDays?: number;
   payrollDates?: string[];
 };
@@ -12,4 +13,5 @@ export type UpdateEmployerRequestDTO = {
   referralID?: string;
   leadDays?: number;
   payrollDates?: string[];
+  maxAllocationPercent?: number;
 };

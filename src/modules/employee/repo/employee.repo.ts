@@ -6,4 +6,5 @@ export interface IEmployeeRepo {
   getEmployeeByID(id: string): Promise<Employee>;
   getEmployeesForConsumerID(consumerID: string): Promise<Employee[]>;
   getEmployeeByConsumerAndEmployerID(consumerID: string, employerID: string): Promise<Employee>;
+  getEmployeesForEmployer(employerID: string): Promise<Employee[]>;
 }

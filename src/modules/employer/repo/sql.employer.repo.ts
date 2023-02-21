@@ -41,6 +41,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
         logoURI: request.logoURI,
         leadDays: request.leadDays,
         payrollDates: request.payrollDates,
+        ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
       };
 
       const returnedEmployer: EmployerPrismaModel = await this.prismaService.employer.create({
@@ -74,6 +75,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
         ...(request.referralID && { referralID: request.referralID }),
         ...(request.leadDays && { leadDays: request.leadDays }),
         ...(request.payrollDates && { payrollDates: request.payrollDates }),
+        ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
       };
 
       const returnedEmployer: EmployerPrismaModel = await this.prismaService.employer.update({

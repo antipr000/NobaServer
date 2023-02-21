@@ -89,16 +89,17 @@ model KYC {
 }
 
 model Employer {
-  id               String     @id @default(uuid())
-  createdTimestamp DateTime?  @default(now()) // Marking optional so we don't need to set in tests
-  updatedTimestamp DateTime?  @updatedAt // Marking optional so we don't need to set in tests
-  name             String
-  logoURI          String
-  referralID       String     @unique()
-  bubbleID         String     @unique()
-  leadDays         Int?
-  payrollDates     String[]
-  Employee         Employee[]
+  id                   String     @id @default(uuid())
+  createdTimestamp     DateTime?  @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp     DateTime?  @updatedAt // Marking optional so we don't need to set in tests
+  name                 String
+  logoURI              String
+  referralID           String     @unique()
+  bubbleID             String     @unique()
+  leadDays             Int?
+  maxAllocationPercent Float?
+  payrollDates         String[]
+  Employee             Employee[]
 
   @@index([referralID])
 }
@@ -109,6 +110,7 @@ model Employee {
   updatedTimestamp   DateTime? @updatedAt // Marking optional so we don't need to set in tests
   allocationAmount   Float
   allocationCurrency String
+  salary             Float?
   employer           Employer  @relation(fields: [employerID], references: [id], onDelete: Cascade)
   employerID         String
   consumer           Consumer  @relation(fields: [consumerID], references: [id], onDelete: Cascade)

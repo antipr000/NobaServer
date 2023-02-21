@@ -4,6 +4,7 @@
 import type { BlankResponseDTO } from "../models/BlankResponseDTO";
 import type { EmployerRegisterResponseDTO } from "../models/EmployerRegisterResponseDTO";
 import type { RegisterEmployerRequestDTO } from "../models/RegisterEmployerRequestDTO";
+import type { UpdateEmployeeRequestDTO } from "../models/UpdateEmployeeRequestDTO";
 import type { UpdateEmployerRequestDTO } from "../models/UpdateEmployerRequestDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -46,6 +47,29 @@ export class WebhooksService {
       url: "/webhooks/bubble/employers/{referralID}",
       path: {
         referralID: referralId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+
+  /**
+   * Update the Employee in Noba
+   * @returns BlankResponseDTO
+   * @throws ApiError
+   */
+  public static updateEmployee({
+    employeeId,
+    requestBody,
+  }: {
+    employeeId: string;
+    requestBody: UpdateEmployeeRequestDTO;
+  }): CancelablePromise<BlankResponseDTO> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/webhooks/bubble/employee/{employeeID}",
+      path: {
+        employeeID: employeeId,
       },
       body: requestBody,
       mediaType: "application/json",

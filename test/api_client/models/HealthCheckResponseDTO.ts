@@ -7,4 +7,5 @@ export type HealthCheckResponseDTO = {
   sardineStatus?: "OK" | "UNAVAILABLE";
   monoStatus?: "OK" | "UNAVAILABLE";
   circleStatus?: "OK" | "UNAVAILABLE";
+  temporalStatus?: "OK" | "UNAVAILABLE";
 };

@@ -14,6 +14,9 @@ export class RegisterEmployerRequestDTO {
   bubbleID: string;
 
   @ApiPropertyOptional()
+  maxAllocationPercent?: number;
+
+  @ApiPropertyOptional()
   leadDays?: number;
 
   @ApiPropertyOptional()
@@ -29,4 +32,12 @@ export class UpdateEmployerRequestDTO {
 
   @ApiPropertyOptional()
   payrollDates?: string[];
+
+  @ApiPropertyOptional()
+  maxAllocationPercent?: number;
+}
+
+export class UpdateEmployeeRequestDTO {
+  @ApiProperty()
+  salary: number;
 }

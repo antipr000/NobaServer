@@ -1978,7 +1978,14 @@ describe("ConsumerService", () => {
 
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(employeeService.getEmployeeByConsumerAndEmployerID("consumerID", employer.id)).thenResolve(employee);
-      when(employeeService.updateEmployee(employee.id, 1256)).thenResolve(employee);
+      when(
+        employeeService.updateEmployee(
+          employee.id,
+          deepEqual({
+            allocationAmount: 1256,
+          }),
+        ),
+      ).thenResolve(employee);
       when(bubbleService.updateEmployeeAllocationInBubble(employee.id, 1256)).thenResolve();
 
       const response = await consumerService.updateEmployerAllocationAmount(employer.referralID, "consumerID", 1256);

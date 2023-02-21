@@ -87,6 +87,35 @@ describe("EmployerServiceTests", () => {
       });
     });
 
+    it("should create an employer with provided maxAllocationPercent", async () => {
+      const employer = getRandomEmployer();
+      employer.maxAllocationPercent = 20;
+      when(employerRepo.createEmployer(anything())).thenResolve(employer);
+
+      const createdEmployer = await employerService.createEmployer({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        bubbleID: employer.bubbleID,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+        payrollDates: employer.payrollDates,
+        maxAllocationPercent: employer.maxAllocationPercent,
+      });
+
+      expect(createdEmployer).toEqual(employer);
+
+      const [propagatedEmployerCreateRequest] = capture(employerRepo.createEmployer).last();
+      expect(propagatedEmployerCreateRequest).toEqual({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        referralID: employer.referralID,
+        bubbleID: employer.bubbleID,
+        leadDays: employer.leadDays,
+        payrollDates: employer.payrollDates,
+        maxAllocationPercent: employer.maxAllocationPercent,
+      });
+    });
+
     it("should create an employer with no payroll dates", async () => {
       const employer = getRandomEmployer();
       delete employer.payrollDates;
@@ -186,6 +215,23 @@ describe("EmployerServiceTests", () => {
       });
     });
 
+    it("should update 'only' the maxAllocationPercent of the employer", async () => {
+      const employer = getRandomEmployer();
+      employer.maxAllocationPercent = 20;
+      when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+
+      const updatedEmployer = await employerService.updateEmployer(employer.id, {
+        maxAllocationPercent: 20,
+      });
+
+      expect(updatedEmployer).toEqual(employer);
+      const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
+      expect(employerID).toEqual(employer.id);
+      expect(propagatedEmployerUpdateRequest).toEqual({
+        maxAllocationPercent: 20,
+      });
+    });
+
     it("should update 'only' the referralID of the employer", async () => {
       const employer = getRandomEmployer();
       when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
@@ -265,9 +311,10 @@ describe("EmployerServiceTests", () => {
         referralID: "new-referral-id",
         leadDays: 4,
         payrollDates: payrollDates,
+        maxAllocationPercent: 20,
       });
 
-      expect(updatedEmployer).toEqual(employer);
+      expect(updatedEmployer).toStrictEqual(employer);
 
       const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
       expect(employerID).toEqual(employer.id);
@@ -276,6 +323,7 @@ describe("EmployerServiceTests", () => {
         referralID: "new-referral-id",
         leadDays: 4,
         payrollDates: payrollDates,
+        maxAllocationPercent: 20,
       });
     });
 
@@ -315,6 +363,21 @@ describe("EmployerServiceTests", () => {
 
       const [employerID] = capture(employerRepo.getEmployerByID).last();
       expect(employerID).toEqual(employer.id);
+      expect(retrievedEmployer.maxAllocationPercent).toBeUndefined();
+    });
+
+    it("should return 'maxAllocationPercent' when available", async () => {
+      const employer = getRandomEmployer();
+      employer.maxAllocationPercent = 20;
+      when(employerRepo.getEmployerByID(anything())).thenResolve(employer);
+
+      const retrievedEmployer = await employerService.getEmployerByID(employer.id);
+
+      expect(retrievedEmployer).toEqual(employer);
+
+      const [employerID] = capture(employerRepo.getEmployerByID).last();
+      expect(employerID).toEqual(employer.id);
+      expect(retrievedEmployer.maxAllocationPercent).toBe(20);
     });
 
     it("should throw ServiceException if the ID is undefined or null", async () => {

@@ -20,5 +20,7 @@ export class RepoException extends BaseException<RepoErrorCode> {
       severity: params.severity,
       error: params.error,
     });
+
+    Object.setPrototypeOf(this, RepoException.prototype);
   }
 }

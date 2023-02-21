@@ -39,6 +39,7 @@ export class EmployerService {
       bubbleID: request.bubbleID,
       leadDays: request.leadDays,
       payrollDates: request.payrollDates,
+      ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
     });
   }
 
@@ -64,6 +65,7 @@ export class EmployerService {
       ...(request.referralID && { referralID: request.referralID }),
       ...(request.leadDays && { leadDays: request.leadDays }),
       ...(request.payrollDates && { payrollDates: request.payrollDates }),
+      ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
     });
   }
 

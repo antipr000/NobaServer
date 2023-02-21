@@ -35,7 +35,6 @@ import {
 } from "@prisma/client";
 import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse";
 import { CardFailureExceptionText } from "./CardProcessingException";
-import { randomBytes } from "crypto";
 import { QRService } from "../common/qrcode.service";
 import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
 import { findFlag } from "country-list-with-dial-code-and-flag";
@@ -763,7 +762,9 @@ export class ConsumerService {
       });
     }
 
-    const result: Employee = await this.employeeService.updateEmployee(employee.id, allocationAmountInPesos);
+    const result: Employee = await this.employeeService.updateEmployee(employee.id, {
+      allocationAmount: allocationAmountInPesos,
+    });
     // TODO: Design a way to post to Bubble efficiently without blocking end users.
     await this.bubbleService.updateEmployeeAllocationInBubble(employee.id, allocationAmountInPesos);
 

@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class EmployerDTO {
   @ApiProperty()
@@ -15,4 +15,7 @@ export class EmployerDTO {
 
   @ApiProperty()
   nextPayrollDate: string;
+
+  @ApiPropertyOptional()
+  maxAllocationPercent: number;
 }

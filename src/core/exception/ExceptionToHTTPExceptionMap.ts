@@ -1,4 +1,4 @@
-import { HttpStatus, HttpException, BadRequestException } from "@nestjs/common";
+import { HttpStatus, HttpException, BadRequestException, InternalServerErrorException } from "@nestjs/common";
 import Joi from "joi";
 import { TransactionSubmissionException } from "../../modules/transactions/exceptions/TransactionSubmissionException";
 import { Logger } from "winston";
@@ -7,6 +7,9 @@ import { serviceToHTTP } from "./mappers/service.http";
 import { ServiceException } from "./service.exception";
 import { repoToHTTP } from "./mappers/repo.http";
 import { RepoException } from "./repo.exception";
+import { WorkflowException } from "./workflow.exception";
+import { workflowToHTTP } from "./mappers/workflow.http";
+import { BaseException } from "./base.exception";
 
 export function convertToHTTPException(logger: Logger, exception: any): HttpException {
   if (Joi.isError(exception)) {
@@ -23,6 +26,10 @@ export function convertToHTTPException(logger: Logger, exception: any): HttpExce
     return serviceToHTTP(logger, exception);
   } else if (exception instanceof RepoException) {
     return repoToHTTP(logger, exception);
+  } else if (exception instanceof WorkflowException) {
+    return workflowToHTTP(logger, exception);
+  } else if (exception instanceof BaseException) {
+    return new InternalServerErrorException(exception.message);
   }
 
   // This should be refactored to RepositoryException

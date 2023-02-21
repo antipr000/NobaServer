@@ -48,6 +48,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
         },
         allocationAmount: request.allocationAmount,
         allocationCurrency: request.allocationCurrency,
+        ...(request.salary && { salary: request.salary }),
       };
 
       const returnedEmployee: EmployeePrismaModel = await this.prismaService.employee.create({
@@ -67,7 +68,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
       ) {
         throw new ServiceException({
           errorCode: ServiceErrorCode.ALREADY_EXISTS,
-          message: `Consumer is already registered with the specified Employer`,
+          message: "Consumer is already registered with the specified Employer",
         });
       }
 
@@ -94,6 +95,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
       const employeeUpdateInput: Prisma.EmployeeUpdateInput = {
         ...(request.allocationAmount && { allocationAmount: request.allocationAmount }),
         ...(request.allocationCurrency && { allocationCurrency: request.allocationCurrency }),
+        ...(request.salary && { salary: request.salary }),
       };
 
       const returnedEmployee: EmployeePrismaModel = await this.prismaService.employee.update({
@@ -175,7 +177,28 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
     } catch (err) {
       this.logger.error(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
-        message: `Error retrieving the Mono transactions for consumer with ID: '${consumerID}'`,
+        message: `Error retrieving employees with consumerID: '${consumerID}'`,
+      });
+    }
+  }
+
+  async getEmployeesForEmployer(employerID: string): Promise<Employee[]> {
+    try {
+      const employees: EmployeePrismaModel[] = await this.prismaService.employee.findMany({
+        where: {
+          employerID: employerID,
+        },
+      });
+
+      if (!employees) {
+        return [];
+      }
+
+      return employees.map(convertToDomainEmployee);
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new DatabaseInternalErrorException({
+        message: `Error retrieving employess for employer with ID: '${employerID}'`,
       });
     }
   }

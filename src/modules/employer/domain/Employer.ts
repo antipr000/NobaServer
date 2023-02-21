@@ -9,6 +9,7 @@ export class Employer {
   referralID: string;
   bubbleID: string;
   leadDays: number;
+  maxAllocationPercent?: number;
   payrollDates: string[];
   createdTimestamp: Date;
   updatedTimestamp: Date;
@@ -20,6 +21,7 @@ export class EmployerCreateRequest {
   referralID: string;
   bubbleID: string;
   leadDays: number;
+  maxAllocationPercent?: number;
   payrollDates: string[];
 }
 
@@ -28,6 +30,7 @@ export class EmployerUpdateRequest {
   referralID?: string;
   leadDays?: number;
   payrollDates?: string[];
+  maxAllocationPercent?: number;
 }
 
 export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) => {
@@ -36,6 +39,7 @@ export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) =
     logoURI: Joi.string().required(),
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
+    maxAllocationPercent: Joi.number().optional(),
     leadDays: Joi.number().required(),
     // Dates should be in YYYY-MM-DD format
     payrollDates: Joi.array()
@@ -58,6 +62,7 @@ export const validateUpdateEmployerRequest = (employer: EmployerUpdateRequest) =
     payrollDates: Joi.array()
       .items(Joi.string().pattern(/^\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01])$/))
       .optional(),
+    maxAllocationPercent: Joi.number().optional(),
   };
 
   const employerJoiSchema = Joi.object(employerJoiValidationKeys).options({
@@ -75,6 +80,7 @@ export const validateEmployer = (employer: Employer) => {
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
     leadDays: Joi.number().required(),
+    maxAllocationPercent: Joi.number().optional(),
     payrollDates: Joi.array()
       .items(Joi.string().pattern(/^\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01])$/))
       .optional(),
@@ -96,6 +102,7 @@ export const convertToDomainEmployer = (employer: PrismaEmployerModel): Employer
     logoURI: employer.logoURI,
     referralID: employer.referralID,
     bubbleID: employer.bubbleID,
+    ...(employer.maxAllocationPercent && { maxAllocationPercent: employer.maxAllocationPercent }),
     leadDays: employer.leadDays,
     payrollDates: employer.payrollDates,
     createdTimestamp: employer.createdTimestamp,
