@@ -7,6 +7,7 @@ import { IEmployeeRepo } from "./repo/employee.repo";
 import { EMPLOYEE_REPO_PROVIDER } from "./repo/employee.repo.module";
 import { UpdateEmployeeRequestDTO } from "./dto/employee.service.dto";
 import { EmployerService } from "../employer/employer.service";
+import { Utils } from "../../core/utils/Utils";
 
 @Injectable()
 export class EmployeeService {
@@ -41,7 +42,7 @@ export class EmployeeService {
     const salary = updateRequest.salary ?? employee.salary;
 
     if (allocationAmount > (maxAllocationPercent * salary) / 100) {
-      updateRequest.allocationAmount = (maxAllocationPercent * salary) / 100;
+      updateRequest.allocationAmount = Utils.roundTo2DecimalNumber((maxAllocationPercent * salary) / 100);
     }
 
     return this.employeeRepo.updateEmployee(employeeID, {
@@ -100,7 +101,7 @@ export class EmployeeService {
 
       if (employee.allocationAmount > maxAllocationAmount) {
         await this.employeeRepo.updateEmployee(employee.id, {
-          allocationAmount: maxAllocationAmount,
+          allocationAmount: Utils.roundTo2DecimalNumber(maxAllocationAmount),
         });
       }
     }
