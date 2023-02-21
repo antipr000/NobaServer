@@ -446,7 +446,7 @@ describe.each(["en", "es_co"])("EmailEventHandler test for language %s", locale 
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.DEPOSIT_SUCCESSFUL_EMAIL["en"],
+      templateId: EmailTemplates.DEPOSIT_SUCCESSFUL_EMAIL[locale],
       dynamicTemplateData: {
         firstName: payload.name,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -486,7 +486,7 @@ describe.each(["en", "es_co"])("EmailEventHandler test for language %s", locale 
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.DEPOSIT_FAILED_EMAIL["en"],
+      templateId: EmailTemplates.DEPOSIT_FAILED_EMAIL[locale],
       dynamicTemplateData: {
         firstName: payload.name,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -526,7 +526,7 @@ describe.each(["en", "es_co"])("EmailEventHandler test for language %s", locale 
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.DEPOSIT_INITIATED_EMAIL["en"],
+      templateId: EmailTemplates.DEPOSIT_INITIATED_EMAIL[locale],
       dynamicTemplateData: {
         firstName: payload.name,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -565,7 +565,7 @@ describe.each(["en", "es_co"])("EmailEventHandler test for language %s", locale 
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.WITHDRAWAL_SUCCESSFUL_EMAIL["en"],
+      templateId: EmailTemplates.WITHDRAWAL_SUCCESSFUL_EMAIL[locale],
       dynamicTemplateData: {
         firstName: payload.name,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -604,7 +604,7 @@ describe.each(["en", "es_co"])("EmailEventHandler test for language %s", locale 
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.WITHDRAWAL_INITIATED_EMAIL["en"],
+      templateId: EmailTemplates.WITHDRAWAL_INITIATED_EMAIL[locale],
       dynamicTemplateData: {
         firstName: payload.name,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -644,7 +644,7 @@ describe.each(["en", "es_co"])("EmailEventHandler test for language %s", locale 
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.WITHDRAWAL_FAILED_EMAIL["en"],
+      templateId: EmailTemplates.WITHDRAWAL_FAILED_EMAIL[locale],
       dynamicTemplateData: {
         firstName: payload.name,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),

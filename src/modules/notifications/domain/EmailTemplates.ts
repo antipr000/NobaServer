@@ -55,21 +55,27 @@ export const EmailTemplates = {
   },
   DEPOSIT_SUCCESSFUL_EMAIL: {
     en: "d-f085402c06584fe2a843c8e9dff2ed4b",
+    es_co: "d-d6b8f9ac6d3e414cb8da0c38216a9d26",
   },
   DEPOSIT_FAILED_EMAIL: {
     en: "d-910099ff234c432f9c2246c71961353e",
+    es_co: "d-90642bf2c09c41b58bd4c74b985c516b",
   },
   DEPOSIT_INITIATED_EMAIL: {
     en: "d-7e413692c9f8497c80d5b5e2a5218171",
+    es_co: "d-d77bf9be0e1b417cbcb1375ec47f3263",
   },
   WITHDRAWAL_SUCCESSFUL_EMAIL: {
     en: "d-3fb3c83cdfd346ffa2d4c4021bc4ef2b",
+    es_co: "d-9af9b2e7e2eb49ef8292bb6cb71945f1",
   },
   WITHDRAWAL_FAILED_EMAIL: {
     en: "d-13a9459f11bb458aac117ad66dd1ccff",
+    es_co: "d-020b26b11925437681157745f9967d76",
   },
   WITHDRAWAL_INITIATED_EMAIL: {
     en: "d-910099ff234c432f9c2246c71961353e",
+    es_co: "d-b468886c63f140cb87d3b4c907ee9fb5",
   },
   TRANSFER_SUCCESSFUL_EMAIL: {
     en: "d-1c758bcf9eae40ed83c3cd9152ed17c4",
