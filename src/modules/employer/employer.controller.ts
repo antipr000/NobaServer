@@ -44,6 +44,7 @@ export class EmployerController {
       name: employer.name,
       logoURI: employer.logoURI,
       leadDays: employer.leadDays,
+      employerReferralID: employer.referralID,
       payrollDates: payrollDatesAsc,
       nextPayrollDate: futurePayrollDates[0],
       ...(employer.maxAllocationPercent && { maxAllocationPercent: employer.maxAllocationPercent }),

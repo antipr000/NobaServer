@@ -11,6 +11,9 @@ export class EmployerDTO {
   leadDays: number;
 
   @ApiProperty()
+  employerReferralID: string;
+
+  @ApiProperty()
   payrollDates: string[];
 
   @ApiProperty()

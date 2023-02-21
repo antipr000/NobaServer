@@ -81,6 +81,7 @@ describe("EmployerControllerTests", () => {
       expect(foundEmployer).toEqual({
         name: employer.name,
         logoURI: employer.logoURI,
+        employerReferralID: employer.referralID,
         leadDays: employer.leadDays,
         payrollDates: employer.payrollDates,
       });
@@ -97,6 +98,7 @@ describe("EmployerControllerTests", () => {
         name: employer.name,
         logoURI: employer.logoURI,
         leadDays: employer.leadDays,
+        employerReferralID: employer.referralID,
         payrollDates: employer.payrollDates,
         maxAllocationPercent: employer.maxAllocationPercent,
       });
@@ -112,6 +114,7 @@ describe("EmployerControllerTests", () => {
         name: employer.name,
         logoURI: employer.logoURI,
         leadDays: employer.leadDays,
+        employerReferralID: employer.referralID,
         payrollDates: employer.payrollDates,
         nextPayrollDate: employer.payrollDates[0],
       });
@@ -127,6 +130,7 @@ describe("EmployerControllerTests", () => {
         name: employer.name,
         logoURI: employer.logoURI,
         leadDays: employer.leadDays,
+        employerReferralID: employer.referralID,
         payrollDates: employer.payrollDates,
         nextPayrollDate: employer.payrollDates[1],
       });
@@ -142,6 +146,7 @@ describe("EmployerControllerTests", () => {
       expect(foundEmployer).toEqual({
         name: employer.name,
         logoURI: employer.logoURI,
+        employerReferralID: employer.referralID,
         leadDays: employer.leadDays,
         payrollDates: payrollDates,
         nextPayrollDate: employer.payrollDates[1],
