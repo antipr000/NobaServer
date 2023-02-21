@@ -22,6 +22,7 @@ import { HealthCheckResponse, HealthCheckStatus } from "../../../core/domain/Hea
 import { convertExternalTransactionStateToInternalState } from "./mono.utils";
 import { MonoClientErrorCode, MonoClientException } from "./exception/mono.client.exception";
 import { InputTransactionEvent } from "../../../modules/transaction/domain/TransactionEvent";
+import { PhoneNumberUtil } from "google-libphonenumber";
 
 @Injectable()
 export class MonoClient implements IClient {
@@ -89,19 +90,13 @@ export class MonoClient implements IClient {
       ...this.getIdempotentHeader(request.transactionID),
     };
 
-    if (
-      !request.consumerPhone.match(
-        /^\+(57)?(300|301|302|304|305|310|311|312|313|314|315|316|317|318|319|320|321|322|323|324|333|350|351|4[14]|5|7|9)\d{7}$|^(\+57)?(60[1-8][2-9])\d{6}$/,
-      )
-    ) {
+    const phoneUtil = PhoneNumberUtil.getInstance();
+    if (phoneUtil.isValidNumberForRegion(phoneUtil.parse(request.consumerPhone, "CO"), "CO")) {
       throw new MonoClientException({
         errorCode: MonoClientErrorCode.PHONE_NUMBER_INVALID,
         message: `Invalid Colombian phone number: ${request.consumerPhone}`,
       });
     }
-    // Mono can only accept phone numbers in the format +57XXXXXXXXX and it is a required field, so we need to make sure we send a valid one.
-    // This is really only a problem with testing, as in practice our customers should have +57 phone numbers.
-    const phone = request.consumerPhone?.startsWith("+57") ? request.consumerPhone : "+573000000000";
 
     const requestBody = {
       account_id: this.nobaAccountID,
@@ -123,7 +118,7 @@ export class MonoClient implements IClient {
           required: false,
           value: "",
         },
-        phone: phone,
+        phone: request.consumerPhone,
       },
       redirect_url: "noba://AuthenticatedPrimaryScreen/activityView",
       reference: {
