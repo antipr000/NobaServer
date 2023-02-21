@@ -3,7 +3,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
 import { Logger } from "winston";
 import { MonoCurrency } from "../domain/Mono";
-import { CollectionIntentCreditedEvent } from "../dto/mono.webhook.dto";
+import { BankTransferApprovedEvent, CollectionIntentCreditedEvent } from "../dto/mono.webhook.dto";
 import { createHmac } from "crypto";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { MONO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
@@ -62,6 +62,42 @@ export class MonoWebhookHandlers {
       currency: webhookData.event.data.amount.currency as MonoCurrency,
       collectionLinkID: webhookData.event.data.collection_link_id,
       monoTransactionID: webhookData.event.data.payment.transaction_id,
+    };
+  }
+
+  convertBankTransferApproved(webhookData: Record<string, any>, monoSignature: string): BankTransferApprovedEvent {
+    if (!this.validateSignature(webhookData, monoSignature)) {
+      throw new InternalServiceErrorException({
+        message: "Invalid Mono signature",
+      });
+    }
+
+    if (webhookData.event.type !== "bank_transfer_approved" || webhookData.event.data.state !== "approved") {
+      this.logger.error("'bank_transfer_approved' state is not 'approved'.");
+      this.logger.error(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
+
+      throw new InternalServiceErrorException({
+        message: "Invalid 'bank_transfer_approved' webhook response.",
+      });
+    }
+
+    if (webhookData.event.data.declination_reason !== null) {
+      this.logger.error(
+        `'bank_transfer_approved' has declination reason: ${webhookData.event.data.declination_reason}`,
+      );
+      this.logger.error(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
+
+      throw new InternalServiceErrorException({
+        message: "Invalid 'bank_transfer_approved' webhook response.",
+      });
+    }
+
+    return {
+      accountID: webhookData.event.data.batch.account_id,
+      amount: webhookData.event.data.amount.amount,
+      currency: webhookData.event.data.amount.currency as MonoCurrency,
+      batchID: webhookData.event.data.batch.id,
+      transferID: webhookData.event.data.id,
     };
   }
 }
