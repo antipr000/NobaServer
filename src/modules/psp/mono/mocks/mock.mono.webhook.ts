@@ -7,5 +7,11 @@ export function getMockMonoWebhookHandlersWithDefaults(): MonoWebhookHandlers {
   when(mockMonoWebhookHandlers.convertCollectionLinkCredited(anything(), anyString())).thenReject(
     new Error("Method not implemented"),
   );
+  when(mockMonoWebhookHandlers.convertBankTransferApproved(anything(), anyString())).thenReject(
+    new Error("Method not implemented"),
+  );
+  when(mockMonoWebhookHandlers.convertBankTransferRejected(anything(), anyString())).thenReject(
+    new Error("Method not implemented"),
+  );
   return mockMonoWebhookHandlers;
 }

@@ -9,6 +9,7 @@ export function getMockMonoRepoWithDefaults(): IMonoRepo {
   when(mockMonoRepo.createMonoTransaction(anything())).thenReject(new Error("Method not implemented"));
   when(mockMonoRepo.getMonoTransactionByCollectionLinkID(anyString())).thenReject(new Error("Method not implemented"));
   when(mockMonoRepo.getMonoTransactionByNobaTransactionID(anyString())).thenReject(new Error("Method not implemented"));
+  when(mockMonoRepo.getMonoTransactionByTransferID(anyString())).thenReject(new Error("Method not implemented"));
 
   return mockMonoRepo;
 }

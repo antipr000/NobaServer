@@ -151,4 +151,26 @@ export class SqlMonoRepo implements IMonoRepo {
       });
     }
   }
+
+  async getMonoTransactionByTransferID(transferID: string): Promise<MonoTransaction> {
+    try {
+      const returnedTransaction: PrismaMonoModel = await this.prismaService.mono.findFirst({
+        where: {
+          transferID: transferID,
+        },
+      });
+
+      if (!returnedTransaction) {
+        return null;
+      }
+
+      return convertToDomainTransaction(returnedTransaction);
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: `Error getting the Mono transaction with transferID: '${transferID}'`,
+      });
+    }
+  }
 }

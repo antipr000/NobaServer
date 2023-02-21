@@ -6,4 +6,5 @@ export interface IMonoRepo {
   // updateMonoTransaction(monoCollectionLinkID: string, request: MonoTransactionUpdateRequest): Promise<MonoTransaction>;
   getMonoTransactionByNobaTransactionID(nobaTransactionID: string): Promise<MonoTransaction>;
   getMonoTransactionByCollectionLinkID(collectionLinkID: string): Promise<MonoTransaction>;
+  getMonoTransactionByTransferID(transferID: string): Promise<MonoTransaction>;
 }

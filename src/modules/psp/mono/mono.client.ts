@@ -19,6 +19,7 @@ import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
 import { MonoTransactionState } from "../domain/Mono";
 import { IClient } from "../../../core/domain/IClient";
 import { HealthCheckResponse, HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
+import { convertExternalTransactionStateToInternalState } from "./mono.utils";
 import { MonoClientErrorCode, MonoClientException } from "./exception/mono.client.exception";
 import { InputTransactionEvent } from "../../../modules/transaction/domain/TransactionEvent";
 
@@ -243,23 +244,8 @@ export class MonoClient implements IClient {
         });
       }
 
-      const externalTransactionStateToInternalState: Record<string, MonoTransactionState> = {
-        created: MonoTransactionState.PENDING,
-        in_progress: MonoTransactionState.IN_PROGRESS,
-        approved: MonoTransactionState.SUCCESS,
-        declined: MonoTransactionState.DECLINED,
-        cancelled: MonoTransactionState.CANCELLED,
-        duplicated: MonoTransactionState.DUPLICATED,
-      };
-      if (!externalTransactionStateToInternalState[transfer.state]) {
-        throw new MonoClientException({
-          errorCode: MonoClientErrorCode.UNKNOWN,
-          message: `Unknown Mono transfer state: ${transfer.state}`,
-        });
-      }
-
       return {
-        state: externalTransactionStateToInternalState[transfer.state],
+        state: convertExternalTransactionStateToInternalState(transfer.state),
         lastUpdatedTimestamp: new Date(transfer.updated_at),
         declinationReason: transfer.declination_reason,
       };

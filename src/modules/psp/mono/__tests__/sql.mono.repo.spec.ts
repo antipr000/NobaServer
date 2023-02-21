@@ -471,4 +471,53 @@ describe("SqlMonoRepoTests", () => {
       await expect(monoRepo.updateMonoTransaction(monoRecordID, updatedMonoTransaction)).rejects.toThrowError();
     });
   });
+
+  describe("getMonoTransactionByTransferID", () => {
+    it("should return the transaction if it exists", async () => {
+      const nobaTransactionID: string = await createTestNobaTransaction(prismaService);
+      const monoTransactionRequest: MonoTransactionSaveRequest = getRandomMonoTransaction(
+        nobaTransactionID,
+        MonoTransactionType.WITHDRAWAL,
+      );
+      const monoTransaction: MonoTransaction = await monoRepo.createMonoTransaction(monoTransactionRequest);
+
+      const retrievedMonoTransaction: MonoTransaction = await monoRepo.getMonoTransactionByTransferID(
+        monoTransactionRequest.withdrawalDetails.transferID,
+      );
+
+      // Note that we don't need to verify the state from DB as create tests would take care of that.
+      expect(retrievedMonoTransaction).toEqual(monoTransaction);
+    });
+
+    it("should return 'null' if the transaction with same collectionLinkID exist", async () => {
+      const nobaTransactionID: string = await createTestNobaTransaction(prismaService);
+      const monoTransactionRequest: MonoTransactionSaveRequest = getRandomMonoTransaction(
+        nobaTransactionID,
+        MonoTransactionType.COLLECTION_LINK_DEPOSIT,
+      );
+      const monoTransaction: MonoTransaction = await monoRepo.createMonoTransaction(monoTransactionRequest);
+
+      const retrievedMonoTransaction: MonoTransaction = await monoRepo.getMonoTransactionByTransferID(
+        monoTransactionRequest.collectionLinkDepositDetails.collectionLinkID,
+      );
+
+      // Note that we don't need to verify the state from DB as create tests would take care of that.
+      expect(retrievedMonoTransaction).toBeNull();
+    });
+
+    it("should return 'null' if the transaction doesn't exists", async () => {
+      const nobaTransactionID: string = await createTestNobaTransaction(prismaService);
+      const monoTransactionRequest: MonoTransactionSaveRequest = getRandomMonoTransaction(
+        nobaTransactionID,
+        MonoTransactionType.WITHDRAWAL,
+      );
+      await monoRepo.createMonoTransaction(monoTransactionRequest);
+
+      const retrievedMonoTransaction: MonoTransaction = await monoRepo.getMonoTransactionByCollectionLinkID(
+        "INVALID_COLLECTION_LINK_ID",
+      );
+
+      expect(retrievedMonoTransaction).toBeNull();
+    });
+  });
 });
