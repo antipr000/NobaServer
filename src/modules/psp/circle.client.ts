@@ -12,8 +12,6 @@ import { Utils } from "../../core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { IClient } from "../../core/domain/IClient";
 import { HealthCheckResponse, HealthCheckStatus } from "../../core/domain/HealthCheckTypes";
-import tunnel from "tunnel";
-import { Length } from "class-validator";
 
 @Injectable()
 export class CircleClient implements IClient {
@@ -26,7 +24,7 @@ export class CircleClient implements IClient {
 
   private axiosConfig: AxiosRequestConfig =
     getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
-      ? null
+      ? {}
       : {
           proxy: {
             protocol: "http",
