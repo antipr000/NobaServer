@@ -79,8 +79,8 @@ describe("EmployerControllerTests", () => {
 
       const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
       expect(foundEmployer).toEqual({
-        name: employer.name,
-        logoURI: employer.logoURI,
+        employerName: employer.name,
+        employerLogoURI: employer.logoURI,
         employerReferralID: employer.referralID,
         leadDays: employer.leadDays,
         payrollDates: employer.payrollDates,
@@ -95,8 +95,8 @@ describe("EmployerControllerTests", () => {
 
       const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
       expect(foundEmployer).toEqual({
-        name: employer.name,
-        logoURI: employer.logoURI,
+        employerName: employer.name,
+        employerLogoURI: employer.logoURI,
         leadDays: employer.leadDays,
         employerReferralID: employer.referralID,
         payrollDates: employer.payrollDates,
@@ -111,8 +111,8 @@ describe("EmployerControllerTests", () => {
 
       const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
       expect(foundEmployer).toEqual({
-        name: employer.name,
-        logoURI: employer.logoURI,
+        employerName: employer.name,
+        employerLogoURI: employer.logoURI,
         leadDays: employer.leadDays,
         employerReferralID: employer.referralID,
         payrollDates: employer.payrollDates,
@@ -127,8 +127,8 @@ describe("EmployerControllerTests", () => {
 
       const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
       expect(foundEmployer).toEqual({
-        name: employer.name,
-        logoURI: employer.logoURI,
+        employerName: employer.name,
+        employerLogoURI: employer.logoURI,
         leadDays: employer.leadDays,
         employerReferralID: employer.referralID,
         payrollDates: employer.payrollDates,
@@ -144,8 +144,8 @@ describe("EmployerControllerTests", () => {
 
       const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
       expect(foundEmployer).toEqual({
-        name: employer.name,
-        logoURI: employer.logoURI,
+        employerName: employer.name,
+        employerLogoURI: employer.logoURI,
         employerReferralID: employer.referralID,
         leadDays: employer.leadDays,
         payrollDates: payrollDates,
