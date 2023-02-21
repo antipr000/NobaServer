@@ -1975,6 +1975,7 @@ describe("ConsumerService", () => {
     it("should update the allocation amount for an Employer", async () => {
       const employer = getRandomEmployer();
       const employee = getRandomEmployee("consumerID", employer.id);
+      employee.allocationAmount = 1256;
 
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(employeeService.getEmployeeByConsumerAndEmployerID("consumerID", employer.id)).thenResolve(employee);
@@ -1982,7 +1983,7 @@ describe("ConsumerService", () => {
         employeeService.updateEmployee(
           employee.id,
           deepEqual({
-            allocationAmount: 1256,
+            allocationAmount: employee.allocationAmount,
           }),
         ),
       ).thenResolve(employee);

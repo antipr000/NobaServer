@@ -762,11 +762,13 @@ export class ConsumerService {
       });
     }
 
+    // This method can bump down the actual amount allocated based on employer maximum,
+    // so be sure we use that updated amount when updating in bubble.
     const result: Employee = await this.employeeService.updateEmployee(employee.id, {
       allocationAmount: allocationAmountInPesos,
     });
     // TODO: Design a way to post to Bubble efficiently without blocking end users.
-    await this.bubbleService.updateEmployeeAllocationInBubble(employee.id, allocationAmountInPesos);
+    await this.bubbleService.updateEmployeeAllocationInBubble(employee.id, result.allocationAmount);
 
     return result;
   }
