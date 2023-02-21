@@ -2,10 +2,10 @@ import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class EmployerDTO {
   @ApiProperty()
-  name: string;
+  employerName: string;
 
   @ApiProperty()
-  logoURI?: string;
+  employerLogoURI?: string;
 
   @ApiProperty()
   leadDays: number;
