@@ -37,6 +37,7 @@ import { KmsKeyType } from "../../../../config/configtypes/KmsConfigs";
 import { ServiceErrorCode, ServiceException } from "../../../../core/exception/service.exception";
 import { getRandomMonoTransaction } from "../test_utils/utils";
 import { HealthCheckStatus } from "../../../../core/domain/HealthCheckTypes";
+import { MonoClientErrorCode, MonoClientException } from "../exception/mono.client.exception";
 
 describe("MonoServiceTests", () => {
   jest.setTimeout(20000);
@@ -395,11 +396,14 @@ describe("MonoServiceTests", () => {
           consumerPhone: consumer.props.phone,
         };
         when(monoClient.createCollectionLink(deepEqual(expectedMonoClientCreateCollectionLink))).thenThrow(
-          new InternalServiceErrorException({}),
+          new MonoClientException({
+            errorCode: MonoClientErrorCode.UNKNOWN,
+            message: "Unknown error",
+          }),
         );
 
         await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowError(
-          InternalServiceErrorException,
+          ServiceException,
         );
       });
 

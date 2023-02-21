@@ -180,11 +180,14 @@ describe("MonoWorkflowServiceTests", () => {
           consumerPhone: consumer.props.phone,
         };
         when(monoClient.createCollectionLink(deepEqual(expectedMonoClientCreateCollectionLink))).thenThrow(
-          new InternalServiceErrorException({}),
+          new MonoClientException({
+            errorCode: MonoClientErrorCode.UNKNOWN,
+            message: "Unknown error",
+          }),
         );
 
         await expect(monoWorkflowService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowError(
-          InternalServiceErrorException,
+          ServiceException,
         );
       });
 
