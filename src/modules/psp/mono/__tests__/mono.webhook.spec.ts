@@ -304,11 +304,13 @@ describe("MonoWebhookHandlersTest", () => {
     });
 
     it("should map all the fields from the request to BankTransferApprovedEvent", () => {
+      const webhookResponseSignature = `t=${webhookEventTime},v1=${createMonoSignature(
+        bankTransferApprovedWebhookEvent,
+        webhookEventTime,
+      )}`;
+
       expect(
-        monoWebhookHandlers.convertBankTransferApproved(
-          bankTransferApprovedWebhookEvent,
-          webhookResponseValidSignature,
-        ),
+        monoWebhookHandlers.convertBankTransferApproved(bankTransferApprovedWebhookEvent, webhookResponseSignature),
       ).toEqual({
         accountID: "acc_16ktUqSO7G0qTHDz8I3qrG",
         amount: 1600000,
@@ -467,11 +469,12 @@ describe("MonoWebhookHandlersTest", () => {
     });
 
     it("should map all the fields from the request to BankTransferRejectedEvent", () => {
+      const webhookResponseSignature = `t=${webhookEventTime},v1=${createMonoSignature(
+        bankTransferRejectedWebhookEvent,
+        webhookEventTime,
+      )}`;
       expect(
-        monoWebhookHandlers.convertBankTransferRejected(
-          bankTransferRejectedWebhookEvent,
-          webhookResponseValidSignature,
-        ),
+        monoWebhookHandlers.convertBankTransferRejected(bankTransferRejectedWebhookEvent, webhookResponseSignature),
       ).toEqual({
         accountID: "acc_16ktUqSO7G0qTHDz8I3qrG",
         amount: 1600000,
