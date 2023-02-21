@@ -1,4 +1,4 @@
-import { MonoCurrency } from "../domain/Mono";
+import { MonoCurrency, MonoTransactionState } from "../domain/Mono";
 
 export type CollectionIntentCreditedEvent = {
   collectionLinkID: string;
@@ -22,6 +22,6 @@ export type BankTransferRejectedEvent = {
   transferID: string;
   amount: number;
   currency: MonoCurrency;
-  state: string;
+  state: MonoTransactionState;
   declinationReason: string;
 };

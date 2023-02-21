@@ -20,7 +20,7 @@ import { IMonoRepo } from "./repo/mono.repo";
 import { MONO_REPO_PROVIDER } from "./repo/mono.repo.module";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { MonoWebhookHandlers } from "./mono.webhook";
-import { BankTransferApprovedEvent, CollectionIntentCreditedEvent } from "../dto/mono.webhook.dto";
+import { BankTransferApprovedEvent, BankTransferRejectedEvent, CollectionIntentCreditedEvent } from "../dto/mono.webhook.dto";
 import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
 import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
@@ -55,7 +55,7 @@ export class MonoService {
     private readonly consumerService: ConsumerService,
     private readonly monoClient: MonoClient,
     private readonly monoWebhookHandlers: MonoWebhookHandlers,
-  ) {}
+  ) { }
 
   async checkMonoHealth(): Promise<HealthCheckResponse> {
     return this.monoClient.getHealth();
@@ -137,6 +137,12 @@ export class MonoService {
         );
         break;
 
+      case "bank_transfer_rejected":
+        await this.processBankTransferRejectedEvent(
+          this.monoWebhookHandlers.convertBankTransferRejected(requestBody, monoSignature),
+        );
+        break;
+
       default:
         this.logger.error(`Unknown Mono webhook event: ${JSON.stringify(requestBody)}`);
         throw new InternalServiceErrorException({
@@ -195,6 +201,23 @@ export class MonoService {
 
     await this.monoRepo.updateMonoTransaction(monoTransaction.id, {
       state: MonoTransactionState.SUCCESS,
+    });
+  }
+
+  private async processBankTransferRejectedEvent(event: BankTransferRejectedEvent): Promise<void> {
+    const monoTransaction: MonoTransaction | null = await this.monoRepo.getMonoTransactionByTransferID(
+      event.transferID,
+    );
+    if (!monoTransaction) {
+      this.logger.error(`Mono transaction not found for transferID: ${event.transferID}`);
+      throw new InternalServiceErrorException({
+        message: `Mono transaction not found for transferID: ${event.transferID}`,
+      });
+    }
+
+    await this.monoRepo.updateMonoTransaction(monoTransaction.id, {
+      state: event.state,
+      declinationReason: event.declinationReason,
     });
   }
 

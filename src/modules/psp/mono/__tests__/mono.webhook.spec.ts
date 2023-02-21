@@ -12,6 +12,8 @@ import { uuid } from "uuidv4";
 import { MonoWebhookHandlers } from "../mono.webhook";
 import { InternalServiceErrorException } from "../../../../core/exception/CommonAppException";
 import { createHmac } from "crypto";
+import { MonoTransactionState } from "../../domain/Mono";
+import { ServiceException } from "../../../../core/exception/service.exception";
 
 const webhookSecret = "whsec_LVeQsJFZ9MxlmUZLkpZ8lGLmuCaGuySk";
 
@@ -312,6 +314,194 @@ describe("MonoWebhookHandlersTest", () => {
         batchID: "bat_2DpSchlriwoCuyGMOoIuwp",
         transferID: "trn_2PVWOx9dZKJMBZw7opjrrs",
       });
+    });
+  });
+
+  describe("convertBankTransferRejected ()", () => {
+    const webhookResponseValidSignature =
+      "t=1673530807,v1=d4121af715c05341d900ca27bee7016cf2250741b21d9312ca9b39774f9f6ea0";
+    const webhookEventTime = 1673530807;
+
+    const bankTransferRejectedWebhookEvent = {
+      event: {
+        data: {
+          amount: {
+            amount: 1600000,
+            currency: "COP",
+          },
+          batch: {
+            account_id: "acc_16ktUqSO7G0qTHDz8I3qrG",
+            id: "bat_2DpSchlriwoCuyGMOoIuwp",
+            inserted_at: "2022-12-28T16:19:52.471575Z",
+            origin: "api",
+            state: "declined",
+            total_amount: {
+              amount: 1600000,
+              currency: "COP",
+            },
+            updated_at: "2022-12-28T16:40:06.822840Z",
+          },
+          declination_reason: "Transaction cancelled by the user",
+          description: "some description",
+          entity_id: "123456789",
+          id: "trn_2PVWOx9dZKJMBZw7opjrrs",
+          inserted_at: "2022-12-28T16:19:52.530158Z",
+          payee: {
+            bank_account: {
+              bank_code: "007",
+              number: "000000009",
+              type: "savings_account",
+            },
+            document_number: "1033711400",
+            document_type: "CC",
+            email: "someone@gmail.com",
+            name: "patricio rothschild",
+          },
+          reference: "ref # 1231",
+          state: "cancelled",
+          updated_at: "2022-12-28T16:40:06.812742Z",
+        },
+        type: "bank_transfer_rejected",
+      },
+      timestamp: "2022-12-28T16:54:38.660650Z",
+    };
+
+    it("should throw InternalServiceErrorException if the signature is not valid (timestamp is different)", () => {
+      const webhookResponseInvalidSignature = `t=${Date.now()},v1=${createMonoSignature(
+        bankTransferRejectedWebhookEvent,
+        webhookEventTime,
+      )}`;
+      expect(() =>
+        monoWebhookHandlers.convertBankTransferRejected(
+          bankTransferRejectedWebhookEvent,
+          webhookResponseInvalidSignature,
+        ),
+      ).toThrowError(InternalServiceErrorException);
+      expect(() =>
+        monoWebhookHandlers.convertBankTransferRejected(
+          bankTransferRejectedWebhookEvent,
+          webhookResponseValidSignature,
+        ),
+      ).toThrowError("Invalid Mono signature");
+    });
+
+    it("should throw InternalServiceErrorException if the signature is not valid (signature is different)", () => {
+      const webhookResponseInvalidSignature = `t=${webhookEventTime},v1=${uuid()}`;
+      expect(() =>
+        monoWebhookHandlers.convertBankTransferRejected(
+          bankTransferRejectedWebhookEvent,
+          webhookResponseInvalidSignature,
+        ),
+      ).toThrowError(InternalServiceErrorException);
+      expect(() =>
+        monoWebhookHandlers.convertBankTransferRejected(
+          bankTransferRejectedWebhookEvent,
+          webhookResponseValidSignature,
+        ),
+      ).toThrowError("Invalid Mono signature");
+    });
+
+    it("should throw InternalServiceErrorException if the signature is not valid (rawBody is different)", () => {
+      const anotherWebhookEvent = {
+        event: {
+          data: bankTransferRejectedWebhookEvent.event.data,
+          type: "bank_transfer_rejected",
+        },
+        timestamp: bankTransferRejectedWebhookEvent.timestamp,
+      };
+      expect(() =>
+        monoWebhookHandlers.convertBankTransferRejected(anotherWebhookEvent, webhookResponseValidSignature),
+      ).toThrowError(InternalServiceErrorException);
+      expect(() =>
+        monoWebhookHandlers.convertBankTransferRejected(anotherWebhookEvent, webhookResponseValidSignature),
+      ).toThrowError("Invalid Mono signature");
+    });
+
+    it("should throw InternalServiceErrorException if the type is not 'bank_transfer_rejected'", () => {
+      const webhookEvent = {
+        event: {
+          data: bankTransferRejectedWebhookEvent.event.data,
+          type: "bank_transfer_approved",
+        },
+        timestamp: bankTransferRejectedWebhookEvent.timestamp,
+      };
+      const webhookResponseSignature = `t=${webhookEventTime},v1=${createMonoSignature(
+        webhookEvent,
+        webhookEventTime,
+      )}`;
+
+      expect(() =>
+        monoWebhookHandlers.convertBankTransferRejected(webhookEvent, webhookResponseSignature),
+      ).toThrowError(InternalServiceErrorException);
+      expect(() =>
+        monoWebhookHandlers.convertBankTransferRejected(webhookEvent, webhookResponseSignature),
+      ).toThrowError("Invalid 'bank_transfer_rejected' webhook response.");
+    });
+
+    it("should throw InternalServiceErrorException if the declination_reason is not set", () => {
+      const webhookEvent = {
+        event: {
+          data: {
+            ...bankTransferRejectedWebhookEvent.event.data,
+            declination_reason: null,
+          },
+          type: "bank_transfer_rejected",
+        },
+        timestamp: bankTransferRejectedWebhookEvent.timestamp,
+      };
+      const webhookResponseSignature = `t=${webhookEventTime},v1=${createMonoSignature(
+        webhookEvent,
+        webhookEventTime,
+      )}`;
+
+      expect(() =>
+        monoWebhookHandlers.convertBankTransferRejected(webhookEvent, webhookResponseSignature),
+      ).toThrowError(InternalServiceErrorException);
+      expect(() =>
+        monoWebhookHandlers.convertBankTransferRejected(webhookEvent, webhookResponseSignature),
+      ).toThrowError("Invalid 'bank_transfer_rejected' webhook response.");
+    });
+
+    it("should map all the fields from the request to BankTransferRejectedEvent", () => {
+      expect(
+        monoWebhookHandlers.convertBankTransferRejected(
+          bankTransferRejectedWebhookEvent,
+          webhookResponseValidSignature,
+        ),
+      ).toEqual({
+        accountID: "acc_16ktUqSO7G0qTHDz8I3qrG",
+        amount: 1600000,
+        currency: "COP",
+        batchID: "bat_2DpSchlriwoCuyGMOoIuwp",
+        transferID: "trn_2PVWOx9dZKJMBZw7opjrrs",
+        state: MonoTransactionState.CANCELLED,
+        declinationReason: "Transaction cancelled by the user",
+      });
+    });
+
+    it("should throw ServiceException if the transfer state is not known", () => {
+      const webhookEvent = {
+        event: {
+          data: {
+            ...bankTransferRejectedWebhookEvent.event.data,
+            state: "unknown",
+          },
+          type: "bank_transfer_rejected",
+        },
+        timestamp: bankTransferRejectedWebhookEvent.timestamp,
+      };
+      const webhookResponseSignature = `t=${webhookEventTime},v1=${createMonoSignature(
+        webhookEvent,
+        webhookEventTime,
+      )}`;
+
+      try {
+        monoWebhookHandlers.convertBankTransferRejected(webhookEvent, webhookResponseSignature);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        expect(e.message).toContain("Unknown Mono transfer state");
+      }
     });
   });
 });

@@ -19,6 +19,7 @@ import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
 import { MonoTransactionState } from "../domain/Mono";
 import { IClient } from "../../../core/domain/IClient";
 import { HealthCheckResponse, HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
+import { convertExternalTransactionStateToInternalState } from "./mono.utils";
 
 @Injectable()
 export class MonoClient implements IClient {
@@ -178,8 +179,7 @@ export class MonoClient implements IClient {
       const response = await axios.post(url, requestBody, { headers });
       if (response.status === 200) {
         this.logger.error(
-          `Mono transfer was successful but found duplicate transaction ID:${
-            request.transactionID
+          `Mono transfer was successful but found duplicate transaction ID:${request.transactionID
           }. Request body: ${JSON.stringify(requestBody)}`,
         );
       }
@@ -221,23 +221,8 @@ export class MonoClient implements IClient {
         });
       }
 
-      const externalTransactionStateToInternalState: Record<string, MonoTransactionState> = {
-        created: MonoTransactionState.PENDING,
-        in_progress: MonoTransactionState.IN_PROGRESS,
-        approved: MonoTransactionState.SUCCESS,
-        declined: MonoTransactionState.DECLINED,
-        cancelled: MonoTransactionState.CANCELLED,
-        duplicated: MonoTransactionState.DUPLICATED,
-      };
-      if (!externalTransactionStateToInternalState[transfer.state]) {
-        throw new ServiceException({
-          errorCode: ServiceErrorCode.UNKNOWN,
-          message: `Unknown Mono transfer state: ${transfer.state}`,
-        });
-      }
-
       return {
-        state: externalTransactionStateToInternalState[transfer.state],
+        state: convertExternalTransactionStateToInternalState(transfer.state),
         lastUpdatedTimestamp: new Date(transfer.updated_at),
         declinationReason: transfer.declination_reason,
       };

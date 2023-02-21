@@ -26,7 +26,7 @@ import { ConsumerService } from "../../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../../modules/consumer/mocks/mock.consumer.service";
 import { MonoWebhookHandlers } from "../mono.webhook";
 import { getMockMonoWebhookHandlersWithDefaults } from "../mocks/mock.mono.webhook";
-import { BankTransferApprovedEvent, CollectionIntentCreditedEvent } from "../../dto/mono.webhook.dto";
+import { BankTransferApprovedEvent, BankTransferRejectedEvent, CollectionIntentCreditedEvent } from "../../dto/mono.webhook.dto";
 import { getMockKMSServiceWithDefaults } from "../../../../modules/common/mocks/mock.kms.service";
 import { KmsService } from "../../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../../config/configtypes/KmsConfigs";
@@ -861,7 +861,7 @@ describe("MonoServiceTests", () => {
         });
       });
 
-      it("should throw InternalServiceErrorException if the 'collectionLinkID' is not found", async () => {
+      it("should throw InternalServiceErrorException if the 'transferID' is not found", async () => {
         const monoTransaction: MonoTransaction = getRandomMonoTransaction(MonoTransactionType.WITHDRAWAL);
         const convertedEvent: BankTransferApprovedEvent = {
           accountID: "accountID",
@@ -881,6 +881,80 @@ describe("MonoServiceTests", () => {
         const webhookSignature = "signature";
 
         when(monoWebhookHandlers.convertBankTransferApproved(deepEqual(webhookBody), webhookSignature)).thenReturn(
+          convertedEvent,
+        );
+        when(monoRepo.getMonoTransactionByTransferID(monoTransaction.withdrawalDetails.transferID)).thenResolve(null);
+
+        await expect(monoService.processWebhookEvent(webhookBody, webhookSignature)).rejects.toThrowError(
+          InternalServiceErrorException,
+        );
+
+        verify(monoRepo.updateMonoTransaction(anyString(), anything())).never();
+      });
+    });
+
+    describe("bank_transfer_rejected", () => {
+      it("should update the state to 'SUCCESS' if valid BankTransferRejectedEvent is sent in Webhook Event", async () => {
+        const monoTransaction: MonoTransaction = getRandomMonoTransaction(MonoTransactionType.WITHDRAWAL);
+        const convertedEvent: BankTransferRejectedEvent = {
+          accountID: "accountID",
+          amount: 100,
+          currency: MonoCurrency.COP,
+          transferID: monoTransaction.withdrawalDetails.transferID,
+          batchID: monoTransaction.withdrawalDetails.batchID,
+          state: MonoTransactionState.DECLINED,
+          declinationReason: "Transaction Declined",
+        };
+
+        const webhookBody = {
+          event: {
+            data: {},
+            type: "bank_transfer_rejected",
+          },
+          timestamp: "2022-12-29T15:42:08.325158Z",
+        };
+        const webhookSignature = "signature";
+
+        when(monoWebhookHandlers.convertBankTransferRejected(deepEqual(webhookBody), webhookSignature)).thenReturn(
+          convertedEvent,
+        );
+        when(monoRepo.getMonoTransactionByTransferID(monoTransaction.withdrawalDetails.transferID)).thenResolve(
+          monoTransaction,
+        );
+        when(monoRepo.updateMonoTransaction(anyString(), anything())).thenResolve();
+
+        await monoService.processWebhookEvent(webhookBody, webhookSignature);
+
+        const [receivedMonoID, receivedMonoTransactionUpdateRequest] = capture(monoRepo.updateMonoTransaction).last();
+        expect(receivedMonoID).toBe(monoTransaction.id);
+        expect(receivedMonoTransactionUpdateRequest).toStrictEqual({
+          state: MonoTransactionState.DECLINED,
+          declinationReason: "Transaction Declined",
+        });
+      });
+
+      it("should throw InternalServiceErrorException if the 'transferID' is not found", async () => {
+        const monoTransaction: MonoTransaction = getRandomMonoTransaction(MonoTransactionType.WITHDRAWAL);
+        const convertedEvent: BankTransferRejectedEvent = {
+          accountID: "accountID",
+          amount: 100,
+          currency: MonoCurrency.COP,
+          transferID: monoTransaction.withdrawalDetails.transferID,
+          batchID: monoTransaction.withdrawalDetails.batchID,
+          state: MonoTransactionState.DECLINED,
+          declinationReason: "Transaction Declined",
+        };
+
+        const webhookBody = {
+          event: {
+            data: {},
+            type: "bank_transfer_rejected",
+          },
+          timestamp: "2022-12-29T15:42:08.325158Z",
+        };
+        const webhookSignature = "signature";
+
+        when(monoWebhookHandlers.convertBankTransferRejected(deepEqual(webhookBody), webhookSignature)).thenReturn(
           convertedEvent,
         );
         when(monoRepo.getMonoTransactionByTransferID(monoTransaction.withdrawalDetails.transferID)).thenResolve(null);
