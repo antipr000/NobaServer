@@ -103,7 +103,7 @@ export class MonoClient implements IClient {
       expires_at: new Date(Date.now() + this.expiryTimeInMillis).toISOString(),
       external_id: request.transactionID,
       payer: {
-        document_number: "",
+        document_number: null,
         document_type: "CC",
         email: request.consumerEmail,
         name: request.consumerName,
