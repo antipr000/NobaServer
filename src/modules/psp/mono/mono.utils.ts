@@ -18,4 +18,4 @@ export const convertExternalTransactionStateToInternalState = (state: string): M
     });
   }
   return externalTransactionStateToInternalState[state];
-}
+};

@@ -20,7 +20,11 @@ import { IMonoRepo } from "./repo/mono.repo";
 import { MONO_REPO_PROVIDER } from "./repo/mono.repo.module";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { MonoWebhookHandlers } from "./mono.webhook";
-import { BankTransferApprovedEvent, BankTransferRejectedEvent, CollectionIntentCreditedEvent } from "../dto/mono.webhook.dto";
+import {
+  BankTransferApprovedEvent,
+  BankTransferRejectedEvent,
+  CollectionIntentCreditedEvent,
+} from "../dto/mono.webhook.dto";
 import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
 import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
@@ -55,7 +59,7 @@ export class MonoService {
     private readonly consumerService: ConsumerService,
     private readonly monoClient: MonoClient,
     private readonly monoWebhookHandlers: MonoWebhookHandlers,
-  ) { }
+  ) {}
 
   async checkMonoHealth(): Promise<HealthCheckResponse> {
     return this.monoClient.getHealth();

@@ -210,34 +210,32 @@ describe("MonoWebhookHandlersTest", () => {
         bankTransferApprovedWebhookEvent,
         webhookEventTime,
       )}`;
-      expect(() =>
+
+      try {
         monoWebhookHandlers.convertBankTransferApproved(
           bankTransferApprovedWebhookEvent,
           webhookResponseInvalidSignature,
-        ),
-      ).toThrowError(InternalServiceErrorException);
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferApproved(
-          bankTransferApprovedWebhookEvent,
-          webhookResponseValidSignature,
-        ),
-      ).toThrowError("Invalid Mono signature");
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(InternalServiceErrorException);
+        expect(e.message).toContain("Invalid Mono signature");
+      }
     });
 
     it("should throw InternalServiceErrorException if the signature is not valid (signature is different)", () => {
       const webhookResponseInvalidSignature = `t=${webhookEventTime},v1=${uuid()}`;
-      expect(() =>
+
+      try {
         monoWebhookHandlers.convertBankTransferApproved(
           bankTransferApprovedWebhookEvent,
           webhookResponseInvalidSignature,
-        ),
-      ).toThrowError(InternalServiceErrorException);
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferApproved(
-          bankTransferApprovedWebhookEvent,
-          webhookResponseValidSignature,
-        ),
-      ).toThrowError("Invalid Mono signature");
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(InternalServiceErrorException);
+        expect(e.message).toContain("Invalid Mono signature");
+      }
     });
 
     it("should throw InternalServiceErrorException if the signature is not valid (rawBody is different)", () => {
@@ -248,12 +246,14 @@ describe("MonoWebhookHandlersTest", () => {
         },
         timestamp: bankTransferApprovedWebhookEvent.timestamp,
       };
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferApproved(anotherWebhookEvent, webhookResponseValidSignature),
-      ).toThrowError(InternalServiceErrorException);
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferApproved(anotherWebhookEvent, webhookResponseValidSignature),
-      ).toThrowError("Invalid Mono signature");
+
+      try {
+        monoWebhookHandlers.convertBankTransferApproved(anotherWebhookEvent, webhookResponseValidSignature);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(InternalServiceErrorException);
+        expect(e.message).toContain("Invalid Mono signature");
+      }
     });
 
     it("should throw InternalServiceErrorException if the type is not 'bank_transfer_approved'", () => {
@@ -269,12 +269,13 @@ describe("MonoWebhookHandlersTest", () => {
         webhookEventTime,
       )}`;
 
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferApproved(webhookEvent, webhookResponseSignature),
-      ).toThrowError(InternalServiceErrorException);
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferApproved(webhookEvent, webhookResponseSignature),
-      ).toThrowError("Invalid 'bank_transfer_approved' webhook response.");
+      try {
+        monoWebhookHandlers.convertBankTransferApproved(webhookEvent, webhookResponseSignature);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(InternalServiceErrorException);
+        expect(e.message).toContain("Invalid 'bank_transfer_approved' webhook response.");
+      }
     });
 
     it("should throw InternalServiceErrorException if the state is not 'approved'", () => {
@@ -293,12 +294,13 @@ describe("MonoWebhookHandlersTest", () => {
         webhookEventTime,
       )}`;
 
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferApproved(webhookEvent, webhookResponseSignature),
-      ).toThrowError(InternalServiceErrorException);
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferApproved(webhookEvent, webhookResponseSignature),
-      ).toThrowError("Invalid 'bank_transfer_approved' webhook response.");
+      try {
+        monoWebhookHandlers.convertBankTransferApproved(webhookEvent, webhookResponseSignature);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(InternalServiceErrorException);
+        expect(e.message).toContain("Invalid 'bank_transfer_approved' webhook response.");
+      }
     });
 
     it("should map all the fields from the request to BankTransferApprovedEvent", () => {
@@ -371,34 +373,32 @@ describe("MonoWebhookHandlersTest", () => {
         bankTransferRejectedWebhookEvent,
         webhookEventTime,
       )}`;
-      expect(() =>
+
+      try {
         monoWebhookHandlers.convertBankTransferRejected(
           bankTransferRejectedWebhookEvent,
           webhookResponseInvalidSignature,
-        ),
-      ).toThrowError(InternalServiceErrorException);
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferRejected(
-          bankTransferRejectedWebhookEvent,
-          webhookResponseValidSignature,
-        ),
-      ).toThrowError("Invalid Mono signature");
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(InternalServiceErrorException);
+        expect(e.message).toContain("Invalid Mono signature");
+      }
     });
 
     it("should throw InternalServiceErrorException if the signature is not valid (signature is different)", () => {
       const webhookResponseInvalidSignature = `t=${webhookEventTime},v1=${uuid()}`;
-      expect(() =>
+
+      try {
         monoWebhookHandlers.convertBankTransferRejected(
           bankTransferRejectedWebhookEvent,
           webhookResponseInvalidSignature,
-        ),
-      ).toThrowError(InternalServiceErrorException);
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferRejected(
-          bankTransferRejectedWebhookEvent,
-          webhookResponseValidSignature,
-        ),
-      ).toThrowError("Invalid Mono signature");
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(InternalServiceErrorException);
+        expect(e.message).toContain("Invalid Mono signature");
+      }
     });
 
     it("should throw InternalServiceErrorException if the signature is not valid (rawBody is different)", () => {
@@ -409,12 +409,14 @@ describe("MonoWebhookHandlersTest", () => {
         },
         timestamp: bankTransferRejectedWebhookEvent.timestamp,
       };
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferRejected(anotherWebhookEvent, webhookResponseValidSignature),
-      ).toThrowError(InternalServiceErrorException);
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferRejected(anotherWebhookEvent, webhookResponseValidSignature),
-      ).toThrowError("Invalid Mono signature");
+
+      try {
+        monoWebhookHandlers.convertBankTransferRejected(anotherWebhookEvent, webhookResponseValidSignature);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(InternalServiceErrorException);
+        expect(e.message).toContain("Invalid Mono signature");
+      }
     });
 
     it("should throw InternalServiceErrorException if the type is not 'bank_transfer_rejected'", () => {
@@ -430,12 +432,13 @@ describe("MonoWebhookHandlersTest", () => {
         webhookEventTime,
       )}`;
 
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferRejected(webhookEvent, webhookResponseSignature),
-      ).toThrowError(InternalServiceErrorException);
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferRejected(webhookEvent, webhookResponseSignature),
-      ).toThrowError("Invalid 'bank_transfer_rejected' webhook response.");
+      try {
+        monoWebhookHandlers.convertBankTransferRejected(webhookEvent, webhookResponseSignature);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(InternalServiceErrorException);
+        expect(e.message).toContain("Invalid 'bank_transfer_rejected' webhook response.");
+      }
     });
 
     it("should throw InternalServiceErrorException if the declination_reason is not set", () => {
@@ -454,12 +457,13 @@ describe("MonoWebhookHandlersTest", () => {
         webhookEventTime,
       )}`;
 
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferRejected(webhookEvent, webhookResponseSignature),
-      ).toThrowError(InternalServiceErrorException);
-      expect(() =>
-        monoWebhookHandlers.convertBankTransferRejected(webhookEvent, webhookResponseSignature),
-      ).toThrowError("Invalid 'bank_transfer_rejected' webhook response.");
+      try {
+        monoWebhookHandlers.convertBankTransferRejected(webhookEvent, webhookResponseSignature);
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(InternalServiceErrorException);
+        expect(e.message).toContain("Invalid 'bank_transfer_rejected' webhook response.");
+      }
     });
 
     it("should map all the fields from the request to BankTransferRejectedEvent", () => {

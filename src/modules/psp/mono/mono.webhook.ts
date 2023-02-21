@@ -3,7 +3,11 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
 import { Logger } from "winston";
 import { MonoCurrency } from "../domain/Mono";
-import { BankTransferApprovedEvent, BankTransferRejectedEvent, CollectionIntentCreditedEvent } from "../dto/mono.webhook.dto";
+import {
+  BankTransferApprovedEvent,
+  BankTransferRejectedEvent,
+  CollectionIntentCreditedEvent,
+} from "../dto/mono.webhook.dto";
 import { createHmac } from "crypto";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { MONO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
@@ -119,9 +123,7 @@ export class MonoWebhookHandlers {
     }
 
     if (webhookData.event.data.declination_reason === null) {
-      this.logger.error(
-        `'bank_transfer_rejected' doesn't have declination_reason`,
-      );
+      this.logger.error(`'bank_transfer_rejected' doesn't have declination_reason`);
       this.logger.error(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
 
       throw new InternalServiceErrorException({

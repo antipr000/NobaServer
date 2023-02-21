@@ -26,7 +26,11 @@ import { ConsumerService } from "../../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../../modules/consumer/mocks/mock.consumer.service";
 import { MonoWebhookHandlers } from "../mono.webhook";
 import { getMockMonoWebhookHandlersWithDefaults } from "../mocks/mock.mono.webhook";
-import { BankTransferApprovedEvent, BankTransferRejectedEvent, CollectionIntentCreditedEvent } from "../../dto/mono.webhook.dto";
+import {
+  BankTransferApprovedEvent,
+  BankTransferRejectedEvent,
+  CollectionIntentCreditedEvent,
+} from "../../dto/mono.webhook.dto";
 import { getMockKMSServiceWithDefaults } from "../../../../modules/common/mocks/mock.kms.service";
 import { KmsService } from "../../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../../config/configtypes/KmsConfigs";
