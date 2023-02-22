@@ -91,7 +91,7 @@ export class MonoClient implements IClient {
     };
 
     const phoneUtil = PhoneNumberUtil.getInstance();
-    if (phoneUtil.isValidNumberForRegion(phoneUtil.parse(request.consumerPhone, "CO"), "CO")) {
+    if (!phoneUtil.isValidNumberForRegion(phoneUtil.parse(request.consumerPhone, "CO"), "CO")) {
       throw new MonoClientException({
         errorCode: MonoClientErrorCode.PHONE_NUMBER_INVALID,
         message: `Invalid Colombian phone number: ${request.consumerPhone}`,
