@@ -120,7 +120,7 @@ export class MonoClient implements IClient {
         },
         phone: request.consumerPhone,
       },
-      redirect_url: "noba://AuthenticatedPrimaryScreen/activityView",
+      redirect_url: "https://app.noba.com/app-routing/AuthenticatedPrimaryScreen/activityView",
       reference: {
         editable: false,
         required: false,
