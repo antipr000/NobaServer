@@ -21,8 +21,6 @@ import { IClient } from "../../../core/domain/IClient";
 import { HealthCheckResponse, HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
 import { convertExternalTransactionStateToInternalState } from "./mono.utils";
 import { MonoClientErrorCode, MonoClientException } from "./exception/mono.client.exception";
-import { InputTransactionEvent } from "../../../modules/transaction/domain/TransactionEvent";
-import { PhoneNumberUtil } from "google-libphonenumber";
 
 @Injectable()
 export class MonoClient implements IClient {
@@ -89,14 +87,6 @@ export class MonoClient implements IClient {
       ...this.getAuthorizationHeader(),
       ...this.getIdempotentHeader(request.transactionID),
     };
-
-    const phoneUtil = PhoneNumberUtil.getInstance();
-    if (!phoneUtil.isValidNumberForRegion(phoneUtil.parse(request.consumerPhone, "CO"), "CO")) {
-      throw new MonoClientException({
-        errorCode: MonoClientErrorCode.PHONE_NUMBER_INVALID,
-        message: `Invalid Colombian phone number: ${request.consumerPhone}`,
-      });
-    }
 
     const requestBody = {
       account_id: this.nobaAccountID,
