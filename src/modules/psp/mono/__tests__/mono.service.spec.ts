@@ -319,7 +319,7 @@ describe("MonoServiceTests", () => {
           id: "CCCCCCCCCC",
           displayEmail: "test@noba.com",
           handle: "test",
-          phone: "+1234567890",
+          phone: "+573000000000",
           firstName: "First",
           lastName: "Last",
         });
@@ -373,7 +373,7 @@ describe("MonoServiceTests", () => {
           id: "CCCCCCCCCC",
           displayEmail: "test@noba.com",
           handle: "test",
-          phone: "+1234567890",
+          phone: "+573000000000",
           firstName: "First",
           lastName: "Last",
         });
@@ -415,7 +415,7 @@ describe("MonoServiceTests", () => {
           id: "CCCCCCCCCC",
           displayEmail: "test@noba.com",
           handle: "test",
-          phone: "+1234567890",
+          phone: "+573000000000",
           firstName: "First",
           lastName: "Last",
         });
@@ -428,21 +428,6 @@ describe("MonoServiceTests", () => {
           consumerID: consumer.props.id,
           type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
         };
-
-        const expectedMonoClientCreateCollectionLink: MonoClientCollectionLinkRequest = {
-          amount: createMonoTransactionRequest.amount,
-          currency: createMonoTransactionRequest.currency,
-          transactionID: createMonoTransactionRequest.nobaTransactionID,
-          consumerEmail: consumer.props.email,
-          consumerName: "First Last",
-          consumerPhone: consumer.props.phone,
-        };
-        when(monoClient.createCollectionLink(deepEqual(expectedMonoClientCreateCollectionLink))).thenThrow(
-          new MonoClientException({
-            errorCode: MonoClientErrorCode.PHONE_NUMBER_INVALID,
-            message: "Phone number is not valid",
-          }),
-        );
 
         await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowError(
           ServiceException,

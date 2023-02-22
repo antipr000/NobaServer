@@ -103,7 +103,7 @@ describe("MonoWorkflowServiceTests", () => {
           id: "CCCCCCCCCC",
           displayEmail: "test@noba.com",
           handle: "test",
-          phone: "+1234567890",
+          phone: "+573000000000",
           firstName: "First",
           lastName: "Last",
         });
@@ -185,6 +185,33 @@ describe("MonoWorkflowServiceTests", () => {
             message: "Unknown error",
           }),
         );
+
+        await expect(monoWorkflowService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowError(
+          ServiceException,
+        );
+      });
+
+      it("should throw service exception when phone number is invalid", async () => {
+        const monoTransaction: MonoTransaction = getRandomMonoTransaction();
+
+        const consumer: Consumer = Consumer.createConsumer({
+          email: "test@noba.com",
+          id: "CCCCCCCCCC",
+          displayEmail: "test@noba.com",
+          handle: "test",
+          phone: "+573000000000",
+          firstName: "First",
+          lastName: "Last",
+        });
+        when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+
+        const createMonoTransactionRequest: CreateMonoTransactionRequest = {
+          amount: 100,
+          currency: MonoCurrency.COP,
+          nobaTransactionID: monoTransaction.nobaTransactionID,
+          consumerID: consumer.props.id,
+          type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
+        };
 
         await expect(monoWorkflowService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowError(
           ServiceException,
