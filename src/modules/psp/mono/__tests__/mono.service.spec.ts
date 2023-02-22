@@ -458,17 +458,7 @@ describe("MonoServiceTests", () => {
 
         await expect(
           monoService.createMonoTransaction(createMonoTransactionRequest),
-        ).rejects.toThrowServiceExceptionWithErrorCode(ServiceErrorCode.SEMANTIC_VALIDATION);
-
-        try {
-          await monoService.createMonoTransaction(createMonoTransactionRequest);
-          expect(true).toBe(false);
-        } catch (e) {
-          expect(e).toBeInstanceOf(ServiceException);
-          expect(e.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
-          expect(e.message).toEqual(expect.stringContaining("COP"));
-          expect(e.message).toEqual(expect.stringContaining("USD"));
-        }
+        ).rejects.toThrowServiceExceptionWithErrorCode(ServiceErrorCode.SEMANTIC_VALIDATION, "COP");
       });
 
       it("should throw ServiceException if the Consumer is not found", async () => {
