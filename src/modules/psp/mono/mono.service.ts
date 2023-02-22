@@ -290,8 +290,8 @@ export class MonoService {
 
     const phoneUtil = PhoneNumberUtil.getInstance();
     if (!phoneUtil.isValidNumberForRegion(phoneUtil.parse(request.consumer.props.phone, "CO"), "CO")) {
-      throw new MonoClientException({
-        errorCode: MonoClientErrorCode.PHONE_NUMBER_INVALID,
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: `Invalid Colombian phone number: ${request.consumer.props.phone}`,
       });
     }
@@ -351,12 +351,6 @@ export class MonoService {
       });
     } catch (e) {
       if (e instanceof MonoClientException) {
-        if (e.errorCode === MonoClientErrorCode.PHONE_NUMBER_INVALID) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: e.message,
-          });
-        }
         throw new ServiceException({
           errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
           message: e.message,
