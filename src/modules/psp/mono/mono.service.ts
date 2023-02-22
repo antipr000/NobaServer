@@ -357,7 +357,6 @@ export class MonoService {
         });
       }
 
-      console.log(e);
       this.logger.error(`Mono collection link creation failed: ${e}`);
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,

@@ -151,7 +151,8 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "setupFilesAfterEnv": [
-      "../test/matchers/exceptionErrorCode.ts"
+      "../test/matchers/exceptionErrorCode.ts",
+      "../test/matchers/serviceExceptionErrorCode.ts"
     ]
   },
   "prisma": {

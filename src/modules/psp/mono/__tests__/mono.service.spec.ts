@@ -431,7 +431,7 @@ describe("MonoServiceTests", () => {
 
         await expect(
           monoService.createMonoTransaction(createMonoTransactionRequest),
-        ).rejects.toThrowExceptionWithErrorCode(ServiceErrorCode.SEMANTIC_VALIDATION);
+        ).rejects.toThrowServiceExceptionWithErrorCode(ServiceErrorCode.SEMANTIC_VALIDATION);
       });
 
       it("should throw ServiceException if the Currency is not COP", async () => {
@@ -455,6 +455,10 @@ describe("MonoServiceTests", () => {
           consumerID: consumer.props.id,
           type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
         };
+
+        await expect(
+          monoService.createMonoTransaction(createMonoTransactionRequest),
+        ).rejects.toThrowServiceExceptionWithErrorCode(ServiceErrorCode.SEMANTIC_VALIDATION);
 
         try {
           await monoService.createMonoTransaction(createMonoTransactionRequest);
