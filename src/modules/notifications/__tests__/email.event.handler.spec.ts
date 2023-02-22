@@ -1568,7 +1568,7 @@ describe("EmailEventHandler test for languages", () => {
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
-        from: SENDER_EMAIL,
+        from: "kelsi@noba.com",
         templateId: EmailTemplates.EMPLOYER_REQUEST_EMAIL["en"],
         dynamicTemplateData: {},
       });

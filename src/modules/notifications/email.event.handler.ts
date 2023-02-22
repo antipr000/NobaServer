@@ -549,7 +549,7 @@ export class EmailEventHandler {
   public async sendEmployerRequestEmail(payload: SendEmployerRequestEvent) {
     const msg = {
       to: payload.email,
-      from: SENDER_EMAIL,
+      from: "kelsi@noba.com",
       templateId: EmailTemplates.getOrDefault(EmailTemplates.EMPLOYER_REQUEST_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {}, // Leaving empty because we don't need any dynamic data
     };
