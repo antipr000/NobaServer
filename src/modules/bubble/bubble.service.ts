@@ -86,8 +86,8 @@ export class BubbleService {
         request.maxAllocationPercent,
       );
 
-      const employeeUpdatePromises: Promise<void>[] = updatedEmployees.map(
-        async employee => await this.updateEmployeeAllocationInBubble(employee.id, employee.allocationAmount),
+      const employeeUpdatePromises: Promise<void>[] = updatedEmployees.map(async employee =>
+        this.updateEmployeeAllocationInBubble(employee.id, employee.allocationAmount),
       );
 
       await Promise.all(employeeUpdatePromises);

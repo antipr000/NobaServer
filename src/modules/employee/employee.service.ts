@@ -95,19 +95,20 @@ export class EmployeeService {
     employerID: string,
     newAllocationPercent: number,
   ): Promise<Employee[]> {
-    const updatedEmployees: Employee[] = [];
+    const updateEmployeePromises: Promise<Employee>[] = [];
     const employees: Employee[] = await this.employeeRepo.getEmployeesForEmployer(employerID);
     for (const employee of employees) {
       const maxAllocationAmount = (newAllocationPercent * employee.salary) / 100;
 
       if (employee.allocationAmount > maxAllocationAmount) {
-        updatedEmployees.push(
-          await this.employeeRepo.updateEmployee(employee.id, {
+        updateEmployeePromises.push(
+          this.employeeRepo.updateEmployee(employee.id, {
             allocationAmount: Utils.roundTo2DecimalNumber(maxAllocationAmount),
           }),
         );
       }
     }
-    return updatedEmployees;
+
+    return Promise.all(updateEmployeePromises);
   }
 }
