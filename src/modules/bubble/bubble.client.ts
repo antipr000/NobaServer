@@ -43,9 +43,11 @@ export class BubbleClient {
 
     try {
       await axios.post(url, requestBody, { headers });
-      this.logger.info(`Successfully registered new employee: ${JSON.stringify(request)} to Bubble`);
+      this.logger.info(`Successfully registered new employee: ${JSON.stringify(requestBody)} to Bubble`);
     } catch (err) {
-      this.logger.error(`Failed to register new employee: ${JSON.stringify(request)} to Bubble. Error: ${err}`);
+      this.logger.error(
+        `Failed to register new employee: ${JSON.stringify(requestBody)} to Bubble endpoint ${url}. Error: ${err}`,
+      );
       throw new ServiceException({
         message: "Failed to register new employee with Bubble",
         errorCode: ServiceErrorCode.UNKNOWN,
@@ -67,9 +69,11 @@ export class BubbleClient {
 
     try {
       await axios.post(url, requestBody, { headers });
-      this.logger.info(`Successfully updated employee allocation amount: ${nobaEmployeeID} to Bubble`);
+      this.logger.info(`Successfully updated employee : ${JSON.stringify(requestBody)} to Bubble`);
     } catch (err) {
-      this.logger.error(`Failed to update employee allocation amount: ${nobaEmployeeID} to Bubble. Error: ${err}`);
+      this.logger.error(
+        `Failed to update employee : ${JSON.stringify(requestBody)} to Bubble endpoint ${url}. Error: ${err}`,
+      );
       throw new ServiceException({
         message: "Failed to update the employee data in Bubble",
         errorCode: ServiceErrorCode.UNKNOWN,
