@@ -46,7 +46,9 @@ export class BubbleClient {
       this.logger.info(`Successfully registered new employee: ${JSON.stringify(requestBody)} to Bubble`);
     } catch (err) {
       this.logger.error(
-        `Failed to register new employee: ${JSON.stringify(requestBody)} to Bubble endpoint ${url}. Error: ${err}`,
+        `Failed to register new employee: ${JSON.stringify(
+          requestBody,
+        )} to Bubble endpoint ${url} with headers: ${JSON.stringify(headers)}. Error: ${err}`,
       );
       throw new ServiceException({
         message: "Failed to register new employee with Bubble",
