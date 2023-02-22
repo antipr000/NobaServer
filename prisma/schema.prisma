@@ -284,7 +284,6 @@ model TransactionFee {
 
 model Mono {
   id                       String      @id @default(uuid())
-  monoTransactionID        String? // [DEPRECATED] Use `monoPaymentTransactionID` instead.
   monoPaymentTransactionID String?
   collectionLinkID         String?
   collectionURL            String?
