@@ -199,7 +199,7 @@ describe("MonoWorkflowServiceTests", () => {
           id: "CCCCCCCCCC",
           displayEmail: "test@noba.com",
           handle: "test",
-          phone: "+573000000000",
+          phone: "+579100000000",
           firstName: "First",
           lastName: "Last",
         });

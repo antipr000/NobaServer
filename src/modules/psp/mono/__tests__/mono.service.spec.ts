@@ -415,7 +415,7 @@ describe("MonoServiceTests", () => {
           id: "CCCCCCCCCC",
           displayEmail: "test@noba.com",
           handle: "test",
-          phone: "+573000000000",
+          phone: "+579100000000",
           firstName: "First",
           lastName: "Last",
         });
@@ -429,9 +429,9 @@ describe("MonoServiceTests", () => {
           type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
         };
 
-        await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowError(
-          ServiceException,
-        );
+        await expect(
+          monoService.createMonoTransaction(createMonoTransactionRequest),
+        ).rejects.toThrowExceptionWithErrorCode(ServiceErrorCode.SEMANTIC_VALIDATION);
       });
 
       it("should throw ServiceException if the Currency is not COP", async () => {

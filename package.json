@@ -149,7 +149,10 @@
     ],
     "coverageProvider": "v8",
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": [
+      "../test/matchers/exceptionErrorCode.ts"
+    ]
   },
   "prisma": {
     "seed": "ts-node ./prisma/seed/seed.ts"
