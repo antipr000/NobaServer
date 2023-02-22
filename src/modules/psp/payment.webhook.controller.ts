@@ -26,7 +26,7 @@ export class PaymentWebhooksController {
   }
 
   @Post("/vendors/checkout/webhooks")
-  @ApiTags("Vendors")
+  @ApiTags("Webhooks")
   @ApiOperation({ summary: "Checks if the transaction parameters are valid" })
   @ApiResponse({ status: HttpStatus.OK })
   async consumePaymentWebhooks(@Body() requestBody, @Headers() headers) {

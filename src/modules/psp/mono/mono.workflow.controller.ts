@@ -16,7 +16,7 @@ export class MonoWorkflowController {
   ) {}
 
   @Post("/webhooks/mono")
-  @ApiTags("Vendors")
+  @ApiTags("Webhooks")
   @ApiOperation({ summary: "Handle all the Mono Webhook requests" })
   @ApiResponse({ status: HttpStatus.CREATED })
   async processWebhookRequests(

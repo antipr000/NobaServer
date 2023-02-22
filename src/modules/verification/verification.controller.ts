@@ -243,7 +243,7 @@ export class VerificationController {
 
 @IsNoApiKeyNeeded()
 @Controller("v1/verify/webhook")
-@ApiTags("VerificationWebhooks")
+@ApiTags("Webhooks")
 export class VerificationWebhookController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
