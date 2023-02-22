@@ -144,30 +144,34 @@ export class ConsumerMapper implements Mapper<Consumer> {
     };
   }
 
-  public async toLinkedEmployerDTO(employees: Employee[]): Promise<LinkedEmployerDTO[]> {
+  public async toLinkedEmployerArrayDTO(employees: Employee[]): Promise<LinkedEmployerDTO[]> {
     const linkedEmployers: LinkedEmployerDTO[] = [];
 
     for (const employee of employees) {
-      const employer: Employer = await this.employerService.getEmployerByID(employee.employerID);
-      const payrollDatesAsc = employer.payrollDates.sort();
-      const now = new Date().setHours(0, 0, 0, 0);
-      const futurePayrollDates = payrollDatesAsc.filter(date => {
-        return new Date(date) > new Date(now + employer.leadDays * 24 * 60 * 60 * 1000);
-      });
-      const linkedEmployer: LinkedEmployerDTO = {
-        employerName: employer.name,
-        employerLogoURI: employer.logoURI,
-        allocationAmountInPesos: employee.allocationAmount,
-        employerReferralID: employer.referralID,
-        leadDays: employer.leadDays,
-        payrollDates: payrollDatesAsc,
-      };
-      if (futurePayrollDates.length > 0) {
-        linkedEmployer["nextPayrollDate"] = futurePayrollDates[0];
-      }
-
-      linkedEmployers.push(linkedEmployer);
+      linkedEmployers.push(await this.toLinkedEmployerDTO(employee));
     }
     return linkedEmployers;
+  }
+
+  public async toLinkedEmployerDTO(employee: Employee): Promise<LinkedEmployerDTO> {
+    const employer: Employer = await this.employerService.getEmployerByID(employee.employerID);
+    const payrollDatesAsc = employer.payrollDates.sort();
+    const now = new Date().setHours(0, 0, 0, 0);
+    const futurePayrollDates = payrollDatesAsc.filter(date => {
+      return new Date(date) > new Date(now + employer.leadDays * 24 * 60 * 60 * 1000);
+    });
+    const linkedEmployer: LinkedEmployerDTO = {
+      employerName: employer.name,
+      employerLogoURI: employer.logoURI,
+      allocationAmountInPesos: employee.allocationAmount,
+      employerReferralID: employer.referralID,
+      leadDays: employer.leadDays,
+      payrollDates: payrollDatesAsc,
+    };
+    if (futurePayrollDates.length > 0) {
+      linkedEmployer["nextPayrollDate"] = futurePayrollDates[0];
+    }
+
+    return linkedEmployer;
   }
 }

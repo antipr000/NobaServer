@@ -1162,11 +1162,27 @@ describe("ConsumerController", () => {
   describe("updateAllocationAmountForAnEmployer", () => {
     it("should forward the call to consumerService", async () => {
       const consumer = getRandomConsumer();
-      when(consumerService.updateEmployerAllocationAmount("employerReferralID", consumer.props.id, 1478)).thenResolve();
+      const employer1 = getRandomEmployer(); // before lead days
+      employer1.payrollDates.push("2020-03-04");
+      const employee1 = getRandomEmployee(consumer.props.id, employer1.id);
+      when(employerService.getEmployerByID(employer1.id)).thenResolve(employer1);
+      when(consumerService.updateEmployerAllocationAmount("employerReferralID", consumer.props.id, 1478)).thenResolve(
+        employee1,
+      );
 
-      await consumerController.updateAllocationAmountForAnEmployer(consumer, {
+      const updatedEmployee = await consumerController.updateAllocationAmountForAnEmployer(consumer, {
         employerReferralID: "employerReferralID",
         allocationAmountInPesos: 1478,
+      });
+
+      expect(updatedEmployee).toEqual({
+        employerName: employer1.name,
+        employerLogoURI: employer1.logoURI,
+        allocationAmountInPesos: employee1.allocationAmount,
+        employerReferralID: employer1.referralID,
+        leadDays: employer1.leadDays,
+        payrollDates: employer1.payrollDates,
+        nextPayrollDate: employer1.payrollDates[3],
       });
     });
   });

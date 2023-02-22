@@ -536,22 +536,22 @@ export class ConsumerController {
   @ApiResponse({ status: HttpStatus.OK, type: [LinkedEmployerDTO] })
   async listLinkedEmployers(@AuthUser() consumer: Consumer): Promise<LinkedEmployerDTO[]> {
     const employees: Employee[] = await this.consumerService.listLinkedEmployers(consumer.props.id);
-    return this.consumerMapper.toLinkedEmployerDTO(employees);
+    return this.consumerMapper.toLinkedEmployerArrayDTO(employees);
   }
 
   @Patch("/employers")
   @ApiOperation({ summary: "Updates the allocation amount for a specific employer" })
-  @ApiResponse({ status: HttpStatus.OK, type: BlankResponseDTO })
+  @ApiResponse({ status: HttpStatus.OK, type: LinkedEmployerDTO })
   async updateAllocationAmountForAnEmployer(
     @AuthUser() consumer: Consumer,
     @Body() requestBody: UpdateEmployerAllocationDTO,
   ): Promise<BlankResponseDTO> {
-    await this.consumerService.updateEmployerAllocationAmount(
+    const employee = await this.consumerService.updateEmployerAllocationAmount(
       requestBody.employerReferralID,
       consumer.props.id,
       requestBody.allocationAmountInPesos,
     );
-    return {};
+    return this.consumerMapper.toLinkedEmployerDTO(employee);
   }
 
   @Post("/employers/request")
