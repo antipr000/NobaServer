@@ -303,7 +303,7 @@ describe("BubbleServiceTests", () => {
 
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(employerService.updateEmployer(anyString(), anything())).thenResolve();
-      when(employeeService.updateAllocationAmountsForNewMaxAllocationPercent(anyString(), anyNumber())).thenResolve();
+      when(employeeService.updateAllocationAmountsForNewMaxAllocationPercent(anyString(), anyNumber())).thenResolve([]);
 
       await bubbleService.updateEmployerInNoba(employer.referralID, {
         leadDays: updatedLeadDays,
@@ -325,6 +325,79 @@ describe("BubbleServiceTests", () => {
 
       expect(propagatedEmployerIDToEmployeeService).toEqual(employer.id);
       expect(propagatedMaxAllocationPercentToEmployeeService).toEqual(updatedMaxAllocationPercent);
+    });
+
+    it("should update Bubble if any employee salaries were reduced as a result of employer allocation reduction", async () => {
+      const consumer1: Consumer = getRandomConsumer();
+      const consumer2: Consumer = getRandomConsumer();
+      const consumer3: Consumer = getRandomConsumer();
+      const employer: Employer = getRandomEmployer();
+      employer.maxAllocationPercent = 50;
+      const employee1: Employee = getRandomEmployee(consumer1.props.id, employer.id);
+      employee1.salary = 100000;
+      employee1.allocationAmount = 50000; // Right on the current limit, should be reduced for new percent
+      const employee2: Employee = getRandomEmployee(consumer2.props.id, employer.id);
+      employee2.salary = 200000;
+      employee2.allocationAmount = 50000; // Below the current limit, should not be reduced
+      const employee3: Employee = getRandomEmployee(consumer3.props.id, employer.id);
+      employee3.salary = 300000;
+      employee3.allocationAmount = 160000; // Above the current limit, should be reduced
+
+      const updatedMaxAllocationPercent = 10;
+
+      const updatedEmployee1: Employee = {
+        ...employee1,
+        allocationAmount: 10000,
+      };
+
+      const updatedEmployee3: Employee = {
+        ...employee3,
+        allocationAmount: 30000,
+      };
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.updateEmployer(anyString(), anything())).thenResolve();
+      when(employeeService.updateAllocationAmountsForNewMaxAllocationPercent(anyString(), anyNumber())).thenResolve([
+        updatedEmployee1,
+        updatedEmployee3,
+      ]);
+      when(
+        bubbleClient.updateEmployeeAllocationAmount(updatedEmployee1.id, updatedEmployee1.allocationAmount),
+      ).thenResolve();
+      when(
+        bubbleClient.updateEmployeeAllocationAmount(updatedEmployee3.id, updatedEmployee3.allocationAmount),
+      ).thenResolve();
+
+      await bubbleService.updateEmployerInNoba(employer.referralID, {
+        maxAllocationPercent: updatedMaxAllocationPercent,
+      });
+
+      const [propagatedEmployerIDToEmployerService, propagatedLeadDaysToEmployerService] = capture(
+        employerService.updateEmployer,
+      ).last();
+      expect(propagatedEmployerIDToEmployerService).toEqual(employer.id);
+      expect(propagatedLeadDaysToEmployerService).toEqual({
+        maxAllocationPercent: updatedMaxAllocationPercent,
+      });
+
+      const [propagatedEmployerIDToEmployeeService, propagatedMaxAllocationPercentToEmployeeService] = capture(
+        employeeService.updateAllocationAmountsForNewMaxAllocationPercent,
+      ).last();
+
+      expect(propagatedEmployerIDToEmployeeService).toEqual(employer.id);
+      expect(propagatedMaxAllocationPercentToEmployeeService).toEqual(updatedMaxAllocationPercent);
+
+      const [updatedEmployee1ID, updatedEmployee1AllocationAmount] = capture(
+        bubbleClient.updateEmployeeAllocationAmount,
+      ).first();
+      expect(updatedEmployee1ID).toEqual(updatedEmployee1.id);
+      expect(updatedEmployee1AllocationAmount).toEqual(updatedEmployee1.allocationAmount);
+
+      const [updatedEmployee3ID, updatedEmployee3AllocationAmount] = capture(
+        bubbleClient.updateEmployeeAllocationAmount,
+      ).second();
+      expect(updatedEmployee3ID).toEqual(updatedEmployee3.id);
+      expect(updatedEmployee3AllocationAmount).toEqual(updatedEmployee3.allocationAmount);
     });
 
     it("should update the 'payrollDays' of employer in Noba", async () => {
@@ -381,7 +454,7 @@ describe("BubbleServiceTests", () => {
       const employee = getRandomEmployee(consumer.props.id, employer.id);
 
       when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
-      when(employeeService.updateEmployee(anyString(), anything())).thenResolve();
+      when(employeeService.updateEmployee(anyString(), anything())).thenResolve(employee);
 
       await bubbleService.updateEmployee(employee.id, {
         salary: 1000,
@@ -395,6 +468,44 @@ describe("BubbleServiceTests", () => {
       expect(propagatedEmployeePropsToEmployeeService).toEqual({
         salary: 1000,
       });
+    });
+
+    it("should update Bubble if employee salary caused a reducation in allocation amount", async () => {
+      const employer = getRandomEmployer();
+      employer.maxAllocationPercent = 50;
+      const consumer = getRandomConsumer();
+      const employee = getRandomEmployee(consumer.props.id, employer.id);
+      employee.salary = 100000;
+      employee.allocationAmount = 50000;
+
+      const newSalary = 50000;
+
+      when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
+
+      const updatedEmployee: Employee = {
+        ...employee,
+        allocationAmount: (newSalary * employer.maxAllocationPercent) / 100,
+      };
+
+      when(employeeService.updateEmployee(anyString(), anything())).thenResolve(updatedEmployee);
+      when(bubbleClient.updateEmployeeAllocationAmount(employee.id, updatedEmployee.allocationAmount)).thenResolve();
+
+      await bubbleService.updateEmployee(employee.id, {
+        salary: newSalary, // Should cause max allocation for employee to be 25000
+      });
+
+      const [propagatedEmployeeIDToEmployeeService, propagatedEmployeePropsToEmployeeService] = capture(
+        employeeService.updateEmployee,
+      ).last();
+
+      expect(propagatedEmployeeIDToEmployeeService).toEqual(employee.id);
+      expect(propagatedEmployeePropsToEmployeeService).toEqual({
+        salary: newSalary,
+      });
+
+      const [employeeID, allocationAmount] = capture(bubbleClient.updateEmployeeAllocationAmount).last();
+      expect(employeeID).toEqual(employee.id);
+      expect(allocationAmount).toEqual(updatedEmployee.allocationAmount);
     });
 
     it("should throw 'ServiceException' when employee with given ID is not found", async () => {

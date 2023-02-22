@@ -81,10 +81,16 @@ export class BubbleService {
     });
 
     if (request.maxAllocationPercent) {
-      await this.employeeService.updateAllocationAmountsForNewMaxAllocationPercent(
+      const updatedEmployees = await this.employeeService.updateAllocationAmountsForNewMaxAllocationPercent(
         employer.id,
         request.maxAllocationPercent,
       );
+
+      const employeeUpdatePromises: Promise<void>[] = updatedEmployees.map(
+        async employee => await this.updateEmployeeAllocationInBubble(employee.id, employee.allocationAmount),
+      );
+
+      await Promise.all(employeeUpdatePromises);
     }
   }
 
@@ -97,8 +103,13 @@ export class BubbleService {
       });
     }
 
-    await this.employeeService.updateEmployee(employeeID, {
+    const updatedEmployee = await this.employeeService.updateEmployee(employeeID, {
       salary: request.salary,
     });
+
+    // If the salary update triggered a change to the allocation percent, update Bubble
+    if (updatedEmployee?.allocationAmount !== employee.allocationAmount) {
+      await this.updateEmployeeAllocationInBubble(employeeID, updatedEmployee.allocationAmount);
+    }
   }
 }
