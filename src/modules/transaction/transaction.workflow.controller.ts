@@ -26,7 +26,7 @@ import { DebitBankRequestDTO, WorkflowTransactionDTO } from "./dto/transaction.w
 import { DebitBankResponse, Transaction } from "./domain/Transaction";
 import { TransactionWorkflowMapper } from "./mapper/transaction.workflow.mapper";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
-import { ServiceErrorCode, ServiceException } from "src/core/exception/service.exception";
+import { ServiceErrorCode, ServiceException } from "../../../src/core/exception/service.exception";
 
 @Controller("wf/v1/transactions")
 @ApiBearerAuth("JWT-auth")
