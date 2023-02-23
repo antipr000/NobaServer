@@ -308,6 +308,7 @@ describe("MonoWorkflowServiceTests", () => {
             encryptedAccountNumber: "encryptedAccountNumber",
           },
         };
+        when(monoRepo.getMonoTransactionByNobaTransactionID(anyString())).thenResolve(null);
 
         try {
           await monoWorkflowService.createMonoTransaction(createMonoTransactionRequest);
@@ -342,6 +343,7 @@ describe("MonoWorkflowServiceTests", () => {
           state: "SUCCESS",
           declinationReason: null,
         });
+        when(monoRepo.getMonoTransactionByNobaTransactionID(anyString())).thenResolve(null);
         when(monoRepo.createMonoTransaction(anything())).thenReject(
           new MonoClientException({ errorCode: MonoClientErrorCode.TRANSFER_FAILED }),
         );
@@ -380,6 +382,7 @@ describe("MonoWorkflowServiceTests", () => {
           lastName: "Last",
         });
         when(consumerService.getConsumer(consumer.props.id)).thenResolve(null);
+        when(monoRepo.getMonoTransactionByNobaTransactionID(anyString())).thenResolve(null);
 
         const createMonoTransactionRequest: CreateMonoTransactionRequest = {
           amount: 100,
@@ -420,6 +423,7 @@ describe("MonoWorkflowServiceTests", () => {
           lastName: "Last",
         });
         when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+        when(monoRepo.getMonoTransactionByNobaTransactionID(anyString())).thenResolve(null);
 
         const createMonoTransactionRequest: CreateMonoTransactionRequest = {
           amount: 100,
@@ -468,9 +472,7 @@ describe("MonoWorkflowServiceTests", () => {
             lastName: "Last",
           });
           when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
-          when(monoRepo.getMonoTransactionByNobaTransactionID(monoTransaction.nobaTransactionID)).thenResolve(
-            monoTransaction,
-          );
+          when(monoRepo.getMonoTransactionByNobaTransactionID(anyString())).thenResolve(null);
 
           const createMonoTransactionRequest: CreateMonoTransactionRequest = {
             amount: 100,
@@ -508,6 +510,7 @@ describe("MonoWorkflowServiceTests", () => {
           lastName: "Last",
         });
         when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+        when(monoRepo.getMonoTransactionByNobaTransactionID(anyString())).thenResolve(null);
 
         const createMonoTransactionRequest: CreateMonoTransactionRequest = {
           amount: 100,
@@ -549,6 +552,7 @@ describe("MonoWorkflowServiceTests", () => {
           lastName: "Last",
         });
         when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+        when(monoRepo.getMonoTransactionByNobaTransactionID(anyString())).thenResolve(null);
 
         const decryptedAccountNumber = "1234567890";
         when(kmsService.decryptString("encryptedAccountNumber", KmsKeyType.SSN)).thenResolve(decryptedAccountNumber);
