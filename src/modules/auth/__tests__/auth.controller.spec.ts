@@ -248,11 +248,12 @@ describe("AuthController", () => {
         accessToken: "fake-token",
       };
       when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp)).thenResolve(adminId);
-      when(mockAdminAuthService.generateAccessToken(adminId, false)).thenResolve(generateAccessTokenResponse);
+      when(mockAdminAuthService.generateAccessToken(adminId, true)).thenResolve(generateAccessTokenResponse);
 
       const result: LoginResponseDTO = await authController.verifyAdminOtp({
         emailOrPhone: adminEmail,
         otp: otp,
+        includeRefreshToken: true,
       });
 
       expect(result).toEqual(generateAccessTokenResponse);
