@@ -157,4 +157,25 @@ export class AuthController {
     const userId: string = await authService.validateAndGetUserId(requestBody.emailOrPhone, requestBody.otp);
     return authService.generateAccessToken(userId, requestBody.includeRefreshToken);
   }
+
+  @IsNoApiKeyNeeded()
+  @ApiTags("Admin")
+  @UseGuards(AdminAuthGuard)
+  @Post("/admins/auth/accesstoken")
+  @ApiOperation({ summary: "returns a new JWT based access token with a refresh token for admins" })
+  @ApiResponse({ status: HttpStatus.OK, type: LoginResponseDTO, description: "API new access token and refresh token" })
+  @ApiUnauthorizedResponse({ description: "Invalid Refresh Token, either already used or expired" })
+  async newAccessTokenForAdmin(@Body() requestBody: NewAccessTokenRequestDTO): Promise<LoginResponseDTO> {
+    const authService: AuthService = this.getAuthService(nobaAdminIdentityIdentifier);
+
+    const isValidToken = await authService.validateToken(requestBody.refreshToken, requestBody.userID);
+
+    if (!isValidToken) {
+      throw new UnauthorizedException("Invalid refresh token, either it is already used or expired");
+    }
+
+    await authService.invalidateToken(requestBody.refreshToken, requestBody.userID);
+
+    return authService.generateAccessToken(requestBody.userID, true);
+  }
 }
