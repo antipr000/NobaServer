@@ -2,19 +2,87 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AddNobaAdminDTO } from "../models/AddNobaAdminDTO";
+import type { AdminLoginRequestDTO } from "../models/AdminLoginRequestDTO";
 import type { AdminUpdateConsumerRequestDTO } from "../models/AdminUpdateConsumerRequestDTO";
+import type { BlankResponseDTO } from "../models/BlankResponseDTO";
 import type { ConsumerDTO } from "../models/ConsumerDTO";
 import type { DeleteNobaAdminDTO } from "../models/DeleteNobaAdminDTO";
 import type { ExchangeRateDTO } from "../models/ExchangeRateDTO";
+import type { LoginResponseDTO } from "../models/LoginResponseDTO";
+import type { NewAccessTokenRequestDTO } from "../models/NewAccessTokenRequestDTO";
 import type { NobaAdminDTO } from "../models/NobaAdminDTO";
 import type { TransactionStatsDTO } from "../models/TransactionStatsDTO";
 import type { UpdateNobaAdminDTO } from "../models/UpdateNobaAdminDTO";
+import type { VerifyOtpRequestDTO } from "../models/VerifyOtpRequestDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 
 export class AdminService {
+  /**
+   * Logs admin in and sends one-time passcode (OTP) to the provided email address
+   * @returns BlankResponseDTO OTP successfully sent.
+   * @throws ApiError
+   */
+  public static loginAdmin({
+    requestBody,
+  }: {
+    requestBody: AdminLoginRequestDTO;
+  }): CancelablePromise<BlankResponseDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/admins/auth/login",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        403: `Access denied`,
+      },
+    });
+  }
+
+  /**
+   * Submits the one-time passcode (OTP) to retreive an API access token
+   * @returns LoginResponseDTO API access token
+   * @throws ApiError
+   */
+  public static verifyAdminOtp({
+    requestBody,
+  }: {
+    requestBody: VerifyOtpRequestDTO;
+  }): CancelablePromise<LoginResponseDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/admins/auth/verifyotp",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        401: `Invalid OTP`,
+      },
+    });
+  }
+
+  /**
+   * returns a new JWT based access token with a refresh token for admins
+   * @returns LoginResponseDTO API new access token and refresh token
+   * @throws ApiError
+   */
+  public static newAccessTokenForAdmin({
+    requestBody,
+  }: {
+    requestBody: NewAccessTokenRequestDTO;
+  }): CancelablePromise<LoginResponseDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/admins/auth/accesstoken",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        401: `Invalid Refresh Token, either already used or expired`,
+      },
+    });
+  }
+
   /**
    * Gets all transaction metrics
    * @returns TransactionStatsDTO Transaction statistics

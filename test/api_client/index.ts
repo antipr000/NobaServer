@@ -10,6 +10,7 @@ export type { AddNobaAdminDTO } from "./models/AddNobaAdminDTO";
 export type { AddPaymentMethodDTO } from "./models/AddPaymentMethodDTO";
 export type { AddressDTO } from "./models/AddressDTO";
 export type { AddTransactionEventDTO } from "./models/AddTransactionEventDTO";
+export type { AdminLoginRequestDTO } from "./models/AdminLoginRequestDTO";
 export type { AdminUpdateConsumerRequestDTO } from "./models/AdminUpdateConsumerRequestDTO";
 export type { BlankResponseDTO } from "./models/BlankResponseDTO";
 export type { CardDetailsDTO } from "./models/CardDetailsDTO";

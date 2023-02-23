@@ -21,6 +21,7 @@ import {
 } from "../api_client";
 import { ConsumerService } from "../api_client/services/ConsumerService";
 import { ConsumerDTO } from "../api_client/models/ConsumerDTO";
+import { AdminService } from "../api_client";
 import {
   computeSignature,
   insertNobaAdmin,
@@ -224,7 +225,7 @@ describe("Authentication", () => {
     it("shouldn't be successful for an unregistered NobaAdmin", async () => {
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
       setAccessTokenForTheNextRequests(adminBearerToken);
-      const loginResponse = (await AuthenticationService.loginAdmin({
+      const loginResponse = (await AdminService.loginAdmin({
         requestBody: {
           emailOrPhone: nobaAdminEmail,
         },
@@ -255,7 +256,7 @@ describe("Authentication", () => {
       expect(consumerLoginResponse.__status).toBe(201);
 
       setAccessTokenForTheNextRequests(adminBearerToken);
-      const adminWithSameConsumerEmailLogin = (await AuthenticationService.loginAdmin({
+      const adminWithSameConsumerEmailLogin = (await AdminService.loginAdmin({
         requestBody: {
           emailOrPhone: consumerEmail,
         },
@@ -270,7 +271,7 @@ describe("Authentication", () => {
       await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAA"), "BASIC");
 
       setAccessTokenForTheNextRequests(adminBearerToken);
-      const loginResponse = (await AuthenticationService.loginAdmin({
+      const loginResponse = (await AdminService.loginAdmin({
         requestBody: {
           emailOrPhone: nobaAdminEmail,
         },
@@ -278,7 +279,7 @@ describe("Authentication", () => {
 
       expect(loginResponse.__status).toBe(201);
 
-      const verifyOtpResponse = (await AuthenticationService.verifyAdminOtp({
+      const verifyOtpResponse = (await AdminService.verifyAdminOtp({
         requestBody: {
           emailOrPhone: nobaAdminEmail,
           otp: staticOTP,
@@ -295,7 +296,7 @@ describe("Authentication", () => {
       await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAA"), "BASIC");
 
       setAccessTokenForTheNextRequests("fakeToken");
-      const loginResponse = (await AuthenticationService.loginAdmin({
+      const loginResponse = (await AdminService.loginAdmin({
         requestBody: {
           emailOrPhone: nobaAdminEmail,
         },

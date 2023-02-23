@@ -1,5 +1,5 @@
 import { Admin, PrismaClient } from "@prisma/client";
-import { AuthenticationService, LoginResponseDTO } from "./api_client";
+import { AdminService, AuthenticationService, LoginResponseDTO } from "./api_client";
 import { ResponseStatus } from "./api_client/core/request";
 import CryptoJS from "crypto-js";
 import { ConsumerProps } from "../src/modules/consumer/domain/Consumer";
@@ -32,7 +32,7 @@ export const TEST_SECRET_KEY = "testsecretkey";
 
 export const loginNobaAdminAndGetResponse = async (email: string): Promise<LoginResponseDTO & ResponseStatus> => {
   setAccessTokenForTheNextRequests("testAdminBearerToken");
-  await AuthenticationService.loginAdmin({
+  await AdminService.loginAdmin({
     requestBody: {
       emailOrPhone: email,
     },
@@ -43,7 +43,7 @@ export const loginNobaAdminAndGetResponse = async (email: string): Promise<Login
     otp: TEST_OTP,
   };
 
-  const response = await AuthenticationService.verifyAdminOtp({
+  const response = await AdminService.verifyAdminOtp({
     requestBody: verifyOtpRequestBody,
   });
 
