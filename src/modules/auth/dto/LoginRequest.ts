@@ -8,4 +8,7 @@ export class LoginRequestDTO {
   autoCreate?: boolean;
 }
 
-export class AdminLoginRequestDTO {}
+export class AdminLoginRequestDTO {
+  @ApiPropertyOptional({ description: "Email or phone value to identify the user" })
+  emailOrPhone?: string;
+}

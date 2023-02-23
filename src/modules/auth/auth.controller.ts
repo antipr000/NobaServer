@@ -22,9 +22,9 @@ import {
 import { AdminAuthService } from "./admin.auth.service";
 import { AuthService } from "./auth.service";
 import { allIdentities, consumerIdentityIdentifier, nobaAdminIdentityIdentifier } from "./domain/IdentityType";
-import { LoginRequestDTO } from "./dto/LoginRequest";
+import { AdminLoginRequestDTO, LoginRequestDTO } from "./dto/LoginRequest";
 import { LoginResponseDTO } from "./dto/LoginResponse";
-import { VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
+import { AdminVerifyOtpRequestDTO, VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
 import { Public, IsNoApiKeyNeeded } from "./public.decorator";
 import { UserAuthService } from "./user.auth.service";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
@@ -32,9 +32,8 @@ import { NewAccessTokenRequestDTO } from "./dto/NewAccessTokenRequest";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { AdminAuthGuard } from "./admin-auth.guard";
 
-@Controller("v1/auth")
+@Controller("v1")
 @ApiBearerAuth("JWT-auth")
-@ApiTags("Authentication")
 export class AuthController {
   @Inject()
   private readonly consumerAuthService: UserAuthService;
@@ -53,7 +52,8 @@ export class AuthController {
   }
 
   @Public()
-  @Post("/accesstoken")
+  @ApiTags("Authentication")
+  @Post("/auth/accesstoken")
   @ApiOperation({ summary: "returns a new JWT based access token with a refresh token" })
   @ApiResponse({ status: HttpStatus.OK, type: LoginResponseDTO, description: "API new access token and refresh token" })
   @ApiUnauthorizedResponse({ description: "Invalid Refresh Token, either already used or expired" })
@@ -73,7 +73,8 @@ export class AuthController {
   }
 
   @Public()
-  @Post("/verifyotp")
+  @ApiTags("Authentication")
+  @Post("/auth/verifyotp")
   @ApiOperation({ summary: "Submits the one-time passcode (OTP) to retreive an API access token" })
   @ApiResponse({ status: HttpStatus.ACCEPTED, type: LoginResponseDTO, description: "API access token" })
   @ApiUnauthorizedResponse({ description: "Invalid OTP" })
@@ -86,10 +87,11 @@ export class AuthController {
   }
 
   @Public()
+  @ApiTags("Authentication")
   @ApiOperation({ summary: "Logs user in and sends one-time passcode (OTP) to the provided email address" })
   @ApiResponse({ status: HttpStatus.ACCEPTED, description: "OTP successfully sent.", type: BlankResponseDTO })
   @ApiForbiddenResponse({ description: "Access denied" })
-  @Post("/login")
+  @Post("/auth/login")
   @ApiHeaders(getCommonHeaders())
   async loginUser(@Body() requestBody: LoginRequestDTO): Promise<BlankResponseDTO> {
     const emailOrPhone = requestBody.emailOrPhone;
@@ -119,12 +121,13 @@ export class AuthController {
   }
 
   @IsNoApiKeyNeeded()
+  @ApiTags("Admin")
   @UseGuards(AdminAuthGuard)
   @ApiOperation({ summary: "Logs admin in and sends one-time passcode (OTP) to the provided email address" })
   @ApiResponse({ status: HttpStatus.ACCEPTED, description: "OTP successfully sent.", type: BlankResponseDTO })
   @ApiForbiddenResponse({ description: "Access denied" })
-  @Post("/admin/login")
-  async loginAdmin(@Body() requestBody: LoginRequestDTO): Promise<BlankResponseDTO> {
+  @Post("/admins/auth/login")
+  async loginAdmin(@Body() requestBody: AdminLoginRequestDTO): Promise<BlankResponseDTO> {
     const emailOrPhone = requestBody.emailOrPhone;
     const authService = this.getAuthService(nobaAdminIdentityIdentifier);
     const userExists = await authService.verifyUserExistence(emailOrPhone);
@@ -141,13 +144,14 @@ export class AuthController {
   }
 
   @IsNoApiKeyNeeded()
+  @ApiTags("Admin")
   @UseGuards(AdminAuthGuard)
   @ApiOperation({ summary: "Submits the one-time passcode (OTP) to retreive an API access token" })
   @ApiResponse({ status: HttpStatus.OK, type: LoginResponseDTO, description: "API access token" })
   @HttpCode(HttpStatus.OK)
   @ApiUnauthorizedResponse({ description: "Invalid OTP" })
-  @Post("/admin/verifyotp")
-  async verifyAdminOtp(@Body() requestBody: VerifyOtpRequestDTO): Promise<LoginResponseDTO> {
+  @Post("/admins/auth/verifyotp")
+  async verifyAdminOtp(@Body() requestBody: AdminVerifyOtpRequestDTO): Promise<LoginResponseDTO> {
     const authService: AuthService = this.getAuthService(nobaAdminIdentityIdentifier);
 
     const userId: string = await authService.validateAndGetUserId(requestBody.emailOrPhone, requestBody.otp);
