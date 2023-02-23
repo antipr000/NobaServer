@@ -25,13 +25,12 @@ import { allIdentities, consumerIdentityIdentifier, nobaAdminIdentityIdentifier 
 import { LoginRequestDTO } from "./dto/LoginRequest";
 import { LoginResponseDTO } from "./dto/LoginResponse";
 import { VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
-import { Public } from "./public.decorator";
+import { Public, IsNoApiKeyNeeded } from "./public.decorator";
 import { UserAuthService } from "./user.auth.service";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
 import { NewAccessTokenRequestDTO } from "./dto/NewAccessTokenRequest";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { AdminAuthGuard } from "./admin-auth.guard";
-import { IsNoApiKeyNeeded } from "./public.decorator";
 
 @Controller("v1/auth")
 @ApiBearerAuth("JWT-auth")
