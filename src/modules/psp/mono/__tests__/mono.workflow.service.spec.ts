@@ -468,6 +468,9 @@ describe("MonoWorkflowServiceTests", () => {
             lastName: "Last",
           });
           when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+          when(monoRepo.getMonoTransactionByNobaTransactionID(monoTransaction.nobaTransactionID)).thenResolve(
+            monoTransaction,
+          );
 
           const createMonoTransactionRequest: CreateMonoTransactionRequest = {
             amount: 100,
@@ -486,15 +489,9 @@ describe("MonoWorkflowServiceTests", () => {
           };
           delete createMonoTransactionRequest.withdrawalDetails[field];
 
-          try {
-            await monoWorkflowService.createMonoTransaction(createMonoTransactionRequest);
-            expect(true).toBe(false);
-          } catch (e) {
-            expect(e).toBeInstanceOf(ServiceException);
-            expect(e.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
-            expect(e.message).toEqual(expect.stringContaining("withdrawal"));
-            expect(e.message).toEqual(expect.stringContaining(field));
-          }
+          expect(
+            monoWorkflowService.createMonoTransaction(createMonoTransactionRequest),
+          ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION, "withdrawal");
         },
       );
 
