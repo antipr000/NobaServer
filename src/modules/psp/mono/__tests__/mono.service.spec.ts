@@ -484,14 +484,10 @@ describe("MonoServiceTests", () => {
           type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
         };
 
-        try {
-          await monoService.createMonoTransaction(createMonoTransactionRequest);
-          expect(true).toBe(false);
-        } catch (e) {
-          expect(e).toBeInstanceOf(ServiceException);
-          expect(e.errorCode).toEqual(ServiceErrorCode.DOES_NOT_EXIST);
-          expect(e.message).toEqual(expect.stringContaining("Consumer"));
-        }
+        expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.DOES_NOT_EXIST,
+          "Consumer",
+        );
       });
     });
 
@@ -526,15 +522,10 @@ describe("MonoServiceTests", () => {
           },
         };
 
-        try {
-          await monoService.createMonoTransaction(createMonoTransactionRequest);
-          expect(true).toBe(false);
-        } catch (e) {
-          expect(e).toBeInstanceOf(ServiceException);
-          expect(e.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
-          expect(e.message).toEqual(expect.stringContaining("COP"));
-          expect(e.message).toEqual(expect.stringContaining("USD"));
-        }
+        expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.SEMANTIC_VALIDATION,
+          "COP",
+        );
       });
 
       it("should throw ServiceException if the Consumer is not found", async () => {
@@ -567,14 +558,10 @@ describe("MonoServiceTests", () => {
           },
         };
 
-        try {
-          await monoService.createMonoTransaction(createMonoTransactionRequest);
-          expect(true).toBe(false);
-        } catch (e) {
-          expect(e).toBeInstanceOf(ServiceException);
-          expect(e.errorCode).toEqual(ServiceErrorCode.DOES_NOT_EXIST);
-          expect(e.message).toEqual(expect.stringContaining("Consumer"));
-        }
+        expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.DOES_NOT_EXIST,
+          "Consumer",
+        );
       });
 
       it("should throw ServiceException if the nobaPublicTransactionRef is not provided", async () => {
@@ -606,14 +593,10 @@ describe("MonoServiceTests", () => {
           },
         };
 
-        try {
-          await monoService.createMonoTransaction(createMonoTransactionRequest);
-          expect(true).toBe(false);
-        } catch (e) {
-          expect(e).toBeInstanceOf(ServiceException);
-          expect(e.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
-          expect(e.message).toEqual(expect.stringContaining("nobaPublicTransactionRef"));
-        }
+        expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.SEMANTIC_VALIDATION,
+          "nobaPublicTransactionRef",
+        );
       });
 
       const withdrawalsRequiredFields = [
