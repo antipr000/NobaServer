@@ -1,4 +1,15 @@
-import { BadRequestException, Body, Controller, Get, HttpStatus, Inject, Param, Patch, Post } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  ConflictException,
+  Controller,
+  Get,
+  HttpStatus,
+  Inject,
+  Param,
+  Patch,
+  Post,
+} from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -81,7 +92,7 @@ export class TransactionWorkflowController {
     } catch (e) {
       if (e instanceof ServiceException && e.errorCode === ServiceErrorCode.ALREADY_EXISTS) {
         this.logger.error(`Error while debiting from bank: ${e.message}`);
-        throw new BadRequestException(e.message);
+        throw new ConflictException(e.message);
       }
     }
   }
