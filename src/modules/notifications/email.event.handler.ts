@@ -550,7 +550,7 @@ export class EmailEventHandler {
     const msg = {
       to: "kelsi@noba.com",
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.EMPLOYER_REQUEST_EMAIL, payload.locale ?? "en"),
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.EMPLOYER_REQUEST_EMAIL, "en"),
       dynamicTemplateData: {
         employerEmail: payload.email,
         firstName: payload.firstName,

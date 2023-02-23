@@ -1560,7 +1560,7 @@ describe("EmailEventHandler test for languages", () => {
     it("should call eventHandler with SendEmployerRequest event with 'en' template", async () => {
       const payload = new SendEmployerRequestEvent({
         email: "fake+user@noba.com",
-        locale: "en",
+        locale: "es",
         firstName: "First",
         lastName: "Last",
       });
