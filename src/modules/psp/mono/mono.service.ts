@@ -311,6 +311,13 @@ export class MonoService {
       });
     }
 
+    if (this.monoRepo.getMonoTransactionByNobaTransactionID(request.nobaTransactionID)) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.ALREADY_EXISTS,
+        message: `Mono transaction already exists for nobaTransactionID: ${request.nobaTransactionID}`,
+      });
+    }
+
     const response: MonoTransferResponse = await this.monoClient.transfer({
       transactionID: request.nobaTransactionID,
       transactionRef: request.nobaPublicTransactionRef,
