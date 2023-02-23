@@ -319,7 +319,7 @@ describe("MonoServiceTests", () => {
           id: "CCCCCCCCCC",
           displayEmail: "test@noba.com",
           handle: "test",
-          phone: "+1234567890",
+          phone: "+573000000000",
           firstName: "First",
           lastName: "Last",
         });
@@ -373,7 +373,7 @@ describe("MonoServiceTests", () => {
           id: "CCCCCCCCCC",
           displayEmail: "test@noba.com",
           handle: "test",
-          phone: "+1234567890",
+          phone: "+573000000000",
           firstName: "First",
           lastName: "Last",
         });
@@ -402,8 +402,8 @@ describe("MonoServiceTests", () => {
           }),
         );
 
-        await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowError(
-          ServiceException,
+        await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.UNABLE_TO_PROCESS,
         );
       });
 
@@ -415,7 +415,7 @@ describe("MonoServiceTests", () => {
           id: "CCCCCCCCCC",
           displayEmail: "test@noba.com",
           handle: "test",
-          phone: "+1234567890",
+          phone: "+579100000000",
           firstName: "First",
           lastName: "Last",
         });
@@ -429,23 +429,8 @@ describe("MonoServiceTests", () => {
           type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
         };
 
-        const expectedMonoClientCreateCollectionLink: MonoClientCollectionLinkRequest = {
-          amount: createMonoTransactionRequest.amount,
-          currency: createMonoTransactionRequest.currency,
-          transactionID: createMonoTransactionRequest.nobaTransactionID,
-          consumerEmail: consumer.props.email,
-          consumerName: "First Last",
-          consumerPhone: consumer.props.phone,
-        };
-        when(monoClient.createCollectionLink(deepEqual(expectedMonoClientCreateCollectionLink))).thenThrow(
-          new MonoClientException({
-            errorCode: MonoClientErrorCode.PHONE_NUMBER_INVALID,
-            message: "Phone number is not valid",
-          }),
-        );
-
-        await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowError(
-          ServiceException,
+        await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.SEMANTIC_VALIDATION,
         );
       });
 
@@ -471,15 +456,10 @@ describe("MonoServiceTests", () => {
           type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
         };
 
-        try {
-          await monoService.createMonoTransaction(createMonoTransactionRequest);
-          expect(true).toBe(false);
-        } catch (e) {
-          expect(e).toBeInstanceOf(ServiceException);
-          expect(e.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
-          expect(e.message).toEqual(expect.stringContaining("COP"));
-          expect(e.message).toEqual(expect.stringContaining("USD"));
-        }
+        await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.SEMANTIC_VALIDATION,
+          "COP",
+        );
       });
 
       it("should throw ServiceException if the Consumer is not found", async () => {

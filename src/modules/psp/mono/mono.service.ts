@@ -32,6 +32,7 @@ import { KmsService } from "../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { HealthCheckResponse } from "../../../core/domain/HealthCheckTypes";
 import { MonoClientErrorCode, MonoClientException } from "./exception/mono.client.exception";
+import { PhoneNumberUtil } from "google-libphonenumber";
 
 type CollectionLinkDepositRequest = {
   nobaTransactionID: string;
@@ -286,6 +287,14 @@ export class MonoService {
         message: "Consumer not found.",
       });
     }
+
+    const phoneUtil = PhoneNumberUtil.getInstance();
+    if (!phoneUtil.isValidNumberForRegion(phoneUtil.parse(request.consumer.props.phone, "CO"), "CO")) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: `Invalid Colombian phone number: ${request.consumer.props.phone}`,
+      });
+    }
   }
 
   private async executeWithdrawal(request: WithdrawalRequest): Promise<MonoTransaction> {
@@ -342,12 +351,6 @@ export class MonoService {
       });
     } catch (e) {
       if (e instanceof MonoClientException) {
-        if (e.errorCode === MonoClientErrorCode.PHONE_NUMBER_INVALID) {
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-            message: e.message,
-          });
-        }
         throw new ServiceException({
           errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
           message: e.message,

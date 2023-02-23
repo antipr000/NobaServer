@@ -103,7 +103,7 @@ describe("MonoWorkflowServiceTests", () => {
           id: "CCCCCCCCCC",
           displayEmail: "test@noba.com",
           handle: "test",
-          phone: "+1234567890",
+          phone: "+573000000000",
           firstName: "First",
           lastName: "Last",
         });
@@ -157,7 +157,7 @@ describe("MonoWorkflowServiceTests", () => {
           id: "CCCCCCCCCC",
           displayEmail: "test@noba.com",
           handle: "test",
-          phone: "+1234567890",
+          phone: "+573000000000",
           firstName: "First",
           lastName: "Last",
         });
@@ -186,9 +186,36 @@ describe("MonoWorkflowServiceTests", () => {
           }),
         );
 
-        await expect(monoWorkflowService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowError(
-          ServiceException,
-        );
+        await expect(
+          monoWorkflowService.createMonoTransaction(createMonoTransactionRequest),
+        ).rejects.toThrowServiceException(ServiceErrorCode.UNABLE_TO_PROCESS);
+      });
+
+      it("should throw service exception when phone number is invalid", async () => {
+        const monoTransaction: MonoTransaction = getRandomMonoTransaction();
+
+        const consumer: Consumer = Consumer.createConsumer({
+          email: "test@noba.com",
+          id: "CCCCCCCCCC",
+          displayEmail: "test@noba.com",
+          handle: "test",
+          phone: "+579100000000",
+          firstName: "First",
+          lastName: "Last",
+        });
+        when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+
+        const createMonoTransactionRequest: CreateMonoTransactionRequest = {
+          amount: 100,
+          currency: MonoCurrency.COP,
+          nobaTransactionID: monoTransaction.nobaTransactionID,
+          consumerID: consumer.props.id,
+          type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
+        };
+
+        await expect(
+          monoWorkflowService.createMonoTransaction(createMonoTransactionRequest),
+        ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
       });
 
       it("should throw ServiceException if the Currency is not COP", async () => {
@@ -213,15 +240,9 @@ describe("MonoWorkflowServiceTests", () => {
           type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
         };
 
-        try {
-          await monoWorkflowService.createMonoTransaction(createMonoTransactionRequest);
-          expect(true).toBe(false);
-        } catch (e) {
-          expect(e).toBeInstanceOf(ServiceException);
-          expect(e.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
-          expect(e.message).toEqual(expect.stringContaining("COP"));
-          expect(e.message).toEqual(expect.stringContaining("USD"));
-        }
+        await expect(
+          monoWorkflowService.createMonoTransaction(createMonoTransactionRequest),
+        ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION, "COP");
       });
 
       it("should throw ServiceException if the Consumer is not found", async () => {
