@@ -403,7 +403,7 @@ describe("MonoServiceTests", () => {
         );
 
         await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
-          ServiceErrorCode.SEMANTIC_VALIDATION,
+          ServiceErrorCode.UNABLE_TO_PROCESS,
         );
       });
 
