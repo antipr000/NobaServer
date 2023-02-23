@@ -639,10 +639,6 @@ describe("MonoServiceTests", () => {
           });
           when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
 
-          when(monoRepo.getMonoTransactionByNobaTransactionID(monoTransaction.nobaTransactionID)).thenResolve(
-            monoTransaction,
-          );
-
           const createMonoTransactionRequest: CreateMonoTransactionRequest = {
             amount: 100,
             currency: MonoCurrency.COP,
@@ -698,15 +694,12 @@ describe("MonoServiceTests", () => {
         };
 
         when(kmsService.decryptString("encryptedAccountNumber", KmsKeyType.SSN)).thenResolve(null);
+        when(monoRepo.getMonoTransactionByNobaTransactionID(anyString())).thenResolve(null);
 
-        try {
-          await monoService.createMonoTransaction(createMonoTransactionRequest);
-          expect(true).toBe(false);
-        } catch (e) {
-          expect(e).toBeInstanceOf(ServiceException);
-          expect(e.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
-          expect(e.message).toEqual(expect.stringContaining("encryptedAccountNumber"));
-        }
+        expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.SEMANTIC_VALIDATION,
+          "encryptedAccountNumber",
+        );
       });
 
       it("should initiate the WITHDRAWAL from NOBA account to Consumer Account", async () => {
@@ -724,6 +717,7 @@ describe("MonoServiceTests", () => {
 
         const decryptedAccountNumber = "1234567890";
         when(kmsService.decryptString("encryptedAccountNumber", KmsKeyType.SSN)).thenResolve(decryptedAccountNumber);
+        when(monoRepo.getMonoTransactionByNobaTransactionID(anyString())).thenResolve(null);
 
         when(monoClient.transfer(anything())).thenResolve({
           batchID: monoTransaction.withdrawalDetails.batchID,
