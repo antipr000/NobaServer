@@ -1190,7 +1190,11 @@ describe("ConsumerController", () => {
   describe("postEmployerRequestEmail", () => {
     it("should forwards the call to consumerService", async () => {
       const consumer = getRandomConsumer();
-      when(consumerService.sendEmployerRequestEmail("rosie@noba.com", consumer.props.locale)).thenResolve();
+      consumer.props.firstName = "Rosie";
+      consumer.props.lastName = "Noba";
+      when(
+        consumerService.sendEmployerRequestEmail("rosie@noba.com", consumer.props.locale, "Rosie", "Noba"),
+      ).thenResolve();
 
       await consumerController.postEmployerRequestEmail({ email: "rosie@noba.com" }, consumer);
     });
