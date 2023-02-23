@@ -95,7 +95,7 @@ export class AuthController {
   async loginUser(@Body() requestBody: LoginRequestDTO): Promise<BlankResponseDTO> {
     const emailOrPhone = requestBody.emailOrPhone;
 
-    const autoCreate = requestBody.autoCreate ?? true;
+    const autoCreate = requestBody.autoCreate ?? false;
 
     const authService: AuthService = this.getAuthService(consumerIdentityIdentifier);
     const userExists = await authService.verifyUserExistence(emailOrPhone);
@@ -103,6 +103,12 @@ export class AuthController {
       // Signin flow
       if (!userExists) {
         throw new ForbiddenException(`User "${emailOrPhone}" is not registered or not authorized to log in.`);
+      }
+    } else {
+      // Signup flow
+      {
+        if (userExists)
+          throw new ForbiddenException(`User "${emailOrPhone}" is already registered - use log in flow instead.`);
       }
     }
 

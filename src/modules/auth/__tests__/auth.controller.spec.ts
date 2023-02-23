@@ -1,6 +1,6 @@
-import { BadRequestException, ForbiddenException, UnauthorizedException } from "@nestjs/common";
+import { ForbiddenException, UnauthorizedException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import { anyString, instance, when } from "ts-mockito";
+import { anyString, instance, verify, when } from "ts-mockito";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { AdminAuthService } from "../admin.auth.service";
@@ -11,7 +11,6 @@ import { getMockUserAuthServiceWithDefaults } from "../mocks/mock.user.auth.serv
 import { UserAuthService } from "../user.auth.service";
 import { HeaderValidationService } from "../header.validation.service";
 import { getMockHeaderValidationServiceWithDefaults } from "../mocks/mock.header.validation.service";
-import { consumerIdentityIdentifier, nobaAdminIdentityIdentifier } from "../domain/IdentityType";
 import { NewAccessTokenRequestDTO } from "../dto/NewAccessTokenRequest";
 
 describe("AuthController", () => {
@@ -94,33 +93,9 @@ describe("AuthController", () => {
   });
 
   describe("verifyOtp", () => {
-    it("should use 'AdminAuthService' if 'identityType' is 'NOBA_ADMIN'", async () => {
-      const adminId = "1111111111";
-      const adminEmail = "admin@noba.com";
-      const identityType: string = nobaAdminIdentityIdentifier;
-      const otp = 123456;
-      const generateAccessTokenResponse: LoginResponseDTO = {
-        userID: adminId,
-        accessToken: "xxxxxx-yyyyyy-zzzzzz",
-      };
-
-      when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp)).thenResolve(adminId);
-      when(mockAdminAuthService.generateAccessToken(adminId, false)).thenResolve(generateAccessTokenResponse);
-
-      const result: LoginResponseDTO = await authController.verifyOtp({
-        emailOrPhone: adminEmail,
-        identityType: identityType,
-        otp: otp,
-        includeRefreshToken: false,
-      });
-
-      expect(result).toEqual(generateAccessTokenResponse);
-    });
-
-    it("should use 'UserAuthService' if 'identityType' is 'CONSUMER'", async () => {
+    it("should use 'UserAuthService'", async () => {
       const consumerId = "1111111111";
       const consumerEmail = "consumer@noba.com";
-      const identityType: string = consumerIdentityIdentifier;
       const otp = 123456;
       const generateAccessTokenResponse: LoginResponseDTO = {
         userID: consumerId,
@@ -132,7 +107,6 @@ describe("AuthController", () => {
 
       const result: LoginResponseDTO = await authController.verifyOtp({
         emailOrPhone: consumerEmail,
-        identityType: identityType,
         otp: otp,
         includeRefreshToken: false,
       });
@@ -142,41 +116,24 @@ describe("AuthController", () => {
   });
 
   describe("login", () => {
-    it("should use 'AdminAuthService' if 'identityType' is 'NOBA_ADMIN'", async () => {
-      const adminEmail = "admin@noba.com";
-      const identityType: string = nobaAdminIdentityIdentifier;
-      const otp = 123456;
-
-      when(mockAdminAuthService.generateOTP(adminEmail)).thenReturn(otp);
-      when(mockAdminAuthService.saveOtp(adminEmail, otp)).thenResolve();
-      when(mockAdminAuthService.sendOtp(adminEmail, otp.toString())).thenResolve();
-      when(mockAdminAuthService.verifyUserExistence(adminEmail)).thenResolve(true);
-
-      await authController.loginUser({
-        emailOrPhone: adminEmail,
-        identityType: identityType,
-      });
-    });
-
-    it("should use 'UserAuthService' if 'identityType' is 'CONSUMER'", async () => {
+    it("should use 'UserAuthService'", async () => {
       const consumerEmail = "consumer@noba.com";
-      const identityType: string = consumerIdentityIdentifier;
       const otp = 123456;
 
       when(mockConsumerAuthService.generateOTP(consumerEmail)).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
-      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(false);
+      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 
       await authController.loginUser({
         emailOrPhone: consumerEmail,
-        identityType: identityType,
       });
+
+      verify(mockConsumerAuthService.verifyUserExistence(consumerEmail)).once();
     });
 
     it("should work with autoCreate set to true", async () => {
       const consumerEmail = "consumer@noba.com";
-      const identityType: string = consumerIdentityIdentifier;
       const otp = 123456;
 
       when(mockConsumerAuthService.generateOTP(consumerEmail)).thenReturn(otp);
@@ -186,73 +143,49 @@ describe("AuthController", () => {
 
       await authController.loginUser({
         emailOrPhone: consumerEmail,
-        identityType: identityType,
         autoCreate: true,
       });
     });
 
     it("should work with emailOrPhoneAttribute too, with email as input", async () => {
       const consumerEmail = "consumer@noba.com";
-      const identityType: string = consumerIdentityIdentifier;
       const otp = 123456;
 
       when(mockConsumerAuthService.generateOTP(consumerEmail)).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
-      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(false);
+      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 
       await authController.loginUser({
         emailOrPhone: consumerEmail,
-        identityType: identityType,
       });
+
+      verify(mockConsumerAuthService.verifyUserExistence(consumerEmail)).once();
     });
 
     it("should work with emailOrPhoneAttribute too, with phone as input", async () => {
       const consumerPhone = "+1242425252";
-      const identityType: string = consumerIdentityIdentifier;
       const otp = 123456;
 
       when(mockConsumerAuthService.generateOTP(consumerPhone)).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerPhone, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerPhone, otp.toString())).thenResolve();
-      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(false);
+      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
 
       await authController.loginUser({
         emailOrPhone: consumerPhone,
-        identityType: identityType,
       });
-    });
-
-    it("should throw BadRequestException if phone used for noba admin for login", async () => {
-      const phone = "+123424242";
-      const identityType: string = nobaAdminIdentityIdentifier;
-      const otp = 123456;
-
-      when(mockConsumerAuthService.generateOTP(phone)).thenReturn(otp);
-      when(mockConsumerAuthService.saveOtp(phone, otp)).thenResolve();
-      when(mockConsumerAuthService.sendOtp(phone, otp.toString())).thenResolve();
-      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
-
-      expect(
-        async () =>
-          await authController.loginUser({
-            emailOrPhone: phone,
-            identityType: identityType,
-            autoCreate: false,
-          }),
-      ).rejects.toThrow(BadRequestException);
+      verify(mockConsumerAuthService.verifyUserExistence(consumerPhone)).once();
     });
 
     it("should throw 'ForbiddenException' if unregistered Consumer tries to log in with autoCreate set to false", async () => {
       const unregisteredConsumer = "rosie@noba.com";
-      const identityType: string = consumerIdentityIdentifier;
 
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(false);
       expect(
         async () =>
           await authController.loginUser({
             emailOrPhone: unregisteredConsumer,
-            identityType: identityType,
             autoCreate: false,
           }),
       ).rejects.toThrow(ForbiddenException);
@@ -260,31 +193,68 @@ describe("AuthController", () => {
 
     it("should throw 'ForbiddenException' if registered Consumer tries to log in with autoCreate set to true", async () => {
       const unregisteredConsumer = "rosie@noba.com";
-      const identityType: string = consumerIdentityIdentifier;
 
       when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
       expect(
         async () =>
           await authController.loginUser({
             emailOrPhone: unregisteredConsumer,
-            identityType: identityType,
             autoCreate: true,
           }),
       ).rejects.toThrow(ForbiddenException);
     });
+  });
 
-    it("should throw 'ForbiddenException' if unregistered Admin tries to login as 'NOBA_ADMIN'", async () => {
-      const unregisteredAdminEmail = "admin@noba.com";
-      const identityType: string = nobaAdminIdentityIdentifier;
+  describe("loginAdmin", () => {
+    it("should throw 'ForbiddenException' if unregistered Admin tries to log in", async () => {
+      const unregisteredAdmin = "rosie@noba.com";
 
-      when(mockAdminAuthService.verifyUserExistence(unregisteredAdminEmail)).thenResolve(false);
+      when(mockAdminAuthService.verifyUserExistence(anyString())).thenResolve(false);
+
       expect(
         async () =>
-          await authController.loginUser({
-            emailOrPhone: unregisteredAdminEmail,
-            identityType: identityType,
+          await authController.loginAdmin({
+            emailOrPhone: unregisteredAdmin,
           }),
       ).rejects.toThrow(ForbiddenException);
+    });
+
+    it("should use 'AdminAuthService'", async () => {
+      const adminEmail = "rosie@noba.com";
+      const otp = 123456;
+
+      when(mockAdminAuthService.generateOTP(adminEmail)).thenReturn(otp);
+      when(mockAdminAuthService.saveOtp(adminEmail, otp)).thenResolve();
+      when(mockAdminAuthService.sendOtp(adminEmail, otp.toString())).thenResolve();
+      when(mockAdminAuthService.verifyUserExistence(anyString())).thenResolve(true);
+
+      await authController.loginAdmin({
+        emailOrPhone: adminEmail,
+      });
+
+      verify(mockAdminAuthService.verifyUserExistence(adminEmail)).once();
+    });
+  });
+
+  describe("verifyAdminOtp", () => {
+    it("should use 'AdminAuthService'", async () => {
+      const adminId = "1111111111";
+      const adminEmail = "rosie@noba.com";
+      const otp = 123456;
+
+      const generateAccessTokenResponse: LoginResponseDTO = {
+        userID: adminId,
+        accessToken: "fake-token",
+      };
+      when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp)).thenResolve(adminId);
+      when(mockAdminAuthService.generateAccessToken(adminId, false)).thenResolve(generateAccessTokenResponse);
+
+      const result: LoginResponseDTO = await authController.verifyAdminOtp({
+        emailOrPhone: adminEmail,
+        otp: otp,
+      });
+
+      expect(result).toEqual(generateAccessTokenResponse);
     });
   });
 });
