@@ -24,7 +24,7 @@ import { AuthService } from "./auth.service";
 import { allIdentities, consumerIdentityIdentifier, nobaAdminIdentityIdentifier } from "./domain/IdentityType";
 import { AdminLoginRequestDTO, LoginRequestDTO } from "./dto/LoginRequest";
 import { LoginResponseDTO } from "./dto/LoginResponse";
-import { AdminVerifyOtpRequestDTO, VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
+import { VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
 import { Public, IsNoApiKeyNeeded } from "./public.decorator";
 import { UserAuthService } from "./user.auth.service";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
@@ -151,10 +151,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiUnauthorizedResponse({ description: "Invalid OTP" })
   @Post("/admins/auth/verifyotp")
-  async verifyAdminOtp(@Body() requestBody: AdminVerifyOtpRequestDTO): Promise<LoginResponseDTO> {
+  async verifyAdminOtp(@Body() requestBody: VerifyOtpRequestDTO): Promise<LoginResponseDTO> {
     const authService: AuthService = this.getAuthService(nobaAdminIdentityIdentifier);
 
     const userId: string = await authService.validateAndGetUserId(requestBody.emailOrPhone, requestBody.otp);
-    return authService.generateAccessToken(userId, false);
+    return authService.generateAccessToken(userId, requestBody.includeRefreshToken);
   }
 }
