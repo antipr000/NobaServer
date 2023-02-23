@@ -402,8 +402,8 @@ describe("MonoServiceTests", () => {
           }),
         );
 
-        await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowError(
-          ServiceException,
+        await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.SEMANTIC_VALIDATION,
         );
       });
 
@@ -429,9 +429,9 @@ describe("MonoServiceTests", () => {
           type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
         };
 
-        await expect(
-          monoService.createMonoTransaction(createMonoTransactionRequest),
-        ).rejects.toThrowServiceExceptionWithErrorCode(ServiceErrorCode.SEMANTIC_VALIDATION);
+        await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.SEMANTIC_VALIDATION,
+        );
       });
 
       it("should throw ServiceException if the Currency is not COP", async () => {
@@ -456,9 +456,10 @@ describe("MonoServiceTests", () => {
           type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
         };
 
-        await expect(
-          monoService.createMonoTransaction(createMonoTransactionRequest),
-        ).rejects.toThrowServiceExceptionWithErrorCode(ServiceErrorCode.SEMANTIC_VALIDATION, "COP");
+        await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.SEMANTIC_VALIDATION,
+          "COP",
+        );
       });
 
       it("should throw ServiceException if the Consumer is not found", async () => {

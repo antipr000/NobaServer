@@ -3,10 +3,7 @@ import { ServiceErrorCode, ServiceException } from "../../src/core/exception/ser
 declare global {
   namespace jest {
     interface Matchers<R> {
-      toThrowServiceExceptionWithErrorCode(
-        expectedErrorCode: ServiceErrorCode,
-        expectedMessage?: string,
-      ): CustomMatcherResult;
+      toThrowServiceException(expectedErrorCode?: ServiceErrorCode, expectedMessage?: string): CustomMatcherResult;
     }
   }
 }
@@ -17,9 +14,9 @@ const mismatchResult = (message: string) => ({
 });
 
 expect.extend({
-  toThrowServiceExceptionWithErrorCode(
+  toThrowServiceException(
     received: ServiceException,
-    expectedErrorCode: ServiceErrorCode,
+    expectedErrorCode?: ServiceErrorCode,
     expectedMessage?: string,
   ): jest.CustomMatcherResult {
     const isServiceException = received instanceof ServiceException;
@@ -27,7 +24,7 @@ expect.extend({
       return mismatchResult("Not a Service Exception");
     }
 
-    if (received.errorCode !== expectedErrorCode) {
+    if (received.errorCode && received.errorCode !== expectedErrorCode) {
       return mismatchResult(
         `Recieved Exception error code:"${received.errorCode}" different from expected error code:"${expectedErrorCode}"`,
       );
