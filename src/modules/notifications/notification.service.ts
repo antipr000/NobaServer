@@ -425,7 +425,12 @@ export class NotificationService {
       case NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
-          new SendEmployerRequestEvent({ email: payload.email, locale: payload.locale }),
+          new SendEmployerRequestEvent({
+            email: payload.email,
+            locale: payload.locale,
+            firstName: payload.firstName,
+            lastName: payload.lastName,
+          }),
         );
         break;
       default:

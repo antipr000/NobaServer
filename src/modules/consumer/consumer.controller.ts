@@ -566,7 +566,12 @@ export class ConsumerController {
     @AuthUser() consumer: Consumer,
   ): Promise<BlankResponseDTO> {
     // Use consumer's locale to drive the language of the request email
-    await this.consumerService.sendEmployerRequestEmail(requestBody.email, consumer.props.locale);
+    await this.consumerService.sendEmployerRequestEmail(
+      requestBody.email,
+      consumer.props.locale,
+      consumer.props.firstName,
+      consumer.props.lastName,
+    );
     return {};
   }
 

@@ -1561,16 +1561,22 @@ describe("EmailEventHandler test for languages", () => {
       const payload = new SendEmployerRequestEvent({
         email: "fake+user@noba.com",
         locale: "en",
+        firstName: "First",
+        lastName: "Last",
       });
 
       await eventHandler.sendEmployerRequestEmail(payload);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
-        to: payload.email,
-        from: "kelsi@noba.com",
+        to: "kelsi@noba.com",
+        from: SENDER_EMAIL,
         templateId: EmailTemplates.EMPLOYER_REQUEST_EMAIL["en"],
-        dynamicTemplateData: {},
+        dynamicTemplateData: {
+          firstName: payload.firstName,
+          lastName: payload.lastName,
+          employerEmail: payload.email,
+        },
       });
     });
   });

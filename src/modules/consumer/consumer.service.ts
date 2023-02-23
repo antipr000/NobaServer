@@ -773,7 +773,7 @@ export class ConsumerService {
     return result;
   }
 
-  async sendEmployerRequestEmail(email: string, locale: string): Promise<void> {
+  async sendEmployerRequestEmail(email: string, locale: string, firstName: string, lastName: string): Promise<void> {
     if (!email) {
       throw new ServiceException({
         message: "Email address is required",
@@ -791,6 +791,8 @@ export class ConsumerService {
     await this.notificationService.sendNotification(NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT, {
       email: email,
       locale: locale,
+      firstName: firstName,
+      lastName: lastName,
     });
   }
 

@@ -1998,7 +1998,7 @@ describe("ConsumerService", () => {
   describe("sendEmployerRequestEmail", () => {
     it("should throw ServiceException if email address is empty", async () => {
       try {
-        await consumerService.sendEmployerRequestEmail(null, null);
+        await consumerService.sendEmployerRequestEmail(null, null, "", "");
         expect(true).toBeFalsy();
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);
@@ -2009,7 +2009,7 @@ describe("ConsumerService", () => {
 
     it("should throw ServiceException if email address is invalid", async () => {
       try {
-        await consumerService.sendEmployerRequestEmail("bademail", null);
+        await consumerService.sendEmployerRequestEmail("bademail", null, "Fake", "Name");
         expect(true).toBeFalsy();
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);
@@ -2021,7 +2021,7 @@ describe("ConsumerService", () => {
     it("should send a notification", async () => {
       const email = "rosie@noba.com";
       const locale = "en";
-      await consumerService.sendEmployerRequestEmail(email, locale);
+      await consumerService.sendEmployerRequestEmail(email, locale, "Fake", "Name");
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT,
@@ -2029,6 +2029,8 @@ describe("ConsumerService", () => {
           deepEqual({
             email: email,
             locale: locale,
+            firstName: "Fake",
+            lastName: "Name",
           }),
         ),
       ).once();

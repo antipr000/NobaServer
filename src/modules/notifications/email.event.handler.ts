@@ -548,10 +548,14 @@ export class EmailEventHandler {
   @OnEvent(`email.${NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT}`)
   public async sendEmployerRequestEmail(payload: SendEmployerRequestEvent) {
     const msg = {
-      to: payload.email,
-      from: "kelsi@noba.com",
+      to: "kelsi@noba.com",
+      from: SENDER_EMAIL,
       templateId: EmailTemplates.getOrDefault(EmailTemplates.EMPLOYER_REQUEST_EMAIL, payload.locale ?? "en"),
-      dynamicTemplateData: {}, // Leaving empty because we don't need any dynamic data
+      dynamicTemplateData: {
+        employerEmail: payload.email,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+      },
     };
 
     await this.emailClient.sendEmail(msg);
