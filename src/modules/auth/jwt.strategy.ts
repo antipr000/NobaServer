@@ -31,6 +31,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   // TODO: Move all the payload related logic to a single file.
   async validate(request: Request, payload: any): Promise<AuthenticatedUser> {
+    if (payload.identityType === nobaAdminIdentityIdentifier) {
+      return this.getIdentityDomain(payload.id, payload.identityType);
+    }
     const apiKey = request.headers[X_NOBA_API_KEY];
     const signature = request.headers[X_NOBA_SIGNATURE];
     const timestamp = request.headers[X_NOBA_TIMESTAMP];
