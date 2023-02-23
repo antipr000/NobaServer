@@ -743,7 +743,7 @@ export class ConsumerService {
 
   /**
    * Updates the allocation amount for a specific employer
-   * @returns BlankResponseDTO
+   * @returns LinkedEmployerDTO
    * @throws ApiError
    */
   public static updateAllocationAmountForAnEmployer({
@@ -759,7 +759,7 @@ export class ConsumerService {
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
     xNobaTimestamp?: string;
-  }): CancelablePromise<BlankResponseDTO> {
+  }): CancelablePromise<LinkedEmployerDTO> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/v1/consumers/employers",

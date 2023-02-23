@@ -116,4 +116,42 @@ export class AuthenticationService {
       },
     });
   }
+
+  /**
+   * Logs admin in and sends one-time passcode (OTP) to the provided email address
+   * @returns BlankResponseDTO OTP successfully sent.
+   * @throws ApiError
+   */
+  public static loginAdmin({ requestBody }: { requestBody: LoginRequestDTO }): CancelablePromise<BlankResponseDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/auth/admin/login",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        403: `Access denied`,
+      },
+    });
+  }
+
+  /**
+   * Submits the one-time passcode (OTP) to retreive an API access token
+   * @returns LoginResponseDTO API access token
+   * @throws ApiError
+   */
+  public static verifyAdminOtp({
+    requestBody,
+  }: {
+    requestBody: VerifyOtpRequestDTO;
+  }): CancelablePromise<LoginResponseDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/auth/admin/verifyotp",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        401: `Invalid OTP`,
+      },
+    });
+  }
 }

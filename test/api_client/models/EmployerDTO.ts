@@ -3,9 +3,10 @@
 /* eslint-disable */
 
 export type EmployerDTO = {
-  name: string;
-  logoURI: string;
+  employerName: string;
+  employerLogoURI: string;
   leadDays: number;
+  employerReferralID: string;
   payrollDates: Array<string>;
   nextPayrollDate: string;
   maxAllocationPercent?: number;

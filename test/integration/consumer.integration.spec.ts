@@ -17,6 +17,7 @@ import {
   computeSignature,
   insertNobaAdmin,
   loginAndGetResponse,
+  loginNobaAdminAndGetResponse,
   patchConsumer,
   setAccessTokenForTheNextRequests,
   TEST_API_KEY,
@@ -51,7 +52,7 @@ describe("Consumers", () => {
       await integrationTestUtils.reset();
     });
 
-    it("should return 401 if not logged in as any identity", async () => {
+    it("should return 401 if not logged in", async () => {
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/paymentmethods/plaid/token", JSON.stringify({}));
       const generatePlaidTokenResponse = (await ConsumerService.generatePlaidToken({
         xNobaApiKey: TEST_API_KEY,
@@ -68,7 +69,7 @@ describe("Consumers", () => {
       const nobaAdminRole = "BASIC";
       await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(nobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -88,7 +89,7 @@ describe("Consumers", () => {
     it("should allow Consumer identity to call this API", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
 
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -132,7 +133,7 @@ describe("Consumers", () => {
       const nobaAdminRole = "BASIC";
       await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(nobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -154,7 +155,7 @@ describe("Consumers", () => {
     it("should allow Consumer identity to call this API", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
 
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -178,7 +179,7 @@ describe("Consumers", () => {
     it("should return 'false' if the handle is already taken", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
       const handle = "fakehandle" + uuid().slice(0, 6);
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       await patchConsumer({ email: consumerEmail, handle: handle });
@@ -228,7 +229,7 @@ describe("Consumers", () => {
       const nobaAdminRole = "BASIC";
       await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(nobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
@@ -243,7 +244,7 @@ describe("Consumers", () => {
     it("should allow Consumer identity to call this API", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
 
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
@@ -269,7 +270,7 @@ describe("Consumers", () => {
     it("should allow signature to validate even with extra request params", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
 
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers?param1=12345", JSON.stringify({}));
@@ -311,7 +312,7 @@ describe("Consumers", () => {
       const nobaAdminRole = "BASIC";
       await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(nobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(TEST_TIMESTAMP, "PATCH", "/v1/consumers", JSON.stringify({}));
@@ -326,7 +327,7 @@ describe("Consumers", () => {
 
     it("should updates 'firstName' if Consumer identity calls this API", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       let signature = computeSignature(
@@ -368,7 +369,7 @@ describe("Consumers", () => {
 
     it("should updates 'lastName' if Consumer identity calls this API", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       let signature = computeSignature(
@@ -410,7 +411,7 @@ describe("Consumers", () => {
 
     it("should updates 'dateOfBirth' if Consumer identity calls this API", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       let signature = computeSignature(
@@ -452,7 +453,7 @@ describe("Consumers", () => {
 
     it("should fail with 400 for invalid 'dateOfBirth'", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -476,7 +477,7 @@ describe("Consumers", () => {
 
     it("should updates 'handle' if Consumer identity calls this API", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
       const handle = "fakehandle" + uuid().slice(0, 6);
       let signature = computeSignature(
@@ -518,7 +519,7 @@ describe("Consumers", () => {
 
     it("should updates multiple-fields at once if Consumer identity calls this API", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
       const handle = "changedhandle" + uuid().slice(0, 6);
       let signature = computeSignature(
@@ -567,7 +568,7 @@ describe("Consumers", () => {
 
     it("should updates 'address' if Consumer identity calls this API", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       let signature = computeSignature(
@@ -665,7 +666,7 @@ describe("Consumers", () => {
     //
     // it("should throw 400 if given card details are invalid when Consumer identity calls the API", async () => {
     //   const consumerEmail = "test.consumer@noba.com";
-    //   const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+    //   const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
     //   setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
     //   const addPaymentMethodResponse = (await ConsumerService.addPaymentMethod({
@@ -682,7 +683,7 @@ describe("Consumers", () => {
 
     it("should successfully add the payment method when Consumer identity calls the API", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       let signature = computeSignature(
@@ -755,7 +756,7 @@ describe("Consumers", () => {
 
     it("should allow addition of payment method when cardName is not provided", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       await patchConsumer({
@@ -815,7 +816,7 @@ describe("Consumers", () => {
 
     it("should allow updating payment method to make it default", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       await patchConsumer({
@@ -900,7 +901,7 @@ describe("Consumers", () => {
 
     /*it("should map verification status properly when all status are approved", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const consumer: Partial<ConsumerProps> = {
@@ -974,7 +975,7 @@ describe("Consumers", () => {
 
     it("should map verification status properly when payment method is Flagged, wallet is not added and documentVerificationStatus is REJECTED", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const consumer: Partial<ConsumerProps> = {

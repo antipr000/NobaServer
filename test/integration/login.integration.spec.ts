@@ -21,7 +21,14 @@ import {
 } from "../api_client";
 import { ConsumerService } from "../api_client/services/ConsumerService";
 import { ConsumerDTO } from "../api_client/models/ConsumerDTO";
-import { computeSignature, insertNobaAdmin, setAccessTokenForTheNextRequests, TEST_OTP, TEST_API_KEY } from "../common";
+import {
+  computeSignature,
+  insertNobaAdmin,
+  setAccessTokenForTheNextRequests,
+  TEST_OTP,
+  TEST_API_KEY,
+  clearAccessTokenForNextRequests,
+} from "../common";
 import { ResponseStatus } from "../api_client/core/request";
 import { IntegrationTestUtility } from "../TestUtils";
 
@@ -52,7 +59,6 @@ describe("Authentication", () => {
 
       const loginRequestBody: LoginRequestDTO = {
         emailOrPhone: consumerEmail,
-        identityType: "CONSUMER",
         autoCreate: true,
       };
 
@@ -69,7 +75,6 @@ describe("Authentication", () => {
       const verifyOtpRequestBody: VerifyOtpRequestDTO = {
         emailOrPhone: consumerEmail,
         otp: staticOTP,
-        identityType: "CONSUMER",
       };
 
       const verifyOtpSignature = computeSignature(
@@ -116,7 +121,6 @@ describe("Authentication", () => {
         "/v1/auth/login",
         JSON.stringify({
           emailOrPhone: consumerEmail,
-          identityType: "CONSUMER",
         }),
       );
 
@@ -126,7 +130,6 @@ describe("Authentication", () => {
         xNobaTimestamp: timestamp,
         requestBody: {
           emailOrPhone: consumerEmail,
-          identityType: "CONSUMER",
         },
       });
 
@@ -137,7 +140,6 @@ describe("Authentication", () => {
         JSON.stringify({
           emailOrPhone: consumerEmail,
           otp: staticOTP,
-          identityType: "CONSUMER",
         }),
       );
 
@@ -148,7 +150,6 @@ describe("Authentication", () => {
         requestBody: {
           emailOrPhone: consumerEmail,
           otp: staticOTP,
-          identityType: "CONSUMER",
         },
       })) as LoginResponseDTO & ResponseStatus;
 
@@ -160,7 +161,6 @@ describe("Authentication", () => {
         "/v1/auth/login",
         JSON.stringify({
           emailOrPhone: consumerEmail,
-          identityType: "CONSUMER",
           autoCreate: false,
         }),
       );
@@ -171,7 +171,6 @@ describe("Authentication", () => {
         xNobaTimestamp: timestamp,
         requestBody: {
           emailOrPhone: consumerEmail,
-          identityType: "CONSUMER",
           autoCreate: false,
         },
       })) as LoginResponseDTO & ResponseStatus;
@@ -184,7 +183,6 @@ describe("Authentication", () => {
         JSON.stringify({
           emailOrPhone: consumerEmail,
           otp: staticOTP,
-          identityType: "CONSUMER",
         }),
       );
 
@@ -195,7 +193,6 @@ describe("Authentication", () => {
         requestBody: {
           emailOrPhone: consumerEmail,
           otp: staticOTP,
-          identityType: "CONSUMER",
         },
       })) as LoginResponseDTO & ResponseStatus;
 
@@ -219,54 +216,22 @@ describe("Authentication", () => {
       expect(loggedInConsumer.id).toBe(userId);
       expect(loggedInConsumer.email).toBe(consumerEmail);
     });
-
-    it("signup with invalid 'identityType' throws 400 error", async () => {
-      const consumerEmail = integrationTestUtils.getRandomEmail("test+consumer");
-      const signature = computeSignature(
-        timestamp,
-        "POST",
-        "/v1/auth/login",
-        JSON.stringify({
-          emailOrPhone: consumerEmail,
-          identityType: "CONSUMR" as any,
-        }),
-      );
-      const loginResponse = (await AuthenticationService.loginUser({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: timestamp,
-        requestBody: {
-          emailOrPhone: consumerEmail,
-          identityType: "CONSUMR" as any,
-        },
-      })) as BlankResponseDTO & ResponseStatus;
-      expect(loginResponse.__status).toBe(400);
-    });
   });
 
   describe("NobaAdmin login", () => {
+    const adminBearerToken = "testAdminBearerToken";
+
     it("shouldn't be successful for an unregistered NobaAdmin", async () => {
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
-      const signature = computeSignature(
-        timestamp,
-        "POST",
-        "/v1/auth/login",
-        JSON.stringify({
-          emailOrPhone: nobaAdminEmail,
-          identityType: "NOBA_ADMIN",
-        }),
-      );
-      const loginResponse = (await AuthenticationService.loginUser({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: timestamp,
+      setAccessTokenForTheNextRequests(adminBearerToken);
+      const loginResponse = (await AuthenticationService.loginAdmin({
         requestBody: {
           emailOrPhone: nobaAdminEmail,
-          identityType: "NOBA_ADMIN",
         },
       })) as any & ResponseStatus;
 
       expect(loginResponse.__status).toBe(403);
+      clearAccessTokenForNextRequests();
     });
 
     it("shouldn't be successful for a SignedUp Consumer with same email", async () => {
@@ -277,7 +242,6 @@ describe("Authentication", () => {
         "/v1/auth/login",
         JSON.stringify({
           emailOrPhone: consumerEmail,
-          identityType: "CONSUMER",
         }),
       );
       const consumerLoginResponse = (await AuthenticationService.loginUser({
@@ -286,74 +250,59 @@ describe("Authentication", () => {
         xNobaTimestamp: timestamp,
         requestBody: {
           emailOrPhone: consumerEmail,
-          identityType: "CONSUMER",
         },
       })) as BlankResponseDTO & ResponseStatus;
       expect(consumerLoginResponse.__status).toBe(201);
 
-      const adminWithSameConsumerEmailLogin = (await AuthenticationService.loginUser({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: timestamp,
+      setAccessTokenForTheNextRequests(adminBearerToken);
+      const adminWithSameConsumerEmailLogin = (await AuthenticationService.loginAdmin({
         requestBody: {
           emailOrPhone: consumerEmail,
-          identityType: "NOBA_ADMIN",
         },
       })) as BlankResponseDTO & ResponseStatus;
       expect(adminWithSameConsumerEmailLogin.__status).toBe(403);
+      clearAccessTokenForNextRequests();
     });
 
     it("should be successful for registered NobaAdmin", async () => {
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
 
-      let signature = computeSignature(
-        timestamp,
-        "POST",
-        "/v1/auth/login",
-        JSON.stringify({
-          emailOrPhone: nobaAdminEmail,
-          identityType: "NOBA_ADMIN",
-        }),
-      );
-
       await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAA"), "BASIC");
 
-      const loginResponse = (await AuthenticationService.loginUser({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: timestamp,
+      setAccessTokenForTheNextRequests(adminBearerToken);
+      const loginResponse = (await AuthenticationService.loginAdmin({
         requestBody: {
           emailOrPhone: nobaAdminEmail,
-          identityType: "NOBA_ADMIN",
         },
       })) as any & ResponseStatus;
 
       expect(loginResponse.__status).toBe(201);
 
-      signature = computeSignature(
-        timestamp,
-        "POST",
-        "/v1/auth/verifyotp",
-        JSON.stringify({
-          emailOrPhone: nobaAdminEmail,
-          otp: staticOTP,
-          identityType: "NOBA_ADMIN",
-        }),
-      );
-
-      const verifyOtpResponse = (await AuthenticationService.verifyOtp({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: timestamp,
+      const verifyOtpResponse = (await AuthenticationService.verifyAdminOtp({
         requestBody: {
           emailOrPhone: nobaAdminEmail,
           otp: staticOTP,
-          identityType: "NOBA_ADMIN",
         },
       })) as LoginResponseDTO & ResponseStatus;
 
-      // TODO: Modify 'verifyOtp' to return 200.
-      expect(verifyOtpResponse.__status).toBe(201);
+      expect(verifyOtpResponse.__status).toBe(200);
+      clearAccessTokenForNextRequests();
+    });
+
+    it("should throw 403 when bearer token is not correct", async () => {
+      const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
+
+      await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAA"), "BASIC");
+
+      setAccessTokenForTheNextRequests("fakeToken");
+      const loginResponse = (await AuthenticationService.loginAdmin({
+        requestBody: {
+          emailOrPhone: nobaAdminEmail,
+        },
+      })) as any & ResponseStatus;
+
+      expect(loginResponse.__status).toBe(403);
+      clearAccessTokenForNextRequests();
     });
   });
 });

@@ -24,7 +24,7 @@ import {
   UpdateConsumerRequestDTO,
   VerificationResultDTO,
   VerificationService,
-  VerificationWebhooksService,
+  WebhooksService,
 } from "../api_client";
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE } from "../../src/modules/verification/integrations/fakes/FakeSardineResponses";
@@ -67,7 +67,7 @@ describe("Verification", () => {
 
     it("should return sessionKey when user is logged in", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/verify/session", JSON.stringify({}));
@@ -83,7 +83,7 @@ describe("Verification", () => {
 
   it("verifies consumer information using Sardine and stores the information against the consumer record for non-US users", async () => {
     const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
-    const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+    const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
     setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
     const consumerUpdateRequest: UpdateConsumerRequestDTO = {
       firstName: "Jo",
@@ -215,11 +215,7 @@ describe("Verification", () => {
       const secretKey = "bogus-value"; // SecretKey is bogus-value in yaml for E2E test
 
       // Create consumer
-      const consumerLoginResponse = await loginAndGetResponse(
-        "",
-        integrationTestUtils.getRandomEmail("fake+consumer"),
-        "CONSUMER",
-      );
+      const consumerLoginResponse = await loginAndGetResponse(integrationTestUtils.getRandomEmail("fake+consumer"));
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
       let getConsumerResponse = (await ConsumerService.getConsumer({
@@ -249,7 +245,7 @@ describe("Verification", () => {
 
       const sardineSignature = computeSardineWebhookSignature(secretKey, JSON.stringify(requestBody));
 
-      const response = await VerificationWebhooksService.postDocumentVerificationResult({
+      const response = await WebhooksService.postDocumentVerificationResult({
         xSardineSignature: sardineSignature,
         requestBody: requestBody,
       });
@@ -285,7 +281,7 @@ describe("Verification", () => {
       };
 
       const sardineSignature = computeSardineWebhookSignature(secretKey, JSON.stringify(requestBody));
-      const response = await VerificationWebhooksService.postDocumentVerificationResult({
+      const response = await WebhooksService.postDocumentVerificationResult({
         xSardineSignature: sardineSignature,
         requestBody: requestBody,
       });
@@ -302,11 +298,7 @@ describe("Verification", () => {
       const secretKey = "bogus-value"; // SecretKey is bogus-value in yaml for E2E test
 
       // Create consumer
-      const consumerLoginResponse = await loginAndGetResponse(
-        "",
-        integrationTestUtils.getRandomEmail("fake+consumer"),
-        "CONSUMER",
-      );
+      const consumerLoginResponse = await loginAndGetResponse(integrationTestUtils.getRandomEmail("fake+consumer"));
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
       let signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
       let getConsumerResponse = (await ConsumerService.getConsumer({
@@ -360,7 +352,7 @@ describe("Verification", () => {
 
       const sardineSignature = computeSardineWebhookSignature(secretKey, JSON.stringify(requestBody));
 
-      const response = await VerificationWebhooksService.postCaseNotification({
+      const response = await WebhooksService.postCaseNotification({
         xSardineSignature: sardineSignature,
         requestBody: requestBody,
       });

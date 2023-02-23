@@ -85,7 +85,7 @@ describe("CryptoCurrencies & Locations", () => {
 
     it("should work even if credentials are passed", async () => {
       const consumerEmail = "test.consumer@noba.com";
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/cryptocurrencies", JSON.stringify({}));
@@ -158,7 +158,7 @@ describe("CryptoCurrencies & Locations", () => {
 
     it("should work even if credentials are passed", async () => {
       const consumerEmail = "test.consumer@noba.com";
-      const consumerLoginResponse = await loginAndGetResponse(mongoUri, consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/fiatcurrencies", JSON.stringify({}));

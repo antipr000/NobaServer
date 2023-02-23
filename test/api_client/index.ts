@@ -106,8 +106,6 @@ export { ConsumerService } from "./services/ConsumerService";
 export { EmployersService } from "./services/EmployersService";
 export { HealthCheckService } from "./services/HealthCheckService";
 export { TransactionService } from "./services/TransactionService";
-export { VendorsService } from "./services/VendorsService";
 export { VerificationService } from "./services/VerificationService";
-export { VerificationWebhooksService } from "./services/VerificationWebhooksService";
 export { WebhooksService } from "./services/WebhooksService";
 export { WorkflowService } from "./services/WorkflowService";

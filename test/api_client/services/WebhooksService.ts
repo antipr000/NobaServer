@@ -2,6 +2,8 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { BlankResponseDTO } from "../models/BlankResponseDTO";
+import type { CaseNotificationWebhookRequestDTO } from "../models/CaseNotificationWebhookRequestDTO";
+import type { DocumentVerificationWebhookRequestDTO } from "../models/DocumentVerificationWebhookRequestDTO";
 import type { EmployerRegisterResponseDTO } from "../models/EmployerRegisterResponseDTO";
 import type { RegisterEmployerRequestDTO } from "../models/RegisterEmployerRequestDTO";
 import type { UpdateEmployeeRequestDTO } from "../models/UpdateEmployeeRequestDTO";
@@ -12,6 +14,18 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 
 export class WebhooksService {
+  /**
+   * Checks if the transaction parameters are valid
+   * @returns any
+   * @throws ApiError
+   */
+  public static consumePaymentWebhooks(): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/vendors/checkout/webhooks",
+    });
+  }
+
   /**
    * Register the Employer in Noba
    * @returns EmployerRegisterResponseDTO
@@ -70,6 +84,65 @@ export class WebhooksService {
       url: "/webhooks/bubble/employee/{employeeID}",
       path: {
         employeeID: employeeId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+
+  /**
+   * Handle all the Mono Webhook requests
+   * @returns any
+   * @throws ApiError
+   */
+  public static processWebhookRequests({ monoSignature }: { monoSignature: string }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/webhooks/mono",
+      headers: {
+        "mono-signature": monoSignature,
+      },
+    });
+  }
+
+  /**
+   * @returns any
+   * @throws ApiError
+   */
+  public static postDocumentVerificationResult({
+    xSardineSignature,
+    requestBody,
+  }: {
+    xSardineSignature: string;
+    requestBody: DocumentVerificationWebhookRequestDTO;
+  }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/verify/webhook/document/result",
+      headers: {
+        "x-sardine-signature": xSardineSignature,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+
+  /**
+   * @returns any
+   * @throws ApiError
+   */
+  public static postCaseNotification({
+    xSardineSignature,
+    requestBody,
+  }: {
+    xSardineSignature: string;
+    requestBody: CaseNotificationWebhookRequestDTO;
+  }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/verify/webhook/case/notification",
+      headers: {
+        "x-sardine-signature": xSardineSignature,
       },
       body: requestBody,
       mediaType: "application/json",

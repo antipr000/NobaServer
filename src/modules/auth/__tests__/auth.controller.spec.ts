@@ -127,6 +127,7 @@ describe("AuthController", () => {
 
       await authController.loginUser({
         emailOrPhone: consumerEmail,
+        autoCreate: false,
       });
 
       verify(mockConsumerAuthService.verifyUserExistence(consumerEmail)).once();
@@ -154,7 +155,7 @@ describe("AuthController", () => {
       when(mockConsumerAuthService.generateOTP(consumerEmail)).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerEmail, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerEmail, otp.toString())).thenResolve();
-      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
+      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(false);
 
       await authController.loginUser({
         emailOrPhone: consumerEmail,
@@ -170,7 +171,7 @@ describe("AuthController", () => {
       when(mockConsumerAuthService.generateOTP(consumerPhone)).thenReturn(otp);
       when(mockConsumerAuthService.saveOtp(consumerPhone, otp)).thenResolve();
       when(mockConsumerAuthService.sendOtp(consumerPhone, otp.toString())).thenResolve();
-      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(true);
+      when(mockConsumerAuthService.verifyUserExistence(anyString())).thenResolve(false);
 
       await authController.loginUser({
         emailOrPhone: consumerPhone,

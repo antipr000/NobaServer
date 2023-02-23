@@ -14,7 +14,7 @@ export class AdminAuthGuard implements CanActivate {
   private readonly configService: CustomConfigService;
 
   private validatePrivateBearerToken(bearerToken: string): boolean {
-    const expectedBearerToken = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).privateBearerToken;
+    const expectedBearerToken = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).adminBearerToken;
     return expectedBearerToken === bearerToken;
   }
 

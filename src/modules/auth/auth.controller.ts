@@ -95,7 +95,7 @@ export class AuthController {
   async loginUser(@Body() requestBody: LoginRequestDTO): Promise<BlankResponseDTO> {
     const emailOrPhone = requestBody.emailOrPhone;
 
-    const autoCreate = requestBody.autoCreate ?? false;
+    const autoCreate = requestBody.autoCreate ?? true;
 
     const authService: AuthService = this.getAuthService(consumerIdentityIdentifier);
     const userExists = await authService.verifyUserExistence(emailOrPhone);
@@ -126,7 +126,6 @@ export class AuthController {
   @ApiForbiddenResponse({ description: "Access denied" })
   @Post("/admin/login")
   async loginAdmin(@Body() requestBody: LoginRequestDTO): Promise<BlankResponseDTO> {
-    console.log("Here");
     const emailOrPhone = requestBody.emailOrPhone;
     const authService = this.getAuthService(nobaAdminIdentityIdentifier);
     const userExists = await authService.verifyUserExistence(emailOrPhone);

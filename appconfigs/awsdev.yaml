@@ -58,6 +58,8 @@ sardine:
 noba:
   appSecretKey: "7sjoNYZiZ3c6Z99wzVp2OLh0XbyRGtz9wj48MV6XfNscpY9W14kE4RDies/HuKsyCw7UJxz+RZAFoPx4t974Lw=="
   privateBearerToken: ""
+  adminBearerToken: ""
+  awsSecretKeyForAdminBearerToken: "TEST_NOBA_ADMIN_BEARER_TOKEN"
   awsSecretKeyForPrivateBearerToken: "TEST_NOBA_PRIVATE_BEARER_TOKEN"
   awsSecretKeyForAppSecretKey: ""
   bubbleBearerToken: ""

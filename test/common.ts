@@ -30,14 +30,31 @@ export const clearAccessTokenForNextRequests = () => {
 export const TEST_API_KEY = "testapikey";
 export const TEST_SECRET_KEY = "testsecretkey";
 
-export const loginAndGetResponse = async (
-  ignore: any,
-  email: string,
-  identityType: string,
-): Promise<LoginResponseDTO & ResponseStatus> => {
+export const loginNobaAdminAndGetResponse = async (email: string): Promise<LoginResponseDTO & ResponseStatus> => {
+  setAccessTokenForTheNextRequests("testAdminBearerToken");
+  await AuthenticationService.loginAdmin({
+    requestBody: {
+      emailOrPhone: email,
+    },
+  });
+
+  const verifyOtpRequestBody = {
+    emailOrPhone: email,
+    otp: TEST_OTP,
+  };
+
+  const response = await AuthenticationService.verifyAdminOtp({
+    requestBody: verifyOtpRequestBody,
+  });
+
+  clearAccessTokenForNextRequests();
+
+  return response as LoginResponseDTO & ResponseStatus;
+};
+
+export const loginAndGetResponse = async (email: string): Promise<LoginResponseDTO & ResponseStatus> => {
   const requestBody = {
     emailOrPhone: email,
-    identityType: identityType as any,
   };
   const TEST_TIMESTAMP = new Date().getTime().toString();
   const loginSignature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/auth/login", JSON.stringify(requestBody));
@@ -50,7 +67,6 @@ export const loginAndGetResponse = async (
   const verifyOtpRequestBody = {
     emailOrPhone: email,
     otp: TEST_OTP,
-    identityType: identityType as any,
   };
 
   const verifyOtpSignature = computeSignature(

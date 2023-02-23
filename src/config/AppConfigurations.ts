@@ -130,6 +130,8 @@ import {
   NOBA_BUBBLE_BEARER_TOKEN,
   AWS_SECRET_KEY_FOR_NOBA_BUBBLE_BEARER_TOKEN,
   DEPENDENCY_SMS_CLIENT,
+  NOBA_ADMIN_BEARER_TOKEN,
+  AWS_SECRET_KEY_FOR_NOBA_ADMIN_BEARER_TOKEN,
 } from "./ConfigurationUtils";
 import fs from "fs";
 
@@ -552,6 +554,7 @@ async function configureNobaParameters(
       `("${NOBA_APP_SECRET_KEY}" or "${AWS_SECRET_KEY_FOR_NOBA_APP_SECRET_KEY}"), ` +
       `("${NOBA_BUBBLE_BEARER_TOKEN}" or "${AWS_SECRET_KEY_FOR_NOBA_BUBBLE_BEARER_TOKEN}"), ` +
       `("${NOBA_PRIVATE_BEARER_TOKEN}" or "${AWS_SECRET_KEY_FOR_NOBA_PRIVATE_BEARER_TOKEN}"), ` +
+      `("${NOBA_ADMIN_BEARER_TOKEN}" or "${AWS_SECRET_KEY_FOR_NOBA_ADMIN_BEARER_TOKEN}"), ` +
       "and populate " +
       `("${SPREAD_PERCENTAGE}" or "${AWS_SECRET_KEY_FOR_SPREAD_PERCENTAGE}"), ` +
       `("${DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE}" or "${AWS_SECRET_KEY_FOR_DYNAMIC_CREDIT_CARD_FEE_PERCENTAGE}"), ` +
@@ -565,6 +568,10 @@ async function configureNobaParameters(
   nobaConfigs.privateBearerToken = await getParameterValue(
     nobaConfigs.awsSecretKeyForPrivateBearerToken,
     nobaConfigs.privateBearerToken,
+  );
+  nobaConfigs.adminBearerToken = await getParameterValue(
+    nobaConfigs.awsSecretKeyForAdminBearerToken,
+    nobaConfigs.adminBearerToken,
   );
   nobaConfigs.bubbleBearerToken = await getParameterValue(
     nobaConfigs.awsSecretKeyForBubbleBearerToken,

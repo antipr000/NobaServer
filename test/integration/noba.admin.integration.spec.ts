@@ -19,6 +19,7 @@ import {
   computeSignature,
   insertNobaAdmin,
   loginAndGetResponse,
+  loginNobaAdminAndGetResponse,
   setAccessTokenForTheNextRequests,
   TEST_API_KEY,
 } from "../common";
@@ -58,7 +59,7 @@ describe("Noba Admin", () => {
     it("Should return 403 if requested with Consumer credentials with same EMAIL", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
 
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/admins", JSON.stringify({}));
@@ -78,7 +79,7 @@ describe("Noba Admin", () => {
       await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, nobaAdminRole);
       await insertNobaAdmin("", "another.admin@noba.com", "ID2ID2ID2ID2", nobaAdminRole);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(nobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/admins", JSON.stringify({}));
@@ -98,7 +99,7 @@ describe("Noba Admin", () => {
     it("shouldn't allow requests with Consumer credentials", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.user");
 
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       // TODO(#189): Remove '_id' from the input DTO.
@@ -131,7 +132,7 @@ describe("Noba Admin", () => {
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
 
       await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAAA"), "BASIC");
-      const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(nobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       // TODO(#189): Remove '_id' from the input DTO.
@@ -164,7 +165,7 @@ describe("Noba Admin", () => {
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
 
       await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAAA"), "INTERMEDIATE");
-      const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(nobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       // TODO(#189): Remove '_id' from the input DTO.
@@ -201,7 +202,7 @@ describe("Noba Admin", () => {
       const newNobaAdminRole = "BASIC";
 
       await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAAA"), "ADMIN");
-      const nobaAdminLoginResponse = await loginAndGetResponse("", nobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(nobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       // TODO(#189): Remove '_id' from the input DTO.
@@ -235,8 +236,8 @@ describe("Noba Admin", () => {
       expect(createNobaAdminResponse.role).toBe(newNobaAdminRole);
 
       // LOGIN as newly created NobaAdmin should be successful.
-      const newNobaAdminLoginResponse = await loginAndGetResponse("", newNobaAdminEmail, "NOBA_ADMIN");
-      expect(newNobaAdminLoginResponse.__status).toBe(201);
+      const newNobaAdminLoginResponse = await loginNobaAdminAndGetResponse(newNobaAdminEmail);
+      expect(newNobaAdminLoginResponse.__status).toBe(200);
     });
   });
 
@@ -247,7 +248,7 @@ describe("Noba Admin", () => {
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin.2");
       const nobaAdminId = integrationTestUtils.getRandomID("A2A2A2A2A2A2");
 
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       console.log(consumerLoginResponse);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
@@ -288,7 +289,7 @@ describe("Noba Admin", () => {
       await insertNobaAdmin("", toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole);
       await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(loggedInNobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -328,7 +329,7 @@ describe("Noba Admin", () => {
       await insertNobaAdmin("", toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole);
       await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(loggedInNobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -362,7 +363,7 @@ describe("Noba Admin", () => {
 
       await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(loggedInNobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -399,7 +400,7 @@ describe("Noba Admin", () => {
 
       await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(loggedInNobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -440,7 +441,7 @@ describe("Noba Admin", () => {
       await insertNobaAdmin("", toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole);
       await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(loggedInNobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -483,7 +484,7 @@ describe("Noba Admin", () => {
       await insertNobaAdmin("", toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole);
       await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(loggedInNobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -526,7 +527,7 @@ describe("Noba Admin", () => {
       await insertNobaAdmin("", toUpdateNobaAdminEmail, toUpdateNobaAdminId, toUpdateNobaAdminCurrentRole);
       await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, loggedInNobaAdminRole);
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(loggedInNobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -566,7 +567,7 @@ describe("Noba Admin", () => {
       const nobaAdminId = integrationTestUtils.getRandomID("A2A2A2A2A2A2");
       await insertNobaAdmin("", nobaAdminEmail, nobaAdminId, "BASIC");
 
-      const consumerLoginResponse = await loginAndGetResponse("", consumerEmail, "CONSUMER");
+      const consumerLoginResponse = await loginAndGetResponse(consumerEmail);
       setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
 
       const signature = computeSignature(TEST_TIMESTAMP, "DELETE", `/v1/admins/${nobaAdminId}`, JSON.stringify({}));
@@ -588,7 +589,7 @@ describe("Noba Admin", () => {
       const toDeleteNobaAdminId = integrationTestUtils.getRandomID("A2A2A2A2A2A2");
       await insertNobaAdmin("", toDeleteNobaAdminEmail, toDeleteNobaAdminId, "BASIC");
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(loggedInNobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -616,7 +617,7 @@ describe("Noba Admin", () => {
       const toDeleteNobaAdminId = integrationTestUtils.getRandomID("A2A2A2A2A2A2");
       await insertNobaAdmin("", toDeleteNobaAdminEmail, toDeleteNobaAdminId, "BASIC");
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginAndGetResponse(loggedInNobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -642,7 +643,7 @@ describe("Noba Admin", () => {
       const toDeleteNobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin.2");
       const toDeleteNobaAdminId = integrationTestUtils.getRandomID("A2A2A2A2A2A2");
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(loggedInNobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -669,7 +670,7 @@ describe("Noba Admin", () => {
       const toDeleteNobaAdminId = integrationTestUtils.getRandomID("A2A2A2A2A2A2");
       await insertNobaAdmin("", toDeleteNobaAdminEmail, toDeleteNobaAdminId, "BASIC");
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(loggedInNobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
@@ -694,7 +695,7 @@ describe("Noba Admin", () => {
       const loggedInNobaAdminId = integrationTestUtils.getRandomID("AAAAAAAAAAA");
       await insertNobaAdmin("", loggedInNobaAdminEmail, loggedInNobaAdminId, "ADMIN");
 
-      const nobaAdminLoginResponse = await loginAndGetResponse("", loggedInNobaAdminEmail, "NOBA_ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(loggedInNobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
 
       const signature = computeSignature(
