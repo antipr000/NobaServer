@@ -88,30 +88,12 @@ export class AdminService {
    * @returns TransactionStatsDTO Transaction statistics
    * @throws ApiError
    */
-  public static getTransactionMetrics({
-    xNobaApiKey,
-    adminId,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    adminId: string;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<TransactionStatsDTO> {
+  public static getTransactionMetrics({ adminId }: { adminId: string }): CancelablePromise<TransactionStatsDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/admins/{adminID}/transactionmetrics",
       path: {
         adminID: adminId,
-      },
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
       },
     });
   }
@@ -121,28 +103,10 @@ export class AdminService {
    * @returns NobaAdminDTO The newly created Noba admin
    * @throws ApiError
    */
-  public static createNobaAdmin({
-    xNobaApiKey,
-    requestBody,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    requestBody: AddNobaAdminDTO;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<NobaAdminDTO> {
+  public static createNobaAdmin({ requestBody }: { requestBody: AddNobaAdminDTO }): CancelablePromise<NobaAdminDTO> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/admins",
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
       body: requestBody,
       mediaType: "application/json",
       errors: {
@@ -157,26 +121,10 @@ export class AdminService {
    * @returns NobaAdminDTO The logged in Noba admin
    * @throws ApiError
    */
-  public static getNobaAdmin({
-    xNobaApiKey,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<NobaAdminDTO> {
+  public static getNobaAdmin(): CancelablePromise<NobaAdminDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/admins",
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
       errors: {
         403: `User forbidden from retrieving details of the Noba admin`,
       },
@@ -189,31 +137,17 @@ export class AdminService {
    * @throws ApiError
    */
   public static updateNobaAdmin({
-    xNobaApiKey,
     adminId,
     requestBody,
-    xNobaSignature,
-    xNobaTimestamp,
   }: {
-    xNobaApiKey: string;
     adminId: string;
     requestBody: UpdateNobaAdminDTO;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
   }): CancelablePromise<NobaAdminDTO> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/v1/admins/{adminID}",
       path: {
         adminID: adminId,
-      },
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -229,30 +163,12 @@ export class AdminService {
    * @returns DeleteNobaAdminDTO The ID of the Noba admin to delete
    * @throws ApiError
    */
-  public static deleteNobaAdmin({
-    xNobaApiKey,
-    adminId,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    adminId: string;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<DeleteNobaAdminDTO> {
+  public static deleteNobaAdmin({ adminId }: { adminId: string }): CancelablePromise<DeleteNobaAdminDTO> {
     return __request(OpenAPI, {
       method: "DELETE",
       url: "/v1/admins/{adminID}",
       path: {
         adminID: adminId,
-      },
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         403: `User forbidden from deleting Noba admin or attempt to delete one's own record`,
@@ -267,31 +183,17 @@ export class AdminService {
    * @throws ApiError
    */
   public static updateConsumer({
-    xNobaApiKey,
     consumerId,
     requestBody,
-    xNobaSignature,
-    xNobaTimestamp,
   }: {
-    xNobaApiKey: string;
     consumerId: string;
     requestBody: AdminUpdateConsumerRequestDTO;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
   }): CancelablePromise<ConsumerDTO> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/v1/admins/consumers/{consumerID}",
       path: {
         consumerID: consumerId,
-      },
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
       },
       body: requestBody,
       mediaType: "application/json",
@@ -308,32 +210,18 @@ export class AdminService {
    * @throws ApiError
    */
   public static createExchangeRate({
-    xNobaApiKey,
     addInverse,
     requestBody,
-    xNobaSignature,
-    xNobaTimestamp,
   }: {
-    xNobaApiKey: string;
     /**
      * Whether to also add the inverse of this rate
      */
     addInverse: boolean;
     requestBody: ExchangeRateDTO;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
   }): CancelablePromise<Array<ExchangeRateDTO>> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/admins/exchangerates",
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
       query: {
         addInverse: addInverse,
       },
