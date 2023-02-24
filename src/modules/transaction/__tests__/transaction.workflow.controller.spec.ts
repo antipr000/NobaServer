@@ -188,13 +188,20 @@ describe("Transaction Workflow Controller tests", () => {
       const transaction: Transaction = getRandomTransaction("testConsumerID");
 
       when(mockTransactionService.getTransactionByTransactionID(anyString())).thenResolve(transaction);
-      when(transactionWorkflowMapper.toWorkflowTransactionDTO(anything())).thenReturn(null);
+      when(transactionWorkflowMapper.toWorkflowTransactionDTO(anything(), anything())).thenReturn(null);
+      when(mockTransactionService.getTransactionEvents(anyString(), anything())).thenResolve([]);
 
       await transactionWorkflowController.getTransactionByTransactionID(transaction.id);
 
-      const [propagatedTransactionID] = capture(mockTransactionService.getTransactionByTransactionID).last();
+      const [propagatedTransactionIdToGetTransaction] = capture(
+        mockTransactionService.getTransactionByTransactionID,
+      ).last();
+      const [propagatedTransactionIdToGetTransactionEvents] = capture(
+        mockTransactionService.getTransactionEvents,
+      ).last();
       const [propagatedMonoTransaction] = capture(transactionWorkflowMapper.toWorkflowTransactionDTO).last();
-      expect(propagatedTransactionID).toEqual(transaction.id);
+      expect(propagatedTransactionIdToGetTransaction).toEqual(transaction.id);
+      expect(propagatedTransactionIdToGetTransactionEvents).toEqual(transaction.id);
       expect(propagatedMonoTransaction).toEqual(transaction);
     });
   });

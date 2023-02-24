@@ -1,14 +1,15 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Transaction, WorkflowName, getTotalFees } from "../domain/Transaction";
 import { ConsumerInformationDTO, TransactionDTO, TransactionFeeDTO } from "../dto/TransactionDTO";
-import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { TransactionEvent } from "../domain/TransactionEvent";
 import { MonoTransaction } from "../../../modules/psp/domain/Mono";
 import { MonoService } from "../../../modules/psp/mono/mono.service";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
+import { toTransactionEventDTO, toTransactionFeesDTO } from "./transaction.mapper.util";
 import { TransactionFee } from "../domain/TransactionFee";
+import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 
 @Injectable()
 export class TransactionMappingService {
@@ -68,40 +69,13 @@ export class TransactionMappingService {
       createdTimestamp: transaction.createdTimestamp,
       updatedTimestamp: transaction.updatedTimestamp,
       memo: transaction.memo,
-      transactionEvents: transactionEvents?.map(event => this.toTransactionEventDTO(event)),
+      transactionEvents: transactionEvents?.map(event => toTransactionEventDTO(event)),
       totalFees: getTotalFees(transaction),
-      transactionFees: transaction.transactionFees?.map(fee => this.toTransactionFeesDTO(fee)),
+      transactionFees: transaction.transactionFees?.map(fee => toTransactionFeesDTO(fee)),
       ...(monoTransaction &&
         monoTransaction.collectionLinkDepositDetails && {
           paymentCollectionLink: monoTransaction.collectionLinkDepositDetails.collectionURL,
         }),
-    };
-  }
-
-  toTransactionFeesDTO(transactionFees: TransactionFee): TransactionFeeDTO {
-    return {
-      amount: transactionFees.amount,
-      currency: transactionFees.currency,
-      type: transactionFees.type,
-    };
-  }
-
-  toTransactionEventDTO(transactionEvent: TransactionEvent): TransactionEventDTO {
-    return {
-      timestamp: transactionEvent.timestamp,
-      internal: transactionEvent.internal,
-      message: transactionEvent.message,
-      ...(transactionEvent.details !== undefined && { details: transactionEvent.details }),
-      ...(transactionEvent.key !== undefined && { key: transactionEvent.key }),
-      ...(transactionEvent.param1 !== undefined && {
-        parameters: Array.of(
-          transactionEvent.param1,
-          transactionEvent.param2,
-          transactionEvent.param3,
-          transactionEvent.param4,
-          transactionEvent.param5,
-        ),
-      }),
     };
   }
 

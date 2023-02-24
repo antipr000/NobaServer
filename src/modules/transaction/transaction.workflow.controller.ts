@@ -15,6 +15,7 @@ import { DebitBankRequestDTO, WorkflowTransactionDTO } from "./dto/transaction.w
 import { DebitBankResponse, Transaction } from "./domain/Transaction";
 import { TransactionWorkflowMapper } from "./mapper/transaction.workflow.mapper";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
+import { TransactionEvent } from "./domain/TransactionEvent";
 
 @Controller("wf/v1/transactions")
 @ApiBearerAuth("JWT-auth")
@@ -67,7 +68,12 @@ export class TransactionWorkflowController {
   @ApiResponse({ status: HttpStatus.OK, type: WorkflowTransactionDTO })
   async getTransactionByTransactionID(@Param("transactionID") transactionID: string): Promise<WorkflowTransactionDTO> {
     const transaction: Transaction = await this.transactionService.getTransactionByTransactionID(transactionID);
-    return this.transactionWorkflowMapper.toWorkflowTransactionDTO(transaction);
+    const transactionEvents: TransactionEvent[] = await this.transactionService.getTransactionEvents(
+      transaction.id,
+      /*includeInternalEvents=*/ true,
+    );
+
+    return this.transactionWorkflowMapper.toWorkflowTransactionDTO(transaction, transactionEvents);
   }
 
   @Post("/debitfrombank")

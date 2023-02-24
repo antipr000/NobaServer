@@ -7,6 +7,7 @@ import { TransactionWorkflowMapper } from "../mapper/transaction.workflow.mapper
 import { Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
 import { WorkflowTransactionDTO } from "../dto/transaction.workflow.controller.dto";
 import { FeeType } from "../domain/TransactionFee";
+import { TransactionEvent } from "../domain/TransactionEvent";
 
 describe("TransactionWorkflowMapperTest", () => {
   jest.setTimeout(20000);
@@ -60,12 +61,31 @@ describe("TransactionWorkflowMapperTest", () => {
           },
         ],
       };
+      const transactionEvents: TransactionEvent[] = [
+        {
+          id: "ID_1",
+          message: "INTERNAL_MESSAGE_WITH_DETAILS_KEY_AND_PARAMS",
+          timestamp: new Date(),
+          transactionID: "ID",
+          details: "DETAILS",
+          internal: true,
+          key: "KEY",
+          param1: "PARAM1",
+          param2: "PARAM2",
+          param3: "PARAM3",
+          param4: "PARAM4",
+          param5: "PARAM5",
+        },
+      ];
 
-      const workflowTransactionDTO: WorkflowTransactionDTO =
-        transactionWorkflowMapper.toWorkflowTransactionDTO(transaction);
+      const workflowTransactionDTO: WorkflowTransactionDTO = transactionWorkflowMapper.toWorkflowTransactionDTO(
+        transaction,
+        transactionEvents,
+      );
 
       expect(workflowTransactionDTO).toEqual({
         id: "ID",
+        transactionRef: "transactionRef",
         workflowName: WorkflowName.WALLET_TRANSFER,
         debitConsumerID: "debitConsumerID",
         creditConsumerID: "creditConsumerID",
@@ -75,15 +95,34 @@ describe("TransactionWorkflowMapperTest", () => {
         creditAmount: 200,
         exchangeRate: "1.2",
         status: TransactionStatus.INITIATED,
+        memo: "memo",
+        transactionEvents: [
+          {
+            timestamp: transactionEvents[0].timestamp,
+            message: "INTERNAL_MESSAGE_WITH_DETAILS_KEY_AND_PARAMS",
+            internal: true,
+            details: "DETAILS",
+            key: "KEY",
+            parameters: ["PARAM1", "PARAM2", "PARAM3", "PARAM4", "PARAM5"],
+          },
+        ],
+        totalFees: 10,
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
       });
     });
 
     it("should throw 'NotFoundError' if the input transaction is 'null'", () => {
-      expect(() => transactionWorkflowMapper.toWorkflowTransactionDTO(null)).toThrowError(NotFoundError);
+      expect(() => transactionWorkflowMapper.toWorkflowTransactionDTO(null, [])).toThrowError(NotFoundError);
     });
 
     it("should throw 'NotFoundError' if the input transaction is 'undefined'", () => {
-      expect(() => transactionWorkflowMapper.toWorkflowTransactionDTO(undefined)).toThrowError(NotFoundError);
+      expect(() => transactionWorkflowMapper.toWorkflowTransactionDTO(undefined, [])).toThrowError(NotFoundError);
     });
   });
 });
