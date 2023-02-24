@@ -273,7 +273,7 @@ describe("TransactionServiceTests", () => {
       };
       when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       const transactionVerification: TransactionVerification = {
-        transactionID: transaction.id,
+        transactionRef: transaction.transactionRef,
         debitConsumerID: transaction.debitConsumerID,
         creditConsumerID: transaction.creditConsumerID,
         workflowName: transaction.workflowName,
@@ -350,7 +350,7 @@ describe("TransactionServiceTests", () => {
 
       when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
       const transactionVerification: TransactionVerification = {
-        transactionID: transaction.id,
+        transactionRef: transaction.transactionRef,
         debitConsumerID: transaction.debitConsumerID,
         creditConsumerID: transaction.creditConsumerID,
         workflowName: transaction.workflowName,
