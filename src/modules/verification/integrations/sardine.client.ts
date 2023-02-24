@@ -329,7 +329,7 @@ export class Sardine implements IDVProvider {
         id: transaction.transactionRef,
         status: "accepted",
         createdAtMillis: Date.now(),
-        amount: usdAmount,
+        amount: Utils.roundTo2DecimalNumber(usdAmount),
         currencyCode: Currency.USD,
         actionType: actionType,
         ...(debitSidePaymentMethod && { paymentMethod: debitSidePaymentMethod }),
