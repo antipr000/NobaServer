@@ -10,7 +10,7 @@ import { uuid } from "uuidv4";
 
 const VERIFICATION_ID_PREFIX = "verification_id_prefix";
 const DEFAULT_USER_ID = "user_id";
-const DEFAULT_TRANSACTION_ID = "transaction_id";
+const DEFAULT_TRANSACTION_REF = "transaction_id";
 
 const mkid = (id: string): string => {
   return VERIFICATION_ID_PREFIX + id;
@@ -82,11 +82,11 @@ describe("VerificationRepoTests", () => {
       await verificationRepo.saveVerificationData(vfd2);
       const savedVerificationData = await verificationRepo.getVerificationData(mkid("4"));
       const updatedVerificationData = await verificationRepo.updateVerificationData(
-        VerificationData.createVerificationData({ ...savedVerificationData.props, transactionID: mkid("tid") }),
+        VerificationData.createVerificationData({ ...savedVerificationData.props, transactionRef: mkid("tid") }),
       );
       expect(updatedVerificationData.props.id).toBe(mkid("4"));
       expect(updatedVerificationData.props.userID).toBe(DEFAULT_USER_ID);
-      expect(updatedVerificationData.props.transactionID).toBe(mkid("tid"));
+      expect(updatedVerificationData.props.transactionRef).toBe(mkid("tid"));
     });
   });
 
@@ -102,12 +102,12 @@ describe("VerificationRepoTests", () => {
 
 const getVerificationData = (
   id: string,
-  options: { userId?: string; transactionId?: string } = {},
+  options: { userId?: string; transactionRef?: string } = {},
 ): VerificationData => {
   const props: VerificationDataProps = {
     id: mkid(id),
     userID: options.userId || DEFAULT_USER_ID,
-    transactionID: options.transactionId || DEFAULT_TRANSACTION_ID + "_" + uuid(),
+    transactionRef: options.transactionRef || DEFAULT_TRANSACTION_REF + "_" + uuid(),
   };
   const verificationData = VerificationData.createVerificationData(props);
   return verificationData;
