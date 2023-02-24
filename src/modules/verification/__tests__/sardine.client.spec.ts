@@ -406,7 +406,7 @@ describe("SardineTests", () => {
       const consumerID1 = "consumer-1";
       const consumerID2 = "consumer-2";
       const transactionVerification: TransactionVerification = {
-        transactionID: "transaction-1",
+        transactionRef: "transaction-1",
         debitConsumerID: consumerID1,
         creditConsumerID: consumerID2,
         debitAmount: 100,
@@ -453,7 +453,7 @@ describe("SardineTests", () => {
       const consumerID1 = "consumer-1";
       const consumerID2 = "consumer-2";
       const transactionVerification: TransactionVerification = {
-        transactionID: "transaction-1",
+        transactionRef: "transaction-1",
         debitConsumerID: consumerID1,
         creditConsumerID: consumerID2,
         debitAmount: 100,
@@ -500,7 +500,7 @@ describe("SardineTests", () => {
       const consumerID1 = "consumer-1";
       const consumerID2 = "consumer-2";
       const transactionVerification: TransactionVerification = {
-        transactionID: "transaction-1",
+        transactionRef: "transaction-1",
         debitConsumerID: consumerID1,
         creditConsumerID: consumerID2,
         debitAmount: 100,
@@ -548,7 +548,7 @@ describe("SardineTests", () => {
       const consumerID1 = "consumer-1";
       const consumerID2 = "consumer-2";
       const transactionVerification: TransactionVerification = {
-        transactionID: "transaction-1",
+        transactionRef: "transaction-1",
         debitConsumerID: consumerID1,
         creditConsumerID: consumerID2,
         debitAmount: 100,
@@ -918,7 +918,7 @@ describe("SardineTests", () => {
       const consumerID1 = "consumer-1";
       const consumerID2 = "consumer-2";
       const transactionVerification: TransactionVerification = {
-        transactionID: "transaction-1",
+        transactionRef: "transaction-1",
         debitConsumerID: consumerID1,
         creditConsumerID: consumerID2,
         debitAmount: 100,
@@ -966,7 +966,7 @@ describe("SardineTests", () => {
       const consumerID1 = "consumer-1";
       const consumerID2 = "consumer-2";
       const transactionVerification: TransactionVerification = {
-        transactionID: "transaction-1",
+        transactionRef: "transaction-1",
         debitConsumerID: consumerID1,
         creditConsumerID: consumerID2,
         debitAmount: 100,
