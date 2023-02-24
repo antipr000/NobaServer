@@ -606,7 +606,7 @@ describe("VerificationService", () => {
 
       const verificationData = VerificationData.createVerificationData({
         id: sessionKey,
-        transactionID: transactionInformation.transactionID,
+        transactionRef: transactionInformation.transactionRef,
       });
 
       when(
@@ -657,17 +657,17 @@ describe("VerificationService", () => {
     it("should post transaction feedback with appropriate parameters", async () => {
       const errorCode = "fake-error";
       const errorDescription = "Fake Error";
-      const transactionID = "fake-transaction";
+      const transactionRef = "fake-transaction";
       const sessionKey = "fake-session";
       const processor = "checkout";
 
-      when(verificationRepo.getSessionKeyFromFilters(deepEqual({ transactionID: transactionID }))).thenResolve(
+      when(verificationRepo.getSessionKeyFromFilters(deepEqual({ transactionRef: transactionRef }))).thenResolve(
         sessionKey,
       );
 
-      await verificationService.provideTransactionFeedback(errorCode, errorDescription, transactionID, processor);
+      await verificationService.provideTransactionFeedback(errorCode, errorDescription, transactionRef, processor);
       verify(
-        idvProvider.postTransactionFeedback(sessionKey, errorCode, errorDescription, transactionID, processor),
+        idvProvider.postTransactionFeedback(sessionKey, errorCode, errorDescription, transactionRef, processor),
       ).once();
     });
   });
@@ -986,7 +986,7 @@ function getDocumentVerificationWebhookRequest(
 
 function getFakeTransactionVerification(): TransactionVerification {
   return {
-    transactionID: "fake-transaction-id",
+    transactionRef: "fake-transaction-id",
     debitConsumerID: "debit-consumer-id",
     creditConsumerID: "credit-consumer-id",
     debitAmount: 100,

@@ -336,7 +336,7 @@ export class VerificationService {
     await this.verificationDataRepo.updateVerificationData(
       VerificationData.createVerificationData({
         id: sessionKey,
-        transactionID: transactionVerification.transactionID,
+        transactionRef: transactionVerification.transactionRef,
       }),
     );
 
@@ -346,11 +346,11 @@ export class VerificationService {
   async provideTransactionFeedback(
     errorCode: string,
     errorDescription: string,
-    transactionID: string,
+    transactionRef: string,
     processor: string,
   ): Promise<void> {
-    const sessionKey = await this.verificationDataRepo.getSessionKeyFromFilters({ transactionID: transactionID });
-    await this.idvProvider.postTransactionFeedback(sessionKey, errorCode, errorDescription, transactionID, processor);
+    const sessionKey = await this.verificationDataRepo.getSessionKeyFromFilters({ transactionRef: transactionRef });
+    await this.idvProvider.postTransactionFeedback(sessionKey, errorCode, errorDescription, transactionRef, processor);
   }
 
   async getDeviceVerificationResult(sessionKey: string): Promise<SardineDeviceInformationResponse> {

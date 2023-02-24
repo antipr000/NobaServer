@@ -326,7 +326,7 @@ export class Sardine implements IDVProvider {
         id: consumer.props.id,
       },
       transaction: {
-        id: transaction.transactionID,
+        id: transaction.transactionRef,
         status: "accepted",
         createdAtMillis: Date.now(),
         amount: usdAmount,

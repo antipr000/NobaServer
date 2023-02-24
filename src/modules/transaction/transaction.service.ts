@@ -197,7 +197,7 @@ export class TransactionService {
   private async validateForSanctions(consumerID: string, transaction: Transaction): Promise<boolean> {
     // Check Sardine for sanctions
     const sardineTransactionInformation: TransactionVerification = {
-      transactionID: transaction.id,
+      transactionRef: transaction.transactionRef,
       debitConsumerID: transaction.debitConsumerID,
       creditConsumerID: transaction.creditConsumerID,
       workflowName: transaction.workflowName,
