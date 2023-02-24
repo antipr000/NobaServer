@@ -14,7 +14,7 @@ export class SQLVerificationDataRepo implements IVerificationDataRepo {
         data: {
           id: verificationData.props.id,
           userID: verificationData.props.userID,
-          transactionID: verificationData.props.transactionID,
+          transactionID: verificationData.props.transactionRef,
         },
       });
       return VerificationData.createVerificationData(verificationDataProps);
@@ -38,7 +38,7 @@ export class SQLVerificationDataRepo implements IVerificationDataRepo {
         where: { id: verificationData.props.id },
         data: {
           userID: verificationData.props.userID,
-          transactionID: verificationData.props.transactionID,
+          transactionID: verificationData.props.transactionRef,
         },
       });
 
@@ -52,7 +52,7 @@ export class SQLVerificationDataRepo implements IVerificationDataRepo {
     try {
       const verificationDataProps = await this.prismaService.verification.findFirstOrThrow({
         where: {
-          transactionID: filters.transactionID,
+          transactionID: filters.transactionRef,
         },
       });
       return verificationDataProps.id;
