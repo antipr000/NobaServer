@@ -311,7 +311,6 @@ export class Sardine implements IDVProvider {
       case WorkflowName.WALLET_DEPOSIT:
         actionType = "deposit";
         creditSidePaymentMethod = consumerPaymentMethod; // For a deposit, set recipient to the circle wallet
-        checkpoints.push("ach");
         break;
       default:
         // This should never happen
