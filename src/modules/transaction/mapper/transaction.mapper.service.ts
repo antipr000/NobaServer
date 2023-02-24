@@ -56,6 +56,7 @@ export class TransactionMappingService {
     }
 
     return {
+      id: transaction.id,
       transactionRef: transaction.transactionRef,
       workflowName: transaction.workflowName,
       debitConsumer: this.toConsumerInformationDTO(debitConsumer),

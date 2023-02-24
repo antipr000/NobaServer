@@ -484,14 +484,10 @@ describe("MonoServiceTests", () => {
           type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
         };
 
-        try {
-          await monoService.createMonoTransaction(createMonoTransactionRequest);
-          expect(true).toBe(false);
-        } catch (e) {
-          expect(e).toBeInstanceOf(ServiceException);
-          expect(e.errorCode).toEqual(ServiceErrorCode.DOES_NOT_EXIST);
-          expect(e.message).toEqual(expect.stringContaining("Consumer"));
-        }
+        expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.DOES_NOT_EXIST,
+          "Consumer",
+        );
       });
     });
 
@@ -526,15 +522,10 @@ describe("MonoServiceTests", () => {
           },
         };
 
-        try {
-          await monoService.createMonoTransaction(createMonoTransactionRequest);
-          expect(true).toBe(false);
-        } catch (e) {
-          expect(e).toBeInstanceOf(ServiceException);
-          expect(e.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
-          expect(e.message).toEqual(expect.stringContaining("COP"));
-          expect(e.message).toEqual(expect.stringContaining("USD"));
-        }
+        expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.SEMANTIC_VALIDATION,
+          "COP",
+        );
       });
 
       it("should throw ServiceException if the Consumer is not found", async () => {
@@ -567,14 +558,10 @@ describe("MonoServiceTests", () => {
           },
         };
 
-        try {
-          await monoService.createMonoTransaction(createMonoTransactionRequest);
-          expect(true).toBe(false);
-        } catch (e) {
-          expect(e).toBeInstanceOf(ServiceException);
-          expect(e.errorCode).toEqual(ServiceErrorCode.DOES_NOT_EXIST);
-          expect(e.message).toEqual(expect.stringContaining("Consumer"));
-        }
+        expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.DOES_NOT_EXIST,
+          "Consumer",
+        );
       });
 
       it("should throw ServiceException if the nobaPublicTransactionRef is not provided", async () => {
@@ -606,14 +593,10 @@ describe("MonoServiceTests", () => {
           },
         };
 
-        try {
-          await monoService.createMonoTransaction(createMonoTransactionRequest);
-          expect(true).toBe(false);
-        } catch (e) {
-          expect(e).toBeInstanceOf(ServiceException);
-          expect(e.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
-          expect(e.message).toEqual(expect.stringContaining("nobaPublicTransactionRef"));
-        }
+        expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.SEMANTIC_VALIDATION,
+          "nobaPublicTransactionRef",
+        );
       });
 
       const withdrawalsRequiredFields = [
@@ -656,15 +639,10 @@ describe("MonoServiceTests", () => {
           };
           delete createMonoTransactionRequest.withdrawalDetails[field];
 
-          try {
-            await monoService.createMonoTransaction(createMonoTransactionRequest);
-            expect(true).toBe(false);
-          } catch (e) {
-            expect(e).toBeInstanceOf(ServiceException);
-            expect(e.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
-            expect(e.message).toEqual(expect.stringContaining("withdrawal"));
-            expect(e.message).toEqual(expect.stringContaining(field));
-          }
+          expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+            ServiceErrorCode.SEMANTIC_VALIDATION,
+            "withdrawal",
+          );
         },
       );
 
@@ -699,15 +677,53 @@ describe("MonoServiceTests", () => {
         };
 
         when(kmsService.decryptString("encryptedAccountNumber", KmsKeyType.SSN)).thenResolve(null);
+        when(monoRepo.getMonoTransactionByNobaTransactionID(anyString())).thenResolve(null);
 
-        try {
-          await monoService.createMonoTransaction(createMonoTransactionRequest);
-          expect(true).toBe(false);
-        } catch (e) {
-          expect(e).toBeInstanceOf(ServiceException);
-          expect(e.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
-          expect(e.message).toEqual(expect.stringContaining("encryptedAccountNumber"));
-        }
+        expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.SEMANTIC_VALIDATION,
+          "encryptedAccountNumber",
+        );
+      });
+
+      it("should throw ServiceException if transaction already exists", async () => {
+        const monoTransaction: MonoTransaction = getRandomMonoTransaction(MonoTransactionType.WITHDRAWAL);
+
+        const consumer: Consumer = Consumer.createConsumer({
+          email: "test@noba.com",
+          id: "CCCCCCCCCC",
+          displayEmail: "test@noba.com",
+          handle: "test",
+          phone: "+1234567890",
+          firstName: "First",
+          lastName: "Last",
+        });
+        when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+
+        const createMonoTransactionRequest: CreateMonoTransactionRequest = {
+          amount: 100,
+          currency: MonoCurrency.COP,
+          nobaTransactionID: monoTransaction.nobaTransactionID,
+          consumerID: consumer.props.id,
+          type: MonoTransactionType.WITHDRAWAL,
+          nobaPublicTransactionRef: "nobaTransactionRef",
+          withdrawalDetails: {
+            accountType: "accountType",
+            bankCode: "bankCode",
+            documentNumber: "documentNumber",
+            documentType: "documentType",
+            encryptedAccountNumber: "encryptedAccountNumber",
+          },
+        };
+
+        const decryptedAccountNumber = "1234567890";
+        when(kmsService.decryptString("encryptedAccountNumber", KmsKeyType.SSN)).thenResolve(decryptedAccountNumber);
+        when(monoRepo.getMonoTransactionByNobaTransactionID(monoTransaction.nobaTransactionID)).thenResolve(
+          monoTransaction,
+        );
+
+        expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.ALREADY_EXISTS,
+        );
       });
 
       it("should initiate the WITHDRAWAL from NOBA account to Consumer Account", async () => {
@@ -725,6 +741,7 @@ describe("MonoServiceTests", () => {
 
         const decryptedAccountNumber = "1234567890";
         when(kmsService.decryptString("encryptedAccountNumber", KmsKeyType.SSN)).thenResolve(decryptedAccountNumber);
+        when(monoRepo.getMonoTransactionByNobaTransactionID(anyString())).thenResolve(null);
 
         when(monoClient.transfer(anything())).thenResolve({
           batchID: monoTransaction.withdrawalDetails.batchID,

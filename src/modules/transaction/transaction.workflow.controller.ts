@@ -1,4 +1,15 @@
-import { BadRequestException, Body, Controller, Get, HttpStatus, Inject, Param, Patch, Post } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  ConflictException,
+  Controller,
+  Get,
+  HttpStatus,
+  Inject,
+  Param,
+  Patch,
+  Post,
+} from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -16,6 +27,7 @@ import { DebitBankResponse, Transaction } from "./domain/Transaction";
 import { TransactionWorkflowMapper } from "./mapper/transaction.workflow.mapper";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { TransactionEvent } from "./domain/TransactionEvent";
+import { ServiceErrorCode, ServiceException } from "../../../src/core/exception/service.exception";
 
 @Controller("wf/v1/transactions")
 @ApiBearerAuth("JWT-auth")
@@ -81,6 +93,13 @@ export class TransactionWorkflowController {
   @ApiOperation({ summary: "Debit money from Noba bank account into consumer account" })
   @ApiResponse({ status: HttpStatus.OK, type: WorkflowTransactionDTO })
   async debitFromBank(@Body() requestBody: DebitBankRequestDTO): Promise<DebitBankResponse> {
-    return await this.transactionService.debitFromBank(requestBody.transactionID);
+    try {
+      return await this.transactionService.debitFromBank(requestBody.transactionID);
+    } catch (e) {
+      if (e instanceof ServiceException && e.errorCode === ServiceErrorCode.ALREADY_EXISTS) {
+        this.logger.error(`Error while debiting from bank: ${e.message}`);
+        throw new ConflictException(e.message);
+      }
+    }
   }
 }

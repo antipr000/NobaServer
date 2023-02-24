@@ -300,14 +300,22 @@ export class MonoService {
   private async executeWithdrawal(request: WithdrawalRequest): Promise<MonoTransaction> {
     this.validateWithdrawalRequest(request);
 
-    const decryptedAccountNumber = await this.kmsService.decryptString(
-      request.withdrawalDetails.encryptedAccountNumber,
-      KmsKeyType.SSN,
-    );
+    const [decryptedAccountNumber, monoTransaction] = await Promise.all([
+      this.kmsService.decryptString(request.withdrawalDetails.encryptedAccountNumber, KmsKeyType.SSN),
+      this.monoRepo.getMonoTransactionByNobaTransactionID(request.nobaTransactionID),
+    ]);
+
     if (!decryptedAccountNumber) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: `Account number failed decryption: ${request.withdrawalDetails.encryptedAccountNumber}`,
+      });
+    }
+
+    if (monoTransaction) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.ALREADY_EXISTS,
+        message: `Mono transaction already exists for nobaTransactionID: ${request.nobaTransactionID}`,
       });
     }
 

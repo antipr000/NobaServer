@@ -29,6 +29,8 @@ export class TransactionFeeDTO {
 }
 
 export class TransactionDTO {
+  id: string;
+
   @ApiProperty({ description: "The reference by which the user identifies this unique transaction" })
   transactionRef: string;
 
