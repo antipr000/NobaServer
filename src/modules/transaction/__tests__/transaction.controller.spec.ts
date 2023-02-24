@@ -151,6 +151,7 @@ describe("Transaction Controller tests", () => {
         consumer,
       );
       const expectedResult: TransactionDTO = {
+        id: transaction.id,
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
         debitConsumer: {
@@ -196,6 +197,7 @@ describe("Transaction Controller tests", () => {
         consumer,
       );
       const expectedResult: TransactionDTO = {
+        id: transaction.id,
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
         creditConsumer: {
@@ -245,6 +247,7 @@ describe("Transaction Controller tests", () => {
         consumer,
       );
       const expectedResult: TransactionDTO = {
+        id: transaction.id,
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
         creditConsumer: {
@@ -295,6 +298,7 @@ describe("Transaction Controller tests", () => {
         consumer,
       );
       const expectedResult: TransactionDTO = {
+        id: transaction.id,
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
         debitConsumer: {
@@ -355,6 +359,7 @@ describe("Transaction Controller tests", () => {
         consumer,
       );
       const expectedResult: TransactionDTO = {
+        id: transaction.id,
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
         debitConsumer: {
@@ -454,6 +459,7 @@ describe("Transaction Controller tests", () => {
       );
 
       const expectedResult: TransactionDTO = {
+        id: transaction.id,
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
         debitConsumer: {
@@ -501,6 +507,7 @@ describe("Transaction Controller tests", () => {
       );
 
       const expectedResult: TransactionDTO = {
+        id: transaction.id,
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
         debitConsumer: {
@@ -599,6 +606,7 @@ describe("Transaction Controller tests", () => {
       when(consumerService.getConsumer(creditConsumer.props.id)).thenResolve(creditConsumer);
 
       const expectedResult: TransactionDTO = {
+        id: transaction.id,
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
         creditConsumer: {
@@ -663,6 +671,7 @@ describe("Transaction Controller tests", () => {
       when(consumerService.getConsumer(creditConsumer.props.id)).thenResolve(creditConsumer);
 
       const expectedResult: TransactionDTO = {
+        id: transaction.id,
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
         creditConsumer: {
