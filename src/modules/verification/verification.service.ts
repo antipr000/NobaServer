@@ -336,7 +336,7 @@ export class VerificationService {
     await this.verificationDataRepo.updateVerificationData(
       VerificationData.createVerificationData({
         id: sessionKey,
-        transactionRef: transactionVerification.transactionRef,
+        transactionID: transactionVerification.transactionRef,
       }),
     );
 
@@ -349,7 +349,7 @@ export class VerificationService {
     transactionRef: string,
     processor: string,
   ): Promise<void> {
-    const sessionKey = await this.verificationDataRepo.getSessionKeyFromFilters({ transactionRef: transactionRef });
+    const sessionKey = await this.verificationDataRepo.getSessionKeyFromFilters({ transactionID: transactionRef });
     await this.idvProvider.postTransactionFeedback(sessionKey, errorCode, errorDescription, transactionRef, processor);
   }
 

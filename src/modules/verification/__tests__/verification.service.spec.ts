@@ -606,7 +606,7 @@ describe("VerificationService", () => {
 
       const verificationData = VerificationData.createVerificationData({
         id: sessionKey,
-        transactionRef: transactionInformation.transactionRef,
+        transactionID: transactionInformation.transactionRef,
       });
 
       when(
@@ -657,17 +657,17 @@ describe("VerificationService", () => {
     it("should post transaction feedback with appropriate parameters", async () => {
       const errorCode = "fake-error";
       const errorDescription = "Fake Error";
-      const transactionRef = "fake-transaction";
+      const transactionID = "fake-transaction";
       const sessionKey = "fake-session";
       const processor = "checkout";
 
-      when(verificationRepo.getSessionKeyFromFilters(deepEqual({ transactionRef: transactionRef }))).thenResolve(
+      when(verificationRepo.getSessionKeyFromFilters(deepEqual({ transactionID: transactionID }))).thenResolve(
         sessionKey,
       );
 
-      await verificationService.provideTransactionFeedback(errorCode, errorDescription, transactionRef, processor);
+      await verificationService.provideTransactionFeedback(errorCode, errorDescription, transactionID, processor);
       verify(
-        idvProvider.postTransactionFeedback(sessionKey, errorCode, errorDescription, transactionRef, processor),
+        idvProvider.postTransactionFeedback(sessionKey, errorCode, errorDescription, transactionID, processor),
       ).once();
     });
   });
