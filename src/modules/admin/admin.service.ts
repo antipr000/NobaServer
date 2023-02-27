@@ -5,6 +5,8 @@ import { IAdminRepo } from "./repos/transactions/sql.admin.repo";
 import { TransactionStatsDTO } from "./dto/TransactionStats";
 import { ACCOUNT_BALANCE_TYPES, Admin, AllRoles, isValidRole } from "./domain/Admin";
 import { PaymentService } from "../psp/payment.service";
+import { AccountBalanceDTO } from "./dto/AccountBalanceDTO";
+import { AdminPSPMapper } from "./mappers/admin.psp";
 
 @Injectable()
 export class AdminService {
@@ -17,7 +19,11 @@ export class AdminService {
   @Inject("AdminTransactionRepo")
   private readonly adminRepo: IAdminRepo;
 
-  constructor() {}
+  private readonly adminPSPMapper: AdminPSPMapper;
+
+  constructor() {
+    this.adminPSPMapper = new AdminPSPMapper();
+  }
 
   async getTransactionStatus(): Promise<TransactionStatsDTO> {
     return this.adminRepo.getTransactionStats();
@@ -78,7 +84,23 @@ export class AdminService {
     return this.adminRepo.getNobaAdminById(id);
   }
 
-  async getBalanceForAccounts(accountType: ACCOUNT_BALANCE_TYPES, accountIDs: string[]): Promise<any> {
-    return this.adminRepo.getBalanceForAccounts();
+  async getBalanceForAccounts(accountType: ACCOUNT_BALANCE_TYPES, accountIDs: string[]): Promise<AccountBalanceDTO[]> {
+    // return all balances based on account type
+
+    const accountBalancesPromises: Promise<number>[] = [];
+    accountIDs.forEach(accountID => {
+      const bankName = this.adminPSPMapper.accountTypeToBankName(accountType);
+      accountBalancesPromises.push(this.paymentService.getBalance(bankName, accountID));
+    });
+
+    const accountBalances = await Promise.all(accountBalancesPromises);
+
+    return accountBalances.map(balance => {
+      return {
+        accountID: accountIDs[index],
+        currency: 
+        balance: balance,
+      };
+    });
   }
 }

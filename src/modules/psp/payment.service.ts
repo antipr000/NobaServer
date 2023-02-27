@@ -194,6 +194,7 @@ export class PaymentService {
   }*/
 
   async getBalance(bankName: BankName, accountID: string): Promise<number> {
+    // make this an account balance object, wrap circle explicity
     const bankImpl = await this.bankFactory.getBankImplementation(bankName);
 
     const balance = await bankImpl.getBalance(accountID);

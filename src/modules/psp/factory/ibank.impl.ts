@@ -2,4 +2,5 @@ import { DebitBankFactoryRequest, DebitBankFactoryResponse } from "../domain/Ban
 
 export interface IBankImpl {
   debit(request: DebitBankFactoryRequest): Promise<DebitBankFactoryResponse>;
+  getBalance(accountID: string): Promise<number>;
 }
