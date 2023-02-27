@@ -31,8 +31,9 @@ import { ServiceErrorCode, ServiceException } from "../../../core/exception/serv
 import { KmsService } from "../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { HealthCheckResponse } from "../../../core/domain/HealthCheckTypes";
-import { MonoClientErrorCode, MonoClientException } from "./exception/mono.client.exception";
+import { MonoClientException } from "./exception/mono.client.exception";
 import { PhoneNumberUtil } from "google-libphonenumber";
+import { BalanceDTO } from "../dto/balance.dto";
 
 type CollectionLinkDepositRequest = {
   nobaTransactionID: string;
@@ -99,7 +100,24 @@ export class MonoService {
         return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
       });
     });
+
     return supportedBanks;
+  }
+
+  async getBalance(accountNumber: string): Promise<BalanceDTO> {
+    try {
+      const balance = await this.monoClient.getAccountBalance(accountNumber);
+      return {
+        balance: balance.amount,
+        currency: balance.currency,
+      };
+    } catch (e) {
+      this.logger.error(`Error obtaining balance for account ending in ${accountNumber.slice(-4)}: ${e.message}`);
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: "Error obtaining Mono account balance",
+      });
+    }
   }
 
   async getTransactionByCollectionLinkID(collectionLinkID: string): Promise<MonoTransaction | null> {

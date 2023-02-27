@@ -194,6 +194,34 @@ describe("MonoServiceTests", () => {
     });
   });
 
+  describe("getBalance", () => {
+    it("should return the current balance", async () => {
+      const accountNumber = "1234567890";
+      when(monoClient.getAccountBalance(accountNumber)).thenResolve({
+        amount: 1000,
+        currency: "COP",
+      });
+
+      const balance = await monoService.getBalance(accountNumber);
+      expect(balance).toStrictEqual({
+        balance: 1000,
+        currency: "COP",
+      });
+    });
+
+    it("should throw error if account number doesn't exist", async () => {
+      const accountNumber = "1234567890";
+      when(monoClient.getAccountBalance(accountNumber)).thenThrow(
+        new MonoClientException({
+          errorCode: MonoClientErrorCode.UNKNOWN,
+          message: "Failed to fetch data from Mono",
+        }),
+      );
+
+      expect(monoService.getBalance(accountNumber)).rejects.toThrowServiceException(ServiceErrorCode.UNKNOWN);
+    });
+  });
+
   describe("getTransactionByNobaTransactionID", () => {
     it("should throw error if no transaction exists", async () => {
       const nobaTransactionID = uuid();
@@ -402,7 +430,7 @@ describe("MonoServiceTests", () => {
           }),
         );
 
-        await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+        expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
           ServiceErrorCode.UNABLE_TO_PROCESS,
         );
       });
@@ -429,7 +457,7 @@ describe("MonoServiceTests", () => {
           type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
         };
 
-        await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+        expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
           ServiceErrorCode.SEMANTIC_VALIDATION,
         );
       });
@@ -456,7 +484,7 @@ describe("MonoServiceTests", () => {
           type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
         };
 
-        await expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+        expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
           ServiceErrorCode.SEMANTIC_VALIDATION,
           "COP",
         );
@@ -863,7 +891,7 @@ describe("MonoServiceTests", () => {
           monoRepo.getMonoTransactionByCollectionLinkID(monoTransaction.collectionLinkDepositDetails.collectionLinkID),
         ).thenResolve(null);
 
-        await expect(monoService.processWebhookEvent(webhookBody, webhookSignature)).rejects.toThrowError(
+        expect(monoService.processWebhookEvent(webhookBody, webhookSignature)).rejects.toThrowError(
           InternalServiceErrorException,
         );
 
@@ -932,7 +960,7 @@ describe("MonoServiceTests", () => {
         );
         when(monoRepo.getMonoTransactionByTransferID(monoTransaction.withdrawalDetails.transferID)).thenResolve(null);
 
-        await expect(monoService.processWebhookEvent(webhookBody, webhookSignature)).rejects.toThrowError(
+        expect(monoService.processWebhookEvent(webhookBody, webhookSignature)).rejects.toThrowError(
           InternalServiceErrorException,
         );
 
@@ -1006,7 +1034,7 @@ describe("MonoServiceTests", () => {
         );
         when(monoRepo.getMonoTransactionByTransferID(monoTransaction.withdrawalDetails.transferID)).thenResolve(null);
 
-        await expect(monoService.processWebhookEvent(webhookBody, webhookSignature)).rejects.toThrowError(
+        expect(monoService.processWebhookEvent(webhookBody, webhookSignature)).rejects.toThrowError(
           InternalServiceErrorException,
         );
 
@@ -1024,7 +1052,7 @@ describe("MonoServiceTests", () => {
       };
       const webhookSignature = "signature";
 
-      await expect(monoService.processWebhookEvent(webhookBody, webhookSignature)).rejects.toThrowError(
+      expect(monoService.processWebhookEvent(webhookBody, webhookSignature)).rejects.toThrowError(
         InternalServiceErrorException,
       );
 

@@ -5,6 +5,7 @@ import { MONO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { Logger } from "winston";
 import {
+  MonoClientAccountBalanceResponse,
   MonoClientCollectionLinkRequest,
   MonoClientCollectionLinkResponse,
   MonoTransferRequest,
@@ -16,7 +17,6 @@ import { fromString as convertToUUIDv4 } from "uuidv4";
 import { Utils } from "../../../core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
-import { MonoTransactionState } from "../domain/Mono";
 import { IClient } from "../../../core/domain/IClient";
 import { HealthCheckResponse, HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
 import { convertExternalTransactionStateToInternalState } from "./mono.utils";
@@ -77,6 +77,36 @@ export class MonoClient implements IClient {
       throw new MonoClientException({
         errorCode: MonoClientErrorCode.UNKNOWN,
         message: "Failed to fetch data from Mono",
+      });
+    }
+  }
+
+  async getAccountBalance(accountID: String): Promise<MonoClientAccountBalanceResponse> {
+    const url = `${this.baseUrl}/${this.apiVersion}/accounts/${accountID}/balances`;
+    const headers = {
+      ...this.getAuthorizationHeader(),
+    };
+
+    try {
+      const { data } = await axios.get(url, { headers });
+      const availableBalance = data["available"];
+      if (!availableBalance) {
+        throw new MonoClientException({
+          errorCode: MonoClientErrorCode.UNKNOWN,
+          message: "Failed to fetch data from Mono",
+        });
+      }
+
+      return {
+        // Mono returns balances without decimal and we want to be sure this math is kept at the client code level
+        amount: Utils.roundTo2DecimalNumber(availableBalance.amount / 100),
+        currency: availableBalance.currency,
+      };
+    } catch (e) {
+      this.logger.error(`Failed to fetch accountbalance from mono. ${JSON.stringify(e.response?.data)}`);
+      throw new MonoClientException({
+        errorCode: MonoClientErrorCode.UNKNOWN,
+        message: "Failed to fetch account balance from Mono",
       });
     }
   }

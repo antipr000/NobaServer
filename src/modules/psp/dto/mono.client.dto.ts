@@ -14,6 +14,11 @@ export type MonoClientCollectionLinkResponse = {
   collectionLinkID: string;
 };
 
+export type MonoClientAccountBalanceResponse = {
+  amount: number;
+  currency: string;
+};
+
 export type MonoTransferRequest = {
   transactionID: string;
   transactionRef: string;
