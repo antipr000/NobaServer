@@ -11,20 +11,20 @@ import { ConsumerMapper } from "./mappers/ConsumerMapper";
 import { EmployeeModule } from "../employee/employee.module";
 import { EmployerModule } from "../employer/employer.module";
 import { BubbleModule } from "../bubble/bubble.module";
+import { PlaidClient } from "../psp/plaid.client";
 
 @Module({
   imports: [
     InfraProvidersModule,
     CommonModule,
     NotificationsModule,
-    PspModule,
     ConsumerRepoModule,
     EmployeeModule,
     EmployerModule,
     BubbleModule,
   ],
   controllers: [ConsumerController],
-  providers: [ConsumerService, SanctionedCryptoWalletService, ConsumerMapper],
+  providers: [ConsumerService, SanctionedCryptoWalletService, ConsumerMapper, PlaidClient],
   exports: [ConsumerService, ConsumerMapper],
 })
 export class ConsumerModule {}

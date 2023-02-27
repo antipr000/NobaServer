@@ -8,9 +8,10 @@ import { AdminMapper } from "./mappers/AdminMapper";
 import { ConsumerModule } from "../consumer/consumer.module";
 import { TransactionModule } from "../transaction/transaction.module";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
+import { PspModule } from "../psp/psp.module";
 
 @Module({
-  imports: [ConfigModule, CommonModule, ConsumerModule, TransactionModule, InfraProvidersModule],
+  imports: [ConfigModule, CommonModule, ConsumerModule, TransactionModule, InfraProvidersModule, PspModule],
   controllers: [AdminController],
   providers: [
     AdminService,

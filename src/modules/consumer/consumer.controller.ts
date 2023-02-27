@@ -253,41 +253,41 @@ export class ConsumerController {
     };
   }
 
-  @Post("/paymentmethods")
-  @ApiOperation({ summary: "Adds a payment method for the logged-in consumer" })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    type: ConsumerDTO,
-    description: "Updated payment method record",
-  })
-  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
-  @ApiBadRequestResponse({ description: "Invalid payment method details" })
-  async addPaymentMethod(
-    @Body() requestBody: AddPaymentMethodDTO,
-    @AuthUser() consumer: Consumer,
-  ): Promise<ConsumerDTO> {
-    const requiredFields = [];
-    switch (requestBody.type) {
-      case PaymentType.CARD:
-        requiredFields.push("cardDetails");
-        break;
+  // @Post("/paymentmethods")
+  // @ApiOperation({ summary: "Adds a payment method for the logged-in consumer" })
+  // @ApiResponse({
+  //   status: HttpStatus.CREATED,
+  //   type: ConsumerDTO,
+  //   description: "Updated payment method record",
+  // })
+  // @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  // @ApiBadRequestResponse({ description: "Invalid payment method details" })
+  // async addPaymentMethod(
+  //   @Body() requestBody: AddPaymentMethodDTO,
+  //   @AuthUser() consumer: Consumer,
+  // ): Promise<ConsumerDTO> {
+  //   const requiredFields = [];
+  //   switch (requestBody.type) {
+  //     case PaymentType.CARD:
+  //       requiredFields.push("cardDetails");
+  //       break;
 
-      case PaymentType.ACH:
-        requiredFields.push("achDetails");
-        break;
+  //     case PaymentType.ACH:
+  //       requiredFields.push("achDetails");
+  //       break;
 
-      default:
-        throw new BadRequestException(`"type" should be one of "${PaymentType.CARD}" or "${PaymentType.ACH}".`);
-    }
-    requiredFields.forEach(field => {
-      if (requestBody[field] === undefined || requestBody[field] === null) {
-        throw new BadRequestException(`"${field}" is required field when "type" is "${requestBody.type}".`);
-      }
-    });
+  //     default:
+  //       throw new BadRequestException(`"type" should be one of "${PaymentType.CARD}" or "${PaymentType.ACH}".`);
+  //   }
+  //   requiredFields.forEach(field => {
+  //     if (requestBody[field] === undefined || requestBody[field] === null) {
+  //       throw new BadRequestException(`"${field}" is required field when "type" is "${requestBody.type}".`);
+  //     }
+  //   });
 
-    await this.consumerService.addPaymentMethod(consumer, requestBody);
-    return await this.mapToDTO(consumer);
-  }
+  //   await this.consumerService.addPaymentMethod(consumer, requestBody);
+  //   return await this.mapToDTO(consumer);
+  // }
 
   @Patch("/paymentmethods/:paymentToken")
   @ApiOperation({ summary: "Updates a payment method for logged-in consumer" })
@@ -312,22 +312,22 @@ export class ConsumerController {
     return this.mapToDTO(consumer);
   }
 
-  @Delete("/paymentmethods/:paymentToken")
-  @ApiOperation({ summary: "Deletes a payment method for the logged-in consumer" })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    type: ConsumerDTO,
-    description: "Consumer record with updated payment methods",
-  })
-  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
-  @ApiBadRequestResponse({ description: "Invalid payment method details" })
-  async deletePaymentMethod(
-    @Param("paymentToken") paymentToken: string,
-    @AuthUser() consumer: Consumer,
-  ): Promise<ConsumerDTO> {
-    await this.consumerService.removePaymentMethod(consumer, paymentToken);
-    return this.mapToDTO(consumer);
-  }
+  // @Delete("/paymentmethods/:paymentToken")
+  // @ApiOperation({ summary: "Deletes a payment method for the logged-in consumer" })
+  // @ApiResponse({
+  //   status: HttpStatus.OK,
+  //   type: ConsumerDTO,
+  //   description: "Consumer record with updated payment methods",
+  // })
+  // @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  // @ApiBadRequestResponse({ description: "Invalid payment method details" })
+  // async deletePaymentMethod(
+  //   @Param("paymentToken") paymentToken: string,
+  //   @AuthUser() consumer: Consumer,
+  // ): Promise<ConsumerDTO> {
+  //   await this.consumerService.removePaymentMethod(consumer, paymentToken);
+  //   return this.mapToDTO(consumer);
+  // }
 
   /* Example of how we can decrypt the SSN. This should only be available to the compliance team.
   @Get("/ssn")

@@ -1,7 +1,6 @@
 import { Injectable, Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { Consumer } from "../consumer/domain/Consumer";
 import { PaymentProvider } from "@prisma/client";
 import { AddPaymentMethodDTO } from "../consumer/dto/AddPaymentMethodDTO";
 import { PaymentMethod } from "../consumer/domain/PaymentMethod";
@@ -33,54 +32,10 @@ export class PaymentService {
   private readonly logger: Logger;
 
   @Inject()
-  private readonly notificationService: NotificationService;
-
-  @Inject()
-  private readonly creditCardService: CreditCardService;
-
-  @Inject()
   private readonly checkoutClient: CheckoutClient;
 
   @Inject()
-  private readonly plaidClient: PlaidClient;
-
-  @Inject()
   private readonly bankFactory: BankFactory;
-
-  /**
-   * Checks if consumer already has account with PSP. If not creates the account
-   * @param consumer Details of the consumer
-   * @returns [string, boolean]: Array of 2 values. The first element represents the customer id of the account created in PSP
-   * The second value represents whether account was already created or a new account has been created. Returns true if account
-   * existed else false
-   */
-  public async createPspConsumerAccount(consumer: Consumer): Promise<[string, boolean]> {
-    // const checkoutCustomerData = consumer.props.paymentProviderAccounts.filter(
-    //   paymentProviderAccount => paymentProviderAccount.providerID === PaymentProvider.CHECKOUT,
-    // );
-    const checkoutCustomerData = [];
-
-    if (checkoutCustomerData.length === 0) {
-      // new customer. Create customer id
-      return [await this.checkoutClient.createConsumer(consumer.props.email), false];
-    } else {
-      return [checkoutCustomerData[0].providerCustomerID, true];
-    }
-  }
-
-  public async addPaymentMethod(
-    consumer: Consumer,
-    paymentMethod: AddPaymentMethodDTO,
-  ): Promise<AddPaymentMethodResponse> {
-    throw new Error("Not implemented");
-  }
-
-  private async addCreditCardPaymentMethod(
-    consumer: Consumer,
-    paymentMethod: AddPaymentMethodDTO,
-  ): Promise<AddPaymentMethodResponse> {
-    throw new Error("Not implemented");
-  }
 
   /* TODO: Incompatible with new Noba product. Will need to be rewritten if we bring back the onramp functionality.
   public async requestCheckoutPayment(
@@ -216,120 +171,110 @@ export class PaymentService {
     await this.checkoutClient.removePaymentMethod(paymentToken);
   }
 
-  private async prepareAddPaymentMethodResponse(
-    consumer: Consumer,
-    newPaymentMethod: PaymentMethod,
-    hasCustomerIDSaved: boolean,
-    checkoutCustomerID: string,
-    checkoutResponse: CheckoutResponseData,
-  ): Promise<AddPaymentMethodResponse> {
-    throw new Error("Not implemented!");
-  }
+  // private async handlePaymentResponse({
+  //   consumer,
+  //   paymentResponse,
+  //   instrumentID,
+  //   cardNumber,
+  //   sessionID,
+  //   transactionID,
+  //   binData,
+  // }: HandlePaymentResponse): Promise<CheckoutResponseData> {
+  //   if (!paymentResponse) {
+  //     this.logger.error(`Empty paymentResponse in handlePaymentResponse() for transactionID ${transactionID}`);
+  //     throw new CardProcessingException(CardFailureExceptionText.ERROR);
+  //   }
+  //   const response: CheckoutResponseData = new CheckoutResponseData();
+  //   response.responseCode = paymentResponse.response_code;
+  //   response.responseSummary = paymentResponse.response_summary;
+  //   let sendNobaEmail = false;
 
-  private async handlePaymentResponse({
-    consumer,
-    paymentResponse,
-    instrumentID,
-    cardNumber,
-    sessionID,
-    transactionID,
-    binData,
-  }: HandlePaymentResponse): Promise<CheckoutResponseData> {
-    if (!paymentResponse) {
-      this.logger.error(`Empty paymentResponse in handlePaymentResponse() for transactionID ${transactionID}`);
-      throw new CardProcessingException(CardFailureExceptionText.ERROR);
-    }
-    const response: CheckoutResponseData = new CheckoutResponseData();
-    response.responseCode = paymentResponse.response_code;
-    response.responseSummary = paymentResponse.response_summary;
-    let sendNobaEmail = false;
+  //   try {
+  //     let creditCardBinData = await this.creditCardService.getBINDetails(binData.bin);
+  //     if (!creditCardBinData) creditCardBinData = binData;
 
-    try {
-      let creditCardBinData = await this.creditCardService.getBINDetails(binData.bin);
-      if (!creditCardBinData) creditCardBinData = binData;
+  //     if (!response.responseCode) {
+  //       this.logger.error(`No response code received validating card instrument ${instrumentID}`);
+  //       throw new CardProcessingException(CardFailureExceptionText.ERROR);
+  //     } else if (response.responseCode.startsWith("10")) {
+  //       // If reqeust payment was successful
+  //       response.paymentMethodStatus = PaymentMethodStatus.APPROVED;
+  //       if (cardNumber) {
+  //         creditCardBinData.supported = BINValidity.SUPPORTED;
+  //         await this.creditCardService.addOrUpdateBinData(creditCardBinData);
+  //       }
+  //     } else if (response.responseCode.startsWith("20")) {
+  //       // Soft decline, with several categories
+  //       if (
+  //         [...REASON_CODE_SOFT_DECLINE_CARD_ERROR, ...REASON_CODE_SOFT_DECLINE_BANK_ERROR].indexOf(
+  //           response.responseCode,
+  //         ) > -1
+  //       ) {
+  //         // Card error, possibly bad number, user should confirm details
+  //         throw new CardProcessingException(
+  //           CardFailureExceptionText.SOFT_DECLINE,
+  //           response.responseCode,
+  //           response.responseSummary,
+  //         );
+  //       } else if (REASON_CODE_SOFT_DECLINE_NO_CRYPTO.indexOf(response.responseCode) > -1) {
+  //         creditCardBinData.supported = BINValidity.NOT_SUPPORTED;
+  //         await this.creditCardService.addOrUpdateBinData(creditCardBinData);
+  //         throw new CardProcessingException(
+  //           CardFailureExceptionText.NO_CRYPTO,
+  //           response.responseCode,
+  //           response.responseSummary,
+  //         );
+  //       } else if (REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA.indexOf(response.responseCode) > -1) {
+  //         sendNobaEmail = true;
+  //         throw new CardProcessingException(
+  //           CardFailureExceptionText.SOFT_DECLINE,
+  //           response.responseCode,
+  //           response.responseSummary,
+  //         );
+  //       } else {
+  //         this.logger.error(`Unknown checkout response: ${response.responseCode} - ${response.responseSummary}`);
+  //         throw new CardProcessingException(
+  //           CardFailureExceptionText.SOFT_DECLINE,
+  //           response.responseCode,
+  //           response.responseSummary,
+  //         );
+  //       }
+  //     } else if (response.responseCode.startsWith("30")) {
+  //       // Hard decline
+  //       sendNobaEmail = true;
+  //       response.paymentMethodStatus = PaymentMethodStatus.REJECTED;
+  //     } else if (response.responseCode.startsWith("40") || paymentResponse.risk.flagged) {
+  //       // Risk
+  //       sendNobaEmail = true;
+  //       response.paymentMethodStatus = PaymentMethodStatus.REJECTED;
+  //     } else {
+  //       // Should never get here, but log if we do
+  //       this.logger.error(
+  //         `Unknown response code '${response.responseCode}' received when validating card instrument ${instrumentID}`,
+  //       );
+  //       throw new CardProcessingException(
+  //         CardFailureExceptionText.ERROR,
+  //         response.responseCode,
+  //         response.responseSummary,
+  //       );
+  //     }
+  //   } finally {
+  //     if (sendNobaEmail) {
+  //       await this.notificationService.sendNotification(NotificationEventType.SEND_HARD_DECLINE_EVENT, {
+  //         firstName: consumer.props.firstName,
+  //         lastName: consumer.props.lastName,
+  //         nobaUserID: consumer.props.id,
+  //         email: consumer.props.displayEmail,
+  //         sessionID: sessionID,
+  //         transactionID: transactionID,
+  //         paymentToken: instrumentID,
+  //         processor: PaymentProvider.CHECKOUT,
+  //         responseCode: response.responseCode,
+  //         responseSummary: response.responseCode,
+  //       });
+  //     }
+  //   }
 
-      if (!response.responseCode) {
-        this.logger.error(`No response code received validating card instrument ${instrumentID}`);
-        throw new CardProcessingException(CardFailureExceptionText.ERROR);
-      } else if (response.responseCode.startsWith("10")) {
-        // If reqeust payment was successful
-        response.paymentMethodStatus = PaymentMethodStatus.APPROVED;
-        if (cardNumber) {
-          creditCardBinData.supported = BINValidity.SUPPORTED;
-          await this.creditCardService.addOrUpdateBinData(creditCardBinData);
-        }
-      } else if (response.responseCode.startsWith("20")) {
-        // Soft decline, with several categories
-        if (
-          [...REASON_CODE_SOFT_DECLINE_CARD_ERROR, ...REASON_CODE_SOFT_DECLINE_BANK_ERROR].indexOf(
-            response.responseCode,
-          ) > -1
-        ) {
-          // Card error, possibly bad number, user should confirm details
-          throw new CardProcessingException(
-            CardFailureExceptionText.SOFT_DECLINE,
-            response.responseCode,
-            response.responseSummary,
-          );
-        } else if (REASON_CODE_SOFT_DECLINE_NO_CRYPTO.indexOf(response.responseCode) > -1) {
-          creditCardBinData.supported = BINValidity.NOT_SUPPORTED;
-          await this.creditCardService.addOrUpdateBinData(creditCardBinData);
-          throw new CardProcessingException(
-            CardFailureExceptionText.NO_CRYPTO,
-            response.responseCode,
-            response.responseSummary,
-          );
-        } else if (REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA.indexOf(response.responseCode) > -1) {
-          sendNobaEmail = true;
-          throw new CardProcessingException(
-            CardFailureExceptionText.SOFT_DECLINE,
-            response.responseCode,
-            response.responseSummary,
-          );
-        } else {
-          this.logger.error(`Unknown checkout response: ${response.responseCode} - ${response.responseSummary}`);
-          throw new CardProcessingException(
-            CardFailureExceptionText.SOFT_DECLINE,
-            response.responseCode,
-            response.responseSummary,
-          );
-        }
-      } else if (response.responseCode.startsWith("30")) {
-        // Hard decline
-        sendNobaEmail = true;
-        response.paymentMethodStatus = PaymentMethodStatus.REJECTED;
-      } else if (response.responseCode.startsWith("40") || paymentResponse.risk.flagged) {
-        // Risk
-        sendNobaEmail = true;
-        response.paymentMethodStatus = PaymentMethodStatus.REJECTED;
-      } else {
-        // Should never get here, but log if we do
-        this.logger.error(
-          `Unknown response code '${response.responseCode}' received when validating card instrument ${instrumentID}`,
-        );
-        throw new CardProcessingException(
-          CardFailureExceptionText.ERROR,
-          response.responseCode,
-          response.responseSummary,
-        );
-      }
-    } finally {
-      if (sendNobaEmail) {
-        await this.notificationService.sendNotification(NotificationEventType.SEND_HARD_DECLINE_EVENT, {
-          firstName: consumer.props.firstName,
-          lastName: consumer.props.lastName,
-          nobaUserID: consumer.props.id,
-          email: consumer.props.displayEmail,
-          sessionID: sessionID,
-          transactionID: transactionID,
-          paymentToken: instrumentID,
-          processor: PaymentProvider.CHECKOUT,
-          responseCode: response.responseCode,
-          responseSummary: response.responseCode,
-        });
-      }
-    }
-
-    return response;
-  }
+  //   return response;
+  // }
 }
