@@ -2,7 +2,7 @@ import { Inject } from "@nestjs/common";
 import { IBankImpl } from "./ibank.impl";
 import { DebitBankFactoryRequest, DebitBankFactoryResponse } from "../domain/BankFactoryTypes";
 import { CircleService } from "../circle.service";
-import { ServiceErrorCode, ServiceException } from "src/core/exception/service.exception";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { BalanceDTO } from "../dto/balance.dto";
 
 export class BankCircleImpl implements IBankImpl {
