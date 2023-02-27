@@ -3,13 +3,14 @@ import { IBankImpl } from "./ibank.impl";
 import { DebitBankFactoryRequest, DebitBankFactoryResponse } from "../domain/BankFactoryTypes";
 import { MonoCurrency, MonoTransactionType } from "../domain/Mono";
 import { MonoWorkflowService } from "../mono/mono.workflow.service";
+import { BalanceDTO } from "../dto/balance.dto";
 
 export class BankMonoImpl implements IBankImpl {
   @Inject()
   private readonly monoWorkflowService: MonoWorkflowService;
 
-  async getBalance(accountID: string): Promise<number> {
-    return 1;
+  async getBalance(accountID: string): Promise<BalanceDTO> {
+    return this.monoWorkflowService.getBalance(accountID);
   }
 
   async debit(request: DebitBankFactoryRequest): Promise<DebitBankFactoryResponse> {

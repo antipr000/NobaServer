@@ -25,6 +25,7 @@ import { HandlePaymentResponse } from "./domain/CardServiceTypes";
 import { PlaidClient } from "./plaid.client";
 import { BankFactory } from "./factory/bank.factory";
 import { BankName } from "./domain/BankFactoryTypes";
+import { BalanceDTO } from "./dto/balance.dto";
 
 @Injectable()
 export class PaymentService {
@@ -193,7 +194,7 @@ export class PaymentService {
     };
   }*/
 
-  async getBalance(bankName: BankName, accountID: string): Promise<number> {
+  async getBalance(bankName: BankName, accountID: string): Promise<BalanceDTO> {
     // make this an account balance object, wrap circle explicity
     const bankImpl = await this.bankFactory.getBankImplementation(bankName);
 

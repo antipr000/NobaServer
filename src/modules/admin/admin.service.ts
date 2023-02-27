@@ -85,22 +85,12 @@ export class AdminService {
   }
 
   async getBalanceForAccounts(accountType: ACCOUNT_BALANCE_TYPES, accountIDs: string[]): Promise<AccountBalanceDTO[]> {
-    // return all balances based on account type
-
-    const accountBalancesPromises: Promise<number>[] = [];
-    accountIDs.forEach(accountID => {
+    const accountBalancesPromises: Promise<AccountBalanceDTO>[] = accountIDs.map(async accountID => {
       const bankName = this.adminPSPMapper.accountTypeToBankName(accountType);
-      accountBalancesPromises.push(this.paymentService.getBalance(bankName, accountID));
+      const accountBalance = await this.paymentService.getBalance(bankName, accountID);
+      return await this.adminPSPMapper.balanceDTOToAccountBalanceDTO(accountID, accountBalance);
     });
 
-    const accountBalances = await Promise.all(accountBalancesPromises);
-
-    return accountBalances.map(balance => {
-      return {
-        accountID: accountIDs[index],
-        currency: 
-        balance: balance,
-      };
-    });
+    return Promise.all(accountBalancesPromises);
   }
 }
