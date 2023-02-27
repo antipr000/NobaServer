@@ -13,6 +13,11 @@ const Permissions = {
   updateConsumerData: "UPDATE_CONSUMER_DATA",
 };
 
+export enum ACCOUNT_BALANCE_TYPES {
+  CIRCLE = "CIRCLE",
+  MONO = "MONO",
+}
+
 export enum NOBA_ADMIN_ROLE_TYPES {
   BASIC = "BASIC",
   INTERMEDIATE = "INTERMEDIATE",

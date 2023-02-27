@@ -45,6 +45,8 @@ import { AddNobaAdminDTO } from "./dto/AddNobaAdminDTO";
 import { ExchangeRateService } from "../common/exchangerate.service";
 import { ExchangeRateDTO } from "../common/dto/ExchangeRateDTO";
 import { Role } from "../auth/role.enum";
+import { AccountBalanceFiltersDTO } from "./dto/AccountBalanceFiltersDTO";
+import { AccountBalanceDTO } from "./dto/AccountBalanceDTO";
 
 @Roles(Role.NOBA_ADMIN)
 @Controller("v1/admins")
@@ -224,6 +226,19 @@ export class AdminController {
     const paymentMethods = await this.consumerService.getAllPaymentMethodsForConsumer(consumerID);
     const cryptoWallets = await this.consumerService.getAllConsumerWallets(consumerID);
     return this.consumerMapper.toDTO(updatedConsumerData, paymentMethods, cryptoWallets);
+  }
+
+  @Get("/balances")
+  @ApiOperation({ summary: "Gets the balances of accounts based on providers" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Balances of accounts" })
+  @ApiForbiddenResponse({
+    description: "User forbidden from getting account balances",
+  })
+  async getAccountBalances(
+    @Request() request,
+    @Query() filters: AccountBalanceFiltersDTO,
+  ): Promise<AccountBalanceDTO[]> {
+    return null;
   }
 
   @Post("/exchangerates")

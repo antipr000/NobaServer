@@ -73,4 +73,10 @@ export class AdminService {
   async getAdminById(id: string): Promise<Admin> {
     return this.adminRepo.getNobaAdminById(id);
   }
+
+  async getBalanceForAccounts(
+    
+  ): Promise<any> {
+    return this.adminRepo.getBalanceForAccounts();
+  }
 }
