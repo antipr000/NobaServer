@@ -12,7 +12,7 @@ export function getMockIdvProviderIntegrationWithDefaults(): IDVProvider {
   );
   when(mockIdvProvider.getDocumentVerificationResult(anyString())).thenReject(new Error("Method not implemented"));
 
-  when(mockIdvProvider.postConsumerFeedback(anyString(), anything())).thenResolve();
+  when(mockIdvProvider.postConsumerFeedback(anyString(), anyString(), anything())).thenResolve();
   when(
     mockIdvProvider.postTransactionFeedback(anyString(), anyString(), anyString(), anyString(), anyString()),
   ).thenResolve();

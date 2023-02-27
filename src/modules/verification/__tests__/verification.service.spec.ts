@@ -171,7 +171,9 @@ describe("VerificationService", () => {
       );
 
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
-      when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
+      when(
+        idvProvider.postConsumerFeedback(sessionKey, consumer.props.id, deepEqual(consumerVerificationResult)),
+      ).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
       expect(result).toStrictEqual(consumerVerificationResult);
@@ -220,7 +222,9 @@ describe("VerificationService", () => {
       );
 
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
-      when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
+      when(
+        idvProvider.postConsumerFeedback(sessionKey, consumer.props.id, deepEqual(consumerVerificationResult)),
+      ).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
       expect(result).toStrictEqual(consumerVerificationResult);
@@ -271,7 +275,9 @@ describe("VerificationService", () => {
       );
 
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
-      when(idvProvider.postConsumerFeedback(sessionKey, deepEqual(consumerVerificationResult))).thenResolve();
+      when(
+        idvProvider.postConsumerFeedback(sessionKey, consumer.props.id, deepEqual(consumerVerificationResult)),
+      ).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
       expect(result).toStrictEqual(consumerVerificationResult);

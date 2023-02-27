@@ -644,10 +644,13 @@ export class Sardine implements IDVProvider {
     };
   }
 
-  async postConsumerFeedback(sessionKey: string, result: ConsumerVerificationResult) {
+  async postConsumerFeedback(sessionKey: string, consumerID: string, result: ConsumerVerificationResult) {
     try {
       const payload: FeedbackRequest = {
         sessionKey: sessionKey,
+        customer: {
+          id: consumerID,
+        },
         feedback: {
           id: Utils.generateUUID(),
           type: FeedbackType.ONBOARDING,

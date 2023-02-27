@@ -42,7 +42,7 @@ export interface IDVProvider extends IClient {
 
   processKycVerificationWebhookResult(resultData: CaseNotificationWebhookRequest): ConsumerVerificationResult;
 
-  postConsumerFeedback(sessionKey: string, result: ConsumerVerificationResult): Promise<void>;
+  postConsumerFeedback(sessionKey: string, consumerID: string, result: ConsumerVerificationResult): Promise<void>;
 
   postDocumentFeedback(sessionKey: string, result: DocumentVerificationResult): Promise<void>;
 

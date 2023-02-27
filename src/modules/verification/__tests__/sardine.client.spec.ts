@@ -1702,7 +1702,7 @@ describe("SardineTests", () => {
         status: KYCStatus.APPROVED,
       };
 
-      sardine.postConsumerFeedback("fake-session", consumerVerificationResult);
+      sardine.postConsumerFeedback("fake-session", "consumer-id", consumerVerificationResult);
       expect(mockAxios.post).toHaveBeenCalled();
     });
 
@@ -1711,7 +1711,7 @@ describe("SardineTests", () => {
         status: KYCStatus.APPROVED,
       };
 
-      const responsePromise = sardine.postConsumerFeedback("fake-session", consumerVerificationResult);
+      const responsePromise = sardine.postConsumerFeedback("fake-session", "consumer-id", consumerVerificationResult);
       expect(mockAxios.post).toHaveBeenCalled();
       mockAxios.mockError({
         response: {
@@ -1729,7 +1729,7 @@ describe("SardineTests", () => {
         status: KYCStatus.APPROVED,
       };
 
-      const responsePromise = sardine.postConsumerFeedback("fake-session", consumerVerificationResult);
+      const responsePromise = sardine.postConsumerFeedback("fake-session", "consumer-id", consumerVerificationResult);
       expect(mockAxios.post).toHaveBeenCalled();
       mockAxios.mockError({
         code: 400,

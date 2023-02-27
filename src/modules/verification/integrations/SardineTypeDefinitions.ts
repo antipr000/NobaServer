@@ -271,6 +271,7 @@ export type Feedback = {
 
 export type FeedbackRequest = {
   sessionKey: string;
+  customer?: Customer;
   feedback: Feedback;
 };
 

@@ -79,7 +79,7 @@ export class VerificationService {
     const updatedConsumer = await this.consumerService.updateConsumer(verifiedConsumerData);
 
     if (result.status === KYCStatus.APPROVED) {
-      await this.idvProvider.postConsumerFeedback(sessionKey, result);
+      await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, result);
       await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, {
         firstName: updatedConsumer.props.firstName,
         lastName: updatedConsumer.props.lastName,
@@ -87,7 +87,7 @@ export class VerificationService {
         email: updatedConsumer.props.displayEmail,
       });
     } else if (result.status === KYCStatus.REJECTED) {
-      await this.idvProvider.postConsumerFeedback(sessionKey, result);
+      await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, result);
       await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_DENIED_EVENT, {
         firstName: updatedConsumer.props.firstName,
         lastName: updatedConsumer.props.lastName,
@@ -121,7 +121,7 @@ export class VerificationService {
 
       await this.consumerService.updateConsumer(newConsumerData);
 
-      await this.idvProvider.postConsumerFeedback(requestBody.data.case.sessionKey, result);
+      await this.idvProvider.postConsumerFeedback(requestBody.data.case.sessionKey, consumerID, result);
 
       if (result.status === KYCStatus.APPROVED) {
         await this.notificationService.sendNotification(
