@@ -4,11 +4,15 @@ import { Logger } from "winston";
 import { IAdminRepo } from "./repos/transactions/sql.admin.repo";
 import { TransactionStatsDTO } from "./dto/TransactionStats";
 import { ACCOUNT_BALANCE_TYPES, Admin, AllRoles, isValidRole } from "./domain/Admin";
+import { PaymentService } from "../psp/payment.service";
 
 @Injectable()
 export class AdminService {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
+
+  @Inject()
+  private readonly paymentService: PaymentService;
 
   @Inject("AdminTransactionRepo")
   private readonly adminRepo: IAdminRepo;

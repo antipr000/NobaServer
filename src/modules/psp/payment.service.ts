@@ -23,6 +23,8 @@ import { NotificationEventType } from "../notifications/domain/NotificationTypes
 import { CheckoutClient } from "./checkout.client";
 import { HandlePaymentResponse } from "./domain/CardServiceTypes";
 import { PlaidClient } from "./plaid.client";
+import { BankFactory } from "./factory/bank.factory";
+import { BankName } from "./domain/BankFactoryTypes";
 
 @Injectable()
 export class PaymentService {
@@ -40,6 +42,9 @@ export class PaymentService {
 
   @Inject()
   private readonly plaidClient: PlaidClient;
+
+  @Inject()
+  private readonly bankFactory: BankFactory;
 
   /**
    * Checks if consumer already has account with PSP. If not creates the account
@@ -187,6 +192,13 @@ export class PaymentService {
       responseCode: response.response_code,
     };
   }*/
+
+  async getBalance(bankName: BankName, accountID: string): Promise<number> {
+    const bankImpl = await this.bankFactory.getBankImplementation(bankName);
+
+    const balance = await bankImpl.getBalance(accountID);
+    return balance;
+  }
 
   async getFiatPaymentStatus(paymentId: string): Promise<FiatTransactionStatus> {
     const status = await this.checkoutClient.getPaymentDetails(paymentId);

@@ -1,5 +1,6 @@
 export enum BankName {
   MONO = "MONO",
+  CIRCLE = "CIRCLE",
 }
 export type DebitBankFactoryRequest = {
   transactionID: string;

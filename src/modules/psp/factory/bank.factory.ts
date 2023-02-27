@@ -12,9 +12,23 @@ export class BankFactory {
 
   private readonly bankCircleImpl: BankCircleImpl;
 
+  getBankImplementation(bankName: BankName): IBankImpl {
+    switch (bankName) {
+      case BankName.MONO:
+        return this.bankMonoImpl;
+      case BankName.CIRCLE:
+        return this.bankCircleImpl;
+      default:
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: "No supported bank",
+        });
+    }
+  }
+
   getBankImplementationByCurrency(currency: string): IBankImpl {
     switch (currency) {
-      case "USD": // Should we be calling other
+      case "USD":
         return this.bankCircleImpl;
       case "COP":
         return this.bankMonoImpl;
