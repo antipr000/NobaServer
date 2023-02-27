@@ -69,11 +69,7 @@ export class ConsumerController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  constructor(
-    private readonly consumerService: ConsumerService,
-    private readonly plaidClient: PlaidClient,
-    private readonly consumerMapper: ConsumerMapper,
-  ) {}
+  constructor(private readonly consumerService: ConsumerService, private readonly consumerMapper: ConsumerMapper) {}
 
   @Get("/")
   @ApiOperation({ summary: "Gets details of logged-in consumer" })
@@ -239,19 +235,19 @@ export class ConsumerController {
     return {};
   }
 
-  @Get("/paymentmethods/plaid/token")
-  @ApiOperation({ summary: "Generates a token to connect to Plaid UI" })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    type: PlaidTokenDTO,
-    description: "Plaid token",
-  })
-  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
-  async generatePlaidToken(@AuthUser() consumer: Consumer): Promise<PlaidTokenDTO> {
-    return {
-      token: await this.plaidClient.generateLinkToken({ userID: consumer.props.id }),
-    };
-  }
+  // @Get("/paymentmethods/plaid/token")
+  // @ApiOperation({ summary: "Generates a token to connect to Plaid UI" })
+  // @ApiResponse({
+  //   status: HttpStatus.OK,
+  //   type: PlaidTokenDTO,
+  //   description: "Plaid token",
+  // })
+  // @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  // async generatePlaidToken(@AuthUser() consumer: Consumer): Promise<PlaidTokenDTO> {
+  //   return {
+  //     token: await this.plaidClient.generateLinkToken({ userID: consumer.props.id }),
+  //   };
+  // }
 
   // @Post("/paymentmethods")
   // @ApiOperation({ summary: "Adds a payment method for the logged-in consumer" })
