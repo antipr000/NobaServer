@@ -238,7 +238,7 @@ export class AdminController {
     @Request() request,
     @Query() filters: AccountBalanceFiltersDTO,
   ): Promise<AccountBalanceDTO[]> {
-    return null;
+    return this.adminService.getBalanceForAccounts(filters.accountBalanceTypes, filters.accountIDs);
   }
 
   @Post("/exchangerates")

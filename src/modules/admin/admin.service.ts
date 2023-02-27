@@ -3,7 +3,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { IAdminRepo } from "./repos/transactions/sql.admin.repo";
 import { TransactionStatsDTO } from "./dto/TransactionStats";
-import { Admin, AllRoles, isValidRole } from "./domain/Admin";
+import { ACCOUNT_BALANCE_TYPES, Admin, AllRoles, isValidRole } from "./domain/Admin";
 
 @Injectable()
 export class AdminService {
@@ -74,9 +74,7 @@ export class AdminService {
     return this.adminRepo.getNobaAdminById(id);
   }
 
-  async getBalanceForAccounts(
-    
-  ): Promise<any> {
+  async getBalanceForAccounts(accountType: ACCOUNT_BALANCE_TYPES, accountIDs: string[]): Promise<any> {
     return this.adminRepo.getBalanceForAccounts();
   }
 }
