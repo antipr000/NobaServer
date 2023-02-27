@@ -8,6 +8,10 @@ export class BankMonoImpl implements IBankImpl {
   @Inject()
   private readonly monoWorkflowService: MonoWorkflowService;
 
+  async getBalance(accountID: string): Promise<number> {
+    return 1;
+  }
+
   async debit(request: DebitBankFactoryRequest): Promise<DebitBankFactoryResponse> {
     const withdrawal = await this.monoWorkflowService.createMonoTransaction({
       type: MonoTransactionType.WITHDRAWAL,
