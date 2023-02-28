@@ -22,3 +22,20 @@ export class EmployerDTO {
   @ApiPropertyOptional()
   maxAllocationPercent: number;
 }
+
+export class PayrollData {
+  @ApiProperty()
+  payrollDate: string;
+
+  @ApiProperty()
+  primaryContactEmail: string;
+
+  @ApiProperty()
+  secondaryContactEmail: string[];
+
+  @ApiProperty()
+  primaryContactLanguage: string;
+
+  @ApiProperty()
+  payrollAccountNumber: string;
+}
