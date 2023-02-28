@@ -130,7 +130,7 @@ export class CircleClient implements IClient {
     try {
       const transferResponse = await this.circleApi.transfers.createTransfer(
         {
-          idempotencyKey: request.idempotencyKey,
+          idempotencyKey: convertToUUIDv4(request.idempotencyKey),
           source: { id: request.sourceWalletID, type: "wallet" },
           destination: { id: request.destinationWalletID, type: "wallet" },
           amount: { amount: Utils.roundTo2DecimalString(request.amount), currency: "USD" },
