@@ -238,7 +238,12 @@ export class AdminController {
     @Request() request,
     @Query() filters: AccountBalanceFiltersDTO,
   ): Promise<AccountBalanceDTO[]> {
-    return this.adminService.getBalanceForAccounts(filters.accountBalanceTypes, filters.accountIDs);
+    const authenticatedUser: Admin = request.user.entity;
+    if (!(authenticatedUser instanceof Admin)) {
+      throw new ForbiddenException("User is forbidden from calling this API.");
+    }
+
+    return this.adminService.getBalanceForAccounts(filters.accountBalanceType, filters.accountIDs);
   }
 
   @Post("/exchangerates")

@@ -6,7 +6,7 @@ export class AccountBalanceFiltersDTO {
     enum: Object.values(ACCOUNT_BALANCE_TYPES),
     description: "filter for a particular account type for balance",
   })
-  accountBalanceTypes: ACCOUNT_BALANCE_TYPES;
+  accountBalanceType: ACCOUNT_BALANCE_TYPES;
 
   @ApiProperty({ description: "filter for a list of account IDs" })
   accountIDs: string[];

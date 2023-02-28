@@ -3,7 +3,7 @@ import { anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { AdminService } from "../admin.service";
-import { Admin, NOBA_ADMIN_ROLE_TYPES } from "../domain/Admin";
+import { ACCOUNT_BALANCE_TYPES, Admin, NOBA_ADMIN_ROLE_TYPES } from "../domain/Admin";
 import { AdminController } from "../admin.controller";
 import { AdminMapper } from "../mappers/AdminMapper";
 import { NobaAdminDTO } from "../dto/NobaAdminDTO";
@@ -937,6 +937,28 @@ describe("AdminController", () => {
 
       const [firstExchangeRate] = capture(mockExchangeRateService.createExchangeRate).first();
       expect(firstExchangeRate).toEqual(newExchangeRate);
+    });
+  });
+
+  describe("getAccountBalances", () => {
+    it("Regular user (non-admin) should not be able view balances", async () => {
+      const authenticatedConsumer: Consumer = Consumer.createConsumer({
+        id: "XXXXXXXXXX",
+        email: LOGGED_IN_ADMIN_EMAIL,
+      });
+
+      expect(
+        async () =>
+          await adminController.getAccountBalances(
+            {
+              user: { entity: authenticatedConsumer },
+            },
+            {
+              accountBalanceType: ACCOUNT_BALANCE_TYPES.CIRCLE,
+              accountIDs: ["test-account-id"],
+            },
+          ),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 });
