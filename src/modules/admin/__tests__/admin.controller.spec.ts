@@ -941,6 +941,47 @@ describe("AdminController", () => {
   });
 
   describe("getAccountBalances", () => {
+    it("Should return expected account balances", async () => {
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: "admin-123456789",
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const expectedAccountBalances = [
+        {
+          accountID: "test-account-id",
+          currency: "USD",
+          balance: 10.99,
+        },
+        {
+          accountID: "test-account-id-2",
+          currency: "USD",
+
+          balance: 2000.22,
+        },
+      ];
+
+      when(
+        mockAdminService.getBalanceForAccounts(
+          ACCOUNT_BALANCE_TYPES.CIRCLE,
+          deepEqual(["test-account-id", "test-account-id-2"]),
+        ),
+      ).thenResolve(expectedAccountBalances);
+
+      const accountBalances = await adminController.getAccountBalances(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        {
+          accountBalanceType: ACCOUNT_BALANCE_TYPES.CIRCLE,
+          accountIDs: ["test-account-id", "test-account-id-2"],
+        },
+      );
+
+      expect(accountBalances).toEqual(expectedAccountBalances);
+    });
+
     it("Regular user (non-admin) should not be able view balances", async () => {
       const authenticatedConsumer: Consumer = Consumer.createConsumer({
         id: "XXXXXXXXXX",

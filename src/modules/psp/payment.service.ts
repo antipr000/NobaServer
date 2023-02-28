@@ -137,19 +137,4 @@ export class PaymentService {
     const balance = await balanceProvider.getBalance(accountID);
     return balance;
   }
-
-  async getFiatPaymentStatus(paymentId: string): Promise<FiatTransactionStatus> {
-    const status = await this.checkoutClient.getPaymentDetails(paymentId);
-    console.log(status);
-    if (status === "Authorized" || status === "Paid") return FiatTransactionStatus.AUTHORIZED;
-    if (status === "Captured" || status === "Partially Captured") return FiatTransactionStatus.CAPTURED;
-    if (status === "Pending") return FiatTransactionStatus.PENDING;
-
-    this.logger.error(`Payment ${paymentId} failed fiat processing with status ${status}`);
-    return FiatTransactionStatus.FAILED;
-  }
-
-  async removePaymentMethod(paymentToken: string): Promise<void> {
-    await this.checkoutClient.removePaymentMethod(paymentToken);
-  }
 }
