@@ -47,8 +47,8 @@ import { FeeType } from "../domain/TransactionFee";
 import { ConsumerVerificationResult } from "../../../modules/verification/domain/VerificationResult";
 import { TransactionVerification } from "../../../modules/verification/domain/TransactionVerification";
 import { SeverityLevel } from "../../../core/exception/base.exception";
-import { getMockMonoWorkflowServiceWithDefaults } from "src/modules/psp/mono/mocks/mock.mono.workflow.service";
-import { MonoWorkflowService } from "src/modules/psp/mono/mono.workflow.service";
+import { getMockMonoWorkflowServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.workflow.service";
+import { MonoWorkflowService } from "../../../modules/psp/mono/mono.workflow.service";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -111,6 +111,10 @@ describe("TransactionServiceTests", () => {
         {
           provide: BankFactory,
           useFactory: () => instance(bankFactory),
+        },
+        {
+          provide: MonoWorkflowService,
+          useFactory: () => instance(monoWorkflowService),
         },
         {
           provide: WITHDRAWAL_DETAILS_REPO_PROVIDER,
@@ -777,12 +781,12 @@ describe("TransactionServiceTests", () => {
         state: "SUCCESS",
         withdrawalID: "fake-withdrawal-id",
       };
-      when(returnedBankService.debit(anything())).thenResolve(factoryResponse);
+      when(monoWorkflowService.debit(anything())).thenResolve(factoryResponse);
 
       const response = await transactionService.debitFromBank(transaction.id);
 
       expect(response).toStrictEqual(factoryResponse);
-      const [debitRequest] = capture(returnedBankService.debit).last();
+      const [debitRequest] = capture(monoWorkflowService.debit).last();
       expect(debitRequest).toEqual({
         amount: 111,
         currency: "USD",
