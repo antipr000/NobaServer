@@ -41,7 +41,6 @@ import { ConsumerDTO } from "./dto/ConsumerDTO";
 import { ConsumerHandleDTO } from "./dto/ConsumerHandleDTO";
 import { EmailVerificationOtpRequest, UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
 import { PhoneVerificationOtpRequest, UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
-import { PlaidTokenDTO } from "./dto/PlaidTokenDTO";
 import { UpdateConsumerRequestDTO } from "./dto/UpdateConsumerRequestDTO";
 import { UpdatePaymentMethodDTO } from "./dto/UpdatePaymentMethodDTO";
 import { ConsumerMapper } from "./mappers/ConsumerMapper";
