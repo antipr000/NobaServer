@@ -29,7 +29,6 @@ import { InputWithdrawalDetails, WithdrawalDetails } from "./domain/WithdrawalDe
 import { TransactionFlags } from "./domain/TransactionFlags";
 import { DebitBankResponse } from "./domain/Transaction";
 import { BankFactory } from "../psp/factory/bank.factory";
-import { BankName } from "../psp/domain/BankFactoryTypes";
 import { Utils } from "../../core/utils/Utils";
 import { ProcessedTransactionDTO } from "./dto/ProcessedTransactionDTO";
 

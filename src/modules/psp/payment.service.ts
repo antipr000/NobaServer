@@ -1,30 +1,12 @@
 import { Injectable, Inject } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { PaymentProvider } from "@prisma/client";
-import { AddPaymentMethodDTO } from "../consumer/dto/AddPaymentMethodDTO";
-import { PaymentMethod } from "../consumer/domain/PaymentMethod";
-import { PaymentMethodStatus } from "@prisma/client";
-import {
-  REASON_CODE_SOFT_DECLINE_BANK_ERROR,
-  REASON_CODE_SOFT_DECLINE_BANK_ERROR_ALERT_NOBA,
-  REASON_CODE_SOFT_DECLINE_CARD_ERROR,
-  REASON_CODE_SOFT_DECLINE_NO_CRYPTO,
-} from "../transactions/domain/CheckoutConstants";
-import { CardFailureExceptionText, CardProcessingException } from "../consumer/CardProcessingException";
-import { BINValidity } from "../common/dto/CreditCardDTO";
-import { CreditCardService } from "../common/creditcard.service";
-import { CheckoutResponseData } from "../common/domain/CheckoutResponseData";
-import { AddPaymentMethodResponse } from "./domain/AddPaymentMethodResponse";
 import { FiatTransactionStatus } from "../consumer/domain/Types";
-import { NotificationService } from "../notifications/notification.service";
-import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { CheckoutClient } from "./checkout.client";
-import { HandlePaymentResponse } from "./domain/CardServiceTypes";
-import { PlaidClient } from "./plaid.client";
 import { BankFactory } from "./factory/bank.factory";
 import { BankName } from "./domain/BankFactoryTypes";
 import { BalanceDTO } from "./dto/balance.dto";
+import { IBalanceProvider } from "./factory/ibalanceprovider";
 
 @Injectable()
 export class PaymentService {
@@ -150,9 +132,9 @@ export class PaymentService {
   }*/
 
   async getBalance(bankName: BankName, accountID: string): Promise<BalanceDTO> {
-    const bankImpl = await this.bankFactory.getBankImplementation(bankName);
+    const balanceProvider: IBalanceProvider = this.bankFactory.getBankImplementation(bankName);
 
-    const balance = await bankImpl.getBalance(accountID);
+    const balance = await balanceProvider.getBalance(accountID);
     return balance;
   }
 
