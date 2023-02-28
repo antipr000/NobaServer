@@ -43,12 +43,12 @@ import { getMockWalletWithdrawalImplWithDefaults } from "../mocks/mock.wallet.wi
 import { getMockWalletDepositImplWithDefaults } from "../mocks/mock.wallet.deposit.impl";
 import { BankFactory } from "../../../modules/psp/factory/bank.factory";
 import { getMockBankFactoryWithDefaults } from "../../../modules/psp/mocks/mock.bank.factory";
-import { BankMonoImpl } from "../../../modules/psp/factory/bank.mono.impl";
-import { getMockBankMonoImplWithDefaults } from "../../../modules/psp/mocks/mock.bank.mono.impl";
 import { FeeType } from "../domain/TransactionFee";
 import { ConsumerVerificationResult } from "../../../modules/verification/domain/VerificationResult";
 import { TransactionVerification } from "../../../modules/verification/domain/TransactionVerification";
 import { SeverityLevel } from "../../../core/exception/base.exception";
+import { getMockMonoWorkflowServiceWithDefaults } from "src/modules/psp/mono/mocks/mock.mono.workflow.service";
+import { MonoWorkflowService } from "src/modules/psp/mono/mono.workflow.service";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -64,7 +64,7 @@ describe("TransactionServiceTests", () => {
   let walletWithdrawalImpl: WalletWithdrawalImpl;
   let walletDepositImpl: WalletDepositImpl;
   let bankFactory: BankFactory;
-  let bankMonoImpl: BankMonoImpl;
+  let monoWorkflowService: MonoWorkflowService;
   let withdrawalDetailsRepo: IWithdrawalDetailsRepo;
 
   beforeEach(async () => {
@@ -77,7 +77,7 @@ describe("TransactionServiceTests", () => {
     walletWithdrawalImpl = getMockWalletWithdrawalImplWithDefaults();
     walletDepositImpl = getMockWalletDepositImplWithDefaults();
     bankFactory = getMockBankFactoryWithDefaults();
-    bankMonoImpl = getMockBankMonoImplWithDefaults();
+    monoWorkflowService = getMockMonoWorkflowServiceWithDefaults();
     withdrawalDetailsRepo = getMockWithdrawalDetailsRepoWithDefaults();
 
     const appConfigurations = {
@@ -770,19 +770,19 @@ describe("TransactionServiceTests", () => {
       };
       when(withdrawalDetailsRepo.getWithdrawalDetailsByTransactionID(transaction.id)).thenResolve(withdrawalDetails);
 
-      const returnedBankMonoImpl = instance(bankMonoImpl);
-      when(bankFactory.getBankImplementationByCurrency(transaction.creditCurrency)).thenReturn(returnedBankMonoImpl);
+      const returnedBankService = instance(monoWorkflowService);
+      when(bankFactory.getBankImplementationByCurrency(transaction.creditCurrency)).thenReturn(returnedBankService);
 
       const factoryResponse = {
         state: "SUCCESS",
         withdrawalID: "fake-withdrawal-id",
       };
-      when(bankMonoImpl.debit(anything())).thenResolve(factoryResponse);
+      when(returnedBankService.debit(anything())).thenResolve(factoryResponse);
 
       const response = await transactionService.debitFromBank(transaction.id);
 
       expect(response).toStrictEqual(factoryResponse);
-      const [debitRequest] = capture(bankMonoImpl.debit).last();
+      const [debitRequest] = capture(returnedBankService.debit).last();
       expect(debitRequest).toEqual({
         amount: 111,
         currency: "USD",

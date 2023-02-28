@@ -4,11 +4,13 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { instance } from "ts-mockito";
 import { BankFactory } from "../factory/bank.factory";
-import { getMockBankMonoImplWithDefaults } from "../mocks/mock.bank.mono.impl";
 import { BankName } from "../domain/BankFactoryTypes";
 import { ServiceException } from "../../../core/exception/service.exception";
 import { MonoWorkflowService } from "../mono/mono.workflow.service";
 import { getMockMonoWorkflowServiceWithDefaults } from "../mono/mocks/mock.mono.workflow.service";
+import { CircleService } from "../circle.service";
+import { getMockCircleServiceWithDefaults } from "../mocks/mock.circle.service";
+import { IBank } from "../factory/ibank";
 
 describe("BankFactory Tests", () => {
   jest.setTimeout(20000);
@@ -16,9 +18,11 @@ describe("BankFactory Tests", () => {
   let app: TestingModule;
   let bankFactory: BankFactory;
   let monoWorkflowService: MonoWorkflowService;
+  let circleService: CircleService;
 
   beforeAll(async () => {
     monoWorkflowService = instance(getMockMonoWorkflowServiceWithDefaults());
+    circleService = instance(getMockCircleServiceWithDefaults());
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
@@ -30,6 +34,10 @@ describe("BankFactory Tests", () => {
         {
           provide: MonoWorkflowService,
           useFactory: () => monoWorkflowService,
+        },
+        {
+          provide: CircleService,
+          useFactory: () => circleService,
         },
         BankFactory,
       ],
@@ -43,9 +51,15 @@ describe("BankFactory Tests", () => {
   });
 
   describe("getBankImplementationByCurrency", () => {
-    it("should return BankMonoImpl when currency is COP", () => {
-      const workflow = bankFactory.getBankImplementationByCurrency("COP");
-      expect(workflow).toBe(monoWorkflowService);
+    it("should return MonoWorkflowService when currency is COP", () => {
+      // const bank = ;
+      const bankService: IBank = monoWorkflowService;
+      expect(bankFactory.getBankImplementationByCurrency("COP")).toBeInstanceOf<IBank>(bankService);
+    });
+
+    it("should return CircleService when currency is USD", () => {
+      const bank = bankFactory.getBankImplementationByCurrency("USD");
+      expect(bank).toBe(circleService);
     });
   });
 });
