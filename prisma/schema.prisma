@@ -136,7 +136,7 @@ model Payroll {
   exchangeRate        Float?
   debitCurrency       String
   creditCurrency      String
-  status              String? // As first state is invoiced, do we create this entry when invoice is created?
+  status              String // As first state is invoiced, do we create this entry when invoice is created?
   payrollDisbursement PayrollDisbursement[]
 }
 

@@ -3,6 +3,7 @@ import { Payroll as PrismaPayrollModel } from "@prisma/client";
 import { KeysRequired } from "../../../../modules/common/domain/Types";
 
 export enum PayrollStatus {
+  CREATED = "Created",
   INVOICED = "Invoiced",
   INVESTIGATION = "Investigation",
   FUNDED = "Funded",
@@ -24,7 +25,7 @@ export class Payroll {
   exchangeRate?: number;
   debitCurrency: string;
   creditCurrency: string;
-  status?: PayrollStatus;
+  status: PayrollStatus;
 }
 
 export class PayrollCreateRequest {
@@ -92,7 +93,7 @@ export const validatePayroll = (payroll: Payroll) => {
     debitCurrency: Joi.string().required(),
     creditCurrency: Joi.string().required(),
     status: Joi.string()
-      .optional()
+      .required()
       .valid(...Object.values(PayrollStatus)),
   };
 
@@ -117,7 +118,7 @@ export const convertToDomainPayroll = (payroll: PrismaPayrollModel): Payroll => 
     ...(payroll.exchangeRate && { exchangeRate: payroll.exchangeRate }),
     debitCurrency: payroll.debitCurrency,
     creditCurrency: payroll.creditCurrency,
-    ...(payroll.status && { status: payroll.status as PayrollStatus }),
+    status: payroll.status as PayrollStatus,
   };
 };
 

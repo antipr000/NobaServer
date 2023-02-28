@@ -8,6 +8,7 @@ import {
   validatePayroll,
   PayrollUpdateRequest,
   validateUpdatePayrollRequest,
+  PayrollStatus,
 } from "../domain/Payroll";
 import { IPayrollRepo } from "./payroll.repo";
 import { PrismaService } from "../../../../infraproviders/PrismaService";
@@ -43,6 +44,7 @@ export class SqlPayrollRepo implements IPayrollRepo {
         totalDebitAmount: payroll.totalDebitAmount,
         debitCurrency: payroll.debitCurrency,
         creditCurrency: payroll.creditCurrency,
+        status: PayrollStatus.CREATED,
       };
 
       const returnedPayroll: PrismaPayrollModel = await this.prismaService.payroll.create({ data: payrollInput });
