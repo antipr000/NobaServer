@@ -100,24 +100,59 @@ model Employer {
   maxAllocationPercent Float?
   payrollDates         String[]
   Employee             Employee[]
+  Payroll              Payroll[]
 
   @@index([referralID])
 }
 
 model Employee {
-  id                 String    @id @default(uuid())
-  createdTimestamp   DateTime? @default(now()) // Marking optional so we don't need to set in tests
-  updatedTimestamp   DateTime? @updatedAt // Marking optional so we don't need to set in tests
-  allocationAmount   Float
-  allocationCurrency String
-  salary             Float?
-  employer           Employer  @relation(fields: [employerID], references: [id], onDelete: Cascade)
-  employerID         String
-  consumer           Consumer  @relation(fields: [consumerID], references: [id], onDelete: Cascade)
-  consumerID         String
+  id                  String                @id @default(uuid())
+  createdTimestamp    DateTime?             @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp    DateTime?             @updatedAt // Marking optional so we don't need to set in tests
+  allocationAmount    Float
+  allocationCurrency  String
+  salary              Float?
+  employer            Employer              @relation(fields: [employerID], references: [id], onDelete: Cascade)
+  employerID          String
+  consumer            Consumer              @relation(fields: [consumerID], references: [id], onDelete: Cascade)
+  consumerID          String
+  PayrollDisbursement PayrollDisbursement[]
 
   @@unique([consumerID, employerID])
   @@index([consumerID])
+}
+
+model Payroll {
+  id                  String                @id @default(uuid())
+  employer            Employer              @relation(fields: [employerID], references: [id], onDelete: Cascade)
+  employerID          String
+  reference           String
+  payrollDate         DateTime
+  createdTimestamp    DateTime?             @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp    DateTime?             @updatedAt // Marking optional so we don't need to set in tests
+  completedTimestamp  DateTime?
+  totalDebitAmount    Float
+  totalCreditAmount   Float?
+  exchangeRate        Float?
+  debitCurrency       String
+  creditCurrency      String
+  status              String? // As first state is invoiced, do we create this entry when invoice is created?
+  payrollDisbursement PayrollDisbursement[]
+}
+
+model PayrollDisbursement {
+  id               String       @id @default(uuid())
+  createdTimestamp DateTime?    @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime?    @updatedAt // Marking optional so we don't need to set in tests
+  payroll          Payroll      @relation(fields: [payrollID], references: [id], onDelete: Cascade)
+  payrollID        String
+  employee         Employee     @relation(fields: [employeeID], references: [id], onDelete: Cascade)
+  employeeID       String
+  transaction      Transaction? @relation(fields: [transactionID], references: [id], onDelete: Cascade)
+  transactionID    String?      @unique()
+  debitAmount      Float
+
+  @@unique([payrollID, employeeID])
 }
 
 model CryptoWallet {
@@ -233,27 +268,28 @@ model LimitConfiguration {
 }
 
 model Transaction {
-  id                String              @id @default(uuid())
-  transactionRef    String              @unique()
-  workflowName      String
-  debitConsumer     Consumer?           @relation("debitConsumer", fields: [debitConsumerID], references: [id], onDelete: Cascade)
-  debitConsumerID   String?
-  creditConsumer    Consumer?           @relation("creditConsumer", fields: [creditConsumerID], references: [id], onDelete: Cascade)
-  creditConsumerID  String?
-  status            String              @default("INITIATED")
-  memo              String?
-  sessionKey        String
-  debitCurrency     String?
-  creditCurrency    String?
-  debitAmount       Float?
-  creditAmount      Float?
-  exchangeRate      Float?
-  createdTimestamp  DateTime?           @default(now()) // Marking optional so we don't need to set in tests
-  updatedTimestamp  DateTime?           @updatedAt // Marking optional so we don't need to set in tests
-  transactionEvents TransactionEvent[]
-  Mono              Mono?
-  WithdrawalDetails WithdrawalDetails[]
-  transactionFees   TransactionFee[]
+  id                  String               @id @default(uuid())
+  transactionRef      String               @unique()
+  workflowName        String
+  debitConsumer       Consumer?            @relation("debitConsumer", fields: [debitConsumerID], references: [id], onDelete: Cascade)
+  debitConsumerID     String?
+  creditConsumer      Consumer?            @relation("creditConsumer", fields: [creditConsumerID], references: [id], onDelete: Cascade)
+  creditConsumerID    String?
+  status              String               @default("INITIATED")
+  memo                String?
+  sessionKey          String
+  debitCurrency       String?
+  creditCurrency      String?
+  debitAmount         Float?
+  creditAmount        Float?
+  exchangeRate        Float?
+  createdTimestamp    DateTime?            @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp    DateTime?            @updatedAt // Marking optional so we don't need to set in tests
+  transactionEvents   TransactionEvent[]
+  Mono                Mono?
+  WithdrawalDetails   WithdrawalDetails[]
+  transactionFees     TransactionFee[]
+  payrollDisbursement PayrollDisbursement?
 }
 
 model TransactionEvent {
