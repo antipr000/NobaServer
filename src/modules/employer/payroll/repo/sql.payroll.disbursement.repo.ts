@@ -116,4 +116,16 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
       return null;
     }
   }
+
+  async getAllDisbursementsForEmployee(employeeID: string): Promise<PayrollDisbursement[]> {
+    try {
+      const allDisburementsForEmployee = await this.prismaService.payrollDisbursement.findMany({
+        where: { employeeID },
+      });
+      return allDisburementsForEmployee.map(disbursement => convertToDomainPayrollDisbursement(disbursement));
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      return [];
+    }
+  }
 }

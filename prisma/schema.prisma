@@ -132,11 +132,11 @@ model Payroll {
   updatedTimestamp    DateTime?             @updatedAt // Marking optional so we don't need to set in tests
   completedTimestamp  DateTime?
   totalDebitAmount    Float
-  totalCreditAmount   Float?
-  exchangeRate        Float?
+  totalCreditAmount   Float
+  exchangeRate        Float
   debitCurrency       String
   creditCurrency      String
-  status              String // As first state is invoiced, do we create this entry when invoice is created?
+  status              String
   payrollDisbursement PayrollDisbursement[]
 }
 

@@ -21,8 +21,8 @@ export class Payroll {
   updatedTimestamp: Date;
   completedTimestamp?: Date;
   totalDebitAmount: number;
-  totalCreditAmount?: number;
-  exchangeRate?: number;
+  totalCreditAmount: number;
+  exchangeRate: number;
   debitCurrency: string;
   creditCurrency: string;
   status: PayrollStatus;
@@ -32,15 +32,15 @@ export class PayrollCreateRequest {
   employerID: string;
   reference: string;
   payrollDate: string;
-  totalDebitAmount?: number;
+  totalDebitAmount: number;
+  totalCreditAmount: number;
+  exchangeRate: number;
   debitCurrency: string;
   creditCurrency: string;
 }
 
 export class PayrollUpdateRequest {
   completedTimestamp?: Date;
-  totalCreditAmount?: number;
-  exchangeRate?: number;
   status?: PayrollStatus;
 }
 
@@ -50,6 +50,8 @@ export const validateCreatePayrollRequest = (payroll: PayrollCreateRequest) => {
     reference: Joi.string().required(),
     payrollDate: Joi.string().required(),
     totalDebitAmount: Joi.number().required(),
+    totalCreditAmount: Joi.number().required(),
+    exchangeRate: Joi.number().required(),
     debitCurrency: Joi.string().required(),
     creditCurrency: Joi.string().required(),
   };
@@ -64,8 +66,6 @@ export const validateCreatePayrollRequest = (payroll: PayrollCreateRequest) => {
 export const validateUpdatePayrollRequest = (payroll: PayrollUpdateRequest) => {
   const payrollJoiValidationKeys: KeysRequired<PayrollUpdateRequest> = {
     completedTimestamp: Joi.date().optional(),
-    totalCreditAmount: Joi.number().optional(),
-    exchangeRate: Joi.number().optional(),
     status: Joi.string()
       .optional()
       .valid(...Object.values(PayrollStatus)),
@@ -88,8 +88,8 @@ export const validatePayroll = (payroll: Payroll) => {
     updatedTimestamp: Joi.date().required(),
     completedTimestamp: Joi.date().optional(),
     totalDebitAmount: Joi.number().required(),
-    totalCreditAmount: Joi.number().optional(),
-    exchangeRate: Joi.number().optional(),
+    totalCreditAmount: Joi.number().required(),
+    exchangeRate: Joi.number().required(),
     debitCurrency: Joi.string().required(),
     creditCurrency: Joi.string().required(),
     status: Joi.string()
@@ -114,8 +114,8 @@ export const convertToDomainPayroll = (payroll: PrismaPayrollModel): Payroll => 
     updatedTimestamp: payroll.updatedTimestamp,
     ...(payroll.completedTimestamp && { completedTimestamp: payroll.completedTimestamp }),
     totalDebitAmount: payroll.totalDebitAmount,
-    ...(payroll.totalCreditAmount && { totalCreditAmount: payroll.totalCreditAmount }),
-    ...(payroll.exchangeRate && { exchangeRate: payroll.exchangeRate }),
+    totalCreditAmount: payroll.totalCreditAmount,
+    exchangeRate: payroll.exchangeRate,
     debitCurrency: payroll.debitCurrency,
     creditCurrency: payroll.creditCurrency,
     status: payroll.status as PayrollStatus,
