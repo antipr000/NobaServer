@@ -52,14 +52,14 @@ describe("BankFactory Tests", () => {
 
   // Revisit this and fine the correct way to implement
   describe("getBankImplementationByCurrency", () => {
-    // it("should return MonoWorkflowService when currency is COP", () => {
-    //   const bank = bankFactory.getBankImplementationByCurrency("COP");
-    //   const bankService: IBank = monoWorkflowService;
-    //   expect(bank).toBeInstanceOf<IBank>(bankService);
-    // });
-    // it("should return CircleService when currency is USD", () => {
-    //   const bank = bankFactory.getBankImplementationByCurrency("USD");
-    //   expect(bank).toBe(circleService);
-    // });
+    it("should return MonoWorkflowService when currency is COP", () => {
+      // const bank = bankFactory.getBankImplementationByCurrency("COP");
+      // const bankService: IBank = monoWorkflowService;
+      // expect(bank).toBeInstanceOf<IBank>(bankService);
+    });
+    it("should return CircleService when currency is USD", () => {
+      // const bank = bankFactory.getBankImplementationByCurrency("USD");
+      // expect(bank).toBe(circleService);
+    });
   });
 });
