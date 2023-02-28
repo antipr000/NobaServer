@@ -235,56 +235,6 @@ export class ConsumerController {
     return {};
   }
 
-  // @Get("/paymentmethods/plaid/token")
-  // @ApiOperation({ summary: "Generates a token to connect to Plaid UI" })
-  // @ApiResponse({
-  //   status: HttpStatus.OK,
-  //   type: PlaidTokenDTO,
-  //   description: "Plaid token",
-  // })
-  // @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
-  // async generatePlaidToken(@AuthUser() consumer: Consumer): Promise<PlaidTokenDTO> {
-  //   return {
-  //     token: await this.plaidClient.generateLinkToken({ userID: consumer.props.id }),
-  //   };
-  // }
-
-  // @Post("/paymentmethods")
-  // @ApiOperation({ summary: "Adds a payment method for the logged-in consumer" })
-  // @ApiResponse({
-  //   status: HttpStatus.CREATED,
-  //   type: ConsumerDTO,
-  //   description: "Updated payment method record",
-  // })
-  // @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
-  // @ApiBadRequestResponse({ description: "Invalid payment method details" })
-  // async addPaymentMethod(
-  //   @Body() requestBody: AddPaymentMethodDTO,
-  //   @AuthUser() consumer: Consumer,
-  // ): Promise<ConsumerDTO> {
-  //   const requiredFields = [];
-  //   switch (requestBody.type) {
-  //     case PaymentType.CARD:
-  //       requiredFields.push("cardDetails");
-  //       break;
-
-  //     case PaymentType.ACH:
-  //       requiredFields.push("achDetails");
-  //       break;
-
-  //     default:
-  //       throw new BadRequestException(`"type" should be one of "${PaymentType.CARD}" or "${PaymentType.ACH}".`);
-  //   }
-  //   requiredFields.forEach(field => {
-  //     if (requestBody[field] === undefined || requestBody[field] === null) {
-  //       throw new BadRequestException(`"${field}" is required field when "type" is "${requestBody.type}".`);
-  //     }
-  //   });
-
-  //   await this.consumerService.addPaymentMethod(consumer, requestBody);
-  //   return await this.mapToDTO(consumer);
-  // }
-
   @Patch("/paymentmethods/:paymentToken")
   @ApiOperation({ summary: "Updates a payment method for logged-in consumer" })
   @ApiResponse({
@@ -307,37 +257,6 @@ export class ConsumerController {
     await this.consumerService.updatePaymentMethod(consumer.props.id, paymentMethodProps);
     return this.mapToDTO(consumer);
   }
-
-  // @Delete("/paymentmethods/:paymentToken")
-  // @ApiOperation({ summary: "Deletes a payment method for the logged-in consumer" })
-  // @ApiResponse({
-  //   status: HttpStatus.OK,
-  //   type: ConsumerDTO,
-  //   description: "Consumer record with updated payment methods",
-  // })
-  // @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
-  // @ApiBadRequestResponse({ description: "Invalid payment method details" })
-  // async deletePaymentMethod(
-  //   @Param("paymentToken") paymentToken: string,
-  //   @AuthUser() consumer: Consumer,
-  // ): Promise<ConsumerDTO> {
-  //   await this.consumerService.removePaymentMethod(consumer, paymentToken);
-  //   return this.mapToDTO(consumer);
-  // }
-
-  /* Example of how we can decrypt the SSN. This should only be available to the compliance team.
-  @Get("/ssn")
-  @ApiOperation({ summary: "Gets SSN of currently logged-in consumer" })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: "Get SSN of currently logged-in consumer",
-  })
-  async getConsumerSSN(@Request() request): Promise<string> {
-    const consumerID: string = request.consumer.props.id;
-    const consumer = await this.consumerService.getConsumer(consumerID);
-    const decrypted = await new KMSUtil("ssn-encryption-key").decryptString(consumer.props.socialSecurityNumber);
-    return decrypted;
-  }*/
 
   @Post("/devicecontacts")
   @ApiOperation({ summary: "Bulk query contact consumers" })

@@ -432,37 +432,6 @@ export class ConsumerService {
     return this.notificationService.unsubscribeFromPushNotifications(consumerID, pushToken);
   }
 
-  // async addPaymentMethod(consumer: Consumer, paymentMethod: AddPaymentMethodDTO): Promise<PaymentMethod> {
-  //   const addPaymentMethodResponse: AddPaymentMethodResponse = await this.paymentService.addPaymentMethod(
-  //     consumer,
-  //     paymentMethod,
-  //   );
-
-  //   if (addPaymentMethodResponse.newPaymentMethod) {
-  //     const result = await this.consumerRepo.addPaymentMethod(addPaymentMethodResponse.newPaymentMethod);
-
-  //     if (paymentMethod.type === PaymentMethodType.CARD) {
-  //       if (addPaymentMethodResponse.checkoutResponseData.paymentMethodStatus === PaymentMethodStatus.UNSUPPORTED) {
-  //         // Do we want to send a different email here too? Currently just throw up to the UI as a 400.
-  //         // Note that we are intentionally saving the payment method with this UNSUPPORTED status as
-  //         // we may want to let the user know some day when their bank allows crypto.
-  //         throw new BadRequestException(CardFailureExceptionText.NO_CRYPTO);
-  //       }
-
-  //       await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_ADDED_EVENT, {
-  //         firstName: consumer.props.firstName,
-  //         lastName: consumer.props.lastName,
-  //         nobaUserID: consumer.props.id,
-  //         email: consumer.props.displayEmail,
-  //         cardNetwork: addPaymentMethodResponse.newPaymentMethod.props.cardData.scheme,
-  //         last4Digits: addPaymentMethodResponse.newPaymentMethod.props.cardData.last4Digits,
-  //       });
-  //     }
-
-  //     return result;
-  //   }
-  // }
-
   async getBase64EncodedQRCode(url: string): Promise<string> {
     return this.qrService.generateQRCode(url);
   }
@@ -497,40 +466,6 @@ export class ConsumerService {
     //   throw new BadRequestException(`Payment provider ${paymentMethod.paymentProvider} is not supported`);
     // }
   }
-
-  // async removePaymentMethod(consumer: Consumer, paymentMethodID: string): Promise<void> {
-  //   const paymentMethod = await this.consumerRepo.getPaymentMethodForConsumer(paymentMethodID, consumer.props.id);
-
-  //   if (!paymentMethod) {
-  //     throw new NotFoundException("Payment Method id not found");
-  //   }
-
-  //   const paymentProviderID = paymentMethod.props.paymentProvider;
-  //   if (paymentProviderID === PaymentProvider.CHECKOUT) {
-  //     await this.paymentService.removePaymentMethod(paymentMethod.props.paymentToken);
-  //   } else {
-  //     throw new NotFoundException("Payment provider not found");
-  //   }
-
-  //   await this.updatePaymentMethod(consumer.props.id, { id: paymentMethodID, status: PaymentMethodStatus.DELETED });
-
-  //   await this.notificationService.sendNotification(NotificationEventType.SEND_CARD_DELETED_EVENT, {
-  //     firstName: consumer.props.firstName,
-  //     lastName: consumer.props.lastName,
-  //     nobaUserID: consumer.props.id,
-  //     email: consumer.props.displayEmail,
-  //     cardNetwork: paymentMethod.props.cardData.cardType,
-  //     last4Digits: paymentMethod.props.cardData.last4Digits,
-  //   });
-  // }
-
-  // async getFiatPaymentStatus(paymentId: string, paymentProvider: PaymentProvider): Promise<FiatTransactionStatus> {
-  //   if (paymentProvider === PaymentProvider.CHECKOUT) {
-  //     return this.paymentService.getFiatPaymentStatus(paymentId);
-  //   } else {
-  //     throw new BadRequestException("Payment provider is not supported");
-  //   }
-  // }
 
   async getAllPaymentMethodsForConsumer(consumerID: string): Promise<PaymentMethod[]> {
     return this.consumerRepo.getAllPaymentMethodsForConsumer(consumerID);
