@@ -243,6 +243,10 @@ export class AdminController {
       throw new ForbiddenException("User is forbidden from calling this API.");
     }
 
+    if (typeof filters.accountIDs === "string") {
+      filters.accountIDs = [filters.accountIDs];
+    }
+
     return this.adminService.getBalanceForAccounts(filters.accountBalanceType, filters.accountIDs);
   }
 
