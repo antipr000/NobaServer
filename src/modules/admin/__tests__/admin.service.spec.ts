@@ -9,15 +9,19 @@ import { getTestWinstonModule } from "../../../../src/core/utils/WinstonModule";
 import { getMockAdminRepoWithDefaults } from "../mocks/MockAdminRepo";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
+import { PaymentService } from "../../../modules/psp/payment.service";
+import { getMockPaymentServiceWithDefaults } from "../../../modules/psp/mocks/mock.payment.service";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);
 
   let adminRepo: IAdminRepo;
   let adminService: AdminService;
+  let paymentService: PaymentService;
 
   beforeEach(async () => {
     adminRepo = getMockAdminRepoWithDefaults();
+    paymentService = getMockPaymentServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -26,6 +30,10 @@ describe("AdminService", () => {
         {
           provide: "AdminTransactionRepo",
           useFactory: () => instance(adminRepo),
+        },
+        {
+          provide: PaymentService,
+          useFactory: () => instance(paymentService),
         },
         AdminMapper,
       ],
