@@ -210,13 +210,13 @@ export class AdminService {
    * @throws ApiError
    */
   public static getAccountBalances({
-    accountBalanceTypes,
+    accountBalanceType,
     accountIDs,
   }: {
     /**
      * filter for a particular account type for balance
      */
-    accountBalanceTypes: "CIRCLE" | "MONO";
+    accountBalanceType: "CIRCLE" | "MONO";
     /**
      * filter for a list of account IDs
      */
@@ -226,7 +226,7 @@ export class AdminService {
       method: "GET",
       url: "/v1/admins/balances",
       query: {
-        accountBalanceTypes: accountBalanceTypes,
+        accountBalanceType: accountBalanceType,
         accountIDs: accountIDs,
       },
       errors: {
