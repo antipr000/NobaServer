@@ -17,10 +17,6 @@ export function getMockConsumerServiceWithDefaults(): ConsumerService {
     new Error("Method not implemented"),
   );
   when(mockConsumerService.updateConsumer(anything())).thenReject(new Error("Method not implemented"));
-  when(mockConsumerService.addPaymentMethod(anything(), anything())).thenReject(new Error("Method not implemented"));
-  when(mockConsumerService.removePaymentMethod(anything(), anyString())).thenReject(
-    new Error("Method not implemented"),
-  );
   when(mockConsumerService.updatePaymentMethod(anything(), anything())).thenReject(new Error("Method not implemented"));
   when(mockConsumerService.subscribeToPushNotifications(anything(), anyString())).thenReject(
     new Error("Method not implemented"),
@@ -33,9 +29,6 @@ export function getMockConsumerServiceWithDefaults(): ConsumerService {
     new Error("Method not implemented"),
   );
   when(mockConsumerService.getPaymentMethodProvider(anyString(), anyString())).thenReject(
-    new Error("Method not implemented!"),
-  );
-  when(mockConsumerService.getFiatPaymentStatus(anyString(), anything())).thenReject(
     new Error("Method not implemented!"),
   );
   when(mockConsumerService.requestPayment(anything(), anything())).thenReject(new Error("Method not implemented!"));
