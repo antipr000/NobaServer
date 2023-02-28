@@ -1,3 +1,4 @@
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { BankName } from "../../../modules/psp/domain/BankFactoryTypes";
 import { BalanceDTO } from "../../../modules/psp/dto/balance.dto";
 import { ACCOUNT_BALANCE_TYPES } from "../domain/Admin";
@@ -11,7 +12,10 @@ export class AdminPSPMapper {
       case ACCOUNT_BALANCE_TYPES.MONO:
         return BankName.MONO;
       default:
-        throw new Error("Invalid account type");
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: "Invalid account type",
+        });
     }
   }
 

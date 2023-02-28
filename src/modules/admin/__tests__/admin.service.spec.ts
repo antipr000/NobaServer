@@ -3,7 +3,7 @@ import { anything, capture, instance, when } from "ts-mockito";
 import { AdminService } from "../admin.service";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { IAdminRepo } from "../repos/transactions/sql.admin.repo";
-import { Admin } from "../domain/Admin";
+import { ACCOUNT_BALANCE_TYPES, Admin } from "../domain/Admin";
 import { AdminMapper } from "../mappers/AdminMapper";
 import { getTestWinstonModule } from "../../../../src/core/utils/WinstonModule";
 import { getMockAdminRepoWithDefaults } from "../mocks/MockAdminRepo";
@@ -11,6 +11,8 @@ import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { PaymentService } from "../../../modules/psp/payment.service";
 import { getMockPaymentServiceWithDefaults } from "../../../modules/psp/mocks/mock.payment.service";
+import { ServiceErrorCode } from "../../../core/exception/service.exception";
+import { BankName } from "../../../modules/psp/domain/BankFactoryTypes";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);
@@ -242,6 +244,77 @@ describe("AdminService", () => {
 
       const result = await adminService.getAdminById(EXISTING_ADMINid);
       expect(result).toEqual(existingNobaAdmin);
+    });
+  });
+
+  describe("getBalanceForAccounts", () => {
+    it("should get mono balances", async () => {
+      const monoAccountID1 = "mono-account-id-1";
+      const monoAccountID2 = "mono-account-id-2";
+      when(paymentService.getBalance(BankName.MONO, monoAccountID1)).thenResolve({
+        currency: "COP",
+        balance: 1.23,
+      });
+      when(paymentService.getBalance(BankName.MONO, monoAccountID2)).thenResolve({
+        currency: "COP",
+        balance: 19999,
+      });
+      const balances = await adminService.getBalanceForAccounts(ACCOUNT_BALANCE_TYPES.MONO, [
+        monoAccountID1,
+        monoAccountID2,
+      ]);
+      expect(balances).toEqual([
+        {
+          accountID: monoAccountID1,
+          balance: 1.23,
+          currency: "COP",
+        },
+        {
+          accountID: monoAccountID2,
+          balance: 19999,
+          currency: "COP",
+        },
+      ]);
+    });
+
+    it("should get circle balances", async () => {
+      const circleAccountID1 = "circle-account-id-1";
+      const circleAccountID2 = "circle-account-id-2";
+      when(paymentService.getBalance(BankName.CIRCLE, circleAccountID1)).thenResolve({
+        currency: "USD",
+        balance: 100.01,
+      });
+      when(paymentService.getBalance(BankName.CIRCLE, circleAccountID2)).thenResolve({
+        currency: "USD",
+        balance: 10,
+      });
+      const balances = await adminService.getBalanceForAccounts(ACCOUNT_BALANCE_TYPES.CIRCLE, [
+        circleAccountID1,
+        circleAccountID2,
+      ]);
+      expect(balances).toEqual([
+        {
+          accountID: circleAccountID1,
+          balance: 100.01,
+          currency: "USD",
+        },
+        {
+          accountID: circleAccountID2,
+          balance: 10,
+          currency: "USD",
+        },
+      ]);
+    });
+
+    it("should return no balances when empty account IDs", async () => {
+      const balances = await adminService.getBalanceForAccounts(ACCOUNT_BALANCE_TYPES.CIRCLE, []);
+      expect(balances).toEqual([]);
+    });
+
+    it("should throw invalid account balance type when balance type null", async () => {
+      expect(adminService.getBalanceForAccounts(null, [])).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
     });
   });
 });

@@ -7,6 +7,7 @@ import { ACCOUNT_BALANCE_TYPES, Admin, AllRoles, isValidRole } from "./domain/Ad
 import { PaymentService } from "../psp/payment.service";
 import { AccountBalanceDTO } from "./dto/AccountBalanceDTO";
 import { AdminPSPMapper } from "./mappers/admin.psp";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 
 @Injectable()
 export class AdminService {
@@ -85,12 +86,21 @@ export class AdminService {
   }
 
   async getBalanceForAccounts(accountType: ACCOUNT_BALANCE_TYPES, accountIDs: string[]): Promise<AccountBalanceDTO[]> {
+    if (!accountType) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Invalid account type",
+      });
+    }
+
     const accountBalancesPromises: Promise<AccountBalanceDTO>[] = accountIDs.map(async accountID => {
       const bankName = this.adminPSPMapper.accountTypeToBankName(accountType);
       const accountBalance = await this.paymentService.getBalance(bankName, accountID);
       return await this.adminPSPMapper.balanceDTOToAccountBalanceDTO(accountID, accountBalance);
     });
 
-    return Promise.all(accountBalancesPromises);
+    const accountBalances = await Promise.all(accountBalancesPromises);
+
+    return accountBalances;
   }
 }
