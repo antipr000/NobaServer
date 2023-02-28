@@ -15,7 +15,7 @@ export class Payroll {
   id: string;
   employerID: string;
   reference: string;
-  payrollDate: Date;
+  payrollDate: string;
   createdTimestamp: Date;
   updatedTimestamp: Date;
   completedTimestamp?: Date;
@@ -30,7 +30,7 @@ export class Payroll {
 export class PayrollCreateRequest {
   employerID: string;
   reference: string;
-  payrollDate: Date;
+  payrollDate: string;
   totalDebitAmount?: number;
   debitCurrency: string;
   creditCurrency: string;
@@ -47,7 +47,7 @@ export const validateCreatePayrollRequest = (payroll: PayrollCreateRequest) => {
   const payrollJoiValidationKeys: KeysRequired<PayrollCreateRequest> = {
     employerID: Joi.string().required(),
     reference: Joi.string().required(),
-    payrollDate: Joi.date().required(),
+    payrollDate: Joi.string().required(),
     totalDebitAmount: Joi.number().required(),
     debitCurrency: Joi.string().required(),
     creditCurrency: Joi.string().required(),
