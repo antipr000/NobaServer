@@ -2,18 +2,15 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type { ACHDetailsDTO } from "./models/ACHDetailsDTO";
 export type { ActionDTO } from "./models/ActionDTO";
 export type { AddCryptoWalletDTO } from "./models/AddCryptoWalletDTO";
 export type { AddCryptoWalletResponseDTO } from "./models/AddCryptoWalletResponseDTO";
 export type { AddNobaAdminDTO } from "./models/AddNobaAdminDTO";
-export type { AddPaymentMethodDTO } from "./models/AddPaymentMethodDTO";
 export type { AddressDTO } from "./models/AddressDTO";
 export type { AddTransactionEventDTO } from "./models/AddTransactionEventDTO";
 export type { AdminLoginRequestDTO } from "./models/AdminLoginRequestDTO";
 export type { AdminUpdateConsumerRequestDTO } from "./models/AdminUpdateConsumerRequestDTO";
 export type { BlankResponseDTO } from "./models/BlankResponseDTO";
-export type { CardDetailsDTO } from "./models/CardDetailsDTO";
 export type { CaseDTO } from "./models/CaseDTO";
 export type { CaseNotificationDataDTO } from "./models/CaseNotificationDataDTO";
 export type { CaseNotificationWebhookRequestDTO } from "./models/CaseNotificationWebhookRequestDTO";
@@ -69,7 +66,6 @@ export type { PaymentMethodCardDataDTO } from "./models/PaymentMethodCardDataDTO
 export type { PaymentMethodsDTO } from "./models/PaymentMethodsDTO";
 export type { PeriodLimit } from "./models/PeriodLimit";
 export type { PhoneVerificationOtpRequest } from "./models/PhoneVerificationOtpRequest";
-export type { PlaidTokenDTO } from "./models/PlaidTokenDTO";
 export type { QRCodeDTO } from "./models/QRCodeDTO";
 export type { QuoteResponseDTO } from "./models/QuoteResponseDTO";
 export type { RegisterEmployerRequestDTO } from "./models/RegisterEmployerRequestDTO";

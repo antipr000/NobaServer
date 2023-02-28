@@ -52,17 +52,6 @@ describe("Consumers", () => {
       await integrationTestUtils.reset();
     });
 
-    it("should return 401 if not logged in", async () => {
-      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/paymentmethods/plaid/token", JSON.stringify({}));
-      const generatePlaidTokenResponse = (await ConsumerService.generatePlaidToken({
-        xNobaApiKey: TEST_API_KEY,
-        xNobaSignature: signature,
-        xNobaTimestamp: TEST_TIMESTAMP,
-      })) as PlaidTokenDTO & ResponseStatus;
-
-      expect(generatePlaidTokenResponse.__status).toBe(401);
-    });
-
     it("should throw 403 if NobaAdmin identity tries to call this API", async () => {
       const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
       const nobaAdminId = integrationTestUtils.getRandomID("AAAAAAAAA");

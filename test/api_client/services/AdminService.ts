@@ -205,6 +205,37 @@ export class AdminService {
   }
 
   /**
+   * Gets the balances of accounts based on providers
+   * @returns any Balances of accounts
+   * @throws ApiError
+   */
+  public static getAccountBalances({
+    accountBalanceTypes,
+    accountIDs,
+  }: {
+    /**
+     * filter for a particular account type for balance
+     */
+    accountBalanceTypes: "CIRCLE" | "MONO";
+    /**
+     * filter for a list of account IDs
+     */
+    accountIDs: Array<string>;
+  }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/admins/balances",
+      query: {
+        accountBalanceTypes: accountBalanceTypes,
+        accountIDs: accountIDs,
+      },
+      errors: {
+        403: `User forbidden from getting account balances`,
+      },
+    });
+  }
+
+  /**
    * Creates a new exchange rate entry
    * @returns ExchangeRateDTO The newly created exchange rate(s). Index [0] is the forward rate that was created, index [1] is the inverse rate if addInverse is true
    * @throws ApiError

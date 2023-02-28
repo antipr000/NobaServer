@@ -15,18 +15,6 @@ import { request as __request } from "../core/request";
 
 export class WebhooksService {
   /**
-   * Checks if the transaction parameters are valid
-   * @returns any
-   * @throws ApiError
-   */
-  public static consumePaymentWebhooks(): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/v1/vendors/checkout/webhooks",
-    });
-  }
-
-  /**
    * Register the Employer in Noba
    * @returns EmployerRegisterResponseDTO
    * @throws ApiError
@@ -87,6 +75,18 @@ export class WebhooksService {
       },
       body: requestBody,
       mediaType: "application/json",
+    });
+  }
+
+  /**
+   * Checks if the transaction parameters are valid
+   * @returns any
+   * @throws ApiError
+   */
+  public static consumePaymentWebhooks(): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/vendors/checkout/webhooks",
     });
   }
 

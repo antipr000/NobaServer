@@ -3,7 +3,6 @@
 /* eslint-disable */
 import type { AddCryptoWalletDTO } from "../models/AddCryptoWalletDTO";
 import type { AddCryptoWalletResponseDTO } from "../models/AddCryptoWalletResponseDTO";
-import type { AddPaymentMethodDTO } from "../models/AddPaymentMethodDTO";
 import type { BlankResponseDTO } from "../models/BlankResponseDTO";
 import type { CircleWalletBalanceResponseDTO } from "../models/CircleWalletBalanceResponseDTO";
 import type { CircleWalletResponseDTO } from "../models/CircleWalletResponseDTO";
@@ -16,7 +15,6 @@ import type { ContactConsumerResponseDTO } from "../models/ContactConsumerRespon
 import type { EmailVerificationOtpRequest } from "../models/EmailVerificationOtpRequest";
 import type { LinkedEmployerDTO } from "../models/LinkedEmployerDTO";
 import type { PhoneVerificationOtpRequest } from "../models/PhoneVerificationOtpRequest";
-import type { PlaidTokenDTO } from "../models/PlaidTokenDTO";
 import type { QRCodeDTO } from "../models/QRCodeDTO";
 import type { RegisterWithEmployerDTO } from "../models/RegisterWithEmployerDTO";
 import type { RequestEmployerDTO } from "../models/RequestEmployerDTO";
@@ -280,73 +278,6 @@ export class ConsumerService {
   }
 
   /**
-   * Generates a token to connect to Plaid UI
-   * @returns PlaidTokenDTO Plaid token
-   * @throws ApiError
-   */
-  public static generatePlaidToken({
-    xNobaApiKey,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<PlaidTokenDTO> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/v1/consumers/paymentmethods/plaid/token",
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
-      errors: {
-        403: `Logged-in user is not a Consumer`,
-      },
-    });
-  }
-
-  /**
-   * Adds a payment method for the logged-in consumer
-   * @returns ConsumerDTO Updated payment method record
-   * @throws ApiError
-   */
-  public static addPaymentMethod({
-    xNobaApiKey,
-    requestBody,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    requestBody: AddPaymentMethodDTO;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<ConsumerDTO> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/v1/consumers/paymentmethods",
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `Invalid payment method details`,
-        403: `Logged-in user is not a Consumer`,
-      },
-    });
-  }
-
-  /**
    * Updates a payment method for logged-in consumer
    * @returns ConsumerDTO Consumer record with updated payment methods
    * @throws ApiError
@@ -384,43 +315,6 @@ export class ConsumerService {
         400: `Invalid payment method details`,
         403: `Logged-in user is not a Consumer`,
         404: `Payment method not found for Consumer`,
-      },
-    });
-  }
-
-  /**
-   * Deletes a payment method for the logged-in consumer
-   * @returns ConsumerDTO Consumer record with updated payment methods
-   * @throws ApiError
-   */
-  public static deletePaymentMethod({
-    xNobaApiKey,
-    paymentToken,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    paymentToken: string;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<ConsumerDTO> {
-    return __request(OpenAPI, {
-      method: "DELETE",
-      url: "/v1/consumers/paymentmethods/{paymentToken}",
-      path: {
-        paymentToken: paymentToken,
-      },
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
-      errors: {
-        400: `Invalid payment method details`,
-        403: `Logged-in user is not a Consumer`,
       },
     });
   }
@@ -842,6 +736,42 @@ export class ConsumerService {
   }
 
   /**
+   * Gets transaction limit details for logged-in consumer
+   * @returns ConsumerLimitsDTO Consumer limit details
+   * @throws ApiError
+   */
+  public static getConsumerLimits({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+    transactionType,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+    transactionType?: "NOBA_WALLET";
+  }): CancelablePromise<ConsumerLimitsDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v2/consumers/limits",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      query: {
+        transactionType: transactionType,
+      },
+      errors: {
+        400: `Invalid request parameters`,
+      },
+    });
+  }
+
+  /**
    * Add circle wallet to current consumer
    * @returns CircleWalletResponseDTO
    * @throws ApiError
@@ -899,42 +829,6 @@ export class ConsumerService {
       },
       errors: {
         403: `Logged-in user is not a Consumer`,
-      },
-    });
-  }
-
-  /**
-   * Gets transaction limit details for logged-in consumer
-   * @returns ConsumerLimitsDTO Consumer limit details
-   * @throws ApiError
-   */
-  public static getConsumerLimits({
-    xNobaApiKey,
-    xNobaSignature,
-    xNobaTimestamp,
-    transactionType,
-  }: {
-    xNobaApiKey: string;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-    transactionType?: "NOBA_WALLET";
-  }): CancelablePromise<ConsumerLimitsDTO> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/v2/consumers/limits",
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
-      query: {
-        transactionType: transactionType,
-      },
-      errors: {
-        400: `Invalid request parameters`,
       },
     });
   }
