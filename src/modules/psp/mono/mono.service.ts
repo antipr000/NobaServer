@@ -34,6 +34,8 @@ import { HealthCheckResponse } from "../../../core/domain/HealthCheckTypes";
 import { MonoClientException } from "./exception/mono.client.exception";
 import { PhoneNumberUtil } from "google-libphonenumber";
 import { BalanceDTO } from "../dto/balance.dto";
+import { IBank } from "../factory/ibank";
+import { DebitBankFactoryRequest, DebitBankFactoryResponse } from "../domain/BankFactoryTypes";
 
 type CollectionLinkDepositRequest = {
   nobaTransactionID: string;
@@ -52,7 +54,7 @@ type WithdrawalRequest = {
 };
 
 @Injectable()
-export class MonoService {
+export class MonoService implements IBank {
   @Inject()
   protected readonly kmsService: KmsService;
 
@@ -118,6 +120,30 @@ export class MonoService {
         message: "Error obtaining Mono account balance",
       });
     }
+  }
+
+  public async debit(request: DebitBankFactoryRequest): Promise<DebitBankFactoryResponse> {
+    const withdrawal = await this.createMonoTransaction({
+      type: MonoTransactionType.WITHDRAWAL,
+      amount: request.amount,
+      currency: request.currency as MonoCurrency,
+      nobaTransactionID: request.transactionID,
+      nobaPublicTransactionRef: request.transactionRef,
+      consumerID: request.consumerID,
+      withdrawalDetails: {
+        bankCode: request.bankCode,
+        encryptedAccountNumber: request.accountNumber,
+        accountType: request.accountType,
+        documentNumber: request.documentNumber,
+        documentType: request.documentType,
+      },
+    });
+
+    return {
+      withdrawalID: withdrawal.id,
+      state: withdrawal.state,
+      declinationReason: withdrawal.withdrawalDetails.declinationReason,
+    };
   }
 
   async getTransactionByCollectionLinkID(collectionLinkID: string): Promise<MonoTransaction | null> {

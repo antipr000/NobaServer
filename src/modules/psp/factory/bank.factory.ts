@@ -1,23 +1,24 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
+import { CircleService } from "../circle.service";
 import { BankName } from "../domain/BankFactoryTypes";
-import { BankCircleImpl } from "./bank.circle.impl";
-import { BankMonoImpl } from "./bank.mono.impl";
-import { IBankImpl } from "./ibank.impl";
+import { MonoWorkflowService } from "../mono/mono.workflow.service";
+import { IBank } from "./ibank";
 
 @Injectable()
 export class BankFactory {
   @Inject()
-  private readonly bankMonoImpl: BankMonoImpl;
+  private readonly monoWorkflowService: MonoWorkflowService;
 
-  private readonly bankCircleImpl: BankCircleImpl;
+  @Inject()
+  private readonly circleService: CircleService;
 
-  getBankImplementation(bankName: BankName): IBankImpl {
+  getBankImplementation(bankName: BankName): IBank {
     switch (bankName) {
       case BankName.MONO:
-        return this.bankMonoImpl;
+        return this.monoWorkflowService;
       case BankName.CIRCLE:
-        return this.bankCircleImpl;
+        return this.circleService;
       default:
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -26,12 +27,12 @@ export class BankFactory {
     }
   }
 
-  getBankImplementationByCurrency(currency: string): IBankImpl {
+  getBankImplementationByCurrency(currency: string): IBank {
     switch (currency) {
       case "USD":
-        return this.bankCircleImpl;
+        return this.monoWorkflowService;
       case "COP":
-        return this.bankMonoImpl;
+        return this.circleService;
       default:
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,

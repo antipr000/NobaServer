@@ -6,9 +6,12 @@ import { CircleClient } from "./circle.client";
 import { ICircleRepo } from "./repos/circle.repo";
 import { UpdateWalletBalanceServiceDTO } from "./domain/UpdateWalletBalanceServiceDTO";
 import { HealthCheckResponse } from "../../core/domain/HealthCheckTypes";
+import { IBank } from "./factory/ibank";
+import { BalanceDTO } from "./dto/balance.dto";
+import { DebitBankFactoryRequest, DebitBankFactoryResponse } from "./domain/BankFactoryTypes";
 
 @Injectable()
-export class CircleService {
+export class CircleService implements IBank {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
@@ -206,5 +209,16 @@ export class CircleService {
       status: response.status,
       createdAt: response.createdAt,
     };
+  }
+
+  public async getBalance(accountID: string): Promise<BalanceDTO> {
+    return {
+      balance: await this.getWalletBalance(accountID),
+      currency: "USD",
+    };
+  }
+
+  debit(request: DebitBankFactoryRequest): Promise<DebitBankFactoryResponse> {
+    throw new Error("Method not implemented.");
   }
 }
