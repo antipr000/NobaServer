@@ -3,13 +3,13 @@ import { Payroll as PrismaPayrollModel } from "@prisma/client";
 import { KeysRequired } from "../../../../modules/common/domain/Types";
 
 export enum PayrollStatus {
-  CREATED = "Created",
-  INVOICED = "Invoiced",
-  INVESTIGATION = "Investigation",
-  FUNDED = "Funded",
-  IN_PROGRESS = "InProgress",
-  COMPLETE = "Complete",
-  EXPIRED = "Expired",
+  CREATED = "CREATED",
+  INVOICED = "INVOICED",
+  INVESTIGATION = "INVESTIGATION",
+  FUNDED = "FUNDED",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETE = "COMPLETE",
+  EXPIRED = "EXPIRED",
 }
 
 export class Payroll {
@@ -20,11 +20,11 @@ export class Payroll {
   createdTimestamp: Date;
   updatedTimestamp: Date;
   completedTimestamp?: Date;
-  totalDebitAmount: number;
-  totalCreditAmount: number;
-  exchangeRate: number;
-  debitCurrency: string;
-  creditCurrency: string;
+  totalDebitAmount?: number;
+  totalCreditAmount?: number;
+  exchangeRate?: number;
+  debitCurrency?: string;
+  creditCurrency?: string;
   status: PayrollStatus;
 }
 
@@ -32,16 +32,21 @@ export class PayrollCreateRequest {
   employerID: string;
   reference: string;
   payrollDate: string;
-  totalDebitAmount: number;
-  totalCreditAmount: number;
-  exchangeRate: number;
-  debitCurrency: string;
-  creditCurrency: string;
+  totalDebitAmount?: number;
+  totalCreditAmount?: number;
+  exchangeRate?: number;
+  debitCurrency?: string;
+  creditCurrency?: string;
 }
 
 export class PayrollUpdateRequest {
   completedTimestamp?: Date;
   status?: PayrollStatus;
+  totalDebitAmount?: number;
+  totalCreditAmount?: number;
+  exchangeRate?: number;
+  debitCurrency?: string;
+  creditCurrency?: string;
 }
 
 export const validateCreatePayrollRequest = (payroll: PayrollCreateRequest) => {
@@ -49,11 +54,11 @@ export const validateCreatePayrollRequest = (payroll: PayrollCreateRequest) => {
     employerID: Joi.string().required(),
     reference: Joi.string().required(),
     payrollDate: Joi.string().required(),
-    totalDebitAmount: Joi.number().required(),
-    totalCreditAmount: Joi.number().required(),
-    exchangeRate: Joi.number().required(),
-    debitCurrency: Joi.string().required(),
-    creditCurrency: Joi.string().required(),
+    totalDebitAmount: Joi.number().optional(),
+    totalCreditAmount: Joi.number().optional(),
+    exchangeRate: Joi.number().optional(),
+    debitCurrency: Joi.string().optional(),
+    creditCurrency: Joi.string().optional(),
   };
 
   const payrollJoiSchema = Joi.object(payrollJoiValidationKeys).options({
@@ -69,6 +74,11 @@ export const validateUpdatePayrollRequest = (payroll: PayrollUpdateRequest) => {
     status: Joi.string()
       .optional()
       .valid(...Object.values(PayrollStatus)),
+    totalDebitAmount: Joi.number().optional(),
+    totalCreditAmount: Joi.number().optional(),
+    exchangeRate: Joi.number().optional(),
+    debitCurrency: Joi.string().optional(),
+    creditCurrency: Joi.string().optional(),
   };
 
   const payrollJoiSchema = Joi.object(payrollJoiValidationKeys).options({
@@ -87,11 +97,11 @@ export const validatePayroll = (payroll: Payroll) => {
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
     completedTimestamp: Joi.date().optional(),
-    totalDebitAmount: Joi.number().required(),
-    totalCreditAmount: Joi.number().required(),
-    exchangeRate: Joi.number().required(),
-    debitCurrency: Joi.string().required(),
-    creditCurrency: Joi.string().required(),
+    totalDebitAmount: Joi.number().optional(),
+    totalCreditAmount: Joi.number().optional(),
+    exchangeRate: Joi.number().optional(),
+    debitCurrency: Joi.string().optional(),
+    creditCurrency: Joi.string().optional(),
     status: Joi.string()
       .required()
       .valid(...Object.values(PayrollStatus)),
@@ -113,11 +123,11 @@ export const convertToDomainPayroll = (payroll: PrismaPayrollModel): Payroll => 
     createdTimestamp: payroll.createdTimestamp,
     updatedTimestamp: payroll.updatedTimestamp,
     ...(payroll.completedTimestamp && { completedTimestamp: payroll.completedTimestamp }),
-    totalDebitAmount: payroll.totalDebitAmount,
-    totalCreditAmount: payroll.totalCreditAmount,
-    exchangeRate: payroll.exchangeRate,
-    debitCurrency: payroll.debitCurrency,
-    creditCurrency: payroll.creditCurrency,
+    ...(payroll.totalDebitAmount && { totalDebitAmount: payroll.totalDebitAmount }),
+    ...(payroll.totalCreditAmount && { totalCreditAmount: payroll.totalCreditAmount }),
+    ...(payroll.exchangeRate && { exchangeRate: payroll.exchangeRate }),
+    ...(payroll.debitCurrency && { debitCurrency: payroll.debitCurrency }),
+    ...(payroll.creditCurrency && { creditCurrency: payroll.creditCurrency }),
     status: payroll.status as PayrollStatus,
   };
 };

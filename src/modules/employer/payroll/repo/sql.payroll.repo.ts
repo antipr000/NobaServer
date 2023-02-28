@@ -77,6 +77,11 @@ export class SqlPayrollRepo implements IPayrollRepo {
       const payrollUpdateInput: Prisma.PayrollUpdateInput = {
         ...(payroll.completedTimestamp && { completedTimestamp: payroll.completedTimestamp }),
         ...(payroll.status && { status: payroll.status }),
+        ...(payroll.totalDebitAmount && { totalDebitAmount: payroll.totalDebitAmount }),
+        ...(payroll.totalCreditAmount && { totalCreditAmount: payroll.totalCreditAmount }),
+        ...(payroll.exchangeRate && { exchangeRate: payroll.exchangeRate }),
+        ...(payroll.debitCurrency && { debitCurrency: payroll.debitCurrency }),
+        ...(payroll.creditCurrency && { creditCurrency: payroll.creditCurrency }),
       };
 
       const returnedPayroll: PrismaPayrollModel = await this.prismaService.payroll.update({
