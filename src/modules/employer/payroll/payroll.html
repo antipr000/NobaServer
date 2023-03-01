@@ -1,12 +1,11 @@
-<!DOCTYPE html>
 <body>
   <img
     src="https://uploads-ssl.webflow.com/629e5b654205c541b9708b89/62bf02e704082cf222d13cd9_Logo.png"
     width="150px"
     height="39px"
   />
-  <h1>{{companyName}} Invoice - {{dateMonthYear}}</h1>
-  <h2>Hello {{companyName}} 👋</h2>
+  <h1>Mono Invoice - March 2023</h1>
+  <h2>Hello Mono 👋</h2>
   <div>
     <p>
       Below is a list of your employees who will receive a portion of this month’s salary in digital dollars. Please
@@ -17,8 +16,8 @@
         Deduct the amount marked “Noba Allocation” from the traditional salary payment for each of these employees.
       </li>
       <li>
-        Pay the amount marked “Total” equal to ${{totalAmount}}
-        {{currency}}
+        Pay the amount marked “Total” equal to $2.700.000
+        COP
         for this pay period to the bank account below.
       </li>
     </ul>
@@ -29,15 +28,21 @@
         <th>Employee</th>
         <th>Noba Allocation</th>
       </tr>
-      {{#each allocations}}
         <tr>
-          <td>{{this.employee}}</td>
-          <td>${{this.amount}} {{../currency}}</td>
+          <td>Camilo Moreno</td>
+          <td>$200.000 COP</td>
         </tr>
-      {{/each}}
+        <tr>
+          <td>German Ramirez</td>
+          <td>$500.000 COP</td>
+        </tr>
+        <tr>
+          <td>Jhon Pedroza</td>
+          <td>$100.000 COP</td>
+        </tr>
       <tr>
         <td>Total</td>
-        <td>${{totalAmount}} {{currency}}</td>
+        <td>$2.700.000 COP</td>
       </tr>
     </table>
   </div>
@@ -47,13 +52,26 @@
         <th>Noba Account Information</th>
         <th></th>
       </tr>
-      {{!-- Hardcode bottom 4 rows --}}
-      {{#each accountInformation}}
         <tr>
-          <td>{{this.key}}</td>
-          <td>{{this.value}}</td>
+          <td>Número de cuenta</td>
+          <td>095000766</td>
         </tr>
-      {{/each}}
+        <tr>
+          <td>NIT</td>
+          <td>9016746554</td>
+        </tr>
+        <tr>
+          <td>A nombre de</td>
+          <td>NOBA COLOMBIA SAS</td>
+        </tr>
+        <tr>
+          <td>Tipo de cuenta</td>
+          <td>Ahorros</td>
+        </tr>
+        <tr>
+          <td>Banco</td>
+          <td>Banco Cooperativo Coopcentral</td>
+        </tr>
 
     </table>
 

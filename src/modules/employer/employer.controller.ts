@@ -7,7 +7,6 @@ import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
 import { EmployerService } from "./employer.service";
 import { EmployerDTO, PayrollData } from "./dto/employer.controller.dto";
-import Handlebars from "handlebars";
 
 @Controller("v1/employers")
 @Roles(Role.CONSUMER)
@@ -62,12 +61,9 @@ export class EmployerController {
   @ApiNotFoundResponse({ description: "Employer not found" })
   async generatePayroll(@Param("referralID") referralID: string, @Body() payrollData: PayrollData): Promise<void> {
     const employer = await this.employerService.getEmployerByReferralID(referralID);
-    if (!employer) {
-      throw new NotFoundException("Employer not found");
-    }
-
-    const template = Handlebars.compile("Name: {{name}}");
-    const result = template({ name: "Nest" });
-    console.log(result);
+    // if (!employer) {
+    //   throw new NotFoundException("Employer not found");
+    // }
+    this.employerService.generatePayroll("payrollID");
   }
 }

@@ -6,6 +6,9 @@ import { Employer } from "./domain/Employer";
 import { IEmployerRepo } from "./repo/employer.repo";
 import { EMPLOYER_REPO_PROVIDER } from "./repo/employer.repo.module";
 import { CreateEmployerRequestDTO, UpdateEmployerRequestDTO } from "./dto/employer.service.dto";
+import { readFileSync, writeFileSync } from "fs-extra";
+import dayjs from "dayjs";
+import Handlebars from "handlebars";
 
 @Injectable()
 export class EmployerService {
@@ -102,5 +105,64 @@ export class EmployerService {
     return this.employerRepo.getEmployerByBubbleID(bubbleID);
   }
 
-  async generatePayroll() {}
+  async generatePayroll(payrollID: string): Promise<string> {
+    // lookup in payroll repo
+    // get disbursements by payroll ID
+    // payroll -> disbursements -> employee -> consumer
+    const fileContent = readFileSync(
+      __dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\template_en.hbs",
+      "utf-8",
+    );
+    const template = Handlebars.compile(fileContent);
+    const dateMonthYear = dayjs().format("MMMM YYYY");
+    const currency = "COP";
+    const allocations = [
+      {
+        employee: "Camilo Moreno",
+        amount: "200.000",
+      },
+      {
+        employee: "German Ramirez",
+        amount: "500.000",
+      },
+      {
+        employee: "Jhon Pedroza",
+        amount: "100.000",
+      },
+    ];
+
+    const accountInformation = [
+      {
+        key: "Número de cuenta",
+        value: "095000766",
+      },
+      {
+        key: "NIT",
+        value: "9016746554",
+      },
+      {
+        key: "A nombre de",
+        value: "NOBA COLOMBIA SAS",
+      },
+      {
+        key: "Tipo de cuenta",
+        value: "Ahorros",
+      },
+      {
+        key: "Banco",
+        value: "Banco Cooperativo Coopcentral",
+      },
+    ];
+    const result = template({
+      companyName: "Mono",
+      currency: currency,
+      dateMonthYear: dateMonthYear,
+      totalAmount: "2.700.000",
+      allocations: allocations,
+      accountInformation: accountInformation,
+    });
+    writeFileSync(__dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\payroll.html", result);
+    console.log(result);
+    return "fake-link";
+  }
 }
