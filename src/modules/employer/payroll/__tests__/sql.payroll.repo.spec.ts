@@ -8,7 +8,7 @@ import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { getRandomPayroll, saveAndGetPayroll } from "../test_utils/payroll.test.utils";
 import { createTestEmployerAndStoreInDB } from "../../test_utils/test.utils";
 import { PayrollStatus } from "../domain/Payroll";
-import { DatabaseInternalErrorException } from "../../../../core/exception/CommonAppException";
+import { DatabaseInternalErrorException, NotFoundError } from "../../../../core/exception/CommonAppException";
 
 describe("SqlPayrollRepo tests", () => {
   jest.setTimeout(20000);
@@ -111,6 +111,16 @@ describe("SqlPayrollRepo tests", () => {
           }),
       ).rejects.toThrow(Error);
     });
+
+    it("should throw error if payroll does not exist", async () => {
+      await expect(
+        async () =>
+          await payrollRepo.updatePayroll("fake-id", {
+            status: PayrollStatus.COMPLETE,
+            completedTimestamp: new Date(),
+          }),
+      ).rejects.toThrow(NotFoundError);
+    });
   });
 
   describe("getPayrollById", () => {
@@ -155,6 +165,15 @@ describe("SqlPayrollRepo tests", () => {
       });
       expect(allPayrolls).toHaveLength(2);
       expect(allPayrolls).toEqual(expect.arrayContaining([payroll1, payroll3]));
+    });
+
+    it("should return empty list when employer is not present", async () => {
+      const payroll1 = await saveAndGetPayroll(prismaService);
+      await saveAndGetPayroll(prismaService, payroll1.employerID);
+
+      const allPayrolls = await payrollRepo.getAllPayrollsForEmployer("fake-id", {});
+
+      expect(allPayrolls).toHaveLength(0);
     });
   });
 });
