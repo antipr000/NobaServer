@@ -30,7 +30,7 @@ export class BankFactory {
   getBankImplementationByCurrency(currency: string): IBank {
     switch (currency) {
       case "USD":
-        return this.monoWorkflowService;
+        return this.circleService;
       case "COP":
         return this.monoWorkflowService;
       default:
