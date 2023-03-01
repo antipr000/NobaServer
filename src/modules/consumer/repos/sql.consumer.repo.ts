@@ -345,9 +345,9 @@ export class SQLConsumerRepo implements IConsumerRepo {
 
     try {
       const consumers = await this.prisma.consumer.findMany({
-        where: query,
+        ...(query.OR.length > 0 && { where: query }), // If no OR conditions, find everything
         orderBy: { lastName: "asc" },
-        include: { verificationData: true },
+        include: { address: true, verificationData: true },
       });
 
       return Result.ok(consumers.map(consumer => Consumer.createConsumer(consumer)));

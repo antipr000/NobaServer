@@ -14,7 +14,11 @@ import { DeleteNobaAdminDTO } from "../dto/DeleteNobaAdminDTO";
 import { Consumer, ConsumerProps } from "../../consumer/domain/Consumer";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
-import { DocumentVerificationState, KycVerificationState } from "../../../modules/consumer/domain/ExternalStates";
+import {
+  DocumentVerificationState,
+  KycVerificationState,
+  UserState,
+} from "../../../modules/consumer/domain/ExternalStates";
 import { TransactionService } from "../../../modules/transaction/transaction.service";
 import { KYCStatus, DocumentVerificationStatus, KYCProvider } from "@prisma/client";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
@@ -25,6 +29,7 @@ import { getMockTransactionServiceWithDefaults } from "../../../modules/transact
 import { ConsumerMapper } from "../../../modules/consumer/mappers/ConsumerMapper";
 import { EmployerService } from "../../../modules/employer/employer.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
+import { ConsumerDTO } from "../../../modules/consumer/dto/ConsumerDTO";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -980,6 +985,110 @@ describe("AdminController", () => {
       );
 
       expect(accountBalances).toEqual(expectedAccountBalances);
+    });
+
+    it("Should return expected account balances with string accountID", async () => {
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: "admin-123456789",
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const expectedAccountBalances = [
+        {
+          accountID: "test-account-id",
+          currency: "USD",
+          balance: 10.99,
+        },
+      ];
+
+      when(
+        mockAdminService.getBalanceForAccounts(ACCOUNT_BALANCE_TYPES.CIRCLE, deepEqual(["test-account-id"])),
+      ).thenResolve(expectedAccountBalances);
+
+      const accountBalances = await adminController.getAccountBalances(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        {
+          accountBalanceType: ACCOUNT_BALANCE_TYPES.CIRCLE,
+          accountIDs: "test-account-id" as unknown as string[],
+        },
+      );
+
+      expect(accountBalances).toEqual(expectedAccountBalances);
+    });
+
+    it("Regular user (non-admin) should not be able view balances", async () => {
+      const authenticatedConsumer: Consumer = Consumer.createConsumer({
+        id: "XXXXXXXXXX",
+        email: LOGGED_IN_ADMIN_EMAIL,
+      });
+
+      expect(
+        async () =>
+          await adminController.getAccountBalances(
+            {
+              user: { entity: authenticatedConsumer },
+            },
+            {
+              accountBalanceType: ACCOUNT_BALANCE_TYPES.CIRCLE,
+              accountIDs: ["test-account-id"],
+            },
+          ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe("getConsumers", () => {
+    it("Should return expected consumers", async () => {
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: "admin-123456789",
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const expectedConsumer: ConsumerDTO[] = [
+        {
+          id: "123456790",
+          firstName: "Rosie",
+          lastName: "Noba",
+          email: "rosie@noba.com",
+          handle: "rosie-noba",
+          status: UserState.APPROVED,
+          referralCode: "123456789",
+          kycVerificationData: {
+            kycVerificationStatus: KycVerificationState.APPROVED,
+          },
+          documentVerificationData: {
+            documentVerificationStatus: DocumentVerificationState.NOT_REQUIRED,
+          },
+        },
+        {
+          id: "0987654321",
+          firstName: "Rosie2",
+          lastName: "Noba",
+          email: "rosie2@noba.com",
+          handle: "rosie2-noba",
+          status: UserState.APPROVED,
+          referralCode: "987654321",
+          kycVerificationData: {
+            kycVerificationStatus: KycVerificationState.APPROVED,
+          },
+          documentVerificationData: {
+            documentVerificationStatus: DocumentVerificationState.NOT_REQUIRED,
+          },
+        },
+      ];
+
+      when(mockConsumerService.findConsumers(deepEqual({ name: "Rosie" }))).thenResolve();
+
+      const consumers = await adminController.getConsumers(
+        { user: { entity: requestingNobaAdmin } },
+        { name: "Rosie" },
+      );
+
+      expect(consumers).toEqual(expectedConsumers);
     });
 
     it("Should return expected account balances with string accountID", async () => {

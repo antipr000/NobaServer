@@ -17,7 +17,7 @@ export class ConsumerSearchDTO {
   @ApiPropertyOptional()
   handle?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: KYCStatus })
   kycStatus?: KYCStatus;
 }
 
