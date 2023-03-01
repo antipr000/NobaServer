@@ -1,0 +1,35 @@
+<body>
+  <img
+    src="https://uploads-ssl.webflow.com/629e5b654205c541b9708b89/62bf02e704082cf222d13cd9_Logo.png"
+    width="150px"
+    height="39px"
+  />
+  <h1>{{companyName}} Invoice - {{dateMonthYear}}</h1>
+  <h2>Hello {{companyName}}👋</h2>
+  <div>
+    <p>
+      Below is a list of your employees who will receive a portion of this month’s salary in digital dollars. Please
+      follow these instructions to complete the salary payment process with Noba:
+    </p>
+    <ul>
+      <li>
+        Deduct the amount marked “Noba Allocation” from the traditional salary payment for each of these employees.
+      </li>
+      <li>
+        Pay the amount marked “Total” equal to ${{totalAmount}} COP for this pay period to the bank account below.
+      </li>
+    </ul>
+  </div>
+  <div>
+    <table>
+      <tr>
+        <td></td>
+        {{#each people}}
+        <th scope="col">{{this}}</th>
+        {{/each}}
+      </tr>
+      <li></li>
+    </table>
+  </div>
+  <div></div>
+</body>

@@ -101,4 +101,6 @@ export class EmployerService {
 
     return this.employerRepo.getEmployerByBubbleID(bubbleID);
   }
+
+  async generatePayroll() {}
 }

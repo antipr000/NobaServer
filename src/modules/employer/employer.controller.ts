@@ -7,6 +7,7 @@ import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
 import { EmployerService } from "./employer.service";
 import { EmployerDTO, PayrollData } from "./dto/employer.controller.dto";
+import Handlebars from "handlebars";
 
 @Controller("v1/employers")
 @Roles(Role.CONSUMER)
@@ -52,6 +53,7 @@ export class EmployerController {
   }
 
   @Post("/:referralID/payroll")
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Generate payroll for employer" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -64,6 +66,8 @@ export class EmployerController {
       throw new NotFoundException("Employer not found");
     }
 
-    await this.employerService.generatePayroll(employer);
+    const template = Handlebars.compile("Name: {{name}}");
+    const result = template({ name: "Nest" });
+    console.log(result);
   }
 }
