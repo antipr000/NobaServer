@@ -16,6 +16,7 @@ export class EmployerService {
 
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
+    // @Inject(PAYROLL_REPO_PROVIDER) private readonly payrollRepo: IPayrollRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -109,6 +110,7 @@ export class EmployerService {
     // lookup in payroll repo
     // get disbursements by payroll ID
     // payroll -> disbursements -> employee -> consumer
+
     HandlebarsI18n.init();
     const fileContent = readFileSync(
       __dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\template_en.hbs",
