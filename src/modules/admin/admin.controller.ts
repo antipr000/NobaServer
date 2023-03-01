@@ -47,6 +47,7 @@ import { ExchangeRateDTO } from "../common/dto/ExchangeRateDTO";
 import { Role } from "../auth/role.enum";
 import { AccountBalanceFiltersDTO } from "./dto/AccountBalanceFiltersDTO";
 import { AccountBalanceDTO } from "./dto/AccountBalanceDTO";
+import { ConsumerSearchDTO } from "../consumer/dto/consumer.search.dto";
 
 @Roles(Role.NOBA_ADMIN)
 @Controller("v1/admins")
@@ -205,7 +206,7 @@ export class AdminController {
     @Param("consumerID") consumerID: string,
     @Body() requestBody: AdminUpdateConsumerRequestDTO,
     @Request() request,
-  ) {
+  ): Promise<ConsumerDTO> {
     const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canUpdateConsumerData()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update a Consumer.`);
@@ -248,6 +249,20 @@ export class AdminController {
     }
 
     return this.adminService.getBalanceForAccounts(filters.accountBalanceType, filters.accountIDs);
+  }
+
+  @Get("/consumers")
+  @ApiOperation({ summary: "Gets all consumers or a subset based on query parameters" })
+  @ApiResponse({ status: HttpStatus.OK, type: ConsumerDTO, description: "List of consumers", isArray: true })
+  @ApiForbiddenResponse({ description: "User forbidden from getting consumers" })
+  async getConsumers(@Request() request, @Query() filters: ConsumerSearchDTO): Promise<ConsumerDTO[]> {
+    const authenticatedUser: Admin = request.user.entity;
+    if (!(authenticatedUser instanceof Admin)) {
+      throw new ForbiddenException("User is forbidden from calling this API.");
+    }
+
+    const consumerArr = await this.consumerService.findConsumers(filters);
+    return consumerArr.map(consumer => this.consumerMapper.toDTO(consumer));
   }
 
   @Post("/exchangerates")

@@ -12,6 +12,7 @@ import { Utils } from "../../../core/utils/Utils";
 import { ContactInfo } from "../domain/ContactInfo";
 import { KmsService } from "../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
+import { FindConsumerByStructuredFieldsDTO } from "../dto/consumer.search.dto";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
@@ -262,6 +263,97 @@ export class SQLConsumerRepo implements IConsumerRepo {
     if (!consumerProps) return null;
 
     return consumerProps.id;
+  }
+
+  async findConsumersByStructuredFields(filter: FindConsumerByStructuredFieldsDTO): Promise<Result<Consumer[]>> {
+    // Clean up search parameters
+    const handle = filter.handle && filter.handle.startsWith("$") ? filter.handle.substring(1).trim() : filter.handle;
+
+    filter.email = filter.email && filter.email.toLowerCase();
+    filter.phone = filter.phone && Utils.stripSpaces(filter.phone);
+
+    let firstName;
+    let lastName;
+
+    if (filter.name) {
+      firstName = filter.name && filter.name.indexOf(" ") > -1 ? filter.name.split(" ")[0].trim() : filter.name.trim();
+      lastName = filter.name && filter.name.indexOf(" ") > -1 ? filter.name.split(" ")[1].trim() : filter.name.trim();
+    }
+
+    // Build query
+    const query: Prisma.ConsumerWhereInput = {};
+
+    query.OR = [];
+
+    if (filter.email) {
+      query.OR.push({ email: { contains: filter.email, mode: "insensitive" } });
+    }
+
+    if (filter.phone) {
+      query.OR.push({ phone: { contains: filter.phone, mode: "insensitive" } });
+    }
+
+    if (filter.kycStatus) {
+      query.OR.push({
+        verificationData: {
+          kycCheckStatus: filter.kycStatus,
+        },
+      });
+    }
+
+    if (filter.name) {
+      // If a space is provided, it is expected that the firstName and lastName match the terms
+      // on either side of the space, so these conditions should be ANDed not ORed
+      if (filter.name.indexOf(" ") > -1) {
+        query.OR.push({
+          firstName: {
+            contains: firstName,
+            mode: "insensitive",
+          },
+          lastName: {
+            contains: lastName,
+            mode: "insensitive",
+          },
+        });
+      } else {
+        // If no space, search could be for a last name or first name so we OR them
+        query.OR.push({
+          firstName: {
+            contains: firstName,
+            mode: "insensitive",
+          },
+        });
+        query.OR.push({
+          lastName: {
+            contains: lastName,
+            mode: "insensitive",
+          },
+        });
+      }
+    }
+
+    if (handle) {
+      query.OR = [
+        {
+          handle: {
+            contains: handle,
+            mode: "insensitive",
+          },
+        },
+      ];
+    }
+
+    try {
+      const consumers = await this.prisma.consumer.findMany({
+        where: query,
+        orderBy: { lastName: "asc" },
+        include: { verificationData: true },
+      });
+
+      return Result.ok(consumers.map(consumer => Consumer.createConsumer(consumer)));
+    } catch (e) {
+      return Result.fail(`Couldn't find consumer with given contact info for unknown reason: ${e}`);
+    }
   }
 
   async updateConsumer(consumerID: string, consumer: Partial<ConsumerProps>): Promise<Consumer> {

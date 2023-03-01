@@ -16,6 +16,7 @@ import { LinkedEmployerDTO } from "../dto/LinkedEmployerDTO";
 import { EmployerService } from "../../../modules/employer/employer.service";
 import { Employer } from "../../../modules/employer/domain/Employer";
 import { Injectable } from "@nestjs/common";
+import { AggregatedPaymentMethodState, AggregatedWalletState } from "../domain/ExternalStates";
 
 @Injectable()
 export class ConsumerMapper implements Mapper<Consumer> {
@@ -83,7 +84,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
       .map(paymentMethod => this.toPaymentMethodsDTO(paymentMethod));
   }
 
-  public toDTO(consumer: Consumer, paymentMethods: PaymentMethod[], cryptoWallets: CryptoWallet[]): ConsumerDTO {
+  public toDTO(consumer: Consumer, paymentMethods?: PaymentMethod[], cryptoWallets?: CryptoWallet[]): ConsumerDTO {
     const p = consumer.props;
     const [documentVerificationStatus, documentVerificationErrorReason] =
       this.statesMapper.getDocumentVerificationState(
@@ -126,10 +127,14 @@ export class ConsumerMapper implements Mapper<Consumer> {
             postalCode: p.address.postalCode,
           }
         : null,
-      cryptoWallets: this.getCryptoWalletsDTO(cryptoWallets),
-      paymentMethods: this.getPaymentMethodsDTO(paymentMethods),
-      paymentMethodStatus: this.statesMapper.getPaymentMethodState(paymentMethods),
-      walletStatus: this.statesMapper.getWalletState(cryptoWallets),
+      cryptoWallets: cryptoWallets ? this.getCryptoWalletsDTO(cryptoWallets) : [],
+      paymentMethods: paymentMethods ? this.getPaymentMethodsDTO(paymentMethods) : [],
+      paymentMethodStatus: paymentMethods
+        ? this.statesMapper.getPaymentMethodState(paymentMethods)
+        : AggregatedPaymentMethodState.NOT_SUBMITTED,
+      walletStatus: cryptoWallets
+        ? this.statesMapper.getWalletState(cryptoWallets)
+        : AggregatedWalletState.NOT_SUBMITTED,
     };
   }
 
