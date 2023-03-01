@@ -151,6 +151,7 @@ import { NobaWorkflowConfig } from "./configtypes/NobaWorkflowConfig";
 import { MonoConfigs } from "./configtypes/MonoConfig";
 import { SecretProvider } from "./SecretProvider";
 import { BubbleConfigs } from "./configtypes/BubbleConfigs";
+import { readHTMLTemplateFromHandlebarFiles } from "../core/utils/template.handlebars";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -216,6 +217,8 @@ export default async function loadAppConfigs() {
 
   const vendorConfigs = await configureAllVendorCredentials(environment, updatedAwsConfigs);
   const filteredConfigs = ensureDevOnlyConfig(environment, vendorConfigs);
+
+  const templateFiles = await readHTMLTemplateFromHandlebarFiles();
 
   // initializeAWSEnv();
 
