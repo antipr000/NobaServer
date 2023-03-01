@@ -9,7 +9,7 @@ import { CreateEmployerRequestDTO, UpdateEmployerRequestDTO } from "./dto/employ
 import { readFileSync, writeFileSync } from "fs-extra";
 import dayjs from "dayjs";
 import Handlebars from "handlebars";
-
+import HandlebarsI18n from "handlebars-i18n";
 @Injectable()
 export class EmployerService {
   private readonly MAX_LEAD_DAYS = 5;
@@ -109,6 +109,7 @@ export class EmployerService {
     // lookup in payroll repo
     // get disbursements by payroll ID
     // payroll -> disbursements -> employee -> consumer
+    HandlebarsI18n.init();
     const fileContent = readFileSync(
       __dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\template_en.hbs",
       "utf-8",
