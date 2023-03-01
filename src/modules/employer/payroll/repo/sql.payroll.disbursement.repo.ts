@@ -15,7 +15,6 @@ import { Prisma, PayrollDisbursement as PrismaPayrollDisbursementModel } from "@
 import {
   DatabaseInternalErrorException,
   InvalidDatabaseRecordException,
-  NotFoundError,
 } from "../../../../core/exception/CommonAppException";
 
 @Injectable()
@@ -93,9 +92,6 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
       return convertToDomainPayrollDisbursement(returnedPayrollDisbursement);
     } catch (err) {
       this.logger.error(JSON.stringify(err));
-      if (err.meta && err.meta.cause === "Record to update not found.") {
-        throw new NotFoundError({});
-      }
       throw new DatabaseInternalErrorException({
         message: `Error updating the Payroll disbursement with ID: '${id}'`,
       });
