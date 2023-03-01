@@ -32,7 +32,7 @@ export class BankFactory {
       case "USD":
         return this.monoWorkflowService;
       case "COP":
-        return this.circleService;
+        return this.monoWorkflowService;
       default:
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
