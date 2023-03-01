@@ -53,7 +53,11 @@ export class SqlPayrollRepo implements IPayrollRepo {
       savedPayroll = convertToDomainPayroll(returnedPayroll);
     } catch (err) {
       this.logger.error(JSON.stringify(err));
-
+      if (err.code === "P2025") {
+        throw new DatabaseInternalErrorException({
+          message: `Failed to store Payroll in database as employer with id ${payroll.employerID} was not found`,
+        });
+      }
       throw new DatabaseInternalErrorException({
         message: "Error saving Payroll in database",
       });

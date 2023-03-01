@@ -96,12 +96,12 @@ export const validatePayroll = (payroll: Payroll) => {
     payrollDate: Joi.string().required(),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
-    completedTimestamp: Joi.date().optional(),
-    totalDebitAmount: Joi.number().optional(),
-    totalCreditAmount: Joi.number().optional(),
-    exchangeRate: Joi.number().optional(),
-    debitCurrency: Joi.string().optional(),
-    creditCurrency: Joi.string().optional(),
+    completedTimestamp: Joi.date().optional().allow(null),
+    totalDebitAmount: Joi.number().optional().allow(null),
+    totalCreditAmount: Joi.number().optional().allow(null),
+    exchangeRate: Joi.number().optional().allow(null),
+    debitCurrency: Joi.string().optional().allow(null),
+    creditCurrency: Joi.string().optional().allow(null),
     status: Joi.string()
       .required()
       .valid(...Object.values(PayrollStatus)),

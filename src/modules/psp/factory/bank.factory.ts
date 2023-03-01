@@ -30,9 +30,9 @@ export class BankFactory {
   getBankImplementationByCurrency(currency: string): IBank {
     switch (currency) {
       case "USD":
-        return this.monoWorkflowService;
-      case "COP":
         return this.circleService;
+      case "COP":
+        return this.monoWorkflowService;
       default:
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,

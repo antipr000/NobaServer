@@ -28,7 +28,7 @@ expect.extend({
 
     return {
       pass: true,
-      message: () => ``,
+      message: () => "",
     };
   },
 });
