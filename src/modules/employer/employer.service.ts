@@ -10,13 +10,17 @@ import { readFileSync, writeFileSync } from "fs-extra";
 import dayjs from "dayjs";
 import Handlebars from "handlebars";
 import HandlebarsI18n from "handlebars-i18n";
+import { PAYROLL_DISBURSEMENT_REPO_PROVIDER, PAYROLL_REPO_PROVIDER } from "./payroll/repo/payroll.repo.module";
+import { IPayrollRepo } from "./payroll/repo/payroll.repo";
+import { IPayrollDisbursementRepo } from "./payroll/repo/payroll.disbursement.repo";
 @Injectable()
 export class EmployerService {
   private readonly MAX_LEAD_DAYS = 5;
 
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
-    // @Inject(PAYROLL_REPO_PROVIDER) private readonly payrollRepo: IPayrollRepo,
+    @Inject(PAYROLL_REPO_PROVIDER) private readonly payrollRepo: IPayrollRepo,
+    @Inject(PAYROLL_DISBURSEMENT_REPO_PROVIDER) private readonly payrollDisbursementRepo: IPayrollDisbursementRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -110,6 +114,8 @@ export class EmployerService {
     // lookup in payroll repo
     // get disbursements by payroll ID
     // payroll -> disbursements -> employee -> consumer
+    const payroll = await this.payrollRepo.getPayrollByID(payrollID);
+    const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
 
     HandlebarsI18n.init();
     const fileContent = readFileSync(
