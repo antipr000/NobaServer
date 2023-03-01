@@ -32,7 +32,7 @@ p {
   font-weight: 600;
 }
 
-ul {
+ol {
   opacity: 0.85;
   font-weight: 500;
 }
@@ -49,6 +49,7 @@ table {
   margin-top: 20px;
   margin-bottom: 20px;
   text-align: left;
+
   box-shadow: 0 2px 4px 0 rgb(0 0 0 / 5%);
 }
 
