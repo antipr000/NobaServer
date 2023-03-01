@@ -1,3 +1,8 @@
+html {
+  max-width: 700px;
+  margin: auto;
+}
+
 body {
   color: #002034;
   text-align: center;
@@ -38,12 +43,13 @@ ul {
 }
 
 table {
-  border-radius: 4px;
+  border-radius: 8px;
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
   margin-bottom: 20px;
   text-align: left;
+  box-shadow: 0 2px 4px 0 rgb(0 0 0 / 5%);
 }
 
 td {
@@ -60,12 +66,6 @@ tr:nth-of-type(2n + 1) {
   background-color: #e8eef0;
 }
 
-tr:last-of-type td {
-  background-color: rgb(186, 207, 213);
-  font-weight: 600;
-  font-size: 12px;
-}
-
 tr:first-child th:first-child {
   border-top-left-radius: 8px;
 }
@@ -80,9 +80,11 @@ tr:last-child td:last-child {
   border-bottom-right-radius: 8px;
 }
 
-/* table tr:first-child {
-  border-radius: 4px;
-} */
+.employee-allocations tr:last-of-type td {
+  background-color: rgb(186, 207, 213);
+  font-weight: 600;
+  font-size: 12px;
+}
 
 table tr th {
   font-size: 16px;

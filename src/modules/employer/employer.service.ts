@@ -133,16 +133,32 @@ export class EmployerService {
     const currency = "COP";
     const allocations = [
       {
-        employee: "Camilo Moreno",
+        employeeName: "Camilo Moreno",
         amount: "200.000",
       },
       {
-        employee: "German Ramirez",
+        employeeName: "German Ramirez",
         amount: "500.000",
       },
       {
-        employee: "Jhon Pedroza",
+        employeeName: "Jhon Pedroza",
         amount: "100.000",
+      },
+      {
+        employeeName: "Sara Ruiz",
+        amount: "100.000",
+      },
+      {
+        employeeName: "Daniel Felipe Piñeros",
+        amount: "600.000",
+      },
+      {
+        employeeName: "Elianne Julieth Marcilia Burgos",
+        amount: "200.000",
+      },
+      {
+        employeeName: "Alejandro Cordoba",
+        amount: "1.000.000",
       },
     ];
     const nobaAccountNumber = "095000766";
