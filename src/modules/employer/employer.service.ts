@@ -112,7 +112,7 @@ export class EmployerService {
     return this.employerRepo.getEmployerByBubbleID(bubbleID);
   }
 
-  async generatePayroll(payrollID: string): Promise<string> {
+  async generatePayroll(payrollID: string): Promise<void> {
     const fileContent = readFileSync(
       __dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\template_en.hbs",
       "utf-8",
@@ -173,7 +173,6 @@ export class EmployerService {
     writeFileSync(__dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\payroll.html", result);
     console.log(result);
     // generate both ES and EN
-    return "fake-link";
   }
 
   private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDibursementDTO[]> {
