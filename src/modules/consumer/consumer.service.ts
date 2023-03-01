@@ -13,28 +13,17 @@ import { KmsService } from "../common/kms.service";
 import { SanctionedCryptoWalletService } from "../common/sanctionedcryptowallet.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { NotificationService } from "../notifications/notification.service";
-import { PaymentService } from "../psp/payment.service";
 import { Transaction } from "../transaction/domain/Transaction";
 import { Consumer, ConsumerProps } from "./domain/Consumer";
 import { PaymentMethod, PaymentMethodProps } from "./domain/PaymentMethod";
 import { CryptoWallet } from "./domain/CryptoWallet";
-import { FiatTransactionStatus, PaymentRequestResponse } from "./domain/Types";
+import { PaymentRequestResponse } from "./domain/Types";
 import { UserVerificationStatus } from "./domain/UserVerificationStatus";
 import { NotificationMethod } from "./dto/AddCryptoWalletDTO";
-import { AddPaymentMethodDTO } from "./dto/AddPaymentMethodDTO";
 import { UserEmailUpdateRequest } from "./dto/EmailVerificationDTO";
 import { UserPhoneUpdateRequest } from "./dto/PhoneVerificationDTO";
 import { IConsumerRepo } from "./repos/consumer.repo";
-import {
-  DocumentVerificationStatus,
-  KYCStatus,
-  PaymentMethodStatus,
-  PaymentMethodType,
-  PaymentProvider,
-  WalletStatus,
-} from "@prisma/client";
-import { AddPaymentMethodResponse } from "../psp/domain/AddPaymentMethodResponse";
-import { CardFailureExceptionText } from "./CardProcessingException";
+import { DocumentVerificationStatus, KYCStatus, PaymentProvider, WalletStatus } from "@prisma/client";
 import { QRService } from "../common/qrcode.service";
 import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
 import { findFlag } from "country-list-with-dial-code-and-flag";
@@ -44,6 +33,8 @@ import { EmployerService } from "../employer/employer.service";
 import { Employer } from "../employer/domain/Employer";
 import { Employee } from "../employee/domain/Employee";
 import { BubbleService } from "../bubble/bubble.service";
+import { ConsumerSearchDTO } from "./dto/consumer.search.dto";
+import { ConsumerMapper } from "./mappers/ConsumerMapper";
 
 @Injectable()
 export class ConsumerService {
@@ -64,6 +55,9 @@ export class ConsumerService {
 
   @Inject()
   private readonly otpService: OTPService;
+
+  @Inject()
+  private readonly consumerMapper: ConsumerMapper;
 
   private otpOverride: number;
   private qrCodePrefix: string;
@@ -379,6 +373,35 @@ export class ConsumerService {
       ? await this.consumerRepo.getConsumerByEmail(emailOrPhone.toLowerCase())
       : await this.consumerRepo.getConsumerByPhone(emailOrPhone);
     return consumerResult;
+  }
+
+  async findConsumers(filter: ConsumerSearchDTO): Promise<Consumer[]> {
+    // If consumerID is populated, it is unique and this is all we want to search for
+    if (filter.consumerID) {
+      const consumer = await this.consumerRepo.getConsumer(filter.consumerID);
+      if (!consumer) {
+        return [];
+      }
+      return [consumer];
+    } else {
+      const result = await this.consumerRepo.findConsumersByStructuredFields({
+        name: filter.name,
+        email: filter.email,
+        phone: filter.phone,
+        handle: filter.handle,
+        kycStatus: filter.kycStatus,
+      });
+
+      if (result.isSuccess) {
+        return result.getValue();
+      }
+
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        error: result.error,
+        message: "Error finding consumers with supplied search criteria",
+      });
+    }
   }
 
   /**

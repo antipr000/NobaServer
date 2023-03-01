@@ -3,6 +3,7 @@ import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { ContactInfo } from "../domain/ContactInfo";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
+import { FindConsumerByStructuredFieldsDTO } from "../dto/consumer.search.dto";
 
 export interface IConsumerRepo {
   getConsumer(consumerID: string): Promise<Consumer>;
@@ -11,6 +12,7 @@ export interface IConsumerRepo {
   exists(emailOrPhone: string): Promise<boolean>;
   findConsumersByPublicInfo(publicInfoSearch: string, limit: number): Promise<Result<Consumer[]>>;
   findConsumerByContactInfo(contactInfo: ContactInfo): Promise<Result<Consumer>>;
+  findConsumersByStructuredFields(filter: FindConsumerByStructuredFieldsDTO): Promise<Result<Consumer[]>>;
   getConsumerByEmail(email: string): Promise<Result<Consumer>>;
   getConsumerByPhone(phone: string): Promise<Result<Consumer>>;
   getConsumerIDByHandle(handle: string): Promise<string>;

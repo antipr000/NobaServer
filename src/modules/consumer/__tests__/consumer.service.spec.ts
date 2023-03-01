@@ -57,6 +57,8 @@ import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/
 import { uuid } from "uuidv4";
 import { BubbleService } from "../../bubble/bubble.service";
 import { getMockBubbleServiceWithDefaults } from "../../../modules/bubble/mocks/mock.bubble.service";
+import { ConsumerMapper } from "../mappers/ConsumerMapper";
+import { getMockConsumerMapperWithDefaults } from "../mocks/mock.consumer.mapper";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -99,6 +101,7 @@ const getRandomConsumer = (): Consumer => {
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
   let consumerRepo: IConsumerRepo;
+  let consumerMapper: ConsumerMapper;
   let notificationService: NotificationService;
   let otpService: OTPService;
   let paymentService: PaymentService;
@@ -114,6 +117,7 @@ describe("ConsumerService", () => {
 
   beforeEach(async () => {
     consumerRepo = getMockConsumerRepoWithDefaults();
+    consumerMapper = getMockConsumerMapperWithDefaults();
     notificationService = getMockNotificationServiceWithDefaults();
     otpService = getMockOTPServiceWithDefaults();
     paymentService = getMockPaymentServiceWithDefaults();
@@ -145,6 +149,10 @@ describe("ConsumerService", () => {
       providers: [
         ConsumerRepoProvider,
         ConsumerService,
+        {
+          provide: ConsumerMapper,
+          useFactory: () => instance(consumerMapper),
+        },
         {
           provide: NotificationService,
           useFactory: () => instance(notificationService),
