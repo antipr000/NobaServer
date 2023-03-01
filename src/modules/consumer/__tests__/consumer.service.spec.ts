@@ -1423,6 +1423,99 @@ describe("ConsumerService", () => {
     });
   });
 
+  describe("findConsumersByStructuredFields", () => {
+    it("should find consumers by specific ID", async () => {
+      const consumer = getRandomConsumer();
+
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      const structuredFieldSearchSpy = jest.spyOn(consumerRepo, "findConsumersByStructuredFields");
+
+      const consumers = await consumerService.findConsumers({ consumerID: consumer.props.id });
+      expect(consumers).toEqual([consumer]);
+      expect(structuredFieldSearchSpy).not.toHaveBeenCalled();
+    });
+
+    it("should return empty array if no consumers found by specific ID", async () => {
+      when(consumerRepo.getConsumer("1234567890")).thenResolve(undefined);
+
+      const consumers = await consumerService.findConsumers({ consumerID: "1234567890" });
+      expect(consumers).toEqual([]);
+    });
+
+    it("should find consumers by name", async () => {
+      const consumer = getRandomConsumer();
+      consumer.props.firstName = "Rosie";
+      consumer.props.lastName = "Noba";
+
+      when(consumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Rosie Noba" }))).thenResolve(
+        Result.ok<Array<Consumer>>([consumer]),
+      );
+      const idSearchSpy = jest.spyOn(consumerRepo, "getConsumer");
+
+      const consumers = await consumerService.findConsumers({ name: "Rosie Noba" });
+      expect(consumers).toEqual([consumer]);
+      expect(idSearchSpy).not.toHaveBeenCalled();
+    });
+
+    it("should find consumers by all fields", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mockConsumer",
+        phone: "+15559993333",
+        email: "rosie@noba.com",
+        firstName: "Rosie",
+        lastName: "Noba",
+        handle: "rosie-noba",
+        isLocked: false,
+        verificationData: {
+          provider: KYCProvider.SARDINE,
+          isSuspectedFraud: false,
+          kycCheckStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+          documentVerificationTimestamp: new Date(),
+          kycVerificationTimestamp: new Date(),
+        },
+      });
+
+      when(
+        consumerRepo.findConsumersByStructuredFields(
+          deepEqual({
+            name: `${consumer.props.firstName} ${consumer.props.lastName}`,
+            email: consumer.props.email,
+            phone: consumer.props.phone,
+            handle: consumer.props.handle,
+            kycStatus: consumer.props.verificationData.kycCheckStatus,
+          }),
+        ),
+      ).thenResolve(Result.ok<Array<Consumer>>([consumer]));
+      const idSearchSpy = jest.spyOn(consumerRepo, "getConsumer");
+
+      const consumers = await consumerService.findConsumers({
+        name: "Rosie Noba",
+        email: consumer.props.email,
+        phone: consumer.props.phone,
+        handle: consumer.props.handle,
+        kycStatus: consumer.props.verificationData.kycCheckStatus,
+      });
+      expect(consumers).toEqual([consumer]);
+      expect(idSearchSpy).not.toHaveBeenCalled();
+    });
+
+    it("should return empty array if no consumers found", async () => {
+      when(consumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(Result.ok([]));
+
+      const consumers = await consumerService.findConsumers({ name: "Blah Blah" });
+      expect(consumers).toEqual([]);
+    });
+
+    it("should throw ServiceException if findConsumers fails", async () => {
+      when(consumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
+        Result.fail("Prisma failed!"),
+      );
+
+      expect(consumerService.findConsumers({ name: "Blah Blah" })).rejects.toThrow(ServiceException);
+    });
+  });
+
   describe("updateConsumerEmail", () => {
     it("incorrect and correct otp", async () => {
       const phone = "+12434252";

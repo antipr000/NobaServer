@@ -385,11 +385,11 @@ export class ConsumerService {
       return [consumer];
     } else {
       const result = await this.consumerRepo.findConsumersByStructuredFields({
-        name: filter.name,
-        email: filter.email,
-        phone: filter.phone,
-        handle: filter.handle,
-        kycStatus: filter.kycStatus,
+        ...(filter.name && { name: filter.name }),
+        ...(filter.email && { email: filter.email }),
+        ...(filter.phone && { phone: filter.phone }),
+        ...(filter.handle && { handle: filter.handle }),
+        ...(filter.kycStatus && { kycStatus: filter.kycStatus }),
       });
 
       if (result.isSuccess) {

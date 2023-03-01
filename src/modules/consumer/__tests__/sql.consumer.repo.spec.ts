@@ -627,11 +627,11 @@ describe("ConsumerRepoTests", () => {
     it("get a consumer by KYC Status", async () => {
       // Create 2 consumers in each status
       for (let status in KYCStatus) {
-        const consumer1 = getRandomUser(`${status}-1`);
+        const consumer1 = getRandomUser(`${status}-1`, "AAAAAAAA");
         consumer1.props.verificationData.kycCheckStatus = KYCStatus[status];
         await consumerRepo.createConsumer(consumer1);
 
-        const consumer2 = getRandomUser(`${status}-2`);
+        const consumer2 = getRandomUser(`${status}-2`, "BBBBBBBB");
         consumer2.props.verificationData.kycCheckStatus = KYCStatus[status];
         await consumerRepo.createConsumer(consumer2);
       }
