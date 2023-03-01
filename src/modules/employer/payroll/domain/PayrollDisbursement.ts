@@ -55,7 +55,7 @@ export const validatePayrollDisbursement = (payrollDisbursement: PayrollDisburse
     updatedTimestamp: Joi.date().required(),
     payrollID: Joi.string().required(),
     employeeID: Joi.string().required(),
-    transactionID: Joi.string().optional(),
+    transactionID: Joi.string().optional().allow(null),
     debitAmount: Joi.number().required(),
   };
 

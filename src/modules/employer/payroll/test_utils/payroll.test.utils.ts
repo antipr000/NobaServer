@@ -2,6 +2,12 @@ import { uuid } from "uuidv4";
 import { Payroll, PayrollCreateRequest, PayrollStatus, convertToDomainPayroll } from "../domain/Payroll";
 import { createTestEmployerAndStoreInDB } from "../../test_utils/test.utils";
 import { PrismaService } from "../../../../infraproviders/PrismaService";
+import {
+  PayrollDisbursement,
+  PayrollDisbursementCreateRequest,
+  convertToDomainPayrollDisbursement,
+} from "../domain/PayrollDisbursement";
+import { saveAndGetEmployee } from "../../../../modules/employee/test_utils/employee.test.utils";
 
 export const getRandomPayroll = (
   employerID: string,
@@ -58,4 +64,44 @@ export const saveAndGetPayroll = async (prismaService: PrismaService, employerID
   });
 
   return convertToDomainPayroll(createdPayroll);
+};
+
+export const getRandomPayrollDisbursement = (
+  payrollID: string,
+  employeeID: string,
+): {
+  payrollDisbursement: PayrollDisbursement;
+  payrollDisbursementCreateInput: PayrollDisbursementCreateRequest;
+} => {
+  const payrollDisbursement: PayrollDisbursement = {
+    id: uuid(),
+    createdTimestamp: new Date("2023-02-20"),
+    updatedTimestamp: new Date("2023-02-20"),
+    payrollID: payrollID,
+    employeeID: employeeID,
+    debitAmount: 10,
+  };
+
+  const payrollDisbursementCreateInput: PayrollDisbursementCreateRequest = {
+    payrollID: payrollID,
+    employeeID: employeeID,
+    debitAmount: 10,
+  };
+
+  return {
+    payrollDisbursement,
+    payrollDisbursementCreateInput,
+  };
+};
+
+export const saveAndGetPayrollDisbursement = async (prismaService: PrismaService): Promise<PayrollDisbursement> => {
+  const employee = await saveAndGetEmployee(prismaService);
+
+  const payroll = await saveAndGetPayroll(prismaService, employee.employerID);
+
+  const { payrollDisbursementCreateInput } = getRandomPayrollDisbursement(payroll.id, employee.id);
+
+  const payrollDisbursement = await prismaService.payrollDisbursement.create({ data: payrollDisbursementCreateInput });
+
+  return convertToDomainPayrollDisbursement(payrollDisbursement);
 };
