@@ -15,3 +15,8 @@ export type UpdateEmployerRequestDTO = {
   payrollDates?: string[];
   maxAllocationPercent?: number;
 };
+
+export type EmployeeDibursementDTO = {
+  employeeName: string;
+  amount: number;
+};

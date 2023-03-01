@@ -5,7 +5,7 @@ import { Logger } from "winston";
 import { Employer } from "./domain/Employer";
 import { IEmployerRepo } from "./repo/employer.repo";
 import { EMPLOYER_REPO_PROVIDER } from "./repo/employer.repo.module";
-import { CreateEmployerRequestDTO, UpdateEmployerRequestDTO } from "./dto/employer.service.dto";
+import { CreateEmployerRequestDTO, EmployeeDibursementDTO, UpdateEmployerRequestDTO } from "./dto/employer.service.dto";
 import { readFileSync, writeFileSync } from "fs-extra";
 import dayjs from "dayjs";
 import Handlebars from "handlebars";
@@ -13,6 +13,8 @@ import HandlebarsI18n from "handlebars-i18n";
 import { PAYROLL_DISBURSEMENT_REPO_PROVIDER, PAYROLL_REPO_PROVIDER } from "./payroll/repo/payroll.repo.module";
 import { IPayrollRepo } from "./payroll/repo/payroll.repo";
 import { IPayrollDisbursementRepo } from "./payroll/repo/payroll.disbursement.repo";
+import { ConsumerService } from "../consumer/consumer.service";
+import { EmployeeService } from "../employee/employee.service";
 @Injectable()
 export class EmployerService {
   private readonly MAX_LEAD_DAYS = 5;
@@ -111,18 +113,22 @@ export class EmployerService {
   }
 
   async generatePayroll(payrollID: string): Promise<string> {
-    // lookup in payroll repo
-    // get disbursements by payroll ID
-    // payroll -> disbursements -> employee -> consumer
-    const payroll = await this.payrollRepo.getPayrollByID(payrollID);
-    const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
-
-    HandlebarsI18n.init();
     const fileContent = readFileSync(
       __dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\template_en.hbs",
       "utf-8",
     );
     const template = Handlebars.compile(fileContent);
+
+    // const [employeeAllocations, payroll] = await Promise.all([
+    //   this.getEmployeeDisbursements(payrollID),
+    //   this.payrollRepo.getPayrollByID(payrollID),
+    // ]);
+
+    // const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
+    // const companyName = employer.name;
+
+    HandlebarsI18n.init();
+
     const dateMonthYear = dayjs().format("MMMM YYYY");
     const currency = "COP";
     const allocations = [
@@ -139,39 +145,34 @@ export class EmployerService {
         amount: "100.000",
       },
     ];
-
-    const accountInformation = [
-      {
-        key: "Número de cuenta",
-        value: "095000766",
-      },
-      {
-        key: "NIT",
-        value: "9016746554",
-      },
-      {
-        key: "A nombre de",
-        value: "NOBA COLOMBIA SAS",
-      },
-      {
-        key: "Tipo de cuenta",
-        value: "Ahorros",
-      },
-      {
-        key: "Banco",
-        value: "Banco Cooperativo Coopcentral",
-      },
-    ];
+    const nobaAccountNumber = "095000766";
     const result = template({
       companyName: "Mono",
       currency: currency,
       dateMonthYear: dateMonthYear,
       totalAmount: "2.700.000",
       allocations: allocations,
-      accountInformation: accountInformation,
+      nobaAccountNumber: nobaAccountNumber,
     });
     writeFileSync(__dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\payroll.html", result);
     console.log(result);
+    // generate both ES and EN
     return "fake-link";
+  }
+
+  private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDibursementDTO[]> {
+    const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
+
+    return Promise.all(
+      disbursements.map(async disbursement => {
+        // need to resolve circular dependency first
+        // const employee = await this.employeeService.getEmployeeByID(disbursement.employeeID);
+        // const consumer = await this.consumerService.getConsumer(employee.consumerID);
+        return {
+          employeeName: "TestFirst" + " " + "TestLast",
+          amount: disbursement.debitAmount,
+        };
+      }),
+    );
   }
 }
