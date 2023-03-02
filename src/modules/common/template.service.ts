@@ -35,6 +35,6 @@ export class TemplateService {
       this.loadTemplatesFromS3("/payroll-invoice/", "template_es.hbs"),
     ]);
 
-    return { EN: handlebarEnglishTemplate, ES: handlebarSpanishTemplate };
+    return { en: handlebarEnglishTemplate, es: handlebarSpanishTemplate };
   }
 }

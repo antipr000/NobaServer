@@ -2,14 +2,10 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { Logger } from "winston";
-import { Employer } from "./domain/Employer";
+import { EmployeeDisbursement, Employer, TemplateFields } from "./domain/Employer";
 import { IEmployerRepo } from "./repo/employer.repo";
 import { EMPLOYER_REPO_PROVIDER } from "./repo/employer.repo.module";
-import {
-  CreateEmployerRequestDTO,
-  EmployeeDibursementDTO as EmployeeDisbursementDTO,
-  UpdateEmployerRequestDTO,
-} from "./dto/employer.service.dto";
+import { CreateEmployerRequestDTO, UpdateEmployerRequestDTO } from "./dto/employer.service.dto";
 import { writeFileSync } from "fs-extra";
 import dayjs from "dayjs";
 import Handlebars from "handlebars";
@@ -19,6 +15,7 @@ import { ConsumerService } from "../consumer/consumer.service";
 import { EmployeeService } from "../employee/employee.service";
 import { TemplateService } from "../common/template.service";
 import "dayjs/locale/es";
+import { IPayrollRepo } from "./repo/payroll.repo";
 
 @Injectable()
 export class EmployerService {
@@ -35,6 +32,7 @@ export class EmployerService {
 
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
+    @Inject(PAYROLL_REPO_PROVIDER) private readonly payrollRepo: IPayrollRepo,
     @Inject(PAYROLL_DISBURSEMENT_REPO_PROVIDER) private readonly payrollDisbursementRepo: IPayrollDisbursementRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
@@ -128,16 +126,16 @@ export class EmployerService {
   async generatePayroll(payrollID: string): Promise<void> {
     const templatesPromise = this.templateService.getHandlebarLanguageTemplates();
 
-    // const [employeeAllocations, payroll] = await Promise.all([
-    //   this.getEmployeeDisbursements(payrollID),
-    //   this.payrollRepo.getPayrollByID(payrollID),
-    // ]);
+    let [employeeDisbursements, payroll] = await Promise.all([
+      this.getEmployeeDisbursements(payrollID),
+      this.payrollRepo.getPayrollByID(payrollID),
+    ]);
 
-    // const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
-    // const companyName = employer.name;
+    const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
+    const companyName = employer.name;
 
     const currency = "COP";
-    const allocations = [
+    employeeDisbursements = [
       {
         employeeName: "Camilo Moreno",
         amount: 200000,
@@ -170,32 +168,59 @@ export class EmployerService {
     const nobaAccountNumber = "095000766";
 
     const templates = await templatesPromise;
-    const template_en = Handlebars.compile(templates["EN"]);
-    const template_es = Handlebars.compile(templates["ES"]);
-    const totalAmount = 2700000;
 
-    const html_en = template_en({
-      companyName: "Mono",
-      currency: currency,
-      dateMonthYear: dayjs().locale("en").format("MMMM YYYY"),
-      totalAmount: totalAmount.toLocaleString("en-US"),
-      allocations: allocations,
-      nobaAccountNumber: nobaAccountNumber,
-    });
-    const html_es = template_es({
-      companyName: "Mono",
-      currency: currency,
-      dateMonthYear: dayjs().locale("es").format("MMMM YYYY"),
-      totalAmount: totalAmount.toLocaleString("es-CO"),
-      allocations: allocations,
-      nobaAccountNumber: nobaAccountNumber,
-    });
+    const [html_en, html_es] = await Promise.all([
+      this.generateTemplate({
+        handlebarTemplate: templates["en"],
+        companyName: companyName,
+        currency: currency,
+        employeeDisbursements: employeeDisbursements,
+        nobaAccountNumber: nobaAccountNumber,
+        locale: "en",
+        region: "US",
+      }),
+      this.generateTemplate({
+        handlebarTemplate: templates["es"],
+        companyName: companyName,
+        currency: currency,
+        employeeDisbursements: employeeDisbursements,
+        nobaAccountNumber: nobaAccountNumber,
+        locale: "es",
+        region: "CO",
+      }),
+    ]);
 
     writeFileSync(__dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\payroll_en.html", html_en);
     writeFileSync(__dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\payroll_es.html", html_es);
   }
 
-  private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDisbursementDTO[]> {
+  private async generateTemplate({
+    handlebarTemplate,
+    companyName,
+    nobaAccountNumber,
+    currency,
+    employeeDisbursements,
+    locale,
+    region,
+  }: TemplateFields): Promise<string> {
+    const template = Handlebars.compile(handlebarTemplate);
+
+    const totalAmount = employeeDisbursements.reduce((total, allocation) => total + allocation.amount, 0);
+    const employeeAllocations = employeeDisbursements.map(allocation => ({
+      employeeName: allocation.employeeName,
+      amount: allocation.amount.toLocaleString(`${locale}-${region}`),
+    }));
+    return template({
+      companyName: companyName,
+      currency: currency,
+      dateMonthYear: dayjs().locale(locale).format("MMMM YYYY"),
+      totalAmount: totalAmount.toLocaleString(`${locale}-${region}`),
+      allocations: employeeAllocations,
+      nobaAccountNumber: nobaAccountNumber,
+    });
+  }
+
+  private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDisbursement[]> {
     const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
 
     return Promise.all(
