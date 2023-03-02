@@ -4,12 +4,12 @@ import { CommonModule } from "../common/common.module";
 import { TemplateService } from "../common/template.service";
 import { EmployerController } from "./employer.controller";
 import { EmployerService } from "./employer.service";
-import { PayrollRepoModule } from "./payroll/repo/payroll.repo.module";
+import { PayrollRepoModule } from "./repo/payroll.repo.module";
 import { EmployerRepoModule } from "./repo/employer.repo.module";
 import { EmployeeModule } from "../employee/employee.module";
 
 @Module({
-  imports: [InfraProvidersModule, EmployerRepoModule, EmployeeModule],
+  imports: [InfraProvidersModule, EmployerRepoModule, EmployeeModule, PayrollRepoModule],
   controllers: [EmployerController],
   providers: [EmployerService, TemplateService],
   exports: [EmployerService],

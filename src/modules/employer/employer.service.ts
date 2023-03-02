@@ -9,9 +9,8 @@ import { CreateEmployerRequestDTO, EmployeeDibursementDTO, UpdateEmployerRequest
 import { readFileSync, writeFileSync } from "fs-extra";
 import dayjs from "dayjs";
 import Handlebars from "handlebars";
-import { PAYROLL_DISBURSEMENT_REPO_PROVIDER, PAYROLL_REPO_PROVIDER } from "./payroll/repo/payroll.repo.module";
-import { IPayrollRepo } from "./payroll/repo/payroll.repo";
-import { IPayrollDisbursementRepo } from "./payroll/repo/payroll.disbursement.repo";
+import { PAYROLL_DISBURSEMENT_REPO_PROVIDER, PAYROLL_REPO_PROVIDER } from "./repo/payroll.repo.module";
+import { IPayrollDisbursementRepo } from "./repo/payroll.disbursement.repo";
 import { ConsumerService } from "../consumer/consumer.service";
 import { EmployeeService } from "../employee/employee.service";
 import { TemplateService } from "../common/template.service";
@@ -27,9 +26,11 @@ export class EmployerService {
   @Inject()
   private readonly employeeService: EmployeeService;
 
+  @Inject()
+  private readonly consumerService: ConsumerService;
+
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
-    @Inject(PAYROLL_REPO_PROVIDER) private readonly payrollRepo: IPayrollRepo,
     @Inject(PAYROLL_DISBURSEMENT_REPO_PROVIDER) private readonly payrollDisbursementRepo: IPayrollDisbursementRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
@@ -196,7 +197,7 @@ export class EmployerService {
     return Promise.all(
       disbursements.map(async disbursement => {
         // need to resolve circular dependency first
-        // const employee = await this.employeeService.getEmployeeByID(disbursement.employeeID);
+        const employee = await this.employeeService.getEmployeeByID(disbursement.employeeID);
         // const consumer = await this.consumerService.getConsumer(employee.consumerID);
         return {
           employeeName: "TestFirst" + " " + "TestLast",
