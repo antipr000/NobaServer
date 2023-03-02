@@ -156,6 +156,6 @@
     ]
   },
   "prisma": {
-    "seed": "ts-node ./prisma/seed/seed.ts"
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} ./prisma/seed/seed.ts"
   }
 }
