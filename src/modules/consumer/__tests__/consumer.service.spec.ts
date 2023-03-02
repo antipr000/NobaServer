@@ -1813,7 +1813,7 @@ describe("ConsumerService", () => {
     it("should throw ServiceException if Employer with specified employerReferralID is not found", async () => {
       when(employerService.getEmployerByReferralID("123456789")).thenResolve(null);
 
-      await expect(consumerService.registerWithAnEmployer("employerID", "123456789", "test", 10)).rejects.toThrow(
+      await expect(consumerService.registerWithAnEmployer(null, "123456789", "test", 10)).rejects.toThrow(
         ServiceException,
       );
     });
@@ -1828,12 +1828,7 @@ describe("ConsumerService", () => {
       when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(bubbleService.createEmployeeInBubble(anyString(), anything())).thenResolve();
 
-      const response = await consumerService.registerWithAnEmployer(
-        employer.id,
-        employer.referralID,
-        consumer.props.id,
-        100,
-      );
+      const response = await consumerService.registerWithAnEmployer(null, employer.referralID, consumer.props.id, 100);
 
       expect(response).toEqual(employee);
 
@@ -1913,7 +1908,7 @@ describe("ConsumerService", () => {
       when(employerService.getEmployerByReferralID("referralID")).thenResolve(null);
 
       try {
-        await consumerService.updateEmployerAllocationAmount("employerID", "referralID", "consumerID", 10);
+        await consumerService.updateEmployerAllocationAmount(null, "referralID", "consumerID", 10);
         expect(true).toBeFalsy();
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);
@@ -1928,7 +1923,7 @@ describe("ConsumerService", () => {
       when(employeeService.getEmployeeByConsumerAndEmployerID("consumerID", employer.id)).thenResolve(null);
 
       try {
-        await consumerService.updateEmployerAllocationAmount(employer.id, employer.referralID, "consumerID", 10);
+        await consumerService.updateEmployerAllocationAmount(null, employer.referralID, "consumerID", 10);
         expect(true).toBeFalsy();
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);
@@ -1955,7 +1950,7 @@ describe("ConsumerService", () => {
       when(bubbleService.updateEmployeeAllocationInBubble(employee.id, 1256)).thenResolve();
 
       const response = await consumerService.updateEmployerAllocationAmount(
-        employer.id,
+        null,
         employer.referralID,
         "consumerID",
         1256,
