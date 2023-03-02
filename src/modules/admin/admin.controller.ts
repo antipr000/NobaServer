@@ -262,7 +262,7 @@ export class AdminController {
       throw new ForbiddenException("User is forbidden from calling this API.");
     }
 
-    return await this.adminService.findConsumersFullDetails(filters);
+    return this.adminService.findConsumersFullDetails(filters);
   }
 
   @Post("/exchangerates")

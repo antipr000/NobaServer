@@ -14,7 +14,7 @@ import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 import { CircleService } from "../psp/circle.service";
 import { EmployeeService } from "../employee/employee.service";
 import { Employee } from "../employee/domain/Employee";
-import { ConsumerEmployeeDetailsDTO } from "../consumer/dto/ConsumerInternalDTO";
+import { ConsumerEmployeeDetailsDTO, ConsumerInternalDTO } from "../consumer/dto/ConsumerInternalDTO";
 
 @Injectable()
 export class AdminService {
@@ -122,7 +122,7 @@ export class AdminService {
     return accountBalances;
   }
 
-  async findConsumersFullDetails(filter: ConsumerSearchDTO) {
+  async findConsumersFullDetails(filter: ConsumerSearchDTO): Promise<ConsumerInternalDTO[]> {
     const consumers = await this.consumerService.findConsumers(filter);
     const internalConsumers = consumers.map(consumer => this.consumerMapper.toConsumerInternalDTO(consumer));
 

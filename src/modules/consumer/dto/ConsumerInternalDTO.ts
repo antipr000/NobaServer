@@ -1,4 +1,4 @@
-import { ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { DocumentVerificationStatus, KYCProvider, KYCStatus } from "@prisma/client";
 
 export class ConsumerInternalAddressDTO {
@@ -11,8 +11,8 @@ export class ConsumerInternalAddressDTO {
   @ApiPropertyOptional()
   city?: string;
 
-  @ApiPropertyOptional()
-  countryCode?: string;
+  @ApiProperty()
+  countryCode: string;
 
   @ApiPropertyOptional()
   regionCode?: string;
@@ -22,8 +22,8 @@ export class ConsumerInternalAddressDTO {
 }
 
 export class ConsumerInternalKYCDTO {
-  @ApiPropertyOptional({ enum: KYCProvider })
-  provider?: KYCProvider;
+  @ApiProperty({ enum: KYCProvider })
+  provider: KYCProvider;
 
   @ApiPropertyOptional()
   kycCheckReference?: string;
@@ -57,8 +57,8 @@ export class ConsumerInternalKYCDTO {
 }
 
 export class ConsumerEmployeeDetailsDTO {
-  @ApiPropertyOptional()
-  employeeID?: string;
+  @ApiProperty()
+  employeeID: string;
 
   @ApiPropertyOptional()
   allocationAmount: number;
@@ -66,30 +66,30 @@ export class ConsumerEmployeeDetailsDTO {
   @ApiPropertyOptional()
   allocationCurrency: string;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   createdTimestamp: Date;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   updatedTimestamp: Date;
 
-  @ApiPropertyOptional()
-  employerID?: string;
+  @ApiProperty()
+  employerID: string;
 
   @ApiPropertyOptional()
   employerName?: string;
 }
 
 export class ConsumerWalletDetailsDTO {
-  @ApiPropertyOptional()
-  walletProvider?: string;
+  @ApiProperty()
+  walletProvider: string;
 
-  @ApiPropertyOptional()
-  walletID?: string;
+  @ApiProperty()
+  walletID: string;
 }
 
 export class ConsumerInternalDTO {
-  @ApiPropertyOptional()
-  id?: string;
+  @ApiProperty()
+  id: string;
 
   @ApiPropertyOptional()
   firstName?: string;
