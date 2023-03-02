@@ -1132,6 +1132,7 @@ describe("ConsumerController", () => {
       expect(response).toEqual(
         expect.arrayContaining([
           {
+            employerID: employer1.id,
             employerName: employer1.name,
             employerLogoURI: employer1.logoURI,
             allocationAmountInPesos: employee1.allocationAmount,
@@ -1141,6 +1142,7 @@ describe("ConsumerController", () => {
             nextPayrollDate: employer1.payrollDates[3],
           },
           {
+            employerID: employer2.id,
             employerName: employer2.name,
             employerLogoURI: employer2.logoURI,
             allocationAmountInPesos: employee2.allocationAmount,
@@ -1150,6 +1152,7 @@ describe("ConsumerController", () => {
             nextPayrollDate: employer1.payrollDates[2],
           },
           {
+            employerID: employer3.id,
             employerName: employer3.name,
             employerLogoURI: employer3.logoURI,
             allocationAmountInPesos: employee3.allocationAmount,
@@ -1170,16 +1173,17 @@ describe("ConsumerController", () => {
       const employee1 = getRandomEmployee(consumer.props.id, employer1.id);
       when(employerService.getEmployerByID(employer1.id)).thenResolve(employer1);
       when(
-        consumerService.updateEmployerAllocationAmount(employer1.id, "employerReferralID", consumer.props.id, 1478),
+        consumerService.updateEmployerAllocationAmount(null, "employerReferralID", consumer.props.id, 1478),
       ).thenResolve(employee1);
 
       const updatedEmployee = await consumerController.updateAllocationAmountForAnEmployer(consumer, {
-        employerID: employer1.id,
+        employerID: null,
         employerReferralID: "employerReferralID",
         allocationAmountInPesos: 1478,
       });
 
       expect(updatedEmployee).toEqual({
+        employerID: employer1.id,
         employerName: employer1.name,
         employerLogoURI: employer1.logoURI,
         allocationAmountInPesos: employee1.allocationAmount,
