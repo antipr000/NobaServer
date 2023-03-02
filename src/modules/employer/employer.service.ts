@@ -27,8 +27,8 @@ export class EmployerService {
   @Inject()
   private readonly employeeService: EmployeeService;
 
-  @Inject()
-  private readonly consumerService: ConsumerService;
+  // @Inject()
+  // private readonly consumerService: ConsumerService;
 
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
@@ -124,12 +124,25 @@ export class EmployerService {
   }
 
   async generatePayroll(payrollID: string): Promise<void> {
+    if (!payrollID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Payroll ID is required",
+      });
+    }
+
     const templatesPromise = this.templateService.getHandlebarLanguageTemplates();
 
     let [employeeDisbursements, payroll] = await Promise.all([
       this.getEmployeeDisbursements(payrollID),
       this.payrollRepo.getPayrollByID(payrollID),
     ]);
+    if (!payroll) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Payroll not found",
+      });
+    }
 
     const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
     const companyName = employer.name;
@@ -205,7 +218,7 @@ export class EmployerService {
   }: TemplateFields): Promise<string> {
     const template = Handlebars.compile(handlebarTemplate);
 
-    const totalAmount = employeeDisbursements.reduce((total, allocation) => total + allocation.amount, 0);
+    const totalAmount = employeeDisbursements.reduce((total, allocation) => total + allocation.amount, 0); // maybe use total on employer
     const employeeAllocations = employeeDisbursements.map(allocation => ({
       employeeName: allocation.employeeName,
       amount: allocation.amount.toLocaleString(`${locale}-${region}`),

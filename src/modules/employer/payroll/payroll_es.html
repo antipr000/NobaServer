@@ -10,20 +10,20 @@
       width="100px"
       height="26px"
     />
-    <h1>Factura {{companyName}} - {{dateMonthYear}}</h1>
-    <h2>Hola {{companyName}} 👋</h2>
+    <h1>Factura Test Employer 1 - marzo 2023</h1>
+    <h2>Hola Test Employer 1 👋</h2>
     <div class="instructions">
       <p>
-        A continuación se muestra la lista de tus empleados que recibirán una porción del salario de este mes en dólares digitales.
+        A continuación se muestra una lista de tus empleados que recibirán una porción del salario de este mes en dólares digitales.
         Por favor, sigue estas instrucciones para completar el proceso de pago de salario con Noba:
       </p>
       <ol>
         <li>
-          Deduce la cantidad marcada como "Asignación de Noba" del pago de salario tradicional para cada uno de estos empleados.
+          Deduze la cantidad marcada como "Asignación de Noba" del pago de salario tradicional para cada uno de estos empleados.
         </li>
         <li>
-          Paga la cantidad marcada como "Total", que equivale a <b>${{totalAmount}}
-          {{currency}}</b> para este período de pago, a la cuenta bancaria a continuación.
+          Paga la cantidad marcada como "Total", que equivale a <b>$2.700.000
+          COP</b> para este período de pago, a la cuenta bancaria a continuación.
         </li>
       </ol>
     </div>
@@ -33,15 +33,37 @@
           <th>Empleado</th>
           <th>Asignación de Noba</th>
         </tr>
-        {{#each allocations}}
           <tr>
-            <td>{{this.employeeName}}</td>
-            <td>${{this.amount}} {{../currency}}</td>
+            <td>Camilo Moreno</td>
+            <td>$200.000 COP</td>
           </tr>
-        {{/each}}
+          <tr>
+            <td>German Ramirez</td>
+            <td>$500.000 COP</td>
+          </tr>
+          <tr>
+            <td>Jhon Pedroza</td>
+            <td>$100.000 COP</td>
+          </tr>
+          <tr>
+            <td>Sara Ruiz</td>
+            <td>$100.000 COP</td>
+          </tr>
+          <tr>
+            <td>Daniel Felipe Piñeros</td>
+            <td>$600.000 COP</td>
+          </tr>
+          <tr>
+            <td>Elianne Julieth Marcilia Burgos</td>
+            <td>$200.000 COP</td>
+          </tr>
+          <tr>
+            <td>Alejandro Cordoba</td>
+            <td>$1.000.000 COP</td>
+          </tr>
         <tr>
           <td>Total</td>
-          <td>${{totalAmount}} {{currency}}</td>
+          <td>$2.700.000 COP</td>
         </tr>
       </table>
     </div>
@@ -53,7 +75,7 @@
         </tr>
         <tr>
           <td>Número de cuenta:</td>
-          <td>{{nobaAccountNumber}}</td>
+          <td>095000766</td>
         </tr>
         <tr>
           <td>NIT:</td>

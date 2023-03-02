@@ -1,4 +1,4 @@
-import { Controller, HttpStatus, Inject, NotFoundException, Param, Get, Post, Body } from "@nestjs/common";
+import { Controller, HttpStatus, Inject, NotFoundException, Param, Get, Post, Body, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiHeaders, ApiNotFoundResponse, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
@@ -51,7 +51,7 @@ export class EmployerController {
     };
   }
 
-  @Post("/:referralID/payroll")
+  @Post("/payroll")
   @ApiBearerAuth()
   @ApiOperation({ summary: "Generate payroll for employer" })
   @ApiResponse({
@@ -59,11 +59,7 @@ export class EmployerController {
     description: "Payroll Generated",
   })
   @ApiNotFoundResponse({ description: "Employer not found" })
-  async generatePayroll(@Param("referralID") referralID: string, @Body() payrollData: PayrollData): Promise<void> {
-    const employer = await this.employerService.getEmployerByReferralID(referralID);
-    // if (!employer) {
-    //   throw new NotFoundException("Employer not found");
-    // }
-    this.employerService.generatePayroll("payrollID");
+  async generatePayroll(@Query("payrollID") payrollID: string): Promise<void> {
+    this.employerService.generatePayroll(payrollID);
   }
 }
