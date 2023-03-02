@@ -16,7 +16,7 @@ import {
   UpdateDisbursementRequestDTO,
   UpdatePayrollRequestDTO,
 } from "./dto/payroll.workflow.controller.dto";
-import { BlankResponseDTO } from "src/modules/common/dto/BlankResponseDTO";
+import { BlankResponseDTO } from "../../modules/common/dto/BlankResponseDTO";
 import { PayrollDisbursementDTO } from "./dto/PayrollDisbursementDTO";
 
 @Controller("wf/v1/payroll")

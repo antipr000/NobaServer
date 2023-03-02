@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { EmployeeDTO } from "src/modules/employee/dto/EmployeeDTO";
+import { EmployeeDTO } from "../../../modules/employee/dto/EmployeeDTO";
 
 export class EmployerWorkflowDTO {
   @ApiProperty()
