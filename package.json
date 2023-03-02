@@ -71,7 +71,6 @@
     "fs-extra": "^10.0.0",
     "google-libphonenumber": "^3.2.32",
     "handlebars": "^4.7.7",
-    "handlebars-i18n": "^1.6.1",
     "helmet": "^4.6.0",
     "joi": "^17.6.0",
     "joi-to-swagger": "^5.2.0",

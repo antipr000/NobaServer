@@ -9,13 +9,14 @@ import { CreateEmployerRequestDTO, EmployeeDibursementDTO, UpdateEmployerRequest
 import { readFileSync, writeFileSync } from "fs-extra";
 import dayjs from "dayjs";
 import Handlebars from "handlebars";
-import HandlebarsI18n from "handlebars-i18n";
 import { PAYROLL_DISBURSEMENT_REPO_PROVIDER, PAYROLL_REPO_PROVIDER } from "./payroll/repo/payroll.repo.module";
 import { IPayrollRepo } from "./payroll/repo/payroll.repo";
 import { IPayrollDisbursementRepo } from "./payroll/repo/payroll.disbursement.repo";
 import { ConsumerService } from "../consumer/consumer.service";
 import { EmployeeService } from "../employee/employee.service";
 import { TemplateService } from "../common/template.service";
+import "dayjs/locale/es";
+
 @Injectable()
 export class EmployerService {
   private readonly MAX_LEAD_DAYS = 5;
@@ -117,13 +118,7 @@ export class EmployerService {
   }
 
   async generatePayroll(payrollID: string): Promise<void> {
-    const templates = await this.templateService.getHandlebarLanguageTemplates();
-    console.log(templates);
-    const fileContent = readFileSync(
-      __dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\template_en.hbs",
-      "utf-8",
-    );
-    const template = Handlebars.compile(fileContent);
+    const templatesPromise = this.templateService.getHandlebarLanguageTemplates();
 
     // const [employeeAllocations, payroll] = await Promise.all([
     //   this.getEmployeeDisbursements(payrollID),
@@ -133,52 +128,63 @@ export class EmployerService {
     // const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
     // const companyName = employer.name;
 
-    HandlebarsI18n.init();
-
-    const dateMonthYear = dayjs().format("MMMM YYYY");
     const currency = "COP";
     const allocations = [
       {
         employeeName: "Camilo Moreno",
-        amount: "200.000",
+        amount: 200000,
       },
       {
         employeeName: "German Ramirez",
-        amount: "500.000",
+        amount: 500000,
       },
       {
         employeeName: "Jhon Pedroza",
-        amount: "100.000",
+        amount: 100000,
       },
       {
         employeeName: "Sara Ruiz",
-        amount: "100.000",
+        amount: 100000,
       },
       {
         employeeName: "Daniel Felipe Piñeros",
-        amount: "600.000",
+        amount: 600000,
       },
       {
         employeeName: "Elianne Julieth Marcilia Burgos",
-        amount: "200.000",
+        amount: 200000,
       },
       {
         employeeName: "Alejandro Cordoba",
-        amount: "1.000.000",
+        amount: 1000000,
       },
     ];
     const nobaAccountNumber = "095000766";
-    const result = template({
+
+    const templates = await templatesPromise;
+    const template_en = Handlebars.compile(templates["EN"]);
+    const template_es = Handlebars.compile(templates["ES"]);
+    const totalAmount = 2700000;
+
+    const html_en = template_en({
       companyName: "Mono",
       currency: currency,
-      dateMonthYear: dateMonthYear,
-      totalAmount: "2.700.000",
+      dateMonthYear: dayjs().locale("en").format("MMMM YYYY"),
+      totalAmount: totalAmount.toLocaleString("en-US"),
       allocations: allocations,
       nobaAccountNumber: nobaAccountNumber,
     });
-    writeFileSync(__dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\payroll.html", result);
-    // console.log(result);
-    // generate both ES and EN
+    const html_es = template_es({
+      companyName: "Mono",
+      currency: currency,
+      dateMonthYear: dayjs().locale("es").format("MMMM YYYY"),
+      totalAmount: totalAmount.toLocaleString("es-CO"),
+      allocations: allocations,
+      nobaAccountNumber: nobaAccountNumber,
+    });
+
+    writeFileSync(__dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\payroll_en.html", html_en);
+    writeFileSync(__dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\payroll_es.html", html_es);
   }
 
   private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDibursementDTO[]> {
