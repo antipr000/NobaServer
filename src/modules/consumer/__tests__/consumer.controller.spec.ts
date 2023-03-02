@@ -1086,14 +1086,26 @@ describe("ConsumerController", () => {
   describe("registerWithAnEmployer", () => {
     it("should forwards the call to consumerService", async () => {
       const consumer = getRandomConsumer();
-      when(
-        consumerService.registerWithAnEmployer("employerID", "employerReferralID", consumer.props.id, 1478),
-      ).thenResolve();
+      when(consumerService.registerWithAnEmployer(null, "employerReferralID", consumer.props.id, 1478)).thenResolve();
+
+      await consumerController.registerWithAnEmployer(
+        {
+          employerID: null,
+          employerReferralID: "employerReferralID",
+          allocationAmountInPesos: 1478,
+        },
+        consumer,
+      );
+    });
+
+    it("should forwards the call to consumerService", async () => {
+      const consumer = getRandomConsumer();
+      when(consumerService.registerWithAnEmployer("employerID", null, consumer.props.id, 1478)).thenResolve();
 
       await consumerController.registerWithAnEmployer(
         {
           employerID: "employerID",
-          employerReferralID: "employerReferralID",
+          employerReferralID: null,
           allocationAmountInPesos: 1478,
         },
         consumer,
