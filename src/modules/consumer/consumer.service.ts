@@ -66,7 +66,6 @@ export class ConsumerService {
     private readonly configService: CustomConfigService,
     private readonly qrService: QRService,
     private readonly employeeService: EmployeeService,
-    private readonly employerService: EmployerService,
     private readonly bubbleService: BubbleService,
   ) {
     this.otpOverride = this.configService.get(STATIC_DEV_OTP);
@@ -649,28 +648,12 @@ export class ConsumerService {
 
   async registerWithAnEmployer(
     employerID: string,
-    employerReferralID: string,
     consumerID: string,
     allocationAmountInPesos: number,
   ): Promise<Employee> {
-    let employer: Employer;
-
-    if (employerID) {
-      employer = await this.employerService.getEmployerByID(employerID);
-    } else if (employerReferralID) {
-      employer = await this.employerService.getEmployerByReferralID(employerReferralID);
-    }
-
-    if (!employer) {
-      throw new ServiceException({
-        message: `Employer with referral ID ${employerReferralID} does not exist`,
-        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-      });
-    }
-
     const employee: Employee = await this.employeeService.createEmployee(
       allocationAmountInPesos,
-      employer.id,
+      employerID,
       consumerID,
     );
 
@@ -687,7 +670,6 @@ export class ConsumerService {
 
   async updateEmployerAllocationAmount(
     employerID: string,
-    employerReferralID: string,
     consumerID: string,
     allocationAmountInPesos: number,
   ): Promise<Employee> {
@@ -703,31 +685,17 @@ export class ConsumerService {
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
-    if (!employerReferralID) {
+    if (!employerID) {
       throw new ServiceException({
-        message: "'employerReferralID' should be provided",
+        message: "'employerID' should be provided",
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
 
-    let employer: Employer;
-    if (employerID) {
-      employer = await this.employerService.getEmployerByID(employerID);
-    } else if (employerReferralID) {
-      employer = await this.employerService.getEmployerByReferralID(employerReferralID);
-    }
-
-    if (!employer) {
-      throw new ServiceException({
-        message: `Employer with 'referralID' ${employerReferralID} does not exist`,
-        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-      });
-    }
-
-    const employee: Employee = await this.employeeService.getEmployeeByConsumerAndEmployerID(consumerID, employer.id);
+    const employee: Employee = await this.employeeService.getEmployeeByConsumerAndEmployerID(consumerID, employerID);
     if (!employee) {
       throw new ServiceException({
-        message: `Employee with 'consumerID' ${consumerID} and 'employerID' ${employer.id} does not exist`,
+        message: `Employee with 'consumerID' ${consumerID} and 'employerID' ${employerID} does not exist`,
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
       });
     }
