@@ -1193,6 +1193,34 @@ describe("ConsumerController", () => {
         nextPayrollDate: employer1.payrollDates[3],
       });
     });
+
+    it("should forward the call with employer id to consumerService", async () => {
+      const consumer = getRandomConsumer();
+      const employer1 = getRandomEmployer(); // before lead days
+      employer1.payrollDates.push("2020-03-04");
+      const employee1 = getRandomEmployee(consumer.props.id, employer1.id);
+      when(employerService.getEmployerByID(employer1.id)).thenResolve(employer1);
+      when(consumerService.updateEmployerAllocationAmount(employer1.id, null, consumer.props.id, 1478)).thenResolve(
+        employee1,
+      );
+
+      const updatedEmployee = await consumerController.updateAllocationAmountForAnEmployer(consumer, {
+        employerID: employer1.id,
+        employerReferralID: null,
+        allocationAmountInPesos: 1478,
+      });
+
+      expect(updatedEmployee).toEqual({
+        employerID: employer1.id,
+        employerName: employer1.name,
+        employerLogoURI: employer1.logoURI,
+        allocationAmountInPesos: employee1.allocationAmount,
+        employerReferralID: employer1.referralID,
+        leadDays: employer1.leadDays,
+        payrollDates: employer1.payrollDates,
+        nextPayrollDate: employer1.payrollDates[3],
+      });
+    });
   });
 
   describe("postEmployerRequestEmail", () => {
