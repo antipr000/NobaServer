@@ -13,6 +13,7 @@ import { PayrollDTO } from "./dto/PayrollDTO";
 import { PayrollStatus } from "./domain/Payroll";
 import {
   CreateDisbursementRequestDTO,
+  CreateDisbursementResponseDTO,
   UpdateDisbursementRequestDTO,
   UpdatePayrollRequestDTO,
 } from "./dto/payroll.workflow.controller.dto";
@@ -29,12 +30,14 @@ export class PayrollWorkflowController {
   @ApiOperation({ summary: "Creates a disbursement for employee" })
   @ApiResponse({
     status: HttpStatus.CREATED,
-    type: BlankResponseDTO,
+    type: CreateDisbursementResponseDTO,
   })
   @ApiNotFoundResponse({ description: "Requested employee is not found" })
   @ApiBadRequestResponse({ description: "Failed to create disbursement" })
-  async postDisbursement(@Body() requestBody: CreateDisbursementRequestDTO): Promise<BlankResponseDTO> {
-    return {};
+  async postDisbursement(@Body() requestBody: CreateDisbursementRequestDTO): Promise<CreateDisbursementResponseDTO> {
+    return {
+      id: "123",
+    };
   }
 
   @Patch("/:payrollID/disbursement/:disbursementID")
