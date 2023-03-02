@@ -62,3 +62,8 @@ export class DebitBankRequestDTO {
   @ApiProperty()
   transactionID: string;
 }
+
+export class CreateTransactionDTO {
+  @ApiProperty()
+  disbursementID: string;
+}
