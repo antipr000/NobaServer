@@ -11,11 +11,6 @@ export class CreateDisbursementRequestDTO {
   employeeID: string;
 }
 
-export class CreateDisbursementResponseDTO {
-  @ApiProperty()
-  id: string;
-}
-
 export class UpdateDisbursementRequestDTO {
   @ApiPropertyOptional()
   transactionID?: string;

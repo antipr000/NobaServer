@@ -6,10 +6,14 @@ import { Employer } from "./domain/Employer";
 import { IEmployerRepo } from "./repo/employer.repo";
 import { EMPLOYER_REPO_PROVIDER } from "./repo/employer.repo.module";
 import { CreateEmployerRequestDTO, UpdateEmployerRequestDTO } from "./dto/employer.service.dto";
+import { EmployeeService } from "../employee/employee.service";
 
 @Injectable()
 export class EmployerService {
   private readonly MAX_LEAD_DAYS = 5;
+
+  @Inject()
+  private readonly employeeService: EmployeeService;
 
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,

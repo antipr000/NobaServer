@@ -23,6 +23,7 @@ const getRandomEmployee = (): Employee => {
     allocationCurrency: EmployeeAllocationCurrency.COP,
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    employer: createTestEmployer(),
   };
 
   return employee;
@@ -93,16 +94,13 @@ describe("EmployeeServiceTests", () => {
   describe("updateEmployee", () => {
     it("should update an employee", async () => {
       const employee = getRandomEmployee();
-      const employer = createTestEmployer();
-      employee.employerID = employer.id;
       employee.allocationAmount = 200;
 
-      employer.maxAllocationPercent = 20;
+      employee.employer.maxAllocationPercent = 20;
 
       const newSalary = 100;
 
       when(employeeRepo.getEmployeeByID(employee.id)).thenResolve(employee);
-      when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
       when(employeeRepo.updateEmployee(anything(), anything())).thenResolve(employee);
 
       const updatedEmployee = await employeeService.updateEmployee(employee.id, {
@@ -121,16 +119,12 @@ describe("EmployeeServiceTests", () => {
 
     it("should update an employee with new allocation amount based on new salary", async () => {
       const employee = getRandomEmployee();
-      const employer = createTestEmployer();
-      employee.employerID = employer.id;
 
-      employer.maxAllocationPercent = 20;
-
+      employee.employer.maxAllocationPercent = 20;
       const newAllocationAmount = 180;
       const newSalary = 1000;
 
       when(employeeRepo.getEmployeeByID(employee.id)).thenResolve(employee);
-      when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
       when(employeeRepo.updateEmployee(anything(), anything())).thenResolve(employee);
 
       const updatedEmployee = await employeeService.updateEmployee(employee.id, {

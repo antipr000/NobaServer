@@ -9,7 +9,7 @@ export const createTestConsumer = async (prismaService: PrismaService): Promise<
       lastName: "Consumer",
       email: `${uuid()}@noba.com`,
       displayEmail: `${uuid()}@noba.com`,
-      handle: `${Date.now().valueOf()}`,
+      handle: `${uuid().slice(5)}${Date.now().valueOf()}`,
       referralCode: Utils.getAlphaNanoID(15),
     },
   });

@@ -13,11 +13,11 @@ import { PayrollDTO } from "./dto/PayrollDTO";
 import { PayrollStatus } from "./domain/Payroll";
 import {
   CreateDisbursementRequestDTO,
-  CreateDisbursementResponseDTO,
   UpdateDisbursementRequestDTO,
   UpdatePayrollRequestDTO,
 } from "./dto/payroll.workflow.controller.dto";
 import { BlankResponseDTO } from "src/modules/common/dto/BlankResponseDTO";
+import { PayrollDisbursementDTO } from "./dto/PayrollDisbursementDTO";
 
 @Controller("wf/v1/payroll")
 @ApiBearerAuth("JWT-auth")
@@ -30,13 +30,16 @@ export class PayrollWorkflowController {
   @ApiOperation({ summary: "Creates a disbursement for employee" })
   @ApiResponse({
     status: HttpStatus.CREATED,
-    type: CreateDisbursementResponseDTO,
+    type: PayrollDisbursementDTO,
   })
   @ApiNotFoundResponse({ description: "Requested employee is not found" })
   @ApiBadRequestResponse({ description: "Failed to create disbursement" })
-  async postDisbursement(@Body() requestBody: CreateDisbursementRequestDTO): Promise<CreateDisbursementResponseDTO> {
+  async createDisbursement(@Body() requestBody: CreateDisbursementRequestDTO): Promise<PayrollDisbursementDTO> {
     return {
       id: "123",
+      employeeID: requestBody.employeeID,
+      payrollID: "123",
+      debitAmount: 123,
     };
   }
 

@@ -3,8 +3,12 @@ import { Employee, EmployeeCreateRequest, EmployeeUpdateRequest } from "../domai
 export interface IEmployeeRepo {
   createEmployee(request: EmployeeCreateRequest): Promise<Employee>;
   updateEmployee(id: string, request: EmployeeUpdateRequest): Promise<Employee>;
-  getEmployeeByID(id: string): Promise<Employee>;
-  getEmployeesForConsumerID(consumerID: string): Promise<Employee[]>;
-  getEmployeeByConsumerAndEmployerID(consumerID: string, employerID: string): Promise<Employee>;
-  getEmployeesForEmployer(employerID: string): Promise<Employee[]>;
+  getEmployeeByID(id: string, fetchEmployerDetails?: boolean): Promise<Employee>;
+  getEmployeesForConsumerID(consumerID: string, fetchEmployerDetails?: boolean): Promise<Employee[]>;
+  getEmployeeByConsumerAndEmployerID(
+    consumerID: string,
+    employerID: string,
+    fetchEmployerDetails?: boolean,
+  ): Promise<Employee>;
+  getEmployeesForEmployer(employerID: string, fetchEmployerDetails?: boolean): Promise<Employee[]>;
 }

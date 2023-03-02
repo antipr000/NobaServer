@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { Employee as PrismaEmployeeModel } from "@prisma/client";
+import { Employee as PrismaEmployeeModel, Employer as PrismaEmployerModel } from "@prisma/client";
 import { DatabaseInternalErrorException, NotFoundError } from "../../../core/exception/CommonAppException";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
@@ -12,8 +12,19 @@ import { IEmployeeRepo } from "../repo/employee.repo";
 import { SqlEmployeeRepo } from "../repo/sql.employee.repo";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
-const getAllEmployeeRecords = async (prismaService: PrismaService): Promise<PrismaEmployeeModel[]> => {
-  return prismaService.employee.findMany({});
+type EmployeeModel = PrismaEmployeeModel & {
+  employer?: PrismaEmployerModel;
+};
+
+const getAllEmployeeRecords = async (
+  prismaService: PrismaService,
+  fetchEmployerDetails?: boolean,
+): Promise<EmployeeModel[]> => {
+  return prismaService.employee.findMany({
+    include: {
+      employer: fetchEmployerDetails ?? false,
+    },
+  });
 };
 
 const getRandomEmployee = (employerID: string, consumerID: string): EmployeeCreateRequest => {
@@ -84,8 +95,9 @@ describe("SqlEmployeeRepoTests", () => {
       expect(createdEmployee.allocationAmount).toEqual(employee.allocationAmount);
       expect(createdEmployee.allocationCurrency).toEqual(employee.allocationCurrency);
       expect(createdEmployee.salary).toBeUndefined();
+      expect(createdEmployee.employer).toBeUndefined();
 
-      const savedEmployees: PrismaEmployeeModel[] = await getAllEmployeeRecords(prismaService);
+      const savedEmployees: EmployeeModel[] = await getAllEmployeeRecords(prismaService);
       expect(savedEmployees.length).toEqual(1);
       delete savedEmployees[0].salary;
       expect(savedEmployees[0]).toEqual(createdEmployee);
@@ -109,7 +121,7 @@ describe("SqlEmployeeRepoTests", () => {
       expect(createdEmployee.allocationCurrency).toEqual(employee.allocationCurrency);
       expect(createdEmployee.salary).toEqual(employee.salary);
 
-      const savedEmployees: PrismaEmployeeModel[] = await getAllEmployeeRecords(prismaService);
+      const savedEmployees: EmployeeModel[] = await getAllEmployeeRecords(prismaService);
       expect(savedEmployees.length).toEqual(1);
       expect(savedEmployees[0]).toEqual(createdEmployee);
     });
@@ -186,8 +198,9 @@ describe("SqlEmployeeRepoTests", () => {
       expect(updatedEmployee.consumerID).toEqual(createdEmployee.consumerID);
       expect(updatedEmployee.allocationAmount).toEqual(10.1);
       expect(updatedEmployee.allocationCurrency).toEqual(createdEmployee.allocationCurrency);
+      expect(updatedEmployee.employer).toBeUndefined();
 
-      const savedEmployees: PrismaEmployeeModel[] = await getAllEmployeeRecords(prismaService);
+      const savedEmployees: EmployeeModel[] = await getAllEmployeeRecords(prismaService);
       expect(savedEmployees.length).toEqual(1);
       delete savedEmployees[0].salary;
       expect(savedEmployees[0]).toEqual(updatedEmployee);
@@ -211,8 +224,9 @@ describe("SqlEmployeeRepoTests", () => {
       expect(updatedEmployee.employerID).toEqual(createdEmployee.employerID);
       expect(updatedEmployee.consumerID).toEqual(createdEmployee.consumerID);
       expect(updatedEmployee.salary).toEqual(1000);
+      expect(updatedEmployee.employer).toBeUndefined();
 
-      const savedEmployees: PrismaEmployeeModel[] = await getAllEmployeeRecords(prismaService);
+      const savedEmployees: EmployeeModel[] = await getAllEmployeeRecords(prismaService);
       expect(savedEmployees.length).toEqual(1);
       expect(savedEmployees[0]).toEqual(updatedEmployee);
     });
@@ -255,6 +269,18 @@ describe("SqlEmployeeRepoTests", () => {
       const fetchedEmployee: Employee = await employeeRepo.getEmployeeByID(createdEmployee.id);
 
       expect(fetchedEmployee).toEqual(createdEmployee);
+      expect(fetchedEmployee.employer).toBeUndefined();
+    });
+
+    it("should get employee with employer details when requested", async () => {
+      const consumerID: string = await createTestConsumer(prismaService);
+      const employerID: string = await createTestEmployerAndStoreInDB(prismaService);
+      const employee: EmployeeCreateRequest = getRandomEmployee(employerID, consumerID);
+      const createdEmployee: Employee = await employeeRepo.createEmployee(employee);
+
+      const fetchedEmployee: Employee = await employeeRepo.getEmployeeByID(createdEmployee.id, true);
+      expect(fetchedEmployee.employer).toBeDefined();
+      expect(fetchedEmployee.employer.id).toBe(employerID);
     });
 
     it("should throw 'null' if the employeeID doesn't really exist", async () => {
