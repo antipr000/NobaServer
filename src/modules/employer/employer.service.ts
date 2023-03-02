@@ -5,8 +5,12 @@ import { Logger } from "winston";
 import { Employer } from "./domain/Employer";
 import { IEmployerRepo } from "./repo/employer.repo";
 import { EMPLOYER_REPO_PROVIDER } from "./repo/employer.repo.module";
-import { CreateEmployerRequestDTO, EmployeeDibursementDTO, UpdateEmployerRequestDTO } from "./dto/employer.service.dto";
-import { readFileSync, writeFileSync } from "fs-extra";
+import {
+  CreateEmployerRequestDTO,
+  EmployeeDibursementDTO as EmployeeDisbursementDTO,
+  UpdateEmployerRequestDTO,
+} from "./dto/employer.service.dto";
+import { writeFileSync } from "fs-extra";
 import dayjs from "dayjs";
 import Handlebars from "handlebars";
 import { PAYROLL_DISBURSEMENT_REPO_PROVIDER, PAYROLL_REPO_PROVIDER } from "./repo/payroll.repo.module";
@@ -191,7 +195,7 @@ export class EmployerService {
     writeFileSync(__dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\payroll_es.html", html_es);
   }
 
-  private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDibursementDTO[]> {
+  private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDisbursementDTO[]> {
     const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
 
     return Promise.all(
