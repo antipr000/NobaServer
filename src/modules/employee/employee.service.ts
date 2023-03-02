@@ -32,8 +32,9 @@ export class EmployeeService {
       });
     }
 
-    const employee = await this.getEmployeeByID(employeeID);
+    const employee = await this.getEmployeeByID(employeeID, true);
     const employer = employee.employer;
+
     const maxAllocationPercent = employer.maxAllocationPercent ?? 100;
 
     const allocationAmount = updateRequest.allocationAmount ?? employee.allocationAmount;
@@ -49,7 +50,7 @@ export class EmployeeService {
     });
   }
 
-  async getEmployeeByID(employeeID: string): Promise<Employee> {
+  async getEmployeeByID(employeeID: string, fetchEmployerDetails?: boolean): Promise<Employee> {
     if (!employeeID) {
       throw new ServiceException({
         message: "employeeID is required",
@@ -57,7 +58,7 @@ export class EmployeeService {
       });
     }
 
-    return this.employeeRepo.getEmployeeByID(employeeID);
+    return this.employeeRepo.getEmployeeByID(employeeID, fetchEmployerDetails);
   }
 
   async getEmployeeByConsumerAndEmployerID(consumerID: string, employerID: string): Promise<Employee> {
