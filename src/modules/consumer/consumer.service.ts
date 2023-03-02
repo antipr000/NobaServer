@@ -656,10 +656,8 @@ export class ConsumerService {
     let employer: Employer;
 
     if (employerID) {
-      employer = await this.employerService.getEmployerByID(employerReferralID);
-    }
-
-    if (employerReferralID) {
+      employer = await this.employerService.getEmployerByID(employerID);
+    } else if (employerReferralID) {
       employer = await this.employerService.getEmployerByReferralID(employerReferralID);
     }
 
@@ -715,8 +713,7 @@ export class ConsumerService {
     let employer: Employer;
     if (employerID) {
       employer = await this.employerService.getEmployerByID(employerID);
-    }
-    if (employerReferralID) {
+    } else if (employerReferralID) {
       employer = await this.employerService.getEmployerByReferralID(employerReferralID);
     }
 
