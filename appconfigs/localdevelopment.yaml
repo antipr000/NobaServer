@@ -180,7 +180,7 @@ dbDumpFilesBucketPath: "dump"
 assetsBucketName: "prod-noba-assets"
 supportedCryptoFileBucketPath: "assets/data/cryptocurrency_tokens.csv"
 sanctionedCryptoWalletsFileBucketPath: "assets/data/sanctioned_wallets.csv"
-templatesFolderBucketPath: "assets/data/templates"
+templatesFolderBucketPath: "assets/templates"
 
 # Should ONLY EVER be set in localdevelopment.yaml, e2e_test.yaml and awsdev.yaml!
 staticDevOTP: 111111

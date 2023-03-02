@@ -117,8 +117,8 @@ export class EmployerService {
   }
 
   async generatePayroll(payrollID: string): Promise<void> {
-    this.templateService.getHandleBarTemplates();
-
+    const templates = await this.templateService.getHandlebarLanguageTemplates();
+    console.log(templates);
     const fileContent = readFileSync(
       __dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\template_en.hbs",
       "utf-8",
