@@ -32,7 +32,7 @@ import { TransactionWorkflowMapper } from "./mapper/transaction.workflow.mapper"
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { TransactionEvent } from "./domain/TransactionEvent";
 import { ServiceErrorCode, ServiceException } from "../../../src/core/exception/service.exception";
-import { WorkflowName } from "src/infra/temporal/workflow";
+import { WorkflowName } from "../../infra/temporal/workflow";
 
 @Controller("wf/v1/transactions")
 @ApiBearerAuth("JWT-auth")

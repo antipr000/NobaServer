@@ -10,6 +10,8 @@ import { EmployerService } from "../employer.service";
 import { uuid } from "uuidv4";
 import { Employer } from "../domain/Employer";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
+import { EmployeeService } from "../../../modules/employee/employee.service";
+import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -33,9 +35,11 @@ describe("EmployerServiceTests", () => {
   let employerRepo: IEmployerRepo;
   let app: TestingModule;
   let employerService: EmployerService;
+  let employeeService: EmployeeService;
 
   beforeEach(async () => {
     employerRepo = getMockEmployerRepoWithDefaults();
+    employeeService = getMockEmployeeServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -48,6 +52,10 @@ describe("EmployerServiceTests", () => {
         {
           provide: EMPLOYER_REPO_PROVIDER,
           useFactory: () => instance(employerRepo),
+        },
+        {
+          provide: EmployeeService,
+          useFactory: () => instance(employeeService),
         },
         EmployerService,
       ],
