@@ -10,12 +10,12 @@ import {
 } from "../domain/PayrollDisbursement";
 import { IPayrollDisbursementRepo } from "./payroll.disbursement.repo";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { PrismaService } from "../../../../infraproviders/PrismaService";
+import { PrismaService } from "../../../infraproviders/PrismaService";
 import { Prisma, PayrollDisbursement as PrismaPayrollDisbursementModel } from "@prisma/client";
 import {
   DatabaseInternalErrorException,
   InvalidDatabaseRecordException,
-} from "../../../../core/exception/CommonAppException";
+} from "../../../core/exception/CommonAppException";
 
 @Injectable()
 export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {

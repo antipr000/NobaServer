@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { PayrollStatus } from "../domain/Payroll";
+import { PayrollStatus } from "../../payroll/domain/Payroll";
 
 export class PayrollDTO {
   @ApiProperty()

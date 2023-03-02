@@ -11,7 +11,7 @@ import {
   PayrollStatus,
 } from "../domain/Payroll";
 import { IPayrollRepo } from "./payroll.repo";
-import { PrismaService } from "../../../../infraproviders/PrismaService";
+import { PrismaService } from "../../../infraproviders/PrismaService";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Prisma, Payroll as PrismaPayrollModel } from "@prisma/client";
@@ -19,7 +19,7 @@ import {
   DatabaseInternalErrorException,
   InvalidDatabaseRecordException,
   NotFoundError,
-} from "../../../../core/exception/CommonAppException";
+} from "../../../core/exception/CommonAppException";
 
 @Injectable()
 export class SqlPayrollRepo implements IPayrollRepo {
