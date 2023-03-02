@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { Employee as EmployeePrismaModel, Prisma } from "@prisma/client";
+import { Employee as EmployeePrismaModel, Employer as EmployerPrismaModel, Prisma } from "@prisma/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import {
   DatabaseInternalErrorException,
@@ -19,6 +19,10 @@ import {
 } from "../domain/Employee";
 import { IEmployeeRepo } from "./employee.repo";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
+
+type EmployeeModelType = EmployeePrismaModel & {
+  employer?: EmployerPrismaModel;
+};
 
 @Injectable()
 export class SqlEmployeeRepo implements IEmployeeRepo {
@@ -51,13 +55,12 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
         ...(request.salary && { salary: request.salary }),
       };
 
-      const returnedEmployee: EmployeePrismaModel = await this.prismaService.employee.create({
+      const returnedEmployee: EmployeeModelType = await this.prismaService.employee.create({
         data: employeeInput,
       });
       savedEmployee = convertToDomainEmployee(returnedEmployee);
     } catch (err) {
       this.logger.error(JSON.stringify(err));
-
       if (
         err.meta &&
         err.meta.target &&
@@ -98,7 +101,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
         ...(request.salary && { salary: request.salary }),
       };
 
-      const returnedEmployee: EmployeePrismaModel = await this.prismaService.employee.update({
+      const returnedEmployee: EmployeeModelType = await this.prismaService.employee.update({
         where: {
           id: id,
         },
@@ -116,11 +119,14 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
     }
   }
 
-  async getEmployeeByID(id: string): Promise<Employee> {
+  async getEmployeeByID(id: string, fetchEmployerDetails?: boolean): Promise<Employee> {
     try {
-      const employee: EmployeePrismaModel = await this.prismaService.employee.findUnique({
+      const employee: EmployeeModelType = await this.prismaService.employee.findUnique({
         where: {
           id: id,
+        },
+        include: {
+          employer: fetchEmployerDetails ?? false,
         },
       });
 
@@ -137,14 +143,21 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
     }
   }
 
-  async getEmployeeByConsumerAndEmployerID(consumerID: string, employerID: string): Promise<Employee> {
+  async getEmployeeByConsumerAndEmployerID(
+    consumerID: string,
+    employerID: string,
+    fetchEmployerDetails?: boolean,
+  ): Promise<Employee> {
     try {
-      const employee: EmployeePrismaModel = await this.prismaService.employee.findUnique({
+      const employee: EmployeeModelType = await this.prismaService.employee.findUnique({
         where: {
           consumerID_employerID: {
             consumerID: consumerID,
             employerID: employerID,
           },
+        },
+        include: {
+          employer: fetchEmployerDetails ?? false,
         },
       });
 
@@ -161,11 +174,14 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
     }
   }
 
-  async getEmployeesForConsumerID(consumerID: string): Promise<Employee[]> {
+  async getEmployeesForConsumerID(consumerID: string, fetchEmployerDetails?: boolean): Promise<Employee[]> {
     try {
-      const employees: EmployeePrismaModel[] = await this.prismaService.employee.findMany({
+      const employees: EmployeeModelType[] = await this.prismaService.employee.findMany({
         where: {
           consumerID: consumerID,
+        },
+        include: {
+          employer: fetchEmployerDetails ?? false,
         },
       });
 
@@ -182,11 +198,14 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
     }
   }
 
-  async getEmployeesForEmployer(employerID: string): Promise<Employee[]> {
+  async getEmployeesForEmployer(employerID: string, fetchEmployerDetails?: boolean): Promise<Employee[]> {
     try {
-      const employees: EmployeePrismaModel[] = await this.prismaService.employee.findMany({
+      const employees: EmployeeModelType[] = await this.prismaService.employee.findMany({
         where: {
           employerID: employerID,
+        },
+        include: {
+          employer: fetchEmployerDetails ?? false,
         },
       });
 

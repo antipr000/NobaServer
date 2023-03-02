@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { PayrollDisbursement as PrismaPayrollDisbursementModel } from "@prisma/client";
-import { KeysRequired } from "../../../../modules/common/domain/Types";
+import { KeysRequired } from "../../../modules/common/domain/Types";
 
 export class PayrollDisbursement {
   id: string;

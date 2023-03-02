@@ -6,12 +6,10 @@ import { Employee, EmployeeAllocationCurrency } from "./domain/Employee";
 import { IEmployeeRepo } from "./repo/employee.repo";
 import { EMPLOYEE_REPO_PROVIDER } from "./repo/employee.repo.module";
 import { UpdateEmployeeRequestDTO } from "./dto/employee.service.dto";
-import { EmployerService } from "../employer/employer.service";
 import { Utils } from "../../core/utils/Utils";
 
 @Injectable()
 export class EmployeeService {
-  @Inject() private readonly employerService: EmployerService;
   constructor(
     @Inject(EMPLOYEE_REPO_PROVIDER) private readonly employeeRepo: IEmployeeRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
@@ -34,8 +32,9 @@ export class EmployeeService {
       });
     }
 
-    const employee = await this.getEmployeeByID(employeeID);
-    const employer = await this.employerService.getEmployerByID(employee.employerID);
+    const employee = await this.getEmployeeByID(employeeID, true);
+    const employer = employee.employer;
+
     const maxAllocationPercent = employer.maxAllocationPercent ?? 100;
 
     const allocationAmount = updateRequest.allocationAmount ?? employee.allocationAmount;
@@ -51,7 +50,7 @@ export class EmployeeService {
     });
   }
 
-  async getEmployeeByID(employeeID: string): Promise<Employee> {
+  async getEmployeeByID(employeeID: string, fetchEmployerDetails?: boolean): Promise<Employee> {
     if (!employeeID) {
       throw new ServiceException({
         message: "employeeID is required",
@@ -59,7 +58,7 @@ export class EmployeeService {
       });
     }
 
-    return this.employeeRepo.getEmployeeByID(employeeID);
+    return this.employeeRepo.getEmployeeByID(employeeID, fetchEmployerDetails);
   }
 
   async getEmployeeByConsumerAndEmployerID(consumerID: string, employerID: string): Promise<Employee> {

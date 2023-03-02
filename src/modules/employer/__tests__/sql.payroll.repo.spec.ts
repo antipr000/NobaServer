@@ -1,14 +1,14 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { IPayrollRepo } from "../repo/payroll.repo";
 import { SqlPayrollRepo } from "../repo/sql.payroll.repo";
-import { PrismaService } from "../../../../infraproviders/PrismaService";
-import { SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
-import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
-import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
+import { PrismaService } from "../../../infraproviders/PrismaService";
+import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { getRandomPayroll, saveAndGetPayroll } from "../test_utils/payroll.test.utils";
-import { createTestEmployerAndStoreInDB } from "../../test_utils/test.utils";
+import { createTestEmployerAndStoreInDB } from "../test_utils/test.utils";
 import { PayrollStatus } from "../domain/Payroll";
-import { DatabaseInternalErrorException, NotFoundError } from "../../../../core/exception/CommonAppException";
+import { DatabaseInternalErrorException, NotFoundError } from "../../../core/exception/CommonAppException";
 
 describe("SqlPayrollRepo tests", () => {
   jest.setTimeout(20000);
@@ -30,6 +30,10 @@ describe("SqlPayrollRepo tests", () => {
 
     payrollRepo = app.get<SqlPayrollRepo>(SqlPayrollRepo);
     prismaService = app.get<PrismaService>(PrismaService);
+  });
+
+  afterAll(async () => {
+    await prismaService.employer.deleteMany();
   });
 
   describe("addPayroll", () => {

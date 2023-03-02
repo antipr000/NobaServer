@@ -22,12 +22,17 @@ import { TransactionService } from "./transaction.service";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { UpdateTransactionRequestDTO } from "./dto/TransactionDTO";
-import { DebitBankRequestDTO, WorkflowTransactionDTO } from "./dto/transaction.workflow.controller.dto";
-import { DebitBankResponse, Transaction } from "./domain/Transaction";
+import {
+  CreateTransactionDTO,
+  DebitBankRequestDTO,
+  WorkflowTransactionDTO,
+} from "./dto/transaction.workflow.controller.dto";
+import { DebitBankResponse, Transaction, TransactionStatus } from "./domain/Transaction";
 import { TransactionWorkflowMapper } from "./mapper/transaction.workflow.mapper";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { TransactionEvent } from "./domain/TransactionEvent";
 import { ServiceErrorCode, ServiceException } from "../../../src/core/exception/service.exception";
+import { WorkflowName } from "../../infra/temporal/workflow";
 
 @Controller("wf/v1/transactions")
 @ApiBearerAuth("JWT-auth")
@@ -41,6 +46,36 @@ export class TransactionWorkflowController {
 
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
+
+  @Post("/")
+  @ApiTags("Workflow")
+  @ApiOperation({ summary: "Creates a transaction from disbursement" })
+  @ApiResponse({
+    description: "Transaction created",
+    status: HttpStatus.CREATED,
+    type: WorkflowTransactionDTO,
+  })
+  @ApiNotFoundResponse({ description: "Requested disbursement is not found" })
+  @ApiBadRequestResponse({ description: "Failed to create transaction" })
+  async createTransaction(@Body() requestBody: CreateTransactionDTO): Promise<WorkflowTransactionDTO> {
+    return {
+      id: "123",
+      transactionRef: "123",
+      workflowName: WorkflowName.WALLET_TRANSFER,
+      debitConsumerID: "123",
+      creditConsumerID: "456",
+      debitCurrency: "USD",
+      creditCurrency: "COP",
+      debitAmount: 1000,
+      creditAmount: 50,
+      exchangeRate: "0.0025",
+      status: TransactionStatus.INITIATED,
+      memo: "Disbursement",
+      transactionEvents: [],
+      totalFees: 0,
+      transactionFees: [],
+    };
+  }
 
   @Patch("/:transactionID")
   @ApiTags("Workflow")

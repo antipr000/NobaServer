@@ -1,13 +1,13 @@
 import { uuid } from "uuidv4";
 import { Payroll, PayrollCreateRequest, PayrollStatus, convertToDomainPayroll } from "../domain/Payroll";
-import { createTestEmployerAndStoreInDB } from "../../test_utils/test.utils";
-import { PrismaService } from "../../../../infraproviders/PrismaService";
+import { createTestEmployerAndStoreInDB } from "./test.utils";
+import { PrismaService } from "../../../infraproviders/PrismaService";
 import {
   PayrollDisbursement,
   PayrollDisbursementCreateRequest,
   convertToDomainPayrollDisbursement,
 } from "../domain/PayrollDisbursement";
-import { saveAndGetEmployee } from "../../../../modules/employee/test_utils/employee.test.utils";
+import { saveAndGetEmployee } from "../../employee/test_utils/employee.test.utils";
 
 export const getRandomPayroll = (
   employerID: string,

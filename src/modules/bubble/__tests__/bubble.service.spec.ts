@@ -32,15 +32,16 @@ const getRandomEmployer = (): Employer => {
   return employer;
 };
 
-const getRandomEmployee = (consumerID: string, employerID: string): Employee => {
+const getRandomEmployee = (consumerID: string, employer: Employer): Employee => {
   const employee: Employee = {
     id: uuid(),
-    employerID: employerID,
+    employerID: employer.id,
     consumerID: consumerID,
     allocationAmount: Math.floor(Math.random() * 1000000),
     allocationCurrency: EmployeeAllocationCurrency.COP,
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    employer: employer,
   };
 
   return employee;
@@ -103,7 +104,7 @@ describe("BubbleServiceTests", () => {
     it("should create an employee in a bubble", async () => {
       const employer = getRandomEmployer();
       const consumer = getRandomConsumer();
-      const employee = getRandomEmployee(consumer.props.id, employer.id);
+      const employee = getRandomEmployee(consumer.props.id, employer);
 
       when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
       when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
@@ -126,7 +127,7 @@ describe("BubbleServiceTests", () => {
     it("should throw ServiceException if the 'allocationCurrency' is not 'COP'", async () => {
       const employer = getRandomEmployer();
       const consumer = getRandomConsumer();
-      const employee = getRandomEmployee(consumer.props.id, employer.id);
+      const employee = getRandomEmployee(consumer.props.id, employer);
       employee.allocationCurrency = "USD" as EmployeeAllocationCurrency;
 
       when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
@@ -278,7 +279,7 @@ describe("BubbleServiceTests", () => {
     it("should forwards the request to BubbleClient as is", async () => {
       const employer = getRandomEmployer();
       const consumer = getRandomConsumer();
-      const employee = getRandomEmployee(consumer.props.id, employer.id);
+      const employee = getRandomEmployee(consumer.props.id, employer);
       const newAllocationAmount = 12345;
 
       when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
@@ -333,13 +334,13 @@ describe("BubbleServiceTests", () => {
       const consumer3: Consumer = getRandomConsumer();
       const employer: Employer = getRandomEmployer();
       employer.maxAllocationPercent = 50;
-      const employee1: Employee = getRandomEmployee(consumer1.props.id, employer.id);
+      const employee1: Employee = getRandomEmployee(consumer1.props.id, employer);
       employee1.salary = 100000;
       employee1.allocationAmount = 50000; // Right on the current limit, should be reduced for new percent
-      const employee2: Employee = getRandomEmployee(consumer2.props.id, employer.id);
+      const employee2: Employee = getRandomEmployee(consumer2.props.id, employer);
       employee2.salary = 200000;
       employee2.allocationAmount = 50000; // Below the current limit, should not be reduced
-      const employee3: Employee = getRandomEmployee(consumer3.props.id, employer.id);
+      const employee3: Employee = getRandomEmployee(consumer3.props.id, employer);
       employee3.salary = 300000;
       employee3.allocationAmount = 160000; // Above the current limit, should be reduced
 
@@ -451,7 +452,7 @@ describe("BubbleServiceTests", () => {
     it("should update employee", async () => {
       const employer = getRandomEmployer();
       const consumer = getRandomConsumer();
-      const employee = getRandomEmployee(consumer.props.id, employer.id);
+      const employee = getRandomEmployee(consumer.props.id, employer);
 
       when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
       when(employeeService.updateEmployee(anyString(), anything())).thenResolve(employee);
@@ -474,7 +475,7 @@ describe("BubbleServiceTests", () => {
       const employer = getRandomEmployer();
       employer.maxAllocationPercent = 50;
       const consumer = getRandomConsumer();
-      const employee = getRandomEmployee(consumer.props.id, employer.id);
+      const employee = getRandomEmployee(consumer.props.id, employer);
       employee.salary = 100000;
       employee.allocationAmount = 50000;
 

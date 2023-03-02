@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { Payroll as PrismaPayrollModel } from "@prisma/client";
-import { KeysRequired } from "../../../../modules/common/domain/Types";
+import { KeysRequired } from "../../common/domain/Types";
 
 export enum PayrollStatus {
   CREATED = "CREATED",

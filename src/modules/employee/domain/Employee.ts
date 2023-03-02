@@ -1,6 +1,7 @@
-import { Employee as PrismaEmployeeModel } from "@prisma/client";
+import { Employee as PrismaEmployeeModel, Employer as PrismaEmployerModel } from "@prisma/client";
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
+import { Employer, convertToDomainEmployer } from "../../../modules/employer/domain/Employer";
 
 export class Employee {
   id: string;
@@ -11,6 +12,7 @@ export class Employee {
   salary?: number;
   createdTimestamp: Date;
   updatedTimestamp: Date;
+  employer?: Employer;
 }
 
 // TODO: Merge "all" the currency enums across modules in a single enum &
@@ -79,6 +81,7 @@ export const validateEmployee = (employee: Employee) => {
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
     salary: Joi.number().optional(),
+    employer: Joi.object().optional(),
   };
 
   const employeeJoiSchema = Joi.object(employeeJoiValidationKeys).options({
@@ -88,7 +91,9 @@ export const validateEmployee = (employee: Employee) => {
   Joi.attempt(employee, employeeJoiSchema);
 };
 
-export const convertToDomainEmployee = (employee: PrismaEmployeeModel): Employee => {
+export const convertToDomainEmployee = (
+  employee: PrismaEmployeeModel & { employer?: PrismaEmployerModel },
+): Employee => {
   return {
     id: employee.id,
     allocationAmount: employee.allocationAmount,
@@ -98,5 +103,6 @@ export const convertToDomainEmployee = (employee: PrismaEmployeeModel): Employee
     createdTimestamp: employee.createdTimestamp,
     updatedTimestamp: employee.updatedTimestamp,
     ...(employee.salary && { salary: employee.salary }),
+    ...(employee.employer && { employer: convertToDomainEmployer(employee.employer) }),
   };
 };

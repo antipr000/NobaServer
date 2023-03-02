@@ -1,18 +1,18 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { PrismaService } from "../../../../infraproviders/PrismaService";
-import { SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
-import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
-import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
+import { PrismaService } from "../../../infraproviders/PrismaService";
+import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
+import { TestConfigModule } from "../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import {
   getRandomPayrollDisbursement,
   saveAndGetPayroll,
   saveAndGetPayrollDisbursement,
 } from "../test_utils/payroll.test.utils";
-import { DatabaseInternalErrorException } from "../../../../core/exception/CommonAppException";
+import { DatabaseInternalErrorException } from "../../../core/exception/CommonAppException";
 import { IPayrollDisbursementRepo } from "../repo/payroll.disbursement.repo";
 import { SqlPayrollDisbursementRepo } from "../repo/sql.payroll.disbursement.repo";
-import { saveAndGetEmployee } from "../../../../modules/employee/test_utils/employee.test.utils";
-import { createTestNobaTransaction } from "../../../../modules/transaction/test_utils/test.utils";
+import { saveAndGetEmployee } from "../../employee/test_utils/employee.test.utils";
+import { createTestNobaTransaction } from "../../transaction/test_utils/test.utils";
 
 describe("SqlPayrollDisbursementRepo tests", () => {
   jest.setTimeout(20000);
@@ -34,6 +34,11 @@ describe("SqlPayrollDisbursementRepo tests", () => {
 
     payrollDisbursementRepo = app.get<SqlPayrollDisbursementRepo>(SqlPayrollDisbursementRepo);
     prismaService = app.get<PrismaService>(PrismaService);
+  });
+
+  afterAll(async () => {
+    await prismaService.employee.deleteMany();
+    await prismaService.employer.deleteMany();
   });
 
   describe("addPayrollDisbursement", () => {

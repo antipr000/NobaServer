@@ -14,7 +14,7 @@ import { createTestEmployer } from "../../../modules/employer/test_utils/test.ut
 import { EmployerService } from "../../../modules/employer/employer.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
 
-const getRandomEmployee = (): Employee => {
+const getRandomEmployee = (includeEmployer?: boolean): Employee => {
   const employee: Employee = {
     id: uuid(),
     employerID: uuid(),
@@ -23,6 +23,7 @@ const getRandomEmployee = (): Employee => {
     allocationCurrency: EmployeeAllocationCurrency.COP,
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    ...(includeEmployer && { employer: createTestEmployer() }),
   };
 
   return employee;
@@ -92,17 +93,14 @@ describe("EmployeeServiceTests", () => {
 
   describe("updateEmployee", () => {
     it("should update an employee", async () => {
-      const employee = getRandomEmployee();
-      const employer = createTestEmployer();
-      employee.employerID = employer.id;
+      const employee = getRandomEmployee(true);
       employee.allocationAmount = 200;
 
-      employer.maxAllocationPercent = 20;
+      employee.employer.maxAllocationPercent = 20;
 
       const newSalary = 100;
 
-      when(employeeRepo.getEmployeeByID(employee.id)).thenResolve(employee);
-      when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
+      when(employeeRepo.getEmployeeByID(employee.id, true)).thenResolve(employee);
       when(employeeRepo.updateEmployee(anything(), anything())).thenResolve(employee);
 
       const updatedEmployee = await employeeService.updateEmployee(employee.id, {
@@ -120,17 +118,13 @@ describe("EmployeeServiceTests", () => {
     });
 
     it("should update an employee with new allocation amount based on new salary", async () => {
-      const employee = getRandomEmployee();
-      const employer = createTestEmployer();
-      employee.employerID = employer.id;
+      const employee = getRandomEmployee(true);
 
-      employer.maxAllocationPercent = 20;
-
+      employee.employer.maxAllocationPercent = 20;
       const newAllocationAmount = 180;
       const newSalary = 1000;
 
-      when(employeeRepo.getEmployeeByID(employee.id)).thenResolve(employee);
-      when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
+      when(employeeRepo.getEmployeeByID(employee.id, true)).thenResolve(employee);
       when(employeeRepo.updateEmployee(anything(), anything())).thenResolve(employee);
 
       const updatedEmployee = await employeeService.updateEmployee(employee.id, {
@@ -174,14 +168,30 @@ describe("EmployeeServiceTests", () => {
   describe("getEmployeeByID", () => {
     it("should get an employee by ID", async () => {
       const employee = getRandomEmployee();
-      when(employeeRepo.getEmployeeByID(anything())).thenResolve(employee);
+      when(employeeRepo.getEmployeeByID(anything(), anything())).thenResolve(employee);
 
       const retrievedEmployee = await employeeService.getEmployeeByID(employee.id);
 
       expect(retrievedEmployee).toEqual(employee);
 
-      const [employeeID] = capture(employeeRepo.getEmployeeByID).last();
+      const employeeID = capture(employeeRepo.getEmployeeByID).last()[0];
+      const shouldFetchEmployer = capture(employeeRepo.getEmployeeByID).last()[1];
       expect(employeeID).toEqual(employee.id);
+      expect(shouldFetchEmployer).toBeUndefined();
+    });
+
+    it("should get an employee by ID with employer details", async () => {
+      const employee = getRandomEmployee(true);
+      when(employeeRepo.getEmployeeByID(anything(), anything())).thenResolve(employee);
+
+      const retrievedEmployee = await employeeService.getEmployeeByID(employee.id, true);
+
+      expect(retrievedEmployee).toEqual(employee);
+
+      const employeeID = capture(employeeRepo.getEmployeeByID).last()[0];
+      const shouldFetchEmployer = capture(employeeRepo.getEmployeeByID).last()[1];
+      expect(employeeID).toEqual(employee.id);
+      expect(shouldFetchEmployer).toBe(true);
     });
 
     it("should throw ServiceException if the ID is undefined or null", async () => {

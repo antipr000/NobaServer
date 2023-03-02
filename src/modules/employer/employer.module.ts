@@ -6,9 +6,10 @@ import { EmployerController } from "./employer.controller";
 import { EmployerService } from "./employer.service";
 import { PayrollRepoModule } from "./payroll/repo/payroll.repo.module";
 import { EmployerRepoModule } from "./repo/employer.repo.module";
+import { EmployeeModule } from "../employee/employee.module";
 
 @Module({
-  imports: [InfraProvidersModule, EmployerRepoModule, PayrollRepoModule, CommonModule],
+  imports: [InfraProvidersModule, EmployerRepoModule, EmployeeModule],
   controllers: [EmployerController],
   providers: [EmployerService, TemplateService],
   exports: [EmployerService],

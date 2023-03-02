@@ -24,6 +24,9 @@ export class EmployerService {
   @Inject()
   private readonly templateService: TemplateService;
 
+  @Inject()
+  private readonly employeeService: EmployeeService;
+
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
     @Inject(PAYROLL_REPO_PROVIDER) private readonly payrollRepo: IPayrollRepo,
