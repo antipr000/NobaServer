@@ -79,7 +79,7 @@ export class EmployeeService {
     return this.employeeRepo.getEmployeeByConsumerAndEmployerID(consumerID, employerID);
   }
 
-  async getEmployeesForConsumerID(consumerID: string): Promise<Employee[]> {
+  async getEmployeesForConsumerID(consumerID: string, fetchEmployerDetails = false): Promise<Employee[]> {
     if (!consumerID) {
       throw new ServiceException({
         message: "consumerID is required",
@@ -87,7 +87,7 @@ export class EmployeeService {
       });
     }
 
-    return this.employeeRepo.getEmployeesForConsumerID(consumerID);
+    return this.employeeRepo.getEmployeesForConsumerID(consumerID, fetchEmployerDetails);
   }
 
   async updateAllocationAmountsForNewMaxAllocationPercent(

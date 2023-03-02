@@ -13,6 +13,17 @@ import { PaymentService } from "../../../modules/psp/payment.service";
 import { getMockPaymentServiceWithDefaults } from "../../../modules/psp/mocks/mock.payment.service";
 import { ServiceErrorCode } from "../../../core/exception/service.exception";
 import { BankName } from "../../../modules/psp/domain/BankFactoryTypes";
+import { EmployeeService } from "../../../modules/employee/employee.service";
+import { ConsumerMapper } from "../../../modules/consumer/mappers/ConsumerMapper";
+import { ConsumerService } from "../../../modules/consumer/consumer.service";
+import { CircleService } from "../../../modules/psp/circle.service";
+import { Consumer } from "../../../modules/consumer/domain/Consumer";
+import { ConsumerSearchDTO } from "../../../modules/consumer/dto/consumer.search.dto";
+import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
+import { getMockConsumerMapperWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.mapper";
+import { getMockCircleServiceWithDefaults } from "../../../modules/psp/mocks/mock.circle.service";
+import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
+import { Employee } from "../../../modules/employee/domain/Employee";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);
@@ -20,10 +31,18 @@ describe("AdminService", () => {
   let adminRepo: IAdminRepo;
   let adminService: AdminService;
   let paymentService: PaymentService;
+  let consumerService: ConsumerService;
+  let consumerMapper: ConsumerMapper;
+  let circleService: CircleService;
+  let employeeService: EmployeeService;
 
   beforeEach(async () => {
     adminRepo = getMockAdminRepoWithDefaults();
     paymentService = getMockPaymentServiceWithDefaults();
+    consumerService = getMockConsumerServiceWithDefaults();
+    consumerMapper = getMockConsumerMapperWithDefaults();
+    circleService = getMockCircleServiceWithDefaults();
+    employeeService = getMockEmployeeServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -36,6 +55,22 @@ describe("AdminService", () => {
         {
           provide: PaymentService,
           useFactory: () => instance(paymentService),
+        },
+        {
+          provide: ConsumerService,
+          useFactory: () => instance(consumerService),
+        },
+        {
+          provide: ConsumerMapper,
+          useFactory: () => instance(consumerMapper),
+        },
+        {
+          provide: CircleService,
+          useFactory: () => instance(circleService),
+        },
+        {
+          provide: EmployeeService,
+          useFactory: () => instance(employeeService),
         },
         AdminMapper,
       ],
@@ -315,6 +350,127 @@ describe("AdminService", () => {
       expect(adminService.getBalanceForAccounts(null, [])).rejects.toThrowServiceException(
         ServiceErrorCode.SEMANTIC_VALIDATION,
       );
+    });
+  });
+
+  describe("findConsumersFullDetails", () => {
+    it("should find consumers and add wallet details and employee details", async () => {
+      const consumer1 = Consumer.createConsumer({
+        id: "1111111111",
+        firstName: "Rosie",
+        lastName: "Noba",
+        email: "rosie@noba.com",
+      });
+      const consumer2 = Consumer.createConsumer({
+        id: "22222222222",
+        firstName: "Rosie",
+        lastName: "Noba",
+        email: "rosie2@noba.com",
+      });
+
+      const filterCriteria: ConsumerSearchDTO = {
+        name: "Rosie",
+      };
+
+      const employee1Details: Employee = {
+        id: "employee-id-1",
+        allocationAmount: 100,
+        allocationCurrency: "USD" as any,
+        employerID: "employer-id-1",
+        consumerID: consumer1.props.id,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        employer: {
+          id: "employer-id-1",
+          name: "Employer 1",
+          bubbleID: "bubble-id-1",
+          logoURI: "logo-uri-1",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          leadDays: 1,
+          referralID: "referral-id-1",
+          payrollDates: [],
+        },
+      };
+
+      const employee2Details: Employee = {
+        id: "employee-id-2",
+        allocationAmount: 200,
+        allocationCurrency: "USD" as any,
+        employerID: "employer-id-2",
+        consumerID: consumer2.props.id,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        employer: {
+          id: "employer-id-2",
+          name: "Employer 2",
+          bubbleID: "bubble-id-2",
+          logoURI: "logo-uri-2",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          leadDays: 2,
+          referralID: "referral-id-2",
+          payrollDates: [],
+        },
+      };
+
+      when(consumerService.findConsumers(filterCriteria)).thenResolve([consumer1, consumer2]);
+      when(consumerMapper.toConsumerInternalDTO(consumer1)).thenReturn({ ...consumer1.props });
+      when(consumerMapper.toConsumerInternalDTO(consumer2)).thenReturn({ ...consumer2.props });
+      when(circleService.getOrCreateWallet(consumer1.props.id)).thenResolve("wallet-id-1");
+      when(circleService.getOrCreateWallet(consumer2.props.id)).thenResolve("wallet-id-2");
+      when(employeeService.getEmployeesForConsumerID(consumer1.props.id, true)).thenResolve([employee1Details]);
+      when(employeeService.getEmployeesForConsumerID(consumer2.props.id, true)).thenResolve([employee2Details]);
+
+      const foundConsumers = await adminService.findConsumersFullDetails(filterCriteria);
+      expect(foundConsumers).toStrictEqual([
+        {
+          id: consumer1.props.id,
+          firstName: consumer1.props.firstName,
+          lastName: consumer1.props.lastName,
+          email: consumer1.props.email,
+          walletDetails: [
+            {
+              walletProvider: "Circle",
+              walletID: "wallet-id-1",
+            },
+          ],
+          employeeDetails: [
+            {
+              employeeID: employee1Details.id,
+              allocationAmount: employee1Details.allocationAmount,
+              allocationCurrency: employee1Details.allocationCurrency,
+              createdTimestamp: employee1Details.createdTimestamp,
+              updatedTimestamp: employee1Details.updatedTimestamp,
+              employerID: employee1Details.employerID,
+              employerName: employee1Details.employer.name,
+            },
+          ],
+        },
+        {
+          id: consumer2.props.id,
+          firstName: consumer2.props.firstName,
+          lastName: consumer2.props.lastName,
+          email: consumer2.props.email,
+          walletDetails: [
+            {
+              walletProvider: "Circle",
+              walletID: "wallet-id-2",
+            },
+          ],
+          employeeDetails: [
+            {
+              employeeID: employee2Details.id,
+              allocationAmount: employee2Details.allocationAmount,
+              allocationCurrency: employee2Details.allocationCurrency,
+              createdTimestamp: employee2Details.createdTimestamp,
+              updatedTimestamp: employee2Details.updatedTimestamp,
+              employerID: employee2Details.employerID,
+              employerName: employee2Details.employer.name,
+            },
+          ],
+        },
+      ]);
     });
   });
 });
