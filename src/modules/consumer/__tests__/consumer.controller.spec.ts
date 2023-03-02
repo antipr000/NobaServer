@@ -1084,7 +1084,7 @@ describe("ConsumerController", () => {
   });
 
   describe("registerWithAnEmployer", () => {
-    it("should forwards the call to consumerService", async () => {
+    it("should forward the call to consumerService", async () => {
       const consumer = getRandomConsumer();
       when(consumerService.registerWithAnEmployer(null, "employerReferralID", consumer.props.id, 1478)).thenResolve();
 
@@ -1098,7 +1098,7 @@ describe("ConsumerController", () => {
       );
     });
 
-    it("should forwards the call to consumerService", async () => {
+    it("should forwards the call with employerID to consumerService", async () => {
       const consumer = getRandomConsumer();
       when(consumerService.registerWithAnEmployer("employerID", null, consumer.props.id, 1478)).thenResolve();
 
