@@ -50,4 +50,14 @@ export async function seedAdmins(prisma: PrismaClient) {
       role: "ADMIN",
     },
   });
+
+  await prisma.admin.upsert({
+    where: { email: "michael@noba.com" },
+    update: {},
+    create: {
+      email: "michael@noba.com",
+      name: "Michael Davis",
+      role: "ADMIN",
+    },
+  });
 }
