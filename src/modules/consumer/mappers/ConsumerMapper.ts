@@ -166,6 +166,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
       return new Date(date) > new Date(now + employer.leadDays * 24 * 60 * 60 * 1000);
     });
     const linkedEmployer: LinkedEmployerDTO = {
+      employerID: employer.id,
       employerName: employer.name,
       employerLogoURI: employer.logoURI,
       allocationAmountInPesos: employee.allocationAmount,

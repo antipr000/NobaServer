@@ -1086,10 +1086,13 @@ describe("ConsumerController", () => {
   describe("registerWithAnEmployer", () => {
     it("should forwards the call to consumerService", async () => {
       const consumer = getRandomConsumer();
-      when(consumerService.registerWithAnEmployer("employerReferralID", consumer.props.id, 1478)).thenResolve();
+      when(
+        consumerService.registerWithAnEmployer("employerID", "employerReferralID", consumer.props.id, 1478),
+      ).thenResolve();
 
       await consumerController.registerWithAnEmployer(
         {
+          employerID: "employerID",
           employerReferralID: "employerReferralID",
           allocationAmountInPesos: 1478,
         },
@@ -1166,11 +1169,12 @@ describe("ConsumerController", () => {
       employer1.payrollDates.push("2020-03-04");
       const employee1 = getRandomEmployee(consumer.props.id, employer1.id);
       when(employerService.getEmployerByID(employer1.id)).thenResolve(employer1);
-      when(consumerService.updateEmployerAllocationAmount("employerReferralID", consumer.props.id, 1478)).thenResolve(
-        employee1,
-      );
+      when(
+        consumerService.updateEmployerAllocationAmount(employer1.id, "employerReferralID", consumer.props.id, 1478),
+      ).thenResolve(employee1);
 
       const updatedEmployee = await consumerController.updateAllocationAmountForAnEmployer(consumer, {
+        employerID: employer1.id,
         employerReferralID: "employerReferralID",
         allocationAmountInPesos: 1478,
       });
