@@ -29,8 +29,6 @@ import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
 import { findFlag } from "country-list-with-dial-code-and-flag";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { EmployeeService } from "../employee/employee.service";
-import { EmployerService } from "../employer/employer.service";
-import { Employer } from "../employer/domain/Employer";
 import { Employee } from "../employee/domain/Employee";
 import { BubbleService } from "../bubble/bubble.service";
 import { ConsumerSearchDTO } from "./dto/consumer.search.dto";
