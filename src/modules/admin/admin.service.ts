@@ -8,6 +8,13 @@ import { PaymentService } from "../psp/payment.service";
 import { AccountBalanceDTO } from "./dto/AccountBalanceDTO";
 import { AdminPSPMapper } from "./mappers/admin.psp";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
+import { ConsumerService } from "../consumer/consumer.service";
+import { ConsumerSearchDTO } from "../consumer/dto/consumer.search.dto";
+import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
+import { CircleService } from "../psp/circle.service";
+import { EmployeeService } from "../employee/employee.service";
+import { Employee } from "../employee/domain/Employee";
+import { ConsumerEmployeeDetailsDTO } from "../consumer/dto/ConsumerInternalDTO";
 
 @Injectable()
 export class AdminService {
@@ -16,6 +23,18 @@ export class AdminService {
 
   @Inject()
   private readonly paymentService: PaymentService;
+
+  @Inject()
+  private readonly consumerService: ConsumerService;
+
+  @Inject()
+  private readonly consumerMapper: ConsumerMapper;
+
+  @Inject()
+  private readonly circleService: CircleService;
+
+  @Inject()
+  private readonly employeeService: EmployeeService;
 
   @Inject("AdminTransactionRepo")
   private readonly adminRepo: IAdminRepo;
@@ -73,7 +92,6 @@ export class AdminService {
   }
 
   async getAdminByEmail(email: string): Promise<Admin> {
-    console.log("Getting admin by email");
     const admin: Admin | undefined = await this.adminRepo.getNobaAdminByEmail(email);
     if (admin === undefined) {
       throw new NotFoundException(`Admin with email '${email}' is not found.`);
@@ -102,5 +120,41 @@ export class AdminService {
     const accountBalances = await Promise.all(accountBalancesPromises);
 
     return accountBalances;
+  }
+
+  async findConsumersFullDetails(filter: ConsumerSearchDTO) {
+    const consumers = await this.consumerService.findConsumers(filter);
+    const internalConsumers = consumers.map(consumer => this.consumerMapper.toConsumerInternalDTO(consumer));
+
+    // For each consumer, add wallet and employee details
+    await Promise.all(
+      internalConsumers.map(async consumer => {
+        (consumer.walletDetails = [
+          {
+            walletProvider: "Circle",
+            walletID: await this.circleService.getOrCreateWallet(consumer.id),
+          },
+        ]),
+          (consumer.employeeDetails = await Promise.all(
+            (
+              await this.employeeService.getEmployeesForConsumerID(consumer.id, true)
+            ).map(employee => this.toConsumerEmployeeDetailsDTO(employee)),
+          ));
+      }),
+    );
+
+    return internalConsumers;
+  }
+
+  toConsumerEmployeeDetailsDTO(employee: Employee): ConsumerEmployeeDetailsDTO {
+    return {
+      employeeID: employee.id,
+      allocationAmount: employee.allocationAmount,
+      allocationCurrency: employee.allocationCurrency,
+      createdTimestamp: employee.createdTimestamp,
+      updatedTimestamp: employee.updatedTimestamp,
+      employerID: employee.employerID,
+      employerName: employee.employer.name,
+    };
   }
 }

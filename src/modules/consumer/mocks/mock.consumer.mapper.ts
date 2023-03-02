@@ -11,6 +11,7 @@ export function getMockConsumerMapperWithDefaults(): ConsumerMapper {
   when(mockConsumerMapper.toLinkedEmployerDTO(anything())).thenReject(new Error("Method not implemented"));
   when(mockConsumerMapper.toPaymentMethodsDTO(anything())).thenReject(new Error("Method not implemented"));
   when(mockConsumerMapper.toSimpleDTO(anything())).thenReject(new Error("Method not implemented"));
+  when(mockConsumerMapper.toConsumerInternalDTO(anything())).thenReject(new Error("Method not implemented"));
 
   return mockConsumerMapper;
 }
