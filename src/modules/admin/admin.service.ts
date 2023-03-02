@@ -129,17 +129,18 @@ export class AdminService {
     // For each consumer, add wallet and employee details
     await Promise.all(
       internalConsumers.map(async consumer => {
-        (consumer.walletDetails = [
+        consumer.walletDetails = [
           {
             walletProvider: "Circle",
             walletID: await this.circleService.getOrCreateWallet(consumer.id),
           },
-        ]),
-          (consumer.employeeDetails = await Promise.all(
-            (
-              await this.employeeService.getEmployeesForConsumerID(consumer.id, true)
-            ).map(employee => this.toConsumerEmployeeDetailsDTO(employee)),
-          ));
+        ];
+
+        consumer.employeeDetails = await Promise.all(
+          (
+            await this.employeeService.getEmployeesForConsumerID(consumer.id, true)
+          ).map(employee => this.toConsumerEmployeeDetailsDTO(employee)),
+        );
       }),
     );
 
