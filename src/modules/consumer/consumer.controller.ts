@@ -436,6 +436,7 @@ export class ConsumerController {
     @AuthUser() consumer: Consumer,
   ): Promise<BlankResponseDTO> {
     await this.consumerService.registerWithAnEmployer(
+      requestBody.employerID,
       requestBody.employerReferralID,
       consumer.props.id,
       requestBody.allocationAmountInPesos,
@@ -459,6 +460,7 @@ export class ConsumerController {
     @Body() requestBody: UpdateEmployerAllocationDTO,
   ): Promise<BlankResponseDTO> {
     const employee = await this.consumerService.updateEmployerAllocationAmount(
+      requestBody.employerID,
       requestBody.employerReferralID,
       consumer.props.id,
       requestBody.allocationAmountInPesos,

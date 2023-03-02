@@ -648,11 +648,21 @@ export class ConsumerService {
   }
 
   async registerWithAnEmployer(
+    employerID: string,
     employerReferralID: string,
     consumerID: string,
     allocationAmountInPesos: number,
   ): Promise<Employee> {
-    const employer: Employer = await this.employerService.getEmployerByReferralID(employerReferralID);
+    let employer: Employer;
+
+    if (employerID) {
+      employer = await this.employerService.getEmployerByID(employerReferralID);
+    }
+
+    if (employerReferralID) {
+      employer = await this.employerService.getEmployerByReferralID(employerReferralID);
+    }
+
     if (!employer) {
       throw new ServiceException({
         message: `Employer with referral ID ${employerReferralID} does not exist`,
@@ -678,6 +688,7 @@ export class ConsumerService {
   }
 
   async updateEmployerAllocationAmount(
+    employerID: string,
     employerReferralID: string,
     consumerID: string,
     allocationAmountInPesos: number,
@@ -701,7 +712,14 @@ export class ConsumerService {
       });
     }
 
-    const employer: Employer = await this.employerService.getEmployerByReferralID(employerReferralID);
+    let employer: Employer;
+    if (employerID) {
+      employer = await this.employerService.getEmployerByID(employerID);
+    }
+    if (employerReferralID) {
+      employer = await this.employerService.getEmployerByReferralID(employerReferralID);
+    }
+
     if (!employer) {
       throw new ServiceException({
         message: `Employer with 'referralID' ${employerReferralID} does not exist`,
