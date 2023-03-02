@@ -171,7 +171,7 @@ dbDumpFilesBucketPath: "dump"
 assetsBucketName: "prod-noba-assets"
 supportedCryptoFileBucketPath: "assets/data/cryptocurrency_tokens.csv"
 sanctionedCryptoWalletsFileBucketPath: "assets/data/sanctioned_wallets.csv"
-supportedFiatFileBucketPath: "assets/data/templates"
+templatesFolderBucketPath: "assets/data/templates"
 
 # Never intended to set this in the partner env but with the decoupling of onramp, adding it here anyway.
 staticDevOTP: 222222

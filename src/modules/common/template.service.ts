@@ -20,6 +20,8 @@ export class TemplateService {
         Key: this.configService.get(TEMPLATES_FOLDER_BUCKET_PATH),
       };
 
+      console.log(options);
+
       const getObjectCommand = new GetObjectCommand(options);
 
       const getObjectResult = await s3.send(getObjectCommand);
@@ -47,7 +49,7 @@ export class TemplateService {
 
   public async getHandleBarTemplates(): Promise<Record<string, string>> {
     const handleBarTemplates = await this.loadTemplatesFromS3();
-
+    console.log(handleBarTemplates);
     return { EN: "<html></html>", ES: "<html></html>" };
   }
 }

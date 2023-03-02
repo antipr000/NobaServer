@@ -15,9 +15,13 @@ import { IPayrollRepo } from "./payroll/repo/payroll.repo";
 import { IPayrollDisbursementRepo } from "./payroll/repo/payroll.disbursement.repo";
 import { ConsumerService } from "../consumer/consumer.service";
 import { EmployeeService } from "../employee/employee.service";
+import { TemplateService } from "../common/template.service";
 @Injectable()
 export class EmployerService {
   private readonly MAX_LEAD_DAYS = 5;
+
+  @Inject()
+  private readonly templateService: TemplateService;
 
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
@@ -113,6 +117,8 @@ export class EmployerService {
   }
 
   async generatePayroll(payrollID: string): Promise<void> {
+    this.templateService.getHandleBarTemplates();
+
     const fileContent = readFileSync(
       __dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\template_en.hbs",
       "utf-8",
@@ -171,7 +177,7 @@ export class EmployerService {
       nobaAccountNumber: nobaAccountNumber,
     });
     writeFileSync(__dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\payroll.html", result);
-    console.log(result);
+    // console.log(result);
     // generate both ES and EN
   }
 
