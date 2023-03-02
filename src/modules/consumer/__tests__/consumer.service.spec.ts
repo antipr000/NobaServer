@@ -1836,6 +1836,30 @@ describe("ConsumerService", () => {
       expect(propagatedNobaEmployeeID).toEqual(employee.id);
       expect(propagatedConsumer).toEqual(consumer);
     });
+
+    it("should register an Employee by ID successfully", async () => {
+      const consumer = getRandomConsumer();
+      const employer = getRandomEmployer();
+      const employee = getRandomEmployee(consumer.props.id, employer.id);
+
+      when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
+      when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(bubbleService.createEmployeeInBubble(anyString(), anything())).thenResolve();
+
+      const response = await consumerService.registerWithAnEmployer(
+        employer.id,
+        employer.referralID,
+        consumer.props.id,
+        100,
+      );
+
+      expect(response).toEqual(employee);
+
+      const [propagatedNobaEmployeeID, propagatedConsumer] = capture(bubbleService.createEmployeeInBubble).last();
+      expect(propagatedNobaEmployeeID).toEqual(employee.id);
+      expect(propagatedConsumer).toEqual(consumer);
+    });
   });
 
   describe("listLinkedEmployers", () => {
@@ -1951,6 +1975,33 @@ describe("ConsumerService", () => {
 
       const response = await consumerService.updateEmployerAllocationAmount(
         null,
+        employer.referralID,
+        "consumerID",
+        1256,
+      );
+
+      expect(response).toEqual(employee);
+    });
+
+    it("should update the allocation amount for an Employer", async () => {
+      const employer = getRandomEmployer();
+      const employee = getRandomEmployee("consumerID", employer.id);
+      employee.allocationAmount = 1256;
+
+      when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
+      when(employeeService.getEmployeeByConsumerAndEmployerID("consumerID", employer.id)).thenResolve(employee);
+      when(
+        employeeService.updateEmployee(
+          employee.id,
+          deepEqual({
+            allocationAmount: employee.allocationAmount,
+          }),
+        ),
+      ).thenResolve(employee);
+      when(bubbleService.updateEmployeeAllocationInBubble(employee.id, 1256)).thenResolve();
+
+      const response = await consumerService.updateEmployerAllocationAmount(
+        employer.id,
         employer.referralID,
         "consumerID",
         1256,
