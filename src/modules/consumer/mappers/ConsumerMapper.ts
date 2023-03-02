@@ -17,6 +17,7 @@ import { EmployerService } from "../../../modules/employer/employer.service";
 import { Employer } from "../../../modules/employer/domain/Employer";
 import { Injectable } from "@nestjs/common";
 import { AggregatedPaymentMethodState, AggregatedWalletState } from "../domain/ExternalStates";
+import { ConsumerInternalDTO } from "../dto/ConsumerInternalDTO";
 
 @Injectable()
 export class ConsumerMapper implements Mapper<Consumer> {
@@ -166,6 +167,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
       return new Date(date) > new Date(now + employer.leadDays * 24 * 60 * 60 * 1000);
     });
     const linkedEmployer: LinkedEmployerDTO = {
+      employerID: employer.id,
       employerName: employer.name,
       employerLogoURI: employer.logoURI,
       allocationAmountInPesos: employee.allocationAmount,
@@ -178,5 +180,19 @@ export class ConsumerMapper implements Mapper<Consumer> {
     }
 
     return linkedEmployer;
+  }
+
+  public toConsumerInternalDTO(consumer: Consumer): ConsumerInternalDTO {
+    const consumerInternalDTO: ConsumerInternalDTO = {
+      ...consumer.props,
+      address: {
+        ...consumer.props.address,
+      },
+      verificationData: {
+        ...consumer.props.verificationData,
+      },
+    };
+
+    return consumerInternalDTO;
   }
 }

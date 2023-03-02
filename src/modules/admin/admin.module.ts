@@ -9,9 +9,18 @@ import { ConsumerModule } from "../consumer/consumer.module";
 import { TransactionModule } from "../transaction/transaction.module";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { PspModule } from "../psp/psp.module";
+import { EmployeeModule } from "../employee/employee.module";
 
 @Module({
-  imports: [ConfigModule, CommonModule, ConsumerModule, TransactionModule, InfraProvidersModule, PspModule],
+  imports: [
+    ConfigModule,
+    CommonModule,
+    ConsumerModule,
+    TransactionModule,
+    InfraProvidersModule,
+    PspModule,
+    EmployeeModule,
+  ],
   controllers: [AdminController],
   providers: [
     AdminService,

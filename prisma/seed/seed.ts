@@ -1,6 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 import { seedAdmins } from "./seed-admins";
 import { seedExchangeRates } from "./seed-exchangerates";
+import { seedConsumers } from "./seed-consumers";
+import { seedEmployers } from "./seed-employers";
+import { seedEmployees } from "./seed-employees";
+
 const prisma = new PrismaClient();
 
 async function main() {
@@ -9,6 +13,9 @@ async function main() {
     console.log("Seeding data...");
     await seedAdmins(prisma);
     await seedExchangeRates(prisma);
+    await seedConsumers(prisma);
+    await seedEmployers(prisma);
+    await seedEmployees(prisma);
   } else {
     console.log("Not seeding in production environment");
   }

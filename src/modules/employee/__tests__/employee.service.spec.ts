@@ -201,20 +201,39 @@ describe("EmployeeServiceTests", () => {
     });
   });
 
-  describe("getEmployeeByConsumerID", () => {
-    it("should get an employee by consumerID", async () => {
+  describe("getEmployeesForConsumerID", () => {
+    it("should get an employee by consumerID without employer details", async () => {
       const employee1 = getRandomEmployee();
       const employee2 = getRandomEmployee();
       employee2.consumerID = employee1.consumerID;
 
-      when(employeeRepo.getEmployeesForConsumerID(anything())).thenResolve([employee1, employee2]);
+      when(employeeRepo.getEmployeesForConsumerID(anything(), false)).thenResolve([employee1, employee2]);
 
-      const retrievedEmployee = await employeeService.getEmployeesForConsumerID(employee1.consumerID);
+      const retrievedEmployee = await employeeService.getEmployeesForConsumerID(employee1.consumerID, false);
 
       expect(retrievedEmployee).toEqual(expect.arrayContaining([employee1, employee2]));
 
       const [consumerID] = capture(employeeRepo.getEmployeesForConsumerID).last();
       expect(consumerID).toEqual(employee1.consumerID);
+      expect(retrievedEmployee[0].employer).toBeUndefined();
+      expect(retrievedEmployee[1].employer).toBeUndefined();
+    });
+
+    it("should get an employee by consumerID with employer details", async () => {
+      const employee1 = getRandomEmployee(true);
+      const employee2 = getRandomEmployee(true);
+      employee2.consumerID = employee1.consumerID;
+
+      when(employeeRepo.getEmployeesForConsumerID(anything(), true)).thenResolve([employee1, employee2]);
+
+      const retrievedEmployee = await employeeService.getEmployeesForConsumerID(employee1.consumerID, true);
+
+      expect(retrievedEmployee).toEqual(expect.arrayContaining([employee1, employee2]));
+
+      const [consumerID] = capture(employeeRepo.getEmployeesForConsumerID).last();
+      expect(consumerID).toEqual(employee1.consumerID);
+      expect(retrievedEmployee[0].employer).toBeDefined();
+      expect(retrievedEmployee[1].employer).toBeDefined();
     });
 
     it("should throw ServiceException if the ID is undefined or null", async () => {
