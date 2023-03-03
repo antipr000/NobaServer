@@ -636,7 +636,7 @@ export class ConsumerService {
 
     if (!employer) {
       throw new ServiceException({
-        message: `Employer with referral ID ${employerReferralID} does not exist`,
+        message: `Employer does not exist with the supplied reference`,
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
       });
     }
@@ -676,9 +676,9 @@ export class ConsumerService {
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
-    if (!employerReferralID) {
+    if (!employerID && !employerReferralID) {
       throw new ServiceException({
-        message: "'employerReferralID' should be provided",
+        message: "'employerID' or 'employerReferralID' (deprecated) should be provided",
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
@@ -692,7 +692,7 @@ export class ConsumerService {
 
     if (!employer) {
       throw new ServiceException({
-        message: `Employer with 'referralID' ${employerReferralID} does not exist`,
+        message: `Employer does not exist with the supplied identifier`,
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
       });
     }
