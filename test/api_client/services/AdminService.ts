@@ -6,6 +6,7 @@ import type { AdminLoginRequestDTO } from "../models/AdminLoginRequestDTO";
 import type { AdminUpdateConsumerRequestDTO } from "../models/AdminUpdateConsumerRequestDTO";
 import type { BlankResponseDTO } from "../models/BlankResponseDTO";
 import type { ConsumerDTO } from "../models/ConsumerDTO";
+import type { ConsumerInternalDTO } from "../models/ConsumerInternalDTO";
 import type { DeleteNobaAdminDTO } from "../models/DeleteNobaAdminDTO";
 import type { ExchangeRateDTO } from "../models/ExchangeRateDTO";
 import type { LoginResponseDTO } from "../models/LoginResponseDTO";
@@ -231,6 +232,43 @@ export class AdminService {
       },
       errors: {
         403: `User forbidden from getting account balances`,
+      },
+    });
+  }
+
+  /**
+   * Gets all consumers or a subset based on query parameters
+   * @returns ConsumerInternalDTO List of consumers
+   * @throws ApiError
+   */
+  public static getConsumers({
+    consumerId,
+    phone,
+    email,
+    name,
+    handle,
+    kycStatus,
+  }: {
+    consumerId?: string;
+    phone?: string;
+    email?: string;
+    name?: string;
+    handle?: string;
+    kycStatus?: "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "FLAGGED" | "REJECTED";
+  }): CancelablePromise<Array<ConsumerInternalDTO>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/admins/consumers",
+      query: {
+        consumerID: consumerId,
+        phone: phone,
+        email: email,
+        name: name,
+        handle: handle,
+        kycStatus: kycStatus,
+      },
+      errors: {
+        403: `User forbidden from getting consumers`,
       },
     });
   }

@@ -3,6 +3,7 @@
 /* eslint-disable */
 
 export type LinkedEmployerDTO = {
+  employerID: string;
   employerName: string;
   employerLogoURI: string;
   allocationAmountInPesos: number;
