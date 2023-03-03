@@ -206,10 +206,7 @@ export class EmployerService {
     ]);
 
     this.handlebarService.pushHandlebarLanguageHTML("123456", `inv_${payrollID}_en.html`, html_en);
-    this.handlebarService.pushHandlebarLanguageHTML("123456", `inv_${payrollID}_es.html`, html_en);
-
-    writeFileSync(__dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\payroll_en.html", html_en);
-    writeFileSync(__dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\payroll_es.html", html_es);
+    this.handlebarService.pushHandlebarLanguageHTML("123456", `inv_${payrollID}_es.html`, html_es);
   }
 
   private async generateTemplate({

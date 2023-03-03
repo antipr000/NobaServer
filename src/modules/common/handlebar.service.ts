@@ -38,9 +38,8 @@ export class HandlebarService {
       const options = {
         Bucket: this.configService.get(GENERATED_DATA_BUCKET_NAME),
         Key: this.configService.get(INVOICES_FOLDER_BUCKET_PATH) + folderPath + objectName,
+        Body: content,
       };
-
-      console.log(options);
 
       try {
         const putObjectCommand = new PutObjectCommand(options);
