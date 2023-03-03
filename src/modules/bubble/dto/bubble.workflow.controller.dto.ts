@@ -20,6 +20,9 @@ export class RegisterEmployerRequestDTO {
   leadDays?: number;
 
   @ApiPropertyOptional()
+  payrollAccountNumber?: string;
+
+  @ApiPropertyOptional()
   payrollDates?: string[];
 }
 
@@ -29,6 +32,9 @@ export class UpdateEmployerRequestDTO {
 
   @ApiPropertyOptional()
   leadDays?: number;
+
+  @ApiPropertyOptional()
+  payrollAccountNumber?: string;
 
   @ApiPropertyOptional()
   payrollDates?: string[];

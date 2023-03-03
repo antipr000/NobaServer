@@ -1,5 +1,5 @@
 import { Body, Controller, HttpStatus, Inject, Param, Patch, Post, UseGuards } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { BubbleWebhookAuthGuard } from "../auth/bubble.webhooks.auth.guard";
@@ -16,6 +16,7 @@ import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 @Controller("/webhooks/bubble")
 @ApiTags("Webhooks")
 @IsNoApiKeyNeeded()
+@ApiBearerAuth("JWT-auth")
 @UseGuards(BubbleWebhookAuthGuard)
 export class BubbleWorkflowController {
   constructor(

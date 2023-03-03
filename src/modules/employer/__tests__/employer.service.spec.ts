@@ -21,6 +21,7 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 5,
+    payrollAccountNumber: "111111111",
     payrollDates: ["2020-02-05", "2020-03-25"],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
@@ -309,6 +310,23 @@ describe("EmployerServiceTests", () => {
       });
     });
 
+    it("should update 'only' the payrollAccountNumber of the employer", async () => {
+      const employer = getRandomEmployer();
+      when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+
+      const updatedEmployer = await employerService.updateEmployer(employer.id, {
+        payrollAccountNumber: "12345",
+      });
+
+      expect(updatedEmployer).toEqual(employer);
+
+      const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
+      expect(employerID).toEqual(employer.id);
+      expect(propagatedEmployerUpdateRequest).toEqual({
+        payrollAccountNumber: "12345",
+      });
+    });
+
     it("should update all the fields", async () => {
       const employer = getRandomEmployer();
       when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
@@ -318,6 +336,7 @@ describe("EmployerServiceTests", () => {
         logoURI: "https://new-logo-uri.com",
         referralID: "new-referral-id",
         leadDays: 4,
+        payrollAccountNumber: "12345",
         payrollDates: payrollDates,
         maxAllocationPercent: 20,
       });
@@ -330,6 +349,7 @@ describe("EmployerServiceTests", () => {
         logoURI: "https://new-logo-uri.com",
         referralID: "new-referral-id",
         leadDays: 4,
+        payrollAccountNumber: "12345",
         payrollDates: payrollDates,
         maxAllocationPercent: 20,
       });

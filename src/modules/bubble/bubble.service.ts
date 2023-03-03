@@ -77,6 +77,7 @@ export class BubbleService {
       leadDays: request.leadDays,
       logoURI: request.logoURI,
       payrollDates: request.payrollDates,
+      payrollAccountNumber: request.payrollAccountNumber,
       maxAllocationPercent: request.maxAllocationPercent,
     });
 
