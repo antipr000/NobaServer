@@ -41,6 +41,7 @@ export class EmployerController {
     });
 
     return {
+      employerID: employer.id,
       employerName: employer.name,
       employerLogoURI: employer.logoURI,
       leadDays: employer.leadDays,

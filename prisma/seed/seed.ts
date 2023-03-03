@@ -15,7 +15,7 @@ async function main() {
     await seedExchangeRates(prisma);
     await seedConsumers(prisma);
     await seedEmployers(prisma);
-    await seedEmployees(prisma);
+    //await seedEmployees(prisma);
   } else {
     console.log("Not seeding in production environment");
   }

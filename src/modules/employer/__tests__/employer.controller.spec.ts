@@ -79,6 +79,7 @@ describe("EmployerControllerTests", () => {
 
       const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
       expect(foundEmployer).toEqual({
+        employerID: employer.id,
         employerName: employer.name,
         employerLogoURI: employer.logoURI,
         employerReferralID: employer.referralID,
@@ -95,6 +96,7 @@ describe("EmployerControllerTests", () => {
 
       const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
       expect(foundEmployer).toEqual({
+        employerID: employer.id,
         employerName: employer.name,
         employerLogoURI: employer.logoURI,
         leadDays: employer.leadDays,
@@ -111,6 +113,7 @@ describe("EmployerControllerTests", () => {
 
       const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
       expect(foundEmployer).toEqual({
+        employerID: employer.id,
         employerName: employer.name,
         employerLogoURI: employer.logoURI,
         leadDays: employer.leadDays,
@@ -127,6 +130,7 @@ describe("EmployerControllerTests", () => {
 
       const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
       expect(foundEmployer).toEqual({
+        employerID: employer.id,
         employerName: employer.name,
         employerLogoURI: employer.logoURI,
         leadDays: employer.leadDays,
@@ -144,6 +148,7 @@ describe("EmployerControllerTests", () => {
 
       const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
       expect(foundEmployer).toEqual({
+        employerID: employer.id,
         employerName: employer.name,
         employerLogoURI: employer.logoURI,
         employerReferralID: employer.referralID,

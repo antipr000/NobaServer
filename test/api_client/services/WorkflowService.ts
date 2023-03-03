@@ -7,6 +7,7 @@ import type { CircleFundsTransferRequestDTO } from "../models/CircleFundsTransfe
 import type { CircleTransactionDTO } from "../models/CircleTransactionDTO";
 import type { CircleWalletBalanceResponseDTO } from "../models/CircleWalletBalanceResponseDTO";
 import type { CircleWalletResponseDTO } from "../models/CircleWalletResponseDTO";
+import type { CreateTransactionDTO } from "../models/CreateTransactionDTO";
 import type { DebitBankRequestDTO } from "../models/DebitBankRequestDTO";
 import type { MonoTransactionDTO } from "../models/MonoTransactionDTO";
 import type { SendNotificationRequestDTO } from "../models/SendNotificationRequestDTO";
@@ -18,6 +19,28 @@ import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
 
 export class WorkflowService {
+  /**
+   * Creates a transaction from disbursement
+   * @returns WorkflowTransactionDTO Transaction created
+   * @throws ApiError
+   */
+  public static createTransaction({
+    requestBody,
+  }: {
+    requestBody: CreateTransactionDTO;
+  }): CancelablePromise<WorkflowTransactionDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/wf/v1/transactions",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `Failed to create transaction`,
+        404: `Requested disbursement is not found`,
+      },
+    });
+  }
+
   /**
    * Updates the transaction
    * @returns BlankResponseDTO Transaction updated
