@@ -15,6 +15,8 @@ import { CircleService } from "../psp/circle.service";
 import { EmployeeService } from "../employee/employee.service";
 import { Employee } from "../employee/domain/Employee";
 import { ConsumerEmployeeDetailsDTO, ConsumerInternalDTO } from "../consumer/dto/ConsumerInternalDTO";
+import { AdminUpdateConsumerRequestDTO } from "./dto/AdminUpdateConsumerRequestDTO";
+import { Consumer } from "../consumer/domain/Consumer";
 
 @Injectable()
 export class AdminService {
@@ -124,27 +126,29 @@ export class AdminService {
 
   async findConsumersFullDetails(filter: ConsumerSearchDTO): Promise<ConsumerInternalDTO[]> {
     const consumers = await this.consumerService.findConsumers(filter);
-    const internalConsumers = consumers.map(consumer => this.consumerMapper.toConsumerInternalDTO(consumer));
+    return Promise.all(consumers.map(async consumer => this.decorateConsumer(consumer)));
+  }
 
-    // For each consumer, add wallet and employee details
-    await Promise.all(
-      internalConsumers.map(async consumer => {
-        consumer.walletDetails = [
-          {
-            walletProvider: "Circle",
-            walletID: await this.circleService.getOrCreateWallet(consumer.id),
-          },
-        ];
+  async decorateConsumer(consumer: Consumer): Promise<ConsumerInternalDTO> {
+    // Convert to internal DTO
+    const internalConsumer = this.consumerMapper.toConsumerInternalDTO(consumer);
 
-        consumer.employeeDetails = await Promise.all(
-          (
-            await this.employeeService.getEmployeesForConsumerID(consumer.id, true)
-          ).map(employee => this.toConsumerEmployeeDetailsDTO(employee)),
-        );
-      }),
+    // Decorate with wallet details
+    internalConsumer.walletDetails = [
+      {
+        walletProvider: "Circle",
+        walletID: await this.circleService.getOrCreateWallet(consumer.props.id),
+      },
+    ];
+
+    // Decorate with employee details
+    internalConsumer.employeeDetails = await Promise.all(
+      (
+        await this.employeeService.getEmployeesForConsumerID(consumer.props.id, true)
+      ).map(employee => this.toConsumerEmployeeDetailsDTO(employee)),
     );
 
-    return internalConsumers;
+    return internalConsumer;
   }
 
   toConsumerEmployeeDetailsDTO(employee: Employee): ConsumerEmployeeDetailsDTO {
@@ -157,5 +161,106 @@ export class AdminService {
       employerID: employee.employerID,
       employerName: employee.employer.name,
     };
+  }
+
+  async updateConsumer(consumerID: string, updateDetails: AdminUpdateConsumerRequestDTO): Promise<ConsumerInternalDTO> {
+    const consumer = await this.consumerService.getConsumer(consumerID);
+    const updateConsumerPayload = {
+      id: consumerID,
+      ...(this.shouldUpdateField(updateDetails.firstName, consumer.props.firstName) && {
+        firstName: this.cleanValue(updateDetails.firstName),
+      }),
+      ...(this.shouldUpdateField(updateDetails.lastName, consumer.props.lastName) && {
+        lastName: this.cleanValue(updateDetails.lastName),
+      }),
+      ...(this.shouldUpdateField(updateDetails.email, consumer.props.email) && {
+        email: this.cleanValue(updateDetails.email),
+      }),
+      ...(this.shouldUpdateField(updateDetails.phone, consumer.props.phone) && {
+        phone: this.cleanValue(updateDetails.phone),
+      }),
+      ...(this.shouldUpdateField(updateDetails.dateOfBirth, consumer.props.dateOfBirth) && {
+        dateOfBirth: this.cleanValue(updateDetails.dateOfBirth),
+      }),
+      ...(this.shouldUpdateField(updateDetails.handle, consumer.props.handle) && {
+        handle: this.cleanValue(updateDetails.handle),
+      }),
+      ...(this.shouldUpdateField(updateDetails.isLocked, consumer.props.isLocked) && {
+        isLocked: this.cleanValue(updateDetails.isLocked),
+      }),
+      ...(this.shouldUpdateField(updateDetails.isDisabled, consumer.props.isDisabled) && {
+        isDisabled: this.cleanValue(updateDetails.isDisabled),
+      }),
+      ...(this.shouldUpdateField(updateDetails.referredByID, consumer.props.referredByID) && {
+        referredByID: this.cleanValue(updateDetails.referredByID),
+      }),
+      ...(updateDetails.address && {
+        address: {
+          ...(this.shouldUpdateField(updateDetails.address.streetLine1, consumer.props.address.streetLine1) && {
+            streetLine1: this.cleanValue(updateDetails.address.streetLine1),
+          }),
+          ...(this.shouldUpdateField(updateDetails.address.streetLine2, consumer.props.address.streetLine2) && {
+            streetLine2: this.cleanValue(updateDetails.address.streetLine2),
+          }),
+          ...(this.shouldUpdateField(updateDetails.address.countryCode, consumer.props.address.countryCode) && {
+            countryCode: this.cleanValue(updateDetails.address.countryCode),
+          }),
+          ...(this.shouldUpdateField(updateDetails.address.city, consumer.props.address.city) && {
+            city: this.cleanValue(updateDetails.address.city),
+          }),
+          ...(this.shouldUpdateField(updateDetails.address.regionCode, consumer.props.address.regionCode) && {
+            regionCode: this.cleanValue(updateDetails.address.regionCode),
+          }),
+          ...(this.shouldUpdateField(updateDetails.address.postalCode, consumer.props.address.postalCode) && {
+            postalCode: this.cleanValue(updateDetails.address.postalCode),
+          }),
+        },
+      }),
+      ...(updateDetails.verificationData && {
+        verificationData: {
+          ...(this.shouldUpdateField(
+            updateDetails.verificationData.provider,
+            consumer.props.verificationData.provider,
+          ) && { provider: this.cleanValue(updateDetails.verificationData.provider) }),
+          ...(this.shouldUpdateField(
+            updateDetails.verificationData.kycCheckStatus,
+            consumer.props.verificationData.kycCheckStatus,
+          ) && { kycCheckStatus: this.cleanValue(updateDetails.verificationData.kycCheckStatus) }),
+          ...(this.shouldUpdateField(
+            updateDetails.verificationData.documentVerificationStatus,
+            consumer.props.verificationData.documentVerificationStatus,
+          ) && {
+            documentVerificationStatus: this.cleanValue(updateDetails.verificationData.documentVerificationStatus),
+          }),
+        },
+      }),
+    };
+
+    await this.consumerService.updateConsumer(updateConsumerPayload);
+    const updatedConsumer = await this.consumerService.getConsumer(consumerID);
+
+    return this.decorateConsumer(updatedConsumer);
+  }
+
+  private shouldUpdateField(newValue: any, oldValue: any): boolean {
+    // If it's undefined, then it's not part of what we want to update
+    if (newValue === undefined) {
+      return false;
+    }
+
+    return this.cleanValue(newValue) !== this.cleanValue(oldValue);
+  }
+
+  private cleanValue(value: any): any {
+    if (value === undefined || value === null) {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      // Convert empty strings to null
+      return value.trim() === "" ? null : value.trim();
+    } else {
+      return value;
+    }
   }
 }
