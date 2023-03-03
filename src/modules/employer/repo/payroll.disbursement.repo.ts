@@ -10,6 +10,6 @@ export interface IPayrollDisbursementRepo {
     id: string,
     payrollDisbursement: PayrollDisbursementUpdateRequest,
   ): Promise<PayrollDisbursement>;
-  getPayrollDisbursementById(id: string): Promise<PayrollDisbursement>;
+  getPayrollDisbursementByID(id: string): Promise<PayrollDisbursement>;
   getAllDisbursementsForEmployee(employeeID: string): Promise<PayrollDisbursement[]>;
 }

@@ -90,6 +90,17 @@ export class EmployeeService {
     return this.employeeRepo.getEmployeesForConsumerID(consumerID, fetchEmployerDetails);
   }
 
+  async getEmployeesForEmployer(employerID: string): Promise<Employee[]> {
+    if (!employerID) {
+      throw new ServiceException({
+        message: "employerID is required",
+        errorCode: ServiceErrorCode.UNKNOWN,
+      });
+    }
+
+    return this.employeeRepo.getEmployeesForEmployer(employerID);
+  }
+
   async updateAllocationAmountsForNewMaxAllocationPercent(
     employerID: string,
     newAllocationPercent: number,

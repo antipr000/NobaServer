@@ -98,7 +98,7 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
     }
   }
 
-  async getPayrollDisbursementById(id: string): Promise<PayrollDisbursement> {
+  async getPayrollDisbursementByID(id: string): Promise<PayrollDisbursement> {
     try {
       const returnedPayrollDisbursement: PrismaPayrollDisbursementModel =
         await this.prismaService.payrollDisbursement.findUnique({

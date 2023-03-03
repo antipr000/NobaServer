@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiNotFoundResponse, ApiOperation, ApiResponse, ApiTags 
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { EmployerWorkflowDTO } from "./dto/employer.workflow.controller.dto";
-import { EmployeeAllocationCurrency } from "../employee/domain/Employee";
+import { EmployerService } from "./employer.service";
 
 @Controller("wf/v1/employer")
 @ApiBearerAuth("JWT-auth")
@@ -11,6 +11,9 @@ import { EmployeeAllocationCurrency } from "../employee/domain/Employee";
 export class EmployerWorkflowController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
+
+  @Inject()
+  private readonly employerService: EmployerService;
 
   @Get("/:employerID")
   @ApiOperation({ summary: "Gets details of an employer" })
@@ -23,45 +26,30 @@ export class EmployerWorkflowController {
     @Param("employerID") employerID: string,
     @Query() employees?: boolean,
   ): Promise<EmployerWorkflowDTO> {
-    if (!employees) {
-      return {
-        employerName: "Fake Employer",
-        employerLogoURI: "https://fake.employer/logo.png",
-        leadDays: 1,
-        employerReferralID: "123",
-        payrollDates: ["2021-01-01", "2021-01-02"],
-        nextPayrollDate: "2021-01-03",
-        maxAllocationPercent: 20,
-        employees: [],
-      };
-    } else {
-      return {
-        employerName: "Fake Employer",
-        employerLogoURI: "https://fake.employer/logo.png",
-        leadDays: 1,
-        employerReferralID: "123",
-        payrollDates: ["2021-01-01", "2021-01-02"],
-        nextPayrollDate: "2021-01-03",
-        maxAllocationPercent: 20,
-        employees: [
-          {
-            id: "456",
-            allocationAmount: 1000,
-            allocationCurrency: EmployeeAllocationCurrency.COP,
-            employerID: employerID,
-            consumerID: "123",
-            salary: 10000,
-          },
-          {
-            id: "789",
-            allocationAmount: 1000,
-            allocationCurrency: EmployeeAllocationCurrency.COP,
-            employerID: employerID,
-            consumerID: "234",
-            salary: 10000,
-          },
-        ],
-      };
-    }
+    const employer = await this.employerService.getEmployer(employerID, employees);
+
+    const payrollDatesAsc = employer.payrollDates.sort(); // Naturally sorts strings in ascending order
+    const now = new Date().setHours(0, 0, 0, 0);
+    const futurePayrollDates = payrollDatesAsc.filter(date => {
+      return new Date(date) > new Date(now + employer.leadDays * 24 * 60 * 60 * 1000);
+    });
+
+    return {
+      employerName: employer.name,
+      employerLogoURI: employer.logoURI,
+      leadDays: employer.leadDays,
+      employerReferralID: employer.referralID,
+      payrollDates: payrollDatesAsc,
+      nextPayrollDate: futurePayrollDates[0],
+      ...(employer.maxAllocationPercent && { maxAllocationPercent: employer.maxAllocationPercent }),
+      employees: employer.employees.map(employee => ({
+        id: employee.id,
+        allocationAmount: employee.allocationAmount,
+        allocationCurrency: employee.allocationCurrency,
+        employerID: employee.employerID,
+        consumerID: employee.consumerID,
+        ...(employee.salary && { salary: employee.salary }),
+      })),
+    };
   }
 }

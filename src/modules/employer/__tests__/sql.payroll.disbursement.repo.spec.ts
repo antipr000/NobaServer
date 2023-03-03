@@ -120,14 +120,14 @@ describe("SqlPayrollDisbursementRepo tests", () => {
     it("should get the requested payroll disbursement", async () => {
       const payrollDisbursement = await saveAndGetPayrollDisbursement(prismaService);
 
-      const retrivedPayrollDisbursement = await payrollDisbursementRepo.getPayrollDisbursementById(
+      const retrivedPayrollDisbursement = await payrollDisbursementRepo.getPayrollDisbursementByID(
         payrollDisbursement.id,
       );
       expect(retrivedPayrollDisbursement).toStrictEqual(payrollDisbursement);
     });
 
     it("should return null when payroll disbursement is not found", async () => {
-      const retrievedPayrollDisbursement = await payrollDisbursementRepo.getPayrollDisbursementById("fake-id");
+      const retrievedPayrollDisbursement = await payrollDisbursementRepo.getPayrollDisbursementByID("fake-id");
 
       expect(retrievedPayrollDisbursement).toBeNull();
     });

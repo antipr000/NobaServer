@@ -4,9 +4,28 @@ import { ServiceErrorCode, ServiceException } from "../../core/exception/service
 import { Logger } from "winston";
 import { Employer } from "./domain/Employer";
 import { IEmployerRepo } from "./repo/employer.repo";
-import { EMPLOYER_REPO_PROVIDER } from "./repo/employer.repo.module";
-import { CreateEmployerRequestDTO, UpdateEmployerRequestDTO } from "./dto/employer.service.dto";
+import {
+  EMPLOYER_REPO_PROVIDER,
+  PAYROLL_DISBURSEMENT_REPO_PROVIDER,
+  PAYROLL_REPO_PROVIDER,
+} from "./repo/employer.repo.module";
+import {
+  CreateEmployerRequestDTO,
+  EmployerWithEmployeesDTO,
+  UpdateEmployerRequestDTO,
+} from "./dto/employer.service.dto";
 import { EmployeeService } from "../employee/employee.service";
+import { IPayrollRepo } from "./repo/payroll.repo";
+import { IPayrollDisbursementRepo } from "./repo/payroll.disbursement.repo";
+import { Payroll } from "./domain/Payroll";
+import {
+  CreateDisbursementRequestDTO,
+  UpdateDisbursementRequestDTO,
+  UpdatePayrollRequestDTO,
+} from "./dto/payroll.workflow.controller.dto";
+import { PayrollDisbursement } from "./domain/PayrollDisbursement";
+import { PayrollUpdateRequest } from "./domain/Payroll";
+import { PayrollStatus } from "./domain/Payroll";
 
 @Injectable()
 export class EmployerService {
@@ -17,6 +36,8 @@ export class EmployerService {
 
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
+    @Inject(PAYROLL_REPO_PROVIDER) private readonly payrollRepo: IPayrollRepo,
+    @Inject(PAYROLL_DISBURSEMENT_REPO_PROVIDER) private readonly payrollDisbursementRepo: IPayrollDisbursementRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -26,6 +47,21 @@ export class EmployerService {
         message: `Lead days cannot be more than ${this.MAX_LEAD_DAYS}`,
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
+    }
+  }
+
+  async getEmployer(employerID: string, shouldFetchEmployees?: boolean): Promise<EmployerWithEmployeesDTO> {
+    const employer = await this.employerRepo.getEmployerByID(employerID);
+    if (!employer) {
+      throw new ServiceException({
+        message: "Employer not found",
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    if (shouldFetchEmployees) {
+      const employees = await this.employeeService.getEmployeesForEmployer(employerID);
+      return { ...employer, employees };
     }
   }
 
@@ -106,5 +142,114 @@ export class EmployerService {
     }
 
     return this.employerRepo.getEmployerByBubbleID(bubbleID);
+  }
+
+  async getPayrollByID(id: string): Promise<Payroll> {
+    if (!id) {
+      throw new ServiceException({
+        message: "ID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    return this.payrollRepo.getPayrollByID(id);
+  }
+
+  async updatePayroll(payrollID: string, request: UpdatePayrollRequestDTO): Promise<Payroll> {
+    if (!payrollID) {
+      throw new ServiceException({
+        message: "payrollID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const payrollUpdateRequest: PayrollUpdateRequest = {
+      status: request.status,
+    };
+
+    if (request.status === PayrollStatus.COMPLETE) {
+      payrollUpdateRequest.completedTimestamp = new Date();
+    }
+
+    return this.payrollRepo.updatePayroll(payrollID, payrollUpdateRequest);
+  }
+
+  async createDisbursement(
+    payrollID: string,
+    createDisbursementRequest: CreateDisbursementRequestDTO,
+  ): Promise<PayrollDisbursement> {
+    if (!payrollID) {
+      throw new ServiceException({
+        message: "payrollID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+    if (!createDisbursementRequest.employeeID) {
+      throw new ServiceException({
+        message: "employeeID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const employee = await this.employeeService.getEmployeeByID(createDisbursementRequest.employeeID);
+
+    if (!employee) {
+      throw new ServiceException({
+        message: "Employee not found",
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    const amount = employee.allocationAmount; // TODO: Is conversion needed based on allocationCurrency?
+
+    return await this.payrollDisbursementRepo.createPayrollDisbursement({
+      payrollID: payrollID,
+      employeeID: createDisbursementRequest.employeeID,
+      debitAmount: amount,
+    });
+  }
+
+  async updateDisbursement(
+    payrollID: string,
+    disbursementID: string,
+    updateDisbursementRequest: UpdateDisbursementRequestDTO,
+  ): Promise<PayrollDisbursement> {
+    if (!payrollID) {
+      throw new ServiceException({
+        message: "payrollID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    if (!disbursementID) {
+      throw new ServiceException({
+        message: "disbursementID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const disbursement = await this.payrollDisbursementRepo.getPayrollDisbursementByID(disbursementID);
+
+    if (!disbursement) {
+      throw new ServiceException({
+        message: "Payroll Disbursement not found",
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    if (disbursement.payrollID !== payrollID) {
+      throw new ServiceException({
+        message: "Payroll Disbursement not found",
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    return this.payrollDisbursementRepo.updatePayrollDisbursement(disbursementID, {
+      transactionID: updateDisbursementRequest.transactionID,
+    });
+  }
+
+  async createInvoice(payrollID: string): Promise<void> {
+    throw new Error("Not implemented");
   }
 }

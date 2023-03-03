@@ -1,3 +1,6 @@
+import { Employee } from "../../../modules/employee/domain/Employee";
+import { Employer } from "../domain/Employer";
+
 export type CreateEmployerRequestDTO = {
   name: string;
   logoURI: string;
@@ -16,4 +19,8 @@ export type UpdateEmployerRequestDTO = {
   payrollAccountNumber?: string;
   payrollDates?: string[];
   maxAllocationPercent?: number;
+};
+
+export type EmployerWithEmployeesDTO = Employer & {
+  employees: Employee[];
 };
