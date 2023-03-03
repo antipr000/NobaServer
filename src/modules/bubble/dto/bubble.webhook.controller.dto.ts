@@ -47,3 +47,13 @@ export class UpdateEmployeeRequestDTO {
   @ApiProperty()
   salary: number;
 }
+
+export class CreatePayrollRequestDTO {
+  @ApiProperty()
+  payrollDate: string;
+}
+
+export class CreatePayrollResponseDTO {
+  @ApiProperty()
+  payrollID: string;
+}

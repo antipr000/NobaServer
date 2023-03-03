@@ -3,12 +3,12 @@ import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { EmployeeModule } from "../employee/employee.module";
 import { EmployerModule } from "../employer/employer.module";
 import { BubbleClient } from "./bubble.client";
-import { BubbleWorkflowController } from "./bubble.workflow.controller";
+import { BubbleWebhookController } from "./bubble.webhook.controller";
 import { BubbleService } from "./bubble.service";
 
 @Module({
   imports: [InfraProvidersModule, EmployeeModule, EmployerModule],
-  controllers: [BubbleWorkflowController],
+  controllers: [BubbleWebhookController],
   providers: [BubbleClient, BubbleService],
   exports: [BubbleService],
 })

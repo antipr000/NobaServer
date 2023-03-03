@@ -3,14 +3,14 @@ import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { anyString, anything, capture, instance, when } from "ts-mockito";
-import { BubbleWorkflowController } from "../bubble.workflow.controller";
+import { BubbleWebhookController } from "../bubble.webhook.controller";
 import { BubbleService } from "../bubble.service";
 import { getMockBubbleServiceWithDefaults } from "../mocks/mock.bubble.service";
 
 describe("BubbleWorkflowControllerTests", () => {
   jest.setTimeout(20000);
 
-  let bubbleWorkflowController: BubbleWorkflowController;
+  let bubbleWorkflowController: BubbleWebhookController;
   let bubbleService: BubbleService;
   let app: TestingModule;
 
@@ -29,11 +29,11 @@ describe("BubbleWorkflowControllerTests", () => {
           provide: BubbleService,
           useFactory: () => instance(bubbleService),
         },
-        BubbleWorkflowController,
+        BubbleWebhookController,
       ],
     }).compile();
 
-    bubbleWorkflowController = app.get<BubbleWorkflowController>(BubbleWorkflowController);
+    bubbleWorkflowController = app.get<BubbleWebhookController>(BubbleWebhookController);
   });
 
   afterEach(async () => {

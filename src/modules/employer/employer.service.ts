@@ -17,7 +17,7 @@ import {
 import { EmployeeService } from "../employee/employee.service";
 import { IPayrollRepo } from "./repo/payroll.repo";
 import { IPayrollDisbursementRepo } from "./repo/payroll.disbursement.repo";
-import { Payroll } from "./domain/Payroll";
+import { Payroll, PayrollCreateRequest } from "./domain/Payroll";
 import {
   CreateDisbursementRequestDTO,
   UpdateDisbursementRequestDTO,
@@ -26,6 +26,7 @@ import {
 import { PayrollDisbursement } from "./domain/PayrollDisbursement";
 import { PayrollUpdateRequest } from "./domain/Payroll";
 import { PayrollStatus } from "./domain/Payroll";
+import { Utils } from "../../core/utils/Utils";
 
 @Injectable()
 export class EmployerService {
@@ -50,7 +51,17 @@ export class EmployerService {
     }
   }
 
-  async getEmployer(employerID: string, shouldFetchEmployees?: boolean): Promise<EmployerWithEmployeesDTO> {
+  async getEmployerWithEmployees(
+    employerID: string,
+    shouldFetchEmployees?: boolean,
+  ): Promise<EmployerWithEmployeesDTO> {
+    if (!employerID) {
+      throw new ServiceException({
+        message: "Employer ID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
     const employer = await this.employerRepo.getEmployerByID(employerID);
     if (!employer) {
       throw new ServiceException({
@@ -58,11 +69,11 @@ export class EmployerService {
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
       });
     }
-
+    let employees = [];
     if (shouldFetchEmployees) {
-      const employees = await this.employeeService.getEmployeesForEmployer(employerID);
-      return { ...employer, employees };
+      employees = await this.employeeService.getEmployeesForEmployer(employerID);
     }
+    return { ...employer, employees };
   }
 
   async createEmployer(request: CreateEmployerRequestDTO): Promise<Employer> {
@@ -155,6 +166,23 @@ export class EmployerService {
     return this.payrollRepo.getPayrollByID(id);
   }
 
+  async createPayroll(employerID: string, payrollDate: string): Promise<Payroll> {
+    if (!employerID) {
+      throw new ServiceException({
+        message: "employerID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const payrollCreateRequest: PayrollCreateRequest = {
+      employerID: employerID,
+      reference: Utils.generateLowercaseUUID(true),
+      payrollDate: payrollDate,
+    };
+
+    return this.payrollRepo.addPayroll(payrollCreateRequest);
+  }
+
   async updatePayroll(payrollID: string, request: UpdatePayrollRequestDTO): Promise<Payroll> {
     if (!payrollID) {
       throw new ServiceException({
@@ -167,7 +195,7 @@ export class EmployerService {
       status: request.status,
     };
 
-    if (request.status === PayrollStatus.COMPLETE) {
+    if (request.status === PayrollStatus.COMPLETED) {
       payrollUpdateRequest.completedTimestamp = new Date();
     }
 

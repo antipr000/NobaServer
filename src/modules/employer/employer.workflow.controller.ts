@@ -26,7 +26,7 @@ export class EmployerWorkflowController {
     @Param("employerID") employerID: string,
     @Query() employees?: boolean,
   ): Promise<EmployerWorkflowDTO> {
-    const employer = await this.employerService.getEmployer(employerID, employees);
+    const employer = await this.employerService.getEmployerWithEmployees(employerID, employees);
 
     const payrollDatesAsc = employer.payrollDates.sort(); // Naturally sorts strings in ascending order
     const now = new Date().setHours(0, 0, 0, 0);

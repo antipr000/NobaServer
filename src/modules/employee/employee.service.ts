@@ -54,7 +54,7 @@ export class EmployeeService {
     if (!employeeID) {
       throw new ServiceException({
         message: "employeeID is required",
-        errorCode: ServiceErrorCode.UNKNOWN,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
 
@@ -65,14 +65,14 @@ export class EmployeeService {
     if (!consumerID) {
       throw new ServiceException({
         message: "'consumerID' is required",
-        errorCode: ServiceErrorCode.UNKNOWN,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
 
     if (!employerID) {
       throw new ServiceException({
         message: "'employerID' is required",
-        errorCode: ServiceErrorCode.UNKNOWN,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
 
@@ -83,7 +83,7 @@ export class EmployeeService {
     if (!consumerID) {
       throw new ServiceException({
         message: "consumerID is required",
-        errorCode: ServiceErrorCode.UNKNOWN,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
 
@@ -94,7 +94,7 @@ export class EmployeeService {
     if (!employerID) {
       throw new ServiceException({
         message: "employerID is required",
-        errorCode: ServiceErrorCode.UNKNOWN,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
 
@@ -106,7 +106,7 @@ export class EmployeeService {
     newAllocationPercent: number,
   ): Promise<Employee[]> {
     const updateEmployeePromises: Promise<Employee>[] = [];
-    const employees: Employee[] = await this.employeeRepo.getEmployeesForEmployer(employerID);
+    const employees: Employee[] = await this.getEmployeesForEmployer(employerID);
     for (const employee of employees) {
       const maxAllocationAmount = (newAllocationPercent * employee.salary) / 100;
 

@@ -13,6 +13,7 @@ import {
 } from "./dto/bubble.service.dto";
 import { EmployerService } from "../employer/employer.service";
 import { Employer } from "../employer/domain/Employer";
+import { Payroll } from "../employer/domain/Payroll";
 
 @Injectable()
 export class BubbleService {
@@ -113,5 +114,17 @@ export class BubbleService {
     if (updatedEmployee?.allocationAmount !== employee.allocationAmount) {
       await this.updateEmployeeAllocationInBubble(employeeID, updatedEmployee.allocationAmount);
     }
+  }
+
+  async createPayroll(referralID: string, payrollDate: string): Promise<Payroll> {
+    const employer = await this.employerService.getEmployerByReferralID(referralID);
+    if (!employer) {
+      throw new ServiceException({
+        message: `No employer found with referralID: ${referralID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    return this.employerService.createPayroll(employer.id, payrollDate);
   }
 }
