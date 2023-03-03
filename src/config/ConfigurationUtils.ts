@@ -23,6 +23,7 @@ export const SERVER_LOG_FILE_PATH = "logFilePath";
 export const LOCATION_DATA_FILE_NAME = "locationDataFileName";
 export const LOCATION_DATA_FILE_PATH = "LOCATION_DATA_FILE_PATH";
 export const ASSETS_BUCKET_NAME = "assetsBucketName";
+export const GENERATED_DATA_BUCKET_NAME = "generatedDataBucketName";
 export const DB_DUMP_FILES_BUCKET_PATH = "dbDumpFilesBucketPath";
 export const SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH = "supportedCryptoFileBucketPath";
 export const SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH = "sanctionedCryptoWalletsFileBucketPath";
