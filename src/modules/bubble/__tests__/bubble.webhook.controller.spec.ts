@@ -7,10 +7,10 @@ import { BubbleWebhookController } from "../bubble.webhook.controller";
 import { BubbleService } from "../bubble.service";
 import { getMockBubbleServiceWithDefaults } from "../mocks/mock.bubble.service";
 
-describe("BubbleWorkflowControllerTests", () => {
+describe("BubbleWebhookControllerTests", () => {
   jest.setTimeout(20000);
 
-  let bubbleWorkflowController: BubbleWebhookController;
+  let bubbleWebhookController: BubbleWebhookController;
   let bubbleService: BubbleService;
   let app: TestingModule;
 
@@ -33,7 +33,7 @@ describe("BubbleWorkflowControllerTests", () => {
       ],
     }).compile();
 
-    bubbleWorkflowController = app.get<BubbleWebhookController>(BubbleWebhookController);
+    bubbleWebhookController = app.get<BubbleWebhookController>(BubbleWebhookController);
   });
 
   afterEach(async () => {
@@ -50,7 +50,7 @@ describe("BubbleWorkflowControllerTests", () => {
       };
       when(bubbleService.registerEmployerInNoba(anything())).thenResolve("nobaEmployerID");
 
-      const result = await bubbleWorkflowController.registerEmployer(requestBody);
+      const result = await bubbleWebhookController.registerEmployer(requestBody);
 
       expect(result.nobaEmployerID).toEqual("nobaEmployerID");
 
@@ -73,7 +73,7 @@ describe("BubbleWorkflowControllerTests", () => {
       };
       when(bubbleService.registerEmployerInNoba(anything())).thenResolve("nobaEmployerID");
 
-      const result = await bubbleWorkflowController.registerEmployer(requestBody);
+      const result = await bubbleWebhookController.registerEmployer(requestBody);
 
       expect(result.nobaEmployerID).toEqual("nobaEmployerID");
 
@@ -98,7 +98,7 @@ describe("BubbleWorkflowControllerTests", () => {
       };
       when(bubbleService.registerEmployerInNoba(anything())).thenResolve("nobaEmployerID");
 
-      const result = await bubbleWorkflowController.registerEmployer(requestBody);
+      const result = await bubbleWebhookController.registerEmployer(requestBody);
 
       expect(result.nobaEmployerID).toEqual("nobaEmployerID");
 
@@ -123,7 +123,7 @@ describe("BubbleWorkflowControllerTests", () => {
       };
       when(bubbleService.registerEmployerInNoba(anything())).thenResolve("nobaEmployerID");
 
-      const result = await bubbleWorkflowController.registerEmployer(requestBody);
+      const result = await bubbleWebhookController.registerEmployer(requestBody);
 
       expect(result.nobaEmployerID).toEqual("nobaEmployerID");
 
@@ -149,7 +149,7 @@ describe("BubbleWorkflowControllerTests", () => {
       };
       when(bubbleService.updateEmployerInNoba(anyString(), anything())).thenResolve();
 
-      await bubbleWorkflowController.updateEmployer(requestBody, referralID);
+      await bubbleWebhookController.updateEmployer(requestBody, referralID);
 
       const [bubbleServiceUpdateEmployerInNobaReferralIDArgs, bubbleServiceUpdateEmployerInNobaRequestBodyArgs] =
         capture(bubbleService.updateEmployerInNoba).last();
@@ -172,7 +172,7 @@ describe("BubbleWorkflowControllerTests", () => {
 
       when(bubbleService.updateEmployee(anyString(), anything())).thenResolve();
 
-      await bubbleWorkflowController.updateEmployee(requestBody, employeeID);
+      await bubbleWebhookController.updateEmployee(requestBody, employeeID);
 
       const [bubbleServiceUpdateEmployeeEmployeeIDArgs, bubbleServiceUpdateEmployeeRequestBodyArgs] = capture(
         bubbleService.updateEmployee,

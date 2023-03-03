@@ -24,7 +24,7 @@ import {
 } from "./dto/bubble.webhook.controller.dto";
 import { EmployerRegisterResponseDTO } from "./dto/EmployerRegisterResponseDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
-import { isValidDateString } from "src/core/utils/DateUtils";
+import { isValidDateString } from "../../core/utils/DateUtils";
 
 @Controller("/webhooks/bubble")
 @ApiTags("Webhooks")
