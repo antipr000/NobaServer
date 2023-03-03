@@ -20,6 +20,8 @@ import { IPayrollRepo } from "./repo/payroll.repo";
 @Injectable()
 export class EmployerService {
   private readonly MAX_LEAD_DAYS = 5;
+  private readonly ENGLISH_LOCALE = "en";
+  private readonly SPANISH_LOCALE = "es";
 
   @Inject()
   private readonly templateService: TemplateService;
@@ -184,21 +186,21 @@ export class EmployerService {
 
     const [html_en, html_es] = await Promise.all([
       this.generateTemplate({
-        handlebarTemplate: templates["en"],
+        handlebarTemplate: templates[this.ENGLISH_LOCALE],
         companyName: companyName,
         currency: currency,
         employeeDisbursements: employeeDisbursements,
         nobaAccountNumber: nobaAccountNumber,
-        locale: "en",
+        locale: this.ENGLISH_LOCALE,
         region: "US",
       }),
       this.generateTemplate({
-        handlebarTemplate: templates["es"],
+        handlebarTemplate: templates[this.SPANISH_LOCALE],
         companyName: companyName,
         currency: currency,
         employeeDisbursements: employeeDisbursements,
         nobaAccountNumber: nobaAccountNumber,
-        locale: "es",
+        locale: this.SPANISH_LOCALE,
         region: "CO",
       }),
     ]);
