@@ -27,6 +27,8 @@ import { PayrollDisbursement } from "./domain/PayrollDisbursement";
 import { PayrollUpdateRequest } from "./domain/Payroll";
 import { PayrollStatus } from "./domain/Payroll";
 import { Utils } from "../../core/utils/Utils";
+import { ExchangeRateService } from "../common/exchangerate.service";
+import { Currency } from "../transaction/domain/TransactionTypes";
 
 @Injectable()
 export class EmployerService {
@@ -34,6 +36,9 @@ export class EmployerService {
 
   @Inject()
   private readonly employeeService: EmployeeService;
+
+  @Inject()
+  private readonly exchangeRateService: ExchangeRateService;
 
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
@@ -197,6 +202,18 @@ export class EmployerService {
 
     if (request.status === PayrollStatus.COMPLETED) {
       payrollUpdateRequest.completedTimestamp = new Date();
+    } else if (request.status === PayrollStatus.CREATED) {
+      const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
+
+      const totalDebitAmountInCOP = disbursements.reduce((acc, disbursement) => acc + disbursement.debitAmount, 0);
+
+      const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD);
+
+      const totalCreditAmountInUSD = totalDebitAmountInCOP * exchangeRateDTO.nobaRate;
+
+      payrollUpdateRequest.totalDebitAmount = totalDebitAmountInCOP;
+      payrollUpdateRequest.exchangeRate = exchangeRateDTO.nobaRate;
+      payrollUpdateRequest.totalCreditAmount = totalCreditAmountInUSD;
     }
 
     return this.payrollRepo.updatePayroll(payrollID, payrollUpdateRequest);
@@ -228,8 +245,7 @@ export class EmployerService {
       });
     }
 
-    const amount = employee.allocationAmount; // TODO: Is conversion needed based on allocationCurrency?
-
+    const amount = employee.allocationAmount;
     return await this.payrollDisbursementRepo.createPayrollDisbursement({
       payrollID: payrollID,
       employeeID: createDisbursementRequest.employeeID,

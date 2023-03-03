@@ -7,7 +7,7 @@ import { EmployeeModule } from "../employee/employee.module";
 import { CommonModule } from "../common/common.module";
 
 @Module({
-  imports: [InfraProvidersModule, EmployerRepoModule, EmployeeModule],
+  imports: [InfraProvidersModule, EmployerRepoModule, EmployeeModule, CommonModule],
   controllers: [EmployerController],
   providers: [EmployerService],
   exports: [EmployerService],
