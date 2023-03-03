@@ -1,10 +1,10 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { S3, GetObjectCommand, ListObjectsV2Command, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { ASSETS_BUCKET_NAME, TEMPLATES_FOLDER_BUCKET_PATH } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
 @Injectable()
-export class TemplateService {
+export class HandlebarService {
   @Inject()
   private readonly configService: CustomConfigService;
 

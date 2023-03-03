@@ -13,7 +13,7 @@ import { PAYROLL_DISBURSEMENT_REPO_PROVIDER, PAYROLL_REPO_PROVIDER } from "./rep
 import { IPayrollDisbursementRepo } from "./repo/payroll.disbursement.repo";
 import { ConsumerService } from "../consumer/consumer.service";
 import { EmployeeService } from "../employee/employee.service";
-import { TemplateService } from "../common/template.service";
+import { HandlebarService } from "../common/handlebar.service";
 import "dayjs/locale/es";
 import { IPayrollRepo } from "./repo/payroll.repo";
 
@@ -24,7 +24,7 @@ export class EmployerService {
   private readonly SPANISH_LOCALE = "es";
 
   @Inject()
-  private readonly templateService: TemplateService;
+  private readonly handlebarService: HandlebarService;
 
   @Inject()
   private readonly employeeService: EmployeeService;
@@ -133,7 +133,7 @@ export class EmployerService {
       });
     }
 
-    const templatesPromise = this.templateService.getHandlebarLanguageTemplates();
+    const templatesPromise = this.handlebarService.getHandlebarLanguageTemplates();
 
     let [employeeDisbursements, payroll] = await Promise.all([
       this.getEmployeeDisbursements(payrollID),
