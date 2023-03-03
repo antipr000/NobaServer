@@ -26,6 +26,6 @@ export const PAYROLL_DISBURSEMENT_REPO_PROVIDER = "PAYROLL_DISBURSEMENT_REPO";
       useClass: SqlPayrollDisbursementRepo,
     },
   ],
-  exports: [EMPLOYER_REPO_PROVIDER],
+  exports: [EMPLOYER_REPO_PROVIDER, PAYROLL_REPO_PROVIDER, PAYROLL_DISBURSEMENT_REPO_PROVIDER],
 })
 export class EmployerRepoModule {}
