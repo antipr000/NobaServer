@@ -27,6 +27,7 @@ export const DB_DUMP_FILES_BUCKET_PATH = "dbDumpFilesBucketPath";
 export const SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH = "supportedCryptoFileBucketPath";
 export const SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH = "sanctionedCryptoWalletsFileBucketPath";
 export const TEMPLATES_FOLDER_BUCKET_PATH = "templatesFolderBucketPath";
+export const INVOICES_FOLDER_BUCKET_PATH = "invoicesFolderBucketPath";
 export const STATIC_DEV_OTP = "staticDevOTP";
 
 export const AWS_ACCESS_KEY_ID_ATTR = "awsAccessKeyId";

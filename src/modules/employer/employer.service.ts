@@ -139,15 +139,15 @@ export class EmployerService {
       this.getEmployeeDisbursements(payrollID),
       this.payrollRepo.getPayrollByID(payrollID),
     ]);
-    if (!payroll) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: "Payroll not found",
-      });
-    }
+    // if (!payroll) {
+    //   throw new ServiceException({
+    //     errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+    //     message: "Payroll not found",
+    //   });
+    // }
 
-    const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
-    const companyName = employer.name;
+    // const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
+    const companyName = "mono";
 
     const currency = "COP";
     employeeDisbursements = [
@@ -205,6 +205,7 @@ export class EmployerService {
       }),
     ]);
 
+    this.handlebarService.pushHandlebarLanguageHTML(`inv_${payrollID}_en.html`, html_en);
     writeFileSync(__dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\payroll_en.html", html_en);
     writeFileSync(__dirname.split("\\dist")[0] + "\\src\\modules\\employer\\payroll\\payroll_es.html", html_es);
   }

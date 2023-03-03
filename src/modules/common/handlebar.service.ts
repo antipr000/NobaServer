@@ -27,13 +27,15 @@ export class HandlebarService {
     });
   }
 
-  private async pushHTMLToS3(folderPath: string, objectName: string): Promise<any> {
+  private async pushHTMLToS3(folderPath: string, objectName: string, content: string): Promise<any> {
     return new Promise(async (resolve, reject) => {
       const s3 = new S3({});
       const options = {
         Bucket: this.configService.get(ASSETS_BUCKET_NAME),
         Key: this.configService.get(TEMPLATES_FOLDER_BUCKET_PATH) + folderPath + objectName,
       };
+
+      console.log(options);
 
       try {
         const putObjectCommand = new PutObjectCommand(options);
@@ -54,12 +56,7 @@ export class HandlebarService {
     return { en: handlebarEnglishTemplate, es: handlebarSpanishTemplate };
   }
 
-  public async pushHandlebarLanguageHTML(): Promise<Record<string, string>> {
-    const [handlebarEnglishTemplate, handlebarSpanishTemplate] = await Promise.all([
-      this.pushHTMLToS3("/payroll-invoice/", "template_en.hbs"),
-      this.pushHTMLToS3("/payroll-invoice/", "template_es.hbs"),
-    ]);
-
-    return { en: handlebarEnglishTemplate, es: handlebarSpanishTemplate };
+  public async pushHandlebarLanguageHTML(filename: string, content: string): Promise<void> {
+    await this.pushHTMLToS3("/invoices/", filename, content);
   }
 }
