@@ -196,22 +196,22 @@ export class AdminService {
       }),
       ...(updateDetails.address && {
         address: {
-          ...(this.shouldUpdateField(updateDetails.address.streetLine1, consumer.props.address.streetLine1) && {
+          ...(this.shouldUpdateField(updateDetails.address.streetLine1, consumer.props.address?.streetLine1) && {
             streetLine1: this.cleanValue(updateDetails.address.streetLine1),
           }),
-          ...(this.shouldUpdateField(updateDetails.address.streetLine2, consumer.props.address.streetLine2) && {
+          ...(this.shouldUpdateField(updateDetails.address.streetLine2, consumer.props.address?.streetLine2) && {
             streetLine2: this.cleanValue(updateDetails.address.streetLine2),
           }),
-          ...(this.shouldUpdateField(updateDetails.address.countryCode, consumer.props.address.countryCode) && {
+          ...(this.shouldUpdateField(updateDetails.address.countryCode, consumer.props.address?.countryCode) && {
             countryCode: this.cleanValue(updateDetails.address.countryCode),
           }),
-          ...(this.shouldUpdateField(updateDetails.address.city, consumer.props.address.city) && {
+          ...(this.shouldUpdateField(updateDetails.address.city, consumer.props.address?.city) && {
             city: this.cleanValue(updateDetails.address.city),
           }),
-          ...(this.shouldUpdateField(updateDetails.address.regionCode, consumer.props.address.regionCode) && {
+          ...(this.shouldUpdateField(updateDetails.address.regionCode, consumer.props.address?.regionCode) && {
             regionCode: this.cleanValue(updateDetails.address.regionCode),
           }),
-          ...(this.shouldUpdateField(updateDetails.address.postalCode, consumer.props.address.postalCode) && {
+          ...(this.shouldUpdateField(updateDetails.address.postalCode, consumer.props.address?.postalCode) && {
             postalCode: this.cleanValue(updateDetails.address.postalCode),
           }),
         },
@@ -220,15 +220,15 @@ export class AdminService {
         verificationData: {
           ...(this.shouldUpdateField(
             updateDetails.verificationData.provider,
-            consumer.props.verificationData.provider,
+            consumer.props.verificationData?.provider,
           ) && { provider: this.cleanValue(updateDetails.verificationData.provider) }),
           ...(this.shouldUpdateField(
             updateDetails.verificationData.kycCheckStatus,
-            consumer.props.verificationData.kycCheckStatus,
+            consumer.props.verificationData?.kycCheckStatus,
           ) && { kycCheckStatus: this.cleanValue(updateDetails.verificationData.kycCheckStatus) }),
           ...(this.shouldUpdateField(
             updateDetails.verificationData.documentVerificationStatus,
-            consumer.props.verificationData.documentVerificationStatus,
+            consumer.props.verificationData?.documentVerificationStatus,
           ) && {
             documentVerificationStatus: this.cleanValue(updateDetails.verificationData.documentVerificationStatus),
           }),
