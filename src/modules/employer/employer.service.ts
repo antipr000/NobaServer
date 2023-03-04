@@ -139,49 +139,54 @@ export class EmployerService {
       this.getEmployeeDisbursements(payrollID),
       this.payrollRepo.getPayrollByID(payrollID),
     ]);
-    // if (!payroll) {
-    //   throw new ServiceException({
-    //     errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-    //     message: "Payroll not found",
-    //   });
-    // }
+    if (!payroll) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Payroll not found",
+      });
+    }
 
-    // const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
-    const companyName = "mono";
+    const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
+    if (!employer) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Employer not found",
+      });
+    }
 
-    const currency = "COP";
+    const companyName = employer.name;
+    const currency = payroll.debitCurrency;
     employeeDisbursements = [
       {
-        employeeName: "Camilo Moreno",
+        employeeName: "Juan Perez",
         amount: 200000,
       },
       {
-        employeeName: "German Ramirez",
+        employeeName: "Maria Rodriguez",
         amount: 500000,
       },
       {
-        employeeName: "Jhon Pedroza",
+        employeeName: "Carlos Sanchez",
         amount: 100000,
       },
       {
-        employeeName: "Sara Ruiz",
+        employeeName: "Jorge Lopez",
         amount: 100000,
       },
       {
-        employeeName: "Daniel Felipe Piñeros",
+        employeeName: "Andres Garcia",
         amount: 600000,
       },
       {
-        employeeName: "Elianne Julieth Marcilia Burgos",
+        employeeName: "Jose Hernandez",
         amount: 200000,
       },
       {
-        employeeName: "Alejandro Cordoba",
+        employeeName: "Maria Ramirez",
         amount: 1000000,
       },
     ];
     const nobaAccountNumber = "095000766";
-
     const templates = await templatesPromise;
 
     const [html_en, html_es] = await Promise.all([
@@ -190,6 +195,7 @@ export class EmployerService {
         companyName: companyName,
         currency: currency,
         employeeDisbursements: employeeDisbursements,
+        totalAmount: payroll.totalDebitAmount,
         nobaAccountNumber: nobaAccountNumber,
         locale: this.ENGLISH_LOCALE,
         region: "US",
@@ -199,14 +205,17 @@ export class EmployerService {
         companyName: companyName,
         currency: currency,
         employeeDisbursements: employeeDisbursements,
+        totalAmount: payroll.totalDebitAmount,
         nobaAccountNumber: nobaAccountNumber,
         locale: this.SPANISH_LOCALE,
         region: "CO",
       }),
     ]);
 
-    this.handlebarService.pushHandlebarLanguageHTML("123456", `inv_${payrollID}_en.html`, html_en);
-    this.handlebarService.pushHandlebarLanguageHTML("123456", `inv_${payrollID}_es.html`, html_es);
+    await Promise.all([
+      this.handlebarService.pushHandlebarLanguageHTML(employer.id, `inv_${payrollID}_en.html`, html_en),
+      this.handlebarService.pushHandlebarLanguageHTML(employer.id, `inv_${payrollID}_es.html`, html_es),
+    ]);
   }
 
   private async generateTemplate({
@@ -215,12 +224,12 @@ export class EmployerService {
     nobaAccountNumber,
     currency,
     employeeDisbursements,
+    totalAmount,
     locale,
     region,
   }: TemplateFields): Promise<string> {
     const template = Handlebars.compile(handlebarTemplate);
 
-    const totalAmount = employeeDisbursements.reduce((total, allocation) => total + allocation.amount, 0); // maybe use total on employer
     const employeeAllocations = employeeDisbursements.map(allocation => ({
       employeeName: allocation.employeeName,
       amount: allocation.amount.toLocaleString(`${locale}-${region}`),

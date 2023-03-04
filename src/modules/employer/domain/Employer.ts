@@ -26,6 +26,7 @@ export class TemplateFields {
   nobaAccountNumber: string;
   currency: string;
   employeeDisbursements: EmployeeDisbursement[];
+  totalAmount: number;
   locale: string;
   region: string;
 }
