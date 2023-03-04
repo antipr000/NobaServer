@@ -24,6 +24,7 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 1,
+    payrollAccountNumber: "123456789",
     payrollDates: ["2020-03-01"],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
@@ -155,6 +156,7 @@ describe("BubbleServiceTests", () => {
         logoURI: employer.logoURI,
         referralID: employer.referralID,
         leadDays: employer.leadDays,
+        payrollAccountNumber: employer.payrollAccountNumber,
         payrollDates: employer.payrollDates,
       });
 
@@ -167,6 +169,7 @@ describe("BubbleServiceTests", () => {
         logoURI: employer.logoURI,
         referralID: employer.referralID,
         leadDays: employer.leadDays,
+        payrollAccountNumber: employer.payrollAccountNumber,
         payrollDates: employer.payrollDates,
       });
     });
@@ -184,6 +187,7 @@ describe("BubbleServiceTests", () => {
         referralID: employer.referralID,
         leadDays: employer.leadDays,
         payrollDates: employer.payrollDates,
+        payrollAccountNumber: employer.payrollAccountNumber,
         maxAllocationPercent: employer.maxAllocationPercent,
       });
 
@@ -197,6 +201,7 @@ describe("BubbleServiceTests", () => {
         referralID: employer.referralID,
         leadDays: employer.leadDays,
         payrollDates: employer.payrollDates,
+        payrollAccountNumber: employer.payrollAccountNumber,
         maxAllocationPercent: employer.maxAllocationPercent,
       });
     });
@@ -211,6 +216,7 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
+        payrollAccountNumber: employer.payrollAccountNumber,
         payrollDates: employer.payrollDates,
       });
 
@@ -222,6 +228,7 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
+        payrollAccountNumber: employer.payrollAccountNumber,
         payrollDates: employer.payrollDates,
       });
     });
@@ -236,6 +243,7 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
+        payrollAccountNumber: employer.payrollAccountNumber,
         leadDays: employer.leadDays,
       });
 
@@ -247,6 +255,7 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
+        payrollAccountNumber: employer.payrollAccountNumber,
         leadDays: employer.leadDays,
       });
     });
@@ -261,6 +270,7 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
+        payrollAccountNumber: employer.payrollAccountNumber,
       });
 
       expect(result).toEqual(employer.id);
@@ -271,6 +281,7 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
+        payrollAccountNumber: employer.payrollAccountNumber,
       });
     });
   });
@@ -431,6 +442,24 @@ describe("BubbleServiceTests", () => {
       ).last();
       expect(propagatedEmployerIDToEmployerService).toEqual(employer.id);
       expect(propagatedLeadDaysToEmployerService).toEqual({ logoURI: updatedLogoURI });
+    });
+
+    it("should update the 'payrollAccountNumber' of employer in Noba", async () => {
+      const employer: Employer = getRandomEmployer();
+      const updatedPayrollAccountNumber = "new-account-number";
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.updateEmployer(anyString(), anything())).thenResolve();
+
+      await bubbleService.updateEmployerInNoba(employer.referralID, {
+        payrollAccountNumber: updatedPayrollAccountNumber,
+      });
+
+      const [propagatedEmployerIDToEmployerService, propagatedLeadDaysToEmployerService] = capture(
+        employerService.updateEmployer,
+      ).last();
+      expect(propagatedEmployerIDToEmployerService).toEqual(employer.id);
+      expect(propagatedLeadDaysToEmployerService).toEqual({ payrollAccountNumber: updatedPayrollAccountNumber });
     });
 
     it("should throw error if 'referralID' is not linked with an existing Employer", async () => {

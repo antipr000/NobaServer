@@ -56,6 +56,7 @@ export class BubbleService {
       referralID: request.referralID,
       logoURI: request.logoURI,
       bubbleID: request.bubbleID,
+      ...(request.payrollAccountNumber && { payrollAccountNumber: request.payrollAccountNumber }),
       ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
       ...(request.leadDays && { leadDays: request.leadDays }),
       ...(request.payrollDates && { payrollDates: request.payrollDates }),
