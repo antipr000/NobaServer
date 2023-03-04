@@ -149,6 +149,7 @@ nobaWorkflow:
 dependencies:
   emailClient: "SENDGRID"
   smsClient: "TWILIO"
+  dashboardClient: "BUBBLE"
 
 mono:
   bearerToken: ""

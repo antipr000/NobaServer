@@ -38,6 +38,9 @@ export type NotificationPayload = {
   processor?: string;
   responseCode?: string;
   responseSummary?: string;
+  employerReferralID?: string;
+  allocationAmountInPesos?: number;
+  nobaEmployeeID?: string;
 };
 
 export function prepareNotificationPayload(

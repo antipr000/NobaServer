@@ -5,7 +5,6 @@ import { Logger } from "winston";
 import { Consumer } from "../consumer/domain/Consumer";
 import { Employee, EmployeeAllocationCurrency } from "../employee/domain/Employee";
 import { EmployeeService } from "../employee/employee.service";
-import { BubbleClient } from "./bubble.client";
 import {
   RegisterEmployerRequest,
   UpdateNobaEmployeeRequest,
@@ -14,12 +13,14 @@ import {
 import { EmployerService } from "../employer/employer.service";
 import { Employer } from "../employer/domain/Employer";
 import { Payroll } from "../employer/domain/Payroll";
+import { NotificationService } from "../notifications/notification.service";
+import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 
 @Injectable()
 export class BubbleService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-    private readonly bubbleClient: BubbleClient,
+    private readonly notificationService: NotificationService,
     private readonly employeeService: EmployeeService,
     private readonly employerService: EmployerService,
   ) {}
@@ -36,7 +37,7 @@ export class BubbleService {
 
     const employer: Employer = await this.employerService.getEmployerByID(nobaEmployee.employerID);
 
-    await this.bubbleClient.registerNewEmployee({
+    await this.notificationService.sendNotification(NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT, {
       email: consumer.props.email,
       firstName: consumer.props.firstName,
       lastName: consumer.props.lastName,
@@ -48,7 +49,13 @@ export class BubbleService {
   }
 
   async updateEmployeeAllocationInBubble(nobaEmployeeID: string, allocationAmount: number): Promise<void> {
-    return this.bubbleClient.updateEmployeeAllocationAmount(nobaEmployeeID, allocationAmount);
+    await this.notificationService.sendNotification(
+      NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
+      {
+        nobaEmployeeID,
+        allocationAmountInPesos: allocationAmount,
+      },
+    );
   }
 
   async registerEmployerInNoba(request: RegisterEmployerRequest): Promise<string> {

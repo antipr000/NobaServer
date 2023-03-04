@@ -1,15 +1,16 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { BubbleConfigs } from "../../config/configtypes/BubbleConfigs";
-import { BUBBLE_CONFIG_KEY } from "../../config/ConfigurationUtils";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { BubbleConfigs } from "../../../config/configtypes/BubbleConfigs";
+import { BUBBLE_CONFIG_KEY } from "../../../config/ConfigurationUtils";
+import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { Logger } from "winston";
-import { NewEmployeeRegisterRequest } from "./dto/bubble.client.dto";
+import { NewEmployeeRegisterRequest } from "../domain/dashboard.client.dto";
 import axios from "axios";
-import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
+import { DashboardClient } from "./dashboard.client";
 
 @Injectable()
-export class BubbleClient {
+export class BubbleClient implements DashboardClient {
   private bearerToken: string;
   private baseUrl: string;
 

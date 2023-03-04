@@ -36,6 +36,8 @@ import { SendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
 import { IPushTokenRepo } from "./repos/pushtoken.repo";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { SendTransferReceivedEvent } from "./events/SendTransferReceivedEvent";
+import { SendRegisterNewEmployeeEvent } from "./events/SendRegisterNewEmployeeEvent";
+import { SendUpdateEmployeeAllocationAmontEvent } from "./events/SendUpdateEmployeeAllocationAmountEvent";
 
 @Injectable()
 export class NotificationService {
@@ -430,6 +432,29 @@ export class NotificationService {
             locale: payload.locale,
             firstName: payload.firstName,
             lastName: payload.lastName,
+          }),
+        );
+        break;
+      case NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT:
+        this.eventEmitter.emitAsync(
+          eventName,
+          new SendRegisterNewEmployeeEvent({
+            email: payload.email,
+            phone: payload.phone,
+            firstName: payload.firstName,
+            lastName: payload.lastName,
+            employerReferralID: payload.employerReferralID,
+            allocationAmountInPesos: payload.allocationAmountInPesos,
+            nobaEmployeeID: payload.nobaEmployeeID,
+          }),
+        );
+        break;
+      case NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT:
+        this.eventEmitter.emitAsync(
+          eventName,
+          new SendUpdateEmployeeAllocationAmontEvent({
+            nobaEmployeeID: payload.nobaEmployeeID,
+            allocationAmountInPesos: payload.allocationAmountInPesos,
           }),
         );
         break;
