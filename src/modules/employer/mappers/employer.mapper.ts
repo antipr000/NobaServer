@@ -15,6 +15,7 @@ export class EmployerMapper {
     const payrollDatesAsc = employer.payrollDates.sort(); // Naturally sorts strings in ascending order
     const futurePayrollDates = this.getFuturePayrollDates(payrollDatesAsc, employer.leadDays);
     return {
+      employerID: employer.id,
       employerName: employer.name,
       employerLogoURI: employer.logoURI,
       leadDays: employer.leadDays,
@@ -38,6 +39,7 @@ export class EmployerMapper {
     const futurePayrollDates = this.getFuturePayrollDates(payrollDatesAsc, employer.leadDays);
 
     return {
+      employerID: employer.id,
       employerName: employer.name,
       employerLogoURI: employer.logoURI,
       leadDays: employer.leadDays,

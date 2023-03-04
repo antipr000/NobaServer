@@ -3,6 +3,9 @@ import { EmployeeDTO } from "../../../modules/employee/dto/EmployeeDTO";
 
 export class EmployerWorkflowDTO {
   @ApiProperty()
+  employerID: string;
+
+  @ApiProperty()
   employerName: string;
 
   @ApiProperty()
