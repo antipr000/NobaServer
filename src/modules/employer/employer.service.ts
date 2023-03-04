@@ -29,6 +29,7 @@ import { PayrollStatus } from "./domain/Payroll";
 import { Utils } from "../../core/utils/Utils";
 import { ExchangeRateService } from "../common/exchangerate.service";
 import { Currency } from "../transaction/domain/TransactionTypes";
+import { isValidDateString } from "../../core/utils/DateUtils";
 
 @Injectable()
 export class EmployerService {
@@ -175,6 +176,13 @@ export class EmployerService {
     if (!employerID) {
       throw new ServiceException({
         message: "employerID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    if (!isValidDateString(payrollDate)) {
+      throw new ServiceException({
+        message: "payrollDate is invalid",
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }

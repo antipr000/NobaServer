@@ -20,9 +20,12 @@ import { IPayrollRepo } from "../repo/payroll.repo";
 import { IPayrollDisbursementRepo } from "../repo/payroll.disbursement.repo";
 import { getMockPayrollDisbursementRepoWithDefaults } from "../mocks/mock.payroll.disbursement.repo";
 import { getMockPayrollRepoWithDefaults } from "../mocks/mock.payroll.repo";
-import { getRandomPayroll } from "../test_utils/payroll.test.utils";
+import { getRandomPayroll, getRandomPayrollDisbursement } from "../test_utils/payroll.test.utils";
 import { PayrollStatus } from "../domain/Payroll";
 import { getRandomEmployee } from "../../../modules/employee/test_utils/employee.test.utils";
+import { Utils } from "../../../core/utils/Utils";
+import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
+import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -50,12 +53,14 @@ describe("EmployerServiceTests", () => {
   let employeeService: EmployeeService;
   let payrollRepo: IPayrollRepo;
   let payrollDisbursementRepo: IPayrollDisbursementRepo;
+  let exchangeRateService: ExchangeRateService;
 
   beforeEach(async () => {
     employerRepo = getMockEmployerRepoWithDefaults();
     employeeService = getMockEmployeeServiceWithDefaults();
     payrollDisbursementRepo = getMockPayrollDisbursementRepoWithDefaults();
     payrollRepo = getMockPayrollRepoWithDefaults();
+    exchangeRateService = getMockExchangeRateServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -80,6 +85,10 @@ describe("EmployerServiceTests", () => {
         {
           provide: EmployeeService,
           useFactory: () => instance(employeeService),
+        },
+        {
+          provide: ExchangeRateService,
+          useFactory: () => instance(exchangeRateService),
         },
         EmployerService,
       ],
@@ -547,6 +556,43 @@ describe("EmployerServiceTests", () => {
     });
   });
 
+  describe("createPayroll", () => {
+    it("should create a payroll", async () => {
+      const payrollDate = "2020-03-01";
+      const employerID = "fake-employer";
+
+      const { payroll } = getRandomPayroll(employerID);
+
+      const spy = jest.spyOn(Utils, "generateLowercaseUUID").mockImplementation(() => "fake-uuid");
+
+      when(payrollRepo.addPayroll(anything())).thenResolve(payroll);
+
+      const response = await employerService.createPayroll(employerID, payrollDate);
+
+      expect(response).toStrictEqual(payroll);
+
+      const [payrollRequest] = capture(payrollRepo.addPayroll).last();
+      expect(payrollRequest).toEqual({
+        employerID: employerID,
+        payrollDate: payrollDate,
+        reference: "fake-uuid",
+      });
+      spy.mockRestore();
+    });
+
+    it("should throw ServiceException if 'employerID' is undefined", async () => {
+      await expect(employerService.createPayroll(undefined, "2020-03-01")).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw 'ServiceException' when payrollDate is not valid format", async () => {
+      await expect(employerService.createPayroll("fake-employer", "2020/03/01")).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw 'ServiceException' when payrollDate is not valid date", async () => {
+      await expect(employerService.createPayroll("fake-employer", "2020-02-30")).rejects.toThrowError(ServiceException);
+    });
+  });
+
   describe("updatePayroll", () => {
     it("should update 'status' of payroll", async () => {
       const employerID = "fake-employer";
@@ -568,7 +614,7 @@ describe("EmployerServiceTests", () => {
       expect(payrollUpdateRequest.completedTimestamp).toBeUndefined();
     });
 
-    it("should update 'status' and 'completedTimestamp' when status is COMPLETE", async () => {
+    it("should update 'status' and 'completedTimestamp' when status is COMPLETED", async () => {
       const employerID = "fake-employer";
       const { payroll } = getRandomPayroll(employerID);
 
@@ -586,12 +632,163 @@ describe("EmployerServiceTests", () => {
       expect(payrollUpdateRequest.completedTimestamp).toBeDefined();
     });
 
+    it("should update payroll and set totalDebitAmount, totalCreditAmount and exchangeRate when status is CREATED", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const { payrollDisbursement: disbursement1 } = getRandomPayrollDisbursement(payroll.id, "fake-employee-1");
+      const { payrollDisbursement: disbursement2 } = getRandomPayrollDisbursement(payroll.id, "fake-employee-2");
+
+      disbursement1.debitAmount = 10000;
+      disbursement2.debitAmount = 20000;
+
+      when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([
+        disbursement1,
+        disbursement2,
+      ]);
+      when(exchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve({
+        nobaRate: 0.0025,
+        bankRate: 0.0025,
+        numeratorCurrency: "COP",
+        denominatorCurrency: "USD",
+      });
+
+      when(payrollRepo.updatePayroll(anyString(), anything())).thenResolve(payroll);
+
+      const updatedPayroll = await employerService.updatePayroll(payroll.id, {
+        status: PayrollStatus.CREATED,
+      });
+
+      expect(updatedPayroll).toStrictEqual(payroll);
+
+      const [payrollID, payrollUpdateRequest] = capture(payrollRepo.updatePayroll).last();
+      expect(payrollID).toEqual(payroll.id);
+      expect(payrollUpdateRequest).toEqual({
+        status: PayrollStatus.CREATED,
+        totalDebitAmount: 30000,
+        totalCreditAmount: 75,
+        exchangeRate: 0.0025,
+      });
+    });
+
     it("should throw 'ServiceException' when id is undefined", async () => {
       await expect(
         employerService.updatePayroll(undefined, {
           status: PayrollStatus.COMPLETED,
         }),
       ).rejects.toThrowError(ServiceException);
+    });
+  });
+
+  describe("createDisbursement", () => {
+    it("should create disbursement", async () => {
+      const employee = getRandomEmployee("fake-employer");
+      const { payrollDisbursement } = getRandomPayrollDisbursement("fake-payroll", employee.id);
+
+      when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
+      when(payrollDisbursementRepo.createPayrollDisbursement(anything())).thenResolve(payrollDisbursement);
+
+      const response = await employerService.createDisbursement("fake-payroll", {
+        employeeID: employee.id,
+      });
+
+      expect(response).toStrictEqual(payrollDisbursement);
+
+      const [disbursementRequest] = capture(payrollDisbursementRepo.createPayrollDisbursement).last();
+      expect(disbursementRequest).toEqual({
+        payrollID: "fake-payroll",
+        employeeID: employee.id,
+        debitAmount: employee.allocationAmount,
+      });
+    });
+
+    it("should throw 'ServiceException' when payrollID is undefined", async () => {
+      await expect(
+        employerService.createDisbursement(undefined, {
+          employeeID: "fake-employee",
+        }),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw 'ServiceException' when employeeID is undefined", async () => {
+      await expect(
+        employerService.createDisbursement("fake-payroll", {
+          employeeID: undefined,
+        }),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw 'ServiceException' when employee does not exist", async () => {
+      when(employeeService.getEmployeeByID(anything())).thenResolve(null);
+
+      await expect(
+        employerService.createDisbursement("fake-payroll", {
+          employeeID: "fake-employee",
+        }),
+      ).rejects.toThrowError(ServiceException);
+    });
+  });
+
+  describe("updateDisbursement", () => {
+    it("should update disbursement", async () => {
+      const { payrollDisbursement } = getRandomPayrollDisbursement("fake-payroll", "fake-employee");
+
+      when(payrollDisbursementRepo.getPayrollDisbursementByID(payrollDisbursement.id)).thenResolve(payrollDisbursement);
+      when(payrollDisbursementRepo.updatePayrollDisbursement(anyString(), anything())).thenResolve(payrollDisbursement);
+
+      const response = await employerService.updateDisbursement(payrollDisbursement.payrollID, payrollDisbursement.id, {
+        transactionID: "fake-transaction",
+      });
+
+      payrollDisbursement.transactionID = "fake-transaction";
+      expect(response).toStrictEqual(payrollDisbursement);
+
+      const [disbursementID, disbursementUpdateRequest] = capture(
+        payrollDisbursementRepo.updatePayrollDisbursement,
+      ).last();
+      expect(disbursementID).toEqual(payrollDisbursement.id);
+      expect(disbursementUpdateRequest).toEqual({
+        transactionID: "fake-transaction",
+      });
+    });
+
+    it("should throw 'ServiceException' when payrollID is undefined", async () => {
+      await expect(
+        employerService.updateDisbursement(undefined, "fake-disbursement", {
+          transactionID: "fake-transaction",
+        }),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw 'ServiceException' when disbursementID is undefined", async () => {
+      await expect(
+        employerService.updateDisbursement("fake-payroll", undefined, {
+          transactionID: "fake-transaction",
+        }),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw 'ServiceException' when disbursement does not exist", async () => {
+      when(payrollDisbursementRepo.getPayrollDisbursementByID(anything())).thenResolve(null);
+
+      await expect(
+        employerService.updateDisbursement("fake-payroll", "fake-disbursement", {
+          transactionID: "fake-transaction",
+        }),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException when payroll id for disbursement is different", async () => {
+      const { payrollDisbursement } = getRandomPayrollDisbursement("fake-payroll", "fake-employee");
+
+      when(payrollDisbursementRepo.getPayrollDisbursementByID(payrollDisbursement.id)).thenResolve(payrollDisbursement);
+      when(payrollDisbursementRepo.updatePayrollDisbursement(anyString(), anything())).thenResolve(payrollDisbursement);
+
+      await expect(
+        async () =>
+          await employerService.updateDisbursement("fake-payroll-2", payrollDisbursement.id, {
+            transactionID: "fake-transaction",
+          }),
+      ).rejects.toThrow(ServiceException);
     });
   });
 });

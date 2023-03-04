@@ -155,4 +155,25 @@ describe("SqlPayrollDisbursementRepo tests", () => {
       expect(allDisbursementsForEmployee).toHaveLength(0);
     });
   });
+
+  describe("getAllDisbursementsForPayroll", () => {
+    it("should get all disbursements for payroll", async () => {
+      const payrollDisbursement = await saveAndGetPayrollDisbursement(prismaService);
+
+      const allDisbursementsForPayroll = await payrollDisbursementRepo.getAllDisbursementsForPayroll(
+        payrollDisbursement.payrollID,
+      );
+
+      expect(allDisbursementsForPayroll).toHaveLength(1);
+      expect(allDisbursementsForPayroll).toEqual(expect.arrayContaining(allDisbursementsForPayroll));
+    });
+
+    it("should return empty list if payroll with id does not exist", async () => {
+      await saveAndGetPayrollDisbursement(prismaService);
+
+      const allDisbursementsForPayroll = await payrollDisbursementRepo.getAllDisbursementsForPayroll("fake-payroll-id");
+
+      expect(allDisbursementsForPayroll).toHaveLength(0);
+    });
+  });
 });
