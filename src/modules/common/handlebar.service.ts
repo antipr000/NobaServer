@@ -52,13 +52,8 @@ export class HandlebarService {
     });
   }
 
-  public async getHandlebarLanguageTemplates(): Promise<Record<string, string>> {
-    const [handlebarEnglishTemplate, handlebarSpanishTemplate] = await Promise.all([
-      this.loadTemplatesFromS3("/payroll-invoice/", "template_en.hbs"),
-      this.loadTemplatesFromS3("/payroll-invoice/", "template_es.hbs"),
-    ]);
-
-    return { en: handlebarEnglishTemplate, es: handlebarSpanishTemplate };
+  public async getHandlebarLanguageTemplate(filename: string): Promise<string> {
+    return this.loadTemplatesFromS3("/payroll-invoice/", filename);
   }
 
   public async pushHandlebarLanguageHTML(employerID: string, filename: string, content: string): Promise<void> {

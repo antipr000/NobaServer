@@ -70,7 +70,7 @@ describe("HandlebarService", () => {
 
   describe("getHandlebarLanguageTemplates", () => {
     it("Should return language templates", async () => {
-      const template = await handlebarService.getHandlebarLanguageTemplates();
+      const template = await handlebarService.getHandlebarLanguageTemplate("template_en.hbs");
     });
   });
 });

@@ -133,7 +133,10 @@ export class EmployerService {
       });
     }
 
-    const templatesPromise = this.handlebarService.getHandlebarLanguageTemplates();
+    const templatesPromise = Promise.all([
+      this.handlebarService.getHandlebarLanguageTemplate(`template_${this.ENGLISH_LOCALE}.hbs`),
+      this.handlebarService.getHandlebarLanguageTemplate(`template_${this.SPANISH_LOCALE}.hbs`),
+    ]);
 
     let [employeeDisbursements, payroll] = await Promise.all([
       this.getEmployeeDisbursements(payrollID),
@@ -187,11 +190,11 @@ export class EmployerService {
       },
     ];
     const nobaAccountNumber = "095000766";
-    const templates = await templatesPromise;
+    const [template_en, template_es] = await templatesPromise;
 
     const [html_en, html_es] = await Promise.all([
       this.generateTemplate({
-        handlebarTemplate: templates[this.ENGLISH_LOCALE],
+        handlebarTemplate: template_en,
         companyName: companyName,
         currency: currency,
         employeeDisbursements: employeeDisbursements,
@@ -201,7 +204,7 @@ export class EmployerService {
         region: "US",
       }),
       this.generateTemplate({
-        handlebarTemplate: templates[this.SPANISH_LOCALE],
+        handlebarTemplate: template_es,
         companyName: companyName,
         currency: currency,
         employeeDisbursements: employeeDisbursements,
