@@ -6,6 +6,8 @@ import { anyString, anything, capture, instance, when } from "ts-mockito";
 import { BubbleWebhookController } from "../bubble.webhook.controller";
 import { BubbleService } from "../bubble.service";
 import { getMockBubbleServiceWithDefaults } from "../mocks/mock.bubble.service";
+import { getRandomPayroll } from "../../../modules/employer/test_utils/payroll.test.utils";
+import { BadRequestException } from "@nestjs/common";
 
 describe("BubbleWebhookControllerTests", () => {
   jest.setTimeout(20000);
@@ -181,6 +183,63 @@ describe("BubbleWebhookControllerTests", () => {
       expect(bubbleServiceUpdateEmployeeRequestBodyArgs).toEqual({
         salary: 1000,
       });
+    });
+  });
+
+  describe("createPayroll", () => {
+    it("should return payroll id after creation", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const referralID = "fake-referral";
+
+      when(bubbleService.createPayroll(referralID, payroll.payrollDate)).thenResolve(payroll);
+
+      const result = await bubbleWebhookController.createPayroll(referralID, { payrollDate: payroll.payrollDate });
+
+      expect(result).toStrictEqual({ payrollID: payroll.id });
+    });
+
+    it("should throw 'BadRequestException' when payrollDate is malformed", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const referralID = "fake-referral";
+
+      when(bubbleService.createPayroll(referralID, payroll.payrollDate)).thenResolve(payroll);
+      await expect(
+        async () => await bubbleWebhookController.createPayroll(referralID, { payrollDate: "01/01/2020" }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("should throw 'BadRequestException' when payrollDate is not a valid date", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const referralID = "fake-referral";
+
+      when(bubbleService.createPayroll(referralID, payroll.payrollDate)).thenResolve(payroll);
+
+      await expect(
+        async () => await bubbleWebhookController.createPayroll(referralID, { payrollDate: "2020-01-32" }),
+      ).rejects.toThrow(BadRequestException);
+
+      await expect(
+        async () => await bubbleWebhookController.createPayroll(referralID, { payrollDate: "2020-01-32" }),
+      ).rejects.toThrow("Invalid payrollDate");
+    });
+
+    it("should throw 'BadRequestException' when payrollDate does not account for leap year", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const referralID = "fake-referral";
+
+      when(bubbleService.createPayroll(referralID, payroll.payrollDate)).thenResolve(payroll);
+
+      await expect(
+        async () => await bubbleWebhookController.createPayroll(referralID, { payrollDate: "2021-02-29" }),
+      ).rejects.toThrow(BadRequestException);
+
+      await expect(
+        async () => await bubbleWebhookController.createPayroll(referralID, { payrollDate: "2021-02-29" }),
+      ).rejects.toThrow("Invalid payrollDate");
     });
   });
 });

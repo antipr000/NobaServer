@@ -15,6 +15,7 @@ import { BubbleService } from "../bubble.service";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { BubbleClient } from "../bubble.client";
 import { getMockBubbleClientWithDefaults } from "../mocks/mock.bubble.client";
+import { getRandomPayroll } from "../../../modules/employer/test_utils/payroll.test.utils";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -552,6 +553,33 @@ describe("BubbleServiceTests", () => {
         expect(err.errorCode).toEqual(ServiceErrorCode.DOES_NOT_EXIST);
         expect(err.message).toEqual(expect.stringContaining("No employee found"));
       }
+    });
+  });
+
+  describe("createPayroll", () => {
+    it("should create payroll and return it", async () => {
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll(employer.id);
+      const payrollDate = "2020-03-17";
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.createPayroll(employer.id, payrollDate)).thenResolve(payroll);
+
+      const response = await bubbleService.createPayroll(employer.referralID, payrollDate);
+      expect(response).toStrictEqual(payroll);
+    });
+
+    it("should throw ServiceException when employer with referralID does not exist", async () => {
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll(employer.id);
+      const payrollDate = "2020-03-17";
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(null);
+      when(employerService.createPayroll(employer.id, payrollDate)).thenResolve(payroll);
+
+      await expect(async () => await bubbleService.createPayroll(employer.referralID, payrollDate)).rejects.toThrow(
+        ServiceException,
+      );
     });
   });
 });
