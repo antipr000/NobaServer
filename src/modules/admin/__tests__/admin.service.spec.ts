@@ -651,7 +651,6 @@ describe("AdminService", () => {
         ...updateRequest,
         verificationData: {
           ...updateRequest.verificationData,
-          isSuspectedFraud: false,
         },
       });
       expect(updatedConsumer).toStrictEqual({
