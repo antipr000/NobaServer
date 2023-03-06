@@ -2,43 +2,67 @@ import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Address } from "../../consumer/domain/Address";
 import { KYCStatus, DocumentVerificationStatus, KYCProvider } from "@prisma/client";
 import { KYC } from "../../../modules/consumer/domain/KYC";
-class AddressDTO implements Address {
-  @ApiProperty()
-  streetLine1: string;
+class AddressDTO implements Partial<Address> {
+  @ApiPropertyOptional()
+  streetLine1?: string;
 
   @ApiPropertyOptional()
   streetLine2?: string;
 
-  @ApiProperty()
-  countryCode: string;
+  @ApiPropertyOptional()
+  countryCode?: string;
 
-  @ApiProperty()
-  city: string;
+  @ApiPropertyOptional()
+  city?: string;
 
-  @ApiProperty()
-  regionCode: string;
+  @ApiPropertyOptional()
+  regionCode?: string;
 
-  @ApiProperty()
-  postalCode: string;
+  @ApiPropertyOptional()
+  postalCode?: string;
 }
 
 class VerificationDataDTO implements Partial<KYC> {
   @ApiPropertyOptional({ enum: KYCProvider })
-  verificationProvider?: KYCProvider;
+  provider?: KYCProvider;
 
   @ApiPropertyOptional({ enum: KYCStatus })
-  kycVerificationStatus?: KYCStatus;
+  kycCheckStatus?: KYCStatus;
 
   @ApiPropertyOptional({ enum: DocumentVerificationStatus })
-  documentVerificationStatus: DocumentVerificationStatus;
+  documentVerificationStatus?: DocumentVerificationStatus;
 }
 
 export class AdminUpdateConsumerRequestDTO {
+  @ApiPropertyOptional()
+  firstName?: string;
+
+  @ApiPropertyOptional()
+  lastName?: string;
+
+  @ApiPropertyOptional()
+  email?: string;
+
+  @ApiPropertyOptional()
+  phone?: string;
+
   @ApiPropertyOptional()
   dateOfBirth?: string;
 
   @ApiPropertyOptional()
   address?: AddressDTO;
+
+  @ApiPropertyOptional()
+  handle?: string;
+
+  @ApiPropertyOptional()
+  isLocked?: boolean;
+
+  @ApiPropertyOptional()
+  isDisabled?: boolean;
+
+  @ApiPropertyOptional()
+  referredByID?: string;
 
   @ApiPropertyOptional()
   verificationData?: VerificationDataDTO;

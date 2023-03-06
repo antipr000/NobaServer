@@ -54,6 +54,7 @@ export class ExchangeRateService {
     }
   }
 
+  // 1 numeratorCurrency = X denominatorCurrency
   async getExchangeRateForCurrencyPair(
     numeratorCurrency: string,
     denominatorCurrency: string,

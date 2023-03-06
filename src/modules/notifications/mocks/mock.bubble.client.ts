@@ -1,5 +1,5 @@
 import { anyNumber, anyString, anything, mock, when } from "ts-mockito";
-import { BubbleClient } from "../bubble.client";
+import { BubbleClient } from "../dashboard/bubble.client";
 
 export function getMockBubbleClientWithDefaults(): BubbleClient {
   const mockBubbleClient: BubbleClient = mock(BubbleClient);

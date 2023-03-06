@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpStatus, Inject, Param, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpStatus, Inject, NotFoundException, Param, Patch, Post } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -10,7 +10,6 @@ import {
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { PayrollDTO } from "./dto/PayrollDTO";
-import { PayrollStatus } from "./domain/Payroll";
 import {
   CreateDisbursementRequestDTO,
   UpdateDisbursementRequestDTO,
@@ -18,6 +17,7 @@ import {
 } from "./dto/payroll.workflow.controller.dto";
 import { BlankResponseDTO } from "../../modules/common/dto/BlankResponseDTO";
 import { PayrollDisbursementDTO } from "./dto/PayrollDisbursementDTO";
+import { EmployerService } from "./employer.service";
 
 @Controller("wf/v1/payroll")
 @ApiBearerAuth("JWT-auth")
@@ -25,6 +25,9 @@ import { PayrollDisbursementDTO } from "./dto/PayrollDisbursementDTO";
 export class PayrollWorkflowController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
+
+  @Inject()
+  private readonly employerService: EmployerService;
 
   @Post("/:payrollID/disbursement")
   @ApiOperation({ summary: "Creates a disbursement for employee" })
@@ -34,12 +37,16 @@ export class PayrollWorkflowController {
   })
   @ApiNotFoundResponse({ description: "Requested employee is not found" })
   @ApiBadRequestResponse({ description: "Failed to create disbursement" })
-  async createDisbursement(@Body() requestBody: CreateDisbursementRequestDTO): Promise<PayrollDisbursementDTO> {
+  async createDisbursement(
+    @Param("payrollID") payrollID: string,
+    @Body() requestBody: CreateDisbursementRequestDTO,
+  ): Promise<PayrollDisbursementDTO> {
+    const disbursement = await this.employerService.createDisbursement(payrollID, requestBody);
     return {
-      id: "123",
-      employeeID: requestBody.employeeID,
-      payrollID: "123",
-      debitAmount: 123,
+      id: disbursement.id,
+      employeeID: disbursement.employeeID,
+      payrollID: disbursement.payrollID,
+      debitAmount: disbursement.debitAmount,
     };
   }
 
@@ -56,6 +63,7 @@ export class PayrollWorkflowController {
     @Param("disbursementID") disbursementID: string,
     @Body() requestBody: UpdateDisbursementRequestDTO,
   ): Promise<BlankResponseDTO> {
+    await this.employerService.updateDisbursement(payrollID, disbursementID, requestBody);
     return {};
   }
 
@@ -68,6 +76,7 @@ export class PayrollWorkflowController {
   @ApiNotFoundResponse({ description: "Requested employer is not found" })
   @ApiBadRequestResponse({ description: "Failed to create invoice" })
   async createInvoice(@Param("payrollID") payrollID: string): Promise<BlankResponseDTO> {
+    await this.employerService.createInvoice(payrollID);
     return {};
   }
 
@@ -79,17 +88,23 @@ export class PayrollWorkflowController {
   })
   @ApiNotFoundResponse({ description: "Requested payroll is not found" })
   async getPayroll(@Param("payrollID") payrollID: string): Promise<PayrollDTO> {
+    const payroll = await this.employerService.getPayrollByID(payrollID);
+
+    if (!payroll) {
+      throw new NotFoundException(`Payroll with id ${payrollID} is not found`);
+    }
+
     return {
-      id: payrollID,
-      employerID: "123",
-      reference: "123",
-      payrollDate: "123",
-      totalDebitAmount: 10000,
-      totalCreditAmount: 10,
-      exchangeRate: 123,
-      debitCurrency: "COP",
-      creditCurrency: "USD",
-      status: PayrollStatus.CREATED,
+      id: payroll.id,
+      employerID: payroll.employerID,
+      reference: payroll.reference,
+      payrollDate: payroll.payrollDate,
+      totalDebitAmount: payroll.totalDebitAmount,
+      totalCreditAmount: payroll.totalCreditAmount,
+      exchangeRate: payroll.exchangeRate,
+      debitCurrency: payroll.debitCurrency,
+      creditCurrency: payroll.creditCurrency,
+      status: payroll.status,
     };
   }
 
@@ -106,17 +121,18 @@ export class PayrollWorkflowController {
     @Param("payrollID") payrollID: string,
     @Body() requestBody: UpdatePayrollRequestDTO,
   ): Promise<PayrollDTO> {
+    const payroll = await this.employerService.updatePayroll(payrollID, requestBody);
     return {
-      id: payrollID,
-      employerID: "123",
-      reference: "123",
-      payrollDate: "123",
-      totalDebitAmount: 10000,
-      totalCreditAmount: 10,
-      exchangeRate: 123,
-      debitCurrency: "COP",
-      creditCurrency: "USD",
-      status: requestBody.status ?? PayrollStatus.CREATED,
+      id: payroll.id,
+      employerID: payroll.employerID,
+      reference: payroll.reference,
+      payrollDate: payroll.payrollDate,
+      totalDebitAmount: payroll.totalDebitAmount,
+      totalCreditAmount: payroll.totalCreditAmount,
+      exchangeRate: payroll.exchangeRate,
+      debitCurrency: payroll.debitCurrency,
+      creditCurrency: payroll.creditCurrency,
+      status: payroll.status,
     };
   }
 }

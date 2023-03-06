@@ -95,11 +95,11 @@ describe("SqlPayrollRepo tests", () => {
       const payroll = await saveAndGetPayroll(prismaService);
 
       const updatedPayroll = await payrollRepo.updatePayroll(payroll.id, {
-        status: PayrollStatus.COMPLETE,
+        status: PayrollStatus.COMPLETED,
         completedTimestamp: new Date(),
       });
 
-      expect(updatedPayroll.status).toBe(PayrollStatus.COMPLETE);
+      expect(updatedPayroll.status).toBe(PayrollStatus.COMPLETED);
       expect(updatedPayroll.id).toBe(payroll.id);
       expect(updatedPayroll.completedTimestamp).not.toBeNull();
     });
@@ -120,7 +120,7 @@ describe("SqlPayrollRepo tests", () => {
       await expect(
         async () =>
           await payrollRepo.updatePayroll("fake-id", {
-            status: PayrollStatus.COMPLETE,
+            status: PayrollStatus.COMPLETED,
             completedTimestamp: new Date(),
           }),
       ).rejects.toThrow(NotFoundError);
@@ -161,11 +161,11 @@ describe("SqlPayrollRepo tests", () => {
       await saveAndGetPayroll(prismaService);
 
       // Set status
-      payroll1 = await payrollRepo.updatePayroll(payroll1.id, { status: PayrollStatus.COMPLETE });
-      payroll3 = await payrollRepo.updatePayroll(payroll3.id, { status: PayrollStatus.COMPLETE });
+      payroll1 = await payrollRepo.updatePayroll(payroll1.id, { status: PayrollStatus.COMPLETED });
+      payroll3 = await payrollRepo.updatePayroll(payroll3.id, { status: PayrollStatus.COMPLETED });
 
       const allPayrolls = await payrollRepo.getAllPayrollsForEmployer(payroll1.employerID, {
-        status: PayrollStatus.COMPLETE,
+        status: PayrollStatus.COMPLETED,
       });
       expect(allPayrolls).toHaveLength(2);
       expect(allPayrolls).toEqual(expect.arrayContaining([payroll1, payroll3]));

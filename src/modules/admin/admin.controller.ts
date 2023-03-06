@@ -198,7 +198,7 @@ export class AdminController {
 
   @Patch("/consumers/:consumerID")
   @ApiOperation({ summary: "Updates a consumer" })
-  @ApiResponse({ status: HttpStatus.OK, type: ConsumerDTO, description: "Updated consumer record" })
+  @ApiResponse({ status: HttpStatus.OK, type: ConsumerInternalDTO, description: "Updated consumer record" })
   @ApiForbiddenResponse({
     description: "User forbidden from updating consumer record",
   })
@@ -207,27 +207,13 @@ export class AdminController {
     @Param("consumerID") consumerID: string,
     @Body() requestBody: AdminUpdateConsumerRequestDTO,
     @Request() request,
-  ): Promise<ConsumerDTO> {
+  ): Promise<ConsumerInternalDTO> {
     const authenticatedUser: Admin = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canUpdateConsumerData()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update a Consumer.`);
     }
 
-    const consumerData = await this.consumerService.getConsumer(consumerID);
-    const updatedConsumerData = await this.consumerService.updateConsumer({
-      id: consumerData.props.id,
-      ...(requestBody.address && { address: requestBody.address }),
-      ...(requestBody.dateOfBirth && { dateOfBirth: requestBody.dateOfBirth }),
-      ...(requestBody.verificationData && {
-        verificationData: {
-          ...consumerData.props.verificationData,
-          ...requestBody.verificationData,
-        },
-      }),
-    });
-    const paymentMethods = await this.consumerService.getAllPaymentMethodsForConsumer(consumerID);
-    const cryptoWallets = await this.consumerService.getAllConsumerWallets(consumerID);
-    return this.consumerMapper.toDTO(updatedConsumerData, paymentMethods, cryptoWallets);
+    return this.adminService.updateConsumer(consumerID, requestBody);
   }
 
   @Get("/balances")

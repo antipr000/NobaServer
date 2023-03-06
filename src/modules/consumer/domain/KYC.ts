@@ -8,11 +8,11 @@ export class KYC implements Partial<KYCModel> {
   kycCheckReference?: string | null;
   documentCheckReference?: string | null;
   riskRating?: string | null;
-  isSuspectedFraud: boolean;
-  kycCheckStatus: KYCStatus;
-  documentVerificationStatus: DocumentVerificationStatus;
-  documentVerificationTimestamp: Date;
-  kycVerificationTimestamp: Date;
+  isSuspectedFraud?: boolean;
+  kycCheckStatus?: KYCStatus | null;
+  documentVerificationStatus?: DocumentVerificationStatus | null;
+  documentVerificationTimestamp?: Date | null;
+  kycVerificationTimestamp?: Date | null;
   sanctionLevel?: string | null;
   riskLevel?: string | null;
   consumerID?: string; //Marking it as optional as it is not needed internally

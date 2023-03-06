@@ -201,8 +201,15 @@ export class ConsumerService {
       ...consumerProps,
     });
 
-    const updatedConsumer = await this.consumerRepo.updateConsumer(consumer.props.id, consumerProps);
-    return updatedConsumer;
+    try {
+      return await this.consumerRepo.updateConsumer(consumer.props.id, consumerProps);
+    } catch (e) {
+      this.logger.error(`updateConsumer failed with error: ${e}`);
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+        message: "Database error updating consumer. Confirm your input values and see logs for details.",
+      });
+    }
   }
 
   async sendOtpToPhone(consumerID: string, phone: string) {

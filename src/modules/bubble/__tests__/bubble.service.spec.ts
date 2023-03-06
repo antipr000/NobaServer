@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { anyNumber, anyString, anything, capture, instance, when } from "ts-mockito";
+import { anyNumber, anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { uuid } from "uuidv4";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { Employer } from "../../../modules/employer/domain/Employer";
@@ -13,8 +13,10 @@ import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mo
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 import { BubbleService } from "../bubble.service";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
-import { BubbleClient } from "../bubble.client";
-import { getMockBubbleClientWithDefaults } from "../mocks/mock.bubble.client";
+import { getRandomPayroll } from "../../../modules/employer/test_utils/payroll.test.utils";
+import { NotificationService } from "../../../modules/notifications/notification.service";
+import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
+import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -24,6 +26,7 @@ const getRandomEmployer = (): Employer => {
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 1,
+    payrollAccountNumber: "123456789",
     payrollDates: ["2020-03-01"],
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
@@ -62,12 +65,12 @@ describe("BubbleServiceTests", () => {
   let employerService: EmployerService;
   let employeeService: EmployeeService;
   let bubbleService: BubbleService;
-  let bubbleClient: BubbleClient;
+  let notificationService: NotificationService;
 
   beforeEach(async () => {
     employerService = getMockEmployerServiceWithDefaults();
     employeeService = getMockEmployeeServiceWithDefaults();
-    bubbleClient = getMockBubbleClientWithDefaults();
+    notificationService = getMockNotificationServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -86,8 +89,8 @@ describe("BubbleServiceTests", () => {
           useFactory: () => instance(employeeService),
         },
         {
-          provide: BubbleClient,
-          useFactory: () => instance(bubbleClient),
+          provide: NotificationService,
+          useFactory: () => instance(notificationService),
         },
         BubbleService,
       ],
@@ -108,12 +111,13 @@ describe("BubbleServiceTests", () => {
 
       when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
       when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
-      when(bubbleClient.registerNewEmployee(anything())).thenResolve();
+      when(notificationService.sendNotification(anything(), anything())).thenResolve();
 
       await bubbleService.createEmployeeInBubble(employee.id, consumer);
 
-      const [bubbleClientCreateEmployeeArgs] = capture(bubbleClient.registerNewEmployee).last();
-      expect(bubbleClientCreateEmployeeArgs).toEqual({
+      const [notificationEventType, notificationArgs] = capture(notificationService.sendNotification).last();
+      expect(notificationEventType).toBe(NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT);
+      expect(notificationArgs).toEqual({
         email: consumer.props.email,
         firstName: consumer.props.firstName,
         lastName: consumer.props.lastName,
@@ -155,6 +159,7 @@ describe("BubbleServiceTests", () => {
         logoURI: employer.logoURI,
         referralID: employer.referralID,
         leadDays: employer.leadDays,
+        payrollAccountNumber: employer.payrollAccountNumber,
         payrollDates: employer.payrollDates,
       });
 
@@ -167,6 +172,7 @@ describe("BubbleServiceTests", () => {
         logoURI: employer.logoURI,
         referralID: employer.referralID,
         leadDays: employer.leadDays,
+        payrollAccountNumber: employer.payrollAccountNumber,
         payrollDates: employer.payrollDates,
       });
     });
@@ -184,6 +190,7 @@ describe("BubbleServiceTests", () => {
         referralID: employer.referralID,
         leadDays: employer.leadDays,
         payrollDates: employer.payrollDates,
+        payrollAccountNumber: employer.payrollAccountNumber,
         maxAllocationPercent: employer.maxAllocationPercent,
       });
 
@@ -197,6 +204,7 @@ describe("BubbleServiceTests", () => {
         referralID: employer.referralID,
         leadDays: employer.leadDays,
         payrollDates: employer.payrollDates,
+        payrollAccountNumber: employer.payrollAccountNumber,
         maxAllocationPercent: employer.maxAllocationPercent,
       });
     });
@@ -211,6 +219,7 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
+        payrollAccountNumber: employer.payrollAccountNumber,
         payrollDates: employer.payrollDates,
       });
 
@@ -222,6 +231,7 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
+        payrollAccountNumber: employer.payrollAccountNumber,
         payrollDates: employer.payrollDates,
       });
     });
@@ -236,6 +246,7 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
+        payrollAccountNumber: employer.payrollAccountNumber,
         leadDays: employer.leadDays,
       });
 
@@ -247,6 +258,7 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
+        payrollAccountNumber: employer.payrollAccountNumber,
         leadDays: employer.leadDays,
       });
     });
@@ -261,6 +273,7 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
+        payrollAccountNumber: employer.payrollAccountNumber,
       });
 
       expect(result).toEqual(employer.id);
@@ -271,6 +284,7 @@ describe("BubbleServiceTests", () => {
         bubbleID: employer.bubbleID,
         logoURI: employer.logoURI,
         referralID: employer.referralID,
+        payrollAccountNumber: employer.payrollAccountNumber,
       });
     });
   });
@@ -283,16 +297,16 @@ describe("BubbleServiceTests", () => {
       const newAllocationAmount = 12345;
 
       when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
-      when(bubbleClient.updateEmployeeAllocationAmount(employee.id, newAllocationAmount)).thenResolve();
+      when(notificationService.sendNotification(anything(), anything())).thenResolve();
 
       await bubbleService.updateEmployeeAllocationInBubble(employee.id, newAllocationAmount);
 
-      const [
-        bubbleClientUpdateEmployeeAllocationAmountArgsEmployeeID,
-        bubbleClientUpdateEmployeeAllocationAmountArgsNewAllocationAmount,
-      ] = capture(bubbleClient.updateEmployeeAllocationAmount).last();
-      expect(bubbleClientUpdateEmployeeAllocationAmountArgsEmployeeID).toEqual(employee.id);
-      expect(bubbleClientUpdateEmployeeAllocationAmountArgsNewAllocationAmount).toEqual(newAllocationAmount);
+      const [eventType, eventArgs] = capture(notificationService.sendNotification).last();
+      expect(eventType).toEqual(NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT);
+      expect(eventArgs).toEqual({
+        nobaEmployeeID: employee.id,
+        allocationAmountInPesos: newAllocationAmount,
+      });
     });
   });
 
@@ -362,43 +376,42 @@ describe("BubbleServiceTests", () => {
         updatedEmployee1,
         updatedEmployee3,
       ]);
-      when(
-        bubbleClient.updateEmployeeAllocationAmount(updatedEmployee1.id, updatedEmployee1.allocationAmount),
-      ).thenResolve();
-      when(
-        bubbleClient.updateEmployeeAllocationAmount(updatedEmployee3.id, updatedEmployee3.allocationAmount),
-      ).thenResolve();
+
+      when(notificationService.sendNotification(anything(), anything())).thenResolve();
 
       await bubbleService.updateEmployerInNoba(employer.referralID, {
         maxAllocationPercent: updatedMaxAllocationPercent,
       });
 
-      const [propagatedEmployerIDToEmployerService, propagatedLeadDaysToEmployerService] = capture(
-        employerService.updateEmployer,
-      ).last();
-      expect(propagatedEmployerIDToEmployerService).toEqual(employer.id);
-      expect(propagatedLeadDaysToEmployerService).toEqual({
-        maxAllocationPercent: updatedMaxAllocationPercent,
-      });
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
+          deepEqual({
+            nobaEmployeeID: updatedEmployee1.id,
+            allocationAmountInPesos: updatedEmployee1.allocationAmount,
+          }),
+        ),
+      ).once();
 
-      const [propagatedEmployerIDToEmployeeService, propagatedMaxAllocationPercentToEmployeeService] = capture(
-        employeeService.updateAllocationAmountsForNewMaxAllocationPercent,
-      ).last();
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
+          deepEqual({
+            nobaEmployeeID: updatedEmployee3.id,
+            allocationAmountInPesos: updatedEmployee3.allocationAmount,
+          }),
+        ),
+      ).once();
 
-      expect(propagatedEmployerIDToEmployeeService).toEqual(employer.id);
-      expect(propagatedMaxAllocationPercentToEmployeeService).toEqual(updatedMaxAllocationPercent);
-
-      const [updatedEmployee1ID, updatedEmployee1AllocationAmount] = capture(
-        bubbleClient.updateEmployeeAllocationAmount,
-      ).first();
-      expect(updatedEmployee1ID).toEqual(updatedEmployee1.id);
-      expect(updatedEmployee1AllocationAmount).toEqual(updatedEmployee1.allocationAmount);
-
-      const [updatedEmployee3ID, updatedEmployee3AllocationAmount] = capture(
-        bubbleClient.updateEmployeeAllocationAmount,
-      ).second();
-      expect(updatedEmployee3ID).toEqual(updatedEmployee3.id);
-      expect(updatedEmployee3AllocationAmount).toEqual(updatedEmployee3.allocationAmount);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
+          deepEqual({
+            nobaEmployeeID: employee2.id,
+            allocationAmountInPesos: employee2.allocationAmount,
+          }),
+        ),
+      ).never();
     });
 
     it("should update the 'payrollDays' of employer in Noba", async () => {
@@ -431,6 +444,24 @@ describe("BubbleServiceTests", () => {
       ).last();
       expect(propagatedEmployerIDToEmployerService).toEqual(employer.id);
       expect(propagatedLeadDaysToEmployerService).toEqual({ logoURI: updatedLogoURI });
+    });
+
+    it("should update the 'payrollAccountNumber' of employer in Noba", async () => {
+      const employer: Employer = getRandomEmployer();
+      const updatedPayrollAccountNumber = "new-account-number";
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.updateEmployer(anyString(), anything())).thenResolve();
+
+      await bubbleService.updateEmployerInNoba(employer.referralID, {
+        payrollAccountNumber: updatedPayrollAccountNumber,
+      });
+
+      const [propagatedEmployerIDToEmployerService, propagatedLeadDaysToEmployerService] = capture(
+        employerService.updateEmployer,
+      ).last();
+      expect(propagatedEmployerIDToEmployerService).toEqual(employer.id);
+      expect(propagatedLeadDaysToEmployerService).toEqual({ payrollAccountNumber: updatedPayrollAccountNumber });
     });
 
     it("should throw error if 'referralID' is not linked with an existing Employer", async () => {
@@ -489,7 +520,8 @@ describe("BubbleServiceTests", () => {
       };
 
       when(employeeService.updateEmployee(anyString(), anything())).thenResolve(updatedEmployee);
-      when(bubbleClient.updateEmployeeAllocationAmount(employee.id, updatedEmployee.allocationAmount)).thenResolve();
+
+      when(notificationService.sendNotification(anything(), anything())).thenResolve();
 
       await bubbleService.updateEmployee(employee.id, {
         salary: newSalary, // Should cause max allocation for employee to be 25000
@@ -504,9 +536,12 @@ describe("BubbleServiceTests", () => {
         salary: newSalary,
       });
 
-      const [employeeID, allocationAmount] = capture(bubbleClient.updateEmployeeAllocationAmount).last();
-      expect(employeeID).toEqual(employee.id);
-      expect(allocationAmount).toEqual(updatedEmployee.allocationAmount);
+      const [eventType, eventArgs] = capture(notificationService.sendNotification).last();
+      expect(eventType).toEqual(NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT);
+      expect(eventArgs).toEqual({
+        nobaEmployeeID: employee.id,
+        allocationAmountInPesos: updatedEmployee.allocationAmount,
+      });
     });
 
     it("should throw 'ServiceException' when employee with given ID is not found", async () => {
@@ -523,6 +558,33 @@ describe("BubbleServiceTests", () => {
         expect(err.errorCode).toEqual(ServiceErrorCode.DOES_NOT_EXIST);
         expect(err.message).toEqual(expect.stringContaining("No employee found"));
       }
+    });
+  });
+
+  describe("createPayroll", () => {
+    it("should create payroll and return it", async () => {
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll(employer.id);
+      const payrollDate = "2020-03-17";
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.createPayroll(employer.id, payrollDate)).thenResolve(payroll);
+
+      const response = await bubbleService.createPayroll(employer.referralID, payrollDate);
+      expect(response).toStrictEqual(payroll);
+    });
+
+    it("should throw ServiceException when employer with referralID does not exist", async () => {
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll(employer.id);
+      const payrollDate = "2020-03-17";
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(null);
+      when(employerService.createPayroll(employer.id, payrollDate)).thenResolve(payroll);
+
+      await expect(async () => await bubbleService.createPayroll(employer.referralID, payrollDate)).rejects.toThrow(
+        ServiceException,
+      );
     });
   });
 });

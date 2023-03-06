@@ -5,6 +5,7 @@ export type RegisterEmployerRequest = {
   bubbleID: string;
   leadDays?: number;
   maxAllocationPercent?: number;
+  payrollAccountNumber?: string;
   payrollDates?: string[];
 };
 
@@ -12,6 +13,7 @@ export type UpdateNobaEmployerRequest = {
   logoURI?: string;
   leadDays?: number;
   payrollDates?: string[];
+  payrollAccountNumber?: string;
   maxAllocationPercent?: number;
 };
 

@@ -18,9 +18,14 @@ import {
   InvalidDatabaseRecordException,
   NotFoundError,
 } from "../../../core/exception/CommonAppException";
+import { KmsService } from "../../../modules/common/kms.service";
+import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 
 @Injectable()
 export class SqlEmployerRepo implements IEmployerRepo {
+  @Inject()
+  private readonly kmsService: KmsService;
+
   constructor(
     private readonly prismaService: PrismaService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
@@ -28,6 +33,10 @@ export class SqlEmployerRepo implements IEmployerRepo {
 
   async createEmployer(request: EmployerCreateRequest): Promise<Employer> {
     validateCreateEmployerRequest(request);
+
+    if (request.payrollAccountNumber) {
+      request.payrollAccountNumber = await this.kmsService.encryptString(request.payrollAccountNumber, KmsKeyType.SSN);
+    }
 
     let savedEmployer: Employer = null;
 
@@ -40,6 +49,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
         bubbleID: request.bubbleID,
         logoURI: request.logoURI,
         leadDays: request.leadDays,
+        payrollAccountNumber: request.payrollAccountNumber,
         payrollDates: request.payrollDates,
         ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
       };
@@ -69,11 +79,16 @@ export class SqlEmployerRepo implements IEmployerRepo {
   async updateEmployer(id: string, request: EmployerUpdateRequest): Promise<Employer> {
     validateUpdateEmployerRequest(request);
 
+    if (request.payrollAccountNumber) {
+      request.payrollAccountNumber = await this.kmsService.encryptString(request.payrollAccountNumber, KmsKeyType.SSN);
+    }
+
     try {
       const employerInput: Prisma.EmployerUpdateInput = {
         ...(request.logoURI && { logoURI: request.logoURI }),
         ...(request.referralID && { referralID: request.referralID }),
         ...(request.leadDays && { leadDays: request.leadDays }),
+        ...(request.payrollAccountNumber && { payrollAccountNumber: request.payrollAccountNumber }),
         ...(request.payrollDates && { payrollDates: request.payrollDates }),
         ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
       };

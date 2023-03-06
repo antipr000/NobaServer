@@ -7,6 +7,7 @@ import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
 import { EmployerService } from "./employer.service";
 import { EmployerDTO } from "./dto/employer.controller.dto";
+import { EmployerMapper } from "./mappers/employer.mapper";
 
 @Controller("v1/employers")
 @Roles(Role.CONSUMER)
@@ -19,6 +20,12 @@ export class EmployerController {
 
   @Inject()
   private readonly employerService: EmployerService;
+
+  private readonly employerMapper: EmployerMapper;
+
+  constructor() {
+    this.employerMapper = new EmployerMapper();
+  }
 
   @Get("/:referralID")
   @ApiOperation({ summary: "Retrieve employer details by referral ID" })
@@ -34,20 +41,6 @@ export class EmployerController {
       throw new NotFoundException("Employer not found");
     }
 
-    const payrollDatesAsc = employer.payrollDates.sort(); // Naturally sorts strings in ascending order
-    const now = new Date().setHours(0, 0, 0, 0);
-    const futurePayrollDates = payrollDatesAsc.filter(date => {
-      return new Date(date) > new Date(now + employer.leadDays * 24 * 60 * 60 * 1000);
-    });
-
-    return {
-      employerName: employer.name,
-      employerLogoURI: employer.logoURI,
-      leadDays: employer.leadDays,
-      employerReferralID: employer.referralID,
-      payrollDates: payrollDatesAsc,
-      nextPayrollDate: futurePayrollDates[0],
-      ...(employer.maxAllocationPercent && { maxAllocationPercent: employer.maxAllocationPercent }),
-    };
+    return this.employerMapper.toEmployerDTO(employer);
   }
 }

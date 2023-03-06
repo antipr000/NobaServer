@@ -34,6 +34,10 @@ import { ServiceException } from "../../../core/exception/service.exception";
 import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent";
 import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
+import { SendRegisterNewEmployeeEvent } from "../events/SendRegisterNewEmployeeEvent";
+import { SendUpdateEmployeeAllocationAmontEvent } from "../events/SendUpdateEmployeeAllocationAmountEvent";
+import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
+import { SendUpdatePayrollStatusEvent } from "../events/SendUpdatePayrollStatusEvent";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -515,6 +519,84 @@ describe("NotificationService", () => {
       //verify(eventEmitter.emitAsync(`webhook.${event}`, deepEqual(data))).once();
 
       verify(eventEmitter.emitAsync(`email.${event}`, deepEqual(data))).once();
+    });
+  });
+
+  describe("Dashboard Events", () => {
+    it("should emit 'SEND_REGISTER_NEW_EMPLOYEE_EVENT' event in dashboard", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+      const payload: NotificationPayload = {
+        firstName: "Fake",
+        lastName: "User",
+        email: "fake+user@noba.com",
+        phone: "+1234567890",
+        employerReferralID: "fake-referral-id",
+        allocationAmountInPesos: 10000,
+        nobaEmployeeID: "fake-employee-id",
+      };
+
+      await notificationService.sendNotification(NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT, payload);
+
+      const data = new SendRegisterNewEmployeeEvent({
+        email: payload.email,
+        phone: payload.phone,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        employerReferralID: payload.employerReferralID,
+        allocationAmountInPesos: payload.allocationAmountInPesos,
+        nobaEmployeeID: payload.nobaEmployeeID,
+      });
+
+      verify(
+        eventEmitter.emitAsync(`dashboard.${NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT}`, deepEqual(data)),
+      ).once();
+    });
+
+    it("should emit 'SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT' event in dashboard", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+      const payload: NotificationPayload = {
+        nobaEmployeeID: "fake-employee-id",
+        allocationAmountInPesos: 10000,
+      };
+
+      await notificationService.sendNotification(
+        NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
+        payload,
+      );
+
+      const data = new SendUpdateEmployeeAllocationAmontEvent({
+        nobaEmployeeID: payload.nobaEmployeeID,
+        allocationAmountInPesos: payload.allocationAmountInPesos,
+      });
+
+      verify(
+        eventEmitter.emitAsync(
+          `dashboard.${NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT}`,
+          deepEqual(data),
+        ),
+      ).once();
+    });
+
+    it("should emit 'SEND_UPDATE_PAYROLL_STATUS_EVENT' event in dashboard", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+      const payload: NotificationPayload = {
+        nobaPayrollID: "fake-payroll-id",
+        payrollStatus: PayrollStatus.INVOICED,
+      };
+
+      await notificationService.sendNotification(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT, payload);
+
+      const data = new SendUpdatePayrollStatusEvent({
+        nobaPayrollID: payload.nobaPayrollID,
+        payrollStatus: payload.payrollStatus,
+      });
+
+      verify(
+        eventEmitter.emitAsync(`dashboard.${NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT}`, deepEqual(data)),
+      ).once();
     });
   });
 });

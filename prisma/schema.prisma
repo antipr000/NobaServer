@@ -99,6 +99,7 @@ model Employer {
   leadDays             Int?
   maxAllocationPercent Float?
   payrollDates         String[]
+  payrollAccountNumber String?
   Employee             Employee[]
   Payroll              Payroll[]
 
