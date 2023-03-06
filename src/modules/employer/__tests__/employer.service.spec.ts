@@ -26,6 +26,9 @@ import { getRandomEmployee } from "../../../modules/employee/test_utils/employee
 import { Utils } from "../../../core/utils/Utils";
 import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
+import { NotificationService } from "../../../modules/notifications/notification.service";
+import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
+import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -54,6 +57,7 @@ describe("EmployerServiceTests", () => {
   let payrollRepo: IPayrollRepo;
   let payrollDisbursementRepo: IPayrollDisbursementRepo;
   let exchangeRateService: ExchangeRateService;
+  let notificationService: NotificationService;
 
   beforeEach(async () => {
     employerRepo = getMockEmployerRepoWithDefaults();
@@ -61,6 +65,7 @@ describe("EmployerServiceTests", () => {
     payrollDisbursementRepo = getMockPayrollDisbursementRepoWithDefaults();
     payrollRepo = getMockPayrollRepoWithDefaults();
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
+    notificationService = getMockNotificationServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -89,6 +94,10 @@ describe("EmployerServiceTests", () => {
         {
           provide: ExchangeRateService,
           useFactory: () => instance(exchangeRateService),
+        },
+        {
+          provide: NotificationService,
+          useFactory: () => instance(notificationService),
         },
         EmployerService,
       ],
@@ -597,8 +606,10 @@ describe("EmployerServiceTests", () => {
     it("should update 'status' of payroll", async () => {
       const employerID = "fake-employer";
       const { payroll } = getRandomPayroll(employerID);
+      payroll.status = PayrollStatus.INVOICED;
 
       when(payrollRepo.updatePayroll(anyString(), anything())).thenResolve(payroll);
+      when(notificationService.sendNotification(anything(), anything())).thenResolve();
 
       const updatedPayroll = await employerService.updatePayroll(payroll.id, {
         status: PayrollStatus.INVOICED,
@@ -612,29 +623,45 @@ describe("EmployerServiceTests", () => {
         status: PayrollStatus.INVOICED,
       });
       expect(payrollUpdateRequest.completedTimestamp).toBeUndefined();
+
+      const [eventType, eventPayload] = capture(notificationService.sendNotification).last();
+      expect(eventType).toEqual(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT);
+      expect(eventPayload).toStrictEqual({
+        nobaPayrollID: payroll.id,
+        payrollStatus: PayrollStatus.INVOICED,
+      });
     });
 
     it("should update 'status' and 'completedTimestamp' when status is COMPLETED", async () => {
       const employerID = "fake-employer";
       const { payroll } = getRandomPayroll(employerID);
+      payroll.status = PayrollStatus.COMPLETED;
 
       when(payrollRepo.updatePayroll(anyString(), anything())).thenResolve(payroll);
+      when(notificationService.sendNotification(anything(), anything())).thenResolve();
 
       const updatedPayroll = await employerService.updatePayroll(payroll.id, {
         status: PayrollStatus.COMPLETED,
       });
-
       expect(updatedPayroll).toStrictEqual(payroll);
 
       const [payrollID, payrollUpdateRequest] = capture(payrollRepo.updatePayroll).last();
       expect(payrollID).toEqual(payroll.id);
       expect(payrollUpdateRequest.status).toEqual(PayrollStatus.COMPLETED);
       expect(payrollUpdateRequest.completedTimestamp).toBeDefined();
+
+      const [eventType, eventPayload] = capture(notificationService.sendNotification).last();
+      expect(eventType).toEqual(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT);
+      expect(eventPayload).toStrictEqual({
+        nobaPayrollID: payroll.id,
+        payrollStatus: PayrollStatus.COMPLETED,
+      });
     });
 
     it("should update payroll and set totalDebitAmount, totalCreditAmount and exchangeRate when status is CREATED", async () => {
       const employerID = "fake-employer";
       const { payroll } = getRandomPayroll(employerID);
+      payroll.status = PayrollStatus.CREATED;
       const { payrollDisbursement: disbursement1 } = getRandomPayrollDisbursement(payroll.id, "fake-employee-1");
       const { payrollDisbursement: disbursement2 } = getRandomPayrollDisbursement(payroll.id, "fake-employee-2");
 
@@ -645,6 +672,8 @@ describe("EmployerServiceTests", () => {
         disbursement1,
         disbursement2,
       ]);
+      when(notificationService.sendNotification(anything(), anything())).thenResolve();
+
       when(exchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve({
         nobaRate: 0.0025,
         bankRate: 0.0025,
@@ -667,6 +696,13 @@ describe("EmployerServiceTests", () => {
         totalDebitAmount: 30000,
         totalCreditAmount: 75,
         exchangeRate: 0.0025,
+      });
+
+      const [eventType, eventPayload] = capture(notificationService.sendNotification).last();
+      expect(eventType).toEqual(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT);
+      expect(eventPayload).toStrictEqual({
+        nobaPayrollID: payroll.id,
+        payrollStatus: PayrollStatus.CREATED,
       });
     });
 

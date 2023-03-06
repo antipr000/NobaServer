@@ -1,3 +1,4 @@
+import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import {
   DepositCompletedNotificationParameters,
@@ -41,6 +42,8 @@ export type NotificationPayload = {
   employerReferralID?: string;
   allocationAmountInPesos?: number;
   nobaEmployeeID?: string;
+  nobaPayrollID?: string;
+  payrollStatus?: PayrollStatus;
 };
 
 export function prepareNotificationPayload(
