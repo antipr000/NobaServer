@@ -38,6 +38,7 @@ import { ServiceErrorCode, ServiceException } from "../../core/exception/service
 import { SendTransferReceivedEvent } from "./events/SendTransferReceivedEvent";
 import { SendRegisterNewEmployeeEvent } from "./events/SendRegisterNewEmployeeEvent";
 import { SendUpdateEmployeeAllocationAmontEvent } from "./events/SendUpdateEmployeeAllocationAmountEvent";
+import { SendUpdatePayrollStatusEvent } from "./events/SendUpdatePayrollStatusEvent";
 
 @Injectable()
 export class NotificationService {
@@ -455,6 +456,15 @@ export class NotificationService {
           new SendUpdateEmployeeAllocationAmontEvent({
             nobaEmployeeID: payload.nobaEmployeeID,
             allocationAmountInPesos: payload.allocationAmountInPesos,
+          }),
+        );
+        break;
+      case NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT:
+        this.eventEmitter.emitAsync(
+          eventName,
+          new SendUpdatePayrollStatusEvent({
+            nobaPayrollID: payload.nobaPayrollID,
+            payrollStatus: payload.payrollStatus,
           }),
         );
         break;

@@ -8,6 +8,7 @@ import { NewEmployeeRegisterRequest } from "../domain/dashboard.client.dto";
 import axios from "axios";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { DashboardClient } from "./dashboard.client";
+import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 
 @Injectable()
 export class BubbleClient implements DashboardClient {
@@ -77,6 +78,32 @@ export class BubbleClient implements DashboardClient {
       );
       throw new ServiceException({
         message: "Failed to update the employee data in Bubble",
+        errorCode: ServiceErrorCode.UNKNOWN,
+      });
+    }
+  }
+
+  async updatePayrollStatus(status: PayrollStatus, nobaPayrollID: string): Promise<void> {
+    this.logger.info(`Updating status of ${nobaPayrollID} to ${status} in Bubble`);
+
+    const url = `${this.baseUrl}/payroll_status`;
+    const headers = {
+      ...this.getAuthorizationHeader(),
+    };
+    const requestBody = {
+      status: status,
+      nobaPayrollID: nobaPayrollID,
+    };
+
+    try {
+      await axios.post(url, requestBody, { headers });
+      this.logger.info(`Successfully updated payroll status : ${JSON.stringify(requestBody)} to Bubble`);
+    } catch (err) {
+      this.logger.error(
+        `Failed to update payroll status : ${JSON.stringify(requestBody)} to Bubble endpoint ${url}. Error: ${err}`,
+      );
+      throw new ServiceException({
+        message: "Failed to update payroll status in Bubble",
         errorCode: ServiceErrorCode.UNKNOWN,
       });
     }

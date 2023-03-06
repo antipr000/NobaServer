@@ -36,6 +36,8 @@ import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
 import { SendRegisterNewEmployeeEvent } from "../events/SendRegisterNewEmployeeEvent";
 import { SendUpdateEmployeeAllocationAmontEvent } from "../events/SendUpdateEmployeeAllocationAmountEvent";
+import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
+import { SendUpdatePayrollStatusEvent } from "../events/SendUpdatePayrollStatusEvent";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -574,6 +576,26 @@ describe("NotificationService", () => {
           `dashboard.${NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT}`,
           deepEqual(data),
         ),
+      ).once();
+    });
+
+    it("should emit 'SEND_UPDATE_PAYROLL_STATUS_EVENT' event in dashboard", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+      const payload: NotificationPayload = {
+        nobaPayrollID: "fake-payroll-id",
+        payrollStatus: PayrollStatus.INVOICED,
+      };
+
+      await notificationService.sendNotification(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT, payload);
+
+      const data = new SendUpdatePayrollStatusEvent({
+        nobaPayrollID: payload.nobaPayrollID,
+        payrollStatus: payload.payrollStatus,
+      });
+
+      verify(
+        eventEmitter.emitAsync(`dashboard.${NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT}`, deepEqual(data)),
       ).once();
     });
   });

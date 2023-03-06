@@ -9,6 +9,8 @@ import { DashboardEventHandler } from "../dashboard.event.handler";
 import { getMockDashboardClientWithDefaults } from "../mocks/mock.dashboard.client";
 import { SendRegisterNewEmployeeEvent } from "../events/SendRegisterNewEmployeeEvent";
 import { SendUpdateEmployeeAllocationAmontEvent } from "../events/SendUpdateEmployeeAllocationAmountEvent";
+import { SendUpdatePayrollStatusEvent } from "../events/SendUpdatePayrollStatusEvent";
+import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 
 describe("DashboardEventHandler", () => {
   let currencyService: CurrencyService;
@@ -84,5 +86,20 @@ describe("DashboardEventHandler", () => {
     const [nobaEmployeeID, allocationAmountInPesos] = capture(dashboardClient.updateEmployeeAllocationAmount).last();
     expect(nobaEmployeeID).toBe(payload.nobaEmployeeID);
     expect(allocationAmountInPesos).toBe(payload.allocationAmountInPesos);
+  });
+
+  it("should call updatePayrollStatus event", async () => {
+    const payload = new SendUpdatePayrollStatusEvent({
+      nobaPayrollID: "fake-payroll-id",
+      payrollStatus: PayrollStatus.COMPLETED,
+    });
+
+    when(dashboardClient.updatePayrollStatus(anything(), anything())).thenResolve();
+
+    await eventHandler.sendUpdatePayrollStatus(payload);
+
+    const [payrollStatus, nobaPayrollID] = capture(dashboardClient.updatePayrollStatus).last();
+    expect(payrollStatus).toBe(PayrollStatus.COMPLETED);
+    expect(nobaPayrollID).toBe(payload.nobaPayrollID);
   });
 });
