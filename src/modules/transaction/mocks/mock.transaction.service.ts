@@ -24,6 +24,10 @@ export function getMockTransactionServiceWithDefaults(): TransactionService {
     new Error("Method not implemented"),
   );
 
+  when(mockTransactionService.initiateTransactionForPayrolls(anyString())).thenReject(
+    new Error("Method not implemented"),
+  );
+
   when(
     mockTransactionService.getTransactionQuote(anyNumber(), anything(), anything(), anything(), anything()),
   ).thenReject(new Error("Method not implemented"));

@@ -142,6 +142,31 @@ describe("EmployeeServiceTests", () => {
       });
     });
 
+    it("should update an employee with an explicit 0 allocation and salary", async () => {
+      const employee = getRandomEmployee(true);
+
+      employee.employer.maxAllocationPercent = 20;
+      const newAllocationAmount = 0;
+      const newSalary = 0;
+
+      when(employeeRepo.getEmployeeByID(employee.id, true)).thenResolve(employee);
+      when(employeeRepo.updateEmployee(anything(), anything())).thenResolve(employee);
+
+      const updatedEmployee = await employeeService.updateEmployee(employee.id, {
+        allocationAmount: newAllocationAmount,
+        salary: newSalary,
+      });
+
+      expect(updatedEmployee).toEqual(employee);
+
+      const [employeeID, propagatedEmployeeUpdateRequest] = capture(employeeRepo.updateEmployee).last();
+      expect(employeeID).toEqual(employee.id);
+      expect(propagatedEmployeeUpdateRequest).toEqual({
+        allocationAmount: newAllocationAmount,
+        salary: newSalary,
+      });
+    });
+
     it("should throw ServiceException if the ID is undefined or null", async () => {
       try {
         await employeeService.updateEmployee(undefined, {

@@ -465,6 +465,10 @@ export class EmployerService {
     });
   }
 
+  async getDisbursement(disbursementID: string): Promise<PayrollDisbursement> {
+    return this.payrollDisbursementRepo.getPayrollDisbursementByID(disbursementID);
+  }
+
   async createInvoice(payrollID: string): Promise<void> {
     throw new Error("Not implemented");
   }

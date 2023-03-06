@@ -37,16 +37,23 @@ export class EmployeeService {
 
     const maxAllocationPercent = employer.maxAllocationPercent ?? 100;
 
-    const allocationAmount = updateRequest.allocationAmount ?? employee.allocationAmount;
-    const salary = updateRequest.salary ?? employee.salary;
+    let allocationAmount = updateRequest.allocationAmount;
+    if (allocationAmount === undefined || allocationAmount === null || allocationAmount < 0) {
+      allocationAmount = employee.allocationAmount;
+    }
+
+    let salary = updateRequest.salary;
+    if (salary === undefined || salary === null || salary < 0) {
+      salary = employee.salary;
+    }
 
     if (allocationAmount > (maxAllocationPercent * salary) / 100) {
-      updateRequest.allocationAmount = Utils.roundTo2DecimalNumber((maxAllocationPercent * salary) / 100);
+      allocationAmount = Utils.roundTo2DecimalNumber((maxAllocationPercent * salary) / 100);
     }
 
     return this.employeeRepo.updateEmployee(employeeID, {
-      ...(updateRequest.allocationAmount && { allocationAmount: updateRequest.allocationAmount }),
-      ...(updateRequest.salary && { salary: updateRequest.salary }),
+      ...(allocationAmount >= 0 && { allocationAmount: allocationAmount }),
+      ...(salary >= 0 && { salary: salary }),
     });
   }
 

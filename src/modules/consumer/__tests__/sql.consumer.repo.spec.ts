@@ -579,7 +579,7 @@ describe("ConsumerRepoTests", () => {
       expect(consumerResult.getValue()[0].props.id).toEqual(consumer.props.id);
 
       const consumerResultPartial = await consumerRepo.findConsumersByStructuredFields({
-        phone: consumer.props.phone.substring(3, 6),
+        phone: consumer.props.phone.substring(2, 8),
       });
       expect(consumerResultPartial.isSuccess).toBe(true);
       expect(consumerResultPartial.getValue().length).toBe(1);
