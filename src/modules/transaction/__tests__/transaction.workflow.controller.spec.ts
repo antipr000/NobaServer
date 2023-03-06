@@ -4,7 +4,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { uuid } from "uuidv4";
 import { Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
-import { anyString, anything, capture, instance, when } from "ts-mockito";
+import { anyString, anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { TransactionService } from "../transaction.service";
 import { getMockTransactionServiceWithDefaults } from "../mocks/mock.transaction.service";
 import { UpdateTransactionRequestDTO, UpdateTransactionDTO } from "../dto/TransactionDTO";
@@ -203,6 +203,24 @@ describe("Transaction Workflow Controller tests", () => {
       expect(propagatedTransactionIdToGetTransaction).toEqual(transaction.id);
       expect(propagatedTransactionIdToGetTransactionEvents).toEqual(transaction.id);
       expect(propagatedMonoTransaction).toEqual(transaction);
+    });
+  });
+
+  describe("createTransaction", () => {
+    it("should forward the response from initiateTransactionForPayrolls to transactionWorkflowMapper", async () => {
+      const transaction: Transaction = getRandomTransaction("testConsumerID");
+      const payrollDisbursementID = uuid();
+
+      when(mockTransactionService.initiateTransactionForPayrolls(payrollDisbursementID)).thenResolve(transaction);
+      when(transactionWorkflowMapper.toWorkflowTransactionDTO(anything(), anything())).thenResolve(null);
+
+      await transactionWorkflowController.createTransaction({ disbursementID: payrollDisbursementID });
+
+      const [propagatedTransaction, propagatedTransactionEvents] = capture(
+        transactionWorkflowMapper.toWorkflowTransactionDTO,
+      ).last();
+      expect(propagatedTransaction).toStrictEqual(transaction);
+      expect(propagatedTransactionEvents).toStrictEqual([]);
     });
   });
 });
