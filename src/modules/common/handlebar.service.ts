@@ -32,7 +32,7 @@ export class TemplateService {
     });
   }
 
-  private async pushFileToS3(folderPath: string, objectName: string, content: string): Promise<any> {
+  private async pushFileToS3(folderPath: string, objectName: string, content: string | Buffer): Promise<any> {
     return new Promise(async (resolve, reject) => {
       const s3 = new S3({});
       const options = {
@@ -55,7 +55,11 @@ export class TemplateService {
     return this.loadTemplatesFromS3("/payroll-invoice/", filename);
   }
 
-  public async pushHandlebarLanguageFile(employerReferralID: string, filename: string, content: string): Promise<void> {
+  public async pushHandlebarLanguageFile(
+    employerReferralID: string,
+    filename: string,
+    content: string | Buffer,
+  ): Promise<void> {
     await this.pushFileToS3(`/${employerReferralID}/`, filename, content);
   }
 }

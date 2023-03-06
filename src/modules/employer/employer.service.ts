@@ -37,6 +37,7 @@ import { Currency } from "../transaction/domain/TransactionTypes";
 import { isValidDateString } from "../../core/utils/DateUtils";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
+import puppeteer, { Browser } from "puppeteer";
 
 @Injectable()
 export class EmployerService {
@@ -270,48 +271,19 @@ export class EmployerService {
       this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_en.html`, html_en),
       this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_es.html`, html_es),
     ]);
-  }
 
-  private async generateTemplate({
-    handlebarTemplate,
-    companyName,
-    nobaAccountNumber,
-    currency,
-    employeeDisbursements,
-    totalAmount,
-    locale,
-    region,
-  }: TemplateFields): Promise<string> {
-    const template = Handlebars.compile(handlebarTemplate);
+    const browser = await puppeteer.launch({ headless: true });
 
-    const employeeAllocations = employeeDisbursements.map(allocation => ({
-      employeeName: allocation.employeeName,
-      amount: allocation.amount.toLocaleString(`${locale}-${region}`),
-    }));
-    return template({
-      companyName: companyName,
-      currency: currency,
-      dateMonthYear: dayjs().locale(locale).format("MMMM YYYY"),
-      totalAmount: totalAmount.toLocaleString(`${locale}-${region}`),
-      allocations: employeeAllocations,
-      nobaAccountNumber: nobaAccountNumber,
-    });
-  }
+    const [pdf_en, pdf_es] = await Promise.all([
+      this.generatePayrollPDF(browser, html_en, `inv_${payrollID}_en.pdf`),
+      this.generatePayrollPDF(browser, html_es, `inv_${payrollID}_es.pdf`),
+    ]);
 
-  private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDisbursement[]> {
-    const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
-
-    return Promise.all(
-      disbursements.map(async disbursement => {
-        // need to resolve circular dependency first
-        const employee = await this.employeeService.getEmployeeByID(disbursement.employeeID);
-        // const consumer = await this.consumerService.getConsumer(employee.consumerID);
-        return {
-          employeeName: "TestFirst" + " " + "TestLast",
-          amount: disbursement.debitAmount,
-        };
-      }),
-    );
+    await Promise.all([
+      this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_en.pdf`, pdf_en),
+      this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_es.pdf`, pdf_es),
+    ]);
+    browser.close();
   }
 
   async getPayrollByID(id: string): Promise<Payroll> {
@@ -471,5 +443,55 @@ export class EmployerService {
 
   async createInvoice(payrollID: string): Promise<void> {
     throw new Error("Not implemented");
+  }
+
+  private async generateTemplate({
+    handlebarTemplate,
+    companyName,
+    nobaAccountNumber,
+    currency,
+    employeeDisbursements,
+    totalAmount,
+    locale,
+    region,
+  }: TemplateFields): Promise<string> {
+    const template = Handlebars.compile(handlebarTemplate);
+
+    const employeeAllocations = employeeDisbursements.map(allocation => ({
+      employeeName: allocation.employeeName,
+      amount: allocation.amount.toLocaleString(`${locale}-${region}`),
+    }));
+    return template({
+      companyName: companyName,
+      currency: currency,
+      dateMonthYear: dayjs().locale(locale).format("MMMM YYYY"),
+      totalAmount: totalAmount.toLocaleString(`${locale}-${region}`),
+      allocations: employeeAllocations,
+      nobaAccountNumber: nobaAccountNumber,
+    });
+  }
+
+  private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDisbursement[]> {
+    const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
+
+    return Promise.all(
+      disbursements.map(async disbursement => {
+        // need to resolve circular dependency first
+        const employee = await this.employeeService.getEmployeeByID(disbursement.employeeID);
+        // const consumer = await this.consumerService.getConsumer(employee.consumerID);
+        return {
+          employeeName: "TestFirst" + " " + "TestLast",
+          amount: disbursement.debitAmount,
+        };
+      }),
+    );
+  }
+
+  private async generatePayrollPDF(browserInstance: Browser, html: string, path: string): Promise<Buffer> {
+    const page = await browserInstance.newPage();
+    await page.emulateMediaType("screen");
+    await page.setContent(html);
+    await page.evaluateHandle("document.fonts.ready");
+    return page.pdf({ format: "A4", path: path });
   }
 }
