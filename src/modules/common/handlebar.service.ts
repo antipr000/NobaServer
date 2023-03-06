@@ -9,7 +9,7 @@ import {
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
 @Injectable()
-export class HandlebarService {
+export class TemplateService {
   @Inject()
   private readonly configService: CustomConfigService;
 
@@ -32,7 +32,7 @@ export class HandlebarService {
     });
   }
 
-  private async pushHTMLToS3(folderPath: string, objectName: string, content: string): Promise<any> {
+  private async pushFileToS3(folderPath: string, objectName: string, content: string): Promise<any> {
     return new Promise(async (resolve, reject) => {
       const s3 = new S3({});
       const options = {
@@ -46,7 +46,6 @@ export class HandlebarService {
         const putObjectResult = await s3.send(putObjectCommand);
         resolve(putObjectResult);
       } catch (e) {
-        console.log(e);
         reject(e);
       }
     });
@@ -56,7 +55,7 @@ export class HandlebarService {
     return this.loadTemplatesFromS3("/payroll-invoice/", filename);
   }
 
-  public async pushHandlebarLanguageHTML(employerID: string, filename: string, content: string): Promise<void> {
-    await this.pushHTMLToS3(`/${employerID}/`, filename, content);
+  public async pushHandlebarLanguageFile(employerReferralID: string, filename: string, content: string): Promise<void> {
+    await this.pushFileToS3(`/${employerReferralID}/`, filename, content);
   }
 }

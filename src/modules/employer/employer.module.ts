@@ -1,7 +1,6 @@
 import { Module } from "@nestjs/common";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
-import { CommonModule } from "../common/common.module";
-import { HandlebarService } from "../common/handlebar.service";
+import { TemplateService } from "../common/handlebar.service";
 import { EmployerController } from "./employer.controller";
 import { EmployerService } from "./employer.service";
 import { PayrollRepoModule } from "./repo/payroll.repo.module";
@@ -22,7 +21,7 @@ import { NotificationsModule } from "../notifications/notification.module";
     PayrollRepoModule,
   ],
   controllers: [EmployerController, EmployerWorkflowController, PayrollWorkflowController],
-  providers: [EmployerService, HandlebarService],
+  providers: [EmployerService, TemplateService],
   exports: [EmployerService],
 })
 export class EmployerModule {}

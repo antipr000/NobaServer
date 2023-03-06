@@ -4,10 +4,10 @@ import { AWS_ACCESS_KEY_ID_ATTR, AWS_SECRET_ACCESS_KEY_ATTR } from "../../../con
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { readConfigsFromYamlFiles } from "../../../core/utils/YamlJsonUtils";
-import { HandlebarService } from "../handlebar.service";
+import { TemplateService } from "../handlebar.service";
 
 describe("HandlebarService", () => {
-  let handlebarService: HandlebarService;
+  let handlebarService: TemplateService;
   let app: TestingModule;
 
   jest.setTimeout(30000);
@@ -58,10 +58,10 @@ describe("HandlebarService", () => {
         getTestWinstonModule(),
       ],
       controllers: [],
-      providers: [HandlebarService],
+      providers: [TemplateService],
     }).compile();
 
-    handlebarService = app.get<HandlebarService>(HandlebarService);
+    handlebarService = app.get<TemplateService>(TemplateService);
   });
 
   afterAll(async () => {

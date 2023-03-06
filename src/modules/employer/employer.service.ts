@@ -14,16 +14,12 @@ import {
   EmployerWithEmployeesDTO,
   UpdateEmployerRequestDTO,
 } from "./dto/employer.service.dto";
-import { writeFileSync } from "fs-extra";
 import dayjs from "dayjs";
 import Handlebars from "handlebars";
-import { PAYROLL_DISBURSEMENT_REPO_PROVIDER, PAYROLL_REPO_PROVIDER } from "./repo/payroll.repo.module";
-import { IPayrollDisbursementRepo } from "./repo/payroll.disbursement.repo";
 import { ConsumerService } from "../consumer/consumer.service";
 import { EmployeeService } from "../employee/employee.service";
-import { HandlebarService } from "../common/handlebar.service";
+import { TemplateService } from "../common/handlebar.service";
 import "dayjs/locale/es";
-import { IPayrollRepo } from "./repo/payroll.repo";
 import { IPayrollRepo } from "./repo/payroll.repo";
 import { IPayrollDisbursementRepo } from "./repo/payroll.disbursement.repo";
 import { Payroll, PayrollCreateRequest } from "./domain/Payroll";
@@ -49,7 +45,7 @@ export class EmployerService {
   private readonly SPANISH_LOCALE = "es";
 
   @Inject()
-  private readonly handlebarService: HandlebarService;
+  private readonly handlebarService: TemplateService;
 
   @Inject()
   private readonly employeeService: EmployeeService;
@@ -271,8 +267,8 @@ export class EmployerService {
     ]);
 
     await Promise.all([
-      this.handlebarService.pushHandlebarLanguageHTML(employer.id, `inv_${payrollID}_en.html`, html_en),
-      this.handlebarService.pushHandlebarLanguageHTML(employer.id, `inv_${payrollID}_es.html`, html_es),
+      this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_en.html`, html_en),
+      this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_es.html`, html_es),
     ]);
   }
 
