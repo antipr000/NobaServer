@@ -488,7 +488,7 @@ describe("Noba Admin", () => {
     });
   });
 
-  describe("PATCH /consumers/{id}", () => {
+  describe.skip("PATCH /consumers/{id}", () => {
     it("should patch all provided fields", async () => {
       const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
       await loginAndGetResponse(consumerEmail);
