@@ -11,6 +11,8 @@ import { getMockWalletDepositImplWithDefaults } from "../mocks/mock.wallet.depos
 import { getMockWalletTransferImplWithDefaults } from "../mocks/mock.wallet.transfer.impl";
 import { getMockWalletWithdrawalImplWithDefaults } from "../mocks/mock.wallet.withdrawal.impl";
 import { WorkflowName } from "../domain/Transaction";
+import { PayrollDepositImpl } from "../factory/payroll.deposit.impl";
+import { getMockPayrollDepositImplWithDefaults } from "../mocks/mock.payroll.deposit.impl";
 
 describe("WorkflowFactory Tests", () => {
   jest.setTimeout(20000);
@@ -19,12 +21,15 @@ describe("WorkflowFactory Tests", () => {
   let walletDepositImpl: WalletDepositImpl;
   let walletTransferImpl: WalletTransferImpl;
   let walletWithdrawalImpl: WalletWithdrawalImpl;
+  let payrollDepositImpl: PayrollDepositImpl;
   let workflowFactory: WorkflowFactory;
 
   beforeAll(async () => {
     walletDepositImpl = instance(getMockWalletDepositImplWithDefaults());
     walletTransferImpl = instance(getMockWalletTransferImplWithDefaults());
     walletWithdrawalImpl = instance(getMockWalletWithdrawalImplWithDefaults());
+    payrollDepositImpl = instance(getMockPayrollDepositImplWithDefaults());
+
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
@@ -44,6 +49,10 @@ describe("WorkflowFactory Tests", () => {
         {
           provide: WalletWithdrawalImpl,
           useFactory: () => walletWithdrawalImpl,
+        },
+        {
+          provide: PayrollDepositImpl,
+          useFactory: () => payrollDepositImpl,
         },
         WorkflowFactory,
       ],
@@ -70,6 +79,11 @@ describe("WorkflowFactory Tests", () => {
     it("should return WalletWithdrawalImpl when workflowName is WALLET_WITHDRAWAL", () => {
       const workflow = workflowFactory.getWorkflowImplementation(WorkflowName.WALLET_WITHDRAWAL);
       expect(workflow).toBe(walletWithdrawalImpl);
+    });
+
+    it("should return PayrollDepositImpl when workflowName is PAYROLL_DEPOSIT", () => {
+      const workflow = workflowFactory.getWorkflowImplementation(WorkflowName.PAYROLL_DEPOSIT);
+      expect(workflow).toBe(payrollDepositImpl);
     });
   });
 });

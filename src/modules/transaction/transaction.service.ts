@@ -31,6 +31,12 @@ import { DebitBankResponse } from "./domain/Transaction";
 import { BankFactory } from "../psp/factory/bank.factory";
 import { Utils } from "../../core/utils/Utils";
 import { ProcessedTransactionDTO } from "./dto/ProcessedTransactionDTO";
+import { EmployerService } from "../employer/employer.service";
+import { PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
+import { Payroll } from "../employer/domain/Payroll";
+import { Consumer } from "../consumer/domain/Consumer";
+import { EmployeeService } from "../employee/employee.service";
+import { Employee } from "../employee/domain/Employee";
 
 @Injectable()
 export class TransactionService {
@@ -42,6 +48,8 @@ export class TransactionService {
     private readonly verificationService: VerificationService,
     private readonly transactionFactory: WorkflowFactory,
     private readonly bankFactory: BankFactory,
+    private readonly employerService: EmployerService,
+    private readonly employeeService: EmployeeService,
   ) {}
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID: string): Promise<Transaction> {
@@ -64,6 +72,47 @@ export class TransactionService {
 
   async getFilteredTransactions(filter: TransactionFilterOptionsDTO): Promise<PaginatedResult<Transaction>> {
     return await this.transactionRepo.getFilteredTransactions(filter);
+  }
+
+  async initiateTransactionForPayrolls(payrollDisbursementID: string) {
+    const payrollDisbursement: PayrollDisbursement = await this.employerService.getDisbursement(payrollDisbursementID);
+    if (!payrollDisbursement) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Payroll disbursement with ID '${payrollDisbursement}' not found.`,
+      });
+    }
+
+    const payroll: Payroll = await this.employerService.getPayrollByID(payrollDisbursement.payrollID);
+    if (!payroll) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: `Payroll disbursement with ID '${payrollDisbursement}' exist but corresponding Payroll with ID '${payrollDisbursement.payrollID} not found.'.`,
+      });
+    }
+
+    const employee: Employee = await this.employeeService.getEmployeeByID(payrollDisbursement.employeeID);
+    if (!employee) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: `Employee with ID '${payrollDisbursement.employeeID}' not found.'.`,
+      });
+    }
+
+    const transaction: InputTransaction = {
+      workflowName: WorkflowName.PAYROLL_DEPOSIT,
+      exchangeRate: payroll.exchangeRate,
+      memo: `${payroll.payrollDate} Payroll`,
+      transactionRef: Utils.generateLowercaseUUID(true),
+      transactionFees: [],
+      sessionKey: "",
+      debitAmount: payrollDisbursement.debitAmount,
+      debitCurrency: Currency.COP,
+      creditAmount: payrollDisbursement.debitAmount * payroll.exchangeRate,
+      creditCurrency: Currency.USD,
+      creditConsumerID: employee.consumerID,
+    };
+    return this.transactionRepo.createTransaction(transaction);
   }
 
   async initiateTransaction(
