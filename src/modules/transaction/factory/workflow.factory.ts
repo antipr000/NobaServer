@@ -5,6 +5,7 @@ import { WalletWithdrawalImpl } from "./wallet.withdrawal.impl";
 import { WalletTransferImpl } from "./wallet.transfer.impl";
 import { IWorkflowImpl } from "./iworkflow.impl";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
+import { PayrollDepositImpl } from "./payroll.deposit.impl";
 
 @Injectable()
 export class WorkflowFactory {
@@ -17,6 +18,9 @@ export class WorkflowFactory {
   @Inject()
   private readonly walletTransferImpl: WalletTransferImpl;
 
+  @Inject()
+  private readonly payrollDepositImpl: PayrollDepositImpl;
+
   getWorkflowImplementation(workflowName: WorkflowName): IWorkflowImpl {
     switch (workflowName) {
       case WorkflowName.WALLET_DEPOSIT:
@@ -25,6 +29,8 @@ export class WorkflowFactory {
         return this.walletTransferImpl;
       case WorkflowName.WALLET_WITHDRAWAL:
         return this.walletWithdrawalImpl;
+      case WorkflowName.PAYROLL_DEPOSIT:
+        return this.payrollDepositImpl;
       default:
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,

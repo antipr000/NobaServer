@@ -15,6 +15,8 @@ import { VerificationModule } from "../verification/verification.module";
 import { WorkflowFactoryModule } from "./factory/workflow.factory.module";
 import { MonoModule } from "../psp/mono/mono.module";
 import { BankFactoryModule } from "../psp/factory/bank.factory.module";
+import { EmployerModule } from "../employer/employer.module";
+import { EmployeeModule } from "../employee/employee.module";
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { BankFactoryModule } from "../psp/factory/bank.factory.module";
     WorkflowFactoryModule,
     BankFactoryModule,
     MonoModule,
+    EmployerModule,
+    EmployeeModule,
   ],
   controllers: [TransactionController, TransactionWorkflowController],
   providers: [
@@ -50,6 +54,8 @@ export class TransactionModule {}
     TemporalModule,
     CommonModule,
     TransactionModule,
+    EmployerModule,
+    EmployeeModule,
   ],
   providers: [TransactionWorkflowMapper],
   controllers: [TransactionWorkflowController],

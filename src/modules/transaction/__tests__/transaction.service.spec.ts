@@ -49,6 +49,20 @@ import { TransactionVerification } from "../../../modules/verification/domain/Tr
 import { SeverityLevel } from "../../../core/exception/base.exception";
 import { getMockMonoWorkflowServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.workflow.service";
 import { MonoWorkflowService } from "../../../modules/psp/mono/mono.workflow.service";
+import { EmployeeService } from "../../../modules/employee/employee.service";
+import { EmployerService } from "../../../modules/employer/employer.service";
+import { getMockEmployeeRepoWithDefaults } from "../../../modules/employee/mocks/mock.employee.repo";
+import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
+import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
+import { Employee } from "../../../modules/employee/domain/Employee";
+import { uuid } from "uuidv4";
+import { getRandomEmployee } from "../../../modules/employee/test_utils/employee.test.utils";
+import { Payroll } from "../../../modules/employer/domain/Payroll";
+import {
+  getRandomPayroll,
+  getRandomPayrollDisbursement,
+} from "../../../modules/employer/test_utils/payroll.test.utils";
+import { PayrollDisbursement } from "../../../modules/employer/domain/PayrollDisbursement";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -66,6 +80,8 @@ describe("TransactionServiceTests", () => {
   let bankFactory: BankFactory;
   let monoWorkflowService: MonoWorkflowService;
   let withdrawalDetailsRepo: IWithdrawalDetailsRepo;
+  let employeeService: EmployeeService;
+  let employerService: EmployerService;
 
   beforeEach(async () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
@@ -79,6 +95,8 @@ describe("TransactionServiceTests", () => {
     bankFactory = getMockBankFactoryWithDefaults();
     monoWorkflowService = getMockMonoWorkflowServiceWithDefaults();
     withdrawalDetailsRepo = getMockWithdrawalDetailsRepoWithDefaults();
+    employeeService = getMockEmployeeServiceWithDefaults();
+    employerService = getMockEmployerServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -115,6 +133,14 @@ describe("TransactionServiceTests", () => {
         {
           provide: MonoWorkflowService,
           useFactory: () => instance(monoWorkflowService),
+        },
+        {
+          provide: EmployeeService,
+          useFactory: () => instance(employeeService),
+        },
+        {
+          provide: EmployerService,
+          useFactory: () => instance(employerService),
         },
         {
           provide: WITHDRAWAL_DETAILS_REPO_PROVIDER,
@@ -507,6 +533,92 @@ describe("TransactionServiceTests", () => {
       await expect(transactionService.initiateTransaction(transactionDTO, "", null)).rejects.toThrowError(
         ServiceException,
       );
+    });
+  });
+
+  describe("initiateTransactionForPayrolls", () => {
+    it("should throw ServiceException with DOES_NOT_EXIST error if the Disbursement is not found", async () => {
+      const payrollDisbursementID = uuid();
+      when(employerService.getDisbursement(payrollDisbursementID)).thenResolve(null);
+
+      try {
+        await transactionService.initiateTransactionForPayrolls(payrollDisbursementID);
+      } catch (ex) {
+        expect(ex).toBeInstanceOf(ServiceException);
+        expect(ex.errorCode).toBe(ServiceErrorCode.DOES_NOT_EXIST);
+        expect(ex.message).toEqual(expect.stringContaining(payrollDisbursementID));
+      }
+    });
+
+    it("should throw ServiceException with UNKNOWN error if the Payroll is not found", async () => {
+      const employerID = uuid();
+      const employee: Employee = getRandomEmployee(employerID);
+      const payroll: Payroll = getRandomPayroll(employerID).payroll;
+      const payrollDisbursement: PayrollDisbursement = getRandomPayrollDisbursement(
+        payroll.id,
+        employee.id,
+      ).payrollDisbursement;
+
+      when(employerService.getDisbursement(payrollDisbursement.id)).thenResolve(payrollDisbursement);
+      when(employerService.getPayrollByID(payroll.id)).thenResolve(null);
+
+      try {
+        await transactionService.initiateTransactionForPayrolls(payrollDisbursement.id);
+      } catch (ex) {
+        expect(ex).toBeInstanceOf(ServiceException);
+        expect(ex.errorCode).toBe(ServiceErrorCode.UNKNOWN);
+        expect(ex.message).toEqual(expect.stringContaining(payroll.id));
+      }
+    });
+
+    it("should throw ServiceException with UNKNOWN error if the Employee is not found", async () => {
+      const employerID = uuid();
+      const employee: Employee = getRandomEmployee(employerID);
+      const payroll: Payroll = getRandomPayroll(employerID).payroll;
+      const payrollDisbursement: PayrollDisbursement = getRandomPayrollDisbursement(
+        payroll.id,
+        employee.id,
+      ).payrollDisbursement;
+
+      when(employerService.getDisbursement(payrollDisbursement.id)).thenResolve(payrollDisbursement);
+      when(employerService.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(employeeService.getEmployeeByID(employee.id)).thenResolve(null);
+
+      try {
+        await transactionService.initiateTransactionForPayrolls(payrollDisbursement.id);
+      } catch (ex) {
+        expect(ex).toBeInstanceOf(ServiceException);
+        expect(ex.errorCode).toBe(ServiceErrorCode.UNKNOWN);
+        expect(ex.message).toEqual(expect.stringContaining(employee.id));
+      }
+    });
+
+    it("should returns the transaction with proper fields on success", async () => {
+      const employerID = uuid();
+      const employee: Employee = getRandomEmployee(employerID);
+      const payroll: Payroll = getRandomPayroll(employerID).payroll;
+      const payrollDisbursement: PayrollDisbursement = getRandomPayrollDisbursement(
+        payroll.id,
+        employee.id,
+      ).payrollDisbursement;
+
+      when(employerService.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(employerService.getDisbursement(payrollDisbursement.id)).thenResolve(payrollDisbursement);
+      when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
+      when(transactionRepo.createTransaction(anything())).thenResolve(null);
+
+      await transactionService.initiateTransactionForPayrolls(payrollDisbursement.id);
+
+      const [propagatedTransactionToSave] = capture(transactionRepo.createTransaction).last();
+      expect(propagatedTransactionToSave.memo).toEqual(expect.stringContaining(payroll.payrollDate));
+      expect(propagatedTransactionToSave.exchangeRate).toBe(payroll.exchangeRate);
+      expect(propagatedTransactionToSave.workflowName).toBe(WorkflowName.PAYROLL_DEPOSIT);
+      expect(propagatedTransactionToSave.transactionRef).toBeDefined();
+      expect(propagatedTransactionToSave.debitAmount).toBe(payrollDisbursement.debitAmount);
+      expect(propagatedTransactionToSave.debitCurrency).toBe(Currency.COP);
+      expect(propagatedTransactionToSave.creditAmount).toBe(payrollDisbursement.debitAmount * payroll.exchangeRate);
+      expect(propagatedTransactionToSave.creditCurrency).toBe(Currency.USD);
+      expect(propagatedTransactionToSave.creditConsumerID).toBe(employee.consumerID);
     });
   });
 
