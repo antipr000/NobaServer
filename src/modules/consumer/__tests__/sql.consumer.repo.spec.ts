@@ -626,7 +626,7 @@ describe("ConsumerRepoTests", () => {
 
     it("get a consumer by KYC Status", async () => {
       // Create 2 consumers in each status
-      for (let status in KYCStatus) {
+      for (const status in KYCStatus) {
         const consumer1 = getRandomUser(`${status}-1`, "AAAAAAAA");
         consumer1.props.verificationData.kycCheckStatus = KYCStatus[status];
         await consumerRepo.createConsumer(consumer1);
@@ -790,6 +790,40 @@ describe("ConsumerRepoTests", () => {
       expect(consumerAddresses[0].countryCode).toBe("CO");
       expect(consumerAddresses[0].streetLine2).toBe("Second");
       expect(consumerAddresses[0].regionCode).toBe("PA");
+    });
+
+    it("should update partial address for consumer", async () => {
+      const consumer = getRandomUser();
+      consumer.props.address = {
+        streetLine1: "Main st",
+        city: "irvene",
+        countryCode: "US",
+        regionCode: "CA",
+        postalCode: "123456",
+      };
+      await consumerRepo.createConsumer(consumer);
+
+      const updateRequest: Partial<ConsumerProps> = {
+        address: {
+          streetLine1: "Fake street",
+          city: "Seattle",
+          countryCode: "US",
+          regionCode: "WA",
+          postalCode: "123457",
+        },
+      };
+
+      // updates address
+      await consumerRepo.updateConsumer(consumer.props.id, updateRequest);
+
+      const allAddresses = await getAllAddressRecords(prismaService);
+      const consumerAddresses = allAddresses.filter(address => address.consumerID === consumer.props.id);
+      expect(consumerAddresses).toHaveLength(1);
+
+      expect(consumerAddresses[0].countryCode).toBe("US");
+      expect(consumerAddresses[0].streetLine1).toBe("Fake street");
+      expect(consumerAddresses[0].regionCode).toBe("WA");
+      expect(consumerAddresses[0].city).toBe("Seattle");
     });
 
     it("should update locale for consumer", async () => {

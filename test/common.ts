@@ -95,6 +95,19 @@ export async function patchConsumer(consumer: Partial<ConsumerProps>) {
   await prisma.$disconnect();
 }
 
+export async function getConsumer(email: string) {
+  const prisma = new PrismaClient();
+  await prisma.$connect();
+
+  const consumer = await prisma.consumer.findUnique({
+    where: { email },
+    include: { address: true, verificationData: true },
+  });
+
+  await prisma.$disconnect();
+  return consumer;
+}
+
 export const computeSignature = (
   timestamp: string,
   requestMethod: string,

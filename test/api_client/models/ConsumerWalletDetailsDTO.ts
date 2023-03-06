@@ -3,6 +3,6 @@
 /* eslint-disable */
 
 export type ConsumerWalletDetailsDTO = {
-  walletProvider?: string;
-  walletID?: string;
+  walletProvider: string;
+  walletID: string;
 };

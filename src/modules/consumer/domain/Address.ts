@@ -15,11 +15,11 @@ export class Address implements Partial<AddressModel> {
 
 export const addressValidationJoiKeys: KeysRequired<Address> = {
   id: Joi.string().optional(),
-  streetLine1: Joi.string().optional().allow(null),
-  streetLine2: Joi.string().optional().allow(null),
-  city: Joi.string().optional().allow(null),
-  regionCode: Joi.string().optional().allow(null),
+  streetLine1: Joi.string().optional().allow(null, ""),
+  streetLine2: Joi.string().optional().allow(null, ""),
+  city: Joi.string().optional().allow(null, ""),
+  regionCode: Joi.string().optional().allow(null, ""),
   countryCode: Joi.string().optional(),
-  postalCode: Joi.string().optional().allow(null),
-  consumerID: Joi.string().optional().allow(null),
+  postalCode: Joi.string().optional().allow(null, ""),
+  consumerID: Joi.string().optional().allow(null, ""),
 };

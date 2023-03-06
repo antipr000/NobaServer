@@ -3,8 +3,8 @@
 /* eslint-disable */
 
 export type VerificationDataDTO = {
-  verificationProvider?: "SARDINE";
-  kycVerificationStatus?: "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "FLAGGED" | "REJECTED";
+  provider?: "SARDINE";
+  kycCheckStatus?: "NOT_SUBMITTED" | "PENDING" | "APPROVED" | "FLAGGED" | "REJECTED";
   documentVerificationStatus?:
     | "NOT_REQUIRED"
     | "REQUIRED"

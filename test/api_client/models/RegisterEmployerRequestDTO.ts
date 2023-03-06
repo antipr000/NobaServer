@@ -9,5 +9,6 @@ export type RegisterEmployerRequestDTO = {
   bubbleID: string;
   maxAllocationPercent?: number;
   leadDays?: number;
+  payrollAccountNumber?: string;
   payrollDates?: Array<string>;
 };

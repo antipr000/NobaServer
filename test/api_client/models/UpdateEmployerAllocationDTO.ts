@@ -4,6 +4,6 @@
 
 export type UpdateEmployerAllocationDTO = {
   employerID: string;
-  employerReferralID: string;
+  employerReferralID?: string;
   allocationAmountInPesos: number;
 };

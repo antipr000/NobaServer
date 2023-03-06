@@ -649,6 +649,10 @@ describe("AdminService", () => {
       expect(updateConsumerParams).toStrictEqual({
         id: updatedConsumer1.props.id,
         ...updateRequest,
+        verificationData: {
+          ...updateRequest.verificationData,
+          isSuspectedFraud: false,
+        },
       });
       expect(updatedConsumer).toStrictEqual({
         ...updatedConsumer1.props,

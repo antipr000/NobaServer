@@ -3,6 +3,8 @@
 /* eslint-disable */
 import type { BlankResponseDTO } from "../models/BlankResponseDTO";
 import type { CaseNotificationWebhookRequestDTO } from "../models/CaseNotificationWebhookRequestDTO";
+import type { CreatePayrollRequestDTO } from "../models/CreatePayrollRequestDTO";
+import type { CreatePayrollResponseDTO } from "../models/CreatePayrollResponseDTO";
 import type { DocumentVerificationWebhookRequestDTO } from "../models/DocumentVerificationWebhookRequestDTO";
 import type { EmployerRegisterResponseDTO } from "../models/EmployerRegisterResponseDTO";
 import type { RegisterEmployerRequestDTO } from "../models/RegisterEmployerRequestDTO";
@@ -27,6 +29,29 @@ export class WebhooksService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/webhooks/bubble/employers",
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+
+  /**
+   * Creates payroll for employer in Noba
+   * @returns CreatePayrollResponseDTO
+   * @throws ApiError
+   */
+  public static createPayroll({
+    referralId,
+    requestBody,
+  }: {
+    referralId: string;
+    requestBody: CreatePayrollRequestDTO;
+  }): CancelablePromise<CreatePayrollResponseDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/webhooks/bubble/employers/{referralID}/payroll",
+      path: {
+        referralID: referralId,
+      },
       body: requestBody,
       mediaType: "application/json",
     });

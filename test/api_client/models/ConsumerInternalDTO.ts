@@ -8,7 +8,7 @@ import type { ConsumerInternalKYCDTO } from "./ConsumerInternalKYCDTO";
 import type { ConsumerWalletDetailsDTO } from "./ConsumerWalletDetailsDTO";
 
 export type ConsumerInternalDTO = {
-  id?: string;
+  id: string;
   firstName?: string;
   lastName?: string;
   email?: string;

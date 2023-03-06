@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type EmployerDTO = {
+export type EmployerWorkflowDTO = {
   employerID: string;
   employerName: string;
   employerLogoURI: string;
@@ -11,4 +11,5 @@ export type EmployerDTO = {
   payrollDates: Array<string>;
   nextPayrollDate: string;
   maxAllocationPercent?: number;
+  employees?: Array<string>;
 };
