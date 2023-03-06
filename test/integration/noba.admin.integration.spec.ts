@@ -516,7 +516,7 @@ describe("Noba Admin", () => {
       await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAAA"), "ADMIN");
       const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(nobaAdminEmail);
       setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
-      const newPhone = integrationTestUtils.getRandomPhoneNumber("+1");
+      const newPhone = integrationTestUtils.getRandomPhoneNumber("1");
       const patchConsumerResponse = (await AdminService.updateConsumer({
         consumerId: consumer.id,
         requestBody: {
