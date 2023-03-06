@@ -79,7 +79,7 @@ export class TransactionService {
     if (!payrollDisbursement) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-        message: `Payroll disbursement with ID '${payrollDisbursement}' not found.`,
+        message: `Payroll disbursement with ID '${payrollDisbursementID}' not found.`,
       });
     }
 
@@ -87,7 +87,7 @@ export class TransactionService {
     if (!payroll) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
-        message: `Payroll disbursement with ID '${payrollDisbursement}' exist but corresponding Payroll with ID '${payrollDisbursement.payrollID} not found.'.`,
+        message: `Payroll disbursement with ID '${payrollDisbursement.id}' exist but corresponding Payroll with ID '${payrollDisbursement.payrollID} not found.'.`,
       });
     }
 
