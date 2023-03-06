@@ -14,11 +14,6 @@ import { DeleteNobaAdminDTO } from "../dto/DeleteNobaAdminDTO";
 import { Consumer, ConsumerProps } from "../../consumer/domain/Consumer";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
-import {
-  DocumentVerificationState,
-  KycVerificationState,
-  UserState,
-} from "../../../modules/consumer/domain/ExternalStates";
 import { TransactionService } from "../../../modules/transaction/transaction.service";
 import { KYCStatus, DocumentVerificationStatus, KYCProvider } from "@prisma/client";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
@@ -641,23 +636,29 @@ describe("AdminController", () => {
         },
       };
 
+      const updatedConsumerObj: Consumer = Consumer.createConsumer({
+        ...consumerProps,
+        ...updatedConsumerProps,
+      });
+
       when(mockConsumerService.getAllConsumerWallets("test-consumer-1234")).thenResolve([]);
       when(mockConsumerService.getAllPaymentMethodsForConsumer("test-consumer-1234")).thenResolve([]);
 
-      when(mockConsumerService.getConsumer(consumerProps.id)).thenResolve(Consumer.createConsumer(consumerProps));
+      when(mockConsumerService.getConsumer(consumerProps.id))
+        .thenResolve(Consumer.createConsumer(consumerProps))
+        .thenResolve(updatedConsumerObj);
 
-      when(mockConsumerService.updateConsumer(anything())).thenResolve(
-        Consumer.createConsumer({
-          ...consumerProps,
-          ...updatedConsumerProps,
-        }),
-      );
+      when(mockConsumerService.updateConsumer(anything())).thenResolve(updatedConsumerObj);
+
+      when(mockAdminService.updateConsumer(consumerProps.id, anything())).thenResolve({
+        ...updatedConsumerObj.props,
+      });
 
       const result = await adminController.updateConsumer(
         consumerProps.id,
         {
           verificationData: {
-            kycVerificationStatus: KYCStatus.APPROVED,
+            kycCheckStatus: KYCStatus.APPROVED,
             documentVerificationStatus: DocumentVerificationStatus.APPROVED,
           },
         },
@@ -667,8 +668,8 @@ describe("AdminController", () => {
       );
 
       expect(result.id).toBe(consumerProps.id);
-      expect(result.kycVerificationData.kycVerificationStatus).toBe(KycVerificationState.APPROVED);
-      expect(result.documentVerificationData.documentVerificationStatus).toBe(DocumentVerificationState.VERIFIED);
+      expect(result.verificationData.kycCheckStatus).toBe(KYCStatus.APPROVED);
+      expect(result.verificationData.documentVerificationStatus).toBe(DocumentVerificationStatus.APPROVED);
     });
   });
 

@@ -9,17 +9,24 @@ import { EmployerCreateRequest } from "../domain/Employer";
 import { uuid } from "uuidv4";
 import { IEmployerRepo } from "../repo/employer.repo";
 import { SqlEmployerRepo } from "../repo/sql.employer.repo";
+import { KmsService } from "../../../modules/common/kms.service";
+import { instance, when } from "ts-mockito";
+import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
+import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 
 const getAllEmployerRecords = async (prismaService: PrismaService): Promise<PrismaEmployerModel[]> => {
   return prismaService.employer.findMany({});
 };
 
+const payrollAccountNumber = "1234567890";
+const encryptedPayrollAccountNumber = "[enc]encrypted-acct-num";
 const getRandomEmployer = (): EmployerCreateRequest => {
   const employee: EmployerCreateRequest = {
     bubbleID: uuid(),
     name: "Test Employer",
     referralID: uuid(),
     logoURI: "https://www.google.com",
+    payrollAccountNumber: payrollAccountNumber,
     leadDays: 5,
     payrollDates: ["2020-03-02", "2020-03-01", "2020-02-29"],
   };
@@ -32,8 +39,11 @@ describe("SqlEmployerRepoTests", () => {
   let employerRepo: IEmployerRepo;
   let app: TestingModule;
   let prismaService: PrismaService;
+  let kmsService: KmsService;
 
   beforeAll(async () => {
+    kmsService = getMockKMSServiceWithDefaults();
+
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
@@ -41,7 +51,14 @@ describe("SqlEmployerRepoTests", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SqlEmployerRepo],
+      providers: [
+        PrismaService,
+        SqlEmployerRepo,
+        {
+          provide: KmsService,
+          useFactory: () => instance(kmsService),
+        },
+      ],
     }).compile();
 
     employerRepo = app.get<SqlEmployerRepo>(SqlEmployerRepo);
@@ -52,7 +69,7 @@ describe("SqlEmployerRepoTests", () => {
     app.close();
   });
 
-  beforeEach(async () => {
+  afterEach(async () => {
     await prismaService.employer.deleteMany();
 
     // *****************************  WARNING **********************************
@@ -67,6 +84,7 @@ describe("SqlEmployerRepoTests", () => {
   describe("createEmployer", () => {
     it("should create a new employer and auto-populate ID, createdTimestamp & updatedTimestamp", async () => {
       const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN)).thenResolve(encryptedPayrollAccountNumber);
 
       const createdEmployer = await employerRepo.createEmployer(employer);
 
@@ -79,6 +97,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(createdEmployer.referralID).toEqual(employer.referralID);
       expect(createdEmployer.logoURI).toEqual(employer.logoURI);
       expect(createdEmployer.leadDays).toEqual(employer.leadDays);
+      expect(createdEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(createdEmployer.payrollDates).toEqual(employer.payrollDates);
       expect(createdEmployer.maxAllocationPercent).toBeUndefined();
 
@@ -90,6 +109,7 @@ describe("SqlEmployerRepoTests", () => {
 
     it("should add maxAllocationPercent if provided", async () => {
       const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN)).thenResolve(encryptedPayrollAccountNumber);
       employer.maxAllocationPercent = 20;
 
       const createdEmployer = await employerRepo.createEmployer(employer);
@@ -100,6 +120,7 @@ describe("SqlEmployerRepoTests", () => {
 
     it("should throw an error if the referralID is empty", async () => {
       const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN)).thenResolve(encryptedPayrollAccountNumber);
       employer.referralID = "";
 
       try {
@@ -112,6 +133,7 @@ describe("SqlEmployerRepoTests", () => {
 
     it("should throw an error if the bubbleID is empty", async () => {
       const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN)).thenResolve(encryptedPayrollAccountNumber);
       employer.bubbleID = "";
 
       try {
@@ -124,26 +146,42 @@ describe("SqlEmployerRepoTests", () => {
 
     it("should throw an error if tried to save an Employer with duplicate referralID", async () => {
       const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN))
+        .thenResolve(encryptedPayrollAccountNumber)
+        .thenResolve(encryptedPayrollAccountNumber);
+
       await employerRepo.createEmployer(employer);
 
       const anotherEmployerWithSameReferralID = getRandomEmployer();
       anotherEmployerWithSameReferralID.referralID = employer.referralID;
-      await expect(employerRepo.createEmployer(employer)).rejects.toThrowError(DatabaseInternalErrorException);
+      await expect(employerRepo.createEmployer(anotherEmployerWithSameReferralID)).rejects.toThrowError(
+        DatabaseInternalErrorException,
+      );
     });
 
     it("should throw an error if tried to save an Employer with duplicate bubbleID", async () => {
       const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN))
+        .thenResolve(encryptedPayrollAccountNumber)
+        .thenResolve(encryptedPayrollAccountNumber);
+
       await employerRepo.createEmployer(employer);
 
       const anotherEmployerWithSameBubbleID = getRandomEmployer();
       anotherEmployerWithSameBubbleID.bubbleID = employer.bubbleID;
-      await expect(employerRepo.createEmployer(employer)).rejects.toThrowError(DatabaseInternalErrorException);
+      await expect(employerRepo.createEmployer(anotherEmployerWithSameBubbleID)).rejects.toThrowError(
+        DatabaseInternalErrorException,
+      );
     });
   });
 
   describe("updateEmployer", () => {
     it("should update 'logoURI' of an existing employer", async () => {
       const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN))
+        .thenResolve(encryptedPayrollAccountNumber)
+        .thenResolve(encryptedPayrollAccountNumber);
+
       const createdEmployer = await employerRepo.createEmployer(employer);
 
       const updatedEmployer = await employerRepo.updateEmployer(createdEmployer.id, {
@@ -159,6 +197,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.referralID).toEqual(employer.referralID);
       expect(updatedEmployer.logoURI).toEqual("https://www.non-google.com");
       expect(updatedEmployer.leadDays).toEqual(employer.leadDays);
+      expect(updatedEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(updatedEmployer.payrollDates).toEqual(employer.payrollDates);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
@@ -169,6 +208,9 @@ describe("SqlEmployerRepoTests", () => {
 
     it("should update 'maxAllocationPercent' of an existing employer", async () => {
       const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN))
+        .thenResolve(encryptedPayrollAccountNumber)
+        .thenResolve(encryptedPayrollAccountNumber);
       const createdEmployer = await employerRepo.createEmployer(employer);
 
       const updatedEmployer = await employerRepo.updateEmployer(createdEmployer.id, {
@@ -184,6 +226,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.referralID).toEqual(employer.referralID);
       expect(updatedEmployer.logoURI).toEqual(employer.logoURI);
       expect(updatedEmployer.leadDays).toEqual(employer.leadDays);
+      expect(updatedEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(updatedEmployer.payrollDates).toEqual(employer.payrollDates);
       expect(updatedEmployer.maxAllocationPercent).toEqual(20);
 
@@ -194,6 +237,9 @@ describe("SqlEmployerRepoTests", () => {
 
     it("should update 'referralID' of an existing employer", async () => {
       const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN))
+        .thenResolve(encryptedPayrollAccountNumber)
+        .thenResolve(encryptedPayrollAccountNumber);
       const createdEmployer = await employerRepo.createEmployer(employer);
 
       const updatedEmployer = await employerRepo.updateEmployer(createdEmployer.id, {
@@ -209,6 +255,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.referralID).toEqual("new-referral-id");
       expect(updatedEmployer.logoURI).toEqual(employer.logoURI);
       expect(updatedEmployer.leadDays).toEqual(employer.leadDays);
+      expect(updatedEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(updatedEmployer.payrollDates).toEqual(employer.payrollDates);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
@@ -219,6 +266,9 @@ describe("SqlEmployerRepoTests", () => {
 
     it("should update 'leadDays' of an existing employer", async () => {
       const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN))
+        .thenResolve(encryptedPayrollAccountNumber)
+        .thenResolve(encryptedPayrollAccountNumber);
       const createdEmployer = await employerRepo.createEmployer(employer);
 
       const updatedEmployer = await employerRepo.updateEmployer(createdEmployer.id, {
@@ -234,6 +284,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.referralID).toEqual(employer.referralID);
       expect(updatedEmployer.logoURI).toEqual(employer.logoURI);
       expect(updatedEmployer.leadDays).toEqual(3);
+      expect(updatedEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(updatedEmployer.payrollDates).toEqual(employer.payrollDates);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
@@ -244,6 +295,9 @@ describe("SqlEmployerRepoTests", () => {
 
     it("should update 'payrollDays' of an existing employer", async () => {
       const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN))
+        .thenResolve(encryptedPayrollAccountNumber)
+        .thenResolve(encryptedPayrollAccountNumber);
       const createdEmployer = await employerRepo.createEmployer(employer);
 
       const payrollDates = ["2020-03-14", "2020-03-15"];
@@ -260,6 +314,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.referralID).toEqual(employer.referralID);
       expect(updatedEmployer.logoURI).toEqual(employer.logoURI);
       expect(updatedEmployer.leadDays).toEqual(employer.leadDays);
+      expect(updatedEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(updatedEmployer.payrollDates).toEqual(payrollDates);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
@@ -268,7 +323,43 @@ describe("SqlEmployerRepoTests", () => {
       expect(allEmployers[0]).toEqual(updatedEmployer);
     });
 
+    it("should update 'payrollAccountNumber' of an existing employer", async () => {
+      const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN)).thenResolve(encryptedPayrollAccountNumber);
+      const newPayrollAccountNumber = "11111111111";
+      const newEncryptedPayrollAccountNumber = "[enc]222222222222";
+      when(kmsService.encryptString(newPayrollAccountNumber, KmsKeyType.SSN)).thenResolve(
+        newEncryptedPayrollAccountNumber,
+      );
+      const createdEmployer = await employerRepo.createEmployer(employer);
+
+      const updatedEmployer = await employerRepo.updateEmployer(createdEmployer.id, {
+        payrollAccountNumber: newPayrollAccountNumber,
+      });
+
+      expect(updatedEmployer).toBeDefined();
+      expect(updatedEmployer.id).toBeDefined();
+      expect(updatedEmployer.createdTimestamp).toBeDefined();
+      expect(updatedEmployer.updatedTimestamp).toBeDefined();
+      expect(updatedEmployer.bubbleID).toEqual(employer.bubbleID);
+      expect(updatedEmployer.name).toEqual(employer.name);
+      expect(updatedEmployer.referralID).toEqual(employer.referralID);
+      expect(updatedEmployer.logoURI).toEqual(employer.logoURI);
+      expect(updatedEmployer.leadDays).toEqual(employer.leadDays);
+      expect(updatedEmployer.payrollAccountNumber).toEqual(newEncryptedPayrollAccountNumber);
+      expect(updatedEmployer.payrollDates).toEqual(employer.payrollDates);
+
+      const allEmployers = await getAllEmployerRecords(prismaService);
+      expect(allEmployers.length).toEqual(1);
+      delete allEmployers[0].maxAllocationPercent;
+      expect(allEmployers[0]).toEqual(updatedEmployer);
+    });
+
     it("should update all the specified fields of an existing employer", async () => {
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN))
+        .thenResolve(encryptedPayrollAccountNumber)
+        .thenResolve(encryptedPayrollAccountNumber);
+
       const employer1 = getRandomEmployer();
       const createdEmployer1 = await employerRepo.createEmployer(employer1);
       const employer2 = getRandomEmployer();
@@ -288,6 +379,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.referralID).toEqual("new-referral-id");
       expect(updatedEmployer.logoURI).toEqual("https://www.non-google.com");
       expect(updatedEmployer.leadDays).toEqual(createdEmployer1.leadDays);
+      expect(updatedEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(updatedEmployer.payrollDates).toEqual(createdEmployer1.payrollDates);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
@@ -298,6 +390,10 @@ describe("SqlEmployerRepoTests", () => {
     });
 
     it("should throw exception if updated 'referralID' is a duplicate of another referralID", async () => {
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN))
+        .thenResolve(encryptedPayrollAccountNumber)
+        .thenResolve(encryptedPayrollAccountNumber);
+
       const employer1 = getRandomEmployer();
       const createdEmployer1 = await employerRepo.createEmployer(employer1);
 
@@ -313,6 +409,10 @@ describe("SqlEmployerRepoTests", () => {
 
     it("should throw NotFoundError if the employerID doesn't really exist", async () => {
       const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN))
+        .thenResolve(encryptedPayrollAccountNumber)
+        .thenResolve(encryptedPayrollAccountNumber);
+
       await employerRepo.createEmployer(employer);
 
       await expect(
@@ -326,6 +426,9 @@ describe("SqlEmployerRepoTests", () => {
   describe("getEmployerByID", () => {
     it("should return the employer with the given ID", async () => {
       const employer1 = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN))
+        .thenResolve(encryptedPayrollAccountNumber)
+        .thenResolve(encryptedPayrollAccountNumber);
       const createdEmployer1 = await employerRepo.createEmployer(employer1);
 
       const employer2 = getRandomEmployer();
@@ -345,11 +448,13 @@ describe("SqlEmployerRepoTests", () => {
       expect(foundEmployer.referralID).toEqual(employer1.referralID);
       expect(foundEmployer.logoURI).toEqual(employer1.logoURI);
       expect(foundEmployer.leadDays).toEqual(employer1.leadDays);
+      expect(foundEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(foundEmployer.payrollDates).toEqual(employer1.payrollDates);
     });
 
     it("should throw 'null' if the employerID doesn't really exist", async () => {
       const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN)).thenResolve(encryptedPayrollAccountNumber);
       await employerRepo.createEmployer(employer);
 
       const foundEmployer = await employerRepo.getEmployerByID("non-existing-id");
@@ -362,6 +467,10 @@ describe("SqlEmployerRepoTests", () => {
     it("should return the employer with specified referralID", async () => {
       const employer1 = getRandomEmployer();
       const employer2 = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN))
+        .thenResolve(encryptedPayrollAccountNumber)
+        .thenResolve(encryptedPayrollAccountNumber);
+
       await employerRepo.createEmployer(employer1);
       await employerRepo.createEmployer(employer2);
 
@@ -376,11 +485,13 @@ describe("SqlEmployerRepoTests", () => {
       expect(foundEmployer.referralID).toEqual(employer1.referralID);
       expect(foundEmployer.logoURI).toEqual(employer1.logoURI);
       expect(foundEmployer.leadDays).toEqual(employer1.leadDays);
+      expect(foundEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(foundEmployer.payrollDates).toEqual(employer1.payrollDates);
     });
 
     it("should throw 'null' if no Employer with referralID doesn't really exist", async () => {
       const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN)).thenResolve(encryptedPayrollAccountNumber);
       await employerRepo.createEmployer(employer);
 
       const foundEmployer = await employerRepo.getEmployerByReferralID("non-existing-id");
@@ -393,6 +504,9 @@ describe("SqlEmployerRepoTests", () => {
     it("should return the employer with specified bubbleID", async () => {
       const employer1 = getRandomEmployer();
       const employer2 = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN))
+        .thenResolve(encryptedPayrollAccountNumber)
+        .thenResolve(encryptedPayrollAccountNumber);
       await employerRepo.createEmployer(employer1);
       await employerRepo.createEmployer(employer2);
 
@@ -407,11 +521,13 @@ describe("SqlEmployerRepoTests", () => {
       expect(foundEmployer.referralID).toEqual(employer1.referralID);
       expect(foundEmployer.logoURI).toEqual(employer1.logoURI);
       expect(foundEmployer.leadDays).toEqual(employer1.leadDays);
+      expect(foundEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(foundEmployer.payrollDates).toEqual(employer1.payrollDates);
     });
 
     it("should throw 'null' if no Employer with bubbleID doesn't really exist", async () => {
       const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN)).thenResolve(encryptedPayrollAccountNumber);
       await employerRepo.createEmployer(employer);
 
       const foundEmployer = await employerRepo.getEmployerByBubbleID("non-existing-id");

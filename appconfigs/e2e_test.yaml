@@ -177,6 +177,7 @@ bubble:
 dependencies:
   emailClient: "STUB"
   smsClient: "STUB"
+  dashboardClient: "STUB"
 
 locationDataFileName: "countries+states.json"
 dbDumpFilesBucketPath: "dump"

@@ -5,7 +5,6 @@ import { Logger } from "winston";
 import { Consumer } from "../consumer/domain/Consumer";
 import { Employee, EmployeeAllocationCurrency } from "../employee/domain/Employee";
 import { EmployeeService } from "../employee/employee.service";
-import { BubbleClient } from "./bubble.client";
 import {
   RegisterEmployerRequest,
   UpdateNobaEmployeeRequest,
@@ -13,12 +12,15 @@ import {
 } from "./dto/bubble.service.dto";
 import { EmployerService } from "../employer/employer.service";
 import { Employer } from "../employer/domain/Employer";
+import { Payroll } from "../employer/domain/Payroll";
+import { NotificationService } from "../notifications/notification.service";
+import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 
 @Injectable()
 export class BubbleService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-    private readonly bubbleClient: BubbleClient,
+    private readonly notificationService: NotificationService,
     private readonly employeeService: EmployeeService,
     private readonly employerService: EmployerService,
   ) {}
@@ -35,7 +37,7 @@ export class BubbleService {
 
     const employer: Employer = await this.employerService.getEmployerByID(nobaEmployee.employerID);
 
-    await this.bubbleClient.registerNewEmployee({
+    await this.notificationService.sendNotification(NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT, {
       email: consumer.props.email,
       firstName: consumer.props.firstName,
       lastName: consumer.props.lastName,
@@ -47,7 +49,13 @@ export class BubbleService {
   }
 
   async updateEmployeeAllocationInBubble(nobaEmployeeID: string, allocationAmount: number): Promise<void> {
-    return this.bubbleClient.updateEmployeeAllocationAmount(nobaEmployeeID, allocationAmount);
+    await this.notificationService.sendNotification(
+      NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
+      {
+        nobaEmployeeID,
+        allocationAmountInPesos: allocationAmount,
+      },
+    );
   }
 
   async registerEmployerInNoba(request: RegisterEmployerRequest): Promise<string> {
@@ -56,6 +64,7 @@ export class BubbleService {
       referralID: request.referralID,
       logoURI: request.logoURI,
       bubbleID: request.bubbleID,
+      ...(request.payrollAccountNumber && { payrollAccountNumber: request.payrollAccountNumber }),
       ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
       ...(request.leadDays && { leadDays: request.leadDays }),
       ...(request.payrollDates && { payrollDates: request.payrollDates }),
@@ -77,6 +86,7 @@ export class BubbleService {
       leadDays: request.leadDays,
       logoURI: request.logoURI,
       payrollDates: request.payrollDates,
+      payrollAccountNumber: request.payrollAccountNumber,
       maxAllocationPercent: request.maxAllocationPercent,
     });
 
@@ -111,5 +121,17 @@ export class BubbleService {
     if (updatedEmployee?.allocationAmount !== employee.allocationAmount) {
       await this.updateEmployeeAllocationInBubble(employeeID, updatedEmployee.allocationAmount);
     }
+  }
+
+  async createPayroll(referralID: string, payrollDate: string): Promise<Payroll> {
+    const employer = await this.employerService.getEmployerByReferralID(referralID);
+    if (!employer) {
+      throw new ServiceException({
+        message: `No employer found with referralID: ${referralID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    return this.employerService.createPayroll(employer.id, payrollDate);
   }
 }

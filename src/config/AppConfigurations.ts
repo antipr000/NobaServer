@@ -132,6 +132,7 @@ import {
   DEPENDENCY_SMS_CLIENT,
   NOBA_ADMIN_BEARER_TOKEN,
   AWS_SECRET_KEY_FOR_NOBA_ADMIN_BEARER_TOKEN,
+  DEPENDENCY_DASHBOARD_CLIENT,
 } from "./ConfigurationUtils";
 import fs from "fs";
 
@@ -145,7 +146,7 @@ import { CommonConfigs } from "./configtypes/CommonConfigs";
 import { CheckoutConfigs } from "./configtypes/CheckoutConfigs";
 import { EllipticConfigs } from "./configtypes/EllipticConfig";
 import { PlaidConfigs } from "./configtypes/PlaidConfigs";
-import { DependencyConfigs, EmailClient, SMSClient } from "./configtypes/DependencyConfigs";
+import { DashboardClient, DependencyConfigs, EmailClient, SMSClient } from "./configtypes/DependencyConfigs";
 import { CircleConfigs, isValidCircleEnvironment } from "./configtypes/CircleConfigs";
 import { NobaWorkflowConfig } from "./configtypes/NobaWorkflowConfig";
 import { MonoConfigs } from "./configtypes/MonoConfig";
@@ -519,7 +520,7 @@ async function configureDependencies(
   if (dependencyConfigs === undefined) {
     const errorMessage =
       "\n'Dependencies' configurations are required. Please configure the dependencies in 'appconfigs/<ENV>.yaml' file.\n" +
-      `You should configure the key "${DEPENDENCY_CONFIG_KEY}" and populate "${DEPENDENCY_EMAIL_CLIENT}" and "${DEPENDENCY_SMS_CLIENT}"\n`;
+      `You should configure the key "${DEPENDENCY_CONFIG_KEY}" and populate "${DEPENDENCY_EMAIL_CLIENT}" and "${DEPENDENCY_SMS_CLIENT}" and "${DEPENDENCY_DASHBOARD_CLIENT}"\n`;
 
     throw Error(errorMessage);
   }
@@ -533,6 +534,12 @@ async function configureDependencies(
   const allowedSMSClients = [SMSClient.STUB, SMSClient.TWILIO];
   if (!allowedSMSClients.includes(dependencyConfigs.smsClient)) {
     const errorMessage = `"${DEPENDENCY_SMS_CLIENT}" should be one of ${allowedSMSClients}`;
+    throw Error(errorMessage);
+  }
+
+  const allowedDashboardClients = [DashboardClient.STUB, DashboardClient.BUBBLE];
+  if (!allowedDashboardClients.includes(dependencyConfigs.dashboardClient)) {
+    const errorMessage = `"${DEPENDENCY_DASHBOARD_CLIENT}" should be one of ${allowedDashboardClients}`;
     throw Error(errorMessage);
   }
 

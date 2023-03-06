@@ -1818,7 +1818,15 @@ describe("ConsumerService", () => {
       );
     });
 
-    it("should register an Employee successfully", async () => {
+    it("should not throw ServiceException if Employer found with ID and employerReferralID is not supplied", async () => {
+      when(employerService.getEmployerByID("123456789")).thenResolve(null);
+
+      await expect(consumerService.registerWithAnEmployer("123456789", null, "test", 10)).rejects.toThrow(
+        ServiceException,
+      );
+    });
+
+    it("should register an Employee successfully by referralID", async () => {
       const consumer = getRandomConsumer();
       const employer = getRandomEmployer();
       const employee = getRandomEmployee(consumer.props.id, employer.id);
@@ -1837,7 +1845,7 @@ describe("ConsumerService", () => {
       expect(propagatedConsumer).toEqual(consumer);
     });
 
-    it("should register an Employee by ID successfully", async () => {
+    it("should register an Employee by ID successfully with no referralID", async () => {
       const consumer = getRandomConsumer();
       const employer = getRandomEmployer();
       const employee = getRandomEmployee(consumer.props.id, employer.id);
@@ -1847,12 +1855,7 @@ describe("ConsumerService", () => {
       when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(bubbleService.createEmployeeInBubble(anyString(), anything())).thenResolve();
 
-      const response = await consumerService.registerWithAnEmployer(
-        employer.id,
-        employer.referralID,
-        consumer.props.id,
-        100,
-      );
+      const response = await consumerService.registerWithAnEmployer(employer.id, null, consumer.props.id, 100);
 
       expect(response).toEqual(employee);
 
@@ -1888,18 +1891,19 @@ describe("ConsumerService", () => {
       }
     });
 
-    it("should throw ServiceException if Employer with specified employerReferralID is undefined or null", async () => {
+    it("should throw ServiceException if Employer ID and employerReferralID is undefined or null", async () => {
       try {
-        await consumerService.updateEmployerAllocationAmount("employerID", undefined, "consumerID", 10);
+        await consumerService.updateEmployerAllocationAmount(undefined, undefined, "consumerID", 10);
         expect(true).toBeFalsy();
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);
+        expect(err.message).toEqual(expect.stringContaining("'employerID'"));
         expect(err.message).toEqual(expect.stringContaining("'employerReferralID'"));
         expect(err.errorCode).toEqual(ServiceErrorCode.SEMANTIC_VALIDATION);
       }
 
       try {
-        await consumerService.updateEmployerAllocationAmount("employerID", null, "consumerID", 10);
+        await consumerService.updateEmployerAllocationAmount(null, null, "consumerID", 10);
         expect(true).toBeFalsy();
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);
@@ -1936,7 +1940,7 @@ describe("ConsumerService", () => {
         expect(true).toBeFalsy();
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);
-        expect(err.message).toEqual(expect.stringContaining("'referralID'"));
+        expect(err.message).toEqual(expect.stringContaining("supplied identifier"));
         expect(err.errorCode).toEqual(ServiceErrorCode.DOES_NOT_EXIST);
       }
     });

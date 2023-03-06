@@ -98,7 +98,7 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
     }
   }
 
-  async getPayrollDisbursementById(id: string): Promise<PayrollDisbursement> {
+  async getPayrollDisbursementByID(id: string): Promise<PayrollDisbursement> {
     try {
       const returnedPayrollDisbursement: PrismaPayrollDisbursementModel =
         await this.prismaService.payrollDisbursement.findUnique({
@@ -131,6 +131,18 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
         where: { payrollID },
       });
       return allDisbursementsForPayroll.map(disbursement => convertToDomainPayrollDisbursement(disbursement));
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      return [];
+    }
+  }
+
+  async getAllDisbursementsForPayroll(payrollID: string): Promise<PayrollDisbursement[]> {
+    try {
+      const allDisburementsForEmployee = await this.prismaService.payrollDisbursement.findMany({
+        where: { payrollID },
+      });
+      return allDisburementsForEmployee.map(disbursement => convertToDomainPayrollDisbursement(disbursement));
     } catch (err) {
       this.logger.error(JSON.stringify(err));
       return [];

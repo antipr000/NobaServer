@@ -58,22 +58,24 @@ export class ConsumerRepoMapper {
         socialSecurityNumber: consumerUpdateProps.socialSecurityNumber,
       }),
       ...(consumerUpdateProps.referredByID && { referredByID: consumerUpdateProps.referredByID }),
-      ...(consumerUpdateProps.address && {
-        address: {
-          upsert: {
-            create: this.toAddressInput(consumerUpdateProps.address),
-            update: this.toAddressInput(consumerUpdateProps.address),
+      ...(consumerUpdateProps.address &&
+        Object.keys(consumerUpdateProps.address).length > 0 && {
+          address: {
+            upsert: {
+              create: this.toAddressInput(consumerUpdateProps.address),
+              update: this.toAddressInput(consumerUpdateProps.address),
+            },
           },
-        },
-      }),
-      ...(consumerUpdateProps.verificationData && {
-        verificationData: {
-          upsert: {
-            update: this.toVerificationDataInput(consumerUpdateProps.verificationData),
-            create: this.toVerificationDataInput(consumerUpdateProps.verificationData),
+        }),
+      ...(consumerUpdateProps.verificationData &&
+        Object.keys(consumerUpdateProps.verificationData).length > 0 && {
+          verificationData: {
+            upsert: {
+              update: this.toVerificationDataInput(consumerUpdateProps.verificationData),
+              create: this.toVerificationDataInput(consumerUpdateProps.verificationData),
+            },
           },
-        },
-      }),
+        }),
     };
   }
 

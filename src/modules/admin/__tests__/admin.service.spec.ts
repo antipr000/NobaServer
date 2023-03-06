@@ -24,6 +24,9 @@ import { getMockConsumerMapperWithDefaults } from "../../../modules/consumer/moc
 import { getMockCircleServiceWithDefaults } from "../../../modules/psp/mocks/mock.circle.service";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 import { Employee } from "../../../modules/employee/domain/Employee";
+import { DocumentVerificationStatus, KYCProvider, KYCStatus } from "@prisma/client";
+import { AdminUpdateConsumerRequestDTO } from "../dto/AdminUpdateConsumerRequestDTO";
+import { ConsumerInternalDTO } from "../../../modules/consumer/dto/ConsumerInternalDTO";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);
@@ -471,6 +474,192 @@ describe("AdminService", () => {
           ],
         },
       ]);
+    });
+  });
+
+  describe("updateConsumer", () => {
+    it("should update a consumer with new values, ignoring unchanged values, and emptying values that got cleared", async () => {
+      const consumer1 = Consumer.createConsumer({
+        id: "1111111111",
+        firstName: "Rosie",
+        lastName: "Noba",
+        handle: "rosie-noba",
+        email: "rosie@noba.com",
+        phone: "+1234567890",
+        referralCode: "rosie-referral-code",
+        referredByID: "referred-by-1",
+        address: {
+          countryCode: "US",
+        },
+      });
+
+      const newFirstname = "Rosalie";
+      const newReferredByID = "";
+
+      const updateRequest: AdminUpdateConsumerRequestDTO = {
+        firstName: newFirstname, // Updated first name
+        lastName: consumer1.props.lastName, // Same old last name
+        referredByID: newReferredByID, // Empty referred by ID
+      };
+
+      const updatedConsumer1: Consumer = Consumer.createConsumer({
+        ...consumer1.props,
+        firstName: newFirstname,
+        referredByID: null, // Empty gets converted to null
+      });
+
+      const consumerInternalDTO: ConsumerInternalDTO = {
+        ...updatedConsumer1.props,
+        address: {
+          ...(consumer1.props.address as any),
+        },
+        verificationData: {
+          ...(consumer1.props.verificationData as any),
+        },
+      };
+
+      when(consumerService.getConsumer(consumer1.props.id)).thenResolve(consumer1);
+      when(consumerService.updateConsumer(anything())).thenResolve(updatedConsumer1);
+
+      when(consumerMapper.toConsumerInternalDTO(anything())).thenReturn(consumerInternalDTO);
+      when(circleService.getOrCreateWallet(consumer1.props.id)).thenResolve("wallet-id-1");
+      when(employeeService.getEmployeesForConsumerID(consumer1.props.id, true)).thenResolve([]);
+
+      const updatedConsumer = await adminService.updateConsumer(consumer1.props.id, updateRequest);
+
+      const [updateConsumerParams] = capture(consumerService.updateConsumer).last();
+      expect(updateConsumerParams).toStrictEqual({
+        id: consumer1.props.id,
+        firstName: updatedConsumer1.props.firstName,
+        referredByID: updatedConsumer1.props.referredByID,
+      });
+
+      expect(updatedConsumer).toEqual({
+        ...updatedConsumer1.props,
+        verificationData: {},
+        employeeDetails: [],
+        walletDetails: [
+          {
+            walletProvider: "Circle",
+            walletID: "wallet-id-1",
+          },
+        ],
+      });
+    });
+
+    it("should update every allowable field in consumer", async () => {
+      const consumer1 = Consumer.createConsumer({
+        id: "1111111111",
+        firstName: "Rosie",
+        lastName: "Noba",
+        email: "rosie@noba.com",
+        phone: "+1234567890",
+        dateOfBirth: "1990-01-01",
+        handle: "rosie-noba",
+        address: {
+          streetLine1: "123 Main St",
+          streetLine2: "Apt 1",
+          city: "San Francisco",
+          regionCode: "CA",
+          postalCode: "94105",
+          countryCode: "US",
+        },
+        isLocked: false,
+        isDisabled: false,
+        referralCode: "rosie-referral-code",
+        referredByID: "referred-by-1",
+        verificationData: {
+          provider: KYCProvider.SARDINE,
+          kycCheckStatus: KYCStatus.PENDING,
+          documentVerificationStatus: DocumentVerificationStatus.PENDING,
+        },
+      });
+
+      const updateRequest: AdminUpdateConsumerRequestDTO = {
+        firstName: "Rosie-Update",
+        lastName: "Noba-Update",
+        email: "rosie-update@noba.com",
+        phone: "+12345678901",
+        dateOfBirth: "1990-01-02",
+        handle: "rosie-noba-update",
+        address: {
+          streetLine1: "123 Main St-update",
+          streetLine2: "Apt 1 Update",
+          city: "Miami",
+          regionCode: "FL",
+          postalCode: "23927",
+          countryCode: "CO",
+        },
+        isLocked: true,
+        isDisabled: true,
+        referredByID: "referred-by-1-update",
+        verificationData: {
+          provider: "Updated" as any,
+          kycCheckStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+        },
+      };
+
+      const updatedConsumer1: Consumer = Consumer.createConsumer({
+        ...consumer1.props,
+        firstName: "Rosie-Update",
+        lastName: "Noba-Update",
+        email: "rosie-update@noba.com",
+        phone: "+12345678901",
+        dateOfBirth: "1990-01-02",
+        handle: "rosie-noba-update",
+        address: {
+          streetLine1: "123 Main St-update",
+          streetLine2: "Apt 1 Update",
+          city: "Miami",
+          regionCode: "FL",
+          postalCode: "23927",
+          countryCode: "CO",
+        },
+        isLocked: true,
+        isDisabled: true,
+        referredByID: "referred-by-1-update",
+        verificationData: {
+          provider: "Updated" as any,
+          kycCheckStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+        },
+      });
+
+      const consumerInternalDTO: ConsumerInternalDTO = {
+        ...updatedConsumer1.props,
+        address: {
+          ...updatedConsumer1.props.address,
+        },
+        verificationData: {
+          ...updatedConsumer1.props.verificationData,
+        },
+      };
+
+      when(consumerService.getConsumer(consumer1.props.id)).thenResolve(consumer1);
+      when(consumerService.updateConsumer(anything())).thenResolve(updatedConsumer1);
+
+      when(consumerMapper.toConsumerInternalDTO(anything())).thenReturn(consumerInternalDTO);
+      when(circleService.getOrCreateWallet(consumer1.props.id)).thenResolve("wallet-id-1");
+      when(employeeService.getEmployeesForConsumerID(consumer1.props.id, true)).thenResolve([]);
+
+      const updatedConsumer = await adminService.updateConsumer(consumer1.props.id, updateRequest);
+
+      const [updateConsumerParams] = capture(consumerService.updateConsumer).last();
+      expect(updateConsumerParams).toStrictEqual({
+        id: updatedConsumer1.props.id,
+        ...updateRequest,
+      });
+      expect(updatedConsumer).toStrictEqual({
+        ...updatedConsumer1.props,
+        employeeDetails: [],
+        walletDetails: [
+          {
+            walletProvider: "Circle",
+            walletID: "wallet-id-1",
+          },
+        ],
+      });
     });
   });
 });

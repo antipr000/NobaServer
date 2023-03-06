@@ -11,6 +11,7 @@ export class Employer {
   leadDays: number;
   maxAllocationPercent?: number;
   payrollDates: string[];
+  payrollAccountNumber?: string;
   createdTimestamp: Date;
   updatedTimestamp: Date;
 }
@@ -38,6 +39,7 @@ export class EmployerCreateRequest {
   bubbleID: string;
   leadDays: number;
   maxAllocationPercent?: number;
+  payrollAccountNumber?: string;
   payrollDates: string[];
 }
 
@@ -46,6 +48,7 @@ export class EmployerUpdateRequest {
   referralID?: string;
   leadDays?: number;
   payrollDates?: string[];
+  payrollAccountNumber?: string;
   maxAllocationPercent?: number;
 }
 
@@ -57,6 +60,7 @@ export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) =
     bubbleID: Joi.string().required(),
     maxAllocationPercent: Joi.number().optional(),
     leadDays: Joi.number().required(),
+    payrollAccountNumber: Joi.string().optional(),
     // Dates should be in YYYY-MM-DD format
     payrollDates: Joi.array()
       .items(Joi.string().pattern(/^\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01])$/))
@@ -75,6 +79,7 @@ export const validateUpdateEmployerRequest = (employer: EmployerUpdateRequest) =
     logoURI: Joi.string().optional(),
     referralID: Joi.string().optional(),
     leadDays: Joi.number().optional(),
+    payrollAccountNumber: Joi.string().optional(),
     payrollDates: Joi.array()
       .items(Joi.string().pattern(/^\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01])$/))
       .optional(),
@@ -97,6 +102,7 @@ export const validateEmployer = (employer: Employer) => {
     bubbleID: Joi.string().required(),
     leadDays: Joi.number().required(),
     maxAllocationPercent: Joi.number().optional(),
+    payrollAccountNumber: Joi.string().optional(),
     payrollDates: Joi.array()
       .items(Joi.string().pattern(/^\d{4}-([0]\d|1[0-2])-([0-2]\d|3[01])$/))
       .optional(),
@@ -121,6 +127,7 @@ export const convertToDomainEmployer = (employer: PrismaEmployerModel): Employer
     ...(employer.maxAllocationPercent && { maxAllocationPercent: employer.maxAllocationPercent }),
     leadDays: employer.leadDays,
     payrollDates: employer.payrollDates,
+    payrollAccountNumber: employer.payrollAccountNumber,
     createdTimestamp: employer.createdTimestamp,
     updatedTimestamp: employer.updatedTimestamp,
   };

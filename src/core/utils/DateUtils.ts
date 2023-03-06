@@ -106,3 +106,20 @@ export function isValidDateOfBirth(dateString: string): boolean {
 
   return true;
 }
+
+/**
+ * Returns true if date string is valid and YYYY-MM-DD format
+ * @param dateString
+ * @returns {boolean}
+ * @example isValidDateString("2021-02-05") // true
+ *
+ * Copied from: https://stackoverflow.com/questions/18758772/how-do-i-validate-a-date-in-this-format-yyyy-mm-dd-using-jquery
+ */
+export function isValidDateString(dateString: string): boolean {
+  const regEx = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateString.match(regEx)) return false; // Invalid format
+  const d = new Date(dateString);
+  const dNum = d.getTime();
+  if (!dNum && dNum !== 0) return false; // NaN value, Invalid date
+  return d.toISOString().slice(0, 10) === dateString;
+}

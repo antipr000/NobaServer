@@ -204,8 +204,15 @@ export class ConsumerService {
       ...consumerProps,
     });
 
-    const updatedConsumer = await this.consumerRepo.updateConsumer(consumer.props.id, consumerProps);
-    return updatedConsumer;
+    try {
+      return await this.consumerRepo.updateConsumer(consumer.props.id, consumerProps);
+    } catch (e) {
+      this.logger.error(`updateConsumer failed with error: ${e}`);
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+        message: "Database error updating consumer. Confirm your input values and see logs for details.",
+      });
+    }
   }
 
   async sendOtpToPhone(consumerID: string, phone: string) {
@@ -636,7 +643,7 @@ export class ConsumerService {
 
     if (!employer) {
       throw new ServiceException({
-        message: `Employer with referral ID ${employerReferralID} does not exist`,
+        message: `Employer does not exist with the supplied reference`,
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
       });
     }
@@ -676,9 +683,9 @@ export class ConsumerService {
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
-    if (!employerReferralID) {
+    if (!employerID && !employerReferralID) {
       throw new ServiceException({
-        message: "'employerReferralID' should be provided",
+        message: "'employerID' or 'employerReferralID' (deprecated) should be provided",
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
@@ -692,7 +699,7 @@ export class ConsumerService {
 
     if (!employer) {
       throw new ServiceException({
-        message: `Employer with 'referralID' ${employerReferralID} does not exist`,
+        message: `Employer does not exist with the supplied identifier`,
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
       });
     }

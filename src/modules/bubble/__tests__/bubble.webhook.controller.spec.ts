@@ -3,14 +3,16 @@ import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { anyString, anything, capture, instance, when } from "ts-mockito";
-import { BubbleWorkflowController } from "../bubble.workflow.controller";
+import { BubbleWebhookController } from "../bubble.webhook.controller";
 import { BubbleService } from "../bubble.service";
 import { getMockBubbleServiceWithDefaults } from "../mocks/mock.bubble.service";
+import { getRandomPayroll } from "../../../modules/employer/test_utils/payroll.test.utils";
+import { BadRequestException } from "@nestjs/common";
 
-describe("BubbleWorkflowControllerTests", () => {
+describe("BubbleWebhookControllerTests", () => {
   jest.setTimeout(20000);
 
-  let bubbleWorkflowController: BubbleWorkflowController;
+  let bubbleWebhookController: BubbleWebhookController;
   let bubbleService: BubbleService;
   let app: TestingModule;
 
@@ -29,11 +31,11 @@ describe("BubbleWorkflowControllerTests", () => {
           provide: BubbleService,
           useFactory: () => instance(bubbleService),
         },
-        BubbleWorkflowController,
+        BubbleWebhookController,
       ],
     }).compile();
 
-    bubbleWorkflowController = app.get<BubbleWorkflowController>(BubbleWorkflowController);
+    bubbleWebhookController = app.get<BubbleWebhookController>(BubbleWebhookController);
   });
 
   afterEach(async () => {
@@ -50,7 +52,7 @@ describe("BubbleWorkflowControllerTests", () => {
       };
       when(bubbleService.registerEmployerInNoba(anything())).thenResolve("nobaEmployerID");
 
-      const result = await bubbleWorkflowController.registerEmployer(requestBody);
+      const result = await bubbleWebhookController.registerEmployer(requestBody);
 
       expect(result.nobaEmployerID).toEqual("nobaEmployerID");
 
@@ -73,7 +75,7 @@ describe("BubbleWorkflowControllerTests", () => {
       };
       when(bubbleService.registerEmployerInNoba(anything())).thenResolve("nobaEmployerID");
 
-      const result = await bubbleWorkflowController.registerEmployer(requestBody);
+      const result = await bubbleWebhookController.registerEmployer(requestBody);
 
       expect(result.nobaEmployerID).toEqual("nobaEmployerID");
 
@@ -98,7 +100,7 @@ describe("BubbleWorkflowControllerTests", () => {
       };
       when(bubbleService.registerEmployerInNoba(anything())).thenResolve("nobaEmployerID");
 
-      const result = await bubbleWorkflowController.registerEmployer(requestBody);
+      const result = await bubbleWebhookController.registerEmployer(requestBody);
 
       expect(result.nobaEmployerID).toEqual("nobaEmployerID");
 
@@ -123,7 +125,7 @@ describe("BubbleWorkflowControllerTests", () => {
       };
       when(bubbleService.registerEmployerInNoba(anything())).thenResolve("nobaEmployerID");
 
-      const result = await bubbleWorkflowController.registerEmployer(requestBody);
+      const result = await bubbleWebhookController.registerEmployer(requestBody);
 
       expect(result.nobaEmployerID).toEqual("nobaEmployerID");
 
@@ -149,7 +151,7 @@ describe("BubbleWorkflowControllerTests", () => {
       };
       when(bubbleService.updateEmployerInNoba(anyString(), anything())).thenResolve();
 
-      await bubbleWorkflowController.updateEmployer(requestBody, referralID);
+      await bubbleWebhookController.updateEmployer(requestBody, referralID);
 
       const [bubbleServiceUpdateEmployerInNobaReferralIDArgs, bubbleServiceUpdateEmployerInNobaRequestBodyArgs] =
         capture(bubbleService.updateEmployerInNoba).last();
@@ -172,7 +174,7 @@ describe("BubbleWorkflowControllerTests", () => {
 
       when(bubbleService.updateEmployee(anyString(), anything())).thenResolve();
 
-      await bubbleWorkflowController.updateEmployee(requestBody, employeeID);
+      await bubbleWebhookController.updateEmployee(requestBody, employeeID);
 
       const [bubbleServiceUpdateEmployeeEmployeeIDArgs, bubbleServiceUpdateEmployeeRequestBodyArgs] = capture(
         bubbleService.updateEmployee,
@@ -181,6 +183,63 @@ describe("BubbleWorkflowControllerTests", () => {
       expect(bubbleServiceUpdateEmployeeRequestBodyArgs).toEqual({
         salary: 1000,
       });
+    });
+  });
+
+  describe("createPayroll", () => {
+    it("should return payroll id after creation", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const referralID = "fake-referral";
+
+      when(bubbleService.createPayroll(referralID, payroll.payrollDate)).thenResolve(payroll);
+
+      const result = await bubbleWebhookController.createPayroll(referralID, { payrollDate: payroll.payrollDate });
+
+      expect(result).toStrictEqual({ payrollID: payroll.id });
+    });
+
+    it("should throw 'BadRequestException' when payrollDate is malformed", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const referralID = "fake-referral";
+
+      when(bubbleService.createPayroll(referralID, payroll.payrollDate)).thenResolve(payroll);
+      await expect(
+        async () => await bubbleWebhookController.createPayroll(referralID, { payrollDate: "01/01/2020" }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it("should throw 'BadRequestException' when payrollDate is not a valid date", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const referralID = "fake-referral";
+
+      when(bubbleService.createPayroll(referralID, payroll.payrollDate)).thenResolve(payroll);
+
+      await expect(
+        async () => await bubbleWebhookController.createPayroll(referralID, { payrollDate: "2020-01-32" }),
+      ).rejects.toThrow(BadRequestException);
+
+      await expect(
+        async () => await bubbleWebhookController.createPayroll(referralID, { payrollDate: "2020-01-32" }),
+      ).rejects.toThrow("Invalid payrollDate");
+    });
+
+    it("should throw 'BadRequestException' when payrollDate does not account for leap year", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const referralID = "fake-referral";
+
+      when(bubbleService.createPayroll(referralID, payroll.payrollDate)).thenResolve(payroll);
+
+      await expect(
+        async () => await bubbleWebhookController.createPayroll(referralID, { payrollDate: "2021-02-29" }),
+      ).rejects.toThrow(BadRequestException);
+
+      await expect(
+        async () => await bubbleWebhookController.createPayroll(referralID, { payrollDate: "2021-02-29" }),
+      ).rejects.toThrow("Invalid payrollDate");
     });
   });
 });
