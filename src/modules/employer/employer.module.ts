@@ -10,7 +10,6 @@ import { CommonModule } from "../common/common.module";
 import { EmployerWorkflowController } from "./employer.workflow.controller";
 import { PayrollWorkflowController } from "./payroll.workflow.controller";
 import { NotificationsModule } from "../notifications/notification.module";
-import puppeteer from "puppeteer";
 
 @Module({
   imports: [
@@ -22,18 +21,7 @@ import puppeteer from "puppeteer";
     PayrollRepoModule,
   ],
   controllers: [EmployerController, EmployerWorkflowController, PayrollWorkflowController],
-  providers: [
-    EmployerService,
-    TemplateService,
-    {
-      provide: "PUPPETEER_INSTANCE",
-      useFactory: async () => {
-        return await puppeteer.launch({
-          headless: true,
-        });
-      },
-    },
-  ],
+  providers: [EmployerService, TemplateService],
   exports: [EmployerService],
 })
 export class EmployerModule {}

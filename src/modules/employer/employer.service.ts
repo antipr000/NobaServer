@@ -37,7 +37,7 @@ import { Currency } from "../transaction/domain/TransactionTypes";
 import { isValidDateString } from "../../core/utils/DateUtils";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
-import puppeteer, { Browser, PuppeteerNode } from "puppeteer";
+import puppeteer, { Browser } from "puppeteer";
 
 @Injectable()
 export class EmployerService {
@@ -58,7 +58,6 @@ export class EmployerService {
   private readonly notificationService: NotificationService;
 
   constructor(
-    @Inject("PUPPETEER_INSTANCE") private readonly browser: Browser,
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
     @Inject(PAYROLL_REPO_PROVIDER) private readonly payrollRepo: IPayrollRepo,
     @Inject(PAYROLL_DISBURSEMENT_REPO_PROVIDER) private readonly payrollDisbursementRepo: IPayrollDisbursementRepo,
@@ -275,7 +274,7 @@ export class EmployerService {
       this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_es.html`, html_es),
     ]);
 
-    const browser = await this.browser.newPage();
+    const browser = await puppeteer.launch({ headless: true });
 
     const [pdf_en, pdf_es] = await Promise.all([
       this.generatePayrollPDF(browser, html_en, `inv_${payrollID}_en.pdf`),
