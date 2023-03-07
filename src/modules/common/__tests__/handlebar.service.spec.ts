@@ -4,7 +4,7 @@ import { AWS_ACCESS_KEY_ID_ATTR, AWS_SECRET_ACCESS_KEY_ATTR } from "../../../con
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { readConfigsFromYamlFiles } from "../../../core/utils/YamlJsonUtils";
-import { TemplateService } from "../handlebar.service";
+import { TemplateService } from "../template.service";
 
 describe("HandlebarService", () => {
   let handlebarService: TemplateService;

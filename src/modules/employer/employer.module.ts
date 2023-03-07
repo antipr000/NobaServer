@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
-import { TemplateService } from "../common/handlebar.service";
+import { TemplateService } from "../common/template.service";
 import { EmployerController } from "./employer.controller";
 import { EmployerService } from "./employer.service";
 import { PayrollRepoModule } from "./repo/payroll.repo.module";

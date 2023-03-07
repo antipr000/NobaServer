@@ -18,7 +18,7 @@ import dayjs from "dayjs";
 import Handlebars from "handlebars";
 import { ConsumerService } from "../consumer/consumer.service";
 import { EmployeeService } from "../employee/employee.service";
-import { TemplateService } from "../common/handlebar.service";
+import { TemplateService } from "../common/template.service";
 import "dayjs/locale/es";
 import { IPayrollRepo } from "./repo/payroll.repo";
 import { IPayrollDisbursementRepo } from "./repo/payroll.disbursement.repo";
