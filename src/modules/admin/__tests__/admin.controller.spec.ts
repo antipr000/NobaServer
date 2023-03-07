@@ -22,8 +22,8 @@ import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/
 import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { getMockTransactionServiceWithDefaults } from "../../../modules/transaction/mocks/mock.transaction.service";
 import { ConsumerMapper } from "../../../modules/consumer/mappers/ConsumerMapper";
-import { EmployerService } from "../../../modules/employer/employer.service";
-import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
+import { EmployeeService } from "../../../modules/employee/employee.service";
+import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 import { ConsumerDTO } from "../../../modules/consumer/dto/ConsumerDTO";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
@@ -39,7 +39,7 @@ describe("AdminController", () => {
   let mockTransactionService: TransactionService;
   let mockExchangeRateService: ExchangeRateService;
   let consumerMapper: ConsumerMapper;
-  let employerService: EmployerService;
+  let employeeService: EmployeeService;
 
   beforeEach(async () => {
     process.env = {
@@ -52,7 +52,7 @@ describe("AdminController", () => {
     mockConsumerService = getMockConsumerServiceWithDefaults();
     mockTransactionService = getMockTransactionServiceWithDefaults();
     mockExchangeRateService = getMockExchangeRateServiceWithDefaults();
-    employerService = getMockEmployerServiceWithDefaults();
+    employeeService = getMockEmployeeServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -75,8 +75,8 @@ describe("AdminController", () => {
           useFactory: () => instance(mockExchangeRateService),
         },
         {
-          provide: EmployerService,
-          useFactory: () => instance(employerService),
+          provide: EmployeeService,
+          useFactory: () => instance(employeeService),
         },
         AdminMapper,
         ConsumerMapper,
