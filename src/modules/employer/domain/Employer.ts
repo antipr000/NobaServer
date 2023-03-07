@@ -24,6 +24,7 @@ export type EmployeeDisbursement = {
 export class TemplateFields {
   handlebarTemplate: string;
   companyName: string;
+  payrollReference: string;
   nobaAccountNumber: string;
   currency: string;
   employeeDisbursements: EmployeeDisbursement[];

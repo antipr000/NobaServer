@@ -244,12 +244,11 @@ export class EmployerService {
     const nobaAccountNumber = "095000766";
     const [template_en, template_es] = await templatesPromise;
 
-    // add payroll ref and and actual payroll date
-
     const [html_en, html_es] = await Promise.all([
       this.generateTemplate({
         handlebarTemplate: template_en,
         companyName: companyName,
+        payrollReference: payroll.reference,
         currency: currency,
         employeeDisbursements: employeeDisbursements,
         totalAmount: payroll.totalDebitAmount,
@@ -260,6 +259,7 @@ export class EmployerService {
       this.generateTemplate({
         handlebarTemplate: template_es,
         companyName: companyName,
+        payrollReference: payroll.reference,
         currency: currency,
         employeeDisbursements: employeeDisbursements,
         totalAmount: payroll.totalDebitAmount,
@@ -450,6 +450,7 @@ export class EmployerService {
   private async generateTemplate({
     handlebarTemplate,
     companyName,
+    payrollReference,
     nobaAccountNumber,
     currency,
     employeeDisbursements,
@@ -466,7 +467,8 @@ export class EmployerService {
     return template({
       companyName: companyName,
       currency: currency,
-      dateMonthYear: dayjs().locale(locale).format("MMMM YYYY"),
+      payrollReference: payrollReference,
+      date: dayjs().locale(locale).format("MMMM D, YYYY"),
       totalAmount: totalAmount.toLocaleString(`${locale}-${region}`),
       allocations: employeeAllocations,
       nobaAccountNumber: nobaAccountNumber,
