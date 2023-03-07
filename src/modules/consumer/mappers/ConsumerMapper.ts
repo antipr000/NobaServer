@@ -13,9 +13,9 @@ import { ConsumerDTO, ConsumerSimpleDTO, CryptoWalletsDTO, PaymentMethodsDTO } f
 import { StatesMapper } from "./StatesMapper";
 import { Employee } from "../../../modules/employee/domain/Employee";
 import { LinkedEmployerDTO } from "../dto/LinkedEmployerDTO";
-import { EmployerService } from "../../../modules/employer/employer.service";
+import { EmployeeService } from "../../../modules/employee/employee.service";
 import { Employer } from "../../../modules/employer/domain/Employer";
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { AggregatedPaymentMethodState, AggregatedWalletState } from "../domain/ExternalStates";
 import { ConsumerInternalDTO } from "../dto/ConsumerInternalDTO";
 
@@ -23,7 +23,10 @@ import { ConsumerInternalDTO } from "../dto/ConsumerInternalDTO";
 export class ConsumerMapper implements Mapper<Consumer> {
   private readonly statesMapper: StatesMapper;
 
-  constructor(private readonly employerService: EmployerService) {
+  @Inject()
+  private readonly employeeService: EmployeeService;
+
+  constructor() {
     this.statesMapper = new StatesMapper();
   }
 
@@ -154,25 +157,25 @@ export class ConsumerMapper implements Mapper<Consumer> {
     const linkedEmployers: LinkedEmployerDTO[] = [];
 
     for (const employee of employees) {
-      linkedEmployers.push(await this.toLinkedEmployerDTO(employee));
+      linkedEmployers.push(await this.toLinkedEmployerDTO(employee.id));
     }
     return linkedEmployers;
   }
 
-  public async toLinkedEmployerDTO(employee: Employee): Promise<LinkedEmployerDTO> {
-    const employer: Employer = await this.employerService.getEmployerByID(employee.employerID);
-    const payrollDatesAsc = employer.payrollDates.sort();
+  public async toLinkedEmployerDTO(employeeID: string): Promise<LinkedEmployerDTO> {
+    const employee: Employee = await this.employeeService.getEmployeeByID(employeeID, true);
+    const payrollDatesAsc = employee.employer.payrollDates.sort();
     const now = new Date().setHours(0, 0, 0, 0);
     const futurePayrollDates = payrollDatesAsc.filter(date => {
-      return new Date(date) > new Date(now + employer.leadDays * 24 * 60 * 60 * 1000);
+      return new Date(date) > new Date(now + employee.employer.leadDays * 24 * 60 * 60 * 1000);
     });
     const linkedEmployer: LinkedEmployerDTO = {
-      employerID: employer.id,
-      employerName: employer.name,
-      employerLogoURI: employer.logoURI,
+      employerID: employee.employer.id,
+      employerName: employee.employer.name,
+      employerLogoURI: employee.employer.logoURI,
       allocationAmountInPesos: employee.allocationAmount,
-      employerReferralID: employer.referralID,
-      leadDays: employer.leadDays,
+      employerReferralID: employee.employer.referralID,
+      leadDays: employee.employer.leadDays,
       payrollDates: payrollDatesAsc,
     };
     if (futurePayrollDates.length > 0) {

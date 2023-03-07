@@ -463,7 +463,7 @@ export class ConsumerController {
       consumer.props.id,
       requestBody.allocationAmountInPesos,
     );
-    return this.consumerMapper.toLinkedEmployerDTO(employee);
+    return this.consumerMapper.toLinkedEmployerDTO(employee.id);
   }
 
   @Post("/employers/request")

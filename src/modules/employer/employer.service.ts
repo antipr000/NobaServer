@@ -52,6 +52,9 @@ export class EmployerService {
   @Inject()
   private readonly exchangeRateService: ExchangeRateService;
 
+  @Inject()
+  private readonly consumerService: ConsumerService;
+
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
     @Inject(PAYROLL_REPO_PROVIDER) private readonly payrollRepo: IPayrollRepo,
@@ -466,9 +469,8 @@ export class EmployerService {
 
     return Promise.all(
       disbursements.map(async disbursement => {
-        // need to resolve circular dependency first
         const employee = await this.employeeService.getEmployeeByID(disbursement.employeeID);
-        // const consumer = await this.consumerService.getConsumer(employee.consumerID);
+        const consumer = await this.consumerService.getConsumer(employee.consumerID);
         return {
           employeeName: "TestFirst" + " " + "TestLast",
           amount: disbursement.debitAmount,
