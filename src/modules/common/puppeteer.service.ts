@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import puppeteer, { Browser } from "puppeteer";
+import puppeteer, { Browser, PuppeteerNode } from "puppeteer";
 
 @Injectable()
 export class PupperteerService {
-  private readonly browser: Browser;
+  private readonly pupputeer: PuppeteerNode;
 
   constructor() {
     this.browser = await this.getBrowser();
