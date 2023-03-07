@@ -48,6 +48,7 @@ export enum NotificationWorkflowTypes {
   WITHDRAWAL_FAILED_EVENT = "withdrawalFailedEvent",
   TRANSFER_COMPLETED_EVENT = "transferCompletedEvent",
   TRANSFER_FAILED_EVENT = "transferFailedEvent",
+  UPDATE_PAYROLL_STATUS_EVENT = "updatePayrollStatusEvent",
 }
 
 export const preferredNotificationMedium = {

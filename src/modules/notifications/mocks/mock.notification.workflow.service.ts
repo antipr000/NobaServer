@@ -3,7 +3,7 @@ import { NotificationWorkflowService } from "../notification.workflow.service";
 
 export function getMockNotificationWorkflowServiceWithDefaults(): NotificationWorkflowService {
   const notificationWorkflowService = mock(NotificationWorkflowService);
-  when(notificationWorkflowService.sendNotification(anything(), anyString())).thenResolve();
-
+  when(notificationWorkflowService.sendTransactionNotification(anything(), anyString())).thenResolve();
+  when(notificationWorkflowService.sendPayrollStatusUpdateNotification(anyString(), anything())).thenResolve();
   return notificationWorkflowService;
 }

@@ -1,6 +1,13 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiPropertyOptional } from "@nestjs/swagger";
+import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 
 export class SendNotificationRequestDTO {
-  @ApiProperty()
-  transactionID: string;
+  @ApiPropertyOptional()
+  transactionID?: string;
+
+  @ApiPropertyOptional()
+  payrollID?: string;
+
+  @ApiPropertyOptional({ enum: PayrollStatus })
+  payrollStatus?: PayrollStatus;
 }

@@ -35,8 +35,6 @@ import { Utils } from "../../core/utils/Utils";
 import { ExchangeRateService } from "../common/exchangerate.service";
 import { Currency } from "../transaction/domain/TransactionTypes";
 import { isValidDateString } from "../../core/utils/DateUtils";
-import { NotificationService } from "../notifications/notification.service";
-import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import puppeteer, { Browser } from "puppeteer";
 
 @Injectable()
@@ -53,9 +51,6 @@ export class EmployerService {
 
   @Inject()
   private readonly exchangeRateService: ExchangeRateService;
-
-  @Inject()
-  private readonly notificationService: NotificationService;
 
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
@@ -352,15 +347,6 @@ export class EmployerService {
     }
 
     const updatedPayroll = await this.payrollRepo.updatePayroll(payrollID, payrollUpdateRequest);
-
-    // Notify dashboard about the update of payroll status
-
-    if (request.status) {
-      await this.notificationService.sendNotification(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT, {
-        nobaPayrollID: updatedPayroll.id,
-        payrollStatus: updatedPayroll.status,
-      });
-    }
 
     return updatedPayroll;
   }
