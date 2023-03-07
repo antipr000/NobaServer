@@ -633,7 +633,7 @@ describe("EmployerServiceTests", () => {
       expect(payrollUpdateRequest.completedTimestamp).toBeDefined();
     });
 
-    it("should update payroll and set totalDebitAmount, totalCreditAmount and exchangeRate when status is CREATED", async () => {
+    it("should update payroll and set totalDebitAmount, totalCreditAmount and exchangeRate when status is PREPARED", async () => {
       const employerID = "fake-employer";
       const { payroll } = getRandomPayroll(employerID);
       payroll.status = PayrollStatus.CREATED;
@@ -658,7 +658,7 @@ describe("EmployerServiceTests", () => {
       when(payrollRepo.updatePayroll(anyString(), anything())).thenResolve(payroll);
 
       const updatedPayroll = await employerService.updatePayroll(payroll.id, {
-        status: PayrollStatus.CREATED,
+        status: PayrollStatus.PREPARED,
       });
 
       expect(updatedPayroll).toStrictEqual(payroll);
@@ -666,10 +666,38 @@ describe("EmployerServiceTests", () => {
       const [payrollID, payrollUpdateRequest] = capture(payrollRepo.updatePayroll).last();
       expect(payrollID).toEqual(payroll.id);
       expect(payrollUpdateRequest).toEqual({
-        status: PayrollStatus.CREATED,
+        status: PayrollStatus.PREPARED,
         totalDebitAmount: 30000,
         totalCreditAmount: 75,
         exchangeRate: 0.0025,
+      });
+    });
+
+    const noActionPayrollStatuses: PayrollStatus[] = [
+      PayrollStatus.CREATED,
+      PayrollStatus.INVOICED,
+      PayrollStatus.INVESTIGATION,
+      PayrollStatus.FUNDED,
+      PayrollStatus.IN_PROGRESS,
+      PayrollStatus.EXPIRED,
+    ];
+    it.each(noActionPayrollStatuses)("should only update the status when status is '%s'", async payrollStatus => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      payroll.status = payrollStatus;
+
+      when(payrollRepo.updatePayroll(anyString(), anything())).thenResolve(payroll);
+
+      const updatedPayroll = await employerService.updatePayroll(payroll.id, {
+        status: payrollStatus,
+      });
+
+      expect(updatedPayroll).toStrictEqual(payroll);
+
+      const [payrollID, payrollUpdateRequest] = capture(payrollRepo.updatePayroll).last();
+      expect(payrollID).toEqual(payroll.id);
+      expect(payrollUpdateRequest).toEqual({
+        status: payrollStatus,
       });
     });
 

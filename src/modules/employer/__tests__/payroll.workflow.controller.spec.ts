@@ -65,7 +65,7 @@ describe("EmployerWorkflowControllerTests", () => {
         id: payrollDisbursement.id,
         employeeID: payrollDisbursement.employeeID,
         payrollID: payrollDisbursement.payrollID,
-        debitAmount: payrollDisbursement.debitAmount,
+        allocationAmount: payrollDisbursement.debitAmount,
       });
     });
   });

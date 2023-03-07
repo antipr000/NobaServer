@@ -15,6 +15,7 @@ import { Employer } from "../employer/domain/Employer";
 import { Payroll } from "../employer/domain/Payroll";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
+import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
 
 @Injectable()
 export class BubbleService {
@@ -23,6 +24,7 @@ export class BubbleService {
     private readonly notificationService: NotificationService,
     private readonly employeeService: EmployeeService,
     private readonly employerService: EmployerService,
+    private readonly workflowExecutor: WorkflowExecutor,
   ) {}
 
   async createEmployeeInBubble(nobaEmployeeID: string, consumer: Consumer): Promise<void> {
@@ -132,6 +134,8 @@ export class BubbleService {
       });
     }
 
-    return this.employerService.createPayroll(employer.id, payrollDate);
+    const payroll: Payroll = await this.employerService.createPayroll(employer.id, payrollDate);
+    await this.workflowExecutor.executePayrollProcessingWorkflow(payroll.id, payroll.id);
+    return payroll;
   }
 }

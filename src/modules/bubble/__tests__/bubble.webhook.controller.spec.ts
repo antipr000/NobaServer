@@ -8,16 +8,20 @@ import { BubbleService } from "../bubble.service";
 import { getMockBubbleServiceWithDefaults } from "../mocks/mock.bubble.service";
 import { getRandomPayroll } from "../../../modules/employer/test_utils/payroll.test.utils";
 import { BadRequestException } from "@nestjs/common";
+import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
+import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 
 describe("BubbleWebhookControllerTests", () => {
   jest.setTimeout(20000);
 
   let bubbleWebhookController: BubbleWebhookController;
+  let workflowExecutor: WorkflowExecutor;
   let bubbleService: BubbleService;
   let app: TestingModule;
 
   beforeEach(async () => {
     bubbleService = getMockBubbleServiceWithDefaults();
+    workflowExecutor = getMockWorkflowExecutorWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -30,6 +34,10 @@ describe("BubbleWebhookControllerTests", () => {
         {
           provide: BubbleService,
           useFactory: () => instance(bubbleService),
+        },
+        {
+          provide: WorkflowExecutor,
+          useFactory: () => instance(workflowExecutor),
         },
         BubbleWebhookController,
       ],
@@ -193,6 +201,7 @@ describe("BubbleWebhookControllerTests", () => {
       const referralID = "fake-referral";
 
       when(bubbleService.createPayroll(referralID, payroll.payrollDate)).thenResolve(payroll);
+      when(workflowExecutor.executePayrollProcessingWorkflow(payroll.id, payroll.id)).thenResolve(null);
 
       const result = await bubbleWebhookController.createPayroll(referralID, { payrollDate: payroll.payrollDate });
 
