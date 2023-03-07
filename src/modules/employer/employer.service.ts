@@ -177,6 +177,17 @@ export class EmployerService {
     return this.payrollRepo.getPayrollByID(id);
   }
 
+  async getAllPayrollsForEmployer(employerID: string): Promise<Payroll[]> {
+    if (!employerID) {
+      throw new ServiceException({
+        message: "employerID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    return this.payrollRepo.getAllPayrollsForEmployer(employerID, {});
+  }
+
   async createPayroll(employerID: string, payrollDate: string): Promise<Payroll> {
     if (!employerID) {
       throw new ServiceException({
@@ -319,6 +330,26 @@ export class EmployerService {
 
   async getDisbursement(disbursementID: string): Promise<PayrollDisbursement> {
     return this.payrollDisbursementRepo.getPayrollDisbursementByID(disbursementID);
+  }
+
+  async getAllDisbursementsForPayroll(payrollID: string): Promise<PayrollDisbursement[]> {
+    if (!payrollID) {
+      throw new ServiceException({
+        message: "payrollID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+    return this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
+  }
+
+  async getAllDisbursementsForEmployee(employeeID: string): Promise<PayrollDisbursement[]> {
+    if (!employeeID) {
+      throw new ServiceException({
+        message: "employeeID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+    return this.payrollDisbursementRepo.getAllDisbursementsForEmployee(employeeID);
   }
 
   async createInvoice(payrollID: string): Promise<void> {

@@ -6,6 +6,7 @@ import { Consumer } from "../consumer/domain/Consumer";
 import { Employee, EmployeeAllocationCurrency } from "../employee/domain/Employee";
 import { EmployeeService } from "../employee/employee.service";
 import {
+  PayrollWithDisbursements,
   RegisterEmployerRequest,
   UpdateNobaEmployeeRequest,
   UpdateNobaEmployerRequest,
@@ -15,6 +16,7 @@ import { Employer } from "../employer/domain/Employer";
 import { Payroll } from "../employer/domain/Payroll";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
+import { PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
 
 @Injectable()
 export class BubbleService {
@@ -133,5 +135,75 @@ export class BubbleService {
     }
 
     return this.employerService.createPayroll(employer.id, payrollDate);
+  }
+
+  async getAllPayrollsForEmployer(referralID: string): Promise<Payroll[]> {
+    const employer = await this.employerService.getEmployerByReferralID(referralID);
+    if (!employer) {
+      throw new ServiceException({
+        message: `No employer found with referralID: ${referralID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    return this.employerService.getAllPayrollsForEmployer(employer.id);
+  }
+
+  async getPayrollWithDisbursements(
+    referralID: string,
+    payrollID: string,
+    shouldIncludeDisbursements?: boolean,
+  ): Promise<PayrollWithDisbursements> {
+    if (!referralID) {
+      throw new ServiceException({
+        message: "referralID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const employer = await this.employerService.getEmployerByReferralID(referralID);
+
+    const payroll = await this.employerService.getPayrollByID(payrollID);
+
+    if (!payroll || payroll.employerID !== employer.id) {
+      throw new ServiceException({
+        message: `No payroll found with ID: ${payrollID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    if (shouldIncludeDisbursements) {
+      const disbursements = await this.employerService.getAllDisbursementsForPayroll(payrollID);
+
+      return {
+        ...payroll,
+        disbursements,
+      };
+    } else {
+      return {
+        ...payroll,
+        disbursements: [],
+      };
+    }
+  }
+
+  async getAllDisbursementsForEmployee(referralID: string, employeeID: string): Promise<PayrollDisbursement[]> {
+    const employer = await this.employerService.getEmployerByReferralID(referralID);
+    if (!employer) {
+      throw new ServiceException({
+        message: `No employer found with referralID: ${referralID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    const employee = await this.employeeService.getEmployeeByID(employeeID);
+    if (!employee || employee.employerID !== employer.id) {
+      throw new ServiceException({
+        message: `No employee found with ID: ${employeeID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    return this.employerService.getAllDisbursementsForEmployee(employeeID);
   }
 }

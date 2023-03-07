@@ -1,3 +1,6 @@
+import { Payroll } from "../../../modules/employer/domain/Payroll";
+import { PayrollDisbursement } from "../../../modules/employer/domain/PayrollDisbursement";
+
 export type RegisterEmployerRequest = {
   name: string;
   logoURI: string;
@@ -19,4 +22,8 @@ export type UpdateNobaEmployerRequest = {
 
 export type UpdateNobaEmployeeRequest = {
   salary: number;
+};
+
+export type PayrollWithDisbursements = Payroll & {
+  disbursements: PayrollDisbursement[];
 };

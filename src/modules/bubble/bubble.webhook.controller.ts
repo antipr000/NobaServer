@@ -2,11 +2,13 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   HttpStatus,
   Inject,
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
@@ -18,6 +20,9 @@ import { BubbleService } from "./bubble.service";
 import {
   CreatePayrollRequestDTO,
   CreatePayrollResponseDTO,
+  DisbursementDTO,
+  PayrollDTO,
+  PayrollQueryDTO,
   RegisterEmployerRequestDTO,
   UpdateEmployeeRequestDTO,
   UpdateEmployerRequestDTO,
@@ -25,6 +30,7 @@ import {
 import { EmployerRegisterResponseDTO } from "./dto/EmployerRegisterResponseDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { isValidDateString } from "../../core/utils/DateUtils";
+import { BubbleWebhookMapper } from "./mapper/bubble.webhook.mapper";
 
 @Controller("/webhooks/bubble")
 @ApiTags("Webhooks")
@@ -32,10 +38,14 @@ import { isValidDateString } from "../../core/utils/DateUtils";
 @ApiBearerAuth("JWT-auth")
 @UseGuards(BubbleWebhookAuthGuard)
 export class BubbleWebhookController {
+  private readonly mapper: BubbleWebhookMapper;
+
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly bubbleService: BubbleService,
-  ) {}
+  ) {
+    this.mapper = new BubbleWebhookMapper();
+  }
 
   @Post("/employers")
   @ApiOperation({ summary: "Register the Employer in Noba" })
@@ -70,6 +80,45 @@ export class BubbleWebhookController {
     return {
       payrollID: payroll.id,
     };
+  }
+
+  @Get("/employers/:referralID/payrolls")
+  @ApiOperation({ summary: "Get all payrolls for employer in Noba" })
+  @ApiResponse({ status: HttpStatus.OK, type: [PayrollDTO] })
+  async getAllPayrolls(@Param("referralID") referralID: string): Promise<PayrollDTO[]> {
+    const payrolls = await this.bubbleService.getAllPayrollsForEmployer(referralID);
+    return payrolls.map(this.mapper.toPayrollDTO);
+  }
+
+  @Get("/employers/:referralID/payrolls/:payrollID")
+  @ApiOperation({ summary: "Get specific payroll for employer in Noba" })
+  @ApiResponse({ status: HttpStatus.OK, type: [PayrollDTO] })
+  async getPayroll(
+    @Param("referralID") referralID: string,
+    @Param("payrollID") payrollID: string,
+    @Query() query: PayrollQueryDTO,
+  ): Promise<PayrollDTO> {
+    const payrollWithDisbursements = await this.bubbleService.getPayrollWithDisbursements(
+      referralID,
+      payrollID,
+      query.shouldIncludeDisbursements,
+    );
+
+    return {
+      ...this.mapper.toPayrollDTO(payrollWithDisbursements),
+      disbursements: payrollWithDisbursements.disbursements.map(this.mapper.toDisbursementDTO),
+    };
+  }
+
+  @Get("/employers/:referralID/disbursements/:employeeID")
+  @ApiOperation({ summary: "Get all disbursements for employee in Noba" })
+  @ApiResponse({ status: HttpStatus.OK, type: [DisbursementDTO] })
+  async getAllDisbursementsForEmployee(
+    @Param("referralID") referralID: string,
+    @Param("employeeID") employeeID: string,
+  ): Promise<DisbursementDTO[]> {
+    const disbursements = await this.bubbleService.getAllDisbursementsForEmployee(referralID, employeeID);
+    return disbursements.map(this.mapper.toDisbursementDTO);
   }
 
   @Patch("/employers/:referralID")
