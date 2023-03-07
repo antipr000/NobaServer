@@ -6,6 +6,7 @@ import { NotificationWorkflowService } from "../notification.workflow.service";
 import { NotificationWorkflowController } from "../notification.workflow.controller";
 import { getMockNotificationWorkflowServiceWithDefaults } from "../mocks/mock.notification.workflow.service";
 import { NotificationWorkflowTypes } from "../domain/NotificationTypes";
+import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 
 describe("NotificationService", () => {
   let notificationWorkflowController: NotificationWorkflowController;
@@ -43,8 +44,20 @@ describe("NotificationService", () => {
       });
 
       verify(
-        notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT, "test"),
+        notificationWorflowService.sendTransactionNotification(
+          NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT,
+          "test",
+        ),
       ).once();
+    });
+
+    it("should send update payroll status notification", async () => {
+      await notificationWorkflowController.sendNotification(NotificationWorkflowTypes.UPDATE_PAYROLL_STATUS_EVENT, {
+        payrollID: "test",
+        payrollStatus: PayrollStatus.COMPLETED,
+      });
+
+      verify(notificationWorflowService.sendPayrollStatusUpdateNotification("test", PayrollStatus.COMPLETED)).once();
     });
   });
 });

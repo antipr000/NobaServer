@@ -10,6 +10,8 @@ import { NotificationPayload, prepareNotificationPayload } from "./domain/Notifi
 import { TransactionNotificationPayloadMapper } from "./domain/TransactionNotificationParameters";
 import { Transaction } from "../transaction/domain/Transaction";
 import { Consumer } from "../consumer/domain/Consumer";
+import { PayrollStatus } from "../employer/domain/Payroll";
+import { EmployerService } from "../employer/employer.service";
 
 @Injectable()
 export class NotificationWorkflowService {
@@ -25,12 +27,26 @@ export class NotificationWorkflowService {
   @Inject()
   private readonly notificationService: NotificationService;
 
+  @Inject()
+  private readonly employerService: EmployerService;
+
   private readonly transactionNotificationPayloadMapper: TransactionNotificationPayloadMapper;
   constructor() {
     this.transactionNotificationPayloadMapper = new TransactionNotificationPayloadMapper();
   }
 
-  async sendNotification(notificationWorkflowType: NotificationWorkflowTypes, transactionID: string): Promise<void> {
+  async sendTransactionNotification(
+    notificationWorkflowType: NotificationWorkflowTypes,
+    transactionID: string,
+  ): Promise<void> {
+    if (!transactionID) {
+      this.logger.error("Failed to send notification from workflow. Reason: Transaction ID is required");
+      throw new ServiceException({
+        message: "Transaction ID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
     const transaction = await this.transactionService.getTransactionByTransactionID(transactionID);
     if (!transaction) {
       this.logger.error(
@@ -112,6 +128,39 @@ export class NotificationWorkflowService {
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         });
     }
+  }
+
+  async sendPayrollStatusUpdateNotification(payrollID: string, status: PayrollStatus) {
+    if (!payrollID) {
+      this.logger.error("Failed to send notification from workflow. Reason: Payroll ID is required");
+      throw new ServiceException({
+        message: "Payroll ID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    if (!status) {
+      this.logger.error("Failed to send notification from workflow. Reason: Payroll status is required");
+      throw new ServiceException({
+        message: "Payroll status is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const payroll = await this.employerService.getPayrollByID(payrollID);
+
+    if (!payroll) {
+      this.logger.error(`Failed to send notification from workflow. Reason: Payroll with id ${payrollID} not found`);
+      throw new ServiceException({
+        message: `Payroll with id ${payrollID} not found`,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    await this.notificationService.sendNotification(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT, {
+      nobaPayrollID: payrollID,
+      payrollStatus: status,
+    });
   }
 
   private async generateTransactionPayload(
