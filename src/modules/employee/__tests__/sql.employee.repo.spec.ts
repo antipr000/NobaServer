@@ -206,6 +206,33 @@ describe("SqlEmployeeRepoTests", () => {
       expect(savedEmployees[0]).toEqual(updatedEmployee);
     });
 
+    it("should update 'allocationAmount' of an existing employee of 0", async () => {
+      const consumerID: string = await createTestConsumer(prismaService);
+      const employerID: string = await createTestEmployerAndStoreInDB(prismaService);
+      const employee: EmployeeCreateRequest = getRandomEmployee(employerID, consumerID);
+
+      const createdEmployee: Employee = await employeeRepo.createEmployee(employee);
+
+      const updatedEmployee: Employee = await employeeRepo.updateEmployee(createdEmployee.id, {
+        allocationAmount: 0,
+      });
+
+      expect(updatedEmployee.id).toEqual(createdEmployee.id);
+      expect(updatedEmployee.createdTimestamp).toEqual(createdEmployee.createdTimestamp);
+      expect(updatedEmployee.updatedTimestamp).not.toEqual(createdEmployee.updatedTimestamp);
+
+      expect(updatedEmployee.employerID).toEqual(createdEmployee.employerID);
+      expect(updatedEmployee.consumerID).toEqual(createdEmployee.consumerID);
+      expect(updatedEmployee.allocationAmount).toEqual(0);
+      expect(updatedEmployee.allocationCurrency).toEqual(createdEmployee.allocationCurrency);
+      expect(updatedEmployee.employer).toBeUndefined();
+
+      const savedEmployees: EmployeeModel[] = await getAllEmployeeRecords(prismaService);
+      expect(savedEmployees.length).toEqual(1);
+      delete savedEmployees[0].salary;
+      expect(savedEmployees[0]).toEqual(updatedEmployee);
+    });
+
     it("should update 'salary' of an existing employee", async () => {
       const consumerID: string = await createTestConsumer(prismaService);
       const employerID: string = await createTestEmployerAndStoreInDB(prismaService);
