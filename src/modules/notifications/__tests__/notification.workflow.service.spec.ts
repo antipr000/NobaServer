@@ -19,6 +19,9 @@ import { TransactionNotificationPayloadMapper } from "../domain/TransactionNotif
 import { prepareNotificationPayload } from "../domain/NotificationPayload";
 import { ServiceException } from "../../../core/exception/service.exception";
 import { FeeType } from "../../../modules/transaction/domain/TransactionFee";
+import { EmployerService } from "../../../modules/employer/employer.service";
+import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
+import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -26,6 +29,7 @@ describe("NotificationService", () => {
   let transactionService: TransactionService;
   let consumerService: ConsumerService;
   let transactionNotificationMapper: TransactionNotificationPayloadMapper;
+  let employerService: EmployerService;
 
   jest.setTimeout(30000);
 
@@ -39,6 +43,7 @@ describe("NotificationService", () => {
     transactionService = getMockTransactionServiceWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
     transactionNotificationMapper = new TransactionNotificationPayloadMapper();
+    employerService = getMockEmployerServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -57,13 +62,17 @@ describe("NotificationService", () => {
           provide: ConsumerService,
           useFactory: () => instance(consumerService),
         },
+        {
+          provide: EmployerService,
+          useFactory: () => instance(employerService),
+        },
       ],
     }).compile();
 
     notificationWorflowService = app.get<NotificationWorkflowService>(NotificationWorkflowService);
   });
 
-  describe("sendNotification", () => {
+  describe("sendTransactionNotification", () => {
     it("should send notification for deposit success", async () => {
       const consumerID = v4();
       const consumer = getRandomConsumer(consumerID);
@@ -71,7 +80,7 @@ describe("NotificationService", () => {
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
       when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
 
-      await notificationWorflowService.sendNotification(
+      await notificationWorflowService.sendTransactionNotification(
         NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT,
         transaction.id,
       );
@@ -97,7 +106,10 @@ describe("NotificationService", () => {
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
       when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
 
-      await notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEPOSIT_FAILED_EVENT, transaction.id);
+      await notificationWorflowService.sendTransactionNotification(
+        NotificationWorkflowTypes.DEPOSIT_FAILED_EVENT,
+        transaction.id,
+      );
 
       const transactionNotificationPayload =
         transactionNotificationMapper.toDepositFailedNotificationParameters(transaction);
@@ -120,7 +132,7 @@ describe("NotificationService", () => {
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
       when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
 
-      await notificationWorflowService.sendNotification(
+      await notificationWorflowService.sendTransactionNotification(
         NotificationWorkflowTypes.WITHDRAWAL_COMPLETED_EVENT,
         transaction.id,
       );
@@ -146,7 +158,7 @@ describe("NotificationService", () => {
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
       when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
 
-      await notificationWorflowService.sendNotification(
+      await notificationWorflowService.sendTransactionNotification(
         NotificationWorkflowTypes.WITHDRAWAL_FAILED_EVENT,
         transaction.id,
       );
@@ -175,7 +187,7 @@ describe("NotificationService", () => {
       when(consumerService.getConsumer(consumerID2)).thenResolve(consumer2);
       when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
 
-      await notificationWorflowService.sendNotification(
+      await notificationWorflowService.sendTransactionNotification(
         NotificationWorkflowTypes.TRANSFER_COMPLETED_EVENT,
         transaction.id,
       );
@@ -225,7 +237,7 @@ describe("NotificationService", () => {
       when(consumerService.getConsumer(consumerID2)).thenResolve(consumer2);
       when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
 
-      await notificationWorflowService.sendNotification(
+      await notificationWorflowService.sendTransactionNotification(
         NotificationWorkflowTypes.TRANSFER_FAILED_EVENT,
         transaction.id,
       );
@@ -252,7 +264,10 @@ describe("NotificationService", () => {
       when(transactionService.getTransactionByTransactionID(transactionID)).thenResolve(null);
 
       await expect(
-        notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT, transactionID),
+        notificationWorflowService.sendTransactionNotification(
+          NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT,
+          transactionID,
+        ),
       ).rejects.toThrowError(ServiceException);
     });
 
@@ -262,7 +277,64 @@ describe("NotificationService", () => {
       when(transactionService.getTransactionByTransactionID(transactionID)).thenResolve(transaction);
 
       await expect(
-        notificationWorflowService.sendNotification("INVALID_TYPE" as any, transactionID),
+        notificationWorflowService.sendTransactionNotification("INVALID_TYPE" as any, transactionID),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException when transactionID is not defined", async () => {
+      await expect(
+        notificationWorflowService.sendTransactionNotification(
+          NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT,
+          undefined,
+        ),
+      ).rejects.toThrowError(ServiceException);
+    });
+  });
+
+  describe("SendPayrollStatusUpdateNotification", () => {
+    it("should send payroll status update notification", async () => {
+      const payrollID = "fake-payroll-id";
+      const payrollStatus = PayrollStatus.COMPLETED;
+
+      when(employerService.getPayrollByID(payrollID)).thenResolve({
+        id: payrollID,
+        status: payrollStatus,
+        employerID: "fake-employer-id",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+      } as any);
+
+      await notificationWorflowService.sendPayrollStatusUpdateNotification(payrollID, payrollStatus);
+
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT,
+          deepEqual({
+            nobaPayrollID: payrollID,
+            payrollStatus,
+          }),
+        ),
+      ).once();
+    });
+
+    it("should throw 'ServiceException' when payrollID or payrollStatus is undefined", async () => {
+      await expect(
+        notificationWorflowService.sendPayrollStatusUpdateNotification(undefined, PayrollStatus.COMPLETED),
+      ).rejects.toThrowError(ServiceException);
+
+      await expect(
+        notificationWorflowService.sendPayrollStatusUpdateNotification("fake-payroll-id", undefined),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw 'ServiceException' when payroll is not found", async () => {
+      const payrollID = "fake-payroll-id";
+      const payrollStatus = PayrollStatus.COMPLETED;
+
+      when(employerService.getPayrollByID(payrollID)).thenResolve(null);
+
+      await expect(
+        notificationWorflowService.sendPayrollStatusUpdateNotification(payrollID, payrollStatus),
       ).rejects.toThrowError(ServiceException);
     });
   });
