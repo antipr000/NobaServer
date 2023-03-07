@@ -94,6 +94,10 @@ describe("EmployerServiceTests", () => {
           provide: ExchangeRateService,
           useFactory: () => instance(exchangeRateService),
         },
+        {
+          provide: TemplateService,
+          useFactory: () => instance(templateService),
+        },
         EmployerService,
       ],
     }).compile();
