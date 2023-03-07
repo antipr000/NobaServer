@@ -9,7 +9,7 @@ import {
   PAYROLL_DISBURSEMENT_REPO_PROVIDER,
   PAYROLL_REPO_PROVIDER,
 } from "../repo/employer.repo.module";
-import { anyString, anything, capture, instance, when } from "ts-mockito";
+import { anyString, anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { EmployerService } from "../employer.service";
 import { uuid } from "uuidv4";
 import { Employer } from "../domain/Employer";
@@ -556,6 +556,23 @@ describe("EmployerServiceTests", () => {
     });
   });
 
+  describe("getAllPayrollsForEmployer", () => {
+    it("should get all payrolls for employer", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+
+      when(payrollRepo.getAllPayrollsForEmployer(employerID, deepEqual({}))).thenResolve([payroll]);
+
+      const retrievedPayrolls = await employerService.getAllPayrollsForEmployer(employerID);
+
+      expect(retrievedPayrolls).toStrictEqual([payroll]);
+    });
+
+    it("should throw error when 'employerID' is not defined", async () => {
+      await expect(employerService.getAllPayrollsForEmployer(undefined)).rejects.toThrowError(ServiceException);
+    });
+  });
+
   describe("createPayroll", () => {
     it("should create a payroll", async () => {
       const payrollDate = "2020-03-01";
@@ -820,6 +837,38 @@ describe("EmployerServiceTests", () => {
             transactionID: "fake-transaction",
           }),
       ).rejects.toThrow(ServiceException);
+    });
+  });
+
+  describe("getAllDisbursementsForPayroll", () => {
+    it("should return all disbursements for payroll", async () => {
+      const { payrollDisbursement } = getRandomPayrollDisbursement("fake-payroll", "fake-employee");
+
+      when(payrollDisbursementRepo.getAllDisbursementsForPayroll("fake-payroll")).thenResolve([payrollDisbursement]);
+
+      const response = await employerService.getAllDisbursementsForPayroll("fake-payroll");
+
+      expect(response).toStrictEqual([payrollDisbursement]);
+    });
+
+    it("should throw 'ServiceException' when payrollID is undefined", async () => {
+      await expect(employerService.getAllDisbursementsForPayroll(undefined)).rejects.toThrowError(ServiceException);
+    });
+  });
+
+  describe("getAllDisbursementsForEmployee", () => {
+    it("should return all disbursements for employee", async () => {
+      const { payrollDisbursement } = getRandomPayrollDisbursement("fake-payroll", "fake-employee");
+
+      when(payrollDisbursementRepo.getAllDisbursementsForEmployee("fake-employee")).thenResolve([payrollDisbursement]);
+
+      const response = await employerService.getAllDisbursementsForEmployee("fake-employee");
+
+      expect(response).toStrictEqual([payrollDisbursement]);
+    });
+
+    it("should throw 'ServiceException' when employeeID is undefined", async () => {
+      await expect(employerService.getAllDisbursementsForEmployee(undefined)).rejects.toThrowError(ServiceException);
     });
   });
 });

@@ -6,8 +6,12 @@ import { anyString, anything, capture, instance, when } from "ts-mockito";
 import { BubbleWebhookController } from "../bubble.webhook.controller";
 import { BubbleService } from "../bubble.service";
 import { getMockBubbleServiceWithDefaults } from "../mocks/mock.bubble.service";
-import { getRandomPayroll } from "../../../modules/employer/test_utils/payroll.test.utils";
+import {
+  getRandomPayroll,
+  getRandomPayrollDisbursement,
+} from "../../../modules/employer/test_utils/payroll.test.utils";
 import { BadRequestException } from "@nestjs/common";
+import { Bool } from "../../../core/domain/ApiEnums";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 
@@ -249,6 +253,97 @@ describe("BubbleWebhookControllerTests", () => {
       await expect(
         async () => await bubbleWebhookController.createPayroll(referralID, { payrollDate: "2021-02-29" }),
       ).rejects.toThrow("Invalid payrollDate");
+    });
+  });
+
+  describe("getAllPayrolls", () => {
+    it("should get all payrolls for employer", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const referralID = "fake-referral";
+
+      when(bubbleService.getAllPayrollsForEmployer(referralID)).thenResolve([payroll]);
+
+      const result = await bubbleWebhookController.getAllPayrolls(referralID);
+
+      expect(result).toStrictEqual([
+        {
+          payrollID: payroll.id,
+          payrollDate: payroll.payrollDate,
+          status: payroll.status,
+          reference: payroll.reference,
+          ...(payroll.completedTimestamp && { completedTimestamp: payroll.completedTimestamp }),
+          ...(payroll.totalDebitAmount && { totalDebitAmount: payroll.totalDebitAmount }),
+          ...(payroll.totalCreditAmount && { totalCreditAmount: payroll.totalCreditAmount }),
+          ...(payroll.debitCurrency && { debitCurrency: payroll.debitCurrency }),
+          ...(payroll.creditCurrency && { creditCurrency: payroll.creditCurrency }),
+          ...(payroll.exchangeRate && { exchangeRate: payroll.exchangeRate }),
+        },
+      ]);
+    });
+  });
+
+  describe("getPayroll", () => {
+    it("should return payroll with disbursement", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const referralID = "fake-referral";
+
+      const { payrollDisbursement } = getRandomPayrollDisbursement(payroll.id, "fake-employee-id");
+
+      when(bubbleService.getPayrollWithDisbursements(referralID, payroll.id, true)).thenResolve({
+        ...payroll,
+        disbursements: [payrollDisbursement],
+      });
+
+      const result = await bubbleWebhookController.getPayroll(referralID, payroll.id, {
+        shouldIncludeDisbursements: Bool.True,
+      });
+
+      expect(result).toStrictEqual({
+        payrollID: payroll.id,
+        payrollDate: payroll.payrollDate,
+        status: payroll.status,
+        reference: payroll.reference,
+        ...(payroll.completedTimestamp && { completedTimestamp: payroll.completedTimestamp }),
+        ...(payroll.totalDebitAmount && { totalDebitAmount: payroll.totalDebitAmount }),
+        ...(payroll.totalCreditAmount && { totalCreditAmount: payroll.totalCreditAmount }),
+        ...(payroll.debitCurrency && { debitCurrency: payroll.debitCurrency }),
+        ...(payroll.creditCurrency && { creditCurrency: payroll.creditCurrency }),
+        ...(payroll.exchangeRate && { exchangeRate: payroll.exchangeRate }),
+        disbursements: [
+          {
+            id: payrollDisbursement.id,
+            employeeID: payrollDisbursement.employeeID,
+            transactionID: payrollDisbursement.transactionID,
+            debitAmount: payrollDisbursement.debitAmount,
+          },
+        ],
+      });
+    });
+  });
+
+  describe("getAllDisbursementsForEmployee", () => {
+    it("should get all disbursements for employee", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const referralID = "fake-referral";
+      const employeeID = "fake-employee-id";
+
+      const { payrollDisbursement } = getRandomPayrollDisbursement(payroll.id, employeeID);
+
+      when(bubbleService.getAllDisbursementsForEmployee(referralID, employeeID)).thenResolve([payrollDisbursement]);
+
+      const result = await bubbleWebhookController.getAllDisbursementsForEmployee(referralID, employeeID);
+
+      expect(result).toStrictEqual([
+        {
+          id: payrollDisbursement.id,
+          employeeID: payrollDisbursement.employeeID,
+          transactionID: payrollDisbursement.transactionID,
+          debitAmount: payrollDisbursement.debitAmount,
+        },
+      ]);
     });
   });
 });

@@ -13,7 +13,10 @@ import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mo
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 import { BubbleService } from "../bubble.service";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
-import { getRandomPayroll } from "../../../modules/employer/test_utils/payroll.test.utils";
+import {
+  getRandomPayroll,
+  getRandomPayrollDisbursement,
+} from "../../../modules/employer/test_utils/payroll.test.utils";
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
@@ -594,6 +597,110 @@ describe("BubbleServiceTests", () => {
       await expect(async () => await bubbleService.createPayroll(employer.referralID, payrollDate)).rejects.toThrow(
         ServiceException,
       );
+    });
+  });
+
+  describe("getAllPayrollsForEmployer", () => {
+    it("should return all payrolls for employer", async () => {
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll(employer.id);
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.getAllPayrollsForEmployer(employer.id)).thenResolve([payroll]);
+
+      const response = await bubbleService.getAllPayrollsForEmployer(employer.referralID);
+      expect(response).toStrictEqual([payroll]);
+    });
+
+    it("should throw ServiceException when employer with referralID does not exist", async () => {
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll(employer.id);
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(null);
+      when(employerService.getAllPayrollsForEmployer(employer.id)).thenResolve([payroll]);
+
+      await expect(async () => await bubbleService.getAllPayrollsForEmployer(employer.referralID)).rejects.toThrow(
+        ServiceException,
+      );
+    });
+  });
+
+  describe("getPayrollWithDisbursements", () => {
+    it("should return payroll with disbursements", async () => {
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll(employer.id);
+      const { payrollDisbursement } = getRandomPayrollDisbursement(payroll.id, "fake-employee");
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(employerService.getAllDisbursementsForPayroll(payroll.id)).thenResolve([payrollDisbursement]);
+
+      const response = await bubbleService.getPayrollWithDisbursements(employer.referralID, payroll.id, true);
+      expect(response).toStrictEqual({
+        ...payroll,
+        disbursements: [payrollDisbursement],
+      });
+    });
+
+    it("should return empty list of disbursements when flag is false", async () => {
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll(employer.id);
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.getPayrollByID(payroll.id)).thenResolve(payroll);
+
+      const response = await bubbleService.getPayrollWithDisbursements(employer.referralID, payroll.id, false);
+      expect(response).toStrictEqual({
+        ...payroll,
+        disbursements: [],
+      });
+    });
+
+    it("should throw ServiceException when employer with referralID does not exist", async () => {
+      await expect(
+        async () => await bubbleService.getPayrollWithDisbursements(undefined, "fake-payroll-id", true),
+      ).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw error when payroll does not belong to employer", async () => {
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll("fake-employer-id");
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.getPayrollByID(payroll.id)).thenResolve(payroll);
+
+      await expect(
+        async () => await bubbleService.getPayrollWithDisbursements(employer.referralID, payroll.id, true),
+      ).rejects.toThrow(ServiceException);
+    });
+  });
+
+  describe("getAllDisbursementsForEmployee", () => {
+    it("should return all disbursements for employee", async () => {
+      const employer = getRandomEmployer();
+      const employee = getRandomEmployee("fake-consumer-id", employer);
+      const { payroll } = getRandomPayroll(employer.id);
+      const { payrollDisbursement } = getRandomPayrollDisbursement(payroll.id, employee.id);
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
+      when(employerService.getAllDisbursementsForEmployee(employee.id)).thenResolve([payrollDisbursement]);
+
+      const response = await bubbleService.getAllDisbursementsForEmployee(employer.referralID, employee.id);
+      expect(response).toStrictEqual([payrollDisbursement]);
+    });
+
+    it("should throw ServiceException when employee does not belong to employer", async () => {
+      const employer = getRandomEmployer();
+      const employee = getRandomEmployee("fake-consumer-id", employer);
+      employee.employerID = "fake-employer-id";
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
+
+      await expect(
+        async () => await bubbleService.getAllDisbursementsForEmployee(employer.referralID, employee.id),
+      ).rejects.toThrow(ServiceException);
     });
   });
 });
