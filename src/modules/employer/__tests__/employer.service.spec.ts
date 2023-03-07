@@ -28,6 +28,8 @@ import { ExchangeRateService } from "../../../modules/common/exchangerate.servic
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 import { TemplateService } from "../../../modules/common/template.service";
 import { getMockTemplateServiceWithDefaults } from "../../../modules/common/mocks/mock.template.service";
+import { ConsumerService } from "../../../modules/consumer/consumer.service";
+import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -97,6 +99,10 @@ describe("EmployerServiceTests", () => {
         {
           provide: TemplateService,
           useFactory: () => instance(templateService),
+        },
+        {
+          provide: ConsumerService,
+          useFactory: () => instance(getMockConsumerServiceWithDefaults()),
         },
         EmployerService,
       ],
