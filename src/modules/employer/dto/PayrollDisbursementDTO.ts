@@ -14,5 +14,5 @@ export class PayrollDisbursementDTO {
   transactionID?: string;
 
   @ApiProperty()
-  debitAmount: number;
+  allocationAmount: number;
 }

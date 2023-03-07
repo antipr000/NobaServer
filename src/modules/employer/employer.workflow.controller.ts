@@ -6,7 +6,7 @@ import { EmployerWorkflowDTO } from "./dto/employer.workflow.controller.dto";
 import { EmployerService } from "./employer.service";
 import { EmployerMapper } from "./mappers/employer.mapper";
 
-@Controller("wf/v1/employer")
+@Controller("wf/v1/employers")
 @ApiBearerAuth("JWT-auth")
 @ApiTags("Workflow")
 export class EmployerWorkflowController {

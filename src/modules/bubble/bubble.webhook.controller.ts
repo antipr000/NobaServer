@@ -48,6 +48,7 @@ export class BubbleWebhookController {
       referralID: requestBody.referralID,
       leadDays: requestBody.leadDays,
       payrollDates: requestBody.payrollDates,
+      payrollAccountNumber: requestBody.payrollAccountNumber,
       ...(requestBody.maxAllocationPercent && { maxAllocationPercent: requestBody.maxAllocationPercent }),
     });
     return {

@@ -42,11 +42,12 @@ export class PayrollWorkflowController {
     @Body() requestBody: CreateDisbursementRequestDTO,
   ): Promise<PayrollDisbursementDTO> {
     const disbursement = await this.employerService.createDisbursement(payrollID, requestBody);
+
     return {
       id: disbursement.id,
       employeeID: disbursement.employeeID,
       payrollID: disbursement.payrollID,
-      debitAmount: disbursement.debitAmount,
+      allocationAmount: disbursement.debitAmount,
     };
   }
 

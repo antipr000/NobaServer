@@ -5,6 +5,7 @@ import { KeysRequired } from "../../common/domain/Types";
 export enum PayrollStatus {
   CREATED = "CREATED",
   INVOICED = "INVOICED",
+  PREPARED = "PREPARED",
   INVESTIGATION = "INVESTIGATION",
   FUNDED = "FUNDED",
   IN_PROGRESS = "IN_PROGRESS",

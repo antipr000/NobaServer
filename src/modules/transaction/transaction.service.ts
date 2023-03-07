@@ -105,7 +105,7 @@ export class TransactionService {
       memo: `${payroll.payrollDate} Payroll`,
       transactionRef: Utils.generateLowercaseUUID(true),
       transactionFees: [],
-      sessionKey: "",
+      sessionKey: "PAYROLL",
       debitAmount: payrollDisbursement.debitAmount,
       debitCurrency: Currency.COP,
       creditAmount: payrollDisbursement.debitAmount * payroll.exchangeRate,

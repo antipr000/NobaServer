@@ -215,7 +215,7 @@ export class EmployerService {
 
     if (request.status === PayrollStatus.COMPLETED) {
       payrollUpdateRequest.completedTimestamp = new Date();
-    } else if (request.status === PayrollStatus.CREATED) {
+    } else if (request.status === PayrollStatus.PREPARED) {
       const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
 
       const totalDebitAmountInCOP = disbursements.reduce((acc, disbursement) => acc + disbursement.debitAmount, 0);

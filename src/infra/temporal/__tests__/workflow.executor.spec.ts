@@ -259,6 +259,44 @@ describe("WorkflowExecutor", () => {
       expect(mockTemporalConn).toHaveBeenCalledTimes(failedConns);
     });
   });
+
+  describe("executePayrollProcessingWorkflow()", () => {
+    it("Should return the workflow id", async () => {
+      const workflowID = await workflowExecutor.executePayrollProcessingWorkflow("1234", "12345");
+      expect(workflowID).toBe("123");
+    });
+
+    it("Should fail connection once then return the workflow id", async () => {
+      const failedConns = 1;
+      mockFailedConnections(failedConns);
+
+      const workflowID = await workflowExecutor.executePayrollProcessingWorkflow("1234", "12345");
+      expect(workflowID).toBe("123");
+      expect(mockTemporalConn).toHaveBeenCalledTimes(failedConns + 1);
+    });
+
+    it("Should fail connection 6 times then work on the 7th and return the workflow id", async () => {
+      const failedConns = 6;
+      mockFailedConnections(failedConns);
+
+      const workflowID = await workflowExecutor.executePayrollProcessingWorkflow("1234", "12345");
+      expect(workflowID).toBe("123");
+      expect(mockTemporalConn).toHaveBeenCalledTimes(failedConns + 1);
+    });
+
+    it("Should fail connection 10 times and throw an exception", async () => {
+      const failedConns = 10;
+      mockFailedConnections(failedConns);
+
+      try {
+        await workflowExecutor.executePayrollProcessingWorkflow("1234", "12345");
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+      }
+      expect(mockTemporalConn).toHaveBeenCalledTimes(failedConns);
+    });
+  });
 });
 
 const mockFailedConnections = (num: number) => {
