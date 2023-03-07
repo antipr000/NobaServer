@@ -101,6 +101,13 @@ export class NotificationService {
     return deletedPushTokenID;
   }
 
+  async updateEmployeeAllocationInBubble(nobaEmployeeID: string, allocationAmount: number): Promise<void> {
+    await this.sendNotification(NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT, {
+      nobaEmployeeID,
+      allocationAmountInPesos: allocationAmount,
+    });
+  }
+
   private createEvent(eventName: string, eventType: NotificationEventType, payload: NotificationPayload) {
     switch (eventType) {
       case NotificationEventType.SEND_OTP_EVENT:

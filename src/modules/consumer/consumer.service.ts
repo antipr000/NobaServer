@@ -29,7 +29,7 @@ import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
 import { findFlag } from "country-list-with-dial-code-and-flag";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { EmployeeService } from "../employee/employee.service";
-import { Employee } from "../employee/domain/Employee";
+import { Employee, EmployeeAllocationCurrency } from "../employee/domain/Employee";
 import { BubbleService } from "../bubble/bubble.service";
 import { ConsumerSearchDTO } from "./dto/consumer.search.dto";
 import { ConsumerMapper } from "./mappers/ConsumerMapper";
@@ -636,7 +636,22 @@ export class ConsumerService {
 
     // TODO: Design a way to post to Bubble efficiently without blocking end users.
     const consumer: Consumer = await this.consumerRepo.getConsumer(consumerID);
-    await this.bubbleService.createEmployeeInBubble(employee.id, consumer);
+    if (employee.allocationCurrency !== EmployeeAllocationCurrency.COP) {
+      throw new ServiceException({
+        message: "Only COP is supported as 'allocationCurrency'",
+        errorCode: ServiceErrorCode.UNKNOWN,
+      });
+    }
+
+    await this.notificationService.sendNotification(NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT, {
+      email: consumer.props.email,
+      firstName: consumer.props.firstName,
+      lastName: consumer.props.lastName,
+      phone: consumer.props.phone,
+      employerReferralID: employerID,
+      nobaEmployeeID: employee.id,
+      allocationAmountInPesos: employee.allocationAmount,
+    });
 
     return employee;
   }
@@ -683,7 +698,7 @@ export class ConsumerService {
       allocationAmount: allocationAmountInPesos,
     });
     // TODO: Design a way to post to Bubble efficiently without blocking end users.
-    await this.bubbleService.updateEmployeeAllocationInBubble(employee.id, result.allocationAmount);
+    await this.notificationService.updateEmployeeAllocationInBubble(employee.id, result.allocationAmount);
 
     return result;
   }
