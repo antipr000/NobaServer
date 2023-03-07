@@ -5,7 +5,6 @@ import type { AddNobaAdminDTO } from "../models/AddNobaAdminDTO";
 import type { AdminLoginRequestDTO } from "../models/AdminLoginRequestDTO";
 import type { AdminUpdateConsumerRequestDTO } from "../models/AdminUpdateConsumerRequestDTO";
 import type { BlankResponseDTO } from "../models/BlankResponseDTO";
-import type { ConsumerDTO } from "../models/ConsumerDTO";
 import type { ConsumerInternalDTO } from "../models/ConsumerInternalDTO";
 import type { DeleteNobaAdminDTO } from "../models/DeleteNobaAdminDTO";
 import type { ExchangeRateDTO } from "../models/ExchangeRateDTO";
@@ -180,7 +179,7 @@ export class AdminService {
 
   /**
    * Updates a consumer
-   * @returns ConsumerDTO Updated consumer record
+   * @returns ConsumerInternalDTO Updated consumer record
    * @throws ApiError
    */
   public static updateConsumer({
@@ -189,7 +188,7 @@ export class AdminService {
   }: {
     consumerId: string;
     requestBody: AdminUpdateConsumerRequestDTO;
-  }): CancelablePromise<ConsumerDTO> {
+  }): CancelablePromise<ConsumerInternalDTO> {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/v1/admins/consumers/{consumerID}",

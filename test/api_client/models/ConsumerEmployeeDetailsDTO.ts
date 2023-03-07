@@ -3,11 +3,11 @@
 /* eslint-disable */
 
 export type ConsumerEmployeeDetailsDTO = {
-  employeeID?: string;
+  employeeID: string;
   allocationAmount?: number;
   allocationCurrency?: string;
-  createdTimestamp?: string;
-  updatedTimestamp?: string;
-  employerID?: string;
+  createdTimestamp: string;
+  updatedTimestamp: string;
+  employerID: string;
   employerName?: string;
 };

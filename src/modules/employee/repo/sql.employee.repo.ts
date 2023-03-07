@@ -96,9 +96,9 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
 
     try {
       const employeeUpdateInput: Prisma.EmployeeUpdateInput = {
-        ...(request.allocationAmount && { allocationAmount: request.allocationAmount }),
+        ...(request.allocationAmount >= 0 && { allocationAmount: request.allocationAmount }),
         ...(request.allocationCurrency && { allocationCurrency: request.allocationCurrency }),
-        ...(request.salary && { salary: request.salary }),
+        ...(request.salary >= 0 && { salary: request.salary }),
       };
 
       const returnedEmployee: EmployeeModelType = await this.prismaService.employee.update({

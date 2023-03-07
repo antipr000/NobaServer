@@ -202,9 +202,8 @@ export class AdminService {
           ...(this.shouldUpdateField(updateDetails.address.streetLine2, consumer.props.address?.streetLine2) && {
             streetLine2: this.cleanValue(updateDetails.address.streetLine2),
           }),
-          ...(this.shouldUpdateField(updateDetails.address.countryCode, consumer.props.address?.countryCode) && {
-            countryCode: this.cleanValue(updateDetails.address.countryCode),
-          }),
+          // provider is required, so always update even if unchanged
+          countryCode: this.cleanValue(updateDetails.address.countryCode),
           ...(this.shouldUpdateField(updateDetails.address.city, consumer.props.address?.city) && {
             city: this.cleanValue(updateDetails.address.city),
           }),
@@ -218,10 +217,8 @@ export class AdminService {
       }),
       ...(updateDetails.verificationData && {
         verificationData: {
-          ...(this.shouldUpdateField(
-            updateDetails.verificationData.provider,
-            consumer.props.verificationData?.provider,
-          ) && { provider: this.cleanValue(updateDetails.verificationData.provider) }),
+          // provider is required, so always update even if unchanged
+          provider: this.cleanValue(updateDetails.verificationData.provider),
           ...(this.shouldUpdateField(
             updateDetails.verificationData.kycCheckStatus,
             consumer.props.verificationData?.kycCheckStatus,
@@ -235,7 +232,6 @@ export class AdminService {
         },
       }),
     };
-
     await this.consumerService.updateConsumer(updateConsumerPayload);
     const updatedConsumer = await this.consumerService.getConsumer(consumerID);
 

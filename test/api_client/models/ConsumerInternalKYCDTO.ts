@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 export type ConsumerInternalKYCDTO = {
-  provider?: "SARDINE";
+  provider: "SARDINE";
   kycCheckReference?: string;
   documentCheckReference?: string;
   riskRating?: string;

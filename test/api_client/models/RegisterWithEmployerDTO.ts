@@ -4,6 +4,6 @@
 
 export type RegisterWithEmployerDTO = {
   employerID: string;
-  employerReferralID: string;
+  employerReferralID?: string;
   allocationAmountInPesos: number;
 };

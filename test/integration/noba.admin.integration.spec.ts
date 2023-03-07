@@ -13,12 +13,14 @@ import { setUpEnvironmentVariablesToLoadTheSourceCode } from "../setup";
 const port: number = setUpEnvironmentVariablesToLoadTheSourceCode();
 
 import { ResponseStatus } from "../api_client/core/request";
-import { AdminService, DeleteNobaAdminDTO } from "../api_client";
+import { AdminService, ConsumerInternalDTO, DeleteNobaAdminDTO } from "../api_client";
 import { NobaAdminDTO } from "../../src/modules/admin/dto/NobaAdminDTO";
 import {
+  getConsumer,
   insertNobaAdmin,
   loginAndGetResponse,
   loginNobaAdminAndGetResponse,
+  patchConsumer,
   setAccessTokenForTheNextRequests,
 } from "../common";
 import { IntegrationTestUtility } from "../TestUtils";
@@ -483,6 +485,80 @@ describe("Noba Admin", () => {
       })) as DeleteNobaAdminDTO & ResponseStatus;
 
       expect(deleteNobaAdminResponse.__status).toBe(403);
+    });
+  });
+
+  describe.skip("PATCH /consumers/{id}", () => {
+    it("should patch all provided fields", async () => {
+      const consumerEmail = integrationTestUtils.getRandomEmail("test.consumer");
+      await loginAndGetResponse(consumerEmail);
+
+      let consumer = await getConsumer(consumerEmail);
+
+      await patchConsumer({
+        email: consumerEmail,
+        address: {
+          streetLine1: "123 main st",
+          city: "irvene",
+          regionCode: "CA",
+          countryCode: "US",
+          postalCode: "123456",
+        },
+        verificationData: {
+          provider: "SARDINE",
+          kycCheckStatus: "APPROVED",
+          documentVerificationStatus: "NOT_REQUIRED",
+        },
+      });
+
+      const nobaAdminEmail = integrationTestUtils.getRandomEmail("test.noba.admin");
+
+      await insertNobaAdmin("", nobaAdminEmail, integrationTestUtils.getRandomID("AAAAAAAAAAA"), "ADMIN");
+      const nobaAdminLoginResponse = await loginNobaAdminAndGetResponse(nobaAdminEmail);
+      setAccessTokenForTheNextRequests(nobaAdminLoginResponse.accessToken);
+      const newPhone = integrationTestUtils.getRandomPhoneNumber("1");
+      const patchConsumerResponse = (await AdminService.updateConsumer({
+        consumerId: consumer.id,
+        requestBody: {
+          phone: newPhone,
+          dateOfBirth: "1991-08-20",
+          address: {
+            streetLine1: "245 sw 136th street",
+            streetLine2: "",
+            city: "Newberry",
+            regionCode: "FL",
+            countryCode: "US",
+            postalCode: "32669",
+          },
+          handle: "gal-noba",
+          isLocked: false,
+          isDisabled: false,
+          referredByID: "",
+          verificationData: {
+            kycCheckStatus: "APPROVED",
+            documentVerificationStatus: "NOT_REQUIRED",
+          },
+        },
+      })) as ConsumerInternalDTO & ResponseStatus;
+
+      expect(patchConsumerResponse.__status).toBe(200);
+
+      consumer = await getConsumer(consumerEmail);
+
+      expect(consumer.address.city).toBe("Newberry");
+      expect(consumer.address.countryCode).toBe("US");
+      expect(consumer.address.postalCode).toBe("32669");
+      expect(consumer.address.regionCode).toBe("FL");
+      expect(consumer.address.streetLine1).toBe("245 sw 136th street");
+
+      expect(consumer.dateOfBirth).toBe("1991-08-20");
+      expect(consumer.phone).toBe(newPhone);
+      expect(consumer.handle).toBe("gal-noba");
+      expect(consumer.isLocked).toBe(false);
+      expect(consumer.isDisabled).toBe(false);
+      expect(consumer.referredByID).toBe("");
+      expect(consumer.verificationData.kycCheckStatus).toBe("APPROVED");
+      expect(consumer.verificationData.documentVerificationStatus).toBe("NOT_REQUIRED");
     });
   });
 });
