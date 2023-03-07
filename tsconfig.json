@@ -13,7 +13,8 @@
     "incremental": true,
     "resolveJsonModule": true,
     "types": ["jest", "node"],
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "useDefineForClassFields": false
   },
   "ts-node": {
     "compilerOptions": {
