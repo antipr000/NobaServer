@@ -19,7 +19,6 @@ import { BubbleModule } from "../bubble/bubble.module";
     ConsumerRepoModule,
     EmployeeModule,
     EmployerModule,
-    BubbleModule,
   ],
   controllers: [ConsumerController],
   providers: [ConsumerService, SanctionedCryptoWalletService, ConsumerMapper],

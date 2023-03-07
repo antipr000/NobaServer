@@ -64,7 +64,6 @@ export class ConsumerService {
     private readonly configService: CustomConfigService,
     private readonly qrService: QRService,
     private readonly employeeService: EmployeeService,
-    private readonly bubbleService: BubbleService,
   ) {
     this.otpOverride = this.configService.get(STATIC_DEV_OTP);
     this.qrCodePrefix = this.configService.get("QR_CODE_PREFIX");
