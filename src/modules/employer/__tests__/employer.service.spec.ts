@@ -26,6 +26,8 @@ import { getRandomEmployee } from "../../../modules/employee/test_utils/employee
 import { Utils } from "../../../core/utils/Utils";
 import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
+import { TemplateService } from "../../../modules/common/template.service";
+import { getMockTemplateServiceWithDefaults } from "../../../modules/common/mocks/mock.template.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -54,6 +56,7 @@ describe("EmployerServiceTests", () => {
   let payrollRepo: IPayrollRepo;
   let payrollDisbursementRepo: IPayrollDisbursementRepo;
   let exchangeRateService: ExchangeRateService;
+  let templateService: TemplateService;
 
   beforeEach(async () => {
     employerRepo = getMockEmployerRepoWithDefaults();
@@ -61,6 +64,7 @@ describe("EmployerServiceTests", () => {
     payrollDisbursementRepo = getMockPayrollDisbursementRepoWithDefaults();
     payrollRepo = getMockPayrollRepoWithDefaults();
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
+    templateService = getMockTemplateServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
