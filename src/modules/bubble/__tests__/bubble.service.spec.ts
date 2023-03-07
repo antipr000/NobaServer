@@ -17,6 +17,8 @@ import { getRandomPayroll } from "../../../modules/employer/test_utils/payroll.t
 import { NotificationService } from "../../../modules/notifications/notification.service";
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
+import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
+import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -66,11 +68,13 @@ describe("BubbleServiceTests", () => {
   let employeeService: EmployeeService;
   let bubbleService: BubbleService;
   let notificationService: NotificationService;
+  let workflowExecutor: WorkflowExecutor;
 
   beforeEach(async () => {
     employerService = getMockEmployerServiceWithDefaults();
     employeeService = getMockEmployeeServiceWithDefaults();
     notificationService = getMockNotificationServiceWithDefaults();
+    workflowExecutor = getMockWorkflowExecutorWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -91,6 +95,10 @@ describe("BubbleServiceTests", () => {
         {
           provide: NotificationService,
           useFactory: () => instance(notificationService),
+        },
+        {
+          provide: WorkflowExecutor,
+          useFactory: () => instance(workflowExecutor),
         },
         BubbleService,
       ],
@@ -569,6 +577,7 @@ describe("BubbleServiceTests", () => {
 
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(employerService.createPayroll(employer.id, payrollDate)).thenResolve(payroll);
+      when(workflowExecutor.executePayrollProcessingWorkflow(payroll.id, payroll.id)).thenResolve(null);
 
       const response = await bubbleService.createPayroll(employer.referralID, payrollDate);
       expect(response).toStrictEqual(payroll);
