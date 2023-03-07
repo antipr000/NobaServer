@@ -11,6 +11,7 @@ import {
   getRandomPayrollDisbursement,
 } from "../../../modules/employer/test_utils/payroll.test.utils";
 import { BadRequestException } from "@nestjs/common";
+import { Bool } from "../../../core/domain/ApiEnums";
 
 describe("BubbleWebhookControllerTests", () => {
   jest.setTimeout(20000);
@@ -287,7 +288,7 @@ describe("BubbleWebhookControllerTests", () => {
       });
 
       const result = await bubbleWebhookController.getPayroll(referralID, payroll.id, {
-        shouldIncludeDisbursements: true,
+        shouldIncludeDisbursements: Bool.True,
       });
 
       expect(result).toStrictEqual({

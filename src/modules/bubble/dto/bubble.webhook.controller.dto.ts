@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
+import { Bool } from "../../../core/domain/ApiEnums";
 
 export class RegisterEmployerRequestDTO {
   @ApiProperty()
@@ -60,8 +61,8 @@ export class CreatePayrollResponseDTO {
 }
 
 export class PayrollQueryDTO {
-  @ApiProperty()
-  shouldIncludeDisbursements: boolean;
+  @ApiProperty({ enum: Bool })
+  shouldIncludeDisbursements: Bool;
 }
 
 export class DisbursementDTO {

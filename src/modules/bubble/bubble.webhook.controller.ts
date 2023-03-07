@@ -31,6 +31,7 @@ import { EmployerRegisterResponseDTO } from "./dto/EmployerRegisterResponseDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { isValidDateString } from "../../core/utils/DateUtils";
 import { BubbleWebhookMapper } from "./mapper/bubble.webhook.mapper";
+import { Bool } from "../../core/domain/ApiEnums";
 
 @Controller("/webhooks/bubble")
 @ApiTags("Webhooks")
@@ -101,7 +102,7 @@ export class BubbleWebhookController {
     const payrollWithDisbursements = await this.bubbleService.getPayrollWithDisbursements(
       referralID,
       payrollID,
-      query.shouldIncludeDisbursements,
+      query.shouldIncludeDisbursements === Bool.True,
     );
 
     return {
