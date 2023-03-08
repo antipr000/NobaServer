@@ -10,6 +10,7 @@ import { TransactionModule } from "../transaction/transaction.module";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { PspModule } from "../psp/psp.module";
 import { EmployeeModule } from "../employee/employee.module";
+import { EmployerModule } from "../employer/employer.module";
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { EmployeeModule } from "../employee/employee.module";
     InfraProvidersModule,
     PspModule,
     EmployeeModule,
+    EmployerModule,
   ],
   controllers: [AdminController],
   providers: [
