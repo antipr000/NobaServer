@@ -25,6 +25,7 @@ export class TemplateFields {
   handlebarTemplate: string;
   companyName: string;
   payrollReference: string;
+  payrollDate: string;
   nobaAccountNumber: string;
   currency: string;
   employeeDisbursements: EmployeeDisbursement[];
