@@ -1123,9 +1123,9 @@ describe("ConsumerController", () => {
       employee3.employer = employer3;
 
       when(consumerService.listLinkedEmployers(consumer.props.id)).thenResolve([employee1, employee2, employee3]);
-      when(employeeService.getEmployeeByID(employer1.id, deepEqual(true))).thenResolve(employee1);
-      when(employeeService.getEmployeeByID(employer2.id, deepEqual(true))).thenResolve(employee2);
-      when(employeeService.getEmployeeByID(employer3.id, deepEqual(true))).thenResolve(employee3);
+      when(employeeService.getEmployeeByID(employee1.id, deepEqual(true))).thenResolve(employee1);
+      when(employeeService.getEmployeeByID(employee2.id, deepEqual(true))).thenResolve(employee2);
+      when(employeeService.getEmployeeByID(employee3.id, deepEqual(true))).thenResolve(employee3);
 
       const response = await consumerController.listLinkedEmployers(consumer);
       expect(response).toHaveLength(3);
