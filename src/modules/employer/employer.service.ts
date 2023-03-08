@@ -248,7 +248,7 @@ export class EmployerService {
       this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_es.html`, html_es),
     ]);
 
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({ headless: true, args: ["-no-sandbox"] });
 
     const [pdf_en, pdf_es] = await Promise.all([
       this.generatePayrollPDF(browser, html_en, `inv_${payrollID}_en.pdf`),
