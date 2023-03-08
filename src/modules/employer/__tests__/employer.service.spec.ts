@@ -701,6 +701,8 @@ describe("EmployerServiceTests", () => {
         totalDebitAmount: 30000,
         totalCreditAmount: 75,
         exchangeRate: 0.0025,
+        debitCurrency: "COP",
+        creditCurrency: "USD",
       });
     });
 
