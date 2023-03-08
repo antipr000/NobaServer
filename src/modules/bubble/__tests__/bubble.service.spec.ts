@@ -319,34 +319,14 @@ describe("BubbleServiceTests", () => {
       });
 
       verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-          deepEqual({
-            nobaEmployeeID: updatedEmployee1.id,
-            allocationAmountInPesos: updatedEmployee1.allocationAmount,
-          }),
-        ),
+        notificationService.updateEmployeeAllocationInBubble(updatedEmployee1.id, updatedEmployee1.allocationAmount),
       ).once();
 
       verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-          deepEqual({
-            nobaEmployeeID: updatedEmployee3.id,
-            allocationAmountInPesos: updatedEmployee3.allocationAmount,
-          }),
-        ),
+        notificationService.updateEmployeeAllocationInBubble(updatedEmployee3.id, updatedEmployee3.allocationAmount),
       ).once();
 
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-          deepEqual({
-            nobaEmployeeID: employee2.id,
-            allocationAmountInPesos: employee2.allocationAmount,
-          }),
-        ),
-      ).never();
+      verify(notificationService.updateEmployeeAllocationInBubble(employee2.id, employee2.allocationAmount)).never();
     });
 
     it("should update the 'payrollDays' of employer in Noba", async () => {
@@ -469,13 +449,6 @@ describe("BubbleServiceTests", () => {
       expect(propagatedEmployeeIDToEmployeeService).toEqual(employee.id);
       expect(propagatedEmployeePropsToEmployeeService).toEqual({
         salary: newSalary,
-      });
-
-      const [eventType, eventArgs] = capture(notificationService.sendNotification).last();
-      expect(eventType).toEqual(NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT);
-      expect(eventArgs).toEqual({
-        nobaEmployeeID: employee.id,
-        allocationAmountInPesos: updatedEmployee.allocationAmount,
       });
     });
 
