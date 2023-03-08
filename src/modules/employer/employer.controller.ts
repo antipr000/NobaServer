@@ -1,5 +1,5 @@
-import { Controller, HttpStatus, Inject, NotFoundException, Param, Get } from "@nestjs/common";
-import { ApiNotFoundResponse, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { Controller, HttpStatus, Inject, NotFoundException, Param, Get, Post, Query } from "@nestjs/common";
+import { ApiBearerAuth, ApiNotFoundResponse, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Role } from "../auth/role.enum";
@@ -41,5 +41,17 @@ export class EmployerController {
     }
 
     return this.employerMapper.toEmployerDTO(employer);
+  }
+
+  @Post("/payroll")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Generate payroll for employer" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Payroll Generated",
+  })
+  @ApiNotFoundResponse({ description: "Employer not found" })
+  async generatePayroll(@Query("payrollID") payrollID: string): Promise<void> {
+    this.employerService.generatePayroll(payrollID);
   }
 }
