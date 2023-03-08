@@ -183,6 +183,8 @@ export class EmployerService {
       });
     }
 
+    console.log(payrollID);
+
     const templatesPromise = Promise.all([
       this.handlebarService.getHandlebarLanguageTemplate(`template_${this.ENGLISH_LOCALE}.hbs`),
       this.handlebarService.getHandlebarLanguageTemplate(`template_${this.SPANISH_LOCALE}.hbs`),
@@ -206,6 +208,8 @@ export class EmployerService {
         message: "Employer not found",
       });
     }
+
+    console.log(employer);
 
     const companyName = employer.name;
     const currency = payroll.debitCurrency;

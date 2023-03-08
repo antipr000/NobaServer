@@ -44,7 +44,6 @@ export class EmployerController {
   }
 
   @Post("/payroll")
-  @ApiBearerAuth()
   @ApiOperation({ summary: "Generate payroll for employer" })
   @ApiResponse({
     status: HttpStatus.OK,
