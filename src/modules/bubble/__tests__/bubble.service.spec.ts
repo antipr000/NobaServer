@@ -103,50 +103,6 @@ describe("BubbleServiceTests", () => {
     app.close();
   });
 
-  describe("createEmployeeInBubble", () => {
-    it("should create an employee in a bubble", async () => {
-      const employer = getRandomEmployer();
-      const consumer = getRandomConsumer();
-      const employee = getRandomEmployee(consumer.props.id, employer);
-
-      when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
-      when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
-      when(notificationService.sendNotification(anything(), anything())).thenResolve();
-
-      await bubbleService.createEmployeeInBubble(employee.id, consumer);
-
-      const [notificationEventType, notificationArgs] = capture(notificationService.sendNotification).last();
-      expect(notificationEventType).toBe(NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT);
-      expect(notificationArgs).toEqual({
-        email: consumer.props.email,
-        firstName: consumer.props.firstName,
-        lastName: consumer.props.lastName,
-        phone: consumer.props.phone,
-        employerReferralID: employer.referralID,
-        nobaEmployeeID: employee.id,
-        allocationAmountInPesos: employee.allocationAmount,
-      });
-    });
-
-    it("should throw ServiceException if the 'allocationCurrency' is not 'COP'", async () => {
-      const employer = getRandomEmployer();
-      const consumer = getRandomConsumer();
-      const employee = getRandomEmployee(consumer.props.id, employer);
-      employee.allocationCurrency = "USD" as EmployeeAllocationCurrency;
-
-      when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
-
-      try {
-        await bubbleService.createEmployeeInBubble(employee.id, consumer);
-        expect(true).toBeFalsy();
-      } catch (err) {
-        expect(err).toBeInstanceOf(ServiceException);
-        expect(err.message).toEqual(expect.stringContaining("COP"));
-        expect(err.message).toEqual(expect.stringContaining("'allocationCurrency'"));
-      }
-    });
-  });
-
   describe("registerEmployerInNoba", () => {
     it("should register an employer in Noba", async () => {
       const employer: Employer = getRandomEmployer();
