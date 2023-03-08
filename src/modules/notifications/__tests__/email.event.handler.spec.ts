@@ -37,6 +37,7 @@ import { WorkflowName } from "../../../modules/transaction/domain/Transaction";
 import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
 import { SendKycPendingOrFlaggedEvent } from "../events/SendKycPendingOrFlaggedEvent";
+import { SendPayrollDepositCompletedEvent } from "../events/SendPayrollDepositCompletedEvent";
 
 describe("EmailEventHandler test for languages", () => {
   let currencyService: CurrencyService;
@@ -1520,6 +1521,131 @@ describe("EmailEventHandler test for languages", () => {
     });
   });
 
+  describe("SendPayrollDepositCompletedEvent", () => {
+    it("should call eventHandler with SendPayrollDepositCompletedEvent event with 'en' template", async () => {
+      const payload = new SendPayrollDepositCompletedEvent({
+        email: "fake+user@noba.com",
+        name: "First",
+        handle: "fake-handle",
+        params: {
+          ...getTransactionParams(WorkflowName.PAYROLL_DEPOSIT),
+          companyName: "Noba",
+        },
+        locale: "en",
+      });
+
+      await eventHandler.sendPayrollDepositCompletedEmail(payload);
+      const subtotal =
+        Utils.roundTo2DecimalNumber(payload.params.creditAmount) +
+        Utils.roundTo2DecimalNumber(payload.params.processingFees) +
+        Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+
+      const [emailRequest] = capture(emailClient.sendEmail).last();
+      expect(emailRequest).toStrictEqual({
+        to: payload.email,
+        from: SENDER_EMAIL,
+        templateId: EmailTemplates.PAYROLL_DEPOSIT_COMPLETED_EMAIL["en"],
+        dynamicTemplateData: {
+          firstName: payload.name,
+          companyName: payload.params.companyName,
+          debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+          debitCurrency: "COP",
+          creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+          creditCurrency: "USDC",
+          handle: payload.handle,
+          transactionRef: payload.params.transactionRef,
+          executedTimestamp: payload.params.createdTimestamp,
+          exchangeRate: payload.params.exchangeRate,
+          subtotal: Utils.roundTo2DecimalString(subtotal),
+          processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+          nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        },
+      });
+    });
+
+    it("should call eventHandler with SendPayrollDepositCompleted event with 'es' template", async () => {
+      const payload = new SendPayrollDepositCompletedEvent({
+        email: "fake+user@noba.com",
+        name: "First",
+        handle: "fake-handle",
+        params: {
+          ...getTransactionParams(WorkflowName.PAYROLL_DEPOSIT),
+          companyName: "Noba",
+        },
+        locale: "es_co",
+      });
+
+      await eventHandler.sendPayrollDepositCompletedEmail(payload);
+      const subtotal =
+        Utils.roundTo2DecimalNumber(payload.params.creditAmount) +
+        Utils.roundTo2DecimalNumber(payload.params.processingFees) +
+        Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+
+      const [emailRequest] = capture(emailClient.sendEmail).last();
+      expect(emailRequest).toStrictEqual({
+        to: payload.email,
+        from: SENDER_EMAIL,
+        templateId: EmailTemplates.PAYROLL_DEPOSIT_COMPLETED_EMAIL["es"],
+        dynamicTemplateData: {
+          firstName: payload.name,
+          companyName: payload.params.companyName,
+          debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+          debitCurrency: "COP",
+          creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+          creditCurrency: "USDC",
+          handle: payload.handle,
+          transactionRef: payload.params.transactionRef,
+          executedTimestamp: payload.params.createdTimestamp,
+          exchangeRate: payload.params.exchangeRate,
+          subtotal: Utils.roundTo2DecimalString(subtotal),
+          processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+          nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        },
+      });
+    });
+
+    it("should fallback to 'en' template if locale is not supported", async () => {
+      const payload = new SendPayrollDepositCompletedEvent({
+        email: "fake+user@noba.com",
+        name: "First",
+        handle: "fake-handle",
+        params: {
+          ...getTransactionParams(WorkflowName.PAYROLL_DEPOSIT),
+          companyName: "Noba",
+        },
+        locale: "fake-locale",
+      });
+
+      await eventHandler.sendPayrollDepositCompletedEmail(payload);
+      const subtotal =
+        Utils.roundTo2DecimalNumber(payload.params.creditAmount) +
+        Utils.roundTo2DecimalNumber(payload.params.processingFees) +
+        Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+
+      const [emailRequest] = capture(emailClient.sendEmail).last();
+      expect(emailRequest).toStrictEqual({
+        to: payload.email,
+        from: SENDER_EMAIL,
+        templateId: EmailTemplates.PAYROLL_DEPOSIT_COMPLETED_EMAIL["en"],
+        dynamicTemplateData: {
+          firstName: payload.name,
+          companyName: payload.params.companyName,
+          debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+          debitCurrency: "COP",
+          creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+          creditCurrency: "USDC",
+          handle: payload.handle,
+          transactionRef: payload.params.transactionRef,
+          executedTimestamp: payload.params.createdTimestamp,
+          exchangeRate: payload.params.exchangeRate,
+          subtotal: Utils.roundTo2DecimalString(subtotal),
+          processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+          nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        },
+      });
+    });
+  });
+
   it("should call eventHandler with SendHardDecline event", async () => {
     const payload = new SendHardDeclineEvent({
       email: "fake+user@noba.com",
@@ -1616,6 +1742,19 @@ function getTransactionParams(workflow: WorkflowName): TransactionParameters {
         debitAmount: 10,
         debitCurrency: "USD",
         creditAmount: 9.43,
+        creditCurrency: "USD",
+        exchangeRate: 0.0025,
+        transactionRef: "transaction-1",
+        createdTimestamp: "2023-02-02T17:54:37.601Z",
+        processingFees: 0.23,
+        nobaFees: 0.34,
+        totalFees: 0.57,
+      };
+    case WorkflowName.PAYROLL_DEPOSIT:
+      return {
+        debitAmount: 5000,
+        debitCurrency: "COP",
+        creditAmount: 1,
         creditCurrency: "USD",
         exchangeRate: 0.0025,
         transactionRef: "transaction-1",

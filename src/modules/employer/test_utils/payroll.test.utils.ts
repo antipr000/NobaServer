@@ -104,3 +104,20 @@ export const saveAndGetPayrollDisbursement = async (prismaService: PrismaService
 
   return convertToDomainPayrollDisbursement(payrollDisbursement);
 };
+
+export const updatePayrollWithTransactionID = async (
+  prismaService: PrismaService,
+  payrollDisbursementID: string,
+  transactionID: string,
+): Promise<PayrollDisbursement> => {
+  const payrollDisbursement = await prismaService.payrollDisbursement.update({
+    where: {
+      id: payrollDisbursementID,
+    },
+    data: {
+      transactionID: transactionID,
+    },
+  });
+
+  return convertToDomainPayrollDisbursement(payrollDisbursement);
+};

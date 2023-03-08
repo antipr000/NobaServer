@@ -886,4 +886,44 @@ describe("EmployerServiceTests", () => {
       await expect(employerService.getAllDisbursementsForEmployee(undefined)).rejects.toThrowError(ServiceException);
     });
   });
+
+  describe("getEmployerForTransactionID", () => {
+    it("should return the employer associated with a transaction", async () => {
+      const transactionID = "transaction-id-1";
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll(employer.id);
+      const { payrollDisbursement } = getRandomPayrollDisbursement(payroll.id, "fake-employee");
+      payrollDisbursement.transactionID = transactionID;
+
+      when(payrollDisbursementRepo.getPayrollDisbursementByTransactionID(transactionID)).thenResolve(
+        payrollDisbursement,
+      );
+      when(payrollRepo.getPayrollByID(payrollDisbursement.payrollID)).thenResolve(payroll);
+      when(employerRepo.getEmployerByID(payroll.employerID)).thenResolve(employer);
+
+      const response = await employerService.getEmployerForTransactionID(transactionID);
+
+      expect(response).toStrictEqual(employer);
+    });
+
+    it("should return null if disbursement cannot be found", async () => {
+      when(payrollDisbursementRepo.getPayrollDisbursementByTransactionID("1234")).thenResolve(null);
+      expect(await employerService.getEmployerForTransactionID("1234")).toBeNull();
+    });
+
+    it("should return null if payroll cannot be found", async () => {
+      const transactionID = "transaction-id-1";
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll(employer.id);
+      const { payrollDisbursement } = getRandomPayrollDisbursement(payroll.id, "fake-employee");
+      payrollDisbursement.transactionID = transactionID;
+
+      when(payrollDisbursementRepo.getPayrollDisbursementByTransactionID(transactionID)).thenResolve(
+        payrollDisbursement,
+      );
+      when(payrollRepo.getPayrollByID(payrollDisbursement.payrollID)).thenResolve(null);
+
+      expect(await employerService.getEmployerForTransactionID(transactionID)).toBeNull();
+    });
+  });
 });

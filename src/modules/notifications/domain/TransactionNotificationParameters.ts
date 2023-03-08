@@ -55,6 +55,10 @@ export interface TransferFailedNotificationParameters extends TransactionParamet
   reasonDeclined: string;
 }
 
+export interface PayrollDepositCompletedNotificationParameters extends DepositCompletedNotificationParameters {
+  companyName: string;
+}
+
 // TODO(jira/CRYPTO-604): Remove hardcoded values and unnecessary fields once templates are ready
 export class TransactionNotificationPayloadMapper {
   toTransactionParams(transaction: Transaction): TransactionParameters {
@@ -96,6 +100,17 @@ export class TransactionNotificationPayloadMapper {
 
   toWithdrawalCompletedNotificationParameters(transaction: Transaction): WithdrawalCompletedNotificationParameters {
     return this.toTransactionParams(transaction);
+  }
+
+  toPayrollDepositCompletedNotificationParameters(
+    transaction: Transaction,
+    companyName: string,
+  ): PayrollDepositCompletedNotificationParameters {
+    const transactionParams = this.toTransactionParams(transaction);
+    return {
+      ...transactionParams,
+      companyName: companyName,
+    };
   }
 
   toWithdrawalFailedNotificationParameters(transaction: Transaction): WithdrawalFailedNotificationParameters {

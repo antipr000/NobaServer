@@ -32,6 +32,7 @@ import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEv
 import { SendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
 import { SendTransferFailedEvent } from "./events/SendTransferFailedEvent";
 import { SendTransferReceivedEvent } from "./events/SendTransferReceivedEvent";
+import { SendPayrollDepositCompletedEvent } from "./events/SendPayrollDepositCompletedEvent";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -517,6 +518,35 @@ export class EmailEventHandler {
         processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
         nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
         reasonDeclined: payload.params.reasonDeclined,
+      },
+    };
+
+    await this.emailClient.sendEmail(msg);
+  }
+
+  @OnEvent(`email.${NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT}`)
+  public async sendPayrollDepositCompletedEmail(payload: SendPayrollDepositCompletedEvent) {
+    const subtotal =
+      Utils.roundTo2DecimalNumber(payload.params.creditAmount) + Utils.roundTo2DecimalNumber(payload.params.totalFees);
+
+    const msg = {
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: EmailTemplates.getOrDefault(EmailTemplates.PAYROLL_DEPOSIT_COMPLETED_EMAIL, payload.locale ?? "en"),
+      dynamicTemplateData: {
+        firstName: payload.name,
+        companyName: payload.params.companyName,
+        transactionRef: payload.params.transactionRef,
+        handle: payload.handle,
+        executedTimestamp: payload.params.createdTimestamp,
+        exchangeRate: payload.params.exchangeRate,
+        creditCurrency: processCurrency(payload.params.creditCurrency),
+        debitCurrency: processCurrency(payload.params.debitCurrency),
+        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        subtotal: Utils.roundTo2DecimalString(subtotal),
+        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
+        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
       },
     };
 

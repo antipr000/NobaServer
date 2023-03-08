@@ -39,6 +39,7 @@ import { SendTransferReceivedEvent } from "./events/SendTransferReceivedEvent";
 import { SendRegisterNewEmployeeEvent } from "./events/SendRegisterNewEmployeeEvent";
 import { SendUpdateEmployeeAllocationAmontEvent } from "./events/SendUpdateEmployeeAllocationAmountEvent";
 import { SendUpdatePayrollStatusEvent } from "./events/SendUpdatePayrollStatusEvent";
+import { SendPayrollDepositCompletedEvent } from "./events/SendPayrollDepositCompletedEvent";
 
 @Injectable()
 export class NotificationService {
@@ -428,6 +429,19 @@ export class NotificationService {
             processor: payload.processor,
             responseCode: payload.responseCode,
             responseSummary: payload.responseSummary,
+          }),
+        );
+        break;
+
+      case NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT:
+        this.eventEmitter.emitAsync(
+          eventName,
+          new SendPayrollDepositCompletedEvent({
+            email: payload.email,
+            name: payload.firstName,
+            handle: payload.handle,
+            locale: payload.locale,
+            params: payload.payrollDepositCompletedParams,
           }),
         );
         break;

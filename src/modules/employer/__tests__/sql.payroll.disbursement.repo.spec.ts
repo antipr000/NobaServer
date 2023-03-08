@@ -7,6 +7,7 @@ import {
   getRandomPayrollDisbursement,
   saveAndGetPayroll,
   saveAndGetPayrollDisbursement,
+  updatePayrollWithTransactionID,
 } from "../test_utils/payroll.test.utils";
 import { DatabaseInternalErrorException } from "../../../core/exception/CommonAppException";
 import { IPayrollDisbursementRepo } from "../repo/payroll.disbursement.repo";
@@ -120,14 +121,39 @@ describe("SqlPayrollDisbursementRepo tests", () => {
     it("should get the requested payroll disbursement", async () => {
       const payrollDisbursement = await saveAndGetPayrollDisbursement(prismaService);
 
-      const retrivedPayrollDisbursement = await payrollDisbursementRepo.getPayrollDisbursementByID(
+      const retrievedPayrollDisbursement = await payrollDisbursementRepo.getPayrollDisbursementByID(
         payrollDisbursement.id,
       );
-      expect(retrivedPayrollDisbursement).toStrictEqual(payrollDisbursement);
+      expect(retrievedPayrollDisbursement).toStrictEqual(payrollDisbursement);
     });
 
     it("should return null when payroll disbursement is not found", async () => {
       const retrievedPayrollDisbursement = await payrollDisbursementRepo.getPayrollDisbursementByID("fake-id");
+
+      expect(retrievedPayrollDisbursement).toBeNull();
+    });
+  });
+
+  describe("getPayrollDisbursementByTransactionID", () => {
+    it("should get the requested payroll disbursement", async () => {
+      const transactionID = await createTestNobaTransaction(prismaService);
+      const payrollDisbursement = await saveAndGetPayrollDisbursement(prismaService);
+      const updatedPayrollDisbursement = await updatePayrollWithTransactionID(
+        prismaService,
+        payrollDisbursement.id,
+        transactionID,
+      );
+
+      const retrievedPayrollDisbursement = await payrollDisbursementRepo.getPayrollDisbursementByTransactionID(
+        updatedPayrollDisbursement.transactionID,
+      );
+      expect(retrievedPayrollDisbursement).toStrictEqual(updatedPayrollDisbursement);
+    });
+
+    it("should return null when payroll disbursement is not found", async () => {
+      const retrievedPayrollDisbursement = await payrollDisbursementRepo.getPayrollDisbursementByTransactionID(
+        "fake-id",
+      );
 
       expect(retrievedPayrollDisbursement).toBeNull();
     });

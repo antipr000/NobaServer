@@ -97,6 +97,10 @@ export const EmailTemplates = {
     en: "d-c2f615c6c81147c9b3666cb6fd1c93b8",
     es: "d-d806e77606f04b7fb953aaa728f8ae2a",
   },
+  PAYROLL_DEPOSIT_COMPLETED_EMAIL: {
+    en: "d-0791ccff11c7416ca5eceaac66d430cd ",
+    es: "d-4bf8f1e412034f59aef4c0265e4017c2",
+  },
   COLLECTION_LINK_EMAIL: {},
   COLLECTION_COMPLETED_EMAIL: {
     en: "d-f085402c06584fe2a843c8e9dff2ed4b", // For now added deposit completed as default. Replace with proper template id once created

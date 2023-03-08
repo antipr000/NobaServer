@@ -26,6 +26,7 @@ export enum NotificationEventType {
   SEND_TRANSFER_RECEIVED_EVENT = "transfer.received",
   SEND_COLLECTION_LINK_EVENT = "collection.link",
   SEND_COLLECTION_COMPLETED_EVENT = "collection.completed",
+  SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT = "payroll.deposit.completed",
   SEND_EMPLOYER_REQUEST_EVENT = "employee.request",
   SEND_REGISTER_NEW_EMPLOYEE_EVENT = "register.employee",
   SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT = "update.employee.allocation.amount",
@@ -48,6 +49,7 @@ export enum NotificationWorkflowTypes {
   WITHDRAWAL_FAILED_EVENT = "withdrawalFailedEvent",
   TRANSFER_COMPLETED_EVENT = "transferCompletedEvent",
   TRANSFER_FAILED_EVENT = "transferFailedEvent",
+  PAYROLL_DEPOSIT_COMPLETED_EVENT = "payrollDepositCompletedEvent",
   UPDATE_PAYROLL_STATUS_EVENT = "updatePayrollStatusEvent",
 }
 
@@ -82,6 +84,7 @@ export const preferredNotificationMedium = {
   [NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT]: [NotificationEventHandler.DASHBOARD],
   [NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT]: [NotificationEventHandler.DASHBOARD],
   [NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT]: [NotificationEventHandler.DASHBOARD],

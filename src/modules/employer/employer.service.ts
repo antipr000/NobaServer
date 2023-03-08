@@ -439,6 +439,25 @@ export class EmployerService {
     return this.payrollDisbursementRepo.getAllDisbursementsForEmployee(employeeID);
   }
 
+  async getEmployerForTransactionID(transactionID: string): Promise<Employer> {
+    // First, get the disbursement for the transaction ID
+    const disbursement = await this.payrollDisbursementRepo.getPayrollDisbursementByTransactionID(transactionID);
+
+    if (!disbursement) {
+      return null;
+    }
+
+    // Then get the payroll associated with the disbursement
+    const payroll = await this.payrollRepo.getPayrollByID(disbursement.payrollID);
+
+    if (!payroll) {
+      return null;
+    }
+
+    // Then get the employer associated with the payroll
+    return this.employerRepo.getEmployerByID(payroll.employerID);
+  }
+
   async createInvoice(payrollID: string): Promise<void> {
     this.generatePayroll(payrollID);
   }

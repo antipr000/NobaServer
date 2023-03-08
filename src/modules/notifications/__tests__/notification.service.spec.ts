@@ -38,6 +38,7 @@ import { SendRegisterNewEmployeeEvent } from "../events/SendRegisterNewEmployeeE
 import { SendUpdateEmployeeAllocationAmontEvent } from "../events/SendUpdateEmployeeAllocationAmountEvent";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { SendUpdatePayrollStatusEvent } from "../events/SendUpdatePayrollStatusEvent";
+import { SendPayrollDepositCompletedEvent } from "../events/SendPayrollDepositCompletedEvent";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -290,6 +291,7 @@ describe("NotificationService", () => {
       NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
       NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT,
       NotificationEventType.SEND_HARD_DECLINE_EVENT,
+      NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
     ];
 
     const payload: NotificationPayload = {
@@ -512,6 +514,15 @@ describe("NotificationService", () => {
             processor: payload.processor,
             responseCode: payload.responseCode,
             responseSummary: payload.responseSummary,
+          });
+          break;
+        case NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT:
+          data = new SendPayrollDepositCompletedEvent({
+            email: payload.email,
+            name: payload.firstName,
+            handle: payload.handle,
+            params: payload.payrollDepositCompletedParams,
+            locale: payload.locale,
           });
           break;
       }

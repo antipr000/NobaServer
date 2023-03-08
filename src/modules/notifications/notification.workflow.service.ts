@@ -192,6 +192,20 @@ export class NotificationWorkflowService {
           creditConsumerFailed,
           debitConsumerFailed,
         );
+      case NotificationWorkflowTypes.PAYROLL_DEPOSIT_COMPLETED_EVENT:
+        const employer = await this.employerService.getEmployerForTransactionID(transaction.id);
+        let employerName = "";
+        if (!employer) {
+          this.logger.warn(`Unable to find employer for transaction ${transaction.id}`);
+        } else {
+          employerName = employer.name;
+        }
+
+        return this.transactionNotificationPayloadMapper.toPayrollDepositCompletedNotificationParameters(
+          transaction,
+          employerName,
+        );
+
       default:
         return null;
     }
