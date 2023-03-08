@@ -16,6 +16,24 @@ export class Employer {
   updatedTimestamp: Date;
 }
 
+export type EmployeeDisbursement = {
+  employeeName: string;
+  amount: number;
+};
+
+export class TemplateFields {
+  handlebarTemplate: string;
+  companyName: string;
+  payrollReference: string;
+  payrollDate: string;
+  nobaAccountNumber: string;
+  currency: string;
+  employeeDisbursements: EmployeeDisbursement[];
+  totalAmount: number;
+  locale: string;
+  region: string;
+}
+
 export class EmployerCreateRequest {
   name: string;
   logoURI: string;

@@ -43,13 +43,13 @@ export function getMockConsumerServiceWithDefaults(): ConsumerService {
     new Error("Method not implemented!"),
   );
   when(mockConsumerService.getBase64EncodedQRCode(anyString())).thenReject(new Error("Method not implemented!"));
-  when(mockConsumerService.registerWithAnEmployer(anyString(), anyString(), anyString(), anyNumber())).thenReject(
+  when(mockConsumerService.registerWithAnEmployer(anyString(), anyString(), anyNumber())).thenReject(
     new Error("Method not implemented!"),
   );
   when(mockConsumerService.listLinkedEmployers(anyString())).thenReject(new Error("Method not implemented!"));
-  when(
-    mockConsumerService.updateEmployerAllocationAmount(anyString(), anyString(), anyString(), anyNumber()),
-  ).thenReject(new Error("Method not implemented!"));
+  when(mockConsumerService.updateEmployerAllocationAmount(anyString(), anyString(), anyNumber())).thenReject(
+    new Error("Method not implemented!"),
+  );
 
   return mockConsumerService;
 }

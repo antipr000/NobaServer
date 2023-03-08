@@ -6,14 +6,15 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2021",
+    "target": "ES2022",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
     "resolveJsonModule": true,
     "types": ["jest", "node"],
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "useDefineForClassFields": false
   },
   "ts-node": {
     "compilerOptions": {

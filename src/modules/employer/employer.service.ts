@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { Logger } from "winston";
-import { Employer } from "./domain/Employer";
+import { EmployeeDisbursement, Employer, TemplateFields } from "./domain/Employer";
 import { IEmployerRepo } from "./repo/employer.repo";
 import {
   EMPLOYER_REPO_PROVIDER,
@@ -14,7 +14,12 @@ import {
   EmployerWithEmployeesDTO,
   UpdateEmployerRequestDTO,
 } from "./dto/employer.service.dto";
+import dayjs from "dayjs";
+import Handlebars from "handlebars";
+import { ConsumerService } from "../consumer/consumer.service";
 import { EmployeeService } from "../employee/employee.service";
+import { TemplateService } from "../common/template.service";
+import "dayjs/locale/es";
 import { IPayrollRepo } from "./repo/payroll.repo";
 import { IPayrollDisbursementRepo } from "./repo/payroll.disbursement.repo";
 import { Payroll, PayrollCreateRequest } from "./domain/Payroll";
@@ -30,16 +35,25 @@ import { Utils } from "../../core/utils/Utils";
 import { ExchangeRateService } from "../common/exchangerate.service";
 import { Currency } from "../transaction/domain/TransactionTypes";
 import { isValidDateString } from "../../core/utils/DateUtils";
+import puppeteer, { Browser } from "puppeteer";
 
 @Injectable()
 export class EmployerService {
   private readonly MAX_LEAD_DAYS = 5;
+  private readonly ENGLISH_LOCALE = "en";
+  private readonly SPANISH_LOCALE = "es";
+
+  @Inject()
+  private readonly handlebarService: TemplateService;
 
   @Inject()
   private readonly employeeService: EmployeeService;
 
   @Inject()
   private readonly exchangeRateService: ExchangeRateService;
+
+  @Inject()
+  private readonly consumerService: ConsumerService;
 
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
@@ -159,6 +173,89 @@ export class EmployerService {
     }
 
     return this.employerRepo.getEmployerByBubbleID(bubbleID);
+  }
+
+  async generatePayroll(payrollID: string): Promise<void> {
+    if (!payrollID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Payroll ID is required",
+      });
+    }
+
+    const templatesPromise = Promise.all([
+      this.handlebarService.getHandlebarLanguageTemplate(`template_${this.ENGLISH_LOCALE}.hbs`),
+      this.handlebarService.getHandlebarLanguageTemplate(`template_${this.SPANISH_LOCALE}.hbs`),
+    ]);
+
+    let [employeeDisbursements, payroll] = await Promise.all([
+      this.getEmployeeDisbursements(payrollID),
+      this.payrollRepo.getPayrollByID(payrollID),
+    ]);
+    if (!payroll) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Payroll not found",
+      });
+    }
+
+    const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
+    if (!employer) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Employer not found",
+      });
+    }
+
+    const companyName = employer.name;
+    const currency = payroll.debitCurrency;
+    const accountNumber = employer.payrollAccountNumber || "095000766"; // TODO: grab from config
+    const [template_en, template_es] = await templatesPromise;
+
+    const [html_en, html_es] = await Promise.all([
+      this.generateTemplate({
+        handlebarTemplate: template_en,
+        companyName: companyName,
+        payrollReference: payroll.reference,
+        payrollDate: payroll.payrollDate,
+        currency: currency,
+        employeeDisbursements: employeeDisbursements,
+        totalAmount: payroll.totalDebitAmount,
+        nobaAccountNumber: accountNumber,
+        locale: this.ENGLISH_LOCALE,
+        region: "US",
+      }),
+      this.generateTemplate({
+        handlebarTemplate: template_es,
+        companyName: companyName,
+        payrollReference: payroll.reference,
+        payrollDate: payroll.payrollDate,
+        currency: currency,
+        employeeDisbursements: employeeDisbursements,
+        totalAmount: payroll.totalDebitAmount,
+        nobaAccountNumber: accountNumber,
+        locale: this.SPANISH_LOCALE,
+        region: "CO",
+      }),
+    ]);
+
+    await Promise.all([
+      this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_en.html`, html_en),
+      this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_es.html`, html_es),
+    ]);
+
+    const browser = await puppeteer.launch({ headless: true });
+
+    const [pdf_en, pdf_es] = await Promise.all([
+      this.generatePayrollPDF(browser, html_en, `inv_${payrollID}_en.pdf`),
+      this.generatePayrollPDF(browser, html_es, `inv_${payrollID}_es.pdf`),
+    ]);
+
+    await Promise.all([
+      this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_en.pdf`, pdf_en),
+      this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_es.pdf`, pdf_es),
+    ]);
+    browser.close();
   }
 
   async getPayrollByID(id: string): Promise<Payroll> {
@@ -339,6 +436,58 @@ export class EmployerService {
   }
 
   async createInvoice(payrollID: string): Promise<void> {
-    throw new Error("Not implemented");
+    this.generatePayroll(payrollID);
+  }
+
+  private async generateTemplate({
+    handlebarTemplate,
+    companyName,
+    payrollReference,
+    payrollDate,
+    nobaAccountNumber,
+    currency,
+    employeeDisbursements,
+    totalAmount,
+    locale,
+    region,
+  }: TemplateFields): Promise<string> {
+    const template = Handlebars.compile(handlebarTemplate);
+
+    const employeeAllocations = employeeDisbursements.map(allocation => ({
+      employeeName: allocation.employeeName,
+      amount: allocation.amount.toLocaleString(`${locale}-${region}`),
+    }));
+    return template({
+      companyName: companyName,
+      currency: currency,
+      payrollReference: payrollReference,
+      date: dayjs(payrollDate).locale(locale).format("MMMM D, YYYY"),
+      totalAmount: totalAmount.toLocaleString(`${locale}-${region}`),
+      allocations: employeeAllocations,
+      nobaAccountNumber: nobaAccountNumber,
+    });
+  }
+
+  private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDisbursement[]> {
+    const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
+
+    return Promise.all(
+      disbursements.map(async disbursement => {
+        const employee = await this.employeeService.getEmployeeByID(disbursement.employeeID);
+        const consumer = await this.consumerService.getConsumer(employee.consumerID);
+        return {
+          employeeName: consumer.props.firstName + " " + consumer.props.lastName,
+          amount: disbursement.debitAmount,
+        };
+      }),
+    );
+  }
+
+  private async generatePayrollPDF(browserInstance: Browser, html: string, path: string): Promise<Buffer> {
+    const page = await browserInstance.newPage();
+    await page.emulateMediaType("screen");
+    await page.setContent(html);
+    await page.evaluateHandle("document.fonts.ready");
+    return page.pdf({ format: "A4", path: path });
   }
 }

@@ -182,8 +182,11 @@ dependencies:
 locationDataFileName: "countries+states.json"
 dbDumpFilesBucketPath: "dump"
 assetsBucketName: "prod-noba-assets"
+generatedDataBucketName: "noba-generated-data"
 supportedCryptoFileBucketPath: "assets/data/cryptocurrency_tokens.csv"
 sanctionedCryptoWalletsFileBucketPath: "assets/data/sanctioned_wallets.csv"
+templatesFolderBucketPath: "assets/templates"
+invoicesFolderBucketPath: "lowers/invoices"
 
 # Should ONLY EVER be set in localdevelopment.yaml, e2e_test.yaml and awsdev.yaml!
 staticDevOTP: 333333

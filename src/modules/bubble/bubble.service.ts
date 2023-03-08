@@ -29,39 +29,6 @@ export class BubbleService {
     private readonly workflowExecutor: WorkflowExecutor,
   ) {}
 
-  async createEmployeeInBubble(nobaEmployeeID: string, consumer: Consumer): Promise<void> {
-    const nobaEmployee: Employee = await this.employeeService.getEmployeeByID(nobaEmployeeID);
-
-    if (nobaEmployee.allocationCurrency !== EmployeeAllocationCurrency.COP) {
-      throw new ServiceException({
-        message: "Only COP is supported as 'allocationCurrency'",
-        errorCode: ServiceErrorCode.UNKNOWN,
-      });
-    }
-
-    const employer: Employer = await this.employerService.getEmployerByID(nobaEmployee.employerID);
-
-    await this.notificationService.sendNotification(NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT, {
-      email: consumer.props.email,
-      firstName: consumer.props.firstName,
-      lastName: consumer.props.lastName,
-      phone: consumer.props.phone,
-      employerReferralID: employer.referralID,
-      nobaEmployeeID: nobaEmployee.id,
-      allocationAmountInPesos: nobaEmployee.allocationAmount,
-    });
-  }
-
-  async updateEmployeeAllocationInBubble(nobaEmployeeID: string, allocationAmount: number): Promise<void> {
-    await this.notificationService.sendNotification(
-      NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-      {
-        nobaEmployeeID,
-        allocationAmountInPesos: allocationAmount,
-      },
-    );
-  }
-
   async registerEmployerInNoba(request: RegisterEmployerRequest): Promise<string> {
     const employer: Employer = await this.employerService.createEmployer({
       name: request.name,
@@ -101,7 +68,7 @@ export class BubbleService {
       );
 
       const employeeUpdatePromises: Promise<void>[] = updatedEmployees.map(async employee =>
-        this.updateEmployeeAllocationInBubble(employee.id, employee.allocationAmount),
+        this.notificationService.updateEmployeeAllocationInBubble(employee.id, employee.allocationAmount),
       );
 
       await Promise.all(employeeUpdatePromises);
@@ -123,7 +90,7 @@ export class BubbleService {
 
     // If the salary update triggered a change to the allocation percent, update Bubble
     if (updatedEmployee?.allocationAmount !== employee.allocationAmount) {
-      await this.updateEmployeeAllocationInBubble(employeeID, updatedEmployee.allocationAmount);
+      await this.notificationService.updateEmployeeAllocationInBubble(employeeID, updatedEmployee.allocationAmount);
     }
   }
 

@@ -13,9 +13,9 @@ import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { DocumentVerificationStatus, KYCProvider, KYCStatus, WalletStatus } from "@prisma/client";
 import { Address } from "../domain/Address";
 import { Utils } from "../../../core/utils/Utils";
-import { EmployerService } from "../../../modules/employer/employer.service";
+import { EmployeeService } from "../../../modules/employee/employee.service";
 import { anyString, instance, verify, when } from "ts-mockito";
-import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
+import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 import { KmsService } from "../../../modules/common/kms.service";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
@@ -37,10 +37,10 @@ describe("ConsumerRepoTests", () => {
   let app: TestingModule;
   let prismaService: PrismaService;
   let kmsService: KmsService;
-  let employerService: EmployerService;
+  let employeeService: EmployeeService;
 
   beforeAll(async () => {
-    employerService = getMockEmployerServiceWithDefaults();
+    employeeService = getMockEmployeeServiceWithDefaults();
     kmsService = getMockKMSServiceWithDefaults();
 
     const appConfigurations = {
@@ -55,8 +55,8 @@ describe("ConsumerRepoTests", () => {
         PrismaService,
         SQLConsumerRepo,
         {
-          provide: EmployerService,
-          useFactory: () => instance(employerService),
+          provide: EmployeeService,
+          useFactory: () => instance(employeeService),
         },
         {
           provide: KmsService,

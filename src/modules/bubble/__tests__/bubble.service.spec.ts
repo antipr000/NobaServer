@@ -114,50 +114,6 @@ describe("BubbleServiceTests", () => {
     app.close();
   });
 
-  describe("createEmployeeInBubble", () => {
-    it("should create an employee in a bubble", async () => {
-      const employer = getRandomEmployer();
-      const consumer = getRandomConsumer();
-      const employee = getRandomEmployee(consumer.props.id, employer);
-
-      when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
-      when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
-      when(notificationService.sendNotification(anything(), anything())).thenResolve();
-
-      await bubbleService.createEmployeeInBubble(employee.id, consumer);
-
-      const [notificationEventType, notificationArgs] = capture(notificationService.sendNotification).last();
-      expect(notificationEventType).toBe(NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT);
-      expect(notificationArgs).toEqual({
-        email: consumer.props.email,
-        firstName: consumer.props.firstName,
-        lastName: consumer.props.lastName,
-        phone: consumer.props.phone,
-        employerReferralID: employer.referralID,
-        nobaEmployeeID: employee.id,
-        allocationAmountInPesos: employee.allocationAmount,
-      });
-    });
-
-    it("should throw ServiceException if the 'allocationCurrency' is not 'COP'", async () => {
-      const employer = getRandomEmployer();
-      const consumer = getRandomConsumer();
-      const employee = getRandomEmployee(consumer.props.id, employer);
-      employee.allocationCurrency = "USD" as EmployeeAllocationCurrency;
-
-      when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
-
-      try {
-        await bubbleService.createEmployeeInBubble(employee.id, consumer);
-        expect(true).toBeFalsy();
-      } catch (err) {
-        expect(err).toBeInstanceOf(ServiceException);
-        expect(err.message).toEqual(expect.stringContaining("COP"));
-        expect(err.message).toEqual(expect.stringContaining("'allocationCurrency'"));
-      }
-    });
-  });
-
   describe("registerEmployerInNoba", () => {
     it("should register an employer in Noba", async () => {
       const employer: Employer = getRandomEmployer();
@@ -300,27 +256,6 @@ describe("BubbleServiceTests", () => {
     });
   });
 
-  describe("updateEmployeeAllocationInBubble", () => {
-    it("should forwards the request to BubbleClient as is", async () => {
-      const employer = getRandomEmployer();
-      const consumer = getRandomConsumer();
-      const employee = getRandomEmployee(consumer.props.id, employer);
-      const newAllocationAmount = 12345;
-
-      when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
-      when(notificationService.sendNotification(anything(), anything())).thenResolve();
-
-      await bubbleService.updateEmployeeAllocationInBubble(employee.id, newAllocationAmount);
-
-      const [eventType, eventArgs] = capture(notificationService.sendNotification).last();
-      expect(eventType).toEqual(NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT);
-      expect(eventArgs).toEqual({
-        nobaEmployeeID: employee.id,
-        allocationAmountInPesos: newAllocationAmount,
-      });
-    });
-  });
-
   describe("updateEmployerInNoba", () => {
     it("should update the 'leadDays' and 'maxAllocationPercent' of employer in Noba", async () => {
       const employer: Employer = getRandomEmployer();
@@ -395,34 +330,14 @@ describe("BubbleServiceTests", () => {
       });
 
       verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-          deepEqual({
-            nobaEmployeeID: updatedEmployee1.id,
-            allocationAmountInPesos: updatedEmployee1.allocationAmount,
-          }),
-        ),
+        notificationService.updateEmployeeAllocationInBubble(updatedEmployee1.id, updatedEmployee1.allocationAmount),
       ).once();
 
       verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-          deepEqual({
-            nobaEmployeeID: updatedEmployee3.id,
-            allocationAmountInPesos: updatedEmployee3.allocationAmount,
-          }),
-        ),
+        notificationService.updateEmployeeAllocationInBubble(updatedEmployee3.id, updatedEmployee3.allocationAmount),
       ).once();
 
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-          deepEqual({
-            nobaEmployeeID: employee2.id,
-            allocationAmountInPesos: employee2.allocationAmount,
-          }),
-        ),
-      ).never();
+      verify(notificationService.updateEmployeeAllocationInBubble(employee2.id, employee2.allocationAmount)).never();
     });
 
     it("should update the 'payrollDays' of employer in Noba", async () => {
@@ -545,13 +460,6 @@ describe("BubbleServiceTests", () => {
       expect(propagatedEmployeeIDToEmployeeService).toEqual(employee.id);
       expect(propagatedEmployeePropsToEmployeeService).toEqual({
         salary: newSalary,
-      });
-
-      const [eventType, eventArgs] = capture(notificationService.sendNotification).last();
-      expect(eventType).toEqual(NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT);
-      expect(eventArgs).toEqual({
-        nobaEmployeeID: employee.id,
-        allocationAmountInPesos: updatedEmployee.allocationAmount,
       });
     });
 

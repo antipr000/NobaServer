@@ -2,7 +2,7 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { NotificationService } from "../notification.service";
-import { anyString, anything, deepEqual, instance, verify, when } from "ts-mockito";
+import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { NotificationEventType } from "../domain/NotificationTypes";
 import { SENDGRID_API_KEY, SENDGRID_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { EventEmitter2 } from "@nestjs/event-emitter";

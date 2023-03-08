@@ -437,7 +437,6 @@ export class ConsumerController {
   ): Promise<BlankResponseDTO> {
     await this.consumerService.registerWithAnEmployer(
       requestBody.employerID,
-      requestBody.employerReferralID,
       consumer.props.id,
       requestBody.allocationAmountInPesos,
     );
@@ -461,11 +460,10 @@ export class ConsumerController {
   ): Promise<BlankResponseDTO> {
     const employee = await this.consumerService.updateEmployerAllocationAmount(
       requestBody.employerID,
-      requestBody.employerReferralID,
       consumer.props.id,
       requestBody.allocationAmountInPesos,
     );
-    return this.consumerMapper.toLinkedEmployerDTO(employee);
+    return this.consumerMapper.toLinkedEmployerDTO(employee.id);
   }
 
   @Post("/employers/request")

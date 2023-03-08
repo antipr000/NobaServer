@@ -1,4 +1,4 @@
-import { Controller, HttpStatus, Inject, NotFoundException, Param, Get } from "@nestjs/common";
+import { Controller, HttpStatus, Inject, NotFoundException, Param, Get, Post, Body, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiHeaders, ApiNotFoundResponse, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
@@ -6,7 +6,7 @@ import { Logger } from "winston";
 import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
 import { EmployerService } from "./employer.service";
-import { EmployerDTO } from "./dto/employer.controller.dto";
+import { EmployerDTO, PayrollData } from "./dto/employer.controller.dto";
 import { EmployerMapper } from "./mappers/employer.mapper";
 
 @Controller("v1/employers")
@@ -42,5 +42,17 @@ export class EmployerController {
     }
 
     return this.employerMapper.toEmployerDTO(employer);
+  }
+
+  @Post("/payroll")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Generate payroll for employer" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Payroll Generated",
+  })
+  @ApiNotFoundResponse({ description: "Employer not found" })
+  async generatePayroll(@Query("payrollID") payrollID: string): Promise<void> {
+    this.employerService.generatePayroll(payrollID);
   }
 }

@@ -1,7 +1,7 @@
 import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { UserEmailUpdateRequest } from "test/api_client";
-import { deepEqual, instance, verify, when } from "ts-mockito";
+import { anyString, anything, deepEqual, instance, verify, when } from "ts-mockito";
 import { PhoneVerificationOtpRequest } from "../../../../test/api_client/models/PhoneVerificationOtpRequest";
 import { UserPhoneUpdateRequest } from "../../../../test/api_client/models/UserPhoneUpdateRequest";
 import { Result } from "../../../core/logic/Result";
@@ -36,11 +36,11 @@ import {
 import { CryptoWallet } from "../domain/CryptoWallet";
 import { PaymentMethod } from "../domain/PaymentMethod";
 import { QRCodeDTO } from "../dto/QRCodeDTO";
-import { EmployerService } from "../../../modules/employer/employer.service";
+import { EmployeeService } from "../../../modules/employee/employee.service";
 import { Employer } from "../../../modules/employer/domain/Employer";
 import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
 import { uuid } from "uuidv4";
-import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
+import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -84,7 +84,7 @@ describe("ConsumerController", () => {
   let consumerController: ConsumerController;
   let consumerService: ConsumerService;
   let plaidClient: PlaidClient;
-  let employerService: EmployerService;
+  let employeeService: EmployeeService;
   let consumerMapper: ConsumerMapper;
 
   jest.setTimeout(30000);
@@ -97,7 +97,7 @@ describe("ConsumerController", () => {
   beforeEach(async () => {
     consumerService = getMockConsumerServiceWithDefaults();
     plaidClient = getMockPlaidClientWithDefaults();
-    employerService = getMockEmployerServiceWithDefaults();
+    employeeService = getMockEmployeeServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -112,8 +112,8 @@ describe("ConsumerController", () => {
           useFactory: () => instance(plaidClient),
         },
         {
-          provide: EmployerService,
-          useFactory: () => instance(employerService),
+          provide: EmployeeService,
+          useFactory: () => instance(employeeService),
         },
         ConsumerMapper,
       ],
@@ -1086,26 +1086,11 @@ describe("ConsumerController", () => {
   describe("registerWithAnEmployer", () => {
     it("should forward the call to consumerService", async () => {
       const consumer = getRandomConsumer();
-      when(consumerService.registerWithAnEmployer(null, "employerReferralID", consumer.props.id, 1478)).thenResolve();
-
-      await consumerController.registerWithAnEmployer(
-        {
-          employerID: null,
-          employerReferralID: "employerReferralID",
-          allocationAmountInPesos: 1478,
-        },
-        consumer,
-      );
-    });
-
-    it("should forwards the call with employerID to consumerService", async () => {
-      const consumer = getRandomConsumer();
-      when(consumerService.registerWithAnEmployer("employerID", null, consumer.props.id, 1478)).thenResolve();
+      when(consumerService.registerWithAnEmployer("employerID", consumer.props.id, 1478)).thenResolve();
 
       await consumerController.registerWithAnEmployer(
         {
           employerID: "employerID",
-          employerReferralID: null,
           allocationAmountInPesos: 1478,
         },
         consumer,
@@ -1131,13 +1116,16 @@ describe("ConsumerController", () => {
       const sortedEmployer3PayrollDates = ["2020-02-23"].concat(defaultPayrollDates);
 
       const employee1 = getRandomEmployee(consumer.props.id, employer1.id);
+      employee1.employer = employer1;
       const employee2 = getRandomEmployee(consumer.props.id, employer2.id);
+      employee2.employer = employer2;
       const employee3 = getRandomEmployee(consumer.props.id, employer3.id);
+      employee3.employer = employer3;
 
       when(consumerService.listLinkedEmployers(consumer.props.id)).thenResolve([employee1, employee2, employee3]);
-      when(employerService.getEmployerByID(employer1.id)).thenResolve(employer1);
-      when(employerService.getEmployerByID(employer2.id)).thenResolve(employer2);
-      when(employerService.getEmployerByID(employer3.id)).thenResolve(employer3);
+      when(employeeService.getEmployeeByID(employee1.id, deepEqual(true))).thenResolve(employee1);
+      when(employeeService.getEmployeeByID(employee2.id, deepEqual(true))).thenResolve(employee2);
+      when(employeeService.getEmployeeByID(employee3.id, deepEqual(true))).thenResolve(employee3);
 
       const response = await consumerController.listLinkedEmployers(consumer);
       expect(response).toHaveLength(3);
@@ -1183,42 +1171,14 @@ describe("ConsumerController", () => {
       const employer1 = getRandomEmployer(); // before lead days
       employer1.payrollDates.push("2020-03-04");
       const employee1 = getRandomEmployee(consumer.props.id, employer1.id);
-      when(employerService.getEmployerByID(employer1.id)).thenResolve(employer1);
-      when(
-        consumerService.updateEmployerAllocationAmount(null, "employerReferralID", consumer.props.id, 1478),
-      ).thenResolve(employee1);
-
-      const updatedEmployee = await consumerController.updateAllocationAmountForAnEmployer(consumer, {
-        employerID: null,
-        employerReferralID: "employerReferralID",
-        allocationAmountInPesos: 1478,
-      });
-
-      expect(updatedEmployee).toEqual({
-        employerID: employer1.id,
-        employerName: employer1.name,
-        employerLogoURI: employer1.logoURI,
-        allocationAmountInPesos: employee1.allocationAmount,
-        employerReferralID: employer1.referralID,
-        leadDays: employer1.leadDays,
-        payrollDates: employer1.payrollDates,
-        nextPayrollDate: employer1.payrollDates[3],
-      });
-    });
-
-    it("should forward the call with employer id to consumerService", async () => {
-      const consumer = getRandomConsumer();
-      const employer1 = getRandomEmployer(); // before lead days
-      employer1.payrollDates.push("2020-03-04");
-      const employee1 = getRandomEmployee(consumer.props.id, employer1.id);
-      when(employerService.getEmployerByID(employer1.id)).thenResolve(employer1);
-      when(consumerService.updateEmployerAllocationAmount(employer1.id, null, consumer.props.id, 1478)).thenResolve(
+      employee1.employer = employer1;
+      when(employeeService.getEmployeeByID(employee1.id, deepEqual(true))).thenResolve(employee1);
+      when(consumerService.updateEmployerAllocationAmount(employer1.id, consumer.props.id, 1478)).thenResolve(
         employee1,
       );
 
       const updatedEmployee = await consumerController.updateAllocationAmountForAnEmployer(consumer, {
         employerID: employer1.id,
-        employerReferralID: null,
         allocationAmountInPesos: 1478,
       });
 
