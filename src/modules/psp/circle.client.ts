@@ -73,7 +73,6 @@ export class CircleClient implements IClient {
         this.axiosConfig,
       );
 
-      this.logger.info(`"createWallet" succeeds with request_id: "${response.headers["X-Request-Id"]}"`);
       return response.data.data.walletId;
     } catch (err) {
       this.logger.error(
@@ -92,7 +91,6 @@ export class CircleClient implements IClient {
   async getWalletBalance(walletID: string): Promise<number> {
     try {
       const walletData = await this.circleApi.wallets.getWallet(walletID, this.axiosConfig);
-      this.logger.info(`"getWallet" succeeds with request_id: "${walletData.headers["X-Request-Id"]}"`);
 
       let result = 0;
       walletData.data.data.balances.forEach(balance => {
