@@ -23,12 +23,10 @@ export class TemplateService {
 
       try {
         const getObjectCommand = new GetObjectCommand(options);
-        console.log(getObjectCommand);
         const getObjectResult = await s3.send(getObjectCommand);
         const stringifiedResult = await getObjectResult.Body.transformToString();
         resolve(stringifiedResult);
       } catch (e) {
-        console.log("Error loading template from S3: ", e);
         reject(e);
       }
     });
