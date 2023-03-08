@@ -194,8 +194,6 @@ export class EmployerService {
         message: "Payroll ID is required",
       });
     }
-
-    // Remove this once we have unit tests in place and PDF generation is stable
     const templatesPromise = Promise.all([
       this.handlebarService.getHandlebarLanguageTemplate(`template_${this.ENGLISH_LOCALE}.hbs`),
       this.handlebarService.getHandlebarLanguageTemplate(`template_${this.SPANISH_LOCALE}.hbs`),
@@ -236,6 +234,7 @@ export class EmployerService {
     const currency = payroll.debitCurrency;
     const accountNumber = employerPayrollAccountNumber || this.nobaPayrollAccountNumber;
 
+    // Remove this once we have unit tests in place and PDF generation is stable
     const [html_en, html_es] = await Promise.all([
       this.generateTemplate({
         handlebarTemplate: template_en,
