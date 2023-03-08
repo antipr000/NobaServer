@@ -1116,13 +1116,16 @@ describe("ConsumerController", () => {
       const sortedEmployer3PayrollDates = ["2020-02-23"].concat(defaultPayrollDates);
 
       const employee1 = getRandomEmployee(consumer.props.id, employer1.id);
+      employee1.employer = employer1;
       const employee2 = getRandomEmployee(consumer.props.id, employer2.id);
+      employee2.employer = employer2;
       const employee3 = getRandomEmployee(consumer.props.id, employer3.id);
+      employee3.employer = employer3;
 
       when(consumerService.listLinkedEmployers(consumer.props.id)).thenResolve([employee1, employee2, employee3]);
-      when(employerService.getEmployerByID(employer1.id)).thenResolve(employer1);
-      when(employerService.getEmployerByID(employer2.id)).thenResolve(employer2);
-      when(employerService.getEmployerByID(employer3.id)).thenResolve(employer3);
+      when(employeeService.getEmployeeByID(employer1.id, true)).thenResolve(employee1);
+      when(employeeService.getEmployeeByID(employer2.id, true)).thenResolve(employee2);
+      when(employeeService.getEmployeeByID(employer3.id, true)).thenResolve(employee3);
 
       const response = await consumerController.listLinkedEmployers(consumer);
       expect(response).toHaveLength(3);
@@ -1168,7 +1171,8 @@ describe("ConsumerController", () => {
       const employer1 = getRandomEmployer(); // before lead days
       employer1.payrollDates.push("2020-03-04");
       const employee1 = getRandomEmployee(consumer.props.id, employer1.id);
-      when(employerService.getEmployerByID(employer1.id)).thenResolve(employer1);
+      employee1.employer = employer1;
+      when(employeeService.getEmployeeByID(employer1.id, true)).thenResolve(employee1);
       when(consumerService.updateEmployerAllocationAmount(employer1.id, consumer.props.id, 1478)).thenResolve(
         employee1,
       );

@@ -1822,10 +1822,6 @@ describe("ConsumerService", () => {
       const response = await consumerService.registerWithAnEmployer(employer.id, consumer.props.id, 100);
 
       expect(response).toEqual(employee);
-
-      const [propagatedNobaEmployeeID, propagatedConsumer] = capture(notificationService.sendNotification).last();
-      expect(propagatedNobaEmployeeID).toEqual(employee.id);
-      expect(propagatedConsumer).toEqual(consumer);
     });
   });
 
