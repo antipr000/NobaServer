@@ -39,13 +39,15 @@ import puppeteer, { Browser } from "puppeteer";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { MonoConfigs } from "../../config/configtypes/MonoConfig";
 import { MONO_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { KmsService } from "../common/kms.service";
+import { KmsKeyType } from "src/config/configtypes/KmsConfigs";
 
 @Injectable()
 export class EmployerService {
   private readonly MAX_LEAD_DAYS = 5;
   private readonly ENGLISH_LOCALE = "en";
   private readonly SPANISH_LOCALE = "es";
-  private readonly nobaAccountID: string;
+  private readonly nobaPayrollAccountNumber: string;
 
   @Inject()
   private readonly handlebarService: TemplateService;
@@ -59,6 +61,9 @@ export class EmployerService {
   @Inject()
   private readonly consumerService: ConsumerService;
 
+  @Inject()
+  private readonly kmsService: KmsService;
+
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
     @Inject(PAYROLL_REPO_PROVIDER) private readonly payrollRepo: IPayrollRepo,
@@ -66,7 +71,7 @@ export class EmployerService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly configService: CustomConfigService,
   ) {
-    this.nobaAccountID = this.configService.get<MonoConfigs>(MONO_CONFIG_KEY).nobaAccountID;
+    this.nobaPayrollAccountNumber = this.configService.get<MonoConfigs>(MONO_CONFIG_KEY).nobaPayrollAccountNumber;
   }
 
   private validateLeadDays(leadDays: number): void {
@@ -215,10 +220,21 @@ export class EmployerService {
       });
     }
 
+    const employerPayrollAccountNumber = await this.kmsService.decryptString(
+      employer.payrollAccountNumber,
+      KmsKeyType.SSN,
+    );
+    if (!employerPayrollAccountNumber) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: `Account number failed decryption: ${employer.payrollAccountNumber}`,
+      });
+    }
+
+    const [template_en, template_es] = await templatesPromise;
     const companyName = employer.name;
     const currency = payroll.debitCurrency;
-    const accountNumber = employer.payrollAccountNumber || this.nobaAccountID;
-    const [template_en, template_es] = await templatesPromise;
+    const accountNumber = employerPayrollAccountNumber || this.nobaPayrollAccountNumber;
 
     const [html_en, html_es] = await Promise.all([
       this.generateTemplate({
