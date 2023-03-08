@@ -49,6 +49,9 @@ import { AccountBalanceFiltersDTO } from "./dto/AccountBalanceFiltersDTO";
 import { AccountBalanceDTO } from "./dto/AccountBalanceDTO";
 import { ConsumerSearchDTO } from "../consumer/dto/consumer.search.dto";
 import { ConsumerInternalDTO } from "../consumer/dto/ConsumerInternalDTO";
+import { UpdatePayrollRequestDTO } from "../employer/dto/payroll.workflow.controller.dto";
+import { PayrollDTO } from "../employer/dto/PayrollDTO";
+import { EmployerService } from "../employer/employer.service";
 
 @Roles(Role.NOBA_ADMIN)
 @Controller("v1/admins")
@@ -72,6 +75,9 @@ export class AdminController {
 
   @Inject()
   private readonly consumerMapper: ConsumerMapper;
+
+  @Inject()
+  private readonly employerService: EmployerService;
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   constructor() {}
@@ -236,6 +242,37 @@ export class AdminController {
     }
 
     return this.adminService.getBalanceForAccounts(filters.accountBalanceType, filters.accountIDs);
+  }
+
+  @Patch("/payrolls/:payrollID")
+  @ApiOperation({ summary: "Updates the payroll status" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Payroll status is updated successfully" })
+  @ApiForbiddenResponse({
+    description: "User forbidden from updating the Payroll status",
+  })
+  async updatePayrollStatus(
+    @Request() request,
+    @Param("payrollID") payrollID: string,
+    @Body() requestBody: UpdatePayrollRequestDTO,
+  ): Promise<PayrollDTO> {
+    const authenticatedUser: Admin = request.user.entity;
+    if (!(authenticatedUser instanceof Admin)) {
+      throw new ForbiddenException("User is forbidden from calling this API.");
+    }
+
+    const payroll = await this.employerService.updatePayroll(payrollID, requestBody);
+    return {
+      id: payroll.id,
+      employerID: payroll.employerID,
+      reference: payroll.reference,
+      payrollDate: payroll.payrollDate,
+      totalDebitAmount: payroll.totalDebitAmount,
+      totalCreditAmount: payroll.totalCreditAmount,
+      exchangeRate: payroll.exchangeRate,
+      debitCurrency: payroll.debitCurrency,
+      creditCurrency: payroll.creditCurrency,
+      status: payroll.status,
+    };
   }
 
   @Get("/consumers")

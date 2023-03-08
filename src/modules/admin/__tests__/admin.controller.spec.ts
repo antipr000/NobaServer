@@ -25,6 +25,10 @@ import { ConsumerMapper } from "../../../modules/consumer/mappers/ConsumerMapper
 import { EmployeeService } from "../../../modules/employee/employee.service";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 import { ConsumerDTO } from "../../../modules/consumer/dto/ConsumerDTO";
+import { EmployerService } from "../../../modules/employer/employer.service";
+import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
+import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
+import { getRandomPayroll } from "../../../modules/employer/test_utils/payroll.test.utils";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -40,6 +44,7 @@ describe("AdminController", () => {
   let mockExchangeRateService: ExchangeRateService;
   let consumerMapper: ConsumerMapper;
   let employeeService: EmployeeService;
+  let employerService: EmployerService;
 
   beforeEach(async () => {
     process.env = {
@@ -53,6 +58,7 @@ describe("AdminController", () => {
     mockTransactionService = getMockTransactionServiceWithDefaults();
     mockExchangeRateService = getMockExchangeRateServiceWithDefaults();
     employeeService = getMockEmployeeServiceWithDefaults();
+    employerService = getMockEmployerServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -77,6 +83,10 @@ describe("AdminController", () => {
         {
           provide: EmployeeService,
           useFactory: () => instance(employeeService),
+        },
+        {
+          provide: EmployerService,
+          useFactory: () => instance(employerService),
         },
         AdminMapper,
         ConsumerMapper,
@@ -1036,6 +1046,66 @@ describe("AdminController", () => {
               accountBalanceType: ACCOUNT_BALANCE_TYPES.CIRCLE,
               accountIDs: ["test-account-id"],
             },
+          ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe("updatePayrollStatus", () => {
+    it("NobaAdmin with 'Admin' role should be able to update the Payroll status", async () => {
+      const adminID = "AAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+      const payroll = getRandomPayroll("EMPLOYER_ID").payroll;
+
+      when(employerService.updatePayroll(payroll.id, anything())).thenResolve(payroll);
+
+      const returnedPayroll = await adminController.updatePayrollStatus(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        payroll.id,
+        { status: PayrollStatus.FUNDED },
+      );
+
+      expect(returnedPayroll).toStrictEqual({
+        id: payroll.id,
+        employerID: payroll.employerID,
+        reference: payroll.reference,
+        payrollDate: payroll.payrollDate,
+        totalDebitAmount: payroll.totalDebitAmount,
+        totalCreditAmount: payroll.totalCreditAmount,
+        exchangeRate: payroll.exchangeRate,
+        debitCurrency: payroll.debitCurrency,
+        creditCurrency: payroll.creditCurrency,
+        status: payroll.status,
+      });
+
+      const [propagatedPayrollID, propagatedRequestBody] = capture(employerService.updatePayroll).last();
+      expect(propagatedPayrollID).toBe(payroll.id);
+      expect(propagatedRequestBody).toStrictEqual({
+        status: PayrollStatus.FUNDED,
+      });
+    });
+
+    it("Regular user (non-admin) should not be able to update the payroll status", async () => {
+      const authenticatedConsumer: Consumer = Consumer.createConsumer({
+        id: "XXXXXXXXXX",
+        email: LOGGED_IN_ADMIN_EMAIL,
+      });
+
+      expect(
+        async () =>
+          await adminController.updatePayrollStatus(
+            {
+              user: { entity: authenticatedConsumer },
+            },
+            "PAYROLL_ID",
+            { status: PayrollStatus.FUNDED },
           ),
       ).rejects.toThrow(ForbiddenException);
     });
