@@ -36,11 +36,11 @@ import {
 import { CryptoWallet } from "../domain/CryptoWallet";
 import { PaymentMethod } from "../domain/PaymentMethod";
 import { QRCodeDTO } from "../dto/QRCodeDTO";
-import { EmployerService } from "../../../modules/employer/employer.service";
+import { EmployeeService } from "../../../modules/employee/employee.service";
 import { Employer } from "../../../modules/employer/domain/Employer";
 import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
 import { uuid } from "uuidv4";
-import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
+import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -84,7 +84,7 @@ describe("ConsumerController", () => {
   let consumerController: ConsumerController;
   let consumerService: ConsumerService;
   let plaidClient: PlaidClient;
-  let employerService: EmployerService;
+  let employeeService: EmployeeService;
   let consumerMapper: ConsumerMapper;
 
   jest.setTimeout(30000);
@@ -97,7 +97,7 @@ describe("ConsumerController", () => {
   beforeEach(async () => {
     consumerService = getMockConsumerServiceWithDefaults();
     plaidClient = getMockPlaidClientWithDefaults();
-    employerService = getMockEmployerServiceWithDefaults();
+    employeeService = getMockEmployeeServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -112,8 +112,8 @@ describe("ConsumerController", () => {
           useFactory: () => instance(plaidClient),
         },
         {
-          provide: EmployerService,
-          useFactory: () => instance(employerService),
+          provide: EmployeeService,
+          useFactory: () => instance(employeeService),
         },
         ConsumerMapper,
       ],

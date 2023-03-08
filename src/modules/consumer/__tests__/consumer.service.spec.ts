@@ -1817,13 +1817,13 @@ describe("ConsumerService", () => {
 
       when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
       when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(bubbleService.createEmployeeInBubble(anyString(), anything())).thenResolve();
+      when(notificationService.sendNotification(anyString(), anything())).thenResolve();
 
       const response = await consumerService.registerWithAnEmployer(employer.id, consumer.props.id, 100);
 
       expect(response).toEqual(employee);
 
-      const [propagatedNobaEmployeeID, propagatedConsumer] = capture(bubbleService.createEmployeeInBubble).last();
+      const [propagatedNobaEmployeeID, propagatedConsumer] = capture(notificationService.sendNotification).last();
       expect(propagatedNobaEmployeeID).toEqual(employee.id);
       expect(propagatedConsumer).toEqual(consumer);
     });
@@ -1923,7 +1923,7 @@ describe("ConsumerService", () => {
           }),
         ),
       ).thenResolve(employee);
-      when(bubbleService.updateEmployeeAllocationInBubble(employee.id, 1256)).thenResolve();
+      when(notificationService.updateEmployeeAllocationInBubble(employee.id, 1256)).thenResolve();
 
       const response = await consumerService.updateEmployerAllocationAmount(employer.id, "consumerID", 1256);
 
