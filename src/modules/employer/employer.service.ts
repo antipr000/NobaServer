@@ -250,7 +250,7 @@ export class EmployerService {
 
     const browser = await puppeteer.launch({
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless", "--disable-gpu", "--disable-dev-shm-usage"],
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless"],
       executablePath: "/usr/bin/chromium-browser",
     });
 
