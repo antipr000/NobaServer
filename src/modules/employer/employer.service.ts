@@ -334,8 +334,6 @@ export class EmployerService {
       payrollUpdateRequest.totalDebitAmount = totalDebitAmountInCOP;
       payrollUpdateRequest.exchangeRate = exchangeRateDTO.nobaRate;
       payrollUpdateRequest.totalCreditAmount = totalCreditAmountInUSD;
-      payrollUpdateRequest.debitCurrency = Currency.COP;
-      payrollUpdateRequest.creditCurrency = Currency.USD;
     }
 
     const updatedPayroll = await this.payrollRepo.updatePayroll(payrollID, payrollUpdateRequest);
