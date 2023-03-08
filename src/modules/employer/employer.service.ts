@@ -36,12 +36,16 @@ import { ExchangeRateService } from "../common/exchangerate.service";
 import { Currency } from "../transaction/domain/TransactionTypes";
 import { isValidDateString } from "../../core/utils/DateUtils";
 import puppeteer, { Browser } from "puppeteer";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { MonoConfigs } from "../../config/configtypes/MonoConfig";
+import { MONO_CONFIG_KEY } from "../../config/ConfigurationUtils";
 
 @Injectable()
 export class EmployerService {
   private readonly MAX_LEAD_DAYS = 5;
   private readonly ENGLISH_LOCALE = "en";
   private readonly SPANISH_LOCALE = "es";
+  private readonly nobaAccountID: string;
 
   @Inject()
   private readonly handlebarService: TemplateService;
@@ -60,7 +64,10 @@ export class EmployerService {
     @Inject(PAYROLL_REPO_PROVIDER) private readonly payrollRepo: IPayrollRepo,
     @Inject(PAYROLL_DISBURSEMENT_REPO_PROVIDER) private readonly payrollDisbursementRepo: IPayrollDisbursementRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {}
+    private readonly configService: CustomConfigService,
+  ) {
+    this.nobaAccountID = this.configService.get<MonoConfigs>(MONO_CONFIG_KEY).nobaAccountID;
+  }
 
   private validateLeadDays(leadDays: number): void {
     if (leadDays > this.MAX_LEAD_DAYS || leadDays < 1) {
@@ -209,7 +216,7 @@ export class EmployerService {
 
     const companyName = employer.name;
     const currency = payroll.debitCurrency;
-    const accountNumber = employer.payrollAccountNumber || "095000766"; // TODO: grab from config
+    const accountNumber = employer.payrollAccountNumber || this.nobaAccountID;
     const [template_en, template_es] = await templatesPromise;
 
     const [html_en, html_es] = await Promise.all([
