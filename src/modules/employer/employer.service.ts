@@ -190,6 +190,7 @@ export class EmployerService {
       });
     }
 
+    // Remove this once we have unit tests in place and PDF generation is stable
     const templatesPromise = Promise.all([
       this.handlebarService.getHandlebarLanguageTemplate(`template_${this.ENGLISH_LOCALE}.hbs`),
       this.handlebarService.getHandlebarLanguageTemplate(`template_${this.SPANISH_LOCALE}.hbs`),

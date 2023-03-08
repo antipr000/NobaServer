@@ -160,6 +160,8 @@ mono:
   awsSecretNameForBaseURL: "PROD_MONO_BASE_URL"
   nobaAccountID: ""
   awsSecretNameForNobaAccountID: "PROD_MONO_NOBA_ACCOUNT_ID"
+  nobaPayrollAccountNumber: ""
+  awsSecretNameForNobaPayrollAccountNumber: "PROD_MONO_NOBA_PAYROLL_ACCOUNT_NUMBER"
   webhookSecret: ""
   awsSecretNameForWebhookSecret: "PROD_MONO_WEBHOOK_SECRET"
 

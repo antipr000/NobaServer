@@ -423,6 +423,10 @@ async function configureMonoCredentials(
     monoConfig.awsSecretNameForNobaAccountID,
     monoConfig.nobaAccountID,
   );
+  monoConfig.nobaPayrollAccountNumber = await getParameterValue(
+    monoConfig.awsSecretNameForNobaPayrollAccountNumber,
+    monoConfig.nobaPayrollAccountNumber,
+  );
 
   configs[MONO_CONFIG_KEY] = monoConfig;
   return configs;

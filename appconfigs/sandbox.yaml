@@ -153,6 +153,8 @@ mono:
   awsSecretNameForBaseURL: "TEST_MONO_BASE_URL"
   nobaAccountID: ""
   awsSecretNameForNobaAccountID: "TEST_MONO_NOBA_ACCOUNT_ID"
+  nobaPayrollAccountNumber: ""
+  awsSecretNameForNobaPayrollAccountNumber: "TEST_MONO_NOBA_PAYROLL_ACCOUNT_NUMBER"
   webhookSecret: ""
   awsSecretNameForWebhookSecret: "SANDBOX_MONO_WEBHOOK_SECRET"
 

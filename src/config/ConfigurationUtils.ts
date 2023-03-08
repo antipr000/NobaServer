@@ -192,6 +192,8 @@ export const MONO_BASE_URL = "baseURL";
 export const MONO_AWS_SECRET_KEY_FOR_BASE_URL = "awsSecretNameForBaseURL";
 export const MONO_NOBA_ACCOUNT_ID = "nobaAccountID";
 export const MONO_AWS_SECRET_KEY_FOR_NOBA_ACCOUNT_ID = "awsSecretNameForNobaAccountID";
+export const MONO_NOBA_PAYROLL_ACCOUNT_NUMBER = "nobaPayrollAccountNumber";
+export const MONO_AWS_SECRET_KEY_FOR_NOBA_PAYROLL_ACCOUNT_NUMBER = "awsSecretNameForNobaPayrollAccountNumber";
 export const MONO_WEBHOOK_SECRET = "webhookSecret";
 export const MONO_AWS_SECRET_KEY_FOR_WEBHOOK_SECRET = "awsSecretNameForWebhookSecret";
 
