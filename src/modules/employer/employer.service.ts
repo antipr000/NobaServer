@@ -209,37 +209,7 @@ export class EmployerService {
 
     const companyName = employer.name;
     const currency = payroll.debitCurrency;
-    employeeDisbursements = [
-      {
-        employeeName: "Juan Perez",
-        amount: 200000,
-      },
-      {
-        employeeName: "Maria Rodriguez",
-        amount: 500000,
-      },
-      {
-        employeeName: "Carlos Sanchez",
-        amount: 100000,
-      },
-      {
-        employeeName: "Jorge Lopez",
-        amount: 100000,
-      },
-      {
-        employeeName: "Andres Garcia",
-        amount: 600000,
-      },
-      {
-        employeeName: "Jose Hernandez",
-        amount: 200000,
-      },
-      {
-        employeeName: "Maria Ramirez",
-        amount: 1000000,
-      },
-    ];
-    const nobaAccountNumber = "095000766";
+    const accountNumber = employer.payrollAccountNumber || "095000766"; // TODO: grab from config
     const [template_en, template_es] = await templatesPromise;
 
     const [html_en, html_es] = await Promise.all([
@@ -250,7 +220,7 @@ export class EmployerService {
         currency: currency,
         employeeDisbursements: employeeDisbursements,
         totalAmount: payroll.totalDebitAmount,
-        nobaAccountNumber: nobaAccountNumber,
+        nobaAccountNumber: accountNumber,
         locale: this.ENGLISH_LOCALE,
         region: "US",
       }),
@@ -261,7 +231,7 @@ export class EmployerService {
         currency: currency,
         employeeDisbursements: employeeDisbursements,
         totalAmount: payroll.totalDebitAmount,
-        nobaAccountNumber: nobaAccountNumber,
+        nobaAccountNumber: accountNumber,
         locale: this.SPANISH_LOCALE,
         region: "CO",
       }),
@@ -472,7 +442,7 @@ export class EmployerService {
         const employee = await this.employeeService.getEmployeeByID(disbursement.employeeID);
         const consumer = await this.consumerService.getConsumer(employee.consumerID);
         return {
-          employeeName: "TestFirst" + " " + "TestLast",
+          employeeName: consumer.props.firstName + " " + consumer.props.lastName,
           amount: disbursement.debitAmount,
         };
       }),

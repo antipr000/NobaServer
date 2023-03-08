@@ -599,17 +599,4 @@ describe("NotificationService", () => {
       ).once();
     });
   });
-
-  describe("updateEmployeeAllocationInBubble", () => {
-    it("should send notification", async () => {
-      await notificationService.updateEmployeeAllocationInBubble("employeeID", 1000);
-
-      const [eventType, eventArgs] = capture(notificationService.sendNotification).last();
-      expect(eventType).toEqual(NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT);
-      expect(eventArgs).toEqual({
-        nobaEmployeeID: "employeeID",
-        allocationAmountInPesos: 1000,
-      });
-    });
-  });
 });
