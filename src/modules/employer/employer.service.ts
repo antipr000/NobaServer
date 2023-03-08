@@ -433,7 +433,7 @@ export class EmployerService {
   }
 
   async createInvoice(payrollID: string): Promise<void> {
-    throw new Error("Not implemented");
+    this.generatePayroll(payrollID);
   }
 
   private async generateTemplate({

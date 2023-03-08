@@ -1,7 +1,7 @@
 import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { UserEmailUpdateRequest } from "test/api_client";
-import { deepEqual, instance, verify, when } from "ts-mockito";
+import { anyString, anything, deepEqual, instance, verify, when } from "ts-mockito";
 import { PhoneVerificationOtpRequest } from "../../../../test/api_client/models/PhoneVerificationOtpRequest";
 import { UserPhoneUpdateRequest } from "../../../../test/api_client/models/UserPhoneUpdateRequest";
 import { Result } from "../../../core/logic/Result";
@@ -1172,10 +1172,12 @@ describe("ConsumerController", () => {
       employer1.payrollDates.push("2020-03-04");
       const employee1 = getRandomEmployee(consumer.props.id, employer1.id);
       employee1.employer = employer1;
-      when(employeeService.getEmployeeByID(employer1.id, true)).thenResolve(employee1);
+      when(employeeService.getEmployeeByID(employee1.id, anything())).thenResolve(employee1);
       when(consumerService.updateEmployerAllocationAmount(employer1.id, consumer.props.id, 1478)).thenResolve(
         employee1,
       );
+
+      console.log(employee1);
 
       const updatedEmployee = await consumerController.updateAllocationAmountForAnEmployer(consumer, {
         employerID: employer1.id,
