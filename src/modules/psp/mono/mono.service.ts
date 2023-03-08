@@ -36,6 +36,7 @@ import { PhoneNumberUtil } from "google-libphonenumber";
 import { BalanceDTO } from "../dto/balance.dto";
 import { IBank } from "../factory/ibank";
 import { DebitBankFactoryRequest, DebitBankFactoryResponse } from "../domain/BankFactoryTypes";
+import { AlertKey, formatAlertLog } from "../../../core/system.alerts";
 
 type CollectionLinkDepositRequest = {
   nobaTransactionID: string;
@@ -229,10 +230,13 @@ export class MonoService implements IBank {
       event.collectionLinkID,
     );
     if (!monoTransaction) {
-      this.logger.error(`Mono transaction not found for collectionLinkID: ${event.collectionLinkID}`);
-      throw new InternalServiceErrorException({
-        message: `Mono transaction not found for collectionLinkID: ${event.collectionLinkID}`,
-      });
+      this.logger.error(
+        formatAlertLog({
+          key: AlertKey.MONO_TRANSACTION_NOT_FOUND,
+          message: `Failed to find Mono collection record with ID ${event.collectionLinkID}`,
+        }),
+      );
+      return;
     }
 
     // TODO: Verify that the amount and currency match the expected amount and currency.
@@ -247,15 +251,18 @@ export class MonoService implements IBank {
     const monoTransaction: MonoTransaction | null = await this.monoRepo.getMonoTransactionByTransferID(
       event.transferID,
     );
+
     if (!monoTransaction) {
-      this.logger.error(`Mono transaction not found for transferID: ${event.transferID}`);
-      throw new InternalServiceErrorException({
-        message: `Mono transaction not found for transferID: ${event.transferID}`,
-      });
+      this.logger.error(
+        formatAlertLog({
+          key: AlertKey.MONO_TRANSACTION_NOT_FOUND,
+          message: `Failed to find Mono transfer record with ID ${event.transferID}`,
+        }),
+      );
+      return;
     }
 
     // TODO: Verify that the amount and currency match the expected amount and currency (maybe?)
-
     await this.monoRepo.updateMonoTransaction(monoTransaction.id, {
       state: MonoTransactionState.SUCCESS,
     });
@@ -265,11 +272,15 @@ export class MonoService implements IBank {
     const monoTransaction: MonoTransaction | null = await this.monoRepo.getMonoTransactionByTransferID(
       event.transferID,
     );
+
     if (!monoTransaction) {
-      this.logger.error(`Mono transaction not found for transferID: ${event.transferID}`);
-      throw new InternalServiceErrorException({
-        message: `Mono transaction not found for transferID: ${event.transferID}`,
-      });
+      this.logger.error(
+        formatAlertLog({
+          key: AlertKey.MONO_TRANSACTION_NOT_FOUND,
+          message: `Failed to find Mono transfer record (for reject) with ID ${event.transferID}`,
+        }),
+      );
+      return;
     }
 
     await this.monoRepo.updateMonoTransaction(monoTransaction.id, {

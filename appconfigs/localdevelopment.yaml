@@ -162,8 +162,8 @@ mono:
   awsSecretNameForBaseURL: "TEST_MONO_BASE_URL"
   nobaAccountID: ""
   awsSecretNameForNobaAccountID: "TEST_MONO_NOBA_ACCOUNT_ID"
-  webhookSecret: ""
-  awsSecretNameForWebhookSecret: "TEST_MONO_WEBHOOK_SECRET"
+  webhookSecret: "Cannot get webhook calls in local dev"
+  awsSecretNameForWebhookSecret: ""
 
 bubble:
   bearerToken: ""

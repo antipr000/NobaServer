@@ -2,6 +2,7 @@
 export enum AlertKey {
   TEMPORAL_DOWN = "TEMPORAL_DOWN",
   STALE_FX_RATES = "STALE_FX_RATES",
+  MONO_TRANSACTION_NOT_FOUND = "MONO_TRANSACTION_NOT_FOUND",
 }
 
 export class Alert {

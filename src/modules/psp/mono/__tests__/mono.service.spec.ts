@@ -38,6 +38,7 @@ import { ServiceErrorCode, ServiceException } from "../../../../core/exception/s
 import { getRandomMonoTransaction } from "../test_utils/utils";
 import { HealthCheckStatus } from "../../../../core/domain/HealthCheckTypes";
 import { MonoClientErrorCode, MonoClientException } from "../exception/mono.client.exception";
+import * as alertUtils from "../../../../core/system.alerts";
 
 describe("MonoServiceTests", () => {
   jest.setTimeout(20000);
@@ -865,7 +866,7 @@ describe("MonoServiceTests", () => {
         });
       });
 
-      it("should throw InternalServiceErrorException if the 'collectionLinkID' is not found", async () => {
+      it("should raise an alert and return without error if the 'collectionLinkID' is not found", async () => {
         const monoTransaction: MonoTransaction = getRandomMonoTransaction();
         const convertedEvent: CollectionIntentCreditedEvent = {
           accountID: "accountID",
@@ -891,10 +892,11 @@ describe("MonoServiceTests", () => {
           monoRepo.getMonoTransactionByCollectionLinkID(monoTransaction.collectionLinkDepositDetails.collectionLinkID),
         ).thenResolve(null);
 
-        expect(monoService.processWebhookEvent(webhookBody, webhookSignature)).rejects.toThrowError(
-          InternalServiceErrorException,
-        );
+        const alertLogSpy = jest.spyOn(alertUtils, "formatAlertLog");
 
+        await monoService.processWebhookEvent(webhookBody, webhookSignature);
+
+        expect(alertLogSpy).toHaveBeenCalledWith(expect.objectContaining({ key: "MONO_TRANSACTION_NOT_FOUND" }));
         verify(monoRepo.updateMonoTransaction(anyString(), anything())).never();
       });
     });
@@ -936,7 +938,7 @@ describe("MonoServiceTests", () => {
         });
       });
 
-      it("should throw InternalServiceErrorException if the 'transferID' is not found", async () => {
+      it("should raise an alert and return if the 'transferID' is not found", async () => {
         const monoTransaction: MonoTransaction = getRandomMonoTransaction(MonoTransactionType.WITHDRAWAL);
         const convertedEvent: BankTransferApprovedEvent = {
           accountID: "accountID",
@@ -960,10 +962,11 @@ describe("MonoServiceTests", () => {
         );
         when(monoRepo.getMonoTransactionByTransferID(monoTransaction.withdrawalDetails.transferID)).thenResolve(null);
 
-        expect(monoService.processWebhookEvent(webhookBody, webhookSignature)).rejects.toThrowError(
-          InternalServiceErrorException,
-        );
+        const alertLogSpy = jest.spyOn(alertUtils, "formatAlertLog");
 
+        await monoService.processWebhookEvent(webhookBody, webhookSignature);
+
+        expect(alertLogSpy).toHaveBeenCalledWith(expect.objectContaining({ key: "MONO_TRANSACTION_NOT_FOUND" }));
         verify(monoRepo.updateMonoTransaction(anyString(), anything())).never();
       });
     });
@@ -1008,7 +1011,7 @@ describe("MonoServiceTests", () => {
         });
       });
 
-      it("should throw InternalServiceErrorException if the 'transferID' is not found", async () => {
+      it("should raise an alert and return without error if the 'transferID' is not found", async () => {
         const monoTransaction: MonoTransaction = getRandomMonoTransaction(MonoTransactionType.WITHDRAWAL);
         const convertedEvent: BankTransferRejectedEvent = {
           accountID: "accountID",
@@ -1034,10 +1037,11 @@ describe("MonoServiceTests", () => {
         );
         when(monoRepo.getMonoTransactionByTransferID(monoTransaction.withdrawalDetails.transferID)).thenResolve(null);
 
-        expect(monoService.processWebhookEvent(webhookBody, webhookSignature)).rejects.toThrowError(
-          InternalServiceErrorException,
-        );
+        const alertLogSpy = jest.spyOn(alertUtils, "formatAlertLog");
 
+        await monoService.processWebhookEvent(webhookBody, webhookSignature);
+
+        expect(alertLogSpy).toHaveBeenCalledWith(expect.objectContaining({ key: "MONO_TRANSACTION_NOT_FOUND" }));
         verify(monoRepo.updateMonoTransaction(anyString(), anything())).never();
       });
     });
