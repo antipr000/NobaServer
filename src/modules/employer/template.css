@@ -19,7 +19,6 @@ h1 {
   margin: 0;
   font-size: 26px;
   font-weight: 600;
-  padding-bottom: 10px;
   color: #003244;
 }
 
@@ -36,6 +35,7 @@ h3 {
   font-size: 18px;
   font-weight: 500;
   opacity: 0.85;
+  padding-bottom: 10px;
   border-bottom: solid 1.5px #002034;
 }
 
