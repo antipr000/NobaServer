@@ -463,7 +463,6 @@ export class ConsumerController {
       consumer.props.id,
       requestBody.allocationAmountInPesos,
     );
-    console.log(employee);
     return this.consumerMapper.toLinkedEmployerDTO(employee.id);
   }
 
