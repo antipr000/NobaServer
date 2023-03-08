@@ -289,27 +289,6 @@ describe("BubbleServiceTests", () => {
     });
   });
 
-  describe("updateEmployeeAllocationInBubble", () => {
-    it("should forwards the request to BubbleClient as is", async () => {
-      const employer = getRandomEmployer();
-      const consumer = getRandomConsumer();
-      const employee = getRandomEmployee(consumer.props.id, employer);
-      const newAllocationAmount = 12345;
-
-      when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
-      when(notificationService.sendNotification(anything(), anything())).thenResolve();
-
-      await bubbleService.updateEmployeeAllocationInBubble(employee.id, newAllocationAmount);
-
-      const [eventType, eventArgs] = capture(notificationService.sendNotification).last();
-      expect(eventType).toEqual(NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT);
-      expect(eventArgs).toEqual({
-        nobaEmployeeID: employee.id,
-        allocationAmountInPesos: newAllocationAmount,
-      });
-    });
-  });
-
   describe("updateEmployerInNoba", () => {
     it("should update the 'leadDays' and 'maxAllocationPercent' of employer in Noba", async () => {
       const employer: Employer = getRandomEmployer();

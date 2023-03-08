@@ -2,7 +2,7 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { NotificationService } from "../notification.service";
-import { anyString, anything, deepEqual, instance, verify, when } from "ts-mockito";
+import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { NotificationEventType } from "../domain/NotificationTypes";
 import { SENDGRID_API_KEY, SENDGRID_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { EventEmitter2 } from "@nestjs/event-emitter";
@@ -597,6 +597,19 @@ describe("NotificationService", () => {
       verify(
         eventEmitter.emitAsync(`dashboard.${NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT}`, deepEqual(data)),
       ).once();
+    });
+  });
+
+  describe("updateEmployeeAllocationInBubble", () => {
+    it("should send notification", async () => {
+      await notificationService.updateEmployeeAllocationInBubble("employeeID", 1000);
+
+      const [eventType, eventArgs] = capture(notificationService.sendNotification).last();
+      expect(eventType).toEqual(NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT);
+      expect(eventArgs).toEqual({
+        nobaEmployeeID: "employeeID",
+        allocationAmountInPesos: 1000,
+      });
     });
   });
 });
