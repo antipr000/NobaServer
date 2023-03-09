@@ -64,14 +64,14 @@ export class NotificationWorkflowService {
     const transactionPayload = await this.generateTransactionPayload(transaction, notificationWorkflowType);
     switch (notificationWorkflowType) {
       case NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT:
-        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+        consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
         payload = prepareNotificationPayload(consumer, {
           depositCompletedParams: transactionPayload,
         });
         await this.notificationService.sendNotification(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.DEPOSIT_FAILED_EVENT:
-        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+        consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
         payload = prepareNotificationPayload(consumer, {
           depositFailedParams: transactionPayload,
         });
@@ -113,6 +113,17 @@ export class NotificationWorkflowService {
         consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
         payload = prepareNotificationPayload(consumer, {
           transferFailedParams: transactionPayload,
+        });
+        await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_FAILED_EVENT, payload);
+        break;
+      case NotificationWorkflowTypes.PAYROLL_DEPOSIT_COMPLETED_EVENT:
+        consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
+        const employer = await this.employerService.getEmployerForTransactionID(transactionID);
+        payload = prepareNotificationPayload(consumer, {
+          payrollDepositCompletedParams: {
+            ...transactionPayload,
+            companyName: employer.name,
+          },
         });
         await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_FAILED_EVENT, payload);
         break;
