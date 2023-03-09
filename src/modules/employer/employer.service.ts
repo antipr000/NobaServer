@@ -275,7 +275,10 @@ export class EmployerService {
     const browser = await puppeteer.launch({
       headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless"],
-      executablePath: "C:/Program Files/Google/Chrome/Application/chrome.exe",
+      executablePath:
+        process.platform === "win32"
+          ? "C:/Program Files/Google/Chrome/Application/chrome.exe"
+          : "/usr/bin/chromium-browser",
     });
 
     const [pdf_en, pdf_es] = await Promise.all([
