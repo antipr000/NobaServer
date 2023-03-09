@@ -33,9 +33,12 @@ export class MonoWebhookHandlers {
     const payload = `${receivedTimestamp}.${JSON.stringify(webhookData ? webhookData : {})}`;
     const expectedSignature = createHmac("sha256", this.monoWebhookSecret).update(payload).digest("hex");
 
-    this.logger.info(
-      `Received signature "${receivedSignature}" and expected signature based on request body is "${expectedSignature}"`,
-    );
+    if (receivedSignature !== expectedSignature) {
+      this.logger.error(
+        `Received Mono signature "${receivedSignature}" and expected signature based on request body is "${expectedSignature}"`,
+      );
+    }
+
     return expectedSignature === receivedSignature;
   }
 
