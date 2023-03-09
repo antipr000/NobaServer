@@ -40,7 +40,7 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { MonoConfigs } from "../../config/configtypes/MonoConfig";
 import { MONO_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { KmsService } from "../common/kms.service";
-import { KmsKeyType } from "src/config/configtypes/KmsConfigs";
+import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 
 @Injectable()
 export class EmployerService {
