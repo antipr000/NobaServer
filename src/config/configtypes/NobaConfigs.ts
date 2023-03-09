@@ -45,11 +45,11 @@ export interface NobaConfigs {
   [NOBA_ADMIN_BEARER_TOKEN]: string;
   [AWS_SECRET_KEY_FOR_NOBA_PRIVATE_BEARER_TOKEN]: string;
   [NOBA_PRIVATE_BEARER_TOKEN]: string;
-  [NOBA_TRANSACTION_CONFIG_KEY]: NobaTransactionConfigs;
   [NOBA_BUBBLE_BEARER_TOKEN]: string;
-  [NOBA_PAYROLL_CONFIG_KEY]: NobaPayrollConfigs;
   [AWS_SECRET_KEY_FOR_NOBA_BUBBLE_BEARER_TOKEN]: string;
   [AWS_SECRET_KEY_FOR_NOBA_ADMIN_BEARER_TOKEN]: string;
+  [NOBA_TRANSACTION_CONFIG_KEY]: NobaTransactionConfigs;
+  [NOBA_PAYROLL_CONFIG_KEY]: NobaPayrollConfigs;
 }
 
 export interface NobaTransactionConfigs {

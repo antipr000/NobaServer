@@ -94,9 +94,9 @@ noba:
     awsSecretKeyForWithdrawalMonoFeeAmount: ""
     withdrawalNobaFeeAmount: "0"
     awsSecretKeyForWithdrawalNobaFeeAmount: ""
-payroll:
-  nobaPayrollAccountNumber: ""
-  awsSecretNameForNobaPayrollAccountNumber: "TEST_MONO_NOBA_PAYROLL_ACCOUNT_NUMBER"
+  payroll:
+    nobaPayrollAccountNumber: ""
+    awsSecretNameForNobaPayrollAccountNumber: "TEST_MONO_NOBA_PAYROLL_ACCOUNT_NUMBER"
 
 zerohash:
   awsSecretNameForApiKey: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files

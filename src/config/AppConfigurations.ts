@@ -555,7 +555,7 @@ async function configureNobaParameters(
 ): Promise<Record<string, any>> {
   const nobaConfigs: NobaConfigs = configs[NOBA_CONFIG_KEY];
 
-  if (nobaConfigs === undefined || nobaConfigs.transaction === undefined || nobaConfigs.payroll) {
+  if (nobaConfigs === undefined || nobaConfigs.transaction === undefined || nobaConfigs.payroll === undefined) {
     const errorMessage =
       "\n'Noba' configurations are required. Please configure the Noba environment variables " +
       "in 'appconfigs/<ENV>.yaml' file.\n" +
