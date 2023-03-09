@@ -35,12 +35,18 @@ import { ExchangeRateService } from "../common/exchangerate.service";
 import { Currency } from "../transaction/domain/TransactionTypes";
 import { isValidDateString } from "../../core/utils/DateUtils";
 import puppeteer, { Browser } from "puppeteer";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { KmsService } from "../common/kms.service";
+import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
+import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 
 @Injectable()
 export class EmployerService {
   private readonly MAX_LEAD_DAYS = 5;
   private readonly ENGLISH_LOCALE = "en";
   private readonly SPANISH_LOCALE = "es";
+  private readonly nobaPayrollAccountNumber: string;
 
   @Inject()
   private readonly handlebarService: TemplateService;
@@ -54,12 +60,19 @@ export class EmployerService {
   @Inject()
   private readonly consumerService: ConsumerService;
 
+  @Inject()
+  private readonly kmsService: KmsService;
+
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
     @Inject(PAYROLL_REPO_PROVIDER) private readonly payrollRepo: IPayrollRepo,
     @Inject(PAYROLL_DISBURSEMENT_REPO_PROVIDER) private readonly payrollDisbursementRepo: IPayrollDisbursementRepo,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {}
+    private readonly configService: CustomConfigService,
+  ) {
+    this.nobaPayrollAccountNumber =
+      this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).payroll.nobaPayrollAccountNumber;
+  }
 
   private validateLeadDays(leadDays: number): void {
     if (leadDays > this.MAX_LEAD_DAYS || leadDays < 1) {
@@ -181,7 +194,6 @@ export class EmployerService {
         message: "Payroll ID is required",
       });
     }
-
     const templatesPromise = Promise.all([
       this.handlebarService.getHandlebarLanguageTemplate(`template_${this.ENGLISH_LOCALE}.hbs`),
       this.handlebarService.getHandlebarLanguageTemplate(`template_${this.SPANISH_LOCALE}.hbs`),
@@ -206,11 +218,28 @@ export class EmployerService {
       });
     }
 
+    let accountNumber = this.nobaPayrollAccountNumber;
+    if (employer.payrollAccountNumber) {
+      const employerPayrollAccountNumber = await this.kmsService.decryptString(
+        employer.payrollAccountNumber,
+        KmsKeyType.SSN,
+      );
+
+      if (!employerPayrollAccountNumber) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: `Account number failed decryption: ${employer.payrollAccountNumber}`,
+        });
+      }
+
+      accountNumber = employerPayrollAccountNumber;
+    }
+
+    const [template_en, template_es] = await templatesPromise;
     const companyName = employer.name;
     const currency = payroll.debitCurrency;
-    const accountNumber = employer.payrollAccountNumber || "095000766"; // TODO: grab from config
-    const [template_en, template_es] = await templatesPromise;
 
+    // Remove this once we have unit tests in place and PDF generation is stable
     const [html_en, html_es] = await Promise.all([
       this.generateTemplate({
         handlebarTemplate: template_en,

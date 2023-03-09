@@ -1,5 +1,10 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
+import {
+  NOBA_CONFIG_KEY,
+  NOBA_PAYROLL_ACCOUNT_NUMBER,
+  NOBA_PAYROLL_CONFIG_KEY,
+  SERVER_LOG_FILE_PATH,
+} from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { IEmployerRepo } from "../repo/employer.repo";
@@ -30,6 +35,8 @@ import { TemplateService } from "../../../modules/common/template.service";
 import { getMockTemplateServiceWithDefaults } from "../../../modules/common/mocks/mock.template.service";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
+import { KmsService } from "../../../modules/common/kms.service";
+import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -59,6 +66,7 @@ describe("EmployerServiceTests", () => {
   let payrollDisbursementRepo: IPayrollDisbursementRepo;
   let exchangeRateService: ExchangeRateService;
   let templateService: TemplateService;
+  let kmsService: KmsService;
 
   beforeEach(async () => {
     employerRepo = getMockEmployerRepoWithDefaults();
@@ -67,9 +75,15 @@ describe("EmployerServiceTests", () => {
     payrollRepo = getMockPayrollRepoWithDefaults();
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
     templateService = getMockTemplateServiceWithDefaults();
+    kmsService = getMockKMSServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
+      [NOBA_CONFIG_KEY]: {
+        [NOBA_PAYROLL_CONFIG_KEY]: {
+          [NOBA_PAYROLL_ACCOUNT_NUMBER]: "fake-acct-number",
+        },
+      },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
@@ -104,6 +118,10 @@ describe("EmployerServiceTests", () => {
           provide: ConsumerService,
           useFactory: () => instance(getMockConsumerServiceWithDefaults()),
         },
+        {
+          provide: KmsService,
+          useFactory: () => instance(kmsService),
+        },
         EmployerService,
       ],
     }).compile();
@@ -111,9 +129,9 @@ describe("EmployerServiceTests", () => {
     employerService = app.get<EmployerService>(EmployerService);
   });
 
-  afterEach(async () => {
+  /*afterEach(async () => {
     app.close();
-  });
+  });*/
 
   describe("createEmployer", () => {
     it("should create an employer and 'always' send the 'COP' as allocationCurrency", async () => {
