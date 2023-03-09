@@ -8,7 +8,7 @@ export class BubbleWebhookMapper {
       payrollID: payroll.id,
       payrollDate: payroll.payrollDate,
       status: payroll.status,
-      reference: payroll.reference,
+      reference: payroll.referenceNumber.toString(),
       ...(payroll.completedTimestamp && { completedTimestamp: payroll.completedTimestamp }),
       ...(payroll.totalDebitAmount && { totalDebitAmount: payroll.totalDebitAmount }),
       ...(payroll.totalCreditAmount && { totalCreditAmount: payroll.totalCreditAmount }),
