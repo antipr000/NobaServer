@@ -84,7 +84,7 @@ describe("SqlPayrollRepo tests", () => {
       const employerID = await createTestEmployerAndStoreInDB(prismaService);
       const { payrollCreateInput } = getRandomPayroll(employerID);
 
-      delete payrollCreateInput.reference; // Reference is a required field
+      delete payrollCreateInput.payrollDate; // payrollDate is a required field
 
       await expect(async () => await payrollRepo.addPayroll(payrollCreateInput)).rejects.toThrow(Error);
     });

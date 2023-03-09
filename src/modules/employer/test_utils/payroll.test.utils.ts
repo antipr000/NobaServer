@@ -14,7 +14,6 @@ export const getRandomPayroll = (
 ): { payroll: Payroll; payrollCreateInput: PayrollCreateRequest } => {
   const payroll: Payroll = {
     id: uuid(),
-    reference: uuid(),
     employerID: employerID,
     payrollDate: "2023-03-01",
     createdTimestamp: new Date("2023-02-20"),
@@ -29,7 +28,6 @@ export const getRandomPayroll = (
 
   const payrollCreateInput: PayrollCreateRequest = {
     employerID: employerID,
-    reference: payroll.reference,
     payrollDate: payroll.payrollDate,
     totalDebitAmount: payroll.totalDebitAmount,
     totalCreditAmount: payroll.totalCreditAmount,
@@ -49,7 +47,7 @@ export const saveAndGetPayroll = async (prismaService: PrismaService, employerID
   const createdPayroll = await prismaService.payroll.create({
     data: {
       id: uuid(),
-      reference: uuid(),
+      referenceNumber: 1,
       employerID: employerID,
       payrollDate: "2023-03-01",
       createdTimestamp: new Date("2023-02-20"),
@@ -102,6 +100,23 @@ export const saveAndGetPayrollDisbursement = async (prismaService: PrismaService
   const { payrollDisbursementCreateInput } = getRandomPayrollDisbursement(payroll.id, employee.id);
 
   const payrollDisbursement = await prismaService.payrollDisbursement.create({ data: payrollDisbursementCreateInput });
+
+  return convertToDomainPayrollDisbursement(payrollDisbursement);
+};
+
+export const updatePayrollWithTransactionID = async (
+  prismaService: PrismaService,
+  payrollDisbursementID: string,
+  transactionID: string,
+): Promise<PayrollDisbursement> => {
+  const payrollDisbursement = await prismaService.payrollDisbursement.update({
+    where: {
+      id: payrollDisbursementID,
+    },
+    data: {
+      transactionID: transactionID,
+    },
+  });
 
   return convertToDomainPayrollDisbursement(payrollDisbursement);
 };

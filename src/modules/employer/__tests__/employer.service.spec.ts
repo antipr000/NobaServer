@@ -606,7 +606,6 @@ describe("EmployerServiceTests", () => {
       expect(payrollRequest).toEqual({
         employerID: employerID,
         payrollDate: payrollDate,
-        reference: "fake-uuid",
       });
       spy.mockRestore();
     });

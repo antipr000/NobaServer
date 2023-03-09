@@ -98,7 +98,7 @@ describe("EmployerWorkflowControllerTests", () => {
       expect(result).toStrictEqual({
         id: payroll.id,
         employerID: payroll.employerID,
-        reference: payroll.reference,
+        reference: payroll.referenceNumber,
         payrollDate: payroll.payrollDate,
         totalDebitAmount: payroll.totalDebitAmount,
         totalCreditAmount: payroll.totalCreditAmount,

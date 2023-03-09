@@ -9,7 +9,7 @@ export class PayrollDTO {
   employerID: string;
 
   @ApiProperty()
-  reference: string;
+  reference: number;
 
   @ApiProperty()
   payrollDate: string;

@@ -16,7 +16,7 @@ export enum PayrollStatus {
 export class Payroll {
   id: string;
   employerID: string;
-  reference: string;
+  referenceNumber?: number;
   payrollDate: string;
   createdTimestamp: Date;
   updatedTimestamp: Date;
@@ -31,7 +31,6 @@ export class Payroll {
 
 export class PayrollCreateRequest {
   employerID: string;
-  reference: string;
   payrollDate: string;
   totalDebitAmount?: number;
   totalCreditAmount?: number;
@@ -53,7 +52,6 @@ export class PayrollUpdateRequest {
 export const validateCreatePayrollRequest = (payroll: PayrollCreateRequest) => {
   const payrollJoiValidationKeys: KeysRequired<PayrollCreateRequest> = {
     employerID: Joi.string().required(),
-    reference: Joi.string().required(),
     payrollDate: Joi.string().required(),
     totalDebitAmount: Joi.number().optional(),
     totalCreditAmount: Joi.number().optional(),
@@ -93,7 +91,7 @@ export const validatePayroll = (payroll: Payroll) => {
   const payrollJoiValidationKeys: KeysRequired<Payroll> = {
     id: Joi.string().required(),
     employerID: Joi.string().required(),
-    reference: Joi.string().required(),
+    referenceNumber: Joi.number().required(),
     payrollDate: Joi.string().required(),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
@@ -119,7 +117,7 @@ export const convertToDomainPayroll = (payroll: PrismaPayrollModel): Payroll => 
   return {
     id: payroll.id,
     employerID: payroll.employerID,
-    reference: payroll.reference,
+    referenceNumber: payroll.referenceNumber,
     payrollDate: payroll.payrollDate,
     createdTimestamp: payroll.createdTimestamp,
     updatedTimestamp: payroll.updatedTimestamp,

@@ -216,7 +216,7 @@ export class EmployerService {
       this.generateTemplate({
         handlebarTemplate: template_en,
         companyName: companyName,
-        payrollReference: payroll.reference,
+        payrollReference: payroll.referenceNumber.toString().padStart(8, "0"),
         payrollDate: payroll.payrollDate,
         currency: currency,
         employeeDisbursements: employeeDisbursements,
@@ -228,7 +228,7 @@ export class EmployerService {
       this.generateTemplate({
         handlebarTemplate: template_es,
         companyName: companyName,
-        payrollReference: payroll.reference,
+        payrollReference: payroll.referenceNumber.toString().padStart(8, "0"),
         payrollDate: payroll.payrollDate,
         currency: currency,
         employeeDisbursements: employeeDisbursements,
@@ -301,7 +301,6 @@ export class EmployerService {
 
     const payrollCreateRequest: PayrollCreateRequest = {
       employerID: employerID,
-      reference: Utils.generateLowercaseUUID(true),
       payrollDate: payrollDate,
     };
 

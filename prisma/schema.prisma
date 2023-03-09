@@ -127,7 +127,7 @@ model Payroll {
   id                  String                @id @default(uuid())
   employer            Employer              @relation(fields: [employerID], references: [id], onDelete: Cascade)
   employerID          String
-  reference           String
+  referenceNumber     Int                   @default(autoincrement())
   payrollDate         String
   createdTimestamp    DateTime?             @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp    DateTime?             @updatedAt // Marking optional so we don't need to set in tests

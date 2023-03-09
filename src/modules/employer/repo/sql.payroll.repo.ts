@@ -39,7 +39,6 @@ export class SqlPayrollRepo implements IPayrollRepo {
             id: payroll.employerID,
           },
         },
-        reference: payroll.reference,
         payrollDate: payroll.payrollDate,
         totalDebitAmount: payroll.totalDebitAmount,
         totalCreditAmount: payroll.totalCreditAmount,
