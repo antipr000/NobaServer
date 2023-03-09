@@ -10,7 +10,7 @@ import { getMockNotificationServiceWithDefaults } from "../mocks/mock.notificati
 import { getMockTransactionServiceWithDefaults } from "../../../modules/transaction/mocks/mock.transaction.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { Transaction, WorkflowName, TransactionStatus } from "../../../modules/transaction/domain/Transaction";
-import { v4 } from "uuid";
+import { uuid } from "uuidv4";
 import { Utils } from "../../../core/utils/Utils";
 import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
@@ -22,6 +22,7 @@ import { FeeType } from "../../../modules/transaction/domain/TransactionFee";
 import { EmployerService } from "../../../modules/employer/employer.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
+import { Employer } from "../../../modules/employer/domain/Employer";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -74,7 +75,7 @@ describe("NotificationService", () => {
 
   describe("sendTransactionNotification", () => {
     it("should send notification for deposit success", async () => {
-      const consumerID = v4();
+      const consumerID = uuid();
       const consumer = getRandomConsumer(consumerID);
       const transaction = getRandomTransaction(consumerID);
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
@@ -100,7 +101,7 @@ describe("NotificationService", () => {
     });
 
     it("should send notification for deposit failed", async () => {
-      const consumerID = v4();
+      const consumerID = uuid();
       const consumer = getRandomConsumer(consumerID);
       const transaction = getRandomTransaction(consumerID);
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
@@ -126,7 +127,7 @@ describe("NotificationService", () => {
     });
 
     it("should send notification for withdrawal", async () => {
-      const consumerID = v4();
+      const consumerID = uuid();
       const consumer = getRandomConsumer(consumerID);
       const transaction = getRandomTransaction(consumerID);
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
@@ -152,7 +153,7 @@ describe("NotificationService", () => {
     });
 
     it("should send notification for withdrawal failed", async () => {
-      const consumerID = v4();
+      const consumerID = uuid();
       const consumer = getRandomConsumer(consumerID);
       const transaction = getRandomTransaction(consumerID);
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
@@ -178,8 +179,8 @@ describe("NotificationService", () => {
     });
 
     it("should send notification for transfer success", async () => {
-      const consumerID = v4();
-      const consumerID2 = v4();
+      const consumerID = uuid();
+      const consumerID2 = uuid();
       const consumer = getRandomConsumer(consumerID);
       const consumer2 = getRandomConsumer(consumerID2);
       const transaction = getRandomTransaction(consumerID, consumerID2, WorkflowName.WALLET_TRANSFER);
@@ -228,8 +229,8 @@ describe("NotificationService", () => {
     });
 
     it("should send notification for transfer failed", async () => {
-      const consumerID = v4();
-      const consumerID2 = v4();
+      const consumerID = uuid();
+      const consumerID2 = uuid();
       const consumer = getRandomConsumer(consumerID);
       const consumer2 = getRandomConsumer(consumerID2);
       const transaction = getRandomTransaction(consumerID, consumerID2, WorkflowName.WALLET_TRANSFER);
@@ -259,8 +260,36 @@ describe("NotificationService", () => {
       ).once();
     });
 
+    it("should send notification for payroll deposit success", async () => {
+      const consumerID = uuid();
+      const employer = getRandomEmployer();
+      const consumer = getRandomConsumer(consumerID);
+      const transaction = getRandomTransaction(null, consumerID, WorkflowName.PAYROLL_DEPOSIT);
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
+      when(employerService.getEmployerForTransactionID(transaction.id)).thenResolve(employer);
+
+      await notificationWorflowService.sendTransactionNotification(
+        NotificationWorkflowTypes.PAYROLL_DEPOSIT_COMPLETED_EVENT,
+        transaction.id,
+      );
+
+      const transactionNotificationPayload =
+        transactionNotificationMapper.toPayrollDepositCompletedNotificationParameters(transaction, employer.name);
+
+      const notificationPayload = prepareNotificationPayload(consumer, {
+        payrollDepositCompletedParams: transactionNotificationPayload,
+      });
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
+          deepEqual(notificationPayload),
+        ),
+      ).once();
+    });
+
     it("should throw ServiceException when transaction is not found", async () => {
-      const transactionID = v4();
+      const transactionID = uuid();
       when(transactionService.getTransactionByTransactionID(transactionID)).thenResolve(null);
 
       await expect(
@@ -272,8 +301,8 @@ describe("NotificationService", () => {
     });
 
     it("should throw ServiceException when notification type is not found", async () => {
-      const transactionID = v4();
-      const transaction = getRandomTransaction(v4());
+      const transactionID = uuid();
+      const transaction = getRandomTransaction(uuid());
       when(transactionService.getTransactionByTransactionID(transactionID)).thenResolve(transaction);
 
       await expect(
@@ -350,21 +379,21 @@ function getRandomTransaction(
     exchangeRate: 1,
     status: TransactionStatus.INITIATED,
     workflowName: workflowName,
-    id: v4(),
-    sessionKey: v4(),
+    id: uuid(),
+    sessionKey: uuid(),
     memo: "New transaction",
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
     transactionFees: [
       {
-        id: v4(),
+        id: uuid(),
         timestamp: new Date(),
         amount: 0.37,
         type: FeeType.PROCESSING,
         currency: "USD",
       },
       {
-        id: v4(),
+        id: uuid(),
         timestamp: new Date(),
         amount: 0.2,
         type: FeeType.NOBA,
@@ -390,12 +419,17 @@ function getRandomTransaction(
       transaction.debitCurrency = Currency.COP;
       transaction.debitConsumerID = consumerID;
       break;
+    case WorkflowName.PAYROLL_DEPOSIT:
+      transaction.debitAmount = 100;
+      transaction.debitCurrency = Currency.COP;
+      transaction.creditConsumerID = consumerID2;
+      break;
   }
   return transaction;
 }
 
 const getRandomConsumer = (consumerID: string): Consumer => {
-  const email = `${v4()}_${new Date().valueOf()}@noba.com`;
+  const email = `${uuid()}_${new Date().valueOf()}@noba.com`;
   const props: Partial<ConsumerProps> = {
     id: consumerID,
     firstName: "Noba",
@@ -406,4 +440,20 @@ const getRandomConsumer = (consumerID: string): Consumer => {
     phone: `+1${Math.floor(Math.random() * 1000000000)}`,
   };
   return Consumer.createConsumer(props);
+};
+
+const getRandomEmployer = (): Employer => {
+  const employer: Employer = {
+    id: uuid(),
+    name: "Test Employer",
+    bubbleID: uuid(),
+    logoURI: "https://www.google.com",
+    referralID: uuid(),
+    leadDays: 1,
+    payrollDates: ["2020-02-29", "2020-03-01", "2020-03-02"],
+    createdTimestamp: new Date(),
+    updatedTimestamp: new Date(),
+  };
+
+  return employer;
 };
