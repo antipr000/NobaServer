@@ -264,7 +264,7 @@ export class AdminController {
     return {
       id: payroll.id,
       employerID: payroll.employerID,
-      reference: payroll.reference,
+      reference: payroll.referenceNumber,
       payrollDate: payroll.payrollDate,
       totalDebitAmount: payroll.totalDebitAmount,
       totalCreditAmount: payroll.totalCreditAmount,
