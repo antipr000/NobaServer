@@ -14,6 +14,7 @@ export const getRandomPayroll = (
 ): { payroll: Payroll; payrollCreateInput: PayrollCreateRequest } => {
   const payroll: Payroll = {
     id: uuid(),
+    referenceNumber: 1,
     employerID: employerID,
     payrollDate: "2023-03-01",
     createdTimestamp: new Date("2023-02-20"),
