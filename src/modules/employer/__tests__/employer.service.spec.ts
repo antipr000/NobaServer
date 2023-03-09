@@ -1,5 +1,10 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
+import {
+  NOBA_CONFIG_KEY,
+  NOBA_PAYROLL_ACCOUNT_NUMBER,
+  NOBA_PAYROLL_CONFIG_KEY,
+  SERVER_LOG_FILE_PATH,
+} from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { IEmployerRepo } from "../repo/employer.repo";
@@ -74,6 +79,11 @@ describe("EmployerServiceTests", () => {
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
+      [NOBA_CONFIG_KEY]: {
+        [NOBA_PAYROLL_CONFIG_KEY]: {
+          [NOBA_PAYROLL_ACCOUNT_NUMBER]: "fake-acct-number",
+        },
+      },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 

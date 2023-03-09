@@ -133,6 +133,8 @@ import {
   NOBA_ADMIN_BEARER_TOKEN,
   AWS_SECRET_KEY_FOR_NOBA_ADMIN_BEARER_TOKEN,
   DEPENDENCY_DASHBOARD_CLIENT,
+  NOBA_PAYROLL_ACCOUNT_NUMBER,
+  NOBA_PAYROLL_AWS_SECRET_KEY_FOR_NOBA_PAYROLL_ACCOUNT_NUMBER,
 } from "./ConfigurationUtils";
 import fs from "fs";
 
@@ -423,10 +425,6 @@ async function configureMonoCredentials(
     monoConfig.awsSecretNameForNobaAccountID,
     monoConfig.nobaAccountID,
   );
-  monoConfig.nobaPayrollAccountNumber = await getParameterValue(
-    monoConfig.awsSecretNameForNobaPayrollAccountNumber,
-    monoConfig.nobaPayrollAccountNumber,
-  );
 
   configs[MONO_CONFIG_KEY] = monoConfig;
   return configs;
@@ -557,7 +555,7 @@ async function configureNobaParameters(
 ): Promise<Record<string, any>> {
   const nobaConfigs: NobaConfigs = configs[NOBA_CONFIG_KEY];
 
-  if (nobaConfigs === undefined || nobaConfigs.transaction === undefined) {
+  if (nobaConfigs === undefined || nobaConfigs.transaction === undefined || nobaConfigs.payroll) {
     const errorMessage =
       "\n'Noba' configurations are required. Please configure the Noba environment variables " +
       "in 'appconfigs/<ENV>.yaml' file.\n" +
@@ -571,6 +569,7 @@ async function configureNobaParameters(
       `("${DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE}" or "${AWS_SECRET_KEY_FOR_DYNAMIC_CREDIT_CARD_FEE_PERCENTAGE}"), ` +
       `("${FIXED_CREDIT_CARD_FEE}" or "${AWS_SECRET_KEY_FOR_FIXED_CREDIT_CARD_FEE}") AND ` +
       `("${FLAT_FEE_DOLLARS}" or "${AWS_SECRET_KEY_FOR_FLAT_FEE_DOLLARS}") ` +
+      `("${NOBA_PAYROLL_ACCOUNT_NUMBER}" or "${NOBA_PAYROLL_AWS_SECRET_KEY_FOR_NOBA_PAYROLL_ACCOUNT_NUMBER}") ` +
       "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
     throw Error(errorMessage);
   }
@@ -674,6 +673,11 @@ async function configureNobaParameters(
       nobaConfigs.transaction.awsSecretKeyForWithdrawalNobaFeeAmount,
       nobaConfigs.transaction.withdrawalNobaFeeAmount.toString(),
     ),
+  );
+
+  nobaConfigs.payroll.nobaPayrollAccountNumber = await getParameterValue(
+    nobaConfigs.payroll.awsSecretNameForNobaPayrollAccountNumber,
+    nobaConfigs.payroll.nobaPayrollAccountNumber,
   );
 
   configs[NOBA_CONFIG_KEY] = nobaConfigs;

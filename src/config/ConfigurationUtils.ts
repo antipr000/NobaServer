@@ -185,6 +185,10 @@ export const NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_TEMPORAL_CLOUD_CERTIFICATE = "awsS
 export const NOBA_WORKFLOW_TEMPORAL_CLOUD_PRIVATE_KEY = "temporalCloudPrivateKey";
 export const NOBA_WORKFLOW_AWS_SECRET_KEY_FOR_TEMPORAL_CLOUD_PRIVATE_KEY = "awsSecretForTemporalCloudPrivateKey";
 
+export const NOBA_PAYROLL_CONFIG_KEY = "payroll";
+export const NOBA_PAYROLL_ACCOUNT_NUMBER = "nobaPayrollAccountNumber";
+export const NOBA_PAYROLL_AWS_SECRET_KEY_FOR_NOBA_PAYROLL_ACCOUNT_NUMBER = "awsSecretNameForNobaPayrollAccountNumber";
+
 export const MONO_CONFIG_KEY = "mono";
 export const MONO_BEARER_TOKEN = "bearerToken";
 export const MONO_AWS_SECRET_KEY_FOR_BEARER_TOKEN = "awsSecretNameForBearerToken";
@@ -192,8 +196,6 @@ export const MONO_BASE_URL = "baseURL";
 export const MONO_AWS_SECRET_KEY_FOR_BASE_URL = "awsSecretNameForBaseURL";
 export const MONO_NOBA_ACCOUNT_ID = "nobaAccountID";
 export const MONO_AWS_SECRET_KEY_FOR_NOBA_ACCOUNT_ID = "awsSecretNameForNobaAccountID";
-export const MONO_NOBA_PAYROLL_ACCOUNT_NUMBER = "nobaPayrollAccountNumber";
-export const MONO_AWS_SECRET_KEY_FOR_NOBA_PAYROLL_ACCOUNT_NUMBER = "awsSecretNameForNobaPayrollAccountNumber";
 export const MONO_WEBHOOK_SECRET = "webhookSecret";
 export const MONO_AWS_SECRET_KEY_FOR_WEBHOOK_SECRET = "awsSecretNameForWebhookSecret";
 

@@ -37,10 +37,10 @@ import { Currency } from "../transaction/domain/TransactionTypes";
 import { isValidDateString } from "../../core/utils/DateUtils";
 import puppeteer, { Browser } from "puppeteer";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
-import { MonoConfigs } from "../../config/configtypes/MonoConfig";
-import { MONO_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { KmsService } from "../common/kms.service";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
+import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 
 @Injectable()
 export class EmployerService {
@@ -71,7 +71,8 @@ export class EmployerService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly configService: CustomConfigService,
   ) {
-    this.nobaPayrollAccountNumber = this.configService.get<MonoConfigs>(MONO_CONFIG_KEY).nobaPayrollAccountNumber;
+    this.nobaPayrollAccountNumber =
+      this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).payroll.nobaPayrollAccountNumber;
   }
 
   private validateLeadDays(leadDays: number): void {
