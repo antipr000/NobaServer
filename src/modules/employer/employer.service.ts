@@ -219,21 +219,26 @@ export class EmployerService {
       });
     }
 
-    const employerPayrollAccountNumber = await this.kmsService.decryptString(
-      employer.payrollAccountNumber,
-      KmsKeyType.SSN,
-    );
-    if (!employerPayrollAccountNumber) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: `Account number failed decryption: ${employer.payrollAccountNumber}`,
-      });
+    let accountNumber = this.nobaPayrollAccountNumber;
+    if (employer.payrollAccountNumber) {
+      const employerPayrollAccountNumber = await this.kmsService.decryptString(
+        employer.payrollAccountNumber,
+        KmsKeyType.SSN,
+      );
+
+      if (!employerPayrollAccountNumber) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: `Account number failed decryption: ${employer.payrollAccountNumber}`,
+        });
+      }
+
+      accountNumber = employerPayrollAccountNumber;
     }
 
     const [template_en, template_es] = await templatesPromise;
     const companyName = employer.name;
     const currency = payroll.debitCurrency;
-    const accountNumber = employerPayrollAccountNumber || this.nobaPayrollAccountNumber;
 
     // Remove this once we have unit tests in place and PDF generation is stable
     const [html_en, html_es] = await Promise.all([
