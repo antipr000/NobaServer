@@ -64,14 +64,14 @@ export class NotificationWorkflowService {
     const transactionPayload = await this.generateTransactionPayload(transaction, notificationWorkflowType);
     switch (notificationWorkflowType) {
       case NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT:
-        consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
         payload = prepareNotificationPayload(consumer, {
           depositCompletedParams: transactionPayload,
         });
         await this.notificationService.sendNotification(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.DEPOSIT_FAILED_EVENT:
-        consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
         payload = prepareNotificationPayload(consumer, {
           depositFailedParams: transactionPayload,
         });
