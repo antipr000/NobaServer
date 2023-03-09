@@ -98,7 +98,7 @@ export const EmailTemplates = {
     es: "d-d806e77606f04b7fb953aaa728f8ae2a",
   },
   PAYROLL_DEPOSIT_COMPLETED_EMAIL: {
-    en: "d-0791ccff11c7416ca5eceaac66d430cd ",
+    en: "d-0791ccff11c7416ca5eceaac66d430cd",
     es: "d-4bf8f1e412034f59aef4c0265e4017c2",
   },
   COLLECTION_LINK_EMAIL: {},

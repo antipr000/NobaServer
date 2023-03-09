@@ -11,7 +11,7 @@ export abstract class EmailClient {
     try {
       await this.sendEmailInternal(request);
     } catch (e) {
-      this.logger.error("Failed to send email. Reason: ${e.message}");
+      this.logger.error(`Failed to send email. Reason: ${e.message}`);
     }
   }
 }

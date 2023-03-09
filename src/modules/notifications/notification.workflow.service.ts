@@ -125,7 +125,10 @@ export class NotificationWorkflowService {
             companyName: employer.name,
           },
         });
-        await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_FAILED_EVENT, payload);
+        await this.notificationService.sendNotification(
+          NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
+          payload,
+        );
         break;
       case NotificationWorkflowTypes.COLLECTION_COMPLETED_EVENT:
         // No need to send email for now as we are already sending deposit completed email
