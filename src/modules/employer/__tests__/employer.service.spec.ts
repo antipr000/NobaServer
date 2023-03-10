@@ -778,7 +778,7 @@ describe("EmployerServiceTests", () => {
       expect(disbursementRequest).toEqual({
         payrollID: "fake-payroll",
         employeeID: employee.id,
-        debitAmount: employee.allocationAmount,
+        allocationAmount: employee.allocationAmount,
       });
     });
 
