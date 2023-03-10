@@ -235,9 +235,13 @@ export class EmployerService {
       accountNumber = employerPayrollAccountNumber;
     }
 
+    console.log("POINT_1");
+
     const [template_en, template_es] = await templatesPromise;
     const companyName = employer.name;
     const currency = payroll.debitCurrency;
+
+    console.log("POINT_2");
 
     // Remove this once we have unit tests in place and PDF generation is stable
     const [html_en, html_es] = await Promise.all([
@@ -491,7 +495,7 @@ export class EmployerService {
   }
 
   async createInvoice(payrollID: string): Promise<void> {
-    this.generatePayroll(payrollID);
+    await this.generatePayroll(payrollID);
   }
 
   private async generateTemplate({

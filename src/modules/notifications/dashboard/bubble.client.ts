@@ -96,6 +96,10 @@ export class BubbleClient implements DashboardClient {
     };
 
     try {
+      throw new ServiceException({
+        message: "Failed to update payroll status in Bubble",
+        errorCode: ServiceErrorCode.UNKNOWN,
+      });
       await axios.post(url, requestBody, { headers });
       this.logger.info(`Successfully updated payroll status : ${JSON.stringify(requestBody)} to Bubble`);
     } catch (err) {
