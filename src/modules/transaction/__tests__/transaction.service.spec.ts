@@ -614,9 +614,11 @@ describe("TransactionServiceTests", () => {
       expect(propagatedTransactionToSave.exchangeRate).toBe(payroll.exchangeRate);
       expect(propagatedTransactionToSave.workflowName).toBe(WorkflowName.PAYROLL_DEPOSIT);
       expect(propagatedTransactionToSave.transactionRef).toBeDefined();
-      expect(propagatedTransactionToSave.debitAmount).toBe(payrollDisbursement.debitAmount);
+      expect(propagatedTransactionToSave.debitAmount).toBe(payrollDisbursement.allocationAmount);
       expect(propagatedTransactionToSave.debitCurrency).toBe(Currency.COP);
-      expect(propagatedTransactionToSave.creditAmount).toBe(payrollDisbursement.debitAmount * payroll.exchangeRate);
+      expect(propagatedTransactionToSave.creditAmount).toBe(
+        payrollDisbursement.allocationAmount * payroll.exchangeRate,
+      );
       expect(propagatedTransactionToSave.creditCurrency).toBe(Currency.USD);
       expect(propagatedTransactionToSave.creditConsumerID).toBe(employee.consumerID);
       expect(propagatedTransactionToSave.sessionKey).toBe("PAYROLL");

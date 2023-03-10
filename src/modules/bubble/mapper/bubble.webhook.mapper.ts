@@ -23,7 +23,7 @@ export class BubbleWebhookMapper {
       id: disbursement.id,
       employeeID: disbursement.employeeID,
       transactionID: disbursement.transactionID,
-      debitAmount: disbursement.debitAmount,
+      debitAmount: disbursement.allocationAmount,
     };
   }
 }

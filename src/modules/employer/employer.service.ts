@@ -355,7 +355,7 @@ export class EmployerService {
     } else if (request.status === PayrollStatus.PREPARED) {
       const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
 
-      const totalDebitAmountInCOP = disbursements.reduce((acc, disbursement) => acc + disbursement.debitAmount, 0);
+      const totalDebitAmountInCOP = disbursements.reduce((acc, disbursement) => acc + disbursement.allocationAmount, 0);
 
       const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD);
 
@@ -403,7 +403,7 @@ export class EmployerService {
     return await this.payrollDisbursementRepo.createPayrollDisbursement({
       payrollID: payrollID,
       employeeID: createDisbursementRequest.employeeID,
-      debitAmount: amount,
+      allocationAmount: amount,
     });
   }
 
@@ -532,7 +532,7 @@ export class EmployerService {
         const consumer = await this.consumerService.getConsumer(employee.consumerID);
         return {
           employeeName: consumer.props.firstName + " " + consumer.props.lastName,
-          amount: disbursement.debitAmount,
+          amount: disbursement.allocationAmount,
         };
       }),
     );

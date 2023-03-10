@@ -40,7 +40,7 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
             id: payrollDisbursement.employeeID,
           },
         },
-        debitAmount: payrollDisbursement.debitAmount,
+        allocationAmount: payrollDisbursement.allocationAmount,
       };
 
       const returnedPayrollDisbursement: PrismaPayrollDisbursementModel =

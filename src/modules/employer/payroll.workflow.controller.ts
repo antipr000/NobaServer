@@ -47,7 +47,7 @@ export class PayrollWorkflowController {
       id: disbursement.id,
       employeeID: disbursement.employeeID,
       payrollID: disbursement.payrollID,
-      allocationAmount: disbursement.debitAmount,
+      allocationAmount: disbursement.allocationAmount,
     };
   }
 

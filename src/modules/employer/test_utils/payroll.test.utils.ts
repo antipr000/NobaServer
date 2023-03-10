@@ -78,13 +78,13 @@ export const getRandomPayrollDisbursement = (
     updatedTimestamp: new Date("2023-02-20"),
     payrollID: payrollID,
     employeeID: employeeID,
-    debitAmount: 10,
+    allocationAmount: 10,
   };
 
   const payrollDisbursementCreateInput: PayrollDisbursementCreateRequest = {
     payrollID: payrollID,
     employeeID: employeeID,
-    debitAmount: 10,
+    allocationAmount: 10,
   };
 
   return {

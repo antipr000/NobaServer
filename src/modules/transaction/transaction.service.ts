@@ -106,9 +106,9 @@ export class TransactionService {
       transactionRef: Utils.generateLowercaseUUID(true),
       transactionFees: [],
       sessionKey: "PAYROLL",
-      debitAmount: payrollDisbursement.debitAmount,
+      debitAmount: payrollDisbursement.allocationAmount,
       debitCurrency: Currency.COP,
-      creditAmount: payrollDisbursement.debitAmount * payroll.exchangeRate,
+      creditAmount: payrollDisbursement.allocationAmount * payroll.exchangeRate,
       creditCurrency: Currency.USD,
       creditConsumerID: employee.consumerID,
     };
