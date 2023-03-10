@@ -3,15 +3,15 @@
 /* eslint-disable */
 
 export type PayrollDTO = {
-  id: string;
-  employerID: string;
-  reference: string;
+  payrollID: string;
   payrollDate: string;
+  reference: string;
   completedTimestamp?: string;
+  status: "CREATED" | "INVOICED" | "PREPARED" | "INVESTIGATION" | "FUNDED" | "IN_PROGRESS" | "COMPLETED" | "EXPIRED";
   totalDebitAmount?: number;
   totalCreditAmount?: number;
   exchangeRate?: number;
   debitCurrency?: string;
   creditCurrency?: string;
-  status: "CREATED" | "INVOICED" | "INVESTIGATION" | "FUNDED" | "IN_PROGRESS" | "COMPLETED" | "EXPIRED";
+  disbursements?: Array<string>;
 };

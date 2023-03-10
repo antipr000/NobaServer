@@ -13,30 +13,12 @@ export class EmployersService {
    * @returns EmployerDTO Employer summary
    * @throws ApiError
    */
-  public static getEmployerByReferralId({
-    xNobaApiKey,
-    referralId,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    referralId: string;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<EmployerDTO> {
+  public static getEmployerByReferralId({ referralId }: { referralId: string }): CancelablePromise<EmployerDTO> {
     return __request(OpenAPI, {
       method: "GET",
       url: "/v1/employers/{referralID}",
       path: {
         referralID: referralId,
-      },
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
       },
       errors: {
         404: `Employer not found`,

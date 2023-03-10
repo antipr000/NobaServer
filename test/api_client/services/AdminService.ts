@@ -13,6 +13,7 @@ import type { NewAccessTokenRequestDTO } from "../models/NewAccessTokenRequestDT
 import type { NobaAdminDTO } from "../models/NobaAdminDTO";
 import type { TransactionStatsDTO } from "../models/TransactionStatsDTO";
 import type { UpdateNobaAdminDTO } from "../models/UpdateNobaAdminDTO";
+import type { UpdatePayrollRequestDTO } from "../models/UpdatePayrollRequestDTO";
 import type { VerifyOtpRequestDTO } from "../models/VerifyOtpRequestDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
@@ -117,6 +118,21 @@ export class AdminService {
   }
 
   /**
+   * Gets the details of all Noba admins
+   * @returns NobaAdminDTO All Noba admins
+   * @throws ApiError
+   */
+  public static getAllNobaAdmins(): CancelablePromise<Array<NobaAdminDTO>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/admins",
+      errors: {
+        403: `User forbidden from retrieving details of all Noba admin`,
+      },
+    });
+  }
+
+  /**
    * Gets the details of the logged in Noba admin
    * @returns NobaAdminDTO The logged in Noba admin
    * @throws ApiError
@@ -124,7 +140,7 @@ export class AdminService {
   public static getNobaAdmin(): CancelablePromise<NobaAdminDTO> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/v1/admins",
+      url: "/v1/admins/current",
       errors: {
         403: `User forbidden from retrieving details of the Noba admin`,
       },
@@ -231,6 +247,32 @@ export class AdminService {
       },
       errors: {
         403: `User forbidden from getting account balances`,
+      },
+    });
+  }
+
+  /**
+   * Updates the payroll status
+   * @returns any Payroll status is updated successfully
+   * @throws ApiError
+   */
+  public static updatePayrollStatus({
+    payrollId,
+    requestBody,
+  }: {
+    payrollId: string;
+    requestBody: UpdatePayrollRequestDTO;
+  }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/v1/admins/payrolls/{payrollID}",
+      path: {
+        payrollID: payrollId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        403: `User forbidden from updating the Payroll status`,
       },
     });
   }

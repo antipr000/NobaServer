@@ -125,7 +125,7 @@ export class AdminController {
     return this.adminMapper.toDTO(savedAdmin);
   }
 
-  @Get("/")
+  @Get("/current")
   @ApiOperation({ summary: "Gets the details of the logged in Noba admin" })
   @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The logged in Noba admin" })
   @ApiForbiddenResponse({ description: "User forbidden from retrieving details of the Noba admin" })
@@ -138,7 +138,7 @@ export class AdminController {
     return this.adminMapper.toDTO(authenticatedUser);
   }
 
-  @Get("/all")
+  @Get("/")
   @ApiOperation({ summary: "Gets the details of all Noba admins" })
   @ApiResponse({ status: HttpStatus.OK, type: [NobaAdminDTO], description: "All Noba admins" })
   @ApiForbiddenResponse({ description: "User forbidden from retrieving details of all Noba admin" })

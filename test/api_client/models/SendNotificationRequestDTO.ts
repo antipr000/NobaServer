@@ -3,5 +3,15 @@
 /* eslint-disable */
 
 export type SendNotificationRequestDTO = {
-  transactionID: string;
+  transactionID?: string;
+  payrollID?: string;
+  payrollStatus?:
+    | "CREATED"
+    | "INVOICED"
+    | "PREPARED"
+    | "INVESTIGATION"
+    | "FUNDED"
+    | "IN_PROGRESS"
+    | "COMPLETED"
+    | "EXPIRED";
 };

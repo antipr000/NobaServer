@@ -2,10 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type PayrollDisbursementDTO = {
+export type DisbursementDTO = {
   id: string;
   employeeID: string;
-  payrollID: string;
   transactionID?: string;
-  allocationAmount: number;
+  debitAmount: number;
 };

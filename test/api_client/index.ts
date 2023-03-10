@@ -49,6 +49,7 @@ export type { DeviceBehaviorBiometricsDTO } from "./models/DeviceBehaviorBiometr
 export type { DeviceGpsLocationDTO } from "./models/DeviceGpsLocationDTO";
 export type { DeviceIpLocationDTO } from "./models/DeviceIpLocationDTO";
 export type { DeviceVerificationResponseDTO } from "./models/DeviceVerificationResponseDTO";
+export type { DisbursementDTO } from "./models/DisbursementDTO";
 export type { DocumentVerificationDTO } from "./models/DocumentVerificationDTO";
 export type { DocumentVerificationResponseDTO } from "./models/DocumentVerificationResponseDTO";
 export type { DocumentVerificationResultDTO } from "./models/DocumentVerificationResultDTO";

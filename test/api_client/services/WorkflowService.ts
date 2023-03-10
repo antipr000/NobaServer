@@ -26,6 +26,111 @@ import { request as __request } from "../core/request";
 
 export class WorkflowService {
   /**
+   * Creates a transaction from disbursement
+   * @returns WorkflowTransactionDTO Transaction created
+   * @throws ApiError
+   */
+  public static createTransaction({
+    requestBody,
+  }: {
+    requestBody: CreateTransactionDTO;
+  }): CancelablePromise<WorkflowTransactionDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/wf/v1/transactions",
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `Failed to create transaction`,
+        404: `Requested disbursement is not found`,
+      },
+    });
+  }
+
+  /**
+   * Updates the transaction
+   * @returns BlankResponseDTO Transaction updated
+   * @throws ApiError
+   */
+  public static patchTransaction({
+    transactionId,
+    requestBody,
+  }: {
+    transactionId: string;
+    requestBody: UpdateTransactionRequestDTO;
+  }): CancelablePromise<BlankResponseDTO> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/wf/v1/transactions/{transactionID}",
+      path: {
+        transactionID: transactionId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `Improper or misformatted request`,
+        404: `Requested transaction is not found`,
+      },
+    });
+  }
+
+  /**
+   * Fetches the transaction for the specified 'transactionID'
+   * @returns WorkflowTransactionDTO
+   * @throws ApiError
+   */
+  public static getTransactionByTransactionId({
+    transactionId,
+  }: {
+    transactionId: string;
+  }): CancelablePromise<WorkflowTransactionDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/wf/v1/transactions/{transactionID}",
+      path: {
+        transactionID: transactionId,
+      },
+    });
+  }
+
+  /**
+   * Debit money from Noba bank account into consumer account
+   * @returns WorkflowTransactionDTO
+   * @throws ApiError
+   */
+  public static debitFromBank({
+    requestBody,
+  }: {
+    requestBody: DebitBankRequestDTO;
+  }): CancelablePromise<WorkflowTransactionDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/wf/v1/transactions/debitfrombank",
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+
+  /**
+   * Fetches the Mono Transaction for the specified 'nobaTransactionID'
+   * @returns MonoTransactionDTO
+   * @throws ApiError
+   */
+  public static getMonoTransactionByNobaTransactionId({
+    nobaTransactionId,
+  }: {
+    nobaTransactionId: string;
+  }): CancelablePromise<MonoTransactionDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/wf/v1/mono/nobatransactions/{nobaTransactionID}",
+      path: {
+        nobaTransactionID: nobaTransactionId,
+      },
+    });
+  }
+
+  /**
    * Gets details of an employer
    * @returns EmployerWorkflowDTO
    * @throws ApiError
@@ -33,7 +138,7 @@ export class WorkflowService {
   public static getEmployer({ employerId }: { employerId: string }): CancelablePromise<EmployerWorkflowDTO> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/wf/v1/employer/{employerID}",
+      url: "/wf/v1/employers/{employerID}",
       path: {
         employerID: employerId,
       },
@@ -160,111 +265,6 @@ export class WorkflowService {
       errors: {
         400: `Invalid parameters`,
         404: `Requested payroll is not found`,
-      },
-    });
-  }
-
-  /**
-   * Creates a transaction from disbursement
-   * @returns WorkflowTransactionDTO Transaction created
-   * @throws ApiError
-   */
-  public static createTransaction({
-    requestBody,
-  }: {
-    requestBody: CreateTransactionDTO;
-  }): CancelablePromise<WorkflowTransactionDTO> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/wf/v1/transactions",
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `Failed to create transaction`,
-        404: `Requested disbursement is not found`,
-      },
-    });
-  }
-
-  /**
-   * Updates the transaction
-   * @returns BlankResponseDTO Transaction updated
-   * @throws ApiError
-   */
-  public static patchTransaction({
-    transactionId,
-    requestBody,
-  }: {
-    transactionId: string;
-    requestBody: UpdateTransactionRequestDTO;
-  }): CancelablePromise<BlankResponseDTO> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/wf/v1/transactions/{transactionID}",
-      path: {
-        transactionID: transactionId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `Improper or misformatted request`,
-        404: `Requested transaction is not found`,
-      },
-    });
-  }
-
-  /**
-   * Fetches the transaction for the specified 'transactionID'
-   * @returns WorkflowTransactionDTO
-   * @throws ApiError
-   */
-  public static getTransactionByTransactionId({
-    transactionId,
-  }: {
-    transactionId: string;
-  }): CancelablePromise<WorkflowTransactionDTO> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/wf/v1/transactions/{transactionID}",
-      path: {
-        transactionID: transactionId,
-      },
-    });
-  }
-
-  /**
-   * Debit money from Noba bank account into consumer account
-   * @returns WorkflowTransactionDTO
-   * @throws ApiError
-   */
-  public static debitFromBank({
-    requestBody,
-  }: {
-    requestBody: DebitBankRequestDTO;
-  }): CancelablePromise<WorkflowTransactionDTO> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/wf/v1/transactions/debitfrombank",
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-
-  /**
-   * Fetches the Mono Transaction for the specified 'nobaTransactionID'
-   * @returns MonoTransactionDTO
-   * @throws ApiError
-   */
-  public static getMonoTransactionByNobaTransactionId({
-    nobaTransactionId,
-  }: {
-    nobaTransactionId: string;
-  }): CancelablePromise<MonoTransactionDTO> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/wf/v1/mono/nobatransactions/{nobaTransactionID}",
-      path: {
-        nobaTransactionID: nobaTransactionId,
       },
     });
   }
