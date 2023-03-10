@@ -269,6 +269,7 @@ export class VerificationWebhookController {
 
     try {
       const result = await this.verificationService.processDocumentVerificationWebhookResult(requestBody);
+      if (!result) return null;
       return this.verificationResponseMapper.toDocumentResultDTO(result);
     } catch (err) {
       this.logger.error(

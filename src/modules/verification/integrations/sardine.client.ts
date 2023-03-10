@@ -236,6 +236,7 @@ export class Sardine implements IDVProvider {
     try {
       const requestData: IdentityDocumentURLRequest = {
         sessionKey: sessionKey,
+        customerId: consumer.props.id,
         idback: idBack,
         selfie: selfie,
         poa: poa,

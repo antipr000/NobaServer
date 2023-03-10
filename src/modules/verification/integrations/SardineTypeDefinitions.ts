@@ -149,6 +149,7 @@ export type DeviceGpsLocation = {
 
 export type IdentityDocumentURLRequest = {
   sessionKey: string;
+  customerId: string;
   idback: boolean;
   selfie: boolean;
   poa: boolean;

@@ -1,5 +1,5 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { anything, deepEqual, instance, when, verify, capture } from "ts-mockito";
+import { anything, deepEqual, instance, when, verify, capture, anyString } from "ts-mockito";
 import { VerificationService } from "../verification.service";
 import { VerificationData } from "../domain/VerificationData";
 import { IVerificationDataRepo } from "../repos/verificationdata.repo";
@@ -14,7 +14,6 @@ import { ConsumerInformation } from "../domain/ConsumerInformation";
 import { BadRequestException } from "@nestjs/common";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
-import { NationalIDTypes } from "../domain/NationalIDTypes";
 import { DocumentVerificationStatus, KYCStatus, KYCProvider } from "@prisma/client";
 import {
   CaseAction,
@@ -29,9 +28,7 @@ import {
   FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
   FAKE_DOCUMENT_VERIFICATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
 } from "../integrations/fakes/FakeSardineResponses";
-import { Express } from "express";
 // eslint-disable-next-line unused-imports/no-unused-imports
-import { Multer } from "multer";
 import { Readable } from "stream";
 import { DocumentInformation } from "../domain/DocumentInformation";
 import { DocumentTypes } from "../domain/DocumentTypes";
@@ -42,6 +39,7 @@ import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLD
 import { TransactionVerification } from "../domain/TransactionVerification";
 import { ServiceException } from "../../../core/exception/service.exception";
 import { v4 } from "uuid";
+import * as alertUtils from "../../../core/system.alerts";
 
 describe("VerificationService", () => {
   let verificationService: VerificationService;
@@ -589,8 +587,24 @@ describe("VerificationService", () => {
         ),
       ).once();
     });
-  });
 
+    it("should raise an alert if the consumer cannot be found", async () => {
+      when(consumerService.getConsumer(anyString())).thenResolve(null);
+
+      const alertLogSpy = jest.spyOn(alertUtils, "formatAlertLog");
+
+      const result = await verificationService.processDocumentVerificationWebhookResult({
+        data: {
+          case: {
+            customerID: "12345",
+          },
+        },
+      } as any); // Only need customer id to trigger the error
+
+      expect(alertLogSpy).toHaveBeenCalledWith(expect.objectContaining({ key: "WEBHOOK_CONSUMER_NOT_FOUND" }));
+      expect(result).toBeNull();
+    });
+  });
   describe("transactionVerification", () => {
     it("verify transaction parameters and return ACCEPTED if Sardine doesn't flag the transaction", async () => {
       const consumer = getFakeConsumer();

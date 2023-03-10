@@ -23,6 +23,7 @@ import { TransactionVerification } from "./domain/TransactionVerification";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { SeverityLevel } from "../../core/exception/base.exception";
 import { HealthCheckResponse } from "../../core/domain/HealthCheckTypes";
+import { AlertKey, formatAlertLog } from "../../core/system.alerts";
 
 @Injectable()
 export class VerificationService {
@@ -249,12 +250,22 @@ export class VerificationService {
     documentVerificationResult: DocumentVerificationWebhookRequest,
   ): Promise<DocumentVerificationResult> {
     const consumerID = documentVerificationResult.data.case.customerID;
+    const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
+    if (!consumer) {
+      this.logger.error(
+        formatAlertLog({
+          key: AlertKey.WEBHOOK_CONSUMER_NOT_FOUND,
+          message: `Failed to find consumer with ID ${consumerID}`,
+        }),
+      );
+      return null;
+    }
+
     const result: DocumentVerificationResult = this.idvProvider.processDocumentVerificationResult(
       documentVerificationResult.documentVerificationResult,
     );
 
-    const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
-    const newConsumerData: ConsumerProps = {
+    const updateConsumerData: ConsumerProps = {
       ...consumer.props,
       verificationData: {
         ...consumer.props.verificationData,
@@ -262,7 +273,7 @@ export class VerificationService {
         riskRating: result.riskRating,
       },
     };
-    await this.consumerService.updateConsumer(newConsumerData);
+    await this.consumerService.updateConsumer(updateConsumerData);
 
     if (
       result.status === DocumentVerificationStatus.APPROVED ||

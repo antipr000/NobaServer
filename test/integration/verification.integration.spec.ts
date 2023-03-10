@@ -288,6 +288,61 @@ describe("Verification", () => {
 
       expect(response.__status).toBe(403);
     });
+
+    it("should silently ignore if the call does not belong to this server", async () => {
+      const secretKey = "bogus-value"; // SecretKey is bogus-value in yaml for E2E test
+
+      // Create consumer
+      const consumerLoginResponse = await loginAndGetResponse(integrationTestUtils.getRandomEmail("fake+consumer"));
+      setAccessTokenForTheNextRequests(consumerLoginResponse.accessToken);
+      const signature = computeSignature(TEST_TIMESTAMP, "GET", "/v1/consumers", JSON.stringify({}));
+      let getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
+
+      expect(getConsumerResponse.__status).toBe(200);
+      expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired"); // Initially it is set to NotRequired by default
+
+      const requestBody: DocumentVerificationWebhookRequestDTO = {
+        id: "fake-verification-id",
+        type: "fake-type",
+        timestamp: new Date().toISOString(),
+        data: {
+          case: {
+            sessionKey: "test-session-key",
+            customerID: "bogus-consumer",
+          },
+          action: {
+            source: "fake-source",
+          },
+        },
+        documentVerificationResult: FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
+      };
+
+      const sardineSignature = computeSardineWebhookSignature(secretKey, JSON.stringify(requestBody));
+
+      const response = await WebhooksService.postDocumentVerificationResult({
+        xSardineSignature: sardineSignature,
+        requestBody: requestBody,
+      });
+
+      expect(response.__status).toBe(200);
+
+      getConsumerResponse = (await ConsumerService.getConsumer({
+        xNobaApiKey: TEST_API_KEY,
+        xNobaSignature: signature,
+        xNobaTimestamp: TEST_TIMESTAMP,
+      })) as ConsumerDTO & ResponseStatus;
+
+      expect(getConsumerResponse.__status).toBe(200);
+      expect(getConsumerResponse.documentVerificationData).toStrictEqual({
+        documentVerificationErrorReason: null,
+        documentVerificationStatus: "NotRequired",
+        updatedTimestamp: 0,
+      });
+    });
   });
 
   describe("POST /verify/case/notification", () => {
