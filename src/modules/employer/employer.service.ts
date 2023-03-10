@@ -491,7 +491,7 @@ export class EmployerService {
   }
 
   async createInvoice(payrollID: string): Promise<void> {
-    this.generatePayroll(payrollID);
+    await this.generatePayroll(payrollID);
   }
 
   private async generateTemplate({
