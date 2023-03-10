@@ -24,7 +24,6 @@ import { getMockTransactionServiceWithDefaults } from "../../../modules/transact
 import { ConsumerMapper } from "../../../modules/consumer/mappers/ConsumerMapper";
 import { EmployeeService } from "../../../modules/employee/employee.service";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
-import { ConsumerDTO } from "../../../modules/consumer/dto/ConsumerDTO";
 import { EmployerService } from "../../../modules/employer/employer.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
@@ -250,6 +249,69 @@ describe("AdminController", () => {
       expect(queriedNobaAdmin.email).toBe(authenticatedNobaAdmin.props.email);
       expect(queriedNobaAdmin.name).toBe(authenticatedNobaAdmin.props.name);
       expect(queriedNobaAdmin.role).toBe(authenticatedNobaAdmin.props.role);
+    });
+  });
+
+  describe("getAllNobaAdmins", () => {
+    it("should throw ForbiddenException if noba admin does not have permissions", async () => {
+      const authenticatedNobaAdmin: Admin = Admin.createAdmin({
+        id: "XXXXXXXXXX",
+        email: LOGGED_IN_ADMIN_EMAIL,
+        role: NOBA_ADMIN_ROLE_TYPES.BASIC,
+      });
+
+      await expect(
+        async () =>
+          await adminController.getAllNobaAdmins({
+            user: {
+              entity: authenticatedNobaAdmin,
+            },
+          }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it("should throw ForbiddenException if Consumer accesses this endpoint", async () => {
+      const authenticatedConsumer: Consumer = Consumer.createConsumer({
+        id: "XXXXXXXXXX",
+        email: "fake+consumer@noba.com",
+      });
+
+      await expect(
+        async () =>
+          await adminController.getAllNobaAdmins({
+            user: {
+              entity: authenticatedConsumer,
+            },
+          }),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it("should return all nobaAdmins", async () => {
+      const adminId = "XXXXXXXXXX";
+      const authenticatedNobaAdmin: Admin = Admin.createAdmin({
+        id: adminId,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const allAdmins = [
+        authenticatedNobaAdmin,
+        Admin.createAdmin({
+          id: "fake-id-1234",
+          email: "fake+admin@noba.com",
+          role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+        }),
+      ];
+
+      when(mockAdminService.getAllNobaAdmins()).thenResolve(allAdmins);
+
+      const queriedNobaAdmins = await adminController.getAllNobaAdmins({
+        user: {
+          entity: authenticatedNobaAdmin,
+        },
+      });
+
+      expect(queriedNobaAdmins.length).toBe(allAdmins.length);
     });
   });
 

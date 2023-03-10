@@ -12,6 +12,7 @@ export interface IAdminRepo {
   getAllTransactions(startDate: string, endDate: string): Promise<Transaction[]>;
   addNobaAdmin(nobaAdmin: Admin): Promise<Admin>;
   getNobaAdminByEmail(email: string): Promise<Admin>;
+  getAllNobaAdmins(): Promise<Admin[]>;
   updateNobaAdmin(id: string, adminProps: Partial<AdminProps>): Promise<Admin>;
   deleteNobaAdmin(id: string): Promise<void>;
   getNobaAdminById(id: string): Promise<Admin>;
@@ -76,6 +77,15 @@ export class SQLAdminRepo implements IAdminRepo {
       await this.prismaService.admin.delete({ where: { id: id } });
     } catch (e) {
       throw new BadRequestError({ message: `Noba admin with id ${id} not found!` });
+    }
+  }
+
+  async getAllNobaAdmins(): Promise<Admin[]> {
+    try {
+      const adminProps = await this.prismaService.admin.findMany();
+      return adminProps.map(adminProp => Admin.createAdmin(adminProp));
+    } catch (e) {
+      return [];
     }
   }
 

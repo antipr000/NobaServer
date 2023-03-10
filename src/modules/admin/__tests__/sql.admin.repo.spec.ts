@@ -60,6 +60,31 @@ describe("AdminRepo Tests", () => {
     });
   });
 
+  describe("getAllNobaAdmins", () => {
+    beforeEach(async () => {
+      await prismaService.admin.deleteMany();
+    });
+    it("should return empty array if no admins exists", async () => {
+      const allAdmins: Admin[] = await adminRepo.getAllNobaAdmins();
+
+      expect(allAdmins).toHaveLength(0);
+    });
+
+    it("should return all the admins", async () => {
+      const admin1: Admin = getRandomAdmin("BASIC");
+      const admin2: Admin = getRandomAdmin("INTERMEDIATE");
+      const admin3: Admin = getRandomAdmin("ADMIN");
+
+      await adminRepo.addNobaAdmin(admin1);
+      await adminRepo.addNobaAdmin(admin2);
+      await adminRepo.addNobaAdmin(admin3);
+
+      const allAdmins: Admin[] = await adminRepo.getAllNobaAdmins();
+
+      expect(allAdmins).toHaveLength(3);
+    });
+  });
+
   describe("getNobaAdminByEmail", () => {
     it("should return 'undefined' if admind with that email doesn't exists", async () => {
       const retrievedAdmin: Admin = await adminRepo.getNobaAdminByEmail("admin@noba.com");

@@ -115,6 +115,23 @@ describe("AdminService", () => {
     });
   });
 
+  describe("getAllNobaAdmins", () => {
+    it("should return all noba admins", async () => {
+      const nobaAdmins = [
+        Admin.createAdmin({
+          id: "1111111111",
+          name: "Admin",
+          email: "fake+admin@noba.com",
+        }),
+      ];
+
+      when(adminRepo.getAllNobaAdmins()).thenResolve(nobaAdmins);
+
+      const result = await adminService.getAllNobaAdmins();
+      expect(result).toStrictEqual(nobaAdmins);
+    });
+  });
+
   describe("updateNobaAdmin", () => {
     it("should throw 'BadRequestException' if 'role' is invalid", async () => {
       const invalidRole = "INVALID_ROLE";

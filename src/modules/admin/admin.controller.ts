@@ -37,7 +37,6 @@ import { AdminMapper } from "./mappers/AdminMapper";
 import { Public } from "../auth/public.decorator";
 import { UpdateNobaAdminDTO } from "./dto/UpdateNobaAdminDTO";
 import { DeleteNobaAdminDTO } from "./dto/DeleteNobaAdminDTO";
-import { ConsumerDTO } from "../consumer/dto/ConsumerDTO";
 import { AdminUpdateConsumerRequestDTO } from "./dto/AdminUpdateConsumerRequestDTO";
 import { ConsumerService } from "../consumer/consumer.service";
 import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
@@ -137,6 +136,20 @@ export class AdminController {
     }
 
     return this.adminMapper.toDTO(authenticatedUser);
+  }
+
+  @Get("/all")
+  @ApiOperation({ summary: "Gets the details of all Noba admins" })
+  @ApiResponse({ status: HttpStatus.OK, type: [NobaAdminDTO], description: "All Noba admins" })
+  @ApiForbiddenResponse({ description: "User forbidden from retrieving details of all Noba admin" })
+  async getAllNobaAdmins(@Request() request): Promise<NobaAdminDTO[]> {
+    const authenticatedUser: Admin = request.user.entity;
+    if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canViewAllAdmins()) {
+      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't retrieve NobaAdmins.`);
+    }
+
+    const allAdmins = await this.adminService.getAllNobaAdmins();
+    return allAdmins.map(admin => this.adminMapper.toDTO(admin));
   }
 
   @Patch(`/:${AdminId}`)

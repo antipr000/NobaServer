@@ -93,6 +93,10 @@ export class AdminService {
     return adminId;
   }
 
+  async getAllNobaAdmins(): Promise<Admin[]> {
+    return this.adminRepo.getAllNobaAdmins();
+  }
+
   async getAdminByEmail(email: string): Promise<Admin> {
     const admin: Admin | undefined = await this.adminRepo.getNobaAdminByEmail(email);
     if (admin === undefined) {
