@@ -6,6 +6,7 @@ import { SendUpdateEmployeeAllocationAmontEvent } from "./events/SendUpdateEmplo
 import { DashboardClient } from "./dashboard/dashboard.client";
 import { SendUpdatePayrollStatusEvent } from "./events/SendUpdatePayrollStatusEvent";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Logger } from "winston";
 
 @Injectable()
 export class DashboardEventHandler {
