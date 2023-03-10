@@ -688,8 +688,8 @@ describe("EmployerServiceTests", () => {
       const { payrollDisbursement: disbursement1 } = getRandomPayrollDisbursement(payroll.id, "fake-employee-1");
       const { payrollDisbursement: disbursement2 } = getRandomPayrollDisbursement(payroll.id, "fake-employee-2");
 
-      disbursement1.debitAmount = 10000;
-      disbursement2.debitAmount = 20000;
+      disbursement1.allocationAmount = 10000;
+      disbursement2.allocationAmount = 20000;
 
       when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([
         disbursement1,

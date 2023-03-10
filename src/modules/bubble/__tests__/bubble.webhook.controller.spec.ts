@@ -316,7 +316,7 @@ describe("BubbleWebhookControllerTests", () => {
             id: payrollDisbursement.id,
             employeeID: payrollDisbursement.employeeID,
             transactionID: payrollDisbursement.transactionID,
-            debitAmount: payrollDisbursement.debitAmount,
+            debitAmount: payrollDisbursement.allocationAmount,
           },
         ],
       });
@@ -341,7 +341,7 @@ describe("BubbleWebhookControllerTests", () => {
           id: payrollDisbursement.id,
           employeeID: payrollDisbursement.employeeID,
           transactionID: payrollDisbursement.transactionID,
-          debitAmount: payrollDisbursement.debitAmount,
+          debitAmount: payrollDisbursement.allocationAmount,
         },
       ]);
     });
