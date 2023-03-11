@@ -134,18 +134,6 @@ export class BubbleWebhookController {
     return {};
   }
 
-  // [DEPRECATED]: Use "/employees/{ID}" instead.
-  @Patch("/employee/:employeeID")
-  @ApiOperation({ summary: "Update the Employee in Noba" })
-  @ApiResponse({ status: HttpStatus.OK, type: BlankResponseDTO })
-  async deprecatedUpdateEmployee(
-    @Body() requestBody: UpdateEmployeeRequestDTO,
-    @Param("employeeID") employeeID: string,
-  ): Promise<BlankResponseDTO> {
-    await this.bubbleService.updateEmployee(employeeID, requestBody);
-    return {};
-  }
-
   @Patch("/employees/:employeeID")
   @ApiOperation({ summary: "Update the Employee in Noba" })
   @ApiResponse({ status: HttpStatus.OK, type: BlankResponseDTO })
