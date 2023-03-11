@@ -18,20 +18,31 @@ export class DashboardEventHandler {
 
   @OnEvent(`dashboard.${NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT}`)
   public async sendRegisterNewEmployee(payload: SendRegisterNewEmployeeEvent) {
-    await this.dashboardClient.registerNewEmployee({
-      firstName: payload.firstName,
-      lastName: payload.lastName,
-      email: payload.email,
-      phone: payload.phone,
-      employerReferralID: payload.employerReferralID,
-      allocationAmountInPesos: payload.allocationAmountInPesos,
-      nobaEmployeeID: payload.nobaEmployeeID,
-    });
+    try {
+      await this.dashboardClient.registerNewEmployee({
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        email: payload.email,
+        phone: payload.phone,
+        employerReferralID: payload.employerReferralID,
+        allocationAmountInPesos: payload.allocationAmountInPesos,
+        nobaEmployeeID: payload.nobaEmployeeID,
+      });
+    } catch (err) {
+      this.logger.error(`Failed to send the new employee registration event to dasboard, ${JSON.stringify(err)}`);
+    }
   }
 
   @OnEvent(`dashboard.${NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT}`)
   public async sendUpdateEmployeeAllocationAmount(payload: SendUpdateEmployeeAllocationAmontEvent) {
-    await this.dashboardClient.updateEmployeeAllocationAmount(payload.nobaEmployeeID, payload.allocationAmountInPesos);
+    try {
+      await this.dashboardClient.updateEmployeeAllocationAmount(
+        payload.nobaEmployeeID,
+        payload.allocationAmountInPesos,
+      );
+    } catch (err) {
+      this.logger.error(`Failed to update the employee allocationAmount in dasboard, ${JSON.stringify(err)}`);
+    }
   }
 
   @OnEvent(`dashboard.${NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT}`)
