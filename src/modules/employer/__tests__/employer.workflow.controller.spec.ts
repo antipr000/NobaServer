@@ -54,12 +54,7 @@ describe("EmployerWorkflowControllerTests", () => {
       const employer: Employer = createTestEmployer();
       employer.payrollDates = ["2020-03-11", "2020-03-21", "2020-03-01"];
 
-      const employee1: Employee = getRandomEmployee(employer.id);
-      const employee2: Employee = getRandomEmployee(employer.id);
-      employee2.salary = 10;
-
       when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
-      when(employerService.getAllEmployees(employer.id)).thenResolve([employee1, employee2]);
 
       const receivedEmployer = await employerWorkflowController.getEmployer(employer.id);
 
@@ -71,23 +66,6 @@ describe("EmployerWorkflowControllerTests", () => {
         leadDays: employer.leadDays,
         payrollDates: sortedPayrollDates,
         nextPayrollDate: employer.payrollDates[1],
-        employees: [
-          {
-            id: employee1.id,
-            allocationAmount: employee1.allocationAmount,
-            allocationCurrency: employee1.allocationCurrency,
-            employerID: employer.id,
-            consumerID: employee1.consumerID,
-          },
-          {
-            id: employee2.id,
-            allocationAmount: employee2.allocationAmount,
-            allocationCurrency: employee2.allocationCurrency,
-            employerID: employer.id,
-            consumerID: employee2.consumerID,
-            salary: 10,
-          },
-        ],
       });
     });
   });

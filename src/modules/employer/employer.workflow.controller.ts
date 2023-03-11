@@ -32,10 +32,8 @@ export class EmployerWorkflowController {
   @ApiNotFoundResponse({ description: "Requested employer is not found" })
   async getEmployer(@Param("employerID") employerID: string): Promise<EmployerWorkflowDTO> {
     const employer = await this.employerService.getEmployerByID(employerID);
-    // Aways returns "Employee" to avoid breaking the clients who uses it.
-    const employees: Employee[] = await this.employerService.getAllEmployees(employerID);
 
-    return this.employerMapper.toEmployerWorkflowDTO(employer, employees);
+    return this.employerMapper.toEmployerWorkflowDTO(employer);
   }
 
   @Get("/:employerID/employees")

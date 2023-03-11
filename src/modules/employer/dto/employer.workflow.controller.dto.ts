@@ -25,10 +25,6 @@ export class EmployerWorkflowDTO {
 
   @ApiPropertyOptional()
   maxAllocationPercent: number;
-
-  // [Deprecated]: Use the /employers/{ID}/employees method instead.
-  @ApiPropertyOptional()
-  employees?: EmployeeDTO[];
 }
 
 export class EmployeesWorkflowDTO {

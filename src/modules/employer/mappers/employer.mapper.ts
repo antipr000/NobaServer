@@ -11,10 +11,9 @@ export class EmployerMapper {
     });
   }
 
-  toEmployerWorkflowDTO(employer: Employer, employees: Employee[]): EmployerWorkflowDTO {
+  toEmployerWorkflowDTO(employer: Employer): EmployerWorkflowDTO {
     const payrollDatesAsc = employer.payrollDates.sort(); // Naturally sorts strings in ascending order
     const futurePayrollDates = this.getFuturePayrollDates(payrollDatesAsc, employer.leadDays);
-    if (!employees) employees = [];
 
     return {
       employerID: employer.id,
@@ -25,15 +24,6 @@ export class EmployerMapper {
       payrollDates: payrollDatesAsc,
       nextPayrollDate: futurePayrollDates[0],
       ...(employer.maxAllocationPercent && { maxAllocationPercent: employer.maxAllocationPercent }),
-
-      employees: employees.map(employee => ({
-        id: employee.id,
-        allocationAmount: employee.allocationAmount,
-        allocationCurrency: employee.allocationCurrency,
-        employerID: employee.employerID,
-        consumerID: employee.consumerID,
-        ...(employee.salary && { salary: employee.salary }),
-      })),
     };
   }
 
