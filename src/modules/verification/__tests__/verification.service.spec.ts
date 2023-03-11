@@ -105,6 +105,9 @@ describe("VerificationService", () => {
     }).compile();
 
     verificationService = app.get<VerificationService>(VerificationService);
+
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(2020, 3, 1));
   });
 
   describe("getDeviceVerificationResult", () => {
@@ -357,6 +360,7 @@ describe("VerificationService", () => {
         verificationData: {
           ...consumer.props.verificationData,
           documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+          documentVerificationTimestamp: new Date(),
         },
       };
 
@@ -403,6 +407,7 @@ describe("VerificationService", () => {
           verificationData: {
             ...consumer.props.verificationData,
             documentVerificationStatus: rejectedStatus as DocumentVerificationStatus,
+            documentVerificationTimestamp: new Date(),
           },
         };
 
@@ -496,6 +501,7 @@ describe("VerificationService", () => {
           ...consumer.props.verificationData,
           documentVerificationStatus: documentVerificationResult.status,
           riskRating: documentVerificationResult.riskRating,
+          documentVerificationTimestamp: new Date(),
         },
       };
 
@@ -551,6 +557,7 @@ describe("VerificationService", () => {
           ...consumer.props.verificationData,
           documentVerificationStatus: documentVerificationResult.status,
           riskRating: documentVerificationResult.riskRating,
+          documentVerificationTimestamp: new Date(),
         },
       };
 
