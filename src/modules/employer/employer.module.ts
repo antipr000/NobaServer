@@ -8,12 +8,18 @@ import { EmployerRepoModule } from "./repo/employer.repo.module";
 import { EmployeeModule } from "../employee/employee.module";
 import { CommonModule } from "../common/common.module";
 import { EmployerWorkflowController } from "./employer.workflow.controller";
-import { PayrollWorkflowController } from "./payroll.workflow.controller";
+import { DeprecatedPayrollWorkflowController } from "./deprecated.payroll.workflow.controller";
 import { ConsumerModule } from "../consumer/consumer.module";
+import { PayrollWorkflowController } from "./payroll.workflow.controller";
 
 @Module({
   imports: [InfraProvidersModule, EmployerRepoModule, EmployeeModule, CommonModule, PayrollRepoModule, ConsumerModule],
-  controllers: [EmployerController, EmployerWorkflowController, PayrollWorkflowController],
+  controllers: [
+    EmployerController,
+    EmployerWorkflowController,
+    PayrollWorkflowController,
+    DeprecatedPayrollWorkflowController,
+  ],
   providers: [EmployerService, TemplateService],
   exports: [EmployerService],
 })
