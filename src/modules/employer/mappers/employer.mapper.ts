@@ -1,7 +1,7 @@
+import { Employee } from "../../../modules/employee/domain/Employee";
 import { Employer } from "../domain/Employer";
 import { EmployerDTO } from "../dto/employer.controller.dto";
-import { EmployerWithEmployeesDTO } from "../dto/employer.service.dto";
-import { EmployerWorkflowDTO } from "../dto/employer.workflow.controller.dto";
+import { EmployeesWorkflowDTO, EmployerWorkflowDTO } from "../dto/employer.workflow.controller.dto";
 
 export class EmployerMapper {
   private getFuturePayrollDates(payrollDates: string[], leadDays: number): string[] {
@@ -11,9 +11,11 @@ export class EmployerMapper {
     });
   }
 
-  toEmployerWorkflowDTO(employer: EmployerWithEmployeesDTO): EmployerWorkflowDTO {
+  toEmployerWorkflowDTO(employer: Employer, employees: Employee[]): EmployerWorkflowDTO {
     const payrollDatesAsc = employer.payrollDates.sort(); // Naturally sorts strings in ascending order
     const futurePayrollDates = this.getFuturePayrollDates(payrollDatesAsc, employer.leadDays);
+    if (!employees) employees = [];
+
     return {
       employerID: employer.id,
       employerName: employer.name,
@@ -23,7 +25,8 @@ export class EmployerMapper {
       payrollDates: payrollDatesAsc,
       nextPayrollDate: futurePayrollDates[0],
       ...(employer.maxAllocationPercent && { maxAllocationPercent: employer.maxAllocationPercent }),
-      employees: employer.employees.map(employee => ({
+
+      employees: employees.map(employee => ({
         id: employee.id,
         allocationAmount: employee.allocationAmount,
         allocationCurrency: employee.allocationCurrency,
@@ -47,6 +50,19 @@ export class EmployerMapper {
       payrollDates: payrollDatesAsc,
       nextPayrollDate: futurePayrollDates[0],
       ...(employer.maxAllocationPercent && { maxAllocationPercent: employer.maxAllocationPercent }),
+    };
+  }
+
+  toEmployeesWorkflowDTO(employees): EmployeesWorkflowDTO {
+    return {
+      employees: employees.map(employee => ({
+        id: employee.id,
+        allocationAmount: employee.allocationAmount,
+        allocationCurrency: employee.allocationCurrency,
+        employerID: employee.employerID,
+        consumerID: employee.consumerID,
+        ...(employee.salary && { salary: employee.salary }),
+      })),
     };
   }
 }

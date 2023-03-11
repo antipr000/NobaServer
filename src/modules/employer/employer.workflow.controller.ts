@@ -2,7 +2,8 @@ import { Controller, Get, HttpStatus, Inject, Param, Query } from "@nestjs/commo
 import { ApiBearerAuth, ApiNotFoundResponse, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { EmployerWorkflowDTO } from "./dto/employer.workflow.controller.dto";
+import { Employee } from "../employee/domain/Employee";
+import { EmployeesWorkflowDTO, EmployerWorkflowDTO } from "./dto/employer.workflow.controller.dto";
 import { EmployerService } from "./employer.service";
 import { EmployerMapper } from "./mappers/employer.mapper";
 
@@ -29,12 +30,24 @@ export class EmployerWorkflowController {
     type: EmployerWorkflowDTO,
   })
   @ApiNotFoundResponse({ description: "Requested employer is not found" })
-  async getEmployer(
-    @Param("employerID") employerID: string,
-    @Query() employees?: boolean,
-  ): Promise<EmployerWorkflowDTO> {
-    const employer = await this.employerService.getEmployerWithEmployees(employerID, employees);
+  async getEmployer(@Param("employerID") employerID: string): Promise<EmployerWorkflowDTO> {
+    const employer = await this.employerService.getEmployerByID(employerID);
+    // Aways returns "Employee" to avoid breaking the clients who uses it.
+    const employees: Employee[] = await this.employerService.getAllEmployees(employerID);
 
-    return this.employerMapper.toEmployerWorkflowDTO(employer);
+    return this.employerMapper.toEmployerWorkflowDTO(employer, employees);
+  }
+
+  @Get("/:employerID/employees")
+  @ApiOperation({ summary: "Gets all the employees" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: EmployerWorkflowDTO,
+  })
+  @ApiNotFoundResponse({ description: "Employer is not found" })
+  async getAllEmployees(@Param("employerID") employerID: string): Promise<EmployeesWorkflowDTO> {
+    const employees: Employee[] = await this.employerService.getAllEmployees(employerID);
+
+    return this.employerMapper.toEmployeesWorkflowDTO(employees);
   }
 }

@@ -4,33 +4,12 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { instance, when } from "ts-mockito";
 import { EmployerService } from "../employer.service";
-import { uuid } from "uuidv4";
 import { Employer } from "../domain/Employer";
 import { getMockEmployerServiceWithDefaults } from "../mocks/mock.employer.service";
 import { EmployerWorkflowController } from "../employer.workflow.controller";
-import { EmployerWithEmployeesDTO } from "../dto/employer.service.dto";
 import { getRandomEmployee } from "../../../modules/employee/test_utils/employee.test.utils";
-
-const getRandomEmployer = (): EmployerWithEmployeesDTO => {
-  const employer: Employer = {
-    id: uuid(),
-    name: "Test Employer",
-    bubbleID: uuid(),
-    logoURI: "https://www.google.com",
-    referralID: uuid(),
-    leadDays: 5,
-    payrollDates: ["2020-03-02T00:00:00Z+0", "2020-02-29T00:00:00Z+0"],
-    createdTimestamp: new Date(),
-    updatedTimestamp: new Date(),
-  };
-
-  const employee1 = getRandomEmployee(employer.id);
-  const employee2 = getRandomEmployee(employer.id);
-  return {
-    ...employer,
-    employees: [employee1, employee2],
-  };
-};
+import { createTestEmployer } from "../test_utils/test.utils";
+import { Employee } from "../../../modules/employee/domain/Employee";
 
 describe("EmployerWorkflowControllerTests", () => {
   jest.setTimeout(20000);
@@ -70,29 +49,78 @@ describe("EmployerWorkflowControllerTests", () => {
 
   describe("getEmployer", () => {
     it("should return the employer by referral ID with ascending sort payroll dates", async () => {
-      const employer: EmployerWithEmployeesDTO = getRandomEmployer();
+      const sortedPayrollDates = ["2020-03-01", "2020-03-11", "2020-03-21"];
+
+      const employer: Employer = createTestEmployer();
       employer.payrollDates = ["2020-03-11", "2020-03-21", "2020-03-01"];
-      const payrollDates = ["2020-03-01", "2020-03-11", "2020-03-21"];
-      when(employerService.getEmployerWithEmployees(employer.id, true)).thenResolve(employer);
 
-      const foundEmployer = await employerWorkflowController.getEmployer(employer.id, true);
+      const employee1: Employee = getRandomEmployee(employer.id);
+      const employee2: Employee = getRandomEmployee(employer.id);
+      employee2.salary = 10;
 
-      expect(foundEmployer).toEqual({
+      when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
+      when(employerService.getAllEmployees(employer.id)).thenResolve([employee1, employee2]);
+
+      const receivedEmployer = await employerWorkflowController.getEmployer(employer.id);
+
+      expect(receivedEmployer).toEqual({
         employerID: employer.id,
         employerName: employer.name,
         employerLogoURI: employer.logoURI,
         employerReferralID: employer.referralID,
         leadDays: employer.leadDays,
-        payrollDates: payrollDates,
+        payrollDates: sortedPayrollDates,
         nextPayrollDate: employer.payrollDates[1],
-        employees: employer.employees.map(employee => ({
-          id: employee.id,
-          allocationAmount: employee.allocationAmount,
-          allocationCurrency: employee.allocationCurrency,
-          employerID: employee.employerID,
-          consumerID: employee.consumerID,
-          ...(employee.salary && { salary: employee.salary }),
-        })),
+        employees: [
+          {
+            id: employee1.id,
+            allocationAmount: employee1.allocationAmount,
+            allocationCurrency: employee1.allocationCurrency,
+            employerID: employer.id,
+            consumerID: employee1.consumerID,
+          },
+          {
+            id: employee2.id,
+            allocationAmount: employee2.allocationAmount,
+            allocationCurrency: employee2.allocationCurrency,
+            employerID: employer.id,
+            consumerID: employee2.consumerID,
+            salary: 10,
+          },
+        ],
+      });
+    });
+  });
+
+  describe("getAllEmployees", () => {
+    it("should return all the employes for specified employerID", async () => {
+      const employer: Employer = createTestEmployer();
+      const employee1: Employee = getRandomEmployee(employer.id);
+      const employee2: Employee = getRandomEmployee(employer.id);
+      employee2.salary = 10;
+
+      when(employerService.getAllEmployees(employer.id)).thenResolve([employee1, employee2]);
+
+      const receivedEmployees = await employerWorkflowController.getAllEmployees(employer.id);
+
+      expect(receivedEmployees).toEqual({
+        employees: [
+          {
+            id: employee1.id,
+            allocationAmount: employee1.allocationAmount,
+            allocationCurrency: employee1.allocationCurrency,
+            employerID: employer.id,
+            consumerID: employee1.consumerID,
+          },
+          {
+            id: employee2.id,
+            allocationAmount: employee2.allocationAmount,
+            allocationCurrency: employee2.allocationCurrency,
+            employerID: employer.id,
+            consumerID: employee2.consumerID,
+            salary: 10,
+          },
+        ],
       });
     });
   });

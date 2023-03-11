@@ -445,6 +445,24 @@ describe("EmployerServiceTests", () => {
   });
 
   describe("getEmployerByID", () => {
+    it("should throw ServiceException if 'id' is not provided", async () => {
+      try {
+        await employerService.getEmployerByID(null);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
+      }
+
+      try {
+        await employerService.getEmployerByID(undefined);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
+      }
+    });
+
     it("should get an employer by ID", async () => {
       const employer = getRandomEmployer();
       when(employerRepo.getEmployerByID(anything())).thenResolve(employer);
@@ -519,47 +537,33 @@ describe("EmployerServiceTests", () => {
     });
   });
 
-  describe("getEmployerWithEmployees", () => {
-    it("should return employer with employees", async () => {
+  describe("getAllEmployees", () => {
+    it("should throw ServiceException if no 'employerID' is specified", async () => {
       const employer = getRandomEmployer();
       const employee1 = getRandomEmployee(employer.id);
       const employee2 = getRandomEmployee(employer.id);
 
       when(employeeService.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2]);
-      when(employerRepo.getEmployerByID(employer.id)).thenResolve(employer);
 
-      const retrievedEmployer = await employerService.getEmployerWithEmployees(employer.id, true);
-
-      expect(retrievedEmployer).toStrictEqual({
-        ...employer,
-        employees: [employee1, employee2],
-      });
+      try {
+        await employerService.getAllEmployees(null);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
+      }
     });
 
-    it("should not return employees if flag is false", async () => {
+    it("should return all the employees for the specified employer", async () => {
       const employer = getRandomEmployer();
       const employee1 = getRandomEmployee(employer.id);
       const employee2 = getRandomEmployee(employer.id);
 
       when(employeeService.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2]);
-      when(employerRepo.getEmployerByID(employer.id)).thenResolve(employer);
 
-      const retrievedEmployer = await employerService.getEmployerWithEmployees(employer.id, false);
+      const retrievedEmployer = await employerService.getAllEmployees(employer.id);
 
-      expect(retrievedEmployer).toStrictEqual({
-        ...employer,
-        employees: [],
-      });
-    });
-
-    it("should throw ServiceException when 'employerID' is not defined", async () => {
-      await expect(employerService.getEmployerWithEmployees(undefined, true)).rejects.toThrowError(ServiceException);
-    });
-
-    it("should throw ServiceException when employer does not exist", async () => {
-      when(employerRepo.getEmployerByID(anything())).thenResolve(null);
-
-      await expect(employerService.getEmployerWithEmployees("fake-id", true)).rejects.toThrowError(ServiceException);
+      expect(retrievedEmployer).toStrictEqual([employee1, employee2]);
     });
   });
 
