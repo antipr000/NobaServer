@@ -19,17 +19,17 @@ import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { PayrollDisbursementDTO } from "./dto/PayrollDisbursementDTO";
 import { EmployerService } from "./employer.service";
 
-@Controller("wf/v1/payrolls")
+@Controller("wf/v1/payroll")
 @ApiBearerAuth("JWT-auth")
 @ApiTags("Workflow")
-export class PayrollWorkflowController {
+export class DeprecatedPayrollWorkflowController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
   @Inject()
   private readonly employerService: EmployerService;
 
-  @Post("/:payrollID/disbursements")
+  @Post("/:payrollID/disbursement")
   @ApiOperation({ summary: "Creates a disbursement for employee" })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -51,7 +51,7 @@ export class PayrollWorkflowController {
     };
   }
 
-  @Patch("/:payrollID/disbursements/:disbursementID")
+  @Patch("/:payrollID/disbursement/:disbursementID")
   @ApiOperation({ summary: "Updates the disbursement record for an employee" })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -68,7 +68,7 @@ export class PayrollWorkflowController {
     return {};
   }
 
-  @Post("/:payrollID/invoices")
+  @Post("/:payrollID/invoice")
   @ApiOperation({ summary: "Creates an invoice for employer" })
   @ApiResponse({
     status: HttpStatus.CREATED,
