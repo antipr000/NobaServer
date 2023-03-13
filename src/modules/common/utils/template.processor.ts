@@ -131,7 +131,7 @@ export class TemplateContext {
     await page.emulateMediaType("screen");
     await page.setContent(html);
     await page.evaluateHandle("document.fonts.ready");
-    const pdf = page.pdf({ format: "A4", path: filename });
+    const pdf = page.pdf({ format: "A4" });
     this.writeTimingLog("PDF generated", Date.now() - start);
     return pdf;
   }
