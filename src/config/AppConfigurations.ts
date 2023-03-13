@@ -574,6 +574,8 @@ async function configureNobaParameters(
     throw Error(errorMessage);
   }
 
+  nobaConfigs.environment = environment;
+
   nobaConfigs.appSecretKey = await getParameterValue(nobaConfigs.awsSecretKeyForAppSecretKey, nobaConfigs.appSecretKey);
   nobaConfigs.privateBearerToken = await getParameterValue(
     nobaConfigs.awsSecretKeyForPrivateBearerToken,

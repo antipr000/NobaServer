@@ -37,9 +37,11 @@ import {
   NOBA_PAYROLL_ACCOUNT_NUMBER,
   NOBA_PAYROLL_AWS_SECRET_KEY_FOR_NOBA_PAYROLL_ACCOUNT_NUMBER,
   NOBA_PAYROLL_CONFIG_KEY,
+  AppEnvironment,
 } from "../ConfigurationUtils";
 
 export interface NobaConfigs {
+  environment: AppEnvironment;
   [AWS_SECRET_KEY_FOR_NOBA_APP_SECRET_KEY]: string;
   [NOBA_APP_SECRET_KEY]: string;
   [NOBA_ADMIN_BEARER_TOKEN]: string;

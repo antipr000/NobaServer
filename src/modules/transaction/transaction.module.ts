@@ -17,6 +17,7 @@ import { MonoModule } from "../psp/mono/mono.module";
 import { BankFactoryModule } from "../psp/factory/bank.factory.module";
 import { EmployerModule } from "../employer/employer.module";
 import { EmployeeModule } from "../employee/employee.module";
+import { AlertModule } from "src/core/alerts/alert.module";
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { EmployeeModule } from "../employee/employee.module";
     MonoModule,
     EmployerModule,
     EmployeeModule,
+    AlertModule,
   ],
   controllers: [TransactionController, TransactionWorkflowController],
   providers: [
@@ -44,7 +46,7 @@ import { EmployeeModule } from "../employee/employee.module";
   ],
   exports: [TransactionService], //Need to access in PublicController
 })
-export class TransactionModule {}
+export class TransactionModule { }
 
 @Module({
   imports: [
@@ -56,8 +58,9 @@ export class TransactionModule {}
     TransactionModule,
     EmployerModule,
     EmployeeModule,
+    AlertModule,
   ],
   providers: [TransactionWorkflowMapper],
   controllers: [TransactionWorkflowController],
 })
-export class TransactionWorkflowModule {}
+export class TransactionWorkflowModule { }

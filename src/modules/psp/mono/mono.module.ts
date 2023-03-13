@@ -9,11 +9,12 @@ import { MonoWorkflowController } from "./mono.workflow.controller";
 import { MonoWorkflowControllerMappers } from "./mono.workflow.controller.mappers";
 import { CommonModule } from "../../../modules/common/common.module";
 import { MonoWorkflowService } from "./mono.workflow.service";
+import { AlertModule } from "src/core/alerts/alert.module";
 
 @Module({
-  imports: [InfraProvidersModule, MonoRepoModule, ConsumerModule, CommonModule],
+  imports: [InfraProvidersModule, MonoRepoModule, ConsumerModule, CommonModule, AlertModule],
   controllers: [MonoWorkflowController],
   providers: [MonoClient, MonoService, MonoWorkflowService, MonoWebhookHandlers, MonoWorkflowControllerMappers],
   exports: [MonoService, MonoWorkflowService],
 })
-export class MonoModule {}
+export class MonoModule { }

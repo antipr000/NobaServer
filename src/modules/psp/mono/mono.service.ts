@@ -36,7 +36,8 @@ import { PhoneNumberUtil } from "google-libphonenumber";
 import { BalanceDTO } from "../dto/balance.dto";
 import { IBank } from "../factory/ibank";
 import { DebitBankFactoryRequest, DebitBankFactoryResponse } from "../domain/BankFactoryTypes";
-import { AlertKey, formatAlertLog } from "../../../core/system.alerts";
+import { AlertKey } from "../../../core/alerts/alert.dto";
+import { AlertService } from "src/core/alerts/alert.service";
 
 type CollectionLinkDepositRequest = {
   nobaTransactionID: string;
@@ -73,6 +74,9 @@ export class MonoService implements IBank {
 
   @Inject()
   protected readonly monoWebhookHandlers: MonoWebhookHandlers;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   async checkMonoHealth(): Promise<HealthCheckResponse> {
     return this.monoClient.getHealth();
@@ -230,12 +234,10 @@ export class MonoService implements IBank {
       event.collectionLinkID,
     );
     if (!monoTransaction) {
-      this.logger.error(
-        formatAlertLog({
-          key: AlertKey.MONO_TRANSACTION_NOT_FOUND,
-          message: `Failed to find Mono collection record with ID ${event.collectionLinkID}`,
-        }),
-      );
+      this.alertService.raiseAlert({
+        key: AlertKey.MONO_TRANSACTION_NOT_FOUND,
+        message: `Failed to find Mono collection record with ID ${event.collectionLinkID}`,
+      });
       return;
     }
 
@@ -253,12 +255,10 @@ export class MonoService implements IBank {
     );
 
     if (!monoTransaction) {
-      this.logger.error(
-        formatAlertLog({
-          key: AlertKey.MONO_TRANSACTION_NOT_FOUND,
-          message: `Failed to find Mono transfer record with ID ${event.transferID}`,
-        }),
-      );
+      this.alertService.raiseAlert({
+        key: AlertKey.MONO_TRANSACTION_NOT_FOUND,
+        message: `Failed to find Mono transfer record with ID ${event.transferID}`,
+      });
       return;
     }
 
@@ -274,12 +274,10 @@ export class MonoService implements IBank {
     );
 
     if (!monoTransaction) {
-      this.logger.error(
-        formatAlertLog({
-          key: AlertKey.MONO_TRANSACTION_NOT_FOUND,
-          message: `Failed to find Mono transfer record (for reject) with ID ${event.transferID}`,
-        }),
-      );
+      this.alertService.raiseAlert({
+        key: AlertKey.MONO_TRANSACTION_NOT_FOUND,
+        message: `Failed to find Mono transfer record (for reject) with ID ${event.transferID}`,
+      });
       return;
     }
 

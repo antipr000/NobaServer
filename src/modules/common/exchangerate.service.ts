@@ -4,7 +4,8 @@ import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
 import { InputExchangeRate } from "./domain/ExchangeRate";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
-import { AlertKey, formatAlertLog } from "../../core/system.alerts";
+import { AlertKey } from "../../core/alerts/alert.dto";
+import { AlertService } from "src/core/alerts/alert.service";
 
 @Injectable()
 export class ExchangeRateService {
@@ -13,6 +14,9 @@ export class ExchangeRateService {
 
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   async createExchangeRate(exchangeRateDTO: ExchangeRateDTO): Promise<ExchangeRateDTO> {
     // If nobaRate is not provided, use bankRate
@@ -70,14 +74,11 @@ export class ExchangeRateService {
 
       if (rate == null) {
         rate = await this.exchangeRateRepo.getExchangeRateForCurrencyPair(numeratorCurrency, denominatorCurrency);
-        this.logger.error(
-          formatAlertLog({
-            key: AlertKey.STALE_FX_RATES,
-            message: `No exchange rate found for currency pair "${numeratorCurrency}-${denominatorCurrency}" that is not expired. Using rate that expired on ${rate.expirationTimestamp.toISOString()} with values of: bankRate=${
-              rate.bankRate
+        this.alertService.raiseAlert({
+          key: AlertKey.STALE_FX_RATES,
+          message: `No exchange rate found for currency pair "${numeratorCurrency}-${denominatorCurrency}" that is not expired. Using rate that expired on ${rate.expirationTimestamp.toISOString()} with values of: bankRate=${rate.bankRate
             }, nobaRate=${rate.nobaRate}`,
-          }),
-        );
+        });
       }
 
       return {

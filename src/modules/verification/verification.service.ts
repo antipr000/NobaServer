@@ -23,7 +23,8 @@ import { TransactionVerification } from "./domain/TransactionVerification";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { SeverityLevel } from "../../core/exception/base.exception";
 import { HealthCheckResponse } from "../../core/domain/HealthCheckTypes";
-import { AlertKey, formatAlertLog } from "../../core/system.alerts";
+import { AlertKey } from "../../core/alerts/alert.dto";
+import { AlertService } from "src/core/alerts/alert.service";
 
 @Injectable()
 export class VerificationService {
@@ -39,7 +40,7 @@ export class VerificationService {
   @Inject()
   private readonly notificationService: NotificationService;
 
-  constructor(private consumerService: ConsumerService) {}
+  constructor(private consumerService: ConsumerService, private readonly alertService: AlertService) { }
 
   async getHealth(): Promise<HealthCheckResponse> {
     return this.idvProvider.getHealth();
@@ -254,12 +255,10 @@ export class VerificationService {
     const consumerID = documentVerificationResult.data.case.customerID;
     const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
     if (!consumer) {
-      this.logger.error(
-        formatAlertLog({
-          key: AlertKey.WEBHOOK_CONSUMER_NOT_FOUND,
-          message: `Failed to find consumer with ID ${consumerID}`,
-        }),
-      );
+      this.alertService.raiseAlert({
+        key: AlertKey.WEBHOOK_CONSUMER_NOT_FOUND,
+        message: `Failed to find consumer with ID ${consumerID}`,
+      });
       return null;
     }
 
