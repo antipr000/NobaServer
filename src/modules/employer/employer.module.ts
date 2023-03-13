@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { InfraProvidersModule } from "../../infraproviders/infra.module";
-import { TemplateService } from "../common/template.service";
+import { S3Service } from "../common/s3.service";
 import { EmployerController } from "./employer.controller";
 import { EmployerService } from "./employer.service";
 import { PayrollRepoModule } from "./repo/payroll.repo.module";
@@ -14,7 +14,7 @@ import { PayrollWorkflowController } from "./payroll.workflow.controller";
 @Module({
   imports: [InfraProvidersModule, EmployerRepoModule, EmployeeModule, CommonModule, PayrollRepoModule, ConsumerModule],
   controllers: [EmployerController, EmployerWorkflowController, PayrollWorkflowController],
-  providers: [EmployerService, TemplateService],
+  providers: [EmployerService, S3Service],
   exports: [EmployerService],
 })
 export class EmployerModule {}

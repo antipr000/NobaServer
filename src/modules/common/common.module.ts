@@ -15,7 +15,7 @@ import { DeleteExpiredOTPs } from "../auth/DeleteExpiredOTPs";
 import { QRService } from "./qrcode.service";
 import { SQLExchangeRateRepo } from "./repo/sql.exchangerate.repo";
 import { ExchangeRateService } from "./exchangerate.service";
-import { TemplateService } from "./template.service";
+import { S3Service } from "./s3.service";
 
 @Module({
   imports: [InfraProvidersModule],
@@ -43,7 +43,7 @@ import { TemplateService } from "./template.service";
     OTPService,
     DeleteExpiredOTPs,
     QRService,
-    TemplateService,
+    S3Service,
   ],
   exports: [
     CsvService,
@@ -56,7 +56,7 @@ import { TemplateService } from "./template.service";
     EllipticService,
     OTPService,
     QRService,
-    TemplateService,
+    S3Service,
   ],
 })
 export class CommonModule {}
