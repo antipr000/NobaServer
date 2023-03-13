@@ -222,29 +222,6 @@ export class WebhooksService {
    * @returns BlankResponseDTO
    * @throws ApiError
    */
-  public static deprecatedUpdateEmployee({
-    employeeId,
-    requestBody,
-  }: {
-    employeeId: string;
-    requestBody: UpdateEmployeeRequestDTO;
-  }): CancelablePromise<BlankResponseDTO> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/webhooks/bubble/employee/{employeeID}",
-      path: {
-        employeeID: employeeId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-    });
-  }
-
-  /**
-   * Update the Employee in Noba
-   * @returns BlankResponseDTO
-   * @throws ApiError
-   */
   public static updateEmployee({
     employeeId,
     requestBody,

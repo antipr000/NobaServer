@@ -74,6 +74,7 @@ export class VerificationService {
         documentVerificationStatus: this.needsDocumentVerification(consumerInformation.address.countryCode)
           ? DocumentVerificationStatus.REQUIRED
           : DocumentVerificationStatus.NOT_REQUIRED,
+        documentVerificationTimestamp: new Date(),
       },
     };
 
@@ -199,6 +200,7 @@ export class VerificationService {
       verificationData: {
         ...consumer.props.verificationData,
         documentVerificationStatus: result.status,
+        documentVerificationTimestamp: new Date(),
       },
     };
     await this.consumerService.updateConsumer(newConsumerData);
@@ -270,6 +272,7 @@ export class VerificationService {
       verificationData: {
         ...consumer.props.verificationData,
         documentVerificationStatus: result.status,
+        documentVerificationTimestamp: new Date(),
         riskRating: result.riskRating,
       },
     };

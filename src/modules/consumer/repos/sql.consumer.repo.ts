@@ -66,7 +66,10 @@ export class SQLConsumerRepo implements IConsumerRepo {
 
     const consumerInput = this.mapper.toCreateConsumerInput(consumer);
     try {
-      const consumerProps = await this.prisma.consumer.create({ data: consumerInput });
+      const consumerProps = await this.prisma.consumer.create({
+        data: consumerInput,
+        include: { address: true, verificationData: true },
+      });
       return Consumer.createConsumer(consumerProps);
     } catch (e) {
       throw new BadRequestError({
@@ -365,7 +368,11 @@ export class SQLConsumerRepo implements IConsumerRepo {
         );
       }
       const updateConsumerInput = this.mapper.toUpdateConsumerInput(consumer);
-      const consumerProps = await this.prisma.consumer.update({ where: { id: consumerID }, data: updateConsumerInput });
+      const consumerProps = await this.prisma.consumer.update({
+        where: { id: consumerID },
+        data: updateConsumerInput,
+        include: { address: true, verificationData: true },
+      });
       return Consumer.createConsumer(consumerProps);
     } catch (e) {
       throw new BadRequestError({

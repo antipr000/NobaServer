@@ -11,7 +11,7 @@ export function getMockEmployerServiceWithDefaults(): EmployerService {
   when(mockEmployerService.getEmployerByReferralID(anyString())).thenReject(new Error("Method not implemented"));
   when(mockEmployerService.createPayroll(anyString(), anything())).thenReject(new Error("Method not implemented"));
   when(mockEmployerService.getPayrollByID(anyString())).thenReject(new Error("Method not implemented"));
-  when(mockEmployerService.getEmployerWithEmployees(anyString())).thenReject(new Error("Method not implemented"));
+  when(mockEmployerService.getAllEmployees(anyString())).thenReject(new Error("Method not implemented"));
   when(mockEmployerService.createDisbursement(anyString(), anything())).thenReject(new Error("Method not implemented"));
   when(mockEmployerService.createInvoice(anyString())).thenReject(new Error("Method not implemented"));
   when(mockEmployerService.updateDisbursement(anyString(), anyString(), anything())).thenReject(

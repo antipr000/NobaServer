@@ -149,6 +149,24 @@ export class WorkflowService {
   }
 
   /**
+   * Gets all the employees
+   * @returns EmployerWorkflowDTO
+   * @throws ApiError
+   */
+  public static getAllEmployees({ employerId }: { employerId: string }): CancelablePromise<EmployerWorkflowDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/wf/v1/employers/{employerID}/employees",
+      path: {
+        employerID: employerId,
+      },
+      errors: {
+        404: `Employer is not found`,
+      },
+    });
+  }
+
+  /**
    * Creates a disbursement for employee
    * @returns PayrollDisbursementDTO
    * @throws ApiError
@@ -257,127 +275,6 @@ export class WorkflowService {
     return __request(OpenAPI, {
       method: "PATCH",
       url: "/wf/v1/payrolls/{payrollID}",
-      path: {
-        payrollID: payrollId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `Invalid parameters`,
-        404: `Requested payroll is not found`,
-      },
-    });
-  }
-
-  /**
-   * Creates a disbursement for employee
-   * @returns PayrollDisbursementDTO
-   * @throws ApiError
-   */
-  public static createDisbursement1({
-    payrollId,
-    requestBody,
-  }: {
-    payrollId: string;
-    requestBody: CreateDisbursementRequestDTO;
-  }): CancelablePromise<PayrollDisbursementDTO> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/wf/v1/payroll/{payrollID}/disbursement",
-      path: {
-        payrollID: payrollId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `Failed to create disbursement`,
-        404: `Requested employee is not found`,
-      },
-    });
-  }
-
-  /**
-   * Updates the disbursement record for an employee
-   * @returns BlankResponseDTO
-   * @throws ApiError
-   */
-  public static patchDisbursement1({
-    payrollId,
-    disbursementId,
-    requestBody,
-  }: {
-    payrollId: string;
-    disbursementId: string;
-    requestBody: UpdateDisbursementRequestDTO;
-  }): CancelablePromise<BlankResponseDTO> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/wf/v1/payroll/{payrollID}/disbursement/{disbursementID}",
-      path: {
-        payrollID: payrollId,
-        disbursementID: disbursementId,
-      },
-      body: requestBody,
-      mediaType: "application/json",
-      errors: {
-        400: `Failed to update disbursement`,
-        404: `Requested disbursement is not found`,
-      },
-    });
-  }
-
-  /**
-   * Creates an invoice for employer
-   * @returns BlankResponseDTO
-   * @throws ApiError
-   */
-  public static createInvoice1({ payrollId }: { payrollId: string }): CancelablePromise<BlankResponseDTO> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/wf/v1/payroll/{payrollID}/invoice",
-      path: {
-        payrollID: payrollId,
-      },
-      errors: {
-        400: `Failed to create invoice`,
-        404: `Requested employer is not found`,
-      },
-    });
-  }
-
-  /**
-   * Gets details of payroll
-   * @returns PayrollDTO
-   * @throws ApiError
-   */
-  public static getPayroll1({ payrollId }: { payrollId: string }): CancelablePromise<PayrollDTO> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/wf/v1/payroll/{payrollID}",
-      path: {
-        payrollID: payrollId,
-      },
-      errors: {
-        404: `Requested payroll is not found`,
-      },
-    });
-  }
-
-  /**
-   * Updates the payroll
-   * @returns PayrollDTO Payroll updated
-   * @throws ApiError
-   */
-  public static patchPayroll1({
-    payrollId,
-    requestBody,
-  }: {
-    payrollId: string;
-    requestBody: UpdatePayrollRequestDTO;
-  }): CancelablePromise<PayrollDTO> {
-    return __request(OpenAPI, {
-      method: "PATCH",
-      url: "/wf/v1/payroll/{payrollID}",
       path: {
         payrollID: payrollId,
       },

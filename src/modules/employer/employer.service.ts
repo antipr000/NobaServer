@@ -9,11 +9,7 @@ import {
   PAYROLL_DISBURSEMENT_REPO_PROVIDER,
   PAYROLL_REPO_PROVIDER,
 } from "./repo/employer.repo.module";
-import {
-  CreateEmployerRequestDTO,
-  EmployerWithEmployeesDTO,
-  UpdateEmployerRequestDTO,
-} from "./dto/employer.service.dto";
+import { CreateEmployerRequestDTO, UpdateEmployerRequestDTO } from "./dto/employer.service.dto";
 import dayjs from "dayjs";
 import Handlebars from "handlebars";
 import { ConsumerService } from "../consumer/consumer.service";
@@ -40,6 +36,7 @@ import { KmsService } from "../common/kms.service";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
+import { Employee } from "../employee/domain/Employee";
 
 @Injectable()
 export class EmployerService {
@@ -83,10 +80,7 @@ export class EmployerService {
     }
   }
 
-  async getEmployerWithEmployees(
-    employerID: string,
-    shouldFetchEmployees?: boolean,
-  ): Promise<EmployerWithEmployeesDTO> {
+  async getAllEmployees(employerID: string): Promise<Employee[]> {
     if (!employerID) {
       throw new ServiceException({
         message: "Employer ID is required",
@@ -94,18 +88,7 @@ export class EmployerService {
       });
     }
 
-    const employer = await this.employerRepo.getEmployerByID(employerID);
-    if (!employer) {
-      throw new ServiceException({
-        message: "Employer not found",
-        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-      });
-    }
-    let employees = [];
-    if (shouldFetchEmployees) {
-      employees = await this.employeeService.getEmployeesForEmployer(employerID);
-    }
-    return { ...employer, employees };
+    return this.employeeService.getEmployeesForEmployer(employerID);
   }
 
   async createEmployer(request: CreateEmployerRequestDTO): Promise<Employer> {
@@ -162,7 +145,14 @@ export class EmployerService {
       });
     }
 
-    return this.employerRepo.getEmployerByID(id);
+    const employer: Employer = await this.employerRepo.getEmployerByID(id);
+    if (!employer) {
+      throw new ServiceException({
+        message: "Employer not found",
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+    return employer;
   }
 
   async getEmployerByReferralID(referralID: string): Promise<Employer> {
