@@ -3,7 +3,6 @@ name: Main Workflow
 concurrency: 
   group: ${{ github.head_ref }}
   cancel-in-progress: true
-  
 
 on:
   # Run whenever a PR that targets main is created or updated
