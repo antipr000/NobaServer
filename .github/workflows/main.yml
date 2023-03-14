@@ -1,5 +1,9 @@
 name: CI
 
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+  
 # Controls when the workflow will run
 on:
   # Only deploy the changes on push to main branch
