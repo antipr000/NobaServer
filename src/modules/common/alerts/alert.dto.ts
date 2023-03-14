@@ -10,7 +10,3 @@ export class Alert {
   key: AlertKey;
   message: string;
 }
-
-export function formatAlertLog(alert: Alert): string {
-  return `CRITICAL ALERT! ${JSON.stringify(alert)}`;
-}
