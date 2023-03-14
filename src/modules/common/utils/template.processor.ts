@@ -58,14 +58,16 @@ export class TemplateProcessor {
 
   private async initialize() {
     const start = Date.now();
-    this.browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless"],
-      executablePath:
-        process.platform === "win32"
-          ? "C:/Program Files/Google/Chrome/Application/chrome.exe"
-          : "/usr/bin/chromium-browser",
-    });
+    if (!this.browser) {
+      this.browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless"],
+        executablePath:
+          process.platform === "win32"
+            ? "C:/Program Files/Google/Chrome/Application/chrome.exe"
+            : "/usr/bin/chromium-browser",
+      });
+    }
     this.writeTimingLog(`Browser initialized`, Date.now() - start);
   }
 
@@ -99,30 +101,32 @@ export class TemplateProcessor {
   }
 
   public async uploadPopulatedTemplates() {
-    const start = Date.now();
     // For each locale and format, save the populated template
     for (const locale of this.locales) {
       const populatedTemplate = this.populatedTemplates.get(locale);
       if (populatedTemplate) {
         if (this.formats.includes(TemplateFormat.HTML)) {
-          await this.s3Service.uploadToS3(
+          const start = Date.now();
+          this.s3Service.uploadToS3(
             this.savePath,
             `${this.saveBaseFilename}_${locale.language}.${TemplateFormat.HTML}`,
             populatedTemplate,
           );
+          this.writeTimingLog(`HTML template for ${locale.language} uploaded`, Date.now() - start);
         }
 
         if (this.formats.includes(TemplateFormat.PDF)) {
           const pdf = await this.convertToPDF(populatedTemplate, `${this.templateFilename}.${TemplateFormat.PDF}`);
-          await this.s3Service.uploadToS3(
+          const start = Date.now();
+          this.s3Service.uploadToS3(
             this.savePath,
             `${this.saveBaseFilename}_${locale.language}.${TemplateFormat.PDF}`,
             pdf,
           );
+          this.writeTimingLog(`PDF template for ${locale.language} uploaded`, Date.now() - start);
         }
       }
     }
-    this.writeTimingLog("Templates uploaded", Date.now() - start);
   }
 
   private async convertToPDF(html: string, filename: string): Promise<Buffer> {
