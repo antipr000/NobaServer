@@ -17,7 +17,7 @@ export class TemplateLocale extends Intl.Locale {
   }
 }
 
-export class TemplateContext {
+export class TemplateProcessor {
   private readonly logger: Logger;
   private readonly s3Service: S3Service;
   readonly templatePath: string;
@@ -131,7 +131,10 @@ export class TemplateContext {
     await page.emulateMediaType("screen");
     await page.setContent(html);
     await page.evaluateHandle("document.fonts.ready");
-    const pdf = page.pdf({ format: "A4" });
+    const pdf = page.pdf({
+      format: "A4",
+      margin: { bottom: "50px", top: "50px", left: "50px", right: "50px" },
+    });
     this.writeTimingLog("PDF generated", Date.now() - start);
     return pdf;
   }

@@ -38,7 +38,7 @@ import {
 } from "../../config/ConfigurationUtils";
 import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 import { Employee } from "../employee/domain/Employee";
-import { TemplateContext, TemplateFormat, TemplateLocale } from "../common/utils/template.processor";
+import { TemplateProcessor, TemplateFormat, TemplateLocale } from "../common/utils/template.processor";
 import { InvoiceEmployeeDisbursement, InvoiceTemplateFields } from "./templates/payroll.invoice.dto";
 
 @Injectable()
@@ -224,7 +224,7 @@ export class EmployerService {
       accountNumber = employerPayrollAccountNumber;
     }
 
-    const templateContext = new TemplateContext(
+    const templateProcessor = new TemplateProcessor(
       this.logger,
       this.s3Service,
       `${this.invoiceTemplateBucketPath}/payroll-invoice/`,
@@ -233,13 +233,13 @@ export class EmployerService {
       `inv_${payroll.id}`,
     );
 
-    templateContext.addFormat(TemplateFormat.HTML);
-    templateContext.addFormat(TemplateFormat.PDF);
-    templateContext.addLocale(TemplateLocale.ENGLISH);
-    templateContext.addLocale(TemplateLocale.SPANISH); // Should be configured on employer record
+    templateProcessor.addFormat(TemplateFormat.HTML);
+    templateProcessor.addFormat(TemplateFormat.PDF);
+    templateProcessor.addLocale(TemplateLocale.ENGLISH);
+    templateProcessor.addLocale(TemplateLocale.SPANISH); // Should be configured on employer record
 
     // Loads templates for each specified locale
-    await templateContext.loadTemplates();
+    await templateProcessor.loadTemplates();
 
     const employeeDisbursements = await this.getEmployeeDisbursements(payrollID);
 
@@ -247,7 +247,7 @@ export class EmployerService {
     const currency = payroll.debitCurrency;
 
     // Populate templates for each locale
-    for (const element of templateContext.locales) {
+    for (const element of templateProcessor.locales) {
       const locale = element;
 
       const employeeAllocations: InvoiceEmployeeDisbursement[] = employeeDisbursements.map(allocation => ({
@@ -265,14 +265,14 @@ export class EmployerService {
         nobaAccountNumber: accountNumber,
       };
 
-      templateContext.populateTemplate(locale, templateFields);
+      templateProcessor.populateTemplate(locale, templateFields);
     }
 
     // Upload templates
-    await templateContext.uploadPopulatedTemplates();
+    await templateProcessor.uploadPopulatedTemplates();
 
     // Destroy template context
-    await templateContext.destroy();
+    await templateProcessor.destroy();
   }
 
   async generateInvoiceForLocale(locale) {}
