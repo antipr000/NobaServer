@@ -34,9 +34,10 @@ import { ProcessedTransactionDTO } from "./dto/ProcessedTransactionDTO";
 import { EmployerService } from "../employer/employer.service";
 import { PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
 import { Payroll } from "../employer/domain/Payroll";
-import { Consumer } from "../consumer/domain/Consumer";
 import { EmployeeService } from "../employee/employee.service";
 import { Employee } from "../employee/domain/Employee";
+import { AlertService } from "../common/alerts/alert.service";
+import { AlertKey } from "../common/alerts/alert.dto";
 
 @Injectable()
 export class TransactionService {
@@ -50,6 +51,7 @@ export class TransactionService {
     private readonly bankFactory: BankFactory,
     private readonly employerService: EmployerService,
     private readonly employeeService: EmployeeService,
+    private readonly alertService: AlertService,
   ) {}
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID: string): Promise<Transaction> {
@@ -231,6 +233,13 @@ export class TransactionService {
       throw new ServiceException({
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
         message: "Transaction does not exist",
+      });
+    }
+
+    if (transactionDetails.status !== undefined && transactionDetails.status === TransactionStatus.FAILED) {
+      this.alertService.raiseAlert({
+        key: AlertKey.TRANSACTION_FAILED,
+        message: `Transaction with ID '${transactionID}' is transitioned to 'FAILED' state.`,
       });
     }
 
