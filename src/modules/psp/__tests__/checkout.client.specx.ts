@@ -13,8 +13,8 @@ import {
 } from "../../../config/ConfigurationUtils";
 import { Checkout } from "checkout-sdk-node";
 import { BadRequestException } from "@nestjs/common";
-import { AddPaymentMethodDTO, PaymentType } from "../../../modules/consumer/dto/AddPaymentMethodDTO";
-import { Consumer } from "../../../modules/consumer/domain/Consumer";
+import { AddPaymentMethodDTO, PaymentType } from "../../consumer/dto/AddPaymentMethodDTO";
+import { Consumer } from "../../consumer/domain/Consumer";
 
 /**
  * Need to update config for this to work (work-in-progress). Testing as part of e2e currently.
