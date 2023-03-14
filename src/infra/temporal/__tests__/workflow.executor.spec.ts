@@ -1,4 +1,4 @@
-import { anything, instance, when } from "ts-mockito";
+import { anything, capture, instance, when } from "ts-mockito";
 
 const mockHealthServiceCheck = jest.fn(async request => {
   return { status: 2 };
@@ -41,16 +41,21 @@ import { WorkflowExecutor } from "../workflow.executor";
 import { HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
 import { Utils } from "../../../core/utils/Utils";
 import { ServiceException } from "../../../core/exception/service.exception";
+import { AppEnvironment, NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
 
 describe("WorkflowExecutor", () => {
   //let app;
   let workflowExecutor: WorkflowExecutor;
+  let alertService: AlertService;
   //const mockTemporal = temporalio as jest.Mocked<typeof temporalio>;
 
   jest.setTimeout(30000);
 
   beforeEach(async () => {
     //testEnv = await TestWorkflowEnvironment.create();
+    alertService = getMockAlertServiceWithDefaults();
 
     // Don't wait the full sleep time
     jest.spyOn(Utils, "sleep").mockImplementation(anyNumber => Promise.resolve());
@@ -70,14 +75,25 @@ describe("WorkflowExecutor", () => {
             connectionTimeoutInMs: 2000,
             namespace: "default",
           },
+          [NOBA_CONFIG_KEY]: {
+            environment: AppEnvironment.DEV,
+          },
         }),
         getTestWinstonModule(),
       ],
       controllers: [],
-      providers: [WorkflowExecutor],
+      providers: [
+        {
+          provide: AlertService,
+          useFactory: () => instance(alertService),
+        },
+        WorkflowExecutor,
+      ],
     }).compile();
 
     workflowExecutor = app.get<WorkflowExecutor>(WorkflowExecutor);
+
+    when(alertService.raiseAlert(anything())).thenResolve();
   });
 
   afterEach(async () => {
@@ -98,6 +114,7 @@ describe("WorkflowExecutor", () => {
     });
 
     it("Should fail a health check", async () => {
+      when(alertService.raiseAlert(anything())).thenResolve();
       mockHealthServiceCheck.mockResolvedValue({ status: 2 });
 
       const health = await workflowExecutor.getHealth();
@@ -131,6 +148,8 @@ describe("WorkflowExecutor", () => {
     });
 
     it("Should try to connect 5 times before giving up", async () => {
+      when(alertService.raiseAlert(anything())).thenResolve();
+
       // 5 rejections (1st is the initial call, 4 retries))
       mockTemporalConn.mockRejectedValueOnce(new Error("Unable to connect 1"));
       mockTemporalConn.mockRejectedValueOnce(new Error("Unable to connect 2"));
@@ -141,6 +160,9 @@ describe("WorkflowExecutor", () => {
       const success = await workflowExecutor.init("Test");
       expect(success).toBe(false);
       expect(mockTemporalConn).toHaveBeenCalledTimes(5);
+
+      const [alertCall] = capture(alertService.raiseAlert).last();
+      expect(alertCall).toEqual(expect.objectContaining({ key: "TEMPORAL_DOWN" }));
     });
   });
 

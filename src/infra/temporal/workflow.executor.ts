@@ -10,7 +10,7 @@ import { AlertKey } from "../../modules/common/alerts/alert.dto";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { HealthCheckResponse, HealthCheckStatus } from "../../core/domain/HealthCheckTypes";
 import { Utils } from "../../core/utils/Utils";
-import { AlertService } from "src/modules/common/alerts/alert.service";
+import { AlertService } from "../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class WorkflowExecutor {
