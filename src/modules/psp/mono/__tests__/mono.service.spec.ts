@@ -38,7 +38,7 @@ import { ServiceErrorCode, ServiceException } from "../../../../core/exception/s
 import { getRandomMonoTransaction } from "../test_utils/utils";
 import { HealthCheckStatus } from "../../../../core/domain/HealthCheckTypes";
 import { MonoClientErrorCode, MonoClientException } from "../exception/mono.client.exception";
-import * as alertUtils from "../../../../core/alerts/alert.dto";
+import * as alertUtils from "../../../common/alerts/alert.dto";
 
 describe("MonoServiceTests", () => {
   jest.setTimeout(20000);

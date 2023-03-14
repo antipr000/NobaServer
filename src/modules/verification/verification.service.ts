@@ -23,8 +23,8 @@ import { TransactionVerification } from "./domain/TransactionVerification";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { SeverityLevel } from "../../core/exception/base.exception";
 import { HealthCheckResponse } from "../../core/domain/HealthCheckTypes";
-import { AlertKey } from "../../core/alerts/alert.dto";
-import { AlertService } from "src/core/alerts/alert.service";
+import { AlertKey } from "../common/alerts/alert.dto";
+import { AlertService } from "src/modules/common/alerts/alert.service";
 
 @Injectable()
 export class VerificationService {
@@ -40,7 +40,7 @@ export class VerificationService {
   @Inject()
   private readonly notificationService: NotificationService;
 
-  constructor(private consumerService: ConsumerService, private readonly alertService: AlertService) { }
+  constructor(private consumerService: ConsumerService, private readonly alertService: AlertService) {}
 
   async getHealth(): Promise<HealthCheckResponse> {
     return this.idvProvider.getHealth();

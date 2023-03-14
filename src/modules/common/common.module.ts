@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { } from "aws-sdk";
+import {} from "aws-sdk";
 import { CsvService } from "./csv.service";
 import { CreditCardService } from "./creditcard.service";
 import { CurrencyService } from "./currency.service";
@@ -16,10 +16,10 @@ import { QRService } from "./qrcode.service";
 import { SQLExchangeRateRepo } from "./repo/sql.exchangerate.repo";
 import { ExchangeRateService } from "./exchangerate.service";
 import { TemplateService } from "./template.service";
-import { AlertModule } from "src/core/alerts/alert.module";
+import { AlertService } from "./alerts/alert.service";
 
 @Module({
-  imports: [InfraProvidersModule, AlertModule],
+  imports: [InfraProvidersModule],
   providers: [
     CsvService,
     KmsService,
@@ -45,6 +45,7 @@ import { AlertModule } from "src/core/alerts/alert.module";
     DeleteExpiredOTPs,
     QRService,
     TemplateService,
+    AlertService,
   ],
   exports: [
     CsvService,
@@ -58,6 +59,7 @@ import { AlertModule } from "src/core/alerts/alert.module";
     OTPService,
     QRService,
     TemplateService,
+    AlertService,
   ],
 })
-export class CommonModule { }
+export class CommonModule {}

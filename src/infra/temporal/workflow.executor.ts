@@ -6,11 +6,11 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NOBA_WORKFLOW_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { WorkflowName } from "./workflow";
-import { AlertKey } from "../../core/alerts/alert.dto";
+import { AlertKey } from "../../modules/common/alerts/alert.dto";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { HealthCheckResponse, HealthCheckStatus } from "../../core/domain/HealthCheckTypes";
 import { Utils } from "../../core/utils/Utils";
-import { AlertService } from "src/core/alerts/alert.service";
+import { AlertService } from "src/modules/common/alerts/alert.service";
 
 @Injectable()
 export class WorkflowExecutor {
@@ -46,11 +46,11 @@ export class WorkflowExecutor {
         const tlsSettings: TLSConfig =
           this.workflowConfigs.temporalCloudCertificate && this.workflowConfigs.temporalCloudPrivateKey
             ? {
-              clientCertPair: {
-                crt: Buffer.from(this.workflowConfigs.temporalCloudCertificate),
-                key: Buffer.from(this.workflowConfigs.temporalCloudPrivateKey),
-              },
-            }
+                clientCertPair: {
+                  crt: Buffer.from(this.workflowConfigs.temporalCloudCertificate),
+                  key: Buffer.from(this.workflowConfigs.temporalCloudPrivateKey),
+                },
+              }
             : undefined;
 
         this.logger.info(
@@ -72,7 +72,8 @@ export class WorkflowExecutor {
         if (attemptCount < WorkflowExecutor.CONNECTION_ATTEMPTS) {
           this.reset();
           this.logger.warn(
-            `Unable to connect to Temporal server for workflow ${workflowName}! Retrying in ${WorkflowExecutor.RETRY_INTERVAL / 1000
+            `Unable to connect to Temporal server for workflow ${workflowName}! Retrying in ${
+              WorkflowExecutor.RETRY_INTERVAL / 1000
             } seconds (${attemptCount}/${WorkflowExecutor.CONNECTION_ATTEMPTS - 1})...`,
           );
           await Utils.sleep(WorkflowExecutor.RETRY_INTERVAL);

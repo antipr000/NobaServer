@@ -8,7 +8,7 @@ import { ExchangeRateService } from "../exchangerate.service";
 import { getMockExchangeRateRepoWithDefaults } from "../mocks/mock.exchangerate.repo";
 import { IExchangeRateRepo } from "../repo/exchangerate.repo";
 import { ServiceException } from "../../../core/exception/service.exception";
-import * as alertUtils from "../../../core/alerts/alert.dto";
+import * as alertUtils from "../alerts/alert.dto";
 
 describe("ExchangeRateService", () => {
   let exchangeRateService: ExchangeRateService;

@@ -9,10 +9,9 @@ import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { CommonModule } from "../common/common.module";
 import { NotificationsModule } from "../notifications/notification.module";
 import { PspModule } from "../psp/psp.module";
-import { AlertModule } from "src/core/alerts/alert.module";
 
 @Module({
-  imports: [ConfigModule, ConsumerModule, InfraProvidersModule, CommonModule, NotificationsModule, PspModule, AlertModule],
+  imports: [ConfigModule, ConsumerModule, InfraProvidersModule, CommonModule, NotificationsModule, PspModule],
   controllers: [VerificationController],
   providers: [
     VerificationService,
@@ -27,10 +26,10 @@ import { AlertModule } from "src/core/alerts/alert.module";
   ],
   exports: [VerificationService], //Need to access in PublicController
 })
-export class VerificationModule { }
+export class VerificationModule {}
 
 @Module({
-  imports: [ConfigModule, ConsumerModule, InfraProvidersModule, CommonModule, NotificationsModule, PspModule, AlertModule],
+  imports: [ConfigModule, ConsumerModule, InfraProvidersModule, CommonModule, NotificationsModule, PspModule],
   controllers: [VerificationWebhookController],
   providers: [
     VerificationService,
@@ -44,4 +43,4 @@ export class VerificationModule { }
     },
   ],
 })
-export class VerificationWebhookModule { }
+export class VerificationWebhookModule {}

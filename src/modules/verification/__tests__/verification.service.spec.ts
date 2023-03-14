@@ -39,7 +39,7 @@ import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLD
 import { TransactionVerification } from "../domain/TransactionVerification";
 import { ServiceException } from "../../../core/exception/service.exception";
 import { v4 } from "uuid";
-import * as alertUtils from "../../../core/alerts/alert.dto";
+import * as alertUtils from "../../common/alerts/alert.dto";
 
 describe("VerificationService", () => {
   let verificationService: VerificationService;

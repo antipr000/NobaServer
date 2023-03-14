@@ -36,8 +36,8 @@ import { PhoneNumberUtil } from "google-libphonenumber";
 import { BalanceDTO } from "../dto/balance.dto";
 import { IBank } from "../factory/ibank";
 import { DebitBankFactoryRequest, DebitBankFactoryResponse } from "../domain/BankFactoryTypes";
-import { AlertKey } from "../../../core/alerts/alert.dto";
-import { AlertService } from "src/core/alerts/alert.service";
+import { AlertKey } from "../../common/alerts/alert.dto";
+import { AlertService } from "src/modules/common/alerts/alert.service";
 
 type CollectionLinkDepositRequest = {
   nobaTransactionID: string;
