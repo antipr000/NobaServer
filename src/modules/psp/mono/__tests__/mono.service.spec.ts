@@ -38,7 +38,9 @@ import { ServiceErrorCode, ServiceException } from "../../../../core/exception/s
 import { getRandomMonoTransaction } from "../test_utils/utils";
 import { HealthCheckStatus } from "../../../../core/domain/HealthCheckTypes";
 import { MonoClientErrorCode, MonoClientException } from "../exception/mono.client.exception";
-import * as alertUtils from "../../../common/alerts/alert.dto";
+import { AppEnvironment, NOBA_CONFIG_KEY } from "../../../../config/ConfigurationUtils";
+import { AlertService } from "../../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../../modules/common/mocks/mock.alert.service";
 
 describe("MonoServiceTests", () => {
   jest.setTimeout(20000);
@@ -49,6 +51,7 @@ describe("MonoServiceTests", () => {
   let monoWebhookHandlers: MonoWebhookHandlers;
   let kmsService: KmsService;
   let consumerService: ConsumerService;
+  let alertService: AlertService;
   let app: TestingModule;
 
   beforeEach(async () => {
@@ -57,6 +60,7 @@ describe("MonoServiceTests", () => {
     monoWebhookHandlers = getMockMonoWebhookHandlersWithDefaults();
     kmsService = getMockKMSServiceWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
+    alertService = getMockAlertServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -85,6 +89,10 @@ describe("MonoServiceTests", () => {
         {
           provide: KmsService,
           useFactory: () => instance(kmsService),
+        },
+        {
+          provide: AlertService,
+          useFactory: () => instance(alertService),
         },
         MonoService,
       ],
@@ -891,13 +899,14 @@ describe("MonoServiceTests", () => {
         when(
           monoRepo.getMonoTransactionByCollectionLinkID(monoTransaction.collectionLinkDepositDetails.collectionLinkID),
         ).thenResolve(null);
-
-        const alertLogSpy = jest.spyOn(alertUtils, "formatAlertLog");
+        when(alertService.raiseAlert(anything())).thenResolve();
 
         await monoService.processWebhookEvent(webhookBody, webhookSignature);
 
-        expect(alertLogSpy).toHaveBeenCalledWith(expect.objectContaining({ key: "MONO_TRANSACTION_NOT_FOUND" }));
         verify(monoRepo.updateMonoTransaction(anyString(), anything())).never();
+
+        const [alertCall] = capture(alertService.raiseAlert).last();
+        expect(alertCall).toEqual(expect.objectContaining({ key: "MONO_TRANSACTION_NOT_FOUND" }));
       });
     });
 
@@ -961,13 +970,14 @@ describe("MonoServiceTests", () => {
           convertedEvent,
         );
         when(monoRepo.getMonoTransactionByTransferID(monoTransaction.withdrawalDetails.transferID)).thenResolve(null);
-
-        const alertLogSpy = jest.spyOn(alertUtils, "formatAlertLog");
+        when(alertService.raiseAlert(anything())).thenResolve();
 
         await monoService.processWebhookEvent(webhookBody, webhookSignature);
 
-        expect(alertLogSpy).toHaveBeenCalledWith(expect.objectContaining({ key: "MONO_TRANSACTION_NOT_FOUND" }));
         verify(monoRepo.updateMonoTransaction(anyString(), anything())).never();
+
+        const [alertCall] = capture(alertService.raiseAlert).last();
+        expect(alertCall).toEqual(expect.objectContaining({ key: "MONO_TRANSACTION_NOT_FOUND" }));
       });
     });
 
@@ -1036,13 +1046,14 @@ describe("MonoServiceTests", () => {
           convertedEvent,
         );
         when(monoRepo.getMonoTransactionByTransferID(monoTransaction.withdrawalDetails.transferID)).thenResolve(null);
-
-        const alertLogSpy = jest.spyOn(alertUtils, "formatAlertLog");
+        when(alertService.raiseAlert(anything())).thenResolve();
 
         await monoService.processWebhookEvent(webhookBody, webhookSignature);
 
-        expect(alertLogSpy).toHaveBeenCalledWith(expect.objectContaining({ key: "MONO_TRANSACTION_NOT_FOUND" }));
         verify(monoRepo.updateMonoTransaction(anyString(), anything())).never();
+
+        const [alertCall] = capture(alertService.raiseAlert).last();
+        expect(alertCall).toEqual(expect.objectContaining({ key: "MONO_TRANSACTION_NOT_FOUND" }));
       });
     });
 

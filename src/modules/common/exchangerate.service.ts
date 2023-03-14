@@ -5,7 +5,7 @@ import { InputExchangeRate } from "./domain/ExchangeRate";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { AlertKey } from "./alerts/alert.dto";
-import { AlertService } from "src/modules/common/alerts/alert.service";
+import { AlertService } from "../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class ExchangeRateService {

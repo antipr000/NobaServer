@@ -37,7 +37,7 @@ import { BalanceDTO } from "../dto/balance.dto";
 import { IBank } from "../factory/ibank";
 import { DebitBankFactoryRequest, DebitBankFactoryResponse } from "../domain/BankFactoryTypes";
 import { AlertKey } from "../../common/alerts/alert.dto";
-import { AlertService } from "src/modules/common/alerts/alert.service";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 type CollectionLinkDepositRequest = {
   nobaTransactionID: string;

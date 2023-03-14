@@ -39,7 +39,9 @@ import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLD
 import { TransactionVerification } from "../domain/TransactionVerification";
 import { ServiceException } from "../../../core/exception/service.exception";
 import { v4 } from "uuid";
-import * as alertUtils from "../../common/alerts/alert.dto";
+import { AppEnvironment, NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
 
 describe("VerificationService", () => {
   let verificationService: VerificationService;
@@ -47,6 +49,8 @@ describe("VerificationService", () => {
   let consumerService: ConsumerService;
   let idvProvider: IDVProvider;
   let notificationService: NotificationService;
+  let alertService: AlertService;
+
   jest.setTimeout(30000);
   const OLD_ENV = process.env;
 
@@ -63,6 +67,7 @@ describe("VerificationService", () => {
     idvProvider = getMockIdvProviderIntegrationWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
     notificationService = getMockNotificationServiceWithDefaults();
+    alertService = getMockAlertServiceWithDefaults();
 
     const verificationDataRepoProvider = {
       provide: "VerificationDataRepo",
@@ -91,11 +96,18 @@ describe("VerificationService", () => {
             TruliooIDVApiKey: "UGVyZWdyaW5lX1NhbmRib3hfSURWX0FQSV8yOkNvZGVuYW1lZ29kQDEyMzQ=",
             TruliooDocVApiKey: "UGVyZWdyaW5lX1NhbmRib3hfRG9jVl9BUElfMjpDb2RlbmFtZWdvZEAxMjM0",
           },
+          [NOBA_CONFIG_KEY]: {
+            environment: AppEnvironment.DEV,
+          },
         }),
         getTestWinstonModule(),
       ],
       controllers: [],
       providers: [
+        {
+          provide: AlertService,
+          useFactory: () => instance(alertService),
+        },
         verificationDataRepoProvider,
         idvIntegratorProvider,
         VerificationService,
@@ -597,8 +609,7 @@ describe("VerificationService", () => {
 
     it("should raise an alert if the consumer cannot be found", async () => {
       when(consumerService.getConsumer(anyString())).thenResolve(null);
-
-      const alertLogSpy = jest.spyOn(alertUtils, "formatAlertLog");
+      when(alertService.raiseAlert(anything())).thenResolve();
 
       const result = await verificationService.processDocumentVerificationWebhookResult({
         data: {
@@ -608,8 +619,10 @@ describe("VerificationService", () => {
         },
       } as any); // Only need customer id to trigger the error
 
-      expect(alertLogSpy).toHaveBeenCalledWith(expect.objectContaining({ key: "WEBHOOK_CONSUMER_NOT_FOUND" }));
       expect(result).toBeNull();
+
+      const [alertCall] = capture(alertService.raiseAlert).last();
+      expect(alertCall).toEqual(expect.objectContaining({ key: "WEBHOOK_CONSUMER_NOT_FOUND" }));
     });
   });
   describe("transactionVerification", () => {

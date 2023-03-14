@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { deepEqual, instance, when } from "ts-mockito";
+import { anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { ExchangeRate, InputExchangeRate } from "../domain/ExchangeRate";
@@ -8,24 +8,40 @@ import { ExchangeRateService } from "../exchangerate.service";
 import { getMockExchangeRateRepoWithDefaults } from "../mocks/mock.exchangerate.repo";
 import { IExchangeRateRepo } from "../repo/exchangerate.repo";
 import { ServiceException } from "../../../core/exception/service.exception";
-import * as alertUtils from "../alerts/alert.dto";
+import { AlertService } from "../alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../mocks/mock.alert.service";
+import { AppEnvironment, NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 
 describe("ExchangeRateService", () => {
   let exchangeRateService: ExchangeRateService;
   let exchangeRateRepo: IExchangeRateRepo;
+  let alertService: AlertService;
   let app: TestingModule;
 
   jest.setTimeout(30000);
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     exchangeRateRepo = getMockExchangeRateRepoWithDefaults();
+    alertService = getMockAlertServiceWithDefaults();
+
     app = await Test.createTestingModule({
-      imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
+      imports: [
+        TestConfigModule.registerAsync({
+          [NOBA_CONFIG_KEY]: {
+            environment: AppEnvironment.DEV,
+          },
+        }),
+        getTestWinstonModule(),
+      ],
       controllers: [],
       providers: [
         {
           provide: "ExchangeRateRepo",
           useFactory: () => instance(exchangeRateRepo),
+        },
+        {
+          provide: AlertService,
+          useFactory: () => instance(alertService),
         },
         ExchangeRateService,
       ],
@@ -258,7 +274,7 @@ describe("ExchangeRateService", () => {
 
       when(exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "COP", deepEqual(new Date()))).thenResolve(null);
       when(exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(expiredExchangeRate);
-      const alertLogSpy = jest.spyOn(alertUtils, "formatAlertLog");
+      when(alertService.raiseAlert(anything())).thenResolve();
 
       const returnExchangeRate = await exchangeRateService.getExchangeRateForCurrencyPair("USD", "COP");
 
@@ -269,9 +285,10 @@ describe("ExchangeRateService", () => {
         nobaRate: 3000,
         expirationTimestamp: new Date(createdTimestamp.getTime() - 36 * 60 * 60 * 1000), // 36 hours in the past
       };
-
-      expect(alertLogSpy).toHaveBeenCalledWith(expect.objectContaining({ key: "STALE_FX_RATES" }));
       expect(returnExchangeRate).toStrictEqual(expectedExchangeRateDTO);
+
+      const [alertCall] = capture(alertService.raiseAlert).last();
+      expect(alertCall).toEqual(expect.objectContaining({ key: "STALE_FX_RATES" }));
     });
 
     it("Should return null when an error is thrown", async () => {

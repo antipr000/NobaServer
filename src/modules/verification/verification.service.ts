@@ -24,7 +24,7 @@ import { ServiceErrorCode, ServiceException } from "../../core/exception/service
 import { SeverityLevel } from "../../core/exception/base.exception";
 import { HealthCheckResponse } from "../../core/domain/HealthCheckTypes";
 import { AlertKey } from "../common/alerts/alert.dto";
-import { AlertService } from "src/modules/common/alerts/alert.service";
+import { AlertService } from "../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class VerificationService {

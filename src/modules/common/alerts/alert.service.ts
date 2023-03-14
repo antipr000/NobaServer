@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { NobaConfigs } from "src/config/configtypes/NobaConfigs";
-import { NOBA_CONFIG_KEY } from "src/config/ConfigurationUtils";
+import { NobaConfigs } from "../../../config/configtypes/NobaConfigs";
+import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { Logger } from "winston";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { Alert } from "./alert.dto";
