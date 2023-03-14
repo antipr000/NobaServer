@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
+import { AppEnvironment, NOBA_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { uuid } from "uuidv4";
@@ -35,6 +35,8 @@ import { getRandomMonoTransaction } from "../test_utils/utils";
 import { MonoWorkflowService } from "../mono.workflow.service";
 import { MonoClientErrorCode, MonoClientException } from "../exception/mono.client.exception";
 import { WorkflowException } from "../../../../core/exception/workflow.exception";
+import { AlertService } from "../../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../../modules/common/mocks/mock.alert.service";
 
 describe("MonoWorkflowServiceTests", () => {
   jest.setTimeout(20000);
@@ -45,6 +47,7 @@ describe("MonoWorkflowServiceTests", () => {
   let monoWebhookHandlers: MonoWebhookHandlers;
   let kmsService: KmsService;
   let consumerService: ConsumerService;
+  let alertService: AlertService;
   let app: TestingModule;
 
   beforeEach(async () => {
@@ -53,9 +56,13 @@ describe("MonoWorkflowServiceTests", () => {
     monoWebhookHandlers = getMockMonoWebhookHandlersWithDefaults();
     kmsService = getMockKMSServiceWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
+    alertService = getMockAlertServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
+      [NOBA_CONFIG_KEY]: {
+        environment: AppEnvironment.DEV,
+      },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
@@ -81,6 +88,10 @@ describe("MonoWorkflowServiceTests", () => {
         {
           provide: KmsService,
           useFactory: () => instance(kmsService),
+        },
+        {
+          provide: AlertService,
+          useFactory: () => instance(alertService),
         },
         MonoWorkflowService,
       ],
