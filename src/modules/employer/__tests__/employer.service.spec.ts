@@ -14,7 +14,7 @@ import {
   PAYROLL_DISBURSEMENT_REPO_PROVIDER,
   PAYROLL_REPO_PROVIDER,
 } from "../repo/employer.repo.module";
-import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
+import { anyString, anything, capture, deepEqual, instance, mock, verify, when } from "ts-mockito";
 import { EmployerService } from "../employer.service";
 import { uuid } from "uuidv4";
 import { Employer } from "../domain/Employer";
@@ -37,6 +37,7 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { KmsService } from "../../../modules/common/kms.service";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
+import * as TemplateProcessModule from "../../../modules/common/utils/template.processor";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -1094,31 +1095,31 @@ describe("EmployerServiceTests", () => {
       );
     });
 
-    // it("should successfully create invoice", async () => {
-    //   const employer = getRandomEmployer();
-    //   const { payroll } = getRandomPayroll(employer.id);
+    it("should successfully create invoice", async () => {
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll(employer.id);
 
-    //   when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
-    //   when(employerRepo.getEmployerByID(employer.id)).thenResolve(employer);
-    //   when(kmsService.decryptString(employer.payrollAccountNumber, anything())).thenResolve(
-    //     employer.payrollAccountNumber,
-    //   );
+      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(employerRepo.getEmployerByID(employer.id)).thenResolve(employer);
+      when(kmsService.decryptString(employer.payrollAccountNumber, anything())).thenResolve(
+        employer.payrollAccountNumber,
+      );
 
-    //   when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([]);
-    //   const mockTemplateProcessor = mock(TemplateProcessModule.TemplateProcessor); // ignore not implemented for now
-    //   // const mockTemplateProcessor = getMockTemplateProcessorWithDefaults();
-    //   const mockTemplateProcessorInstance = instance(mockTemplateProcessor);
-    //   mockTemplateProcessorInstance.locales = [];
-    //   const constructorSpy = jest.spyOn(TemplateProcessModule, "TemplateProcessor");
-    //   constructorSpy.mockImplementationOnce(() => mockTemplateProcessorInstance);
+      when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([]);
+      const mockTemplateProcessor = mock(TemplateProcessModule.TemplateProcessor); // ignore not implemented for now
+      // const mockTemplateProcessor = getMockTemplateProcessorWithDefaults();
+      const mockTemplateProcessorInstance = instance(mockTemplateProcessor);
+      mockTemplateProcessorInstance.locales = [];
+      const constructorSpy = jest.spyOn(TemplateProcessModule, "TemplateProcessor");
+      constructorSpy.mockImplementationOnce(() => mockTemplateProcessorInstance);
 
-    //   when(mockTemplateProcessor.addFormat(anything())).thenResolve();
-    //   when(mockTemplateProcessor.addLocale(anything())).thenResolve();
-    //   when(mockTemplateProcessor.populateTemplate(anything(), anything())).thenResolve();
-    //   when(mockTemplateProcessor.loadTemplates()).thenResolve();
+      when(mockTemplateProcessor.addFormat(anything())).thenResolve();
+      when(mockTemplateProcessor.addLocale(anything())).thenResolve();
+      when(mockTemplateProcessor.populateTemplate(anything(), anything())).thenResolve();
+      when(mockTemplateProcessor.loadTemplates()).thenResolve();
 
-    //   await employerService.createInvoice(payroll.id);
-    //   expect(constructorSpy).toHaveBeenCalledTimes(1);
-    // });
+      await employerService.createInvoice(payroll.id);
+      expect(constructorSpy).toHaveBeenCalledTimes(1);
+    });
   });
 });
