@@ -1,6 +1,7 @@
 import Joi from "joi";
 import { Payroll as PrismaPayrollModel } from "@prisma/client";
 import { KeysRequired } from "../../common/domain/Types";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 export enum PayrollStatus {
   CREATED = "CREATED",
@@ -12,6 +13,48 @@ export enum PayrollStatus {
   COMPLETED = "COMPLETED",
   EXPIRED = "EXPIRED",
 }
+
+export const isStatusTransitionAllowed = (oldStatus: PayrollStatus, newStatus: PayrollStatus) => {
+  switch (newStatus) {
+    case PayrollStatus.CREATED:
+      // We should not receive updates for CREATED
+      return false;
+    case PayrollStatus.PREPARED:
+      // For prepared we allow status updates from CREATED
+      return oldStatus === PayrollStatus.CREATED;
+    case PayrollStatus.INVOICED:
+      // For invoiced we allow status updates from PREPARED only
+      return oldStatus === PayrollStatus.PREPARED;
+    case PayrollStatus.INVESTIGATION:
+      // For investigation we allow status updates from INVOICED or FUNDED
+      return oldStatus === PayrollStatus.INVOICED || oldStatus === PayrollStatus.CREATED;
+    case PayrollStatus.FUNDED:
+      // As funded is from a webhook event, we will only disallow status updates from IN_PROGRESS, COMPLETED and EXPIRED
+      return (
+        oldStatus !== PayrollStatus.IN_PROGRESS &&
+        oldStatus !== PayrollStatus.COMPLETED &&
+        oldStatus !== PayrollStatus.EXPIRED
+      );
+    case PayrollStatus.IN_PROGRESS:
+      // For in_progress we should allow status updates from FUNDED
+      return oldStatus === PayrollStatus.FUNDED;
+    case PayrollStatus.COMPLETED:
+      // For completed we allow status updates from IN_PROGRESS
+      return oldStatus === PayrollStatus.IN_PROGRESS;
+    case PayrollStatus.EXPIRED:
+      // For expired we allow status updates from CREATED and INVOICED and INVESTIGATION
+      return (
+        oldStatus === PayrollStatus.CREATED ||
+        oldStatus === PayrollStatus.INVOICED ||
+        oldStatus === PayrollStatus.INVESTIGATION
+      );
+    default:
+      throw new ServiceException({
+        message: `Invalid payroll status ${newStatus}`,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+  }
+};
 
 export class Payroll {
   id: string;

@@ -18,7 +18,7 @@ import { TemplateService } from "../common/template.service";
 import "dayjs/locale/es";
 import { IPayrollRepo } from "./repo/payroll.repo";
 import { IPayrollDisbursementRepo } from "./repo/payroll.disbursement.repo";
-import { Payroll, PayrollCreateRequest } from "./domain/Payroll";
+import { Payroll, PayrollCreateRequest, isStatusTransitionAllowed } from "./domain/Payroll";
 import {
   CreateDisbursementRequestDTO,
   UpdateDisbursementRequestDTO,
@@ -189,7 +189,7 @@ export class EmployerService {
       this.handlebarService.getHandlebarLanguageTemplate(`template_${this.SPANISH_LOCALE}.hbs`),
     ]);
 
-    let [employeeDisbursements, payroll] = await Promise.all([
+    const [employeeDisbursements, payroll] = await Promise.all([
       this.getEmployeeDisbursements(payrollID),
       this.payrollRepo.getPayrollByID(payrollID),
     ]);
@@ -334,6 +334,15 @@ export class EmployerService {
         message: "payrollID is required",
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
+    }
+
+    const payroll = await this.getPayrollByID(payrollID);
+
+    if (!isStatusTransitionAllowed(payroll.status, request.status)) {
+      this.logger.warn(
+        `Invalid payroll status transition: ${payroll.status} -> ${request.status} for payroll ${payrollID}`,
+      );
+      return payroll;
     }
 
     const payrollUpdateRequest: PayrollUpdateRequest = {
