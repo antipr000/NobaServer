@@ -38,6 +38,7 @@ import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mo
 import { KmsService } from "../../../modules/common/kms.service";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
 import * as TemplateProcessModule from "../../../modules/common/utils/template.processor";
+import { getMockTemplateProcessorWithDefaults } from "../../../modules/common/mocks/mock.template.processor";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -1106,8 +1107,7 @@ describe("EmployerServiceTests", () => {
       );
 
       when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([]);
-      const mockTemplateProcessor = mock(TemplateProcessModule.TemplateProcessor); // ignore not implemented for now
-      // const mockTemplateProcessor = getMockTemplateProcessorWithDefaults();
+      const mockTemplateProcessor = getMockTemplateProcessorWithDefaults();
       const mockTemplateProcessorInstance = instance(mockTemplateProcessor);
       mockTemplateProcessorInstance.locales = [];
       const constructorSpy = jest.spyOn(TemplateProcessModule, "TemplateProcessor");
