@@ -1054,4 +1054,71 @@ describe("EmployerServiceTests", () => {
       expect(await employerService.getEmployerForTransactionID(transactionID)).toBeNull();
     });
   });
+
+  describe("createInvoice", () => {
+    it("should throw SEMANTIC_VALIDATION when payrollID is undefined", async () => {
+      expect(employerService.createInvoice(undefined)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should throw SEMANTIC_VALIDATION when payrollID is not found", async () => {
+      when(payrollRepo.getPayrollByID("fake-payroll")).thenResolve(null);
+
+      expect(employerService.createInvoice("fake-payroll")).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should throw SEMANTIC_VALIDATION when employeeID is not found", async () => {
+      const { payroll } = getRandomPayroll("fake-employer");
+
+      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(employerRepo.getEmployerByID(payroll.employerID)).thenResolve(null);
+
+      expect(employerService.createInvoice(payroll.id)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should throw SEMANTIC_VALIDATION when Account number fails decryption", async () => {
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll(employer.id);
+
+      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(employerRepo.getEmployerByID(employer.id)).thenResolve(employer);
+      when(kmsService.decryptString(employer.payrollAccountNumber, anything())).thenResolve(null);
+
+      expect(employerService.createInvoice(payroll.id)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    // it("should successfully create invoice", async () => {
+    //   const employer = getRandomEmployer();
+    //   const { payroll } = getRandomPayroll(employer.id);
+
+    //   when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+    //   when(employerRepo.getEmployerByID(employer.id)).thenResolve(employer);
+    //   when(kmsService.decryptString(employer.payrollAccountNumber, anything())).thenResolve(
+    //     employer.payrollAccountNumber,
+    //   );
+
+    //   when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([]);
+    //   const mockTemplateProcessor = mock(TemplateProcessModule.TemplateProcessor); // ignore not implemented for now
+    //   // const mockTemplateProcessor = getMockTemplateProcessorWithDefaults();
+    //   const mockTemplateProcessorInstance = instance(mockTemplateProcessor);
+    //   mockTemplateProcessorInstance.locales = [];
+    //   const constructorSpy = jest.spyOn(TemplateProcessModule, "TemplateProcessor");
+    //   constructorSpy.mockImplementationOnce(() => mockTemplateProcessorInstance);
+
+    //   when(mockTemplateProcessor.addFormat(anything())).thenResolve();
+    //   when(mockTemplateProcessor.addLocale(anything())).thenResolve();
+    //   when(mockTemplateProcessor.populateTemplate(anything(), anything())).thenResolve();
+    //   when(mockTemplateProcessor.loadTemplates()).thenResolve();
+
+    //   await employerService.createInvoice(payroll.id);
+    //   expect(constructorSpy).toHaveBeenCalledTimes(1);
+    // });
+  });
 });

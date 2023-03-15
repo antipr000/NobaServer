@@ -1,5 +1,3 @@
-import { EmployeeDisbursement } from "../domain/Employer";
-
 export type InvoiceEmployeeDisbursement = {
   employeeName: string;
   amount: string;

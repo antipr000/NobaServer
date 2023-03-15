@@ -275,7 +275,9 @@ export class EmployerService {
     await templateProcessor.destroy();
   }
 
-  async generateInvoiceForLocale(locale) {}
+  async generateInvoiceForLocale(locale) {
+    throw new Error("Not implemented");
+  }
 
   async getPayrollByID(id: string): Promise<Payroll> {
     if (!id) {
