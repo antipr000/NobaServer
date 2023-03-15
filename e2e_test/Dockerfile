@@ -5,6 +5,9 @@ FROM --platform=linux/amd64 node:16-alpine
 ENV DATABASE_URL=postgresql://e2e_user:pass@postgres-db:5432/Noba_E2E
 
 RUN apk update && apk add bash
+ENV CHROME_BIN="/usr/bin/chromium-browser" \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="true"
+RUN apk add --no-cache font-noto-emoji udev ttf-freefont chromium
 
 COPY . .
 EXPOSE 8080
