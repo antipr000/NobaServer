@@ -11,5 +11,4 @@ export type EmployerWorkflowDTO = {
   payrollDates: Array<string>;
   nextPayrollDate: string;
   maxAllocationPercent?: number;
-  employees?: Array<string>;
 };

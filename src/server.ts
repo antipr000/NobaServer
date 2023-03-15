@@ -13,10 +13,6 @@ import {
   NoUnExpectedKeysValidationPipe,
 } from "./core/utils/NoUnexpectedKeysValidationPipe";
 import { joiToSwagger } from "./joi2Swagger";
-import { AuthModule } from "./modules/auth/auth.module";
-import { TransactionModule } from "./modules/transaction/transaction.module";
-import { ConsumerModule } from "./modules/consumer/consumer.module";
-import { VerificationModule } from "./modules/verification/verification.module";
 import { AppEnvironment, getEnvironmentName } from "./config/ConfigurationUtils";
 
 // `environmentVariables` stores extra environment varaibles that needs to be loaded before the app startup.
@@ -27,7 +23,6 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
     const environmentKey = environmentKeys[i];
     process.env[environmentKey] = environmentVariables[environmentKey];
   }
-  console.log("Going to load 'AppModule' ...");
   const app = await NestFactory.create(AppModule, {});
 
   const logger: Logger = app.get(WINSTON_MODULE_NEST_PROVIDER); //logger is of Nestjs type
@@ -45,36 +40,8 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
   app.use(json({ limit: "50mb" }));
   app.use(urlencoded({ extended: true, limit: "50mb" }));
 
-  // https://docs.nestjs.com/openapi/introduction
-
-  const apiSubDomain = `api-${appEnvType == AppEnvironment.AWSDEV ? "dev" : appEnvType}`; // configured in api-gateway
-
-  winstonLogger.info("Api subdomain for current environment is " + apiSubDomain);
-
-  // Config and doc generation options for PUBLIC-facing APIs
-  const publicConfig = new DocumentBuilder()
-    .setTitle("Noba Server")
-    .setDescription(`Noba Server API (${appEnvType.toUpperCase()})`)
-    .setVersion("1.0")
-    .addBearerAuth(
-      {
-        type: "http",
-        scheme: "bearer",
-        bearerFormat: "JWT",
-      },
-      "JWT-auth",
-    )
-    .addServer(`https://${apiSubDomain}.noba.com/`)
-    .build();
-
-  // Any API which we want to expose publicly must be explicitly declared here
-  const publicOptions = {
-    include: [AppModule, AuthModule, ConsumerModule, TransactionModule, VerificationModule],
-    operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
-  };
-
   // Config and doc generation options for all APIs, which includes public & private
-  const privateConfig = new DocumentBuilder()
+  const swaggerConfig = new DocumentBuilder()
     .setTitle("Noba Server")
     .setDescription(`Noba Server API (Internal) (${appEnvType.toUpperCase()})`)
     .setVersion("1.0")
@@ -89,16 +56,12 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
     .addServer("/")
     .build();
 
-  const privateOptions = {
+  const swaggerOptions = {
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
   };
 
-  const swaggerDocumentPublic = generateSwaggerDoc("swagger.json", app, publicConfig, publicOptions);
-  const swaggerDocumentPrivate = generateSwaggerDoc("swagger-internal.json", app, privateConfig, privateOptions);
-
-  // Expose /noba-api for public APIs and /noba-api-internal for all APIs (public & private)
-  SwaggerModule.setup("noba-api", app, swaggerDocumentPublic);
-  SwaggerModule.setup("noba-api-internal", app, swaggerDocumentPrivate);
+  const swaggerDocument = generateSwaggerDoc("swagger-internal.json", app, swaggerConfig, swaggerOptions);
+  SwaggerModule.setup("noba-api-internal", app, swaggerDocument);
 
   return app;
 };
