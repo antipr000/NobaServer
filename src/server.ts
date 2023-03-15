@@ -13,7 +13,7 @@ import {
   NoUnExpectedKeysValidationPipe,
 } from "./core/utils/NoUnexpectedKeysValidationPipe";
 import { joiToSwagger } from "./joi2Swagger";
-import { AppEnvironment, getEnvironmentName, isLocalDevEnvironment } from "./config/ConfigurationUtils";
+import { AppEnvironment, getEnvironmentName } from "./config/ConfigurationUtils";
 
 // `environmentVariables` stores extra environment varaibles that needs to be loaded before the app startup.
 // This will come handy while running tests & inserting any dependent environment varaibles.
@@ -105,30 +105,16 @@ function getMorgan(winstonLogger) {
   return morgan((tokens, req, res) => {
     const userID = ((req as any).user as any)?.entity?.props?.id;
 
-    let logText = "";
-    if (isLocalDevEnvironment()) {
-      logText = [
-        userID ?? "unauthenticated-request",
-        req.headers["x-forwarded-for"] || req.socket.remoteAddress, //TODO any privacy issue here?  as developers can see both uid and ip, best practice?
-        tokens.method(req, res),
-        tokens.url(req, res),
-        tokens.status(req, res),
-        tokens.res(req, res, "content-length"),
-        "-",
-        tokens["response-time"](req, res),
-        "ms",
-      ].join(" ");
-    } else {
-      logText = JSON.stringify({
-        userID: userID ?? "unauthenticated-request",
-        ip: req.headers["x-forwarded-for"] || req.socket.remoteAddress,
-        method: tokens.method(req, res),
-        url: tokens.url(req, res),
-        status: tokens.status(req, res),
-        contentLength: tokens.res(req, res, "content-length"),
-        responseTime: `${tokens["response-time"](req, res)}`,
-      });
-    }
-    return logText;
+    return [
+      userID ?? "unauthenticated-request",
+      req.headers["x-forwarded-for"] || req.socket.remoteAddress, //TODO any privacy issue here?  as developers can see both uid and ip, best practice?
+      tokens.method(req, res),
+      tokens.url(req, res),
+      tokens.status(req, res),
+      tokens.res(req, res, "content-length"),
+      "-",
+      tokens["response-time"](req, res),
+      "ms",
+    ].join(" ");
   }, morganOptions);
 }

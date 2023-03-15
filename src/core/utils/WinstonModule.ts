@@ -1,8 +1,7 @@
 import winston from "winston";
 import { WinstonModule, utilities as nestWinstonModuleUtilities } from "nest-winston";
-import { SERVER_LOG_FILE_PATH, isLocalDevEnvironment, NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import { SERVER_LOG_FILE_PATH, isLocalDevEnvironment } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "./AppConfigModule";
-import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 
 export function getWinstonModule() {
   return WinstonModule.forRootAsync({
@@ -17,10 +16,7 @@ export function getWinstonModule() {
         winston.format.timestamp({
           format: () => new Date().toISOString() + " ",
         }),
-        nestWinstonModuleUtilities.format.nestLike(
-          `NobaServer-${configService.get<NobaConfigs>(NOBA_CONFIG_KEY).environment}`,
-          { colors: isLocalDevEnvironment() },
-        ),
+        nestWinstonModuleUtilities.format.nestLike("NobaServer", { colors: isLocalDevEnvironment() }),
       );
 
       return {
