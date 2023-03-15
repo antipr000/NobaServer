@@ -743,57 +743,107 @@ describe("EmployerServiceTests", () => {
       });
     });
 
-    it("should not update status when transition is not valid", async () => {
+    it.each([
+      [PayrollStatus.CREATED, PayrollStatus.PREPARED],
+      [PayrollStatus.PREPARED, PayrollStatus.INVOICED],
+      [PayrollStatus.INVOICED, PayrollStatus.FUNDED],
+      [PayrollStatus.INVESTIGATION, PayrollStatus.FUNDED],
+      [PayrollStatus.CREATED, PayrollStatus.FUNDED],
+      [PayrollStatus.PREPARED, PayrollStatus.FUNDED],
+      [PayrollStatus.INVOICED, PayrollStatus.INVESTIGATION],
+      [PayrollStatus.FUNDED, PayrollStatus.INVESTIGATION],
+      [PayrollStatus.FUNDED, PayrollStatus.IN_PROGRESS],
+      [PayrollStatus.IN_PROGRESS, PayrollStatus.COMPLETED],
+      [PayrollStatus.CREATED, PayrollStatus.EXPIRED],
+      [PayrollStatus.INVOICED, PayrollStatus.EXPIRED],
+      [PayrollStatus.INVESTIGATION, PayrollStatus.EXPIRED],
+    ])("should allow status to be updated from %s to %s", async (fromStatus, toStatus) => {
       const employerID = "fake-employer";
-      const { payroll: createdPayroll } = getRandomPayroll(employerID);
-      createdPayroll.status = PayrollStatus.CREATED;
-      const { payroll: preparedPayroll } = getRandomPayroll(employerID);
-      preparedPayroll.status = PayrollStatus.PREPARED;
-      const { payroll: inProgressPayroll } = getRandomPayroll(employerID);
-      inProgressPayroll.status = PayrollStatus.IN_PROGRESS;
-      const { payroll: completedPayroll } = getRandomPayroll(employerID);
-      completedPayroll.status = PayrollStatus.COMPLETED;
-      const { payroll: invoicedPayroll } = getRandomPayroll(employerID);
-      invoicedPayroll.status = PayrollStatus.INVOICED;
-      const { payroll: expiredPayroll } = getRandomPayroll(employerID);
-      expiredPayroll.status = PayrollStatus.EXPIRED;
-      const { payroll: fundedPayroll } = getRandomPayroll(employerID);
-      fundedPayroll.status = PayrollStatus.FUNDED;
+      const { payroll } = getRandomPayroll(employerID);
+      payroll.status = fromStatus;
 
-      when(payrollRepo.getPayrollByID(createdPayroll.id)).thenResolve(createdPayroll);
-      when(payrollRepo.getPayrollByID(preparedPayroll.id)).thenResolve(preparedPayroll);
-      when(payrollRepo.getPayrollByID(inProgressPayroll.id)).thenResolve(inProgressPayroll);
-      when(payrollRepo.getPayrollByID(completedPayroll.id)).thenResolve(completedPayroll);
-      when(payrollRepo.getPayrollByID(invoicedPayroll.id)).thenResolve(invoicedPayroll);
-      when(payrollRepo.getPayrollByID(expiredPayroll.id)).thenResolve(expiredPayroll);
-      when(payrollRepo.getPayrollByID(fundedPayroll.id)).thenResolve(fundedPayroll);
+      const { payrollDisbursement: disbursement1 } = getRandomPayrollDisbursement(payroll.id, "fake-employee-1");
+      const { payrollDisbursement: disbursement2 } = getRandomPayrollDisbursement(payroll.id, "fake-employee-2");
 
-      // CREATED -> INVOICED
-      let updatedPayroll = await employerService.updatePayroll(createdPayroll.id, {
-        status: PayrollStatus.INVOICED,
+      disbursement1.allocationAmount = 10000;
+      disbursement2.allocationAmount = 20000;
+
+      when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([
+        disbursement1,
+        disbursement2,
+      ]);
+
+      when(exchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve({
+        nobaRate: 0.0025,
+        bankRate: 0.0025,
+        numeratorCurrency: "COP",
+        denominatorCurrency: "USD",
       });
-      expect(updatedPayroll.status).toEqual(PayrollStatus.CREATED);
-      verify(payrollRepo.updatePayroll(anyString(), anything())).never();
 
-      // COMPLETED -> INVOICED
-      updatedPayroll = await employerService.updatePayroll(completedPayroll.id, {
-        status: PayrollStatus.INVOICED,
+      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(payrollRepo.updatePayroll(anyString(), anything())).thenResolve({
+        ...payroll,
+        status: toStatus,
       });
-      expect(updatedPayroll.status).toEqual(PayrollStatus.COMPLETED);
-      verify(payrollRepo.updatePayroll(anyString(), anything())).never();
 
-      // COMPLETED -> FUNDED
-      updatedPayroll = await employerService.updatePayroll(completedPayroll.id, {
-        status: PayrollStatus.FUNDED,
+      const response = await employerService.updatePayroll(payroll.id, {
+        status: toStatus,
       });
-      expect(updatedPayroll.status).toEqual(PayrollStatus.COMPLETED);
-      verify(payrollRepo.updatePayroll(anyString(), anything())).never();
 
-      // FUNDED -> EXPIRED
-      updatedPayroll = await employerService.updatePayroll(fundedPayroll.id, {
-        status: PayrollStatus.EXPIRED,
+      expect(response).toStrictEqual({
+        ...payroll,
+        status: toStatus,
       });
-      expect(updatedPayroll.status).toEqual(PayrollStatus.FUNDED);
+
+      const [payrollID, payrollUpdateRequest] = capture(payrollRepo.updatePayroll).last();
+      expect(payrollID).toEqual(payroll.id);
+      expect(payrollUpdateRequest.status).toEqual(toStatus);
+    });
+
+    it.each([
+      [PayrollStatus.INVOICED, PayrollStatus.PREPARED],
+      [PayrollStatus.IN_PROGRESS, PayrollStatus.PREPARED],
+      [PayrollStatus.COMPLETED, PayrollStatus.PREPARED],
+      [PayrollStatus.FUNDED, PayrollStatus.PREPARED],
+      [PayrollStatus.EXPIRED, PayrollStatus.PREPARED],
+      [PayrollStatus.INVESTIGATION, PayrollStatus.PREPARED],
+      [PayrollStatus.CREATED, PayrollStatus.INVOICED],
+      [PayrollStatus.IN_PROGRESS, PayrollStatus.INVOICED],
+      [PayrollStatus.COMPLETED, PayrollStatus.INVOICED],
+      [PayrollStatus.FUNDED, PayrollStatus.INVOICED],
+      [PayrollStatus.EXPIRED, PayrollStatus.INVOICED],
+      [PayrollStatus.INVESTIGATION, PayrollStatus.INVOICED],
+      [PayrollStatus.CREATED, PayrollStatus.IN_PROGRESS],
+      [PayrollStatus.PREPARED, PayrollStatus.IN_PROGRESS],
+      [PayrollStatus.INVOICED, PayrollStatus.IN_PROGRESS],
+      [PayrollStatus.COMPLETED, PayrollStatus.IN_PROGRESS],
+      [PayrollStatus.INVESTIGATION, PayrollStatus.IN_PROGRESS],
+      [PayrollStatus.COMPLETED, PayrollStatus.FUNDED],
+      [PayrollStatus.IN_PROGRESS, PayrollStatus.FUNDED],
+      [PayrollStatus.EXPIRED, PayrollStatus.FUNDED],
+      [PayrollStatus.COMPLETED, PayrollStatus.INVESTIGATION],
+      [PayrollStatus.PREPARED, PayrollStatus.INVESTIGATION],
+      [PayrollStatus.EXPIRED, PayrollStatus.INVESTIGATION],
+      [PayrollStatus.PREPARED, PayrollStatus.EXPIRED],
+      [PayrollStatus.IN_PROGRESS, PayrollStatus.EXPIRED],
+      [PayrollStatus.IN_PROGRESS, PayrollStatus.EXPIRED],
+      [PayrollStatus.CREATED, PayrollStatus.COMPLETED],
+      [PayrollStatus.INVOICED, PayrollStatus.COMPLETED],
+      [PayrollStatus.FUNDED, PayrollStatus.COMPLETED],
+      [PayrollStatus.EXPIRED, PayrollStatus.COMPLETED],
+      [PayrollStatus.INVESTIGATION, PayrollStatus.COMPLETED],
+    ])("should not update status from %s to %s", async (fromStatus, toStatus) => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      payroll.status = fromStatus;
+
+      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+
+      const response = await employerService.updatePayroll(payroll.id, {
+        status: toStatus,
+      });
+
+      expect(response).toStrictEqual(payroll);
       verify(payrollRepo.updatePayroll(anyString(), anything())).never();
     });
 

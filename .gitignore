@@ -419,3 +419,6 @@ src/generated/*
 swagger*.json
 .prisma/*
 prisma/dbml/*
+
+# Generated invoices
+inv_*.pdf

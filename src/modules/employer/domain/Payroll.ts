@@ -27,7 +27,7 @@ export const isStatusTransitionAllowed = (oldStatus: PayrollStatus, newStatus: P
       return oldStatus === PayrollStatus.PREPARED;
     case PayrollStatus.INVESTIGATION:
       // For investigation we allow status updates from INVOICED or FUNDED
-      return oldStatus === PayrollStatus.INVOICED || oldStatus === PayrollStatus.CREATED;
+      return oldStatus === PayrollStatus.INVOICED || oldStatus === PayrollStatus.FUNDED;
     case PayrollStatus.FUNDED:
       // As funded is from a webhook event, we will only disallow status updates from IN_PROGRESS, COMPLETED and EXPIRED
       return (
