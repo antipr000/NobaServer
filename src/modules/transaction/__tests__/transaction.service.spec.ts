@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
+import { AppEnvironment, NOBA_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { v4 } from "uuid";
@@ -63,6 +63,8 @@ import {
   getRandomPayrollDisbursement,
 } from "../../../modules/employer/test_utils/payroll.test.utils";
 import { PayrollDisbursement } from "../../../modules/employer/domain/PayrollDisbursement";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -82,6 +84,7 @@ describe("TransactionServiceTests", () => {
   let withdrawalDetailsRepo: IWithdrawalDetailsRepo;
   let employeeService: EmployeeService;
   let employerService: EmployerService;
+  let alertService: AlertService;
 
   beforeEach(async () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
@@ -97,9 +100,13 @@ describe("TransactionServiceTests", () => {
     withdrawalDetailsRepo = getMockWithdrawalDetailsRepoWithDefaults();
     employeeService = getMockEmployeeServiceWithDefaults();
     employerService = getMockEmployerServiceWithDefaults();
+    alertService = getMockAlertServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
+      [NOBA_CONFIG_KEY]: {
+        environment: AppEnvironment.DEV,
+      },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
@@ -145,6 +152,10 @@ describe("TransactionServiceTests", () => {
         {
           provide: WITHDRAWAL_DETAILS_REPO_PROVIDER,
           useFactory: () => instance(withdrawalDetailsRepo),
+        },
+        {
+          provide: AlertService,
+          useFactory: () => instance(alertService),
         },
         TransactionService,
       ],
@@ -857,6 +868,33 @@ describe("TransactionServiceTests", () => {
       const updatedTransaction = await transactionService.updateTransaction(transaction.id, updateTransactionDTO);
 
       expect(updatedTransaction.status).toEqual(updateTransactionDTO.status);
+    });
+
+    it("should update the status 'AND' raise the alert if transaction is transition to 'FAILED' status", async () => {
+      const { transaction } = getRandomTransaction("consumerID", "consumerID2");
+      when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(transaction);
+      when(alertService.raiseAlert(anything())).thenResolve();
+
+      const updateTransactionDTO: UpdateTransactionDTO = {
+        status: TransactionStatus.FAILED,
+      };
+
+      const updateTransaction: UpdateTransaction = {
+        status: updateTransactionDTO.status,
+      };
+
+      when(transactionRepo.updateTransactionByTransactionID(transaction.id, deepEqual(updateTransaction))).thenResolve({
+        ...transaction,
+        status: updateTransactionDTO.status,
+      });
+
+      const updatedTransaction = await transactionService.updateTransaction(transaction.id, updateTransactionDTO);
+
+      expect(updatedTransaction.status).toEqual(updateTransactionDTO.status);
+
+      const [alertCall] = capture(alertService.raiseAlert).last();
+      expect(alertCall).toEqual(expect.objectContaining({ key: "TRANSACTION_FAILED" }));
+      expect(alertCall).toEqual(expect.objectContaining({ message: expect.stringContaining(transaction.id) }));
     });
 
     it("should throw a ServiceException if the transaction doesn't exist", async () => {
