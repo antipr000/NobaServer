@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { Logger } from "winston";
-import { EmployeeDisbursement, Employer, TemplateFields } from "./domain/Employer";
+import { EmployeeDisbursement, Employer } from "./domain/Employer";
 import { IEmployerRepo } from "./repo/employer.repo";
 import {
   EMPLOYER_REPO_PROVIDER,
@@ -11,10 +11,9 @@ import {
 } from "./repo/employer.repo.module";
 import { CreateEmployerRequestDTO, UpdateEmployerRequestDTO } from "./dto/employer.service.dto";
 import dayjs from "dayjs";
-import Handlebars from "handlebars";
 import { ConsumerService } from "../consumer/consumer.service";
 import { EmployeeService } from "../employee/employee.service";
-import { TemplateService } from "../common/template.service";
+import { S3Service } from "../common/s3.service";
 import "dayjs/locale/es";
 import { IPayrollRepo } from "./repo/payroll.repo";
 import { IPayrollDisbursementRepo } from "./repo/payroll.disbursement.repo";
@@ -25,28 +24,32 @@ import {
   UpdatePayrollRequestDTO,
 } from "./dto/payroll.workflow.controller.dto";
 import { PayrollDisbursement } from "./domain/PayrollDisbursement";
-import { PayrollUpdateRequest } from "./domain/Payroll";
-import { PayrollStatus } from "./domain/Payroll";
+import { PayrollUpdateRequest, PayrollStatus } from "./domain/Payroll";
 import { ExchangeRateService } from "../common/exchangerate.service";
 import { Currency } from "../transaction/domain/TransactionTypes";
 import { isValidDateString } from "../../core/utils/DateUtils";
-import puppeteer, { Browser } from "puppeteer";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { KmsService } from "../common/kms.service";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
-import { NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
+import {
+  INVOICES_FOLDER_BUCKET_PATH,
+  NOBA_CONFIG_KEY,
+  TEMPLATES_FOLDER_BUCKET_PATH,
+} from "../../config/ConfigurationUtils";
 import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 import { Employee } from "../employee/domain/Employee";
+import { TemplateProcessor, TemplateFormat, TemplateLocale } from "../common/utils/template.processor";
+import { InvoiceEmployeeDisbursement, InvoiceTemplateFields } from "./templates/payroll.invoice.dto";
 
 @Injectable()
 export class EmployerService {
   private readonly MAX_LEAD_DAYS = 5;
-  private readonly ENGLISH_LOCALE = "en";
-  private readonly SPANISH_LOCALE = "es";
   private readonly nobaPayrollAccountNumber: string;
+  private readonly invoiceTemplateBucketPath: string;
+  private readonly invoicesFolderBucketPath: string;
 
   @Inject()
-  private readonly handlebarService: TemplateService;
+  private readonly s3Service: S3Service;
 
   @Inject()
   private readonly employeeService: EmployeeService;
@@ -69,6 +72,8 @@ export class EmployerService {
   ) {
     this.nobaPayrollAccountNumber =
       this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).payroll.nobaPayrollAccountNumber;
+    this.invoiceTemplateBucketPath = this.configService.get(TEMPLATES_FOLDER_BUCKET_PATH);
+    this.invoicesFolderBucketPath = this.configService.get(INVOICES_FOLDER_BUCKET_PATH);
   }
 
   private validateLeadDays(leadDays: number): void {
@@ -177,22 +182,16 @@ export class EmployerService {
     return this.employerRepo.getEmployerByBubbleID(bubbleID);
   }
 
-  async generatePayroll(payrollID: string): Promise<void> {
+  async createInvoice(payrollID: string): Promise<void> {
     if (!payrollID) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: "Payroll ID is required",
       });
     }
-    const templatesPromise = Promise.all([
-      this.handlebarService.getHandlebarLanguageTemplate(`template_${this.ENGLISH_LOCALE}.hbs`),
-      this.handlebarService.getHandlebarLanguageTemplate(`template_${this.SPANISH_LOCALE}.hbs`),
-    ]);
 
-    const [employeeDisbursements, payroll] = await Promise.all([
-      this.getEmployeeDisbursements(payrollID),
-      this.payrollRepo.getPayrollByID(payrollID),
-    ]);
+    const payroll = await this.payrollRepo.getPayrollByID(payrollID);
+
     if (!payroll) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -225,63 +224,58 @@ export class EmployerService {
       accountNumber = employerPayrollAccountNumber;
     }
 
-    const [template_en, template_es] = await templatesPromise;
+    const templateProcessor = new TemplateProcessor(
+      this.logger,
+      this.s3Service,
+      `${this.invoiceTemplateBucketPath}/payroll-invoice/`,
+      `template_LOCALE.hbs`,
+      `${this.invoicesFolderBucketPath}/${employer.id}/`,
+      `inv_${payroll.id}`,
+    );
+
+    templateProcessor.addFormat(TemplateFormat.HTML);
+    templateProcessor.addFormat(TemplateFormat.PDF);
+    templateProcessor.addLocale(TemplateLocale.ENGLISH);
+    templateProcessor.addLocale(TemplateLocale.SPANISH); // Should be configured on employer record
+
+    // Loads templates for each specified locale
+    await templateProcessor.loadTemplates();
+
+    const employeeDisbursements = await this.getEmployeeDisbursements(payrollID);
+
     const companyName = employer.name;
     const currency = payroll.debitCurrency;
 
-    // Remove this once we have unit tests in place and PDF generation is stable
-    const [html_en, html_es] = await Promise.all([
-      this.generateTemplate({
-        handlebarTemplate: template_en,
+    // Populate templates for each locale
+    for (const element of templateProcessor.locales) {
+      const locale = element;
+
+      const employeeAllocations: InvoiceEmployeeDisbursement[] = employeeDisbursements.map(allocation => ({
+        employeeName: allocation.employeeName,
+        amount: allocation.amount.toLocaleString(locale.toString()),
+      }));
+
+      const templateFields: InvoiceTemplateFields = {
         companyName: companyName,
         payrollReference: payroll.referenceNumber.toString().padStart(8, "0"),
-        payrollDate: payroll.payrollDate,
+        payrollDate: dayjs(payroll.payrollDate).locale(locale.toString()).format("MMMM D, YYYY"),
         currency: currency,
-        employeeDisbursements: employeeDisbursements,
-        totalAmount: payroll.totalDebitAmount,
+        allocations: employeeAllocations,
+        totalAmount: payroll.totalDebitAmount.toLocaleString(locale.toString()),
         nobaAccountNumber: accountNumber,
-        locale: this.ENGLISH_LOCALE,
-        region: "US",
-      }),
-      this.generateTemplate({
-        handlebarTemplate: template_es,
-        companyName: companyName,
-        payrollReference: payroll.referenceNumber.toString().padStart(8, "0"),
-        payrollDate: payroll.payrollDate,
-        currency: currency,
-        employeeDisbursements: employeeDisbursements,
-        totalAmount: payroll.totalDebitAmount,
-        nobaAccountNumber: accountNumber,
-        locale: this.SPANISH_LOCALE,
-        region: "CO",
-      }),
-    ]);
+      };
 
-    await Promise.all([
-      this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_en.html`, html_en),
-      this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_es.html`, html_es),
-    ]);
+      templateProcessor.populateTemplate(locale, templateFields);
+    }
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless"],
-      executablePath:
-        process.platform === "win32"
-          ? "C:/Program Files/Google/Chrome/Application/chrome.exe"
-          : "/usr/bin/chromium-browser",
-    });
+    // Upload templates
+    await templateProcessor.uploadPopulatedTemplates();
 
-    const [pdf_en, pdf_es] = await Promise.all([
-      this.generatePayrollPDF(browser, html_en, `inv_${payrollID}_en.pdf`),
-      this.generatePayrollPDF(browser, html_es, `inv_${payrollID}_es.pdf`),
-    ]);
-
-    await Promise.all([
-      this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_en.pdf`, pdf_en),
-      this.handlebarService.pushHandlebarLanguageFile(employer.id, `inv_${payrollID}_es.pdf`, pdf_es),
-    ]);
-    browser.close();
+    // Destroy template context
+    await templateProcessor.destroy();
   }
+
+  async generateInvoiceForLocale(locale) {}
 
   async getPayrollByID(id: string): Promise<Payroll> {
     if (!id) {
@@ -489,39 +483,6 @@ export class EmployerService {
     return this.employerRepo.getEmployerByID(payroll.employerID);
   }
 
-  async createInvoice(payrollID: string): Promise<void> {
-    await this.generatePayroll(payrollID);
-  }
-
-  private async generateTemplate({
-    handlebarTemplate,
-    companyName,
-    payrollReference,
-    payrollDate,
-    nobaAccountNumber,
-    currency,
-    employeeDisbursements,
-    totalAmount,
-    locale,
-    region,
-  }: TemplateFields): Promise<string> {
-    const template = Handlebars.compile(handlebarTemplate);
-
-    const employeeAllocations = employeeDisbursements.map(allocation => ({
-      employeeName: allocation.employeeName,
-      amount: allocation.amount.toLocaleString(`${locale}-${region}`),
-    }));
-    return template({
-      companyName: companyName,
-      currency: currency,
-      payrollReference: payrollReference,
-      date: dayjs(payrollDate).locale(locale).format("MMMM D, YYYY"),
-      totalAmount: totalAmount.toLocaleString(`${locale}-${region}`),
-      allocations: employeeAllocations,
-      nobaAccountNumber: nobaAccountNumber,
-    });
-  }
-
   private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDisbursement[]> {
     const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
 
@@ -535,13 +496,5 @@ export class EmployerService {
         };
       }),
     );
-  }
-
-  private async generatePayrollPDF(browserInstance: Browser, html: string, path: string): Promise<Buffer> {
-    const page = await browserInstance.newPage();
-    await page.emulateMediaType("screen");
-    await page.setContent(html);
-    await page.evaluateHandle("document.fonts.ready");
-    return page.pdf({ format: "A4", path: path });
   }
 }

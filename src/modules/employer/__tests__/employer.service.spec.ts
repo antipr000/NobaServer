@@ -31,8 +31,8 @@ import { getRandomEmployee } from "../../../modules/employee/test_utils/employee
 import { Utils } from "../../../core/utils/Utils";
 import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
-import { TemplateService } from "../../../modules/common/template.service";
-import { getMockTemplateServiceWithDefaults } from "../../../modules/common/mocks/mock.template.service";
+import { S3Service } from "../../common/s3.service";
+import { getMockS3ServiceWithDefaults } from "../../common/mocks/mock.s3.service";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { KmsService } from "../../../modules/common/kms.service";
@@ -65,7 +65,7 @@ describe("EmployerServiceTests", () => {
   let payrollRepo: IPayrollRepo;
   let payrollDisbursementRepo: IPayrollDisbursementRepo;
   let exchangeRateService: ExchangeRateService;
-  let templateService: TemplateService;
+  let s3Service: S3Service;
   let kmsService: KmsService;
 
   beforeEach(async () => {
@@ -74,7 +74,7 @@ describe("EmployerServiceTests", () => {
     payrollDisbursementRepo = getMockPayrollDisbursementRepoWithDefaults();
     payrollRepo = getMockPayrollRepoWithDefaults();
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
-    templateService = getMockTemplateServiceWithDefaults();
+    s3Service = getMockS3ServiceWithDefaults();
     kmsService = getMockKMSServiceWithDefaults();
 
     const appConfigurations = {
@@ -111,8 +111,8 @@ describe("EmployerServiceTests", () => {
           useFactory: () => instance(exchangeRateService),
         },
         {
-          provide: TemplateService,
-          useFactory: () => instance(templateService),
+          provide: S3Service,
+          useFactory: () => instance(s3Service),
         },
         {
           provide: ConsumerService,
