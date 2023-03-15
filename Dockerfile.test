@@ -1,4 +1,7 @@
-FROM node:16
+FROM node:16-alpine
+ENV CHROME_BIN="/usr/bin/chromium-browser" \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD="true"
+RUN apk add --no-cache font-noto-emoji udev ttf-freefont chromium
 COPY package*.json ./
 COPY prisma/* ./prisma/
 #COPY node_modules/@prisma/client/* ./node_modules/@prisma/client/
