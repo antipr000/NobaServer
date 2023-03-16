@@ -1,3 +1,8 @@
+import * as TemplateProcessModule from "../../../modules/common/utils/template.processor";
+import { getMockTemplateProcessorWithDefaults } from "../../../modules/common/mocks/mock.template.processor";
+const mockTemplateProcessor = getMockTemplateProcessorWithDefaults();
+const constructorSpy = jest.spyOn(TemplateProcessModule, "TemplateProcessor");
+
 import { Test, TestingModule } from "@nestjs/testing";
 import {
   NOBA_CONFIG_KEY,
@@ -14,7 +19,7 @@ import {
   PAYROLL_DISBURSEMENT_REPO_PROVIDER,
   PAYROLL_REPO_PROVIDER,
 } from "../repo/employer.repo.module";
-import { anyString, anything, capture, deepEqual, instance, mock, verify, when } from "ts-mockito";
+import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { EmployerService } from "../employer.service";
 import { uuid } from "uuidv4";
 import { Employer } from "../domain/Employer";
@@ -37,11 +42,8 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { KmsService } from "../../../modules/common/kms.service";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
-import * as TemplateProcessModule from "../../../modules/common/utils/template.processor";
-import { getMockTemplateProcessorWithDefaults } from "../../../modules/common/mocks/mock.template.processor";
 import { InvoiceTemplateFields } from "../templates/payroll.invoice.dto";
 import dayjs from "dayjs";
-import { Consumer } from "../../../modules/consumer/domain/Consumer";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -73,7 +75,7 @@ describe("EmployerServiceTests", () => {
   let exchangeRateService: ExchangeRateService;
   let s3Service: S3Service;
   let kmsService: KmsService;
-  let mockTemplateProcessor: TemplateProcessModule.TemplateProcessor;
+  let mockTemplateProcessorInstance;
 
   beforeEach(async () => {
     employerRepo = getMockEmployerRepoWithDefaults();
@@ -84,6 +86,9 @@ describe("EmployerServiceTests", () => {
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
     s3Service = getMockS3ServiceWithDefaults();
     kmsService = getMockKMSServiceWithDefaults();
+    mockTemplateProcessorInstance = instance(mockTemplateProcessor);
+    constructorSpy.mockImplementationOnce(() => mockTemplateProcessorInstance);
+    mockTemplateProcessorInstance.locales = [];
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -135,14 +140,6 @@ describe("EmployerServiceTests", () => {
     }).compile();
 
     employerService = app.get<EmployerService>(EmployerService);
-  });
-
-  beforeAll(() => {
-    mockTemplateProcessor = getMockTemplateProcessorWithDefaults();
-    const mockTemplateProcessorInstance = instance(mockTemplateProcessor);
-    const constructorSpy = jest.spyOn(TemplateProcessModule, "TemplateProcessor");
-    constructorSpy.mockImplementationOnce(() => mockTemplateProcessorInstance);
-    mockTemplateProcessor.locales = [];
   });
 
   afterEach(async () => {
