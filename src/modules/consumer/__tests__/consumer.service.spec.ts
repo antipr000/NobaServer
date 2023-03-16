@@ -207,6 +207,7 @@ describe("ConsumerService", () => {
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         email: email,
+        address: { countryCode: "CO" },
       });
 
       when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
@@ -217,9 +218,8 @@ describe("ConsumerService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_WELCOME_MESSAGE_EVENT,
-
           deepEqual({
-            locale: "en_us",
+            locale: consumer.props.locale,
             email: email,
             firstName: undefined,
             lastName: undefined,
@@ -1587,6 +1587,7 @@ describe("ConsumerService", () => {
       const [notificationType, notificationUserArgs] = capture(notificationService.sendNotification).last();
       expect(notificationType).toBe(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT);
       expect(notificationUserArgs).toStrictEqual({
+        locale: consumer.props.locale,
         email: email.toLowerCase(),
         firstName: consumer.props.firstName,
         lastName: consumer.props.lastName,

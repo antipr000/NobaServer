@@ -69,7 +69,7 @@ describe("SqlEmployerRepoTests", () => {
     app.close();
   });
 
-  afterEach(async () => {
+  beforeEach(async () => {
     await prismaService.employer.deleteMany();
 
     // *****************************  WARNING **********************************
