@@ -95,6 +95,9 @@ export class PayrollDTO {
   @ApiProperty({ enum: PayrollStatus })
   status: PayrollStatus;
 
+  @ApiProperty()
+  payrollISODate: Date;
+
   @ApiPropertyOptional()
   totalDebitAmount?: number;
 
