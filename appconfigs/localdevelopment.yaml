@@ -28,6 +28,7 @@ kms:
 sendgrid:
   awsSecretNameForApiKey: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   apiKey: "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"
+  suppressEmailsRegex: "(e2e|testconsumer).*@noba\\.com"
 
 checkout:
   awsSecretNameForPublicKey: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files

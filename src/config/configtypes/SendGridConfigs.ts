@@ -1,6 +1,11 @@
-import { SENDGRID_API_KEY, SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR } from "../ConfigurationUtils";
+import {
+  SENDGRID_API_KEY,
+  SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR,
+  SENDGRID_SUPPRESS_EMAILS_REGEX,
+} from "../ConfigurationUtils";
 
 export interface SendGridConfigs {
   [SENDGRID_API_KEY]: string;
   [SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR]: string;
+  [SENDGRID_SUPPRESS_EMAILS_REGEX]: string;
 }
