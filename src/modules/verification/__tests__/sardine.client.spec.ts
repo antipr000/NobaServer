@@ -3,6 +3,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { ConsumerInformation } from "../domain/ConsumerInformation";
 import { Sardine } from "../integrations/sardine.client";
+import { v4 } from "uuid";
 import mockAxios from "jest-mock-axios";
 import {
   FAKE_422_VALIDATION_ERROR,
@@ -30,6 +31,8 @@ import { Readable } from "stream";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { NationalIDTypes } from "../domain/NationalIDTypes";
 import {
+  AccountType,
+  CustomerType,
   DocumentVerificationErrorCodes,
   PaymentMethodTypes,
   SardineCustomerRequest,
@@ -37,9 +40,6 @@ import {
   SardineRiskLevels,
 } from "../integrations/SardineTypeDefinitions";
 import { anything, instance, when } from "ts-mockito";
-import { BankAccountType } from "../../psp/domain/PlaidTypes";
-import { PlaidClient } from "../../psp/plaid.client";
-import { getMockPlaidClientWithDefaults } from "../../psp/mocks/mock.plaid.client";
 import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
 import {
   DocumentVerificationStatus,
@@ -63,14 +63,12 @@ const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 //TODO: Add assertions for request body
 describe("SardineTests", () => {
-  let plaidClient: PlaidClient;
   let consumerService: ConsumerService;
   let circleService: CircleService;
   jest.setTimeout(10000);
   let sardine: Sardine;
 
   beforeEach(async () => {
-    plaidClient = getMockPlaidClientWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
     circleService = getMockCircleServiceWithDefaults();
     const app: TestingModule = await Test.createTestingModule({
@@ -86,10 +84,6 @@ describe("SardineTests", () => {
       ],
       controllers: [],
       providers: [
-        {
-          provide: PlaidClient,
-          useFactory: () => instance(plaidClient),
-        },
         Sardine,
         {
           provide: ConsumerService,
@@ -192,6 +186,7 @@ describe("SardineTests", () => {
             postalCode: consumerInformation.address.postalCode,
             countryCode: consumerInformation.address.countryCode,
           },
+          type: CustomerType.CUSTOMER,
           phone: "+12345678900",
           isPhoneVerified: false,
           emailAddress: consumerInformation.email,
@@ -308,6 +303,7 @@ describe("SardineTests", () => {
             postalCode: consumerInformation.address.postalCode,
             countryCode: consumerInformation.address.countryCode,
           },
+          type: CustomerType.CUSTOMER,
           phone: consumerInformation.phoneNumber,
           isPhoneVerified: false,
           emailAddress: consumerInformation.email,
@@ -403,33 +399,19 @@ describe("SardineTests", () => {
 
   describe("transactionVerification", () => {
     it("[OTHER] Should return status APPROVED when transaction is low risk (other) - WALLET_DEPOSIT", async () => {
-      const consumerID1 = "consumer-1";
-      const consumerID2 = "consumer-2";
+      const consumer = getFakeConsumer();
       const transactionVerification: TransactionVerification = {
         transactionRef: "transaction-1",
-        debitConsumerID: consumerID1,
-        creditConsumerID: consumerID2,
-        debitAmount: 100,
-        debitCurrency: "USD",
+        debitConsumerID: consumer.props.id,
+        creditConsumerID: null,
+        debitAmount: 45000,
+        debitCurrency: "COP",
         creditAmount: 100,
         creditCurrency: "USD",
         workflowName: WorkflowName.WALLET_DEPOSIT,
       };
 
-      const consumer = Consumer.createConsumer({
-        id: consumerID1,
-        email: "fake+consumer@noba.com",
-        verificationData: {
-          kycCheckStatus: KYCStatus.APPROVED,
-          provider: KYCProvider.SARDINE,
-          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
-          kycVerificationTimestamp: new Date(),
-          documentVerificationTimestamp: new Date(),
-          isSuspectedFraud: false,
-        },
-      });
-
-      when(circleService.getOrCreateWallet("consumer-1")).thenResolve("wallet-1");
+      when(circleService.getOrCreateWallet(consumer.props.id)).thenResolve("wallet-1");
 
       const responsePromise = sardine.transactionVerification(
         FAKE_GOOD_TRANSACTION.data.sessionKey,
@@ -450,33 +432,19 @@ describe("SardineTests", () => {
     });
 
     it("[OTHER] Should return status APPROVED when transaction is low risk (other) - WALLET_WITHDRAWAL", async () => {
-      const consumerID1 = "consumer-1";
-      const consumerID2 = "consumer-2";
+      const consumer = getFakeConsumer();
       const transactionVerification: TransactionVerification = {
         transactionRef: "transaction-1",
-        debitConsumerID: consumerID1,
-        creditConsumerID: consumerID2,
+        debitConsumerID: consumer.props.id,
+        creditConsumerID: null,
         debitAmount: 100,
         debitCurrency: "USD",
-        creditAmount: 100,
-        creditCurrency: "USD",
+        creditAmount: 45000,
+        creditCurrency: "COP",
         workflowName: WorkflowName.WALLET_WITHDRAWAL,
       };
 
-      const consumer = Consumer.createConsumer({
-        id: consumerID1,
-        email: "fake+consumer@noba.com",
-        verificationData: {
-          kycCheckStatus: KYCStatus.APPROVED,
-          provider: KYCProvider.SARDINE,
-          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
-          kycVerificationTimestamp: new Date(),
-          documentVerificationTimestamp: new Date(),
-          isSuspectedFraud: false,
-        },
-      });
-
-      when(circleService.getOrCreateWallet("consumer-1")).thenResolve("wallet-1");
+      when(circleService.getOrCreateWallet(consumer.props.id)).thenResolve("wallet-1");
 
       const responsePromise = sardine.transactionVerification(
         FAKE_GOOD_TRANSACTION.data.sessionKey,
@@ -497,12 +465,12 @@ describe("SardineTests", () => {
     });
 
     it("[OTHER] Should return status APPROVED when transaction is low risk (other) - WALLET_TRANSFER", async () => {
-      const consumerID1 = "consumer-1";
-      const consumerID2 = "consumer-2";
+      const consumer1 = getFakeConsumer();
+      const consumer2 = getFakeConsumer();
       const transactionVerification: TransactionVerification = {
         transactionRef: "transaction-1",
-        debitConsumerID: consumerID1,
-        creditConsumerID: consumerID2,
+        debitConsumerID: consumer1.props.id,
+        creditConsumerID: consumer2.props.id,
         debitAmount: 100,
         debitCurrency: "USD",
         creditAmount: 100,
@@ -510,25 +478,14 @@ describe("SardineTests", () => {
         workflowName: WorkflowName.WALLET_TRANSFER,
       };
 
-      const consumer = Consumer.createConsumer({
-        id: consumerID1,
-        email: "fake+consumer@noba.com",
-        verificationData: {
-          kycCheckStatus: KYCStatus.APPROVED,
-          provider: KYCProvider.SARDINE,
-          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
-          kycVerificationTimestamp: new Date(),
-          documentVerificationTimestamp: new Date(),
-          isSuspectedFraud: false,
-        },
-      });
+      when(consumerService.getConsumer(consumer2.props.id)).thenResolve(consumer2);
 
-      when(circleService.getOrCreateWallet("consumer-1")).thenResolve("wallet-1");
-      when(circleService.getOrCreateWallet("consumer-2")).thenResolve("wallet-2");
+      when(circleService.getOrCreateWallet(consumer1.props.id)).thenResolve("wallet-1");
+      when(circleService.getOrCreateWallet(consumer2.props.id)).thenResolve("wallet-2");
 
       const responsePromise = sardine.transactionVerification(
         FAKE_GOOD_TRANSACTION.data.sessionKey,
-        consumer,
+        consumer1,
         transactionVerification,
       );
       await sleep(500);
@@ -643,305 +600,20 @@ describe("SardineTests", () => {
       expect(response.walletStatus).toBe(WalletStatus.APPROVED);
     });
 
-    it.skip("[BANK] Should return status APPROVED when transaction is low risk (ACH)", async () => {
-      const plaidAccessToken = "plaid-access-token-for-public-token";
-      const plaidAuthGetItemID = "plaid-itemID-for-auth-get-request";
-      const plaidAccountID = "plaid-account-id-for-the-consumer-bank-account";
-      const plaidCheckoutProcessorToken = "processor-token-for-plaid-checkout-integration";
-
-      const consumerAccountNumber = "1111111111";
-      const achRoutingNumber = "9999999999";
-      const wireRoutingNumber = "2222222222";
-
-      const transactionInformation: TransactionInformation = {
-        transactionID: "transaction-1",
-        amount: 100,
-        currencyCode: "USD",
-        paymentMethodID: plaidCheckoutProcessorToken,
-        cryptoCurrencyCode: "ETH",
-        walletAddress: "good+wallet",
-      };
-
-      const consumer = Consumer.createConsumer({
-        id: "fake-consumer-1234",
-        email: "fake+consumer@noba.com",
-
-        verificationData: {
-          kycCheckStatus: KYCStatus.APPROVED,
-          provider: KYCProvider.SARDINE,
-          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
-          kycVerificationTimestamp: new Date(),
-          documentVerificationTimestamp: new Date(),
-          isSuspectedFraud: false,
-        },
-      });
-
-      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([
-        PaymentMethod.createPaymentMethod({
-          id: plaidCheckoutProcessorToken,
-          imageUri: "image-uri",
-          type: PaymentMethodType.ACH,
-          name: "Bank Account",
-          paymentProvider: PaymentProvider.CHECKOUT,
-          paymentToken: plaidCheckoutProcessorToken,
-          isDefault: false,
-          achData: {
-            id: "fake-ach-id",
-            paymentMethodID: "fake-id",
-            accessToken: plaidAccessToken,
-            accountID: plaidAccountID,
-            itemID: plaidAuthGetItemID,
-            mask: "7890",
-            accountType: BankAccountType.CHECKING,
-          },
-          status: PaymentMethodStatus.APPROVED,
-          consumerID: consumer.props.id,
-        }),
-      ]);
-
-      jest.spyOn(global.Date, "now").mockImplementation(() => 555555555);
-      const expectedSanctionsCheckSardineRequest: SardineCustomerRequest = {
-        flow: "payment-submission",
-        sessionKey: "aml-123",
-        customer: {
-          id: consumer.props.id,
-        },
-        transaction: {
-          id: "transaction-1",
-          status: "accepted",
-          createdAtMillis: 555555555,
-          amount: 100,
-          currencyCode: "USD",
-          actionType: "buy",
-          paymentMethod: {
-            type: PaymentMethodTypes.BANK,
-            bank: {
-              accountNumber: consumerAccountNumber,
-              routingNumber: achRoutingNumber,
-              accountType: "checking",
-              balance: 100.23,
-              balanceCurrencyCode: "INR",
-              id: "inst-id",
-              idSource: "plaid",
-            },
-          },
-          recipient: {
-            emailAddress: "fake+consumer@noba.com",
-            isKycVerified: true,
-            paymentMethod: {
-              type: PaymentMethodTypes.CRYPTO,
-              crypto: {
-                currencyCode: transactionInformation.cryptoCurrencyCode,
-                address: transactionInformation.walletAddress,
-              },
-            },
-          },
-        },
-        checkpoints: ["aml", "payment"],
-      };
-
-      when(plaidClient.retrieveAccountData(anything())).thenResolve({
-        accountID: plaidAccountID,
-        accountNumber: consumerAccountNumber,
-        accountType: BankAccountType.CHECKING,
-        achRoutingNumber: achRoutingNumber,
-        wireRoutingNumber: wireRoutingNumber,
-        availableBalance: "100.23",
-        currencyCode: "INR",
-        itemID: plaidAuthGetItemID,
-        mask: "7890",
-        name: "account-name",
-        institutionID: "inst-id",
-      });
-
-      // ******************* SETUP EXCEPT AXIOS ENDS  *******************
-      //
-      // *********************** REQUEST STARTS *************************
-
-      const responsePromise = sardine.transactionVerification(
-        FAKE_GOOD_TRANSACTION.data.sessionKey,
-        consumer,
-        transactionInformation as any, // 'as any' for the compiler
-      );
-      // This sleep helps the flow to reach the 'axios.post()' call.
-      //
-      // Until https://github.com/knee-cola/jest-mock-axios/issues/46 is resolved,
-      // this is the only way I found.
-      await sleep(500);
-
-      mockAxios.mockResponse(FAKE_GOOD_TRANSACTION);
-      const response = await responsePromise;
-      expect(mockAxios.post).toHaveBeenCalledWith(
-        "http://localhost:8080/sardine/v1/customers",
-        expectedSanctionsCheckSardineRequest,
-        { auth: { password: "test-secret-key", username: "test-client-id" } },
-      );
-
-      expect(response.status).toBe(KYCStatus.APPROVED);
-      expect(response.idvProviderRiskLevel).toBe("low");
-      expect(response.pepLevel).toBeFalsy();
-      expect(response.sanctionLevel).toBeFalsy();
-      expect(response.walletStatus).toBe(WalletStatus.APPROVED);
-    });
-
-    it.skip("Should return status PENDING when transaction is high risk", async () => {
-      const transactionInformation: TransactionInformation = {
-        transactionID: "transaction-1",
-        amount: 100,
-        currencyCode: "USD",
-        paymentMethodID: "card-1234",
-        cryptoCurrencyCode: "ETH",
-        walletAddress: "risk+wallet",
-      };
-
-      const consumer = Consumer.createConsumer({
-        id: "fake-consumer-1234",
-        email: "fake+consumer@noba.com",
-        verificationData: {
-          kycCheckStatus: KYCStatus.APPROVED,
-          provider: KYCProvider.SARDINE,
-          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
-          kycVerificationTimestamp: new Date(),
-          documentVerificationTimestamp: new Date(),
-          isSuspectedFraud: false,
-        },
-      });
-
-      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([
-        PaymentMethod.createPaymentMethod({
-          id: "card-1234",
-          imageUri: "image-uri",
-          type: PaymentMethodType.CARD,
-          paymentProvider: PaymentProvider.CHECKOUT,
-          paymentToken: transactionInformation.paymentMethodID,
-          isDefault: false,
-          cardData: {
-            first6Digits: "123456",
-            last4Digits: "7890",
-            id: "card-type-1234",
-            scheme: "VISA",
-            cardType: "DEBIT",
-            authCode: "100001",
-            authReason: "Approved",
-            paymentMethodID: "card-1234",
-          },
-          status: PaymentMethodStatus.APPROVED,
-          consumerID: consumer.props.id,
-        }),
-      ]);
-
-      const responsePromise = sardine.transactionVerification(
-        FAKE_GOOD_TRANSACTION.data.sessionKey,
-        consumer,
-        transactionInformation as any, // 'as any' for the compiler
-      );
-      await sleep(500);
-      expect(mockAxios.post).toHaveBeenCalled();
-
-      mockAxios.mockResponse(FAKE_HIGH_RISK_TRANSACTION);
-
-      const response = await responsePromise;
-
-      expect(response.status).toBe(KYCStatus.PENDING);
-      expect(response.idvProviderRiskLevel).toBe("high");
-      expect(response.pepLevel).toBeFalsy();
-      expect(response.sanctionLevel).toBeFalsy();
-      expect(response.walletStatus).toBe(WalletStatus.REJECTED);
-    });
-
-    it.skip("should return status REJECTED with appropriate wallet status for fraudulent transaction", async () => {
-      const transactionInformation: TransactionInformation = {
-        transactionID: "transaction-1",
-        amount: 100,
-        currencyCode: "USD",
-        paymentMethodID: "card-1234",
-        cryptoCurrencyCode: "ETH",
-        walletAddress: "good+wallet",
-      };
-
-      const consumer = Consumer.createConsumer({
-        id: "fake-consumer-1234",
-        email: "fake+consumer@noba.com",
-        verificationData: {
-          kycCheckStatus: KYCStatus.APPROVED,
-          provider: KYCProvider.SARDINE,
-          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
-          kycVerificationTimestamp: new Date(),
-          documentVerificationTimestamp: new Date(),
-          isSuspectedFraud: false,
-        },
-      });
-
-      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([
-        PaymentMethod.createPaymentMethod({
-          id: "card-1234",
-          imageUri: "image-uri",
-          type: PaymentMethodType.CARD,
-          paymentProvider: PaymentProvider.CHECKOUT,
-          paymentToken: transactionInformation.paymentMethodID,
-          isDefault: false,
-          cardData: {
-            first6Digits: "123456",
-            last4Digits: "7890",
-            id: "card-type-1234",
-            scheme: "VISA",
-            cardType: "DEBIT",
-            authCode: "100001",
-            authReason: "Approved",
-            paymentMethodID: "card-1234",
-          },
-          consumerID: consumer.props.id,
-          status: PaymentMethodStatus.APPROVED,
-        }),
-      ]);
-
-      const responsePromise = sardine.transactionVerification(
-        FAKE_FRAUDULENT_TRANSACTION.data.sessionKey,
-        consumer,
-        transactionInformation as any, // 'as any' for the compiler
-      );
-      await sleep(500);
-      expect(mockAxios.post).toHaveBeenCalled();
-
-      mockAxios.mockResponse(FAKE_FRAUDULENT_TRANSACTION);
-
-      const response = await responsePromise;
-
-      expect(response.status).toBe(KYCStatus.REJECTED);
-      expect(response.idvProviderRiskLevel).toBe("very_high");
-      expect(response.pepLevel).toBeFalsy();
-      expect(response.sanctionLevel).toBeFalsy();
-      expect(response.walletStatus).toBe(WalletStatus.REJECTED);
-    });
-
     it("Should throw BadRequestException when axios call fails", async () => {
-      const consumerID1 = "consumer-1";
-      const consumerID2 = "consumer-2";
+      const consumer = getFakeConsumer();
       const transactionVerification: TransactionVerification = {
         transactionRef: "transaction-1",
-        debitConsumerID: consumerID1,
-        creditConsumerID: consumerID2,
-        debitAmount: 100,
-        debitCurrency: "USD",
+        debitConsumerID: null,
+        creditConsumerID: consumer.props.id,
+        debitAmount: 45000,
+        debitCurrency: "COP",
         creditAmount: 100,
         creditCurrency: "USD",
         workflowName: WorkflowName.WALLET_DEPOSIT,
       };
 
-      const consumer = Consumer.createConsumer({
-        id: consumerID1,
-        email: "fake+consumer@noba.com",
-        verificationData: {
-          kycCheckStatus: KYCStatus.APPROVED,
-          provider: KYCProvider.SARDINE,
-          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
-          kycVerificationTimestamp: new Date(),
-          documentVerificationTimestamp: new Date(),
-          isSuspectedFraud: false,
-        },
-      });
-
-      when(circleService.getOrCreateWallet(consumerID1)).thenResolve("wallet-1");
+      when(circleService.getOrCreateWallet(consumer.props.id)).thenResolve("wallet-1");
       const responsePromise = sardine.transactionVerification(
         FAKE_GOOD_TRANSACTION.data.sessionKey,
         consumer,
@@ -963,33 +635,19 @@ describe("SardineTests", () => {
     });
 
     it("Should throw BadRequestException if Sardine returns a 422 error", async () => {
-      const consumerID1 = "consumer-1";
-      const consumerID2 = "consumer-2";
+      const consumer = getFakeConsumer();
       const transactionVerification: TransactionVerification = {
         transactionRef: "transaction-1",
-        debitConsumerID: consumerID1,
-        creditConsumerID: consumerID2,
-        debitAmount: 100,
-        debitCurrency: "USD",
+        debitConsumerID: null,
+        creditConsumerID: consumer.props.id,
+        debitAmount: 45000,
+        debitCurrency: "COP",
         creditAmount: 100,
         creditCurrency: "USD",
         workflowName: WorkflowName.WALLET_DEPOSIT,
       };
 
-      const consumer = Consumer.createConsumer({
-        id: consumerID1,
-        email: "fake+consumer@noba.com",
-        verificationData: {
-          kycCheckStatus: KYCStatus.APPROVED,
-          provider: KYCProvider.SARDINE,
-          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
-          kycVerificationTimestamp: new Date(),
-          documentVerificationTimestamp: new Date(),
-          isSuspectedFraud: false,
-        },
-      });
-
-      when(circleService.getOrCreateWallet(consumerID1)).thenResolve("wallet-1");
+      when(circleService.getOrCreateWallet(consumer.props.id)).thenResolve("wallet-1");
       const responsePromise = sardine.transactionVerification(
         FAKE_GOOD_TRANSACTION.data.sessionKey,
         consumer,
@@ -1702,7 +1360,10 @@ describe("SardineTests", () => {
         status: KYCStatus.APPROVED,
       };
 
-      sardine.postConsumerFeedback("fake-session", "consumer-id", consumerVerificationResult);
+      const consumer = getFakeConsumer();
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+
+      sardine.postConsumerFeedback("fake-session", consumer.props.id, consumerVerificationResult);
       expect(mockAxios.post).toHaveBeenCalled();
     });
 
@@ -1711,7 +1372,14 @@ describe("SardineTests", () => {
         status: KYCStatus.APPROVED,
       };
 
-      const responsePromise = sardine.postConsumerFeedback("fake-session", "consumer-id", consumerVerificationResult);
+      const consumer = getFakeConsumer();
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+
+      const responsePromise = sardine.postConsumerFeedback(
+        "fake-session",
+        consumer.props.id,
+        consumerVerificationResult,
+      );
       expect(mockAxios.post).toHaveBeenCalled();
       mockAxios.mockError({
         response: {
@@ -1729,7 +1397,14 @@ describe("SardineTests", () => {
         status: KYCStatus.APPROVED,
       };
 
-      const responsePromise = sardine.postConsumerFeedback("fake-session", "consumer-id", consumerVerificationResult);
+      const consumer = getFakeConsumer();
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+
+      const responsePromise = sardine.postConsumerFeedback(
+        "fake-session",
+        consumer.props.id,
+        consumerVerificationResult,
+      );
       expect(mockAxios.post).toHaveBeenCalled();
       mockAxios.mockError({
         code: 400,
@@ -1839,3 +1514,27 @@ describe("SardineTests", () => {
     });
   });
 });
+
+const getFakeConsumer = (): Consumer => {
+  const consumer = Consumer.createConsumer({
+    id: v4(),
+    createdTimestamp: new Date(),
+    email: "fake+consumer@noba.com",
+    firstName: "fake",
+    lastName: "consumer",
+    phone: "+351234123412",
+    dateOfBirth: "1990-01-01",
+    address: {
+      countryCode: "CO",
+    },
+    verificationData: {
+      kycCheckStatus: KYCStatus.APPROVED,
+      provider: KYCProvider.SARDINE,
+      documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+      kycVerificationTimestamp: new Date(),
+      documentVerificationTimestamp: new Date(),
+      isSuspectedFraud: false,
+    },
+  });
+  return consumer;
+};

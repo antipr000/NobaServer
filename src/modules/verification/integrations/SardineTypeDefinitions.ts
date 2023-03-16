@@ -21,6 +21,7 @@ export type Customer = {
   isEmailVerified?: boolean;
   dateOfBirth?: string;
   taxId?: string;
+  type: CustomerType;
 };
 
 export type Card = {
@@ -35,9 +36,11 @@ export type Crypto = {
 };
 
 export type Bank = {
-  accountNumber: string;
-  routingNumber: string;
-  accountType?: string;
+  accountNumber?: string;
+  routingNumber?: string;
+  accountType?: AccountType;
+  classification?: string;
+  transferType?: string;
   balance?: number;
   balanceCurrencyCode?: string;
   id?: string;
@@ -61,6 +64,9 @@ export type Other = {
 
 export type PaymentMethod = {
   type: PaymentMethodTypes;
+  firstName?: string;
+  lastName?: string;
+  billingAddress?: Address;
   card?: Card;
   crypto?: Crypto;
   bank?: Bank;
@@ -68,11 +74,24 @@ export type PaymentMethod = {
   other?: Other;
 };
 
+export type IDDocument = {
+  type: DocumentType;
+  number: string;
+  country: string;
+};
+
 export type Recipient = {
   id?: string;
+  firstName?: string;
+  lastName?: string;
+  address?: Address;
+  phone?: string;
   paymentMethod?: PaymentMethod;
   isKycVerified?: boolean;
   emailAddress?: string;
+  dateOfBirth?: string;
+  type: CustomerType;
+  idDocument?: IDDocument;
 };
 
 export type Transaction = {
@@ -333,4 +352,21 @@ export enum FeedbackStatus {
   RETURN = "return",
   SETTLED = "settled",
   SUSPECTED_FRAUD = "suspected_fraud",
+}
+
+// Other allowed values which we choose not to map: vendor, business, tenant, owner, agent, ceo, executive
+export enum CustomerType {
+  CUSTOMER = "customer",
+}
+
+export enum DocumentType {
+  PASSPORT = "passport",
+  DRIVER_LICENSE = "driver_licence",
+  OTHER = "other",
+}
+
+export enum AccountType {
+  CHECKING = "checking",
+  SAVINGS = "savings",
+  OTHER = "other",
 }

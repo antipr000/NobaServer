@@ -163,8 +163,9 @@ export class TransactionService {
 
     const savedTransaction: Transaction = await this.transactionRepo.createTransaction(transaction);
 
+    let withdrawalDetails: WithdrawalDetails;
     if (transactionDetails.withdrawalData) {
-      this.addWithdrawalDetails({
+      withdrawalDetails = await this.addWithdrawalDetails({
         transactionID: savedTransaction.id,
         ...transactionDetails.withdrawalData,
       });
@@ -173,7 +174,7 @@ export class TransactionService {
     // Perform sanctions check
     try {
       // If it passes, simple return. If it fails, an exception will be thrown
-      if (!(await this.validateForSanctions(initiatingConsumer, savedTransaction))) {
+      if (!(await this.validateForSanctions(initiatingConsumer, savedTransaction, withdrawalDetails))) {
         await this.transactionRepo.updateTransactionByTransactionID(savedTransaction.id, {
           status: TransactionStatus.FAILED,
         });
@@ -251,21 +252,36 @@ export class TransactionService {
     return await this.transactionRepo.updateTransactionByTransactionID(transactionID, transactionUpdate);
   }
 
-  private async validateForSanctions(consumerID: string, transaction: Transaction): Promise<boolean> {
-    // Check Sardine for sanctions
-    const sardineTransactionInformation: TransactionVerification = {
-      transactionRef: transaction.transactionRef,
-      debitConsumerID: transaction.debitConsumerID,
-      creditConsumerID: transaction.creditConsumerID,
-      workflowName: transaction.workflowName,
-      debitAmount: transaction.debitAmount,
-      debitCurrency: transaction.debitCurrency,
-      creditAmount: transaction.creditAmount,
-      creditCurrency: transaction.creditCurrency,
-    };
-
+  private async validateForSanctions(
+    consumerID: string,
+    transaction: Transaction,
+    withdrawalDetails: WithdrawalDetails,
+  ): Promise<boolean> {
     try {
       const consumer = await this.consumerService.getConsumer(consumerID);
+
+      // Check Sardine for sanctions
+      const sardineTransactionInformation: TransactionVerification = {
+        transactionRef: transaction.transactionRef,
+        debitConsumerID: transaction.debitConsumerID,
+        creditConsumerID: transaction.creditConsumerID,
+        workflowName: transaction.workflowName,
+        debitAmount: transaction.debitAmount,
+        debitCurrency: transaction.debitCurrency,
+        creditAmount: transaction.creditAmount,
+        creditCurrency: transaction.creditCurrency,
+        ...(withdrawalDetails && {
+          withdrawalDetails: {
+            accountNumber: withdrawalDetails.accountNumber,
+            accountType: withdrawalDetails.accountType,
+            bankCode: withdrawalDetails.bankCode,
+            documentNumber: withdrawalDetails.documentNumber,
+            documentType: withdrawalDetails.documentType,
+            country: consumer.props.address?.countryCode,
+          },
+        }),
+      };
+
       const result = await this.verificationService.transactionVerification(
         transaction.sessionKey,
         consumer,

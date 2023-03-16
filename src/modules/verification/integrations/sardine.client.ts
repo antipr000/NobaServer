@@ -14,9 +14,14 @@ import { DocumentInformation } from "../domain/DocumentInformation";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { IDVProvider } from "./IDVProvider";
 import {
+  AccountType,
+  Address,
   CaseAction,
   CaseNotificationWebhookRequest,
   CaseStatus,
+  Customer,
+  CustomerType,
+  DocumentType,
   DocumentVerificationErrorCodes,
   DocumentVerificationSardineResponse,
   FeedbackRequest,
@@ -26,6 +31,7 @@ import {
   IdentityDocumentURLResponse,
   PaymentMethod,
   PaymentMethodTypes,
+  Recipient,
   SardineCustomerRequest,
   SardineDeviceInformationResponse,
   SardineDocumentProcessingStatus,
@@ -37,7 +43,6 @@ import FormData from "form-data";
 import { Consumer } from "../../consumer/domain/Consumer";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { PlaidClient } from "../../psp/plaid.client";
 import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { WorkflowName } from "../../transaction/domain/Transaction";
@@ -54,7 +59,6 @@ export class Sardine implements IDVProvider {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly configService: CustomConfigService,
-    private readonly plaidClient: PlaidClient,
     private readonly consumerService: ConsumerService,
     private readonly circleService: CircleService,
   ) {
@@ -101,6 +105,7 @@ export class Sardine implements IDVProvider {
         dateOfBirth: consumerInfo.dateOfBirth,
         emailAddress: consumerInfo.email,
         isEmailVerified: true,
+        type: CustomerType.CUSTOMER,
       },
       checkpoints: ["customer"],
     };
@@ -273,31 +278,38 @@ export class Sardine implements IDVProvider {
     consumer: Consumer,
     transaction: TransactionVerification,
   ): Promise<ConsumerVerificationResult> {
+    let debitConsumer: Consumer;
+    let creditConsumer: Consumer;
+    let debitSidePaymentMethod: PaymentMethod;
+    let creditSidePaymentMethod: PaymentMethod;
+    let actionType: string;
+
     // Populate "other" section with user's Circle wallet ID
     const circleWallet = await this.circleService.getOrCreateWallet(consumer.props.id);
     const consumerPaymentMethod: PaymentMethod = {
       type: PaymentMethodTypes.OTHER,
+      firstName: consumer.props.firstName,
+      lastName: consumer.props.lastName,
+      billingAddress: this.convertConsumerAddressToSardine(consumer),
       other: {
         id: circleWallet,
         type: "Circle",
       },
     };
 
-    let debitSidePaymentMethod: PaymentMethod;
-    let creditSidePaymentMethod: PaymentMethod;
-
-    // Take amount from the USD side of the transaction
-    const usdAmount = transaction.creditCurrency == Currency.USD ? transaction.creditAmount : transaction.debitAmount;
-
-    let actionType;
-    const checkpoints = ["aml", "customer"];
     switch (transaction.workflowName) {
+      // For transfers and withdrawals, the initiator is always the debit consumer
       case WorkflowName.WALLET_TRANSFER:
         actionType = "transfer";
+        debitConsumer = consumer;
+        creditConsumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
         debitSidePaymentMethod = consumerPaymentMethod; // For a transfer, set sender to the circle wallet
         const recipientCircleWallet = await this.circleService.getOrCreateWallet(transaction.creditConsumerID);
         creditSidePaymentMethod = {
           type: PaymentMethodTypes.OTHER,
+          firstName: creditConsumer.props.firstName,
+          lastName: creditConsumer.props.lastName,
+          billingAddress: this.convertConsumerAddressToSardine(creditConsumer),
           other: {
             id: recipientCircleWallet,
             type: "Circle",
@@ -306,12 +318,41 @@ export class Sardine implements IDVProvider {
         break;
       case WorkflowName.WALLET_WITHDRAWAL:
         actionType = "withdraw";
+        debitConsumer = consumer;
+        creditConsumer = consumer;
         debitSidePaymentMethod = consumerPaymentMethod; // For a withdrawal, set sender to the circle wallet
-        // TODO (CRYPTO-622): populate bank info here in creditSidePaymentMethod
+        creditSidePaymentMethod = {
+          type: PaymentMethodTypes.BANK,
+          firstName: creditConsumer.props.firstName,
+          lastName: creditConsumer.props.lastName,
+          billingAddress: this.convertConsumerAddressToSardine(creditConsumer),
+          bank: {
+            accountNumber: transaction.withdrawalDetails?.accountNumber,
+            routingNumber: transaction.withdrawalDetails?.bankCode,
+            ...(transaction.withdrawalDetails?.accountType && {
+              accountType: this.convertAccountTypeToSardine(transaction.withdrawalDetails.accountType),
+            }),
+            classification: "personal", // Currently the case for all withdrawals but this may change
+            transferType: "ACH", // Currently the case for all withdrawals but this may change
+          },
+        };
         break;
-      case WorkflowName.WALLET_DEPOSIT:
+      case WorkflowName.WALLET_DEPOSIT: // For deposits, the initiator is always the credit consumer
         actionType = "deposit";
+        debitConsumer = consumer;
+        creditConsumer = consumer;
         creditSidePaymentMethod = consumerPaymentMethod; // For a deposit, set recipient to the circle wallet
+        debitSidePaymentMethod = {
+          type: PaymentMethodTypes.BANK,
+          firstName: creditConsumer.props.firstName,
+          lastName: creditConsumer.props.lastName,
+          billingAddress: this.convertConsumerAddressToSardine(creditConsumer),
+          // We don't know anything about the actual bank account
+          bank: {
+            classification: "personal", // Currently the case for all deposits but this may change
+            transferType: "ACH", // Currently the case for all deposits but this may change
+          },
+        };
         break;
       default:
         // This should never happen
@@ -319,12 +360,38 @@ export class Sardine implements IDVProvider {
         throw new Error(`Unknown workflow name: ${transaction.workflowName}`);
     }
 
+    const sender: Customer = {
+      ...this.convertConsumerToSardineCustomer(debitConsumer),
+      ...(debitSidePaymentMethod && { paymentMethod: debitSidePaymentMethod }),
+    };
+
+    const recipient: Recipient = {
+      id: creditConsumer.props.id,
+      firstName: creditConsumer.props.firstName,
+      lastName: creditConsumer.props.lastName,
+      emailAddress: creditConsumer.props.email,
+      address: this.convertConsumerAddressToSardine(creditConsumer),
+      phone: creditConsumer.props.phone,
+      dateOfBirth: creditConsumer.props.dateOfBirth,
+      type: CustomerType.CUSTOMER,
+      isKycVerified: creditConsumer.props.verificationData.kycCheckStatus === KYCStatus.APPROVED,
+      ...(creditSidePaymentMethod && { paymentMethod: creditSidePaymentMethod }),
+      ...(transaction.withdrawalDetails && {
+        idDocument: {
+          type: this.convertDocumentTypeToSardine(transaction.withdrawalDetails.documentType),
+          number: transaction.withdrawalDetails.documentNumber,
+          country: transaction.withdrawalDetails.country,
+        },
+      }),
+    };
+
+    // Take amount from the USD side of the transaction
+    const usdAmount = transaction.creditCurrency == Currency.USD ? transaction.creditAmount : transaction.debitAmount;
+
     const sanctionsCheckSardineRequest: SardineCustomerRequest = {
       flow: transaction.workflowName,
       sessionKey: sessionKey,
-      customer: {
-        id: consumer.props.id,
-      },
+      customer: sender,
       transaction: {
         id: transaction.transactionRef,
         status: "accepted",
@@ -333,13 +400,9 @@ export class Sardine implements IDVProvider {
         currencyCode: Currency.USD,
         actionType: actionType,
         ...(debitSidePaymentMethod && { paymentMethod: debitSidePaymentMethod }),
-        recipient: {
-          emailAddress: consumer.props.email,
-          isKycVerified: consumer.props.verificationData.kycCheckStatus === KYCStatus.APPROVED,
-          ...(creditSidePaymentMethod && { paymentMethod: creditSidePaymentMethod }),
-        },
+        recipient: recipient,
       },
-      checkpoints: checkpoints,
+      checkpoints: ["aml", "customer"],
     };
 
     try {
@@ -370,126 +433,6 @@ export class Sardine implements IDVProvider {
       } else throw new BadRequestException(e);
     }
   }
-
-  /* Onramp version, for reference
-  async transactionVerification(
-    sessionKey: string,
-    consumer: Consumer,
-    transactionInformation: TransactionInformation,
-  ): Promise<ConsumerVerificationResult> {
-    let sardinePaymentMethodData;
-    const allPaymentMethods = await this.consumerService.getAllPaymentMethodsForConsumer(consumer.props.id);
-    const paymentMethod = allPaymentMethods.filter(
-      paymentMethod => paymentMethod.props.id === transactionInformation.paymentMethodID,
-    )[0];
-    if (paymentMethod.props.type === PaymentMethodType.CARD) {
-      sardinePaymentMethodData = {
-        type: PaymentMethodTypes.CARD,
-        card: {
-          first6: paymentMethod.props.cardData.first6Digits,
-          last4: paymentMethod.props.cardData.last4Digits,
-          hash: transactionInformation.paymentMethodID,
-        },
-      };
-    } else if (paymentMethod.props.type === PaymentMethodType.ACH) {
-      const accountData: RetrieveAccountDataResponse = await this.plaidClient.retrieveAccountData({
-        accessToken: paymentMethod.props.achData.accessToken,
-      });
-
-      let accountType = "";
-      switch (accountData.accountType) {
-        case BankAccountType.CHECKING:
-          accountType = "checking";
-          break;
-
-        case BankAccountType.SAVINGS:
-          accountType = "savings";
-          break;
-
-        default:
-          accountType = "other";
-      }
-
-      sardinePaymentMethodData = {
-        type: PaymentMethodTypes.BANK,
-        bank: {
-          accountNumber: accountData.accountNumber,
-          routingNumber: accountData.achRoutingNumber,
-          accountType: accountType,
-          balance: parseFloat(accountData.availableBalance),
-          balanceCurrencyCode: accountData.currencyCode,
-          id: accountData.institutionID,
-          idSource: "plaid",
-        },
-      };
-    }
-    else (paymentMethod.props.type === PaymentMethodType.)
-
-    const sanctionsCheckSardineRequest: SardineCustomerRequest = {
-      flow: "payment-submission",
-      sessionKey: sessionKey,
-      customer: {
-        id: consumer.props.id,
-      },
-      transaction: {
-        id: transactionInformation.transactionID,
-        status: "accepted",
-        createdAtMillis: Date.now(),
-        amount: transactionInformation.amount,
-        currencyCode: transactionInformation.currencyCode,
-        actionType: "buy",
-        paymentMethod: sardinePaymentMethodData,
-        recipient: {
-          emailAddress: consumer.props.email,
-          isKycVerified: consumer.props.verificationData.kycCheckStatus === KYCStatus.APPROVED,
-          paymentMethod: {
-            type: PaymentMethodTypes.CRYPTO,
-            crypto: {
-              currencyCode: transactionInformation.cryptoCurrencyCode,
-              address: transactionInformation.walletAddress,
-            },
-          },
-        },
-      },
-      checkpoints: ["aml", "payment"],
-    };
-
-    try {
-      const { data } = await axios.post(
-        this.BASE_URI + "/v1/customers",
-        sanctionsCheckSardineRequest,
-        this.getAxiosConfig(),
-      );
-
-      let walletStatus: WalletStatus = transactionInformation.walletStatus;
-      let verificationStatus: KYCStatus = KYCStatus.REJECTED;
-
-      for (const signal of data["customer"]["signals"]) {
-        if (signal["key"] === "cryptoAddressLevel") {
-          signal["value"] === SardineRiskLevels.HIGH
-            ? (walletStatus = WalletStatus.REJECTED)
-            : (walletStatus = WalletStatus.APPROVED);
-        }
-      }
-
-      if (data.level === SardineRiskLevels.VERY_HIGH) {
-        verificationStatus = KYCStatus.REJECTED;
-      } else if (data.level === SardineRiskLevels.HIGH) {
-        verificationStatus = KYCStatus.PENDING;
-      } else {
-        verificationStatus = KYCStatus.APPROVED;
-      }
-
-      return {
-        walletStatus: walletStatus,
-        status: verificationStatus,
-        idvProviderRiskLevel: data.level,
-      };
-    } catch (e) {
-      this.logger.error(`Sardine request failed for Transaction validation: ${e}`);
-      throw new BadRequestException(e.message);
-    }
-  }*/
 
   async getDeviceVerificationResult(sessionKey: string): Promise<SardineDeviceInformationResponse> {
     try {
@@ -646,12 +589,11 @@ export class Sardine implements IDVProvider {
   }
 
   async postConsumerFeedback(sessionKey: string, consumerID: string, result: ConsumerVerificationResult) {
+    const consumer = await this.consumerService.getConsumer(consumerID);
     try {
       const payload: FeedbackRequest = {
         sessionKey: sessionKey,
-        customer: {
-          id: consumerID,
-        },
+        customer: this.convertConsumerToSardineCustomer(consumer),
         feedback: {
           id: Utils.generateUUID(),
           type: FeedbackType.ONBOARDING,
@@ -722,5 +664,49 @@ export class Sardine implements IDVProvider {
         this.logger.error(`Sardine request failed for postTransactionFeedback: ${e}`);
       }
     }
+  }
+
+  private convertConsumerAddressToSardine(consumer: Consumer): Address {
+    return {
+      street1: consumer.props.address?.streetLine1,
+      street2: consumer.props.address?.streetLine2,
+      city: consumer.props.address?.city,
+      regionCode: consumer.props.address?.regionCode,
+      postalCode: consumer.props.address?.postalCode,
+      countryCode: consumer.props.address?.countryCode,
+    };
+  }
+
+  private convertDocumentTypeToSardine(documentType: string): DocumentType {
+    if (!documentType) return DocumentType.OTHER;
+
+    // Note that we don't currently support driver's license as a named type
+    // of identity. When we do, we need to map it here to DocumentType.DRIVERS_LICENSE
+    if (documentType === "PASS") return DocumentType.PASSPORT;
+    else return DocumentType.OTHER;
+  }
+
+  private convertAccountTypeToSardine(accountType: string): AccountType {
+    if (!accountType) return AccountType.OTHER;
+
+    // Note that we don't currently support driver's license as a named type
+    // of identity. When we do, we need to map it here to DocumentType.DRIVERS_LICENSE
+    if (accountType.toLowerCase().indexOf("checking") > -1) return AccountType.CHECKING;
+    else if (accountType.toLowerCase().indexOf("savings") > -1) return AccountType.SAVINGS;
+    else return AccountType.OTHER;
+  }
+
+  private convertConsumerToSardineCustomer(consumer: Consumer): Customer {
+    return {
+      id: consumer.props.id,
+      createdAtMillis: consumer.props.createdTimestamp.getTime(),
+      firstName: consumer.props.firstName,
+      lastName: consumer.props.lastName,
+      emailAddress: consumer.props.email,
+      address: this.convertConsumerAddressToSardine(consumer),
+      phone: consumer.props.phone,
+      dateOfBirth: consumer.props.dateOfBirth,
+      type: CustomerType.CUSTOMER,
+    };
   }
 }
