@@ -246,6 +246,7 @@ export class EmployerService {
     const companyName = employer.name;
     const currency = payroll.debitCurrency;
 
+    console.log(templateProcessor.locales);
     // Populate templates for each locale
     for (const element of templateProcessor.locales) {
       const locale = element;
