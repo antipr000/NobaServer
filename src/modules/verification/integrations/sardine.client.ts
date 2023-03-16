@@ -668,12 +668,12 @@ export class Sardine implements IDVProvider {
 
   private convertConsumerAddressToSardine(consumer: Consumer): Address {
     return {
-      street1: consumer.props.address?.streetLine1,
-      street2: consumer.props.address?.streetLine2,
-      city: consumer.props.address?.city,
-      regionCode: consumer.props.address?.regionCode,
-      postalCode: consumer.props.address?.postalCode,
-      countryCode: consumer.props.address?.countryCode,
+      ...(consumer.props.address?.streetLine1 && { street1: consumer.props.address?.streetLine1 }),
+      ...(consumer.props.address?.streetLine2 && { street2: consumer.props.address?.streetLine2 }),
+      ...(consumer.props.address?.city && { city: consumer.props.address?.city }),
+      ...(consumer.props.address?.regionCode && { regionCode: consumer.props.address?.regionCode }),
+      ...(consumer.props.address?.postalCode && { postalCode: consumer.props.address?.postalCode }),
+      ...(consumer.props.address?.countryCode && { countryCode: consumer.props.address?.countryCode }),
     };
   }
 

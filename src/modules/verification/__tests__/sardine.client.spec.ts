@@ -1364,6 +1364,7 @@ describe("SardineTests", () => {
       when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
 
       sardine.postConsumerFeedback("fake-session", consumer.props.id, consumerVerificationResult);
+      await sleep(500);
       expect(mockAxios.post).toHaveBeenCalled();
     });
 
@@ -1380,6 +1381,7 @@ describe("SardineTests", () => {
         consumer.props.id,
         consumerVerificationResult,
       );
+      await sleep(500);
       expect(mockAxios.post).toHaveBeenCalled();
       mockAxios.mockError({
         response: {
@@ -1405,6 +1407,7 @@ describe("SardineTests", () => {
         consumer.props.id,
         consumerVerificationResult,
       );
+      await sleep(500);
       expect(mockAxios.post).toHaveBeenCalled();
       mockAxios.mockError({
         code: 400,
