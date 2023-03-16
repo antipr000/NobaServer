@@ -44,6 +44,7 @@ import { KmsService } from "../../../modules/common/kms.service";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
 import { InvoiceTemplateFields } from "../templates/payroll.invoice.dto";
 import dayjs from "dayjs";
+import { Consumer } from "../../../modules/consumer/domain/Consumer";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -88,7 +89,7 @@ describe("EmployerServiceTests", () => {
     kmsService = getMockKMSServiceWithDefaults();
     mockTemplateProcessorInstance = instance(mockTemplateProcessor);
     constructorSpy.mockImplementationOnce(() => mockTemplateProcessorInstance);
-    mockTemplateProcessorInstance.locales = [];
+    mockTemplateProcessorInstance.locales = new Set();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -143,7 +144,7 @@ describe("EmployerServiceTests", () => {
   });
 
   afterEach(async () => {
-    // jest.clearAllMocks();
+    jest.clearAllMocks();
     app.close();
   });
 
@@ -1166,7 +1167,7 @@ describe("EmployerServiceTests", () => {
       when(mockTemplateProcessor.destroy()).thenResolve();
 
       await employerService.createInvoice(payroll.id);
-      // expect(constructorSpy).toHaveBeenCalledTimes(1);
+      expect(constructorSpy).toHaveBeenCalledTimes(1);
     });
 
     it("should successfully create invoice test", async () => {
@@ -1221,35 +1222,29 @@ describe("EmployerServiceTests", () => {
       when(mockTemplateProcessor.destroy()).thenResolve();
 
       await employerService.createInvoice(payroll.id);
-      // expect(constructorSpy).toHaveBeenCalledTimes(1);
+      expect(constructorSpy).toHaveBeenCalledTimes(1);
     });
 
     it("should successfully create invoice with disbursements", async () => {
-      // const mockTemplateProcessor = getMockTemplateProcessorWithDefaults();
-      // const mockTemplateProcessorInstance = instance(mockTemplateProcessor);
-      // mockTemplateProcessorInstance.locales = [];
-      // const constructorSpy = jest.spyOn(TemplateProcessModule, "TemplateProcessor");
-      // constructorSpy.mockImplementationOnce(() => mockTemplateProcessorInstance);
-
       const employer = getRandomEmployer();
       const { payroll } = getRandomPayroll(employer.id);
 
-      // const employee1 = getRandomEmployee(employer.id);
-      // const employee2 = getRandomEmployee(employer.id);
-      // const consumer1 = Consumer.createConsumer({
-      //   id: "mock-consumer-1",
-      //   firstName: "Mock",
-      //   lastName: "Consumer",
-      //   dateOfBirth: "1998-01-01",
-      //   phone: "+123456789",
-      // });
-      // const consumer2 = Consumer.createConsumer({
-      //   id: "mock-consumer-2",
-      //   firstName: "Mock",
-      //   lastName: "Consumer2",
-      //   dateOfBirth: "1998-01-01",
-      //   phone: "+123456789",
-      // });
+      const employee1 = getRandomEmployee(employer.id);
+      const employee2 = getRandomEmployee(employer.id);
+      const consumer1 = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        dateOfBirth: "1998-01-01",
+        phone: "+123456789",
+      });
+      const consumer2 = Consumer.createConsumer({
+        id: "mock-consumer-2",
+        firstName: "Mock",
+        lastName: "Consumer2",
+        dateOfBirth: "1998-01-01",
+        phone: "+123456789",
+      });
 
       when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
       when(employerRepo.getEmployerByID(employer.id)).thenResolve(employer);
@@ -1271,59 +1266,59 @@ describe("EmployerServiceTests", () => {
         totalAmount: "",
       };
 
-      // const englishTemplateFields: InvoiceTemplateFields = {
-      //   ...baseTemplateFields,
-      //   payrollDate: dayjs(payroll.payrollDate)
-      //     .locale(TemplateProcessModule.TemplateLocale.ENGLISH.toString())
-      //     .format("MMMM D, YYYY"),
-      //   totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString()),
-      // };
+      const englishTemplateFields: InvoiceTemplateFields = {
+        ...baseTemplateFields,
+        payrollDate: dayjs(payroll.payrollDate)
+          .locale(TemplateProcessModule.TemplateLocale.ENGLISH.toString())
+          .format("MMMM D, YYYY"),
+        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString()),
+      };
 
-      // const spanishTemplateFields: InvoiceTemplateFields = {
-      //   ...baseTemplateFields,
-      //   payrollDate: dayjs(payroll.payrollDate)
-      //     .locale(TemplateProcessModule.TemplateLocale.SPANISH.toString())
-      //     .format("MMMM D, YYYY"),
-      //   totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString()),
-      // };
-      // const payrollDisbursements = [
-      //   {
-      //     id: "fake-disbursement",
-      //     createdTimestamp: new Date(),
-      //     updatedTimestamp: new Date(),
-      //     payrollID: payroll.id,
-      //     employeeID: employee1.id,
-      //     transactionID: "fake-transaction",
-      //     allocationAmount: 100,
-      //   },
-      //   {
-      //     id: "fake-disbursement-2",
-      //     createdTimestamp: new Date(),
-      //     updatedTimestamp: new Date(),
-      //     payrollID: payroll.id,
-      //     employeeID: employee2.id,
-      //     transactionID: "fake-transaction",
-      //     allocationAmount: 100,
-      //   },
-      // ];
+      const spanishTemplateFields: InvoiceTemplateFields = {
+        ...baseTemplateFields,
+        payrollDate: dayjs(payroll.payrollDate)
+          .locale(TemplateProcessModule.TemplateLocale.SPANISH.toString())
+          .format("MMMM D, YYYY"),
+        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString()),
+      };
+      const payrollDisbursements = [
+        {
+          id: "fake-disbursement",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          payrollID: payroll.id,
+          employeeID: employee1.id,
+          transactionID: "fake-transaction",
+          allocationAmount: 100,
+        },
+        {
+          id: "fake-disbursement-2",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          payrollID: payroll.id,
+          employeeID: employee2.id,
+          transactionID: "fake-transaction",
+          allocationAmount: 100,
+        },
+      ];
 
       when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([]);
-      // when(employeeService.getEmployeeByID(employee1.id)).thenResolve(employee1);
-      // when(employeeService.getEmployeeByID(employee2.id)).thenResolve(employee2);
+      when(employeeService.getEmployeeByID(employee1.id)).thenResolve(employee1);
+      when(employeeService.getEmployeeByID(employee2.id)).thenResolve(employee2);
 
-      // when(consumerService.getConsumer(employee1.consumerID)).thenResolve(consumer1);
-      // when(consumerService.getConsumer(employee2.consumerID)).thenResolve(consumer2);
-      // when(
-      //   mockTemplateProcessor.populateTemplate(TemplateProcessModule.TemplateLocale.ENGLISH, englishTemplateFields),
-      // ).thenResolve();
-      // when(
-      //   mockTemplateProcessor.populateTemplate(TemplateProcessModule.TemplateLocale.SPANISH, spanishTemplateFields),
-      // ).thenResolve();
+      when(consumerService.getConsumer(employee1.consumerID)).thenResolve(consumer1);
+      when(consumerService.getConsumer(employee2.consumerID)).thenResolve(consumer2);
+      when(
+        mockTemplateProcessor.populateTemplate(TemplateProcessModule.TemplateLocale.ENGLISH, englishTemplateFields),
+      ).thenResolve();
+      when(
+        mockTemplateProcessor.populateTemplate(TemplateProcessModule.TemplateLocale.SPANISH, spanishTemplateFields),
+      ).thenResolve();
 
       when(mockTemplateProcessor.destroy()).thenResolve();
 
       await employerService.createInvoice(payroll.id);
-      // expect(constructorSpy).toHaveBeenCalledTimes(1);
+      expect(constructorSpy).toHaveBeenCalledTimes(1);
     });
   });
 });

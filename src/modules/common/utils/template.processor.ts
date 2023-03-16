@@ -24,8 +24,8 @@ export class TemplateProcessor {
   readonly templateFilename: string;
   readonly savePath: string;
   readonly saveBaseFilename: string;
-  formats: TemplateFormat[] = new Array();
-  locales: TemplateLocale[] = new Array();
+  formats: Set<TemplateFormat> = new Set();
+  locales: Set<TemplateLocale> = new Set();
   private browser: Browser;
 
   // Strings indexed by locale
@@ -49,11 +49,13 @@ export class TemplateProcessor {
   }
 
   public addFormat(format: TemplateFormat) {
-    this.formats.push(format);
+    if (!format) return;
+    this.formats.add(format);
   }
 
   public addLocale(locale: TemplateLocale) {
-    this.locales.push(locale);
+    if (!locale) return;
+    this.locales.add(locale);
   }
 
   private async initialize() {
@@ -105,7 +107,7 @@ export class TemplateProcessor {
     for (const locale of this.locales) {
       const populatedTemplate = this.populatedTemplates.get(locale);
       if (populatedTemplate) {
-        if (this.formats.includes(TemplateFormat.HTML)) {
+        if (this.formats.has(TemplateFormat.HTML)) {
           const start = Date.now();
           this.s3Service.uploadToS3(
             this.savePath,
@@ -115,7 +117,7 @@ export class TemplateProcessor {
           this.writeTimingLog(`HTML template for ${locale.language} uploaded`, Date.now() - start);
         }
 
-        if (this.formats.includes(TemplateFormat.PDF)) {
+        if (this.formats.has(TemplateFormat.PDF)) {
           const pdf = await this.convertToPDF(populatedTemplate, `${this.templateFilename}.${TemplateFormat.PDF}`);
           const start = Date.now();
           this.s3Service.uploadToS3(
