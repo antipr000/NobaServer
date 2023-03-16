@@ -20,6 +20,7 @@ import {
   SENDGRID_API_KEY,
   SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR,
   SENDGRID_CONFIG_KEY,
+  SENDGRID_SUPPRESS_EMAILS_REGEX,
   setEnvironmentProperty,
   CHECKOUT_CONFIG_KEY,
   CHECKOUT_AWS_SECRET_NAME_FOR_CHECKOUT_PUBLIC_KEY,
@@ -502,7 +503,8 @@ async function configureSendgridCredentials(
     const errorMessage =
       "\n'Sendgrid' configurations are required. Please configure the Sendgrid credentials in 'appconfigs/<ENV>.yaml' file.\n" +
       `You should configure the key "${SENDGRID_CONFIG_KEY}" and populate "${SENDGRID_AWS_SECRET_KEY_FOR_API_KEY_ATTR}" or "${SENDGRID_API_KEY}" ` +
-      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n" +
+      `You also need to configure ${SENDGRID_SUPPRESS_EMAILS_REGEX} if you want to suppress emails to certain addresses.\n`;
 
     throw Error(errorMessage);
   }

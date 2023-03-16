@@ -37,6 +37,7 @@ awskms:
 sendgrid:
   awsSecretNameForApiKey: "" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
   apiKey: "bogus-value" # For e2e test we stub this out
+  suppressEmailsRegex: "(e2e|testconsumer).*@noba\\.com" # E2E tests use a stub anyway, but this is a good safety net
 
 checkout:
   awsSecretNameForPublicKey: "TEST_CHECKOUT_PUBLIC_KEY" # if this is present then we fetch the secret key from aws secret manager else we take it from the configs, for production environment we shouldn't put the secret in the config files
