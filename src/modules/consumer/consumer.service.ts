@@ -216,7 +216,7 @@ export class ConsumerService {
     const otp = this.generateOTP();
     await this.otpService.saveOTP(phone, consumerIdentityIdentifier, otp);
     await this.notificationService.sendNotification(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT, {
-      locale: phone.startsWith("+57") ? "es_co" : "en_us", // TODO: Temporary fix
+      locale: phone.startsWith("+57") ? "es_co" : "en_us", // TODO: CRYPTO-894
       phone,
       otp: otp.toString(),
     });

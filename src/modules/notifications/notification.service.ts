@@ -135,7 +135,6 @@ export class NotificationService {
             name: payload.firstName,
             nobaUserID: payload.nobaUserID,
             locale: payload.locale,
-
             walletAddress: payload.walletAddress,
           }),
         );

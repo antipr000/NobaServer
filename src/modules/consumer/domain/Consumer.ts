@@ -80,7 +80,7 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
       consumerProps.verificationData.provider = KYCProvider.SARDINE;
 
     if (!consumerProps.locale && consumerProps.address?.countryCode) {
-      consumerProps.locale = consumerProps.address.countryCode === "CO" ? "es_co" : "en_us";
+      consumerProps.locale = consumerProps.address.countryCode === "CO" ? "es_co" : "en_us"; // TODO: CRYPTO-894
     }
 
     return new Consumer(Joi.attempt(consumerProps, consumerJoiSchema));
