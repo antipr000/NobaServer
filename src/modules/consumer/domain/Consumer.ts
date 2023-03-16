@@ -79,6 +79,10 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
     if (consumerProps.verificationData && !consumerProps.verificationData.provider)
       consumerProps.verificationData.provider = KYCProvider.SARDINE;
 
+    if (!consumerProps.locale && consumerProps.address?.countryCode) {
+      consumerProps.locale = consumerProps.address.countryCode === "CO" ? "es_co" : "en_us";
+    }
+
     return new Consumer(Joi.attempt(consumerProps, consumerJoiSchema));
   }
 

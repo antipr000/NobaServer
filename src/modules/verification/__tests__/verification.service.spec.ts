@@ -194,6 +194,7 @@ describe("VerificationService", () => {
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
           deepEqual({
+            locale: newConsumerData.locale,
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
             nobaUserID: newConsumerData.id,
@@ -244,8 +245,8 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
-
           deepEqual({
+            locale: newConsumerData.locale,
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
             nobaUserID: newConsumerData.id,
@@ -297,8 +298,8 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_DENIED_EVENT,
-
           deepEqual({
+            locale: newConsumerData.locale,
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
             nobaUserID: newConsumerData.id,
@@ -346,8 +347,8 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT,
-
           deepEqual({
+            locale: newConsumerData.locale,
             firstName: newConsumerData.firstName,
             lastName: newConsumerData.lastName,
             nobaUserID: newConsumerData.id,
@@ -387,8 +388,8 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
-
           deepEqual({
+            locale: newConsumerProps.locale,
             firstName: newConsumerProps.firstName,
             lastName: newConsumerProps.lastName,
             nobaUserID: newConsumerProps.id,
@@ -435,6 +436,7 @@ describe("VerificationService", () => {
           notificationService.sendNotification(
             NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
             deepEqual({
+              locale: newConsumerProps.locale,
               firstName: newConsumerProps.firstName,
               lastName: newConsumerProps.lastName,
               nobaUserID: newConsumerProps.id,
@@ -540,8 +542,8 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
-
           deepEqual({
+            locale: consumer.props.locale,
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
             nobaUserID: consumer.props.id,
@@ -596,8 +598,8 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
-
           deepEqual({
+            locale: consumer.props.locale,
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
             nobaUserID: consumer.props.id,
@@ -747,8 +749,8 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
-
           deepEqual({
+            locale: consumer.props.locale,
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
             nobaUserID: consumer.props.id,
@@ -793,8 +795,8 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
-
           deepEqual({
+            locale: consumer.props.locale,
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
             nobaUserID: consumer.props.id,
@@ -838,8 +840,8 @@ describe("VerificationService", () => {
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_DENIED_EVENT,
-
           deepEqual({
+            locale: consumer.props.locale,
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
             nobaUserID: consumer.props.id,
@@ -882,6 +884,7 @@ describe("VerificationService", () => {
         notificationService.sendNotification(
           NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
           deepEqual({
+            locale: consumer.props.locale,
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
             nobaUserID: consumer.props.id,
@@ -912,6 +915,7 @@ describe("VerificationService", () => {
         notificationService.sendNotification(
           NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT,
           deepEqual({
+            locale: consumer.props.locale,
             firstName: consumer.props.firstName,
             lastName: consumer.props.lastName,
             nobaUserID: consumer.props.id,
@@ -932,6 +936,7 @@ function getFakeConsumer(firstName = "Fake", countryCode = "US"): Consumer {
     email: "fake+consumer@noba.com",
     phone: "+447700900000",
     displayEmail: "fake+consumer@noba.com",
+    locale: "en_us",
     address: {
       streetLine1: "Test street",
       countryCode: countryCode,

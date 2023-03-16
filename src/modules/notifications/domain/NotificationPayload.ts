@@ -16,7 +16,7 @@ import {
 export type NotificationPayload = {
   email?: string;
   phone?: string;
-  locale?: string;
+  locale: string;
   otp?: string;
   handle?: string;
   walletAddress?: string;
@@ -52,6 +52,7 @@ export function prepareNotificationPayload(
   consumer: Consumer,
   additionalPayload: Partial<NotificationPayload>,
 ): NotificationPayload {
+  console.log(`Preparing notification payload. Locale: ${consumer.props.locale}`);
   return {
     email: consumer.props.email,
     phone: consumer.props.phone,

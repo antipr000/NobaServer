@@ -154,6 +154,7 @@ export class ConsumerService {
       if (isEmail) {
         await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
           email: emailOrPhone,
+          locale: result.props.locale,
           firstName: result.props.firstName,
           lastName: result.props.lastName,
           nobaUserID: result.props.id,
@@ -215,6 +216,7 @@ export class ConsumerService {
     const otp = this.generateOTP();
     await this.otpService.saveOTP(phone, consumerIdentityIdentifier, otp);
     await this.notificationService.sendNotification(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT, {
+      locale: phone.startsWith("+57") ? "es_co" : "en_us", // TODO: Temporary fix
       phone,
       otp: otp.toString(),
     });
@@ -252,6 +254,7 @@ export class ConsumerService {
     await this.otpService.saveOTP(email, consumerIdentityIdentifier, otp);
 
     await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, {
+      locale: consumer.props.locale,
       email: email,
       otp: otp.toString(),
       firstName: consumer.props.firstName ?? undefined,
@@ -288,6 +291,7 @@ export class ConsumerService {
       //email being added for the first time
       this.logger.info(`User email updated for first time sending welcome note, userId: ${consumer.props.id}`);
       await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
+        locale: consumer.props.locale,
         email: updatedConsumer.props.email,
         firstName: updatedConsumer.props.firstName,
         lastName: updatedConsumer.props.lastName,
@@ -512,6 +516,7 @@ export class ConsumerService {
       await this.notificationService.sendNotification(
         NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
         {
+          locale: consumer.props.locale,
           email: consumer.props.displayEmail,
           otp: otp.toString(),
           walletAddress: walletAddress,
@@ -523,6 +528,7 @@ export class ConsumerService {
       await this.notificationService.sendNotification(
         NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
         {
+          locale: consumer.props.locale,
           phone: consumer.props.phone,
           otp: otp.toString(),
           walletAddress: walletAddress,
@@ -644,6 +650,7 @@ export class ConsumerService {
     }
 
     await this.notificationService.sendNotification(NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT, {
+      locale: consumer.props.locale,
       email: consumer.props.email,
       firstName: consumer.props.firstName,
       lastName: consumer.props.lastName,

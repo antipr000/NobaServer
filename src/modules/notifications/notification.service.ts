@@ -104,6 +104,7 @@ export class NotificationService {
 
   async updateEmployeeAllocationInBubble(nobaEmployeeID: string, allocationAmount: number): Promise<void> {
     await this.sendNotification(NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT, {
+      locale: "en",
       nobaEmployeeID,
       allocationAmountInPesos: allocationAmount,
     });

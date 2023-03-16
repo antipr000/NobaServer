@@ -26,7 +26,9 @@ export const EmailTemplates = {
     es: "d-874a99d468ca40b0b42b471d9213e1dd",
   },
   ID_VERIFICATION_SUCCESSFUL_NON_US_EMAIL: {
-    en: "d-659a31aa552c41d0b86de43ac3b87c34",
+    // Same as US for now but this may eventually change.
+    en: "d-2d55cada60ab46209d6d5bcfe9c450d7",
+    es: "d-874a99d468ca40b0b42b471d9213e1dd",
   },
   KYC_DENIED_EMAIL: {
     en: "d-fac2f33374c443cb855641727a735708",

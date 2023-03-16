@@ -538,6 +538,7 @@ describe("NotificationService", () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
       const payload: NotificationPayload = {
+        locale: "en",
         firstName: "Fake",
         lastName: "User",
         email: "fake+user@noba.com",
@@ -568,6 +569,7 @@ describe("NotificationService", () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
       const payload: NotificationPayload = {
+        locale: "en",
         nobaEmployeeID: "fake-employee-id",
         allocationAmountInPesos: 10000,
       };
@@ -594,6 +596,7 @@ describe("NotificationService", () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
       const payload: NotificationPayload = {
+        locale: "en",
         nobaPayrollID: "fake-payroll-id",
         payrollStatus: PayrollStatus.INVOICED,
       };

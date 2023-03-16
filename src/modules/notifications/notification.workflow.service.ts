@@ -172,6 +172,7 @@ export class NotificationWorkflowService {
     }
 
     await this.notificationService.sendNotification(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT, {
+      locale: "en",
       nobaPayrollID: payrollID,
       payrollStatus: status,
     });
