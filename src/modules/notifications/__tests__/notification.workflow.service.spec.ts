@@ -339,6 +339,7 @@ describe("NotificationService", () => {
         notificationService.sendNotification(
           NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT,
           deepEqual({
+            locale: "en_us",
             nobaPayrollID: payrollID,
             payrollStatus,
           }),

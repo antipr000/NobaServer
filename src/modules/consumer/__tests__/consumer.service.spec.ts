@@ -219,6 +219,7 @@ describe("ConsumerService", () => {
           NotificationEventType.SEND_WELCOME_MESSAGE_EVENT,
 
           deepEqual({
+            locale: "en_us",
             email: email,
             firstName: undefined,
             lastName: undefined,
@@ -1021,6 +1022,7 @@ describe("ConsumerService", () => {
         notificationService.sendNotification(
           NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
           deepEqual({
+            locale: consumer.props.locale,
             email: consumer.props.displayEmail,
             otp: "111111",
             walletAddress: wallet.props.address,
@@ -1062,6 +1064,7 @@ describe("ConsumerService", () => {
         notificationService.sendNotification(
           NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
           deepEqual({
+            locale: consumer.props.locale,
             phone: consumer.props.phone,
             otp: "111111",
             walletAddress: wallet.props.address,
@@ -1113,6 +1116,7 @@ describe("ConsumerService", () => {
         notificationService.sendNotification(
           NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT,
           deepEqual({
+            locale: "en_us",
             phone: phone,
             otp: "111111",
           }),
@@ -1225,6 +1229,7 @@ describe("ConsumerService", () => {
       when(
         notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, {
           email: email,
+          locale: "en_us",
           otp: otp.toString(),
           firstName: "Rosie",
         }),
@@ -1559,6 +1564,7 @@ describe("ConsumerService", () => {
       when(consumerRepo.updateConsumer(anyString(), anything())).thenResolve(expectedUpdatedConsumer);
       when(
         notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
+          locale: consumer.props.locale,
           email: email,
           firstName: consumer.props.firstName,
           lastName: consumer.props.lastName,

@@ -88,6 +88,7 @@ export abstract class AuthService {
   async sendOtp(emailOrPhone: string, otp: string): Promise<void> {
     const isEmail = Utils.isEmail(emailOrPhone);
     await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, {
+      locale: "en_us",
       ...(isEmail ? { email: emailOrPhone } : { phone: emailOrPhone }),
       otp: otp,
     });
