@@ -24,11 +24,11 @@ export class AssetsService {
     xNobaTimestamp,
   }: {
     xNobaApiKey: string;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
   }): CancelablePromise<Array<CurrencyDTO>> {
     return __request(OpenAPI, {
       method: "GET",
@@ -52,11 +52,11 @@ export class AssetsService {
     xNobaTimestamp,
   }: {
     xNobaApiKey: string;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
   }): CancelablePromise<Array<CurrencyDTO>> {
     return __request(OpenAPI, {
       method: "GET",
@@ -76,19 +76,19 @@ export class AssetsService {
    */
   public static getExchangeRate({
     xNobaApiKey,
-    numeratorCurrency,
-    denominatorCurrency,
     xNobaSignature,
     xNobaTimestamp,
+    numeratorCurrency,
+    denominatorCurrency,
   }: {
     xNobaApiKey: string;
-    numeratorCurrency: string;
-    denominatorCurrency: string;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
+    numeratorCurrency: string;
+    denominatorCurrency: string;
   }): CancelablePromise<ExchangeRateDTO> {
     return __request(OpenAPI, {
       method: "GET",
@@ -120,11 +120,11 @@ export class AssetsService {
     xNobaTimestamp,
   }: {
     xNobaApiKey: string;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
   }): CancelablePromise<Array<SupportedBanksDTO>> {
     return __request(OpenAPI, {
       method: "GET",
@@ -149,11 +149,11 @@ export class AssetsService {
     includeSubdivisions,
   }: {
     xNobaApiKey: string;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
     /**
      * Include subdivision data
      */
@@ -180,17 +180,17 @@ export class AssetsService {
    */
   public static getSupportedCountry({
     xNobaApiKey,
-    countryCode,
     xNobaSignature,
     xNobaTimestamp,
+    countryCode,
   }: {
     xNobaApiKey: string;
-    countryCode: string;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
+    countryCode: string;
   }): CancelablePromise<LocationDTO> {
     return __request(OpenAPI, {
       method: "GET",
@@ -220,11 +220,11 @@ export class AssetsService {
     xNobaTimestamp,
   }: {
     xNobaApiKey: string;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
   }): CancelablePromise<ConfigurationsDTO> {
     return __request(OpenAPI, {
       method: "GET",
@@ -247,17 +247,17 @@ export class AssetsService {
    */
   public static getCreditCardBin({
     xNobaApiKey,
-    bin,
     xNobaSignature,
     xNobaTimestamp,
+    bin,
   }: {
     xNobaApiKey: string;
-    bin: string;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
+    bin: string;
   }): CancelablePromise<CreditCardDTO> {
     return __request(OpenAPI, {
       method: "GET",

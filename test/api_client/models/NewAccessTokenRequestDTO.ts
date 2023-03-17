@@ -4,11 +4,15 @@
 
 export type NewAccessTokenRequestDTO = {
   /**
-   * userId of user who owns the refresh token
+   * ID of user who owns the refresh token
    */
   userID: string;
   /**
-   * Refresh token to get new acess token
+   * Refresh token to get new access token
    */
   refreshToken: string;
+  /**
+   * Session key, if known
+   */
+  sessionKey?: string;
 };

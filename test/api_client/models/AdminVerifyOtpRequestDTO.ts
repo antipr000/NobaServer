@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type VerifyOtpRequestDTO = {
+export type AdminVerifyOtpRequestDTO = {
   /**
    * Email or phone value to identify the user
    */
@@ -11,12 +11,4 @@ export type VerifyOtpRequestDTO = {
    * One-time password sent to email or phone
    */
   otp: number;
-  /**
-   * Include refresh token to get new token on expiry of current access token
-   */
-  includeRefreshToken?: boolean;
-  /**
-   * Session key, if known
-   */
-  sessionKey?: string;
 };

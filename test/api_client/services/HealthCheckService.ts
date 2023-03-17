@@ -20,11 +20,11 @@ export class HealthCheckService {
     depth,
   }: {
     xNobaApiKey: string;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
     depth?: "SHALLOW" | "DEEP";
   }): CancelablePromise<HealthCheckResponseDTO> {
     return __request(OpenAPI, {

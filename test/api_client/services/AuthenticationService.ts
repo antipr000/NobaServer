@@ -19,17 +19,17 @@ export class AuthenticationService {
    */
   public static newAccessToken({
     xNobaApiKey,
-    requestBody,
     xNobaSignature,
     xNobaTimestamp,
+    requestBody,
   }: {
     xNobaApiKey: string;
-    requestBody: NewAccessTokenRequestDTO;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
+    requestBody: NewAccessTokenRequestDTO;
   }): CancelablePromise<LoginResponseDTO> {
     return __request(OpenAPI, {
       method: "POST",
@@ -54,17 +54,17 @@ export class AuthenticationService {
    */
   public static verifyOtp({
     xNobaApiKey,
-    requestBody,
     xNobaSignature,
     xNobaTimestamp,
+    requestBody,
   }: {
     xNobaApiKey: string;
-    requestBody: VerifyOtpRequestDTO;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
+    requestBody: VerifyOtpRequestDTO;
   }): CancelablePromise<LoginResponseDTO> {
     return __request(OpenAPI, {
       method: "POST",
@@ -89,17 +89,17 @@ export class AuthenticationService {
    */
   public static loginUser({
     xNobaApiKey,
-    requestBody,
     xNobaSignature,
     xNobaTimestamp,
+    requestBody,
   }: {
     xNobaApiKey: string;
-    requestBody: LoginRequestDTO;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
+    requestBody: LoginRequestDTO;
   }): CancelablePromise<BlankResponseDTO> {
     return __request(OpenAPI, {
       method: "POST",

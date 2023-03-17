@@ -10,6 +10,7 @@ export type { AddressDTO } from "./models/AddressDTO";
 export type { AddTransactionEventDTO } from "./models/AddTransactionEventDTO";
 export type { AdminLoginRequestDTO } from "./models/AdminLoginRequestDTO";
 export type { AdminUpdateConsumerRequestDTO } from "./models/AdminUpdateConsumerRequestDTO";
+export type { AdminVerifyOtpRequestDTO } from "./models/AdminVerifyOtpRequestDTO";
 export type { BlankResponseDTO } from "./models/BlankResponseDTO";
 export type { CaseDTO } from "./models/CaseDTO";
 export type { CaseNotificationDataDTO } from "./models/CaseNotificationDataDTO";

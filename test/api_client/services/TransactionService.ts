@@ -31,11 +31,11 @@ export class TransactionService {
     transactionStatus,
   }: {
     xNobaApiKey: string;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
     /**
      * Consumer ID whose transactions is needed
      */
@@ -100,19 +100,19 @@ export class TransactionService {
    */
   public static initiateTransaction({
     xNobaApiKey,
-    sessionKey,
-    requestBody,
     xNobaSignature,
     xNobaTimestamp,
+    sessionKey,
+    requestBody,
   }: {
     xNobaApiKey: string;
-    sessionKey: string;
-    requestBody: InitiateTransactionDTO;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
+    sessionKey: string;
+    requestBody: InitiateTransactionDTO;
   }): CancelablePromise<TransactionDTO> {
     return __request(OpenAPI, {
       method: "POST",
@@ -140,24 +140,24 @@ export class TransactionService {
    */
   public static getQuote({
     xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
     amount,
     currency,
     desiredCurrency,
     workflowName,
-    xNobaSignature,
-    xNobaTimestamp,
     options,
   }: {
     xNobaApiKey: string;
+    xNobaSignature: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp: string;
     amount: number;
     currency: "USD" | "COP";
     desiredCurrency: "USD" | "COP";
     workflowName: "WALLET_WITHDRAWAL" | "WALLET_DEPOSIT" | "WALLET_TRANSFER" | "PAYROLL_DEPOSIT" | "PAYROLL_PROCESSING";
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
     options?: Array<"IS_COLLECTION">;
   }): CancelablePromise<QuoteResponseDTO> {
     return __request(OpenAPI, {
@@ -188,21 +188,21 @@ export class TransactionService {
    */
   public static checkIfTransactionPossible({
     xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
     type,
     transactionAmount,
     baseCurrency,
-    xNobaSignature,
-    xNobaTimestamp,
   }: {
     xNobaApiKey: string;
-    type: "NOBA_WALLET";
-    transactionAmount: number;
-    baseCurrency: string;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
+    type: "NOBA_WALLET";
+    transactionAmount: number;
+    baseCurrency: string;
   }): CancelablePromise<CheckTransactionDTO> {
     return __request(OpenAPI, {
       method: "GET",
@@ -227,18 +227,18 @@ export class TransactionService {
    */
   public static getTransaction({
     xNobaApiKey,
-    transactionRef,
     xNobaSignature,
     xNobaTimestamp,
+    transactionRef,
     includeEvents,
   }: {
     xNobaApiKey: string;
-    transactionRef: string;
-    xNobaSignature?: string;
+    xNobaSignature: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()
      */
-    xNobaTimestamp?: string;
+    xNobaTimestamp: string;
+    transactionRef: string;
     includeEvents?: "All" | "External Only" | "None";
   }): CancelablePromise<TransactionDTO> {
     return __request(OpenAPI, {
