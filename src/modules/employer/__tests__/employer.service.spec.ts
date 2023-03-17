@@ -1203,12 +1203,10 @@ describe("EmployerServiceTests", () => {
         employer.payrollAccountNumber,
       );
 
-      // mockTemplateProcessor false positive for some reason
-
-      when(mockTemplateProcessor.addFormat(anything())).thenReturn();
-      // when(mockTemplateProcessor.addFormat(TemplateProcessModule.TemplateFormat.PDF)).thenResolve();
-      // when(mockTemplateProcessor.addLocale(TemplateProcessModule.TemplateLocale.ENGLISH)).thenResolve();
-      // when(mockTemplateProcessor.addLocale(TemplateProcessModule.TemplateLocale.SPANISH)).thenResolve();
+      when(mockTemplateProcessor.addFormat(TemplateProcessModule.TemplateFormat.HTML)).thenResolve();
+      when(mockTemplateProcessor.addFormat(TemplateProcessModule.TemplateFormat.PDF)).thenResolve();
+      when(mockTemplateProcessor.addLocale(TemplateProcessModule.TemplateLocale.ENGLISH)).thenResolve();
+      when(mockTemplateProcessor.addLocale(TemplateProcessModule.TemplateLocale.SPANISH)).thenResolve();
 
       mockTemplateProcessorInstance.locales = new Set([
         TemplateProcessModule.TemplateLocale.ENGLISH,
