@@ -1,8 +1,8 @@
 import { PaginatedResult } from "../../../../src/core/infra/PaginationTypes";
-import { TransactionDTO } from "./TransactionDTO";
 import { ApiProperty } from "@nestjs/swagger";
+import { TransactionDTO } from "../../../modules/transaction/dto/TransactionDTO";
 
-export class TransactionQueryResultDTO extends PaginatedResult<TransactionDTO> {
+export class AdminTransactionQueryResultDTO extends PaginatedResult<TransactionDTO> {
   @ApiProperty({ type: [TransactionDTO] })
   items: TransactionDTO[];
 }

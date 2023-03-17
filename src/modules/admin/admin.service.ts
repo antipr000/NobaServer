@@ -17,6 +17,10 @@ import { Employee } from "../employee/domain/Employee";
 import { ConsumerEmployeeDetailsDTO, ConsumerInternalDTO } from "../consumer/dto/ConsumerInternalDTO";
 import { AdminUpdateConsumerRequestDTO } from "./dto/AdminUpdateConsumerRequestDTO";
 import { Consumer } from "../consumer/domain/Consumer";
+import { TransactionService } from "../transaction/transaction.service";
+import { TransactionFilterOptionsDTO } from "../transaction/dto/TransactionFilterOptionsDTO";
+import { Transaction } from "../transaction/domain/Transaction";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
 
 @Injectable()
 export class AdminService {
@@ -42,6 +46,8 @@ export class AdminService {
   private readonly adminRepo: IAdminRepo;
 
   private readonly adminPSPMapper: AdminPSPMapper;
+
+  private readonly transactionService: TransactionService;
 
   constructor() {
     this.adminPSPMapper = new AdminPSPMapper();
@@ -240,6 +246,10 @@ export class AdminService {
     const updatedConsumer = await this.consumerService.getConsumer(consumerID);
 
     return this.decorateConsumer(updatedConsumer);
+  }
+
+  async getFilteredTransactions(filter: TransactionFilterOptionsDTO): Promise<PaginatedResult<Transaction>> {
+    return this.transactionService.getFilteredTransactions(filter);
   }
 
   private shouldUpdateField(newValue: any, oldValue: any): boolean {

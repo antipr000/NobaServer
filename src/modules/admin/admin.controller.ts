@@ -51,6 +51,13 @@ import { ConsumerInternalDTO } from "../consumer/dto/ConsumerInternalDTO";
 import { UpdatePayrollRequestDTO } from "../employer/dto/payroll.workflow.controller.dto";
 import { PayrollDTO } from "../employer/dto/PayrollDTO";
 import { EmployerService } from "../employer/employer.service";
+import { AdminTransactionQueryResultDTO } from "./dto/AdminTransactionQueryResultDTO";
+import { AdminTransactionFilterOptionsDTO } from "./dto/AdminTransactionFilterOptionsDTO";
+import {
+  TransactionMappingService,
+  TRANSACTION_MAPPING_SERVICE_PROVIDER,
+} from "../transaction/mapper/transaction.mapper.service";
+import { TransactionDTO } from "../transaction/dto/TransactionDTO";
 
 @Roles(Role.NOBA_ADMIN)
 @Controller("v1/admins")
@@ -77,6 +84,9 @@ export class AdminController {
 
   @Inject()
   private readonly employerService: EmployerService;
+
+  @Inject(TRANSACTION_MAPPING_SERVICE_PROVIDER)
+  private readonly transactionMapper: TransactionMappingService;
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   constructor() {}
@@ -351,5 +361,35 @@ export class AdminController {
     }
 
     return insertedExchangeRates;
+  }
+
+  @Get("/transactions/")
+  @ApiTags("Transaction")
+  @ApiOperation({ summary: "Get all transactions for logged in user" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: AdminTransactionQueryResultDTO,
+  })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async getAllTransactions(
+    @Query() filters: AdminTransactionFilterOptionsDTO,
+  ): Promise<AdminTransactionQueryResultDTO> {
+    filters.pageLimit = Number(filters.pageLimit) || 10;
+    filters.pageOffset = Number(filters.pageOffset) || 1;
+    const allTransactions = await this.adminService.getFilteredTransactions(filters);
+
+    if (allTransactions == null) return null;
+
+    const transactions = allTransactions.items;
+
+    const transactionDTOPromises: Promise<TransactionDTO>[] = transactions.map(
+      async transaction => await this.transactionMapper.toTransactionDTO(transaction),
+    );
+
+    const transactionDTOs = await Promise.all(transactionDTOPromises);
+    return {
+      ...allTransactions,
+      items: transactionDTOs,
+    };
   }
 }

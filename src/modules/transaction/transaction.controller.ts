@@ -28,7 +28,7 @@ import { LimitsService } from "./limits.service";
 import { ConsumerLimitsQueryDTO } from "./dto/ConsumerLimitsQueryDTO";
 import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 import { TransactionType } from "@prisma/client";
-import { TransactionsQueryResultDTO } from "./dto/TransactionQueryResultDTO";
+import { TransactionQueryResultDTO } from "./dto/TransactionQueryResultDTO";
 import { QuoteResponseDTO } from "./dto/QuoteResponseDTO";
 import { QuoteRequestDTO } from "./dto/QuoteRequestDTO";
 import { Public } from "../auth/public.decorator";
@@ -58,13 +58,13 @@ export class TransactionController {
   @ApiOperation({ summary: "Get all transactions for logged in user" })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: TransactionsQueryResultDTO,
+    type: TransactionQueryResultDTO,
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getAllTransactions(
     @Query() filters: TransactionFilterOptionsDTO,
     @AuthUser() consumer: Consumer,
-  ): Promise<TransactionsQueryResultDTO> {
+  ): Promise<TransactionQueryResultDTO> {
     filters.consumerID = consumer.props.id;
     filters.pageLimit = Number(filters.pageLimit) || 10;
     filters.pageOffset = Number(filters.pageOffset) || 1;

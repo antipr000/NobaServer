@@ -21,7 +21,7 @@ export class TransactionMappingService {
 
   async toTransactionDTO(
     transaction: Transaction,
-    consumer: Consumer,
+    consumer?: Consumer,
     transactionEvents?: TransactionEvent[],
   ): Promise<TransactionDTO> {
     let debitConsumer: Consumer = null;
