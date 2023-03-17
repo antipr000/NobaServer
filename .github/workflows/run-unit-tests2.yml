@@ -8,23 +8,6 @@ jobs:
   test:
     name: Unit Tests
     runs-on: ubuntu-latest
-    services:
-      # Label used to access the service container
-      postgres:
-        # Docker Hub PostgreSQL image
-        image: postgres
-        # Provide the password for postgres
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          # Maps tcp port 5432 on service container to the host
-          - 5432:5432
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Restore environment from cache
@@ -36,18 +19,12 @@ jobs:
           path: ./
           key: ${{ runner.os }}-build-${{ github.run_number }}
 
-      - name: Run db migrations
-        env:
-            DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test?connect_timeout=300
-        run: yarn prisma-clean-init
-
       - name: Unit tests with coverage
         env:
           NODE_OPTIONS: "--max_old_space_size=8192"
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test?connect_timeout=300
-        run: yarn test-repos
+        run: yarn test-nonrepos
 
       - name: Cache test results
         id: cache-test-results

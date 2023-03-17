@@ -29,7 +29,12 @@ jobs:
     uses: ./.github/workflows/run-unit-tests.yml
     secrets: inherit
     needs: [setup-environment]
-  
+
+  run-unit-tests2:
+    uses: ./.github/workflows/run-unit-tests2.yml
+    secrets: inherit
+    needs: [setup-environment]
+
   run-integration-tests:
     uses: ./.github/workflows/run-integration-tests.yml
     secrets: inherit
@@ -38,4 +43,4 @@ jobs:
   sonarcloud-scan:
     uses: ./.github/workflows/run-sonar-scan.yml
     secrets: inherit
-    needs: [setup-environment, run-unit-tests]
+    needs: [setup-environment, run-unit-tests, run-unit-tests2]
