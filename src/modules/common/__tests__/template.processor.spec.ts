@@ -1,12 +1,13 @@
 jest.mock("puppeteer", () => ({
   launch() {
+    console.log("launching puppeteer");
     return stubBrowser;
   },
 }));
 
 import { instance, when } from "ts-mockito";
 import winston, { Logger } from "winston";
-import { stubBrowser, stubPage, stubElementHandle, stubPuppeteer } from "../mocks/mock.puppeteer";
+import { stubBrowser, stubPage, stubElementHandle, stubPuppeteer, newPageFn } from "../mocks/mock.puppeteer";
 import { getMockS3ServiceWithDefaults } from "../mocks/mock.s3.service";
 import { S3Service } from "../s3.service";
 import { TemplateFormat, TemplateLocale, TemplateProcessor } from "../utils/template.processor";
@@ -134,13 +135,11 @@ describe("TemplateProcessor", () => {
     it("should upload PDF populated templates", async () => {
       templateProcessor.addLocale(TemplateLocale.SPANISH);
       templateProcessor.addFormat(TemplateFormat.PDF);
-      // const browserSpy = jest.spyOn(stubBrowser, "newPage").mockImplementation(() => Promise.resolve(stubPage));
-
       const populatedTemplate = "firstName-lastName";
       templateProcessor.populatedTemplates.set(TemplateLocale.SPANISH, "firstName-lastName");
       when(s3Service.uploadToS3("savePath", `saveBaseFilename_es.pdf`, populatedTemplate)).thenResolve();
       await templateProcessor.uploadPopulatedTemplates();
-      // expect(browserSpy).toHaveBeenCalled();
+      expect(newPageFn).toHaveBeenCalled();
     });
 
     it("should not upload populated templates if no populated templates", async () => {

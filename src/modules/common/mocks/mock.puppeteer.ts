@@ -6,10 +6,10 @@ export const stubPuppeteer = {
   },
 } as unknown as any;
 
+export const newPageFn = jest.fn().mockImplementation(() => Promise.resolve(stubPage));
+
 export const stubBrowser = {
-  newPage() {
-    return Promise.resolve(stubPage);
-  },
+  newPage: newPageFn,
   close() {
     return Promise.resolve();
   },
