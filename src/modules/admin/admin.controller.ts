@@ -58,6 +58,8 @@ import {
 import { TransactionDTO } from "../transaction/dto/TransactionDTO";
 import { TransactionFilterOptionsDTO } from "../transaction/dto/TransactionFilterOptionsDTO";
 import { TransactionQueryResultDTO } from "../transaction/dto/TransactionQueryResultDTO";
+import { IncludeEventTypes } from "../transaction/dto/TransactionEventDTO";
+import { TransactionEvent } from "../transaction/domain/TransactionEvent";
 
 @Roles(Role.NOBA_ADMIN)
 @Controller("v1/admins")
@@ -388,5 +390,33 @@ export class AdminController {
       ...allTransactions,
       items: transactionDTOs,
     };
+  }
+
+  @Get("/transactions/:transactionRef")
+  @ApiOperation({ summary: "Gets details of a any transaction" })
+  @ApiQuery({ name: "includeEvents", enum: IncludeEventTypes, required: false })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: TransactionDTO,
+  })
+  @ApiNotFoundResponse({ description: "Requested transaction is not found" })
+  async getTransaction(
+    @Query("includeEvents") includeEvents: IncludeEventTypes,
+    @Param("transactionRef") transactionRef: string,
+  ): Promise<TransactionDTO> {
+    const transaction = await this.adminService.getTransactionByTransactionRef(transactionRef);
+    if (!transaction) {
+      throw new NotFoundException(`Transaction with ref: ${transactionRef} not found for user`);
+    }
+
+    let transactionEvents: TransactionEvent[];
+    if (includeEvents && includeEvents !== IncludeEventTypes.NONE) {
+      transactionEvents = await this.adminService.getTransactionEvents(
+        transaction.id,
+        includeEvents === IncludeEventTypes.ALL,
+      );
+    }
+
+    return await this.transactionMapper.toTransactionDTO(transaction, undefined, transactionEvents);
   }
 }

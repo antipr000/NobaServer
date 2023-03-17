@@ -54,7 +54,7 @@ export class TransactionService {
     private readonly alertService: AlertService,
   ) {}
 
-  async getTransactionByTransactionRef(transactionRef: string, consumerID: string): Promise<Transaction> {
+  async getTransactionByTransactionRef(transactionRef: string, consumerID?: string): Promise<Transaction> {
     const transaction: Transaction = await this.transactionRepo.getTransactionByTransactionRef(transactionRef);
     if (
       transaction === null ||

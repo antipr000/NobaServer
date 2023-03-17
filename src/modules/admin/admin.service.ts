@@ -21,6 +21,7 @@ import { TransactionService } from "../transaction/transaction.service";
 import { TransactionFilterOptionsDTO } from "../transaction/dto/TransactionFilterOptionsDTO";
 import { Transaction } from "../transaction/domain/Transaction";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
+import { TransactionEvent } from "../transaction/domain/TransactionEvent";
 
 @Injectable()
 export class AdminService {
@@ -251,6 +252,14 @@ export class AdminService {
 
   async getFilteredTransactions(filter: TransactionFilterOptionsDTO): Promise<PaginatedResult<Transaction>> {
     return this.transactionService.getFilteredTransactions(filter);
+  }
+
+  async getTransactionByTransactionRef(transactionRef: string): Promise<Transaction> {
+    return this.transactionService.getTransactionByTransactionRef(transactionRef);
+  }
+
+  async getTransactionEvents(transactionID: string, includeInternalEvents: boolean): Promise<TransactionEvent[]> {
+    return this.transactionService.getTransactionEvents(transactionID, includeInternalEvents);
   }
 
   private shouldUpdateField(newValue: any, oldValue: any): boolean {
