@@ -16,8 +16,6 @@ import {
   TRANSACTION_MAPPING_SERVICE_PROVIDER,
 } from "../transaction/mapper/transaction.mapper.service";
 import { MonoModule } from "../psp/mono/mono.module";
-import { TransactionRepoModule, TRANSACTION_REPO_PROVIDER } from "../transaction/repo/transaction.repo.module";
-import { SQLTransactionRepo } from "../transaction/repo/sql.transaction.repo";
 
 @Module({
   imports: [
@@ -25,7 +23,6 @@ import { SQLTransactionRepo } from "../transaction/repo/sql.transaction.repo";
     CommonModule,
     ConsumerModule,
     TransactionModule,
-    TransactionRepoModule,
     InfraProvidersModule,
     PspModule,
     EmployeeModule,
@@ -43,10 +40,6 @@ import { SQLTransactionRepo } from "../transaction/repo/sql.transaction.repo";
     {
       provide: TRANSACTION_MAPPING_SERVICE_PROVIDER,
       useClass: TransactionMappingService,
-    },
-    {
-      provide: TRANSACTION_REPO_PROVIDER,
-      useClass: SQLTransactionRepo,
     },
   ],
   exports: [AdminService],

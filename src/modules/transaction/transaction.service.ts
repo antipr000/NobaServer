@@ -73,9 +73,6 @@ export class TransactionService {
   }
 
   async getFilteredTransactions(filter: TransactionFilterOptionsDTO): Promise<PaginatedResult<Transaction>> {
-    console.log("filters", this.transactionRepo);
-
-    console.log("filters", filter);
     return this.transactionRepo.getFilteredTransactions(filter);
   }
 

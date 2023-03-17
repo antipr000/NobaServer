@@ -364,7 +364,6 @@ export class AdminController {
   }
 
   @Get("/transactions/")
-  @ApiTags("Transaction")
   @ApiOperation({ summary: "Gets all transactions for supplied filters" })
   @ApiResponse({
     status: HttpStatus.OK,

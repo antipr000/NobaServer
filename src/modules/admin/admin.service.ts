@@ -45,9 +45,10 @@ export class AdminService {
   @Inject("AdminTransactionRepo")
   private readonly adminRepo: IAdminRepo;
 
-  private readonly adminPSPMapper: AdminPSPMapper;
-
+  @Inject()
   private readonly transactionService: TransactionService;
+
+  private readonly adminPSPMapper: AdminPSPMapper;
 
   constructor() {
     this.adminPSPMapper = new AdminPSPMapper();
@@ -249,8 +250,6 @@ export class AdminService {
   }
 
   async getFilteredTransactions(filter: TransactionFilterOptionsDTO): Promise<PaginatedResult<Transaction>> {
-    console.log("filters", filter);
-
     return this.transactionService.getFilteredTransactions(filter);
   }
 
