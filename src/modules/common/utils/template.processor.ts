@@ -30,7 +30,7 @@ export class TemplateProcessor {
 
   // Strings indexed by locale
   unpopulatedTemplates: Map<TemplateLocale, string> = new Map();
-  private populatedTemplates: Map<TemplateLocale, string> = new Map();
+  populatedTemplates: Map<TemplateLocale, string> = new Map();
 
   constructor(
     logger: Logger,
@@ -78,7 +78,9 @@ export class TemplateProcessor {
     const start = Date.now();
     for (const locale of this.locales) {
       let filename = this.templateFilename;
+      console.log(filename);
       if (filename.indexOf("LOCALE") > -1) filename = filename.replace("LOCALE", locale.language);
+      console.log(filename);
       const template = await this.s3Service.loadFromS3(this.templatePath, filename);
       if (!template) {
         throw new Error(`Template not found for locale ${locale}`);
@@ -106,9 +108,11 @@ export class TemplateProcessor {
     // For each locale and format, save the populated template
     for (const locale of this.locales) {
       const populatedTemplate = this.populatedTemplates.get(locale);
+
       if (populatedTemplate) {
         if (this.formats.has(TemplateFormat.HTML)) {
           const start = Date.now();
+
           this.s3Service.uploadToS3(
             this.savePath,
             `${this.saveBaseFilename}_${locale.language}.${TemplateFormat.HTML}`,

@@ -4,7 +4,7 @@ jest.mock("puppeteer", () => ({
   },
 }));
 
-import { anything, instance, when } from "ts-mockito";
+import { instance, when } from "ts-mockito";
 import winston, { Logger } from "winston";
 import { stubBrowser, stubPage, stubElementHandle, stubPuppeteer } from "../mocks/mock.puppeteer";
 import { getMockS3ServiceWithDefaults } from "../mocks/mock.s3.service";
@@ -23,7 +23,18 @@ describe("TemplateProcessor", () => {
     logger = winston.createLogger({ transports: [new winston.transports.Console()] });
 
     const s3Instance = instance(s3Service);
-    templateProcessor = new TemplateProcessor(logger, s3Instance, "test", "test", "test", "test");
+    templateProcessor = new TemplateProcessor(
+      logger,
+      s3Instance,
+      "templatePath",
+      "template_LOCALE_filename",
+      "savePath",
+      "saveBaseFilename",
+    );
+  });
+
+  afterEach(async () => {
+    jest.clearAllMocks();
   });
 
   afterAll(async () => {});
@@ -65,6 +76,100 @@ describe("TemplateProcessor", () => {
       templateProcessor.addLocale(null);
       templateProcessor.addLocale(undefined);
       expect(templateProcessor.locales).toEqual(new Set());
+    });
+  });
+
+  describe("loadTemplates", () => {
+    it("should load templates", async () => {
+      templateProcessor.addLocale(TemplateLocale.ENGLISH);
+      templateProcessor.addLocale(TemplateLocale.SPANISH);
+      when(s3Service.loadFromS3("templatePath", "template_en_filename")).thenResolve("test-template-en");
+      when(s3Service.loadFromS3("templatePath", "template_es_filename")).thenResolve("test-template-es");
+      await templateProcessor.loadTemplates();
+      expect(templateProcessor.unpopulatedTemplates.size).toBe(2);
+      expect(templateProcessor.unpopulatedTemplates.get(TemplateLocale.ENGLISH)).toBe("test-template-en");
+      expect(templateProcessor.unpopulatedTemplates.get(TemplateLocale.SPANISH)).toBe("test-template-es");
+    });
+
+    it("should not load templates if no locales", async () => {
+      await templateProcessor.loadTemplates();
+      expect(templateProcessor.unpopulatedTemplates.size).toBe(0);
+    });
+
+    it("should throw Error if templates not found in S3", async () => {
+      templateProcessor.addLocale(TemplateLocale.ENGLISH);
+      templateProcessor.addLocale(TemplateLocale.SPANISH);
+      when(s3Service.loadFromS3("templatePath", "template_en_filename")).thenResolve(null);
+      when(s3Service.loadFromS3("templatePath", "template_es_filename")).thenResolve(null);
+      expect(templateProcessor.loadTemplates()).rejects.toThrowError();
+      expect(templateProcessor.unpopulatedTemplates.size).toBe(0);
+    });
+  });
+
+  describe("populateTemplates", () => {
+    it("should throw Error is unpopulated template is not found", async () => {
+      expect(() =>
+        templateProcessor.populateTemplate(TemplateLocale.SPANISH, { first: "firstName", last: "lastName" }),
+      ).toThrowError();
+    });
+
+    it("should throw Error is unpopulated template is not found", async () => {
+      templateProcessor.addLocale(TemplateLocale.SPANISH);
+      templateProcessor.unpopulatedTemplates.set(TemplateLocale.SPANISH, "{{first}}-{{last}}");
+      await templateProcessor.populateTemplate(TemplateLocale.SPANISH, { first: "firstName", last: "lastName" });
+      expect(templateProcessor.populatedTemplates.get(TemplateLocale.SPANISH)).toEqual("firstName-lastName");
+    });
+  });
+
+  describe("uploadPopulatedTemplates", () => {
+    it("should upload HTML populated templates", async () => {
+      templateProcessor.addLocale(TemplateLocale.SPANISH);
+      templateProcessor.addFormat(TemplateFormat.HTML);
+      const populatedTemplate = "firstName-lastName";
+      templateProcessor.populatedTemplates.set(TemplateLocale.SPANISH, "firstName-lastName");
+      when(s3Service.uploadToS3("savePath", `saveBaseFilename_es.html`, populatedTemplate)).thenResolve();
+      await templateProcessor.uploadPopulatedTemplates();
+    });
+
+    it("should upload PDF populated templates", async () => {
+      templateProcessor.addLocale(TemplateLocale.SPANISH);
+      templateProcessor.addFormat(TemplateFormat.PDF);
+      // const browserSpy = jest.spyOn(stubBrowser, "newPage").mockImplementation(() => Promise.resolve(stubPage));
+
+      const populatedTemplate = "firstName-lastName";
+      templateProcessor.populatedTemplates.set(TemplateLocale.SPANISH, "firstName-lastName");
+      when(s3Service.uploadToS3("savePath", `saveBaseFilename_es.pdf`, populatedTemplate)).thenResolve();
+      await templateProcessor.uploadPopulatedTemplates();
+      // expect(browserSpy).toHaveBeenCalled();
+    });
+
+    it("should not upload populated templates if no populated templates", async () => {
+      const s3UploadSpy = jest.spyOn(s3Service, "uploadToS3");
+      await templateProcessor.uploadPopulatedTemplates();
+      expect(s3UploadSpy).not.toHaveBeenCalled();
+    });
+
+    it("should not upload populated templates if no locales", async () => {
+      const s3UploadSpy = jest.spyOn(s3Service, "uploadToS3");
+      templateProcessor.addFormat(TemplateFormat.HTML);
+      await templateProcessor.uploadPopulatedTemplates();
+      expect(s3UploadSpy).not.toHaveBeenCalled();
+    });
+
+    it("should not upload populated templates if no formats", async () => {
+      const s3UploadSpy = jest.spyOn(s3Service, "uploadToS3");
+      templateProcessor.addLocale(TemplateLocale.SPANISH);
+      await templateProcessor.uploadPopulatedTemplates();
+      expect(s3UploadSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("destroy", () => {
+    it("should close browser", async () => {
+      jest.spyOn(stubBrowser, "close").mockImplementation(() => Promise.resolve());
+
+      await templateProcessor.destroy();
+      expect(stubBrowser.close).toHaveBeenCalled();
     });
   });
 });
