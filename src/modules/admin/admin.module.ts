@@ -11,6 +11,10 @@ import { InfraProvidersModule } from "../../infraproviders/infra.module";
 import { PspModule } from "../psp/psp.module";
 import { EmployeeModule } from "../employee/employee.module";
 import { EmployerModule } from "../employer/employer.module";
+import { TransactionMappingService } from "../transaction/mapper/transaction.mapper.service";
+import { MonoService } from "../psp/mono/mono.service";
+import { MonoRepoModule } from "../psp/mono/repo/mono.repo.module";
+import { MonoModule } from "../psp/mono/mono.module";
 
 @Module({
   imports: [
@@ -22,6 +26,7 @@ import { EmployerModule } from "../employer/employer.module";
     PspModule,
     EmployeeModule,
     EmployerModule,
+    MonoModule,
   ],
   controllers: [AdminController],
   providers: [
@@ -31,6 +36,7 @@ import { EmployerModule } from "../employer/employer.module";
       useClass: SQLAdminRepo,
     },
     AdminMapper,
+    TransactionMappingService,
   ],
   exports: [AdminService],
 })
