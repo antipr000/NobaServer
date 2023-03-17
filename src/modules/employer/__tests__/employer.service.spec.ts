@@ -1110,12 +1110,6 @@ describe("EmployerServiceTests", () => {
     });
 
     it("should successfully create invoice", async () => {
-      // const mockTemplateProcessor = getMockTemplateProcessorWithDefaults();
-      // const mockTemplateProcessorInstance = instance(mockTemplateProcessor);
-      // mockTemplateProcessorInstance.locales = [];
-      // const constructorSpy = jest.spyOn(TemplateProcessModule, "TemplateProcessor");
-      // constructorSpy.mockImplementationOnce(() => mockTemplateProcessorInstance);
-
       const employer = getRandomEmployer();
       const { payroll } = getRandomPayroll(employer.id);
 
