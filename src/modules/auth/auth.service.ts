@@ -78,11 +78,9 @@ export abstract class AuthService {
         this.logger.error(
           `Session key is missing for consumer ${consumerID} access token request. Calling with generic "NOT_PROVIDED" session key.`,
         );
-      const status = this.verificationService.verifyConsumerInformationForLogin(
-        consumerID,
-        sessionKey || "NOT_PROVIDED",
-      );
-      // We don't do anything with the status here, but the consumer data has been updated and when the caller (app)
+
+      this.verificationService.verifyConsumerInformationForLogin(consumerID, sessionKey || "NOT_PROVIDED");
+      // We don't do anything with the return value (status) here, but the consumer data has been updated and when the caller (app)
       // gets the consumer data it will see that the user is blocked.
     }
 

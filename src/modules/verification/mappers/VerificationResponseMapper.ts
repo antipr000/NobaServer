@@ -1,6 +1,5 @@
 import { DocumentVerificationStatus, KYCStatus } from "@prisma/client";
 import { StatesMapper } from "../../../modules/consumer/mappers/StatesMapper";
-import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { DocumentVerificationResultDTO } from "../dto/DocumentVerificationResultDTO";
 import { VerificationResultDTO } from "../dto/VerificationResultDTO";
 
