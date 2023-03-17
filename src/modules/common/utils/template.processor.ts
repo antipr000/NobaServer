@@ -60,16 +60,14 @@ export class TemplateProcessor {
 
   private async initialize() {
     const start = Date.now();
-    if (!this.browser) {
-      this.browser = await puppeteer.launch({
-        headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless"],
-        executablePath:
-          process.platform === "win32"
-            ? "C:/Program Files/Google/Chrome/Application/chrome.exe"
-            : "/usr/bin/chromium-browser",
-      });
-    }
+    this.browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless"],
+      executablePath:
+        process.platform === "win32"
+          ? "C:/Program Files/Google/Chrome/Application/chrome.exe"
+          : "/usr/bin/chromium-browser",
+    });
     this.writeTimingLog(`Browser initialized`, Date.now() - start);
   }
 
