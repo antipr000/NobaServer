@@ -28,10 +28,53 @@ import { EmployerService } from "../../../modules/employer/employer.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { getRandomPayroll } from "../../../modules/employer/test_utils/payroll.test.utils";
+import { Transaction, TransactionStatus, WorkflowName } from "../../../modules/transaction/domain/Transaction";
+import { v4 } from "uuid";
+import { FeeType } from "../../../modules/transaction/domain/TransactionFee";
+import { TransactionFilterOptionsDTO } from "../../../modules/transaction/dto/TransactionFilterOptionsDTO";
+import {
+  TransactionMappingService,
+  TRANSACTION_MAPPING_SERVICE_PROVIDER,
+} from "../../../modules/transaction/mapper/transaction.mapper.service";
+import { MonoService } from "src/modules/psp/mono/mono.service";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
 const LOGGED_IN_ADMIN_EMAIL = "authenticated@noba.com";
+
+const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
+  const transaction: Transaction = {
+    transactionRef: v4(),
+    exchangeRate: 1,
+    status: TransactionStatus.INITIATED,
+    workflowName: WorkflowName.WALLET_DEPOSIT,
+    id: v4(),
+    sessionKey: v4(),
+    memo: "New transaction",
+    createdTimestamp: new Date(),
+    updatedTimestamp: new Date(),
+    transactionFees: [
+      {
+        amount: 10,
+        currency: "USD",
+        type: FeeType.NOBA,
+        id: v4(),
+        timestamp: new Date(),
+      },
+    ],
+  };
+
+  if (isCreditTransaction) {
+    transaction.creditAmount = 100;
+    transaction.creditCurrency = "USD";
+    transaction.creditConsumerID = consumerID;
+  } else {
+    transaction.debitAmount = 100;
+    transaction.debitCurrency = "USD";
+    transaction.debitConsumerID = consumerID;
+  }
+  return transaction;
+};
 
 describe("AdminController", () => {
   jest.setTimeout(2000);
@@ -44,6 +87,8 @@ describe("AdminController", () => {
   let consumerMapper: ConsumerMapper;
   let employeeService: EmployeeService;
   let employerService: EmployerService;
+  let transactionMappingService: TransactionMappingService;
+  let monoService: MonoService;
 
   beforeEach(async () => {
     process.env = {
@@ -58,6 +103,8 @@ describe("AdminController", () => {
     mockExchangeRateService = getMockExchangeRateServiceWithDefaults();
     employeeService = getMockEmployeeServiceWithDefaults();
     employerService = getMockEmployerServiceWithDefaults();
+    transactionMappingService = new TransactionMappingService();
+    monoService = new MonoService();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -86,6 +133,14 @@ describe("AdminController", () => {
         {
           provide: EmployerService,
           useFactory: () => instance(employerService),
+        },
+        {
+          provide: MonoService,
+          useFactory: () => instance(monoService),
+        }
+        {
+          provide: TRANSACTION_MAPPING_SERVICE_PROVIDER,
+          useClass: TransactionMappingService,
         },
         AdminMapper,
         ConsumerMapper,
@@ -1245,4 +1300,39 @@ describe("AdminController", () => {
 
     
   });*/
+
+  describe("getAllTransactions", () => {
+    it("should get filtered transactions with resolved tags", async () => {
+      const consumerID = "testConsumerID";
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      transaction.transactionRef = transactionRef;
+      transaction.status = TransactionStatus.COMPLETED;
+
+      const filter: TransactionFilterOptionsDTO = {
+        consumerID: consumerID,
+        transactionStatus: TransactionStatus.COMPLETED,
+        pageLimit: 5,
+        pageOffset: 1,
+      };
+      when(mockAdminService.getFilteredTransactions(deepEqual(filter))).thenResolve({
+        items: [transaction],
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+      });
+
+      const allTransactions = await adminController.getAllTransactions({
+        transactionStatus: TransactionStatus.COMPLETED,
+        pageLimit: 5,
+        pageOffset: 1,
+      });
+
+      expect(allTransactions.items.length).toBe(1);
+      expect(allTransactions.items[0].transactionRef).toBe(transactionRef);
+      expect(allTransactions.items[0].debitConsumer.id).toBe(consumerID);
+      expect(allTransactions.items[0].creditConsumer).toBeNull();
+    });
+  });
 });
