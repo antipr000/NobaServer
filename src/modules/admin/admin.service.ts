@@ -249,6 +249,8 @@ export class AdminService {
   }
 
   async getFilteredTransactions(filter: TransactionFilterOptionsDTO): Promise<PaginatedResult<Transaction>> {
+    console.log("filters", filter);
+
     return this.transactionService.getFilteredTransactions(filter);
   }
 

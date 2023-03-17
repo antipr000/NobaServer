@@ -51,13 +51,13 @@ import { ConsumerInternalDTO } from "../consumer/dto/ConsumerInternalDTO";
 import { UpdatePayrollRequestDTO } from "../employer/dto/payroll.workflow.controller.dto";
 import { PayrollDTO } from "../employer/dto/PayrollDTO";
 import { EmployerService } from "../employer/employer.service";
-import { AdminTransactionQueryResultDTO } from "./dto/AdminTransactionQueryResultDTO";
-import { AdminTransactionFilterOptionsDTO } from "./dto/AdminTransactionFilterOptionsDTO";
 import {
   TransactionMappingService,
   TRANSACTION_MAPPING_SERVICE_PROVIDER,
 } from "../transaction/mapper/transaction.mapper.service";
 import { TransactionDTO } from "../transaction/dto/TransactionDTO";
+import { TransactionFilterOptionsDTO } from "../transaction/dto/TransactionFilterOptionsDTO";
+import { TransactionQueryResultDTO } from "../transaction/dto/TransactionQueryResultDTO";
 
 @Roles(Role.NOBA_ADMIN)
 @Controller("v1/admins")
@@ -365,15 +365,13 @@ export class AdminController {
 
   @Get("/transactions/")
   @ApiTags("Transaction")
-  @ApiOperation({ summary: "Get all transactions for logged in user" })
+  @ApiOperation({ summary: "Gets all transactions for supplied filters" })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: AdminTransactionQueryResultDTO,
+    type: TransactionQueryResultDTO,
   })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async getAllTransactions(
-    @Query() filters: AdminTransactionFilterOptionsDTO,
-  ): Promise<AdminTransactionQueryResultDTO> {
+  async getAllTransactions(@Query() filters: TransactionFilterOptionsDTO): Promise<TransactionQueryResultDTO> {
     filters.pageLimit = Number(filters.pageLimit) || 10;
     filters.pageOffset = Number(filters.pageOffset) || 1;
     const allTransactions = await this.adminService.getFilteredTransactions(filters);

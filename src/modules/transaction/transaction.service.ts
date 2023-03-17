@@ -73,7 +73,10 @@ export class TransactionService {
   }
 
   async getFilteredTransactions(filter: TransactionFilterOptionsDTO): Promise<PaginatedResult<Transaction>> {
-    return await this.transactionRepo.getFilteredTransactions(filter);
+    console.log("filters", this.transactionRepo);
+
+    console.log("filters", filter);
+    return this.transactionRepo.getFilteredTransactions(filter);
   }
 
   async initiateTransactionForPayrolls(payrollDisbursementID: string) {
