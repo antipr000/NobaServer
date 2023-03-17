@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { ConsumerInformation } from "../domain/ConsumerInformation";
+import { ConsumerInformation, KYCFlow } from "../domain/ConsumerInformation";
 import { Sardine } from "../integrations/sardine.client";
 import { v4 } from "uuid";
 import mockAxios from "jest-mock-axios";
@@ -139,7 +139,9 @@ describe("SardineTests", () => {
         email: "test+user@noba.com",
       };
 
-      const responsePromise = sardine.verifyConsumerInformation(KYC_SSN_LOW_RISK.data.sessionKey, consumerInformation);
+      const responsePromise = sardine.verifyConsumerInformation(KYC_SSN_LOW_RISK.data.sessionKey, consumerInformation, [
+        KYCFlow.CUSTOMER,
+      ]);
       expect(mockAxios.post).toHaveBeenCalled();
       mockAxios.mockResponse(KYC_SSN_LOW_RISK);
 
@@ -197,7 +199,9 @@ describe("SardineTests", () => {
         checkpoints: ["customer"],
       };
 
-      const responsePromise = sardine.verifyConsumerInformation(KYC_SSN_LOW_RISK.data.sessionKey, consumerInformation);
+      const responsePromise = sardine.verifyConsumerInformation(KYC_SSN_LOW_RISK.data.sessionKey, consumerInformation, [
+        KYCFlow.CUSTOMER,
+      ]);
       expect(mockAxios.post).toHaveBeenCalledWith("http://localhost:8080/sardine/v1/customers", sardineRequest, {
         auth: { password: "test-secret-key", username: "test-client-id" },
       });
@@ -226,7 +230,11 @@ describe("SardineTests", () => {
         email: "fake-user@fake.com",
       };
 
-      const responsePromise = sardine.verifyConsumerInformation(KYC_SSN_HIGH_RISK.data.sessionKey, consumerInformation);
+      const responsePromise = sardine.verifyConsumerInformation(
+        KYC_SSN_HIGH_RISK.data.sessionKey,
+        consumerInformation,
+        [KYCFlow.CUSTOMER],
+      );
       expect(mockAxios.post).toHaveBeenCalled();
       mockAxios.mockResponse(KYC_SSN_HIGH_RISK);
 
@@ -256,6 +264,7 @@ describe("SardineTests", () => {
       const responsePromise = sardine.verifyConsumerInformation(
         KYC_SSN_VERY_HIGH_RISK.data.sessionKey,
         consumerInformation,
+        [KYCFlow.CUSTOMER],
       );
       expect(mockAxios.post).toHaveBeenCalled();
       mockAxios.mockResponse(KYC_SSN_VERY_HIGH_RISK);
@@ -314,7 +323,9 @@ describe("SardineTests", () => {
         checkpoints: ["customer"],
       };
 
-      const responsePromise = sardine.verifyConsumerInformation(KYC_SSN_LOW_RISK.data.sessionKey, consumerInformation);
+      const responsePromise = sardine.verifyConsumerInformation(KYC_SSN_LOW_RISK.data.sessionKey, consumerInformation, [
+        KYCFlow.CUSTOMER,
+      ]);
       expect(mockAxios.post).toHaveBeenCalledWith("http://localhost:8080/sardine/v1/customers", sardineRequest, {
         auth: { password: "test-secret-key", username: "test-client-id" },
       });
@@ -343,7 +354,9 @@ describe("SardineTests", () => {
         email: "test+user@noba.com",
       };
 
-      const responsePromise = sardine.verifyConsumerInformation(KYC_SSN_LOW_RISK.data.sessionKey, consumerInformation);
+      const responsePromise = sardine.verifyConsumerInformation(KYC_SSN_LOW_RISK.data.sessionKey, consumerInformation, [
+        KYCFlow.CUSTOMER,
+      ]);
       expect(mockAxios.post).toHaveBeenCalled();
       mockAxios.mockError({
         response: {
@@ -381,6 +394,7 @@ describe("SardineTests", () => {
       const responsePromise = sardine.verifyConsumerInformation(
         KYC_SSN_VERY_HIGH_RISK.data.sessionKey,
         consumerInformation,
+        [KYCFlow.CUSTOMER],
       );
       expect(mockAxios.post).toHaveBeenCalled();
       mockAxios.mockError({
@@ -1371,7 +1385,7 @@ describe("SardineTests", () => {
       const consumer = getFakeConsumer();
       when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
 
-      sardine.postConsumerFeedback("fake-session", consumer.props.id, consumerVerificationResult);
+      sardine.postConsumerFeedback("fake-session", consumer.props.id, consumerVerificationResult.status);
       await sleep(500);
       expect(mockAxios.post).toHaveBeenCalled();
     });
@@ -1387,7 +1401,7 @@ describe("SardineTests", () => {
       const responsePromise = sardine.postConsumerFeedback(
         "fake-session",
         consumer.props.id,
-        consumerVerificationResult,
+        consumerVerificationResult.status,
       );
       await sleep(500);
       expect(mockAxios.post).toHaveBeenCalled();
@@ -1413,7 +1427,7 @@ describe("SardineTests", () => {
       const responsePromise = sardine.postConsumerFeedback(
         "fake-session",
         consumer.props.id,
-        consumerVerificationResult,
+        consumerVerificationResult.status,
       );
       await sleep(500);
       expect(mockAxios.post).toHaveBeenCalled();

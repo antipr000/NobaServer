@@ -6,6 +6,11 @@ export type NationalID = {
   number: string;
 };
 
+export enum KYCFlow {
+  LOGIN = "login",
+  CUSTOMER = "customer",
+}
+
 export type ConsumerInformation = {
   userID: string;
   createdTimestampMillis?: number;

@@ -10,7 +10,7 @@ import { ConsumerService } from "../../consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.consumer.service";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { ConsumerInformation } from "../domain/ConsumerInformation";
+import { ConsumerInformation, KYCFlow } from "../domain/ConsumerInformation";
 import { BadRequestException } from "@nestjs/common";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
@@ -179,17 +179,21 @@ describe("VerificationService", () => {
       };
 
       when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
-        consumerVerificationResult,
-      );
+      when(
+        idvProvider.verifyConsumerInformation(
+          sessionKey,
+          deepEqual(consumerInformation),
+          deepEqual([KYCFlow.CUSTOMER]),
+        ),
+      ).thenResolve(consumerVerificationResult);
 
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(
-        idvProvider.postConsumerFeedback(sessionKey, consumer.props.id, deepEqual(consumerVerificationResult)),
+        idvProvider.postConsumerFeedback(sessionKey, consumer.props.id, consumerVerificationResult.status),
       ).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
-      expect(result).toStrictEqual(consumerVerificationResult);
+      expect(result).toStrictEqual(consumerVerificationResult.status);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
@@ -231,13 +235,17 @@ describe("VerificationService", () => {
       };
 
       when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
-        consumerVerificationResult,
-      );
+      when(
+        idvProvider.verifyConsumerInformation(
+          sessionKey,
+          deepEqual(consumerInformation),
+          deepEqual([KYCFlow.CUSTOMER]),
+        ),
+      ).thenResolve(consumerVerificationResult);
 
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(
-        idvProvider.postConsumerFeedback(sessionKey, consumer.props.id, deepEqual(consumerVerificationResult)),
+        idvProvider.postConsumerFeedback(sessionKey, consumer.props.id, consumerVerificationResult.status),
       ).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
@@ -284,17 +292,21 @@ describe("VerificationService", () => {
       };
 
       when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
-        consumerVerificationResult,
-      );
+      when(
+        idvProvider.verifyConsumerInformation(
+          sessionKey,
+          deepEqual(consumerInformation),
+          deepEqual([KYCFlow.CUSTOMER]),
+        ),
+      ).thenResolve(consumerVerificationResult);
 
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       when(
-        idvProvider.postConsumerFeedback(sessionKey, consumer.props.id, deepEqual(consumerVerificationResult)),
+        idvProvider.postConsumerFeedback(sessionKey, consumer.props.id, consumerVerificationResult.status),
       ).thenResolve();
 
       const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
-      expect(result).toStrictEqual(consumerVerificationResult);
+      expect(result).toStrictEqual(consumerVerificationResult.status);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_DENIED_EVENT,
@@ -337,13 +349,17 @@ describe("VerificationService", () => {
       };
 
       when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation))).thenResolve(
-        consumerVerificationResult,
-      );
+      when(
+        idvProvider.verifyConsumerInformation(
+          sessionKey,
+          deepEqual(consumerInformation),
+          deepEqual([KYCFlow.CUSTOMER]),
+        ),
+      ).thenResolve(consumerVerificationResult);
 
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
       const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
-      expect(result).toStrictEqual(consumerVerificationResult);
+      expect(result).toStrictEqual(consumerVerificationResult.status);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT,
@@ -383,8 +399,8 @@ describe("VerificationService", () => {
         Consumer.createConsumer(newConsumerProps),
       );
 
-      const result = await verificationService.getDocumentVerificationResult(consumer.props.id, verificationId);
-      expect(result.status).toBe(DocumentVerificationStatus.APPROVED);
+      const status = await verificationService.getDocumentVerificationResult(consumer.props.id, verificationId);
+      expect(status).toBe(DocumentVerificationStatus.APPROVED);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
@@ -430,8 +446,8 @@ describe("VerificationService", () => {
           Consumer.createConsumer(newConsumerProps),
         );
 
-        const result = await verificationService.getDocumentVerificationResult(consumer.props.id, verificationId);
-        expect(result.status).toEqual(rejectedStatus);
+        const status = await verificationService.getDocumentVerificationResult(consumer.props.id, verificationId);
+        expect(status).toEqual(rejectedStatus);
         verify(
           notificationService.sendNotification(
             NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,

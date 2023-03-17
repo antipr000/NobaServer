@@ -3,7 +3,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { ConsumerService } from "../consumer/consumer.service";
 import { IDVProvider } from "./integrations/IDVProvider";
-import { ConsumerInformation } from "./domain/ConsumerInformation";
+import { ConsumerInformation, KYCFlow } from "./domain/ConsumerInformation";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "./domain/VerificationResult";
 import { Consumer, ConsumerProps } from "../consumer/domain/Consumer";
 import { DocumentInformation } from "./domain/DocumentInformation";
@@ -46,43 +46,29 @@ export class VerificationService {
     return this.idvProvider.getHealth();
   }
 
-  async verifyConsumerInformation(consumerID: string, sessionKey: string): Promise<ConsumerVerificationResult> {
-    const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
+  async verifyConsumerInformationForLogin(consumerID: string, sessionKey: string): Promise<KYCStatus> {
+    const verifiedConsumerData = await this.verifyConsumerInformationInternal(consumerID, sessionKey, [KYCFlow.LOGIN]);
+    await this.consumerService.updateConsumer(verifiedConsumerData);
+    const status = verifiedConsumerData.verificationData.kycCheckStatus;
+    if (status === KYCStatus.APPROVED) {
+      await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
+    } else if (status === KYCStatus.REJECTED) {
+      await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
+    } else {
+      this.logger.error("Unexpected KYC status: " + status);
+    }
+    return status;
+  }
 
-    // Augment request with created timestamp info for verification provider
-    const consumerInformation: ConsumerInformation = {
-      userID: consumerID,
-      firstName: consumer.props.firstName,
-      lastName: consumer.props.lastName,
-      dateOfBirth: consumer.props.dateOfBirth,
-      address: consumer.props.address,
-      email: consumer.props.email,
-      phoneNumber: consumer.props.phone,
-      createdTimestampMillis: consumer.props.createdTimestamp.getTime(),
-    };
-    const result: ConsumerVerificationResult = await this.idvProvider.verifyConsumerInformation(
-      sessionKey,
-      consumerInformation,
-    );
-    const verifiedConsumerData: ConsumerProps = {
-      ...consumer.props,
-      address: consumerInformation.address,
-      verificationData: {
-        ...consumer.props.verificationData,
-        kycCheckStatus: result.status,
-        kycVerificationTimestamp: new Date(),
-        riskRating: result.idvProviderRiskLevel,
-        documentVerificationStatus: this.needsDocumentVerification(consumerInformation.address.countryCode)
-          ? DocumentVerificationStatus.REQUIRED
-          : DocumentVerificationStatus.NOT_REQUIRED,
-        documentVerificationTimestamp: new Date(),
-      },
-    };
-
+  async verifyConsumerInformation(consumerID: string, sessionKey: string): Promise<KYCStatus> {
+    const verifiedConsumerData = await this.verifyConsumerInformationInternal(consumerID, sessionKey, [
+      KYCFlow.CUSTOMER,
+    ]);
     const updatedConsumer = await this.consumerService.updateConsumer(verifiedConsumerData);
+    const status = verifiedConsumerData.verificationData.kycCheckStatus;
 
-    if (result.status === KYCStatus.APPROVED) {
-      await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, result);
+    if (status === KYCStatus.APPROVED) {
+      await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
       await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, {
         locale: updatedConsumer.props.locale,
         firstName: updatedConsumer.props.firstName,
@@ -90,8 +76,8 @@ export class VerificationService {
         nobaUserID: updatedConsumer.props.id,
         email: updatedConsumer.props.displayEmail,
       });
-    } else if (result.status === KYCStatus.REJECTED) {
-      await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, result);
+    } else if (status === KYCStatus.REJECTED) {
+      await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
       await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_DENIED_EVENT, {
         locale: updatedConsumer.props.locale,
         firstName: updatedConsumer.props.firstName,
@@ -108,7 +94,48 @@ export class VerificationService {
         email: updatedConsumer.props.displayEmail,
       });
     }
-    return result;
+    return status;
+  }
+
+  private async verifyConsumerInformationInternal(
+    consumerID: string,
+    sessionKey: string,
+    kycFlow: KYCFlow[],
+  ): Promise<ConsumerProps> {
+    const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
+
+    // Augment request with created timestamp info for verification provider
+    const consumerInformation: ConsumerInformation = {
+      userID: consumerID,
+      firstName: consumer.props.firstName,
+      lastName: consumer.props.lastName,
+      dateOfBirth: consumer.props.dateOfBirth,
+      address: consumer.props.address,
+      email: consumer.props.email,
+      phoneNumber: consumer.props.phone,
+      createdTimestampMillis: consumer.props.createdTimestamp.getTime(),
+    };
+    const result: ConsumerVerificationResult = await this.idvProvider.verifyConsumerInformation(
+      sessionKey,
+      consumerInformation,
+      kycFlow,
+    );
+    const verifiedConsumerData: ConsumerProps = {
+      ...consumer.props,
+      address: consumerInformation.address,
+      verificationData: {
+        ...consumer.props.verificationData,
+        kycCheckStatus: result.status,
+        kycVerificationTimestamp: new Date(),
+        riskRating: result.idvProviderRiskLevel,
+        // We don't want to change doc verification flag here for this basic KYC check
+        /*documentVerificationStatus: this.needsDocumentVerification(consumerInformation.address.countryCode)
+          ? DocumentVerificationStatus.REQUIRED
+          : DocumentVerificationStatus.NOT_REQUIRED,
+        documentVerificationTimestamp: new Date(),*/
+      },
+    };
+    return verifiedConsumerData;
   }
 
   async processKycVerificationWebhookRequest(requestBody: CaseNotificationWebhookRequest) {
@@ -127,7 +154,7 @@ export class VerificationService {
 
       await this.consumerService.updateConsumer(newConsumerData);
 
-      await this.idvProvider.postConsumerFeedback(requestBody.data.case.sessionKey, consumerID, result);
+      await this.idvProvider.postConsumerFeedback(requestBody.data.case.sessionKey, consumerID, result.status);
 
       if (result.status === KYCStatus.APPROVED) {
         await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, {
@@ -192,7 +219,7 @@ export class VerificationService {
     return id;
   }
 
-  async getDocumentVerificationResult(consumerID: string, verificationID: string): Promise<DocumentVerificationResult> {
+  async getDocumentVerificationResult(consumerID: string, verificationID: string): Promise<DocumentVerificationStatus> {
     const result = await this.idvProvider.getDocumentVerificationResult(verificationID);
     const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
     const newConsumerData: ConsumerProps = {
@@ -231,7 +258,7 @@ export class VerificationService {
       });
     }
 
-    return result;
+    return result.status;
   }
 
   async getDocumentVerificationURL(
@@ -361,9 +388,9 @@ export class VerificationService {
     return await this.idvProvider.getDeviceVerificationResult(sessionKey);
   }
 
-  async createSession(): Promise<VerificationData> {
+  async createSession(consumerID?: string): Promise<VerificationData> {
     const sessionKey = Entity.getNewID();
-    const verificationData = VerificationData.createVerificationData({ id: sessionKey });
+    const verificationData = VerificationData.createVerificationData({ id: sessionKey, userID: consumerID });
     return await this.verificationDataRepo.saveVerificationData(verificationData);
   }
 

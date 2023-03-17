@@ -93,8 +93,8 @@ export class VerificationController {
     @Query("sessionKey") sessionKey: string,
     @AuthUser() consumer: Consumer,
   ): Promise<VerificationResultDTO> {
-    const result = await this.verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
-    return this.verificationResponseMapper.toConsumerInformationResultDTO(result);
+    const status = await this.verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
+    return this.verificationResponseMapper.toConsumerInformationResultDTO(status);
   }
 
   @Post("/document")
@@ -178,8 +178,8 @@ export class VerificationController {
     if (id !== consumer.props.verificationData.documentCheckReference) {
       throw new NotFoundException("No verification record is found for the user with the given id");
     }
-    const result = await this.verificationService.getDocumentVerificationResult(consumer.props.id, id);
-    return this.verificationResponseMapper.toDocumentResultDTO(result);
+    const status = await this.verificationService.getDocumentVerificationResult(consumer.props.id, id);
+    return this.verificationResponseMapper.toDocumentResultDTO(status);
   }
 
   @Get("/document/url")
@@ -270,7 +270,7 @@ export class VerificationWebhookController {
     try {
       const result = await this.verificationService.processDocumentVerificationWebhookResult(requestBody);
       if (!result) return null;
-      return this.verificationResponseMapper.toDocumentResultDTO(result);
+      return this.verificationResponseMapper.toDocumentResultDTO(result.status);
     } catch (err) {
       this.logger.error(
         `Error processing Sardine webhook document verification response: request body: ${JSON.stringify(

@@ -50,7 +50,7 @@ describe("AuthController", () => {
   });
 
   describe("newAccessToken", () => {
-    it("it should return new access token assuming refresh token valid", async () => {
+    it("it should return new access token assuming refresh token valid (no session key)", async () => {
       const consumerId = "1111111111";
       const token = "nobatoken";
       const request: NewAccessTokenRequestDTO = {
@@ -66,7 +66,35 @@ describe("AuthController", () => {
 
       when(mockConsumerAuthService.validateToken(token, consumerId)).thenResolve(true);
       when(mockConsumerAuthService.invalidateToken(token, consumerId)).thenResolve();
-      when(mockConsumerAuthService.generateAccessToken(consumerId, true)).thenResolve(generateAccessTokenResponse);
+      when(mockConsumerAuthService.generateAccessToken(consumerId, true, undefined)).thenResolve(
+        generateAccessTokenResponse,
+      );
+
+      const result: LoginResponseDTO = await authController.newAccessToken(request);
+
+      expect(result).toEqual(generateAccessTokenResponse);
+    });
+
+    it("it should return new access token assuming refresh token valid (with session key)", async () => {
+      const consumerId = "1111111111";
+      const token = "nobatoken";
+      const request: NewAccessTokenRequestDTO = {
+        userID: consumerId,
+        refreshToken: token,
+        sessionKey: "session-key",
+      };
+
+      const generateAccessTokenResponse: LoginResponseDTO = {
+        userID: consumerId,
+        accessToken: "xxxxxx-yyyyyy-zzzzzz",
+        refreshToken: "new-refresh-token",
+      };
+
+      when(mockConsumerAuthService.validateToken(token, consumerId)).thenResolve(true);
+      when(mockConsumerAuthService.invalidateToken(token, consumerId)).thenResolve();
+      when(mockConsumerAuthService.generateAccessToken(consumerId, true, request.sessionKey)).thenResolve(
+        generateAccessTokenResponse,
+      );
 
       const result: LoginResponseDTO = await authController.newAccessToken(request);
 
@@ -93,7 +121,7 @@ describe("AuthController", () => {
   });
 
   describe("verifyOtp", () => {
-    it("should use 'UserAuthService'", async () => {
+    it("should use 'UserAuthService' without session key", async () => {
       const consumerId = "1111111111";
       const consumerEmail = "consumer@noba.com";
       const otp = 123456;
@@ -103,12 +131,38 @@ describe("AuthController", () => {
       };
 
       when(mockConsumerAuthService.validateAndGetUserId(consumerEmail, otp)).thenResolve(consumerId);
-      when(mockConsumerAuthService.generateAccessToken(consumerId, false)).thenResolve(generateAccessTokenResponse);
+      when(mockConsumerAuthService.generateAccessToken(consumerId, false, undefined)).thenResolve(
+        generateAccessTokenResponse,
+      );
 
       const result: LoginResponseDTO = await authController.verifyOtp({
         emailOrPhone: consumerEmail,
         otp: otp,
         includeRefreshToken: false,
+      });
+
+      expect(result).toEqual(generateAccessTokenResponse);
+    });
+
+    it("should use 'UserAuthService' with session key", async () => {
+      const consumerId = "1111111111";
+      const consumerEmail = "consumer@noba.com";
+      const otp = 123456;
+      const generateAccessTokenResponse: LoginResponseDTO = {
+        userID: consumerId,
+        accessToken: "xxxxxx-yyyyyy-zzzzzz",
+      };
+
+      when(mockConsumerAuthService.validateAndGetUserId(consumerEmail, otp)).thenResolve(consumerId);
+      when(mockConsumerAuthService.generateAccessToken(consumerId, false, "session-key")).thenResolve(
+        generateAccessTokenResponse,
+      );
+
+      const result: LoginResponseDTO = await authController.verifyOtp({
+        emailOrPhone: consumerEmail,
+        otp: otp,
+        includeRefreshToken: false,
+        sessionKey: "session-key",
       });
 
       expect(result).toEqual(generateAccessTokenResponse);
@@ -248,12 +302,11 @@ describe("AuthController", () => {
         accessToken: "fake-token",
       };
       when(mockAdminAuthService.validateAndGetUserId(adminEmail, otp)).thenResolve(adminId);
-      when(mockAdminAuthService.generateAccessToken(adminId, true)).thenResolve(generateAccessTokenResponse);
+      when(mockAdminAuthService.generateAccessToken(adminId, false)).thenResolve(generateAccessTokenResponse);
 
       const result: LoginResponseDTO = await authController.verifyAdminOtp({
         emailOrPhone: adminEmail,
         otp: otp,
-        includeRefreshToken: true,
       });
 
       expect(result).toEqual(generateAccessTokenResponse);

@@ -4,7 +4,7 @@ import { VerificationService } from "../verification.service";
 export function getMockVerificationServiceWithDefaults(): VerificationService {
   const mockVerificationService = mock(VerificationService);
 
-  when(mockVerificationService.createSession()).thenReject(new Error("Method not implemented"));
+  when(mockVerificationService.createSession(anyString())).thenReject(new Error("Method not implemented"));
   when(mockVerificationService.verifyConsumerInformation(anyString(), anyString())).thenReject(
     new Error("Method not implemented"),
   );

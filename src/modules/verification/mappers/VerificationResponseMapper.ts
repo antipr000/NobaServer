@@ -1,3 +1,4 @@
+import { DocumentVerificationStatus, KYCStatus } from "@prisma/client";
 import { StatesMapper } from "../../../modules/consumer/mappers/StatesMapper";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { DocumentVerificationResultDTO } from "../dto/DocumentVerificationResultDTO";
@@ -10,16 +11,16 @@ export class VerificationResponseMapper {
     this.statesMapper = new StatesMapper();
   }
 
-  toConsumerInformationResultDTO(t: ConsumerVerificationResult): VerificationResultDTO {
+  toConsumerInformationResultDTO(status: KYCStatus): VerificationResultDTO {
     return {
-      status: this.statesMapper.getKycVerificationState(t.status),
+      status: this.statesMapper.getKycVerificationState(status),
     };
   }
 
-  toDocumentResultDTO(t: DocumentVerificationResult): DocumentVerificationResultDTO {
-    const [status, errorReason] = this.statesMapper.getDocumentVerificationState(t.status);
+  toDocumentResultDTO(status: DocumentVerificationStatus): DocumentVerificationResultDTO {
+    const [state, errorReason] = this.statesMapper.getDocumentVerificationState(status);
     return {
-      status,
+      status: state,
       errorReason,
     };
   }

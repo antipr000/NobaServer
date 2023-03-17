@@ -78,9 +78,9 @@ describe("VerificationController", () => {
         email: "test@noba.com",
       });
 
-      when(verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session")).thenResolve({
-        status: KYCStatus.APPROVED,
-      });
+      when(verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session")).thenResolve(
+        KYCStatus.APPROVED,
+      );
 
       const result = await verificationController.verifyConsumer("test-session", consumer);
 
@@ -108,9 +108,9 @@ describe("VerificationController", () => {
         email: "fake@noba.com",
       });
 
-      when(verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session")).thenResolve({
-        status: KYCStatus.REJECTED,
-      });
+      when(verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session")).thenResolve(
+        KYCStatus.REJECTED,
+      );
 
       const result = await verificationController.verifyConsumer("test-session", consumer);
 
@@ -138,9 +138,9 @@ describe("VerificationController", () => {
         email: "shadyemail@noba.com",
       });
 
-      when(verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session")).thenResolve({
-        status: KYCStatus.FLAGGED,
-      });
+      when(verificationService.verifyConsumerInformation(consumerInfo.userID, "test-session")).thenResolve(
+        KYCStatus.FLAGGED,
+      );
 
       const result = await verificationController.verifyConsumer("test-session", consumer);
 
@@ -167,9 +167,9 @@ describe("VerificationController", () => {
         },
       });
 
-      when(verificationService.getDocumentVerificationResult(consumer.props.id, "fake-transaction-2")).thenResolve({
-        status: DocumentVerificationStatus.APPROVED,
-      });
+      when(verificationService.getDocumentVerificationResult(consumer.props.id, "fake-transaction-2")).thenResolve(
+        DocumentVerificationStatus.APPROVED,
+      );
 
       try {
         await verificationController.getDocumentVerificationResult("fake-transaction-2", {
@@ -200,9 +200,9 @@ describe("VerificationController", () => {
         },
       });
 
-      when(verificationService.getDocumentVerificationResult(consumer.props.id, "fake-transaction-2")).thenResolve({
-        status: DocumentVerificationStatus.APPROVED,
-      });
+      when(verificationService.getDocumentVerificationResult(consumer.props.id, "fake-transaction-2")).thenResolve(
+        DocumentVerificationStatus.APPROVED,
+      );
 
       const result = await verificationController.getDocumentVerificationResult("fake-transaction-2", {
         user: { entity: consumer } as AuthenticatedUser,

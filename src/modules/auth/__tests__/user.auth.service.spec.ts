@@ -20,6 +20,8 @@ import { Token } from "../domain/Token";
 import { OTPService } from "../../../modules/common/otp.service";
 import { getMockOTPServiceWithDefaults } from "../../common/mocks/mock.otp.service";
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
+import { VerificationService } from "../../../modules/verification/verification.service";
+import { getMockVerificationServiceWithDefaults } from "../../../modules/verification/mocks/mock.verification.service";
 
 describe("UserAuthService", () => {
   jest.setTimeout(5000);
@@ -29,6 +31,7 @@ describe("UserAuthService", () => {
     let mockOTPService: OTPService;
     let mockTokenRepo: ITokenRepo;
     let mockNotificationService: NotificationService;
+    let mockVerificationService: VerificationService;
 
     const testJwtSecret = "TEST_SECRET";
     const identityType = consumerIdentityIdentifier;
@@ -39,6 +42,7 @@ describe("UserAuthService", () => {
       mockOTPService = getMockOTPServiceWithDefaults();
       mockTokenRepo = getMockTokenRepoWithDefaults();
       mockNotificationService = getMockNotificationServiceWithDefaults();
+      mockVerificationService = getMockVerificationServiceWithDefaults();
 
       const app: TestingModule = await Test.createTestingModule({
         imports: [
@@ -66,6 +70,10 @@ describe("UserAuthService", () => {
           {
             provide: NotificationService,
             useFactory: () => instance(mockNotificationService),
+          },
+          {
+            provide: VerificationService,
+            useFactory: () => instance(mockVerificationService),
           },
           UserAuthService,
         ],
@@ -110,19 +118,34 @@ describe("UserAuthService", () => {
     describe("generateAccessToken", () => {
       it("generate access token without refresh token", async () => {
         const id = "nobauser";
+        when(mockVerificationService.verifyConsumerInformationForLogin(id, "NOT_PROVIDED")).thenResolve();
         const jwt = await userAuthService.generateAccessToken(id, false);
         expect(jwt.accessToken).toBeDefined();
         expect(jwt.userID).toBe(id);
         expect(jwt.refreshToken).toBe("");
+        verify(mockVerificationService.verifyConsumerInformationForLogin(id, "NOT_PROVIDED")).once();
       });
 
       it("generate access token with refresh token", async () => {
-        const id = "nobauser";
+        const id = "nobauser1";
         when(mockTokenRepo.saveToken(anything())).thenResolve();
+        when(mockVerificationService.verifyConsumerInformationForLogin(id, "NOT_PROVIDED")).thenResolve();
         const jwt = await userAuthService.generateAccessToken(id, true);
         expect(jwt.accessToken).toBeDefined();
         expect(jwt.userID).toBe(id);
         expect(jwt.refreshToken).toBeDefined();
+        verify(mockVerificationService.verifyConsumerInformationForLogin(id, "NOT_PROVIDED")).once();
+      });
+
+      it("generate access token with refresh token and session id", async () => {
+        const id = "nobauser2";
+        when(mockTokenRepo.saveToken(anything())).thenResolve();
+        when(mockVerificationService.verifyConsumerInformationForLogin(id, "session-id")).thenResolve();
+        const jwt = await userAuthService.generateAccessToken(id, true, "session-id");
+        expect(jwt.accessToken).toBeDefined();
+        expect(jwt.userID).toBe(id);
+        expect(jwt.refreshToken).toBeDefined();
+        verify(mockVerificationService.verifyConsumerInformationForLogin(id, "session-id")).once();
       });
     });
 
@@ -284,6 +307,7 @@ describe("UserAuthService", () => {
     let mockOTPService: OTPService;
     let mockTokenRepo: ITokenRepo;
     let mockNotificationService: NotificationService;
+    let mockVerificationService: VerificationService;
 
     const testJwtSecret = "TEST_SECRET";
 
@@ -308,6 +332,7 @@ describe("UserAuthService", () => {
       mockOTPService = getMockOTPServiceWithDefaults();
       mockTokenRepo = getMockTokenRepoWithDefaults();
       mockNotificationService = getMockNotificationServiceWithDefaults();
+      mockVerificationService = getMockVerificationServiceWithDefaults();
 
       const app: TestingModule = await Test.createTestingModule({
         imports: [
@@ -335,6 +360,10 @@ describe("UserAuthService", () => {
           {
             provide: NotificationService,
             useFactory: () => instance(mockNotificationService),
+          },
+          {
+            provide: VerificationService,
+            useFactory: () => instance(mockVerificationService),
           },
           UserAuthService,
         ],

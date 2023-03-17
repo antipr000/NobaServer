@@ -1,3 +1,4 @@
+import { BadRequestException } from "@nestjs/common";
 import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
@@ -91,22 +92,42 @@ describe("VerificationRepoTests", () => {
   });
 
   describe("getSessionKeyFromFilters", () => {
-    it("should get session key from filters", async () => {
+    it("should throw BadRequestException if request ", async () => {
       const verificationData = getVerificationData("6");
       await verificationRepo.saveVerificationData(verificationData);
-      const sessionKey = await verificationRepo.getSessionKeyFromFilters({ id: mkid("5") });
-      expect(sessionKey).toBe(mkid("1"));
+      expect(async () => {
+        await verificationRepo.getSessionKeyFromFilters({ id: mkid("5") });
+      }).rejects.toThrow(BadRequestException);
+    });
+
+    it("should get session key from user and transaction ID filters", async () => {
+      getVerificationData("15"); // Generate some noise data
+      const verificationData = getVerificationData("7", { userID: "user-id-1", transactionId: "transaction-id-1" });
+      getVerificationData("16"); // Generate some noise data
+
+      await verificationRepo.saveVerificationData(verificationData);
+      const sessionKey1 = await verificationRepo.getSessionKeyFromFilters({ userID: "user-id-1" });
+      expect(sessionKey1).toBe(mkid("7"));
+
+      const sessionKey2 = await verificationRepo.getSessionKeyFromFilters({ transactionID: "transaction-id-1" });
+      expect(sessionKey2).toBe(mkid("7"));
+
+      const sessionKey3 = await verificationRepo.getSessionKeyFromFilters({
+        userID: "user-id-1",
+        transactionID: "transaction-id-1",
+      });
+      expect(sessionKey3).toBe(mkid("7"));
     });
   });
 });
 
 const getVerificationData = (
   id: string,
-  options: { userId?: string; transactionId?: string } = {},
+  options: { userID?: string; transactionId?: string } = {},
 ): VerificationData => {
   const props: VerificationDataProps = {
     id: mkid(id),
-    userID: options.userId || DEFAULT_USER_ID,
+    userID: options.userID || DEFAULT_USER_ID,
     transactionID: options.transactionId || DEFAULT_TRANSACTION_ID + "_" + uuid(),
   };
   const verificationData = VerificationData.createVerificationData(props);

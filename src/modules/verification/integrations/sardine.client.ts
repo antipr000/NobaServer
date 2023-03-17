@@ -9,7 +9,7 @@ import axios, { AxiosRequestConfig } from "axios";
 import { KYCStatus, DocumentVerificationStatus } from "@prisma/client";
 import { SardineConfigs } from "../../../config/configtypes/SardineConfigs";
 import { SARDINE_CONFIG_KEY } from "../../../config/ConfigurationUtils";
-import { ConsumerInformation } from "../domain/ConsumerInformation";
+import { ConsumerInformation, KYCFlow } from "../domain/ConsumerInformation";
 import { DocumentInformation } from "../domain/DocumentInformation";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { IDVProvider } from "./IDVProvider";
@@ -92,6 +92,7 @@ export class Sardine implements IDVProvider {
   async verifyConsumerInformation(
     sessionKey: string,
     consumerInfo: ConsumerInformation,
+    kycFlow: KYCFlow[],
   ): Promise<ConsumerVerificationResult> {
     const flowType = consumerInfo.address?.countryCode.toLocaleLowerCase() === "us" ? "kyc-us" : "kyc-non-us";
     const sardineRequest: SardineCustomerRequest = {
@@ -107,7 +108,9 @@ export class Sardine implements IDVProvider {
         isEmailVerified: true,
         type: CustomerType.CUSTOMER,
       },
-      checkpoints: ["customer"],
+      checkpoints: kycFlow.map(flow => {
+        return flow.toString();
+      }),
     };
 
     if (consumerInfo.address) {
@@ -588,7 +591,7 @@ export class Sardine implements IDVProvider {
     };
   }
 
-  async postConsumerFeedback(sessionKey: string, consumerID: string, result: ConsumerVerificationResult) {
+  async postConsumerFeedback(sessionKey: string, consumerID: string, status: KYCStatus) {
     const consumer = await this.consumerService.getConsumer(consumerID);
     try {
       const payload: FeedbackRequest = {
@@ -598,7 +601,7 @@ export class Sardine implements IDVProvider {
           id: Utils.generateUUID(),
           type: FeedbackType.ONBOARDING,
           timeMillis: Date.now(),
-          status: result.status === KYCStatus.APPROVED ? FeedbackStatus.APPROVED : FeedbackStatus.DECLINED,
+          status: status === KYCStatus.APPROVED ? FeedbackStatus.APPROVED : FeedbackStatus.DECLINED,
         },
       };
 

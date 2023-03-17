@@ -1,6 +1,6 @@
 import { IClient } from "../../../core/domain/IClient";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
-import { ConsumerInformation } from "../domain/ConsumerInformation";
+import { ConsumerInformation, KYCFlow } from "../domain/ConsumerInformation";
 import { DocumentInformation } from "../domain/DocumentInformation";
 import { TransactionVerification } from "../domain/TransactionVerification";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
@@ -13,7 +13,11 @@ import {
 } from "./SardineTypeDefinitions";
 
 export interface IDVProvider extends IClient {
-  verifyConsumerInformation(sessionKey: string, consumerInfo: ConsumerInformation): Promise<ConsumerVerificationResult>;
+  verifyConsumerInformation(
+    sessionKey: string,
+    consumerInfo: ConsumerInformation,
+    kycFlow: KYCFlow[],
+  ): Promise<ConsumerVerificationResult>;
 
   verifyDocument(sessionKey: string, documentInfo: DocumentInformation, consumer: Consumer): Promise<string>;
 
@@ -42,7 +46,7 @@ export interface IDVProvider extends IClient {
 
   processKycVerificationWebhookResult(resultData: CaseNotificationWebhookRequest): ConsumerVerificationResult;
 
-  postConsumerFeedback(sessionKey: string, consumerID: string, result: ConsumerVerificationResult): Promise<void>;
+  postConsumerFeedback(sessionKey: string, consumerID: string, status: string): Promise<void>;
 
   postDocumentFeedback(sessionKey: string, result: DocumentVerificationResult): Promise<void>;
 

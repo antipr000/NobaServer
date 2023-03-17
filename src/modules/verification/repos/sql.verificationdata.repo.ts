@@ -49,10 +49,13 @@ export class SQLVerificationDataRepo implements IVerificationDataRepo {
   }
 
   async getSessionKeyFromFilters(filters: Partial<VerificationDataProps>): Promise<string> {
+    if (!filters.transactionID && !filters.userID) throw new BadRequestException("No filters provided");
+
     try {
       const verificationDataProps = await this.prismaService.verification.findFirstOrThrow({
         where: {
-          transactionID: filters.transactionID,
+          ...(filters.transactionID && { transactionID: filters.transactionID }),
+          ...(filters.userID && { userID: filters.userID }),
         },
       });
       return verificationDataProps.id;

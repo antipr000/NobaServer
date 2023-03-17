@@ -15,6 +15,7 @@ import { HeaderValidationService } from "./header.validation.service";
 import { NotificationsModule } from "../notifications/notification.module";
 import { SQLTokenRepo } from "./repo/sql.token.repo";
 import { BubbleWebhookAuthGuard } from "./bubble.webhooks.auth.guard";
+import { VerificationModule } from "../verification/verification.module";
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { BubbleWebhookAuthGuard } from "./bubble.webhooks.auth.guard";
     ConfigModule,
     CommonModule,
     NotificationsModule,
+    VerificationModule,
   ],
   providers: [
     JwtStrategy,

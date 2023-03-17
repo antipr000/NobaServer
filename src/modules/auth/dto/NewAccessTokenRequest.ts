@@ -1,9 +1,12 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class NewAccessTokenRequestDTO {
-  @ApiProperty({ description: "userId of user who owns the refresh token" })
+  @ApiProperty({ description: "ID of user who owns the refresh token" })
   userID: string;
 
-  @ApiProperty({ description: "Refresh token to get new acess token" })
+  @ApiProperty({ description: "Refresh token to get new access token" })
   refreshToken: string;
+
+  @ApiPropertyOptional({ description: "Session key, if known" })
+  sessionKey?: string;
 }

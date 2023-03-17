@@ -10,6 +10,8 @@ import { STATIC_DEV_OTP } from "../../config/ConfigurationUtils";
 import { OTPService } from "../common/otp.service";
 import { ITokenRepo } from "./repo/token.repo";
 import { Token } from "./domain/Token";
+import { VerificationService } from "../verification/verification.service";
+import { IdentityType } from "./domain/IdentityType";
 
 @Injectable()
 export abstract class AuthService {
@@ -27,6 +29,9 @@ export abstract class AuthService {
 
   @Inject()
   private readonly otpService: OTPService;
+
+  @Inject()
+  private readonly verificationService: VerificationService;
 
   private otpOverride: number;
 
@@ -62,7 +67,25 @@ export abstract class AuthService {
     await this.tokenRepo.deleteToken(rawToken, userID);
   }
 
-  async generateAccessToken(consumerID: string, includeRefreshToken?: boolean): Promise<LoginResponseDTO> {
+  async generateAccessToken(
+    consumerID: string,
+    includeRefreshToken?: boolean,
+    sessionKey?: string,
+  ): Promise<LoginResponseDTO> {
+    if (this.getIdentityType() == IdentityType.CONSUMER) {
+      // Run login KYC on the user
+      if (!sessionKey)
+        this.logger.error(
+          `Session key is missing for consumer ${consumerID} access token request. Calling with generic "NOT_PROVIDED" session key.`,
+        );
+      const status = this.verificationService.verifyConsumerInformationForLogin(
+        consumerID,
+        sessionKey || "NOT_PROVIDED",
+      );
+      // We don't do anything with the status here, but the consumer data has been updated and when the caller (app)
+      // gets the consumer data it will see that the user is blocked.
+    }
+
     let refreshToken = "";
     if (includeRefreshToken) {
       const { rawToken, saltifiedToken } = Token.generateToken(consumerID);

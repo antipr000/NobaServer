@@ -24,7 +24,7 @@ import { AuthService } from "./auth.service";
 import { allIdentities, consumerIdentityIdentifier, nobaAdminIdentityIdentifier } from "./domain/IdentityType";
 import { AdminLoginRequestDTO, LoginRequestDTO } from "./dto/LoginRequest";
 import { LoginResponseDTO } from "./dto/LoginResponse";
-import { VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
+import { AdminVerifyOtpRequestDTO, VerifyOtpRequestDTO } from "./dto/VerifyOtpRequest";
 import { Public, IsNoApiKeyNeeded } from "./public.decorator";
 import { UserAuthService } from "./user.auth.service";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
@@ -69,7 +69,7 @@ export class AuthController {
 
     await authService.invalidateToken(requestBody.refreshToken, requestBody.userID);
 
-    return authService.generateAccessToken(requestBody.userID, true);
+    return authService.generateAccessToken(requestBody.userID, true, requestBody.sessionKey);
   }
 
   @Public()
@@ -83,7 +83,7 @@ export class AuthController {
     const authService: AuthService = this.getAuthService(consumerIdentityIdentifier);
 
     const userId: string = await authService.validateAndGetUserId(requestBody.emailOrPhone, requestBody.otp);
-    return authService.generateAccessToken(userId, requestBody.includeRefreshToken);
+    return authService.generateAccessToken(userId, requestBody.includeRefreshToken, requestBody.sessionKey);
   }
 
   @Public()
@@ -151,31 +151,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiUnauthorizedResponse({ description: "Invalid OTP" })
   @Post("/admins/auth/verifyotp")
-  async verifyAdminOtp(@Body() requestBody: VerifyOtpRequestDTO): Promise<LoginResponseDTO> {
+  async verifyAdminOtp(@Body() requestBody: AdminVerifyOtpRequestDTO): Promise<LoginResponseDTO> {
     const authService: AuthService = this.getAuthService(nobaAdminIdentityIdentifier);
 
     const userId: string = await authService.validateAndGetUserId(requestBody.emailOrPhone, requestBody.otp);
-    return authService.generateAccessToken(userId, requestBody.includeRefreshToken);
-  }
-
-  @IsNoApiKeyNeeded()
-  @ApiTags("Admin")
-  @UseGuards(AdminAuthGuard)
-  @Post("/admins/auth/accesstoken")
-  @ApiOperation({ summary: "returns a new JWT based access token with a refresh token for admins" })
-  @ApiResponse({ status: HttpStatus.OK, type: LoginResponseDTO, description: "API new access token and refresh token" })
-  @ApiUnauthorizedResponse({ description: "Invalid Refresh Token, either already used or expired" })
-  async newAccessTokenForAdmin(@Body() requestBody: NewAccessTokenRequestDTO): Promise<LoginResponseDTO> {
-    const authService: AuthService = this.getAuthService(nobaAdminIdentityIdentifier);
-
-    const isValidToken = await authService.validateToken(requestBody.refreshToken, requestBody.userID);
-
-    if (!isValidToken) {
-      throw new UnauthorizedException("Invalid refresh token, either it is already used or expired");
-    }
-
-    await authService.invalidateToken(requestBody.refreshToken, requestBody.userID);
-
-    return authService.generateAccessToken(requestBody.userID, true);
+    return authService.generateAccessToken(userId, false);
   }
 }
