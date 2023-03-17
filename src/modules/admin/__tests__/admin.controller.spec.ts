@@ -137,7 +137,7 @@ describe("AdminController", () => {
         {
           provide: MonoService,
           useFactory: () => instance(monoService),
-        }
+        },
         {
           provide: TRANSACTION_MAPPING_SERVICE_PROVIDER,
           useClass: TransactionMappingService,
