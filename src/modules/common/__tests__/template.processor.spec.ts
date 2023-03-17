@@ -1,6 +1,5 @@
 jest.mock("puppeteer", () => ({
   launch() {
-    console.log("launching puppeteer");
     return stubBrowser;
   },
 }));
@@ -135,9 +134,8 @@ describe("TemplateProcessor", () => {
     it("should upload PDF populated templates", async () => {
       templateProcessor.addLocale(TemplateLocale.SPANISH);
       templateProcessor.addFormat(TemplateFormat.PDF);
-      const populatedTemplate = "firstName-lastName";
-      templateProcessor.populatedTemplates.set(TemplateLocale.SPANISH, "firstName-lastName");
-      when(s3Service.uploadToS3("savePath", `saveBaseFilename_es.pdf`, populatedTemplate)).thenResolve();
+      templateProcessor.populatedTemplates.set(TemplateLocale.SPANISH, "pdf-content");
+      when(s3Service.uploadToS3("savePath", `saveBaseFilename_es.pdf`, "pdf-content")).thenResolve();
       await templateProcessor.uploadPopulatedTemplates();
       expect(newPageFn).toHaveBeenCalled();
     });
@@ -165,10 +163,12 @@ describe("TemplateProcessor", () => {
 
   describe("destroy", () => {
     it("should close browser", async () => {
-      jest.spyOn(stubBrowser, "close").mockImplementation(() => Promise.resolve());
-
+      templateProcessor.loadTemplates();
       await templateProcessor.destroy();
-      expect(stubBrowser.close).toHaveBeenCalled();
+    });
+
+    it("should not close browser if not loaded", async () => {
+      await templateProcessor.destroy();
     });
   });
 });

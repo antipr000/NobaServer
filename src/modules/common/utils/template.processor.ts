@@ -74,13 +74,11 @@ export class TemplateProcessor {
   }
 
   public async loadTemplates() {
-    await this.initialize();
+    if (!this.browser) await this.initialize();
     const start = Date.now();
     for (const locale of this.locales) {
       let filename = this.templateFilename;
-      console.log(filename);
       if (filename.indexOf("LOCALE") > -1) filename = filename.replace("LOCALE", locale.language);
-      console.log(filename);
       const template = await this.s3Service.loadFromS3(this.templatePath, filename);
       if (!template) {
         throw new Error(`Template not found for locale ${locale}`);
@@ -122,8 +120,10 @@ export class TemplateProcessor {
         }
 
         if (this.formats.has(TemplateFormat.PDF)) {
+          if (!this.browser) await this.initialize();
           const pdf = await this.convertToPDF(populatedTemplate, `${this.templateFilename}.${TemplateFormat.PDF}`);
           const start = Date.now();
+
           this.s3Service.uploadToS3(
             this.savePath,
             `${this.saveBaseFilename}_${locale.language}.${TemplateFormat.PDF}`,

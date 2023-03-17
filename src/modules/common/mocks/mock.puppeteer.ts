@@ -28,6 +28,18 @@ export const stubPage = {
   $eval(selector: string, pageFunction: any) {
     return Promise.resolve();
   },
+  emulateMediaType(mediaType: string) {
+    return Promise.resolve();
+  },
+  setContent(html: string) {
+    return Promise.resolve();
+  },
+  evaluateHandle(handle: string) {
+    return Promise.resolve();
+  },
+  pdf(options: any) {
+    return Promise.resolve("pdf-content");
+  },
 } as unknown as Page;
 
 export const stubElementHandle = {

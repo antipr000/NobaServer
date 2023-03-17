@@ -1158,10 +1158,16 @@ describe("EmployerServiceTests", () => {
       };
 
       when(
-        mockTemplateProcessor.populateTemplate(TemplateProcessModule.TemplateLocale.ENGLISH, englishTemplateFields),
+        mockTemplateProcessor.populateTemplate(
+          TemplateProcessModule.TemplateLocale.ENGLISH,
+          deepEqual(englishTemplateFields),
+        ),
       ).thenResolve();
       when(
-        mockTemplateProcessor.populateTemplate(TemplateProcessModule.TemplateLocale.SPANISH, spanishTemplateFields),
+        mockTemplateProcessor.populateTemplate(
+          TemplateProcessModule.TemplateLocale.SPANISH,
+          deepEqual(spanishTemplateFields),
+        ),
       ).thenResolve();
 
       when(mockTemplateProcessor.destroy()).thenResolve();
@@ -1199,38 +1205,18 @@ describe("EmployerServiceTests", () => {
 
       // mockTemplateProcessor false positive for some reason
 
-      // when(mockTemplateProcessor.addFormat(TemplateProcessModule.TemplateFormat.HTML)).thenResolve();
+      when(mockTemplateProcessor.addFormat(anything())).thenReturn();
       // when(mockTemplateProcessor.addFormat(TemplateProcessModule.TemplateFormat.PDF)).thenResolve();
       // when(mockTemplateProcessor.addLocale(TemplateProcessModule.TemplateLocale.ENGLISH)).thenResolve();
       // when(mockTemplateProcessor.addLocale(TemplateProcessModule.TemplateLocale.SPANISH)).thenResolve();
 
+      mockTemplateProcessorInstance.locales = new Set([
+        TemplateProcessModule.TemplateLocale.ENGLISH,
+        TemplateProcessModule.TemplateLocale.SPANISH,
+      ]);
+
       when(mockTemplateProcessor.loadTemplates()).thenResolve();
 
-      const baseTemplateFields: InvoiceTemplateFields = {
-        companyName: employer.name,
-        payrollReference: payroll.referenceNumber.toString().padStart(8, "0"),
-        currency: payroll.debitCurrency,
-        allocations: [],
-        nobaAccountNumber: employer.payrollAccountNumber,
-        payrollDate: "",
-        totalAmount: "",
-      };
-
-      const englishTemplateFields: InvoiceTemplateFields = {
-        ...baseTemplateFields,
-        payrollDate: dayjs(payroll.payrollDate)
-          .locale(TemplateProcessModule.TemplateLocale.ENGLISH.toString())
-          .format("MMMM D, YYYY"),
-        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString()),
-      };
-
-      const spanishTemplateFields: InvoiceTemplateFields = {
-        ...baseTemplateFields,
-        payrollDate: dayjs(payroll.payrollDate)
-          .locale(TemplateProcessModule.TemplateLocale.SPANISH.toString())
-          .format("MMMM D, YYYY"),
-        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString()),
-      };
       const payrollDisbursements = [
         {
           id: "fake-disbursement",
@@ -1252,6 +1238,43 @@ describe("EmployerServiceTests", () => {
         },
       ];
 
+      const allocations = [
+        {
+          employeeName: `${consumer1.props.firstName} ${consumer1.props.lastName}`,
+          amount: "100",
+        },
+        {
+          employeeName: `${consumer2.props.firstName} ${consumer2.props.lastName}`,
+          amount: "100",
+        },
+      ];
+
+      const baseTemplateFields: InvoiceTemplateFields = {
+        companyName: employer.name,
+        payrollReference: payroll.referenceNumber.toString().padStart(8, "0"),
+        currency: payroll.debitCurrency,
+        allocations: allocations,
+        nobaAccountNumber: employer.payrollAccountNumber,
+        payrollDate: "",
+        totalAmount: "",
+      };
+
+      const englishTemplateFields: InvoiceTemplateFields = {
+        ...baseTemplateFields,
+        payrollDate: dayjs(payroll.payrollDate)
+          .locale(TemplateProcessModule.TemplateLocale.ENGLISH.toString())
+          .format("MMMM D, YYYY"),
+        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString()),
+      };
+
+      const spanishTemplateFields: InvoiceTemplateFields = {
+        ...baseTemplateFields,
+        payrollDate: dayjs(payroll.payrollDate)
+          .locale(TemplateProcessModule.TemplateLocale.SPANISH.toString())
+          .format("MMMM D, YYYY"),
+        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString()),
+      };
+
       when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve(payrollDisbursements);
       when(employeeService.getEmployeeByID(employee1.id)).thenResolve(employee1);
       when(employeeService.getEmployeeByID(employee2.id)).thenResolve(employee2);
@@ -1259,16 +1282,26 @@ describe("EmployerServiceTests", () => {
       when(consumerService.getConsumer(employee1.consumerID)).thenResolve(consumer1);
       when(consumerService.getConsumer(employee2.consumerID)).thenResolve(consumer2);
       when(
-        mockTemplateProcessor.populateTemplate(TemplateProcessModule.TemplateLocale.ENGLISH, englishTemplateFields),
+        mockTemplateProcessor.populateTemplate(
+          TemplateProcessModule.TemplateLocale.ENGLISH,
+          deepEqual(englishTemplateFields),
+        ),
       ).thenResolve();
       when(
-        mockTemplateProcessor.populateTemplate(TemplateProcessModule.TemplateLocale.SPANISH, spanishTemplateFields),
+        mockTemplateProcessor.populateTemplate(
+          TemplateProcessModule.TemplateLocale.SPANISH,
+          deepEqual(spanishTemplateFields),
+        ),
       ).thenResolve();
 
       when(mockTemplateProcessor.destroy()).thenResolve();
 
       await employerService.createInvoice(payroll.id);
       expect(constructorSpy).toHaveBeenCalledTimes(1);
+      verify(mockTemplateProcessor.addFormat(TemplateProcessModule.TemplateFormat.PDF)).twice();
+      verify(mockTemplateProcessor.addFormat(TemplateProcessModule.TemplateFormat.HTML)).twice();
+      verify(mockTemplateProcessor.addLocale(TemplateProcessModule.TemplateLocale.SPANISH)).twice();
+      verify(mockTemplateProcessor.addLocale(TemplateProcessModule.TemplateLocale.ENGLISH)).twice();
     });
   });
 });
