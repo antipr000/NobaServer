@@ -272,12 +272,12 @@ export class TransactionService {
         creditCurrency: transaction.creditCurrency,
         ...(withdrawalDetails && {
           withdrawalDetails: {
-            accountNumber: withdrawalDetails.accountNumber,
-            accountType: withdrawalDetails.accountType,
-            bankCode: withdrawalDetails.bankCode,
-            documentNumber: withdrawalDetails.documentNumber,
-            documentType: withdrawalDetails.documentType,
-            country: consumer.props.address?.countryCode,
+            ...(withdrawalDetails.accountNumber && { accountNumber: withdrawalDetails.accountNumber }),
+            ...(withdrawalDetails.accountType && { accountType: withdrawalDetails.accountType }),
+            ...(withdrawalDetails.bankCode && { bankCode: withdrawalDetails.bankCode }),
+            ...(withdrawalDetails.documentNumber && { documentNumber: withdrawalDetails.documentNumber }),
+            ...(withdrawalDetails.documentType && { documentType: withdrawalDetails.documentType }),
+            ...(consumer.props.address?.countryCode && { country: consumer.props.address.countryCode }),
           },
         }),
       };

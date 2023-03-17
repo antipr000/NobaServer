@@ -442,6 +442,14 @@ describe("SardineTests", () => {
         creditAmount: 45000,
         creditCurrency: "COP",
         workflowName: WorkflowName.WALLET_WITHDRAWAL,
+        withdrawalDetails: {
+          accountNumber: "12345",
+          accountType: "checking",
+          bankCode: "882883833",
+          documentType: "unkonwn",
+          documentNumber: "999999",
+          country: "CO",
+        },
       };
 
       when(circleService.getOrCreateWallet(consumer.props.id)).thenResolve("wallet-1");

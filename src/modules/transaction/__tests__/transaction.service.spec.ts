@@ -65,6 +65,7 @@ import {
 import { PayrollDisbursement } from "../../../modules/employer/domain/PayrollDisbursement";
 import { AlertService } from "../../../modules/common/alerts/alert.service";
 import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { KYCStatus } from "@prisma/client";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -470,7 +471,11 @@ describe("TransactionServiceTests", () => {
             ...transactionDTO.withdrawalData,
           }),
         ),
-      ).thenResolve(null); // Not being used right now
+      ).thenResolve({
+        ...transactionDTO.withdrawalData,
+        transactionID: transaction.id,
+        id: v4(),
+      });
       when(workflowFactory.getWorkflowImplementation(WorkflowName.WALLET_WITHDRAWAL)).thenReturn(
         instance(walletWithdrawalImpl),
       );
@@ -479,6 +484,14 @@ describe("TransactionServiceTests", () => {
         inputTransaction,
       );
       when(walletWithdrawalImpl.initiateWorkflow(deepEqual(transaction))).thenResolve();
+
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+
+      when(
+        verificationService.transactionVerification(transaction.sessionKey, consumer, deepEqual(anything())),
+      ).thenResolve({
+        status: KYCStatus.APPROVED,
+      });
 
       const returnedTransaction = await transactionService.initiateTransaction(
         transactionDTO,
