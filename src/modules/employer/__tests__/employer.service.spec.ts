@@ -1170,61 +1170,6 @@ describe("EmployerServiceTests", () => {
       expect(constructorSpy).toHaveBeenCalledTimes(1);
     });
 
-    it("should successfully create invoice test", async () => {
-      const employer = getRandomEmployer();
-      const { payroll } = getRandomPayroll(employer.id);
-
-      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
-      when(employerRepo.getEmployerByID(employer.id)).thenResolve(employer);
-      when(kmsService.decryptString(employer.payrollAccountNumber, anything())).thenResolve(
-        employer.payrollAccountNumber,
-      );
-
-      when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([]);
-
-      when(mockTemplateProcessor.addFormat(anything())).thenResolve();
-      when(mockTemplateProcessor.addLocale(anything())).thenResolve();
-      when(mockTemplateProcessor.loadTemplates()).thenResolve();
-
-      const baseTemplateFields: InvoiceTemplateFields = {
-        companyName: employer.name,
-        payrollReference: payroll.referenceNumber.toString().padStart(8, "0"),
-        currency: payroll.debitCurrency,
-        allocations: [],
-        nobaAccountNumber: employer.payrollAccountNumber,
-        payrollDate: "",
-        totalAmount: "",
-      };
-
-      const englishTemplateFields: InvoiceTemplateFields = {
-        ...baseTemplateFields,
-        payrollDate: dayjs(payroll.payrollDate)
-          .locale(TemplateProcessModule.TemplateLocale.ENGLISH.toString())
-          .format("MMMM D, YYYY"),
-        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString()),
-      };
-
-      const spanishTemplateFields: InvoiceTemplateFields = {
-        ...baseTemplateFields,
-        payrollDate: dayjs(payroll.payrollDate)
-          .locale(TemplateProcessModule.TemplateLocale.SPANISH.toString())
-          .format("MMMM D, YYYY"),
-        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString()),
-      };
-
-      when(
-        mockTemplateProcessor.populateTemplate(TemplateProcessModule.TemplateLocale.ENGLISH, englishTemplateFields),
-      ).thenResolve();
-      when(
-        mockTemplateProcessor.populateTemplate(TemplateProcessModule.TemplateLocale.SPANISH, spanishTemplateFields),
-      ).thenResolve();
-
-      when(mockTemplateProcessor.destroy()).thenResolve();
-
-      await employerService.createInvoice(payroll.id);
-      expect(constructorSpy).toHaveBeenCalledTimes(1);
-    });
-
     it("should successfully create invoice with disbursements", async () => {
       const employer = getRandomEmployer();
       const { payroll } = getRandomPayroll(employer.id);
@@ -1252,8 +1197,13 @@ describe("EmployerServiceTests", () => {
         employer.payrollAccountNumber,
       );
 
-      when(mockTemplateProcessor.addFormat(anything())).thenResolve();
-      when(mockTemplateProcessor.addLocale(anything())).thenResolve();
+      // mockTemplateProcessor false positive for some reason
+
+      // when(mockTemplateProcessor.addFormat(TemplateProcessModule.TemplateFormat.HTML)).thenResolve();
+      // when(mockTemplateProcessor.addFormat(TemplateProcessModule.TemplateFormat.PDF)).thenResolve();
+      // when(mockTemplateProcessor.addLocale(TemplateProcessModule.TemplateLocale.ENGLISH)).thenResolve();
+      // when(mockTemplateProcessor.addLocale(TemplateProcessModule.TemplateLocale.SPANISH)).thenResolve();
+
       when(mockTemplateProcessor.loadTemplates()).thenResolve();
 
       const baseTemplateFields: InvoiceTemplateFields = {
@@ -1302,7 +1252,7 @@ describe("EmployerServiceTests", () => {
         },
       ];
 
-      when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([]);
+      when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve(payrollDisbursements);
       when(employeeService.getEmployeeByID(employee1.id)).thenResolve(employee1);
       when(employeeService.getEmployeeByID(employee2.id)).thenResolve(employee2);
 

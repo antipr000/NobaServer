@@ -6,9 +6,7 @@ export function getMockTemplateProcessorWithDefaults(): TemplateProcessor {
   when(mockTemplateProcessor.addFormat(anything())).thenReject(new Error("Method not implemented"));
   when(mockTemplateProcessor.addLocale(anything())).thenReject(new Error("Method not implemented"));
   when(mockTemplateProcessor.loadTemplates()).thenReject(new Error("Method not implemented"));
-  when(mockTemplateProcessor.populateTemplate(anyString(), anyString())).thenReject(
-    new Error("Method not implemented"),
-  );
+  when(mockTemplateProcessor.populateTemplate(anything(), anything())).thenReject(new Error("Method not implemented"));
   when(mockTemplateProcessor.destroy()).thenReject(new Error("Method not implemented"));
 
   return mockTemplateProcessor;
