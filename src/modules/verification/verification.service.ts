@@ -55,7 +55,7 @@ export class VerificationService {
     } else if (status === KYCStatus.REJECTED) {
       await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
     } else {
-      this.logger.error("Unexpected KYC status: " + status);
+      // This means it's pending. Do we want to do anything more here?
     }
     return status;
   }
@@ -128,11 +128,8 @@ export class VerificationService {
         kycCheckStatus: result.status,
         kycVerificationTimestamp: new Date(),
         riskRating: result.idvProviderRiskLevel,
-        // We don't want to change doc verification flag here for this basic KYC check
-        /*documentVerificationStatus: this.needsDocumentVerification(consumerInformation.address.countryCode)
-          ? DocumentVerificationStatus.REQUIRED
-          : DocumentVerificationStatus.NOT_REQUIRED,
-        documentVerificationTimestamp: new Date(),*/
+        // This may change depending on the response from the IDV provider
+        documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
       },
     };
     return verifiedConsumerData;
@@ -392,13 +389,5 @@ export class VerificationService {
     const sessionKey = Entity.getNewID();
     const verificationData = VerificationData.createVerificationData({ id: sessionKey, userID: consumerID });
     return await this.verificationDataRepo.saveVerificationData(verificationData);
-  }
-
-  private needsDocumentVerification(countryCode: string): boolean {
-    // Currently we don't require doc verification from any user
-    return false;
-
-    // Onramp code
-    // return countryCode.toLocaleLowerCase() !== "us";
   }
 }
