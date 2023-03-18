@@ -385,7 +385,6 @@ export class AdminController {
     filters.pageLimit = Number(filters.pageLimit) || 10;
     filters.pageOffset = Number(filters.pageOffset) || 1;
     const allTransactions = await this.adminService.getFilteredTransactions(filters);
-
     if (allTransactions == null) return null;
 
     const transactions = allTransactions.items;

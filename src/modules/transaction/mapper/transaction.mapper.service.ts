@@ -27,16 +27,17 @@ export class TransactionMappingService {
     let debitConsumer: Consumer = null;
     let creditConsumer: Consumer = null;
 
+    console.log(transaction);
     if (transaction.debitConsumerID) {
       debitConsumer =
-        transaction.debitConsumerID === consumer.props?.id
+        transaction.debitConsumerID === consumer?.props.id
           ? consumer
           : await this.consumerService.getConsumer(transaction.debitConsumerID);
     }
 
     if (transaction.creditConsumerID) {
       creditConsumer =
-        transaction.creditConsumerID === consumer.props?.id
+        transaction.creditConsumerID === consumer?.props.id
           ? consumer
           : await this.consumerService.getConsumer(transaction.creditConsumerID);
     }

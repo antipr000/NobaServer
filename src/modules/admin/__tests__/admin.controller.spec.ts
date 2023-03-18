@@ -37,8 +37,9 @@ import {
   TRANSACTION_MAPPING_SERVICE_PROVIDER,
 } from "../../../modules/transaction/mapper/transaction.mapper.service";
 import { MonoService } from "../../../modules/psp/mono/mono.service";
-import { IncludeEventTypes } from "src/modules/transaction/dto/TransactionEventDTO";
-import { TransactionDTO } from "src/modules/transaction/dto/TransactionDTO";
+import { IncludeEventTypes } from "../../../modules/transaction/dto/TransactionEventDTO";
+import { TransactionDTO } from "../../../modules/transaction/dto/TransactionDTO";
+import { Utils } from "../../../core/utils/Utils";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -76,6 +77,20 @@ const getRandomTransaction = (consumerID: string, isCreditTransaction = false): 
     transaction.debitConsumerID = consumerID;
   }
   return transaction;
+};
+
+const getRandomConsumer = (consumerID: string): Consumer => {
+  const email = `${v4()}_${new Date().valueOf()}@noba.com`;
+  const props: Partial<ConsumerProps> = {
+    id: consumerID,
+    firstName: "Noba",
+    lastName: "lastName",
+    email: email,
+    displayEmail: email.toUpperCase(),
+    referralCode: Utils.getAlphaNanoID(15),
+    phone: `+1${Math.floor(Math.random() * 1000000000)}`,
+  };
+  return Consumer.createConsumer(props);
 };
 
 describe("AdminController", () => {
@@ -1722,6 +1737,7 @@ describe("AdminController", () => {
       });
 
       const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
       transaction.transactionRef = transactionRef;
@@ -1733,6 +1749,8 @@ describe("AdminController", () => {
         pageLimit: 5,
         pageOffset: 1,
       };
+      console.log(consumerID);
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
       when(mockAdminService.getFilteredTransactions(deepEqual(filter))).thenResolve({
         items: [transaction],
         page: 1,
