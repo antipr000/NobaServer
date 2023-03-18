@@ -1578,8 +1578,6 @@ describe("AdminController", () => {
 
       const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
 
-      console.log(result);
-      console.log(expectedResult);
       expect(result).toStrictEqual(expectedResult);
     });
 
