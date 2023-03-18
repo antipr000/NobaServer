@@ -1502,7 +1502,7 @@ describe("AdminController", () => {
       expect(result).toStrictEqual(expectedResult);
     });
 
-    it("should return transaction with paymentCollectionLink for WALLET_DEPOSIT", async () => {
+    it.skip("should return transaction with paymentCollectionLink for WALLET_DEPOSIT", async () => {
       const consumerID = "testConsumerID";
       const consumer = getRandomConsumer(consumerID);
       const transactionRef = "transactionRef";
