@@ -425,6 +425,7 @@ export class AdminController {
         includeEvents === IncludeEventTypes.ALL,
       );
     }
+    console.log(transactionEvents);
 
     return this.transactionMapper.toTransactionDTO(transaction, undefined, transactionEvents);
   }

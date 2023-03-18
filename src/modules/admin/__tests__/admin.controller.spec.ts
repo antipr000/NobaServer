@@ -44,6 +44,7 @@ import { TransactionEvent } from "../../../modules/transaction/domain/Transactio
 import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
 import { TransactionService } from "../../../modules/transaction/transaction.service";
 import { getMockTransactionMapperServiceWithDefaults } from "../../../modules/transaction/mocks/mock.transaction.mapper.service";
+import { timestamp } from "rxjs";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -108,7 +109,7 @@ describe("AdminController", () => {
   let employeeService: EmployeeService;
   let employerService: EmployerService;
   let transactionService: TransactionService;
-  // let transactionMappingService: TransactionMappingService;
+  let transactionMappingService: TransactionMappingService;
   let monoService: MonoService;
 
   beforeEach(async () => {
@@ -123,7 +124,7 @@ describe("AdminController", () => {
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
     employeeService = getMockEmployeeServiceWithDefaults();
     employerService = getMockEmployerServiceWithDefaults();
-    // transactionMappingService = getMockTransactionMapperServiceWithDefaults();
+    transactionMappingService = getMockTransactionMapperServiceWithDefaults();
     transactionService = getMockTransactionServiceWithDefaults();
     monoService = getMockMonoServiceWithDefaults();
 
@@ -159,9 +160,13 @@ describe("AdminController", () => {
           provide: MonoService,
           useFactory: () => instance(monoService),
         },
+        // {
+        //   provide: TRANSACTION_MAPPING_SERVICE_PROVIDER,
+        //   useClass: TransactionMappingService,
+        // },
         {
           provide: TRANSACTION_MAPPING_SERVICE_PROVIDER,
-          useClass: TransactionMappingService,
+          useFactory: () => instance(transactionMappingService),
         },
         AdminMapper,
         ConsumerMapper,
@@ -1329,7 +1334,6 @@ describe("AdminController", () => {
       const transaction: Transaction = getRandomTransaction(consumerID);
       when(adminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
-      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
       const expectedResult: TransactionDTO = {
         id: transaction.id,
         transactionRef: transaction.transactionRef,
@@ -1361,6 +1365,10 @@ describe("AdminController", () => {
         totalFees: 10,
       };
 
+      when(transactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(expectedResult);
+
+      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
+
       expect(result).toStrictEqual(expectedResult);
     });
 
@@ -1372,7 +1380,6 @@ describe("AdminController", () => {
 
       when(adminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
-      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
       const expectedResult: TransactionDTO = {
         id: transaction.id,
         transactionRef: transaction.transactionRef,
@@ -1403,6 +1410,9 @@ describe("AdminController", () => {
         ],
         totalFees: 10,
       };
+      when(transactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(expectedResult);
+
+      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
 
       expect(result).toStrictEqual(expectedResult);
     });
@@ -1419,7 +1429,6 @@ describe("AdminController", () => {
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
       when(consumerService.getConsumer(creditConsumer.props.id)).thenResolve(creditConsumer);
 
-      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
       const expectedResult: TransactionDTO = {
         id: transaction.id,
         transactionRef: transaction.transactionRef,
@@ -1455,6 +1464,9 @@ describe("AdminController", () => {
         ],
         totalFees: 10,
       };
+      when(transactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(expectedResult);
+
+      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
 
       expect(result).toStrictEqual(expectedResult);
     });
@@ -1467,7 +1479,7 @@ describe("AdminController", () => {
       when(adminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
 
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
-      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
+
       const expectedResult: TransactionDTO = {
         id: transaction.id,
         transactionRef: transaction.transactionRef,
@@ -1498,11 +1510,14 @@ describe("AdminController", () => {
         ],
         totalFees: 10,
       };
+      when(transactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(expectedResult);
+
+      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
 
       expect(result).toStrictEqual(expectedResult);
     });
 
-    it.skip("should return transaction with paymentCollectionLink for WALLET_DEPOSIT", async () => {
+    it("should return transaction with paymentCollectionLink for WALLET_DEPOSIT", async () => {
       const consumerID = "testConsumerID";
       const consumer = getRandomConsumer(consumerID);
       const transactionRef = "transactionRef";
@@ -1522,9 +1537,12 @@ describe("AdminController", () => {
         },
       };
 
-      // when(monoService.getTransactionByNobaTransactionID(monoTransaction.id)).thenResolve(monoTransaction);
+      // when();
+      when(monoService.getTransactionByNobaTransactionID(anything())).thenResolve(monoTransaction);
 
-      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
+      when(monoService.getTransactionByNobaTransactionID(anything())).thenThrow(new Error("Not found"));
+      // when(monoService.getTransactionByNobaTransactionID(monoTransaction.id)).thenResolve();
+
       const expectedResult: TransactionDTO = {
         id: transaction.id,
         transactionRef: transaction.transactionRef,
@@ -1556,6 +1574,9 @@ describe("AdminController", () => {
         ],
         totalFees: 10,
       };
+      when(transactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(expectedResult);
+
+      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
 
       console.log(result);
       console.log(expectedResult);
@@ -1621,7 +1642,6 @@ describe("AdminController", () => {
 
       when(adminService.getTransactionEvents(transaction.id, true)).thenResolve(transactionEvents);
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
-      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.ALL, transactionRef);
 
       const expectedResult: TransactionDTO = {
         id: transaction.id,
@@ -1654,6 +1674,43 @@ describe("AdminController", () => {
         totalFees: 10,
       };
 
+      const transactionEventToReturn: TransactionEvent[] = [
+        {
+          id: "testEventID",
+          timestamp: transactionEvents[0].timestamp,
+          transactionID: transaction.id,
+          message: transactionEventsToReturn[0].message,
+          details: transactionEventsToReturn[0].details,
+          internal: false,
+          key: "EVENT_KEY",
+          param1: "Param 1",
+          param2: "Param 2",
+          param3: "Param 3",
+          param4: "Param 4",
+          param5: "Param 5",
+        },
+        {
+          id: "testEvent2ID",
+          timestamp: transactionEvents[1].timestamp,
+          transactionID: transaction.id,
+          message: transactionEventsToReturn[1].message,
+          details: transactionEventsToReturn[1].details,
+          internal: false,
+          key: "EVENT_KEY_2",
+          param1: "Param 1",
+          param2: "Param 2",
+          param3: "Param 3",
+          param4: "Param 4",
+          param5: "Param 5",
+        },
+      ];
+
+      when(
+        transactionMappingService.toTransactionDTO(transaction, undefined, deepEqual(transactionEventToReturn)),
+      ).thenResolve(expectedResult);
+
+      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.ALL, transactionRef);
+
       expect(result).toStrictEqual(expectedResult);
     });
 
@@ -1665,8 +1722,6 @@ describe("AdminController", () => {
       when(adminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
       when(adminService.getTransactionEvents(transaction.id, true)).thenResolve([]);
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
-
-      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.ALL, transactionRef);
 
       const expectedResult: TransactionDTO = {
         id: transaction.id,
@@ -1698,6 +1753,12 @@ describe("AdminController", () => {
         ],
         totalFees: 10,
       };
+
+      when(transactionMappingService.toTransactionDTO(transaction, undefined, deepEqual([]))).thenResolve(
+        expectedResult,
+      );
+
+      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.ALL, transactionRef);
 
       expect(result).toStrictEqual(expectedResult);
     });
@@ -1745,6 +1806,37 @@ describe("AdminController", () => {
         totalItems: 1,
       });
 
+      when(transactionMappingService.toTransactionDTO(transaction)).thenResolve({
+        id: transaction.id,
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        creditConsumer: null,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: [],
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
+      });
+
       const allTransactions = await adminController.getAllTransactions(
         {
           user: { entity: requestingNobaAdmin },
@@ -1756,8 +1848,6 @@ describe("AdminController", () => {
           pageOffset: 1,
         },
       );
-
-      console.log(allTransactions);
 
       expect(allTransactions.items.length).toBe(1);
       expect(allTransactions.items[0].transactionRef).toBe(transactionRef);

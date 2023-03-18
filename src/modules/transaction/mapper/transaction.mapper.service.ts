@@ -49,11 +49,11 @@ export class TransactionMappingService {
       try {
         console.log("here123", transaction.id);
         monoTransaction = await this.monoService.getTransactionByNobaTransactionID(transaction.id);
-        console.log("here123", monoTransaction);
+        console.log("here456");
+        console.log("monoTransaction", monoTransaction);
       } catch (e) {
         if (e instanceof ServiceException && e.errorCode === ServiceErrorCode.DOES_NOT_EXIST) {
           // no-op - this is expected for some transactions
-          console.log(e);
         }
       }
     }
