@@ -412,6 +412,7 @@ export class AdminController {
     @Query("includeEvents") includeEvents: IncludeEventTypes,
     @Param("transactionRef") transactionRef: string,
   ): Promise<TransactionDTO> {
+    console.log(transactionRef);
     const transaction = await this.adminService.getTransactionByTransactionRef(transactionRef);
     if (!transaction) {
       throw new NotFoundException(`Transaction with ref: ${transactionRef} not found for user`);
