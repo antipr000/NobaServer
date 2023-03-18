@@ -98,7 +98,7 @@ describe("AdminController", () => {
 
   let adminController: AdminController;
   let mockAdminService: AdminService;
-  let mockConsumerService: ConsumerService;
+  let consumerService: ConsumerService;
   let mockTransactionService: TransactionService;
   let mockExchangeRateService: ExchangeRateService;
   let consumerMapper: ConsumerMapper;
@@ -115,7 +115,7 @@ describe("AdminController", () => {
     };
 
     mockAdminService = getMockAdminServiceWithDefaults();
-    mockConsumerService = getMockConsumerServiceWithDefaults();
+    consumerService = getMockConsumerServiceWithDefaults();
     mockTransactionService = getMockTransactionServiceWithDefaults();
     mockExchangeRateService = getMockExchangeRateServiceWithDefaults();
     employeeService = getMockEmployeeServiceWithDefaults();
@@ -133,7 +133,7 @@ describe("AdminController", () => {
         },
         {
           provide: ConsumerService,
-          useFactory: () => instance(mockConsumerService),
+          useFactory: () => instance(consumerService),
         },
         {
           provide: TransactionService,
@@ -785,14 +785,14 @@ describe("AdminController", () => {
         ...updatedConsumerProps,
       });
 
-      when(mockConsumerService.getAllConsumerWallets("test-consumer-1234")).thenResolve([]);
-      when(mockConsumerService.getAllPaymentMethodsForConsumer("test-consumer-1234")).thenResolve([]);
+      when(consumerService.getAllConsumerWallets("test-consumer-1234")).thenResolve([]);
+      when(consumerService.getAllPaymentMethodsForConsumer("test-consumer-1234")).thenResolve([]);
 
-      when(mockConsumerService.getConsumer(consumerProps.id))
+      when(consumerService.getConsumer(consumerProps.id))
         .thenResolve(Consumer.createConsumer(consumerProps))
         .thenResolve(updatedConsumerObj);
 
-      when(mockConsumerService.updateConsumer(anything())).thenResolve(updatedConsumerObj);
+      when(consumerService.updateConsumer(anything())).thenResolve(updatedConsumerObj);
 
       when(mockAdminService.updateConsumer(consumerProps.id, anything())).thenResolve({
         ...updatedConsumerObj.props,
@@ -1750,7 +1750,7 @@ describe("AdminController", () => {
         pageOffset: 1,
       };
       console.log(consumerID);
-      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
       when(mockAdminService.getFilteredTransactions(deepEqual(filter))).thenResolve({
         items: [transaction],
         page: 1,
