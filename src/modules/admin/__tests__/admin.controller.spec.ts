@@ -1367,7 +1367,21 @@ describe("AdminController", () => {
 
       when(transactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(expectedResult);
 
-      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const result: TransactionDTO = await adminController.getTransaction(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        IncludeEventTypes.NONE,
+        transactionRef,
+      );
 
       expect(result).toStrictEqual(expectedResult);
     });
@@ -1412,7 +1426,21 @@ describe("AdminController", () => {
       };
       when(transactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(expectedResult);
 
-      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const result: TransactionDTO = await adminController.getTransaction(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        IncludeEventTypes.NONE,
+        transactionRef,
+      );
 
       expect(result).toStrictEqual(expectedResult);
     });
@@ -1466,7 +1494,21 @@ describe("AdminController", () => {
       };
       when(transactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(expectedResult);
 
-      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const result: TransactionDTO = await adminController.getTransaction(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        IncludeEventTypes.NONE,
+        transactionRef,
+      );
 
       expect(result).toStrictEqual(expectedResult);
     });
@@ -1512,7 +1554,21 @@ describe("AdminController", () => {
       };
       when(transactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(expectedResult);
 
-      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const result: TransactionDTO = await adminController.getTransaction(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        IncludeEventTypes.NONE,
+        transactionRef,
+      );
 
       expect(result).toStrictEqual(expectedResult);
     });
@@ -1536,12 +1592,7 @@ describe("AdminController", () => {
           collectionLinkID: "collectionLinkID",
         },
       };
-
-      // when();
       when(monoService.getTransactionByNobaTransactionID(anything())).thenResolve(monoTransaction);
-
-      when(monoService.getTransactionByNobaTransactionID(anything())).thenThrow(new Error("Not found"));
-      // when(monoService.getTransactionByNobaTransactionID(monoTransaction.id)).thenResolve();
 
       const expectedResult: TransactionDTO = {
         id: transaction.id,
@@ -1576,7 +1627,21 @@ describe("AdminController", () => {
       };
       when(transactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(expectedResult);
 
-      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const result: TransactionDTO = await adminController.getTransaction(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        IncludeEventTypes.NONE,
+        transactionRef,
+      );
 
       expect(result).toStrictEqual(expectedResult);
     });
@@ -1707,7 +1772,21 @@ describe("AdminController", () => {
         transactionMappingService.toTransactionDTO(transaction, undefined, deepEqual(transactionEventToReturn)),
       ).thenResolve(expectedResult);
 
-      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.ALL, transactionRef);
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const result: TransactionDTO = await adminController.getTransaction(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        IncludeEventTypes.ALL,
+        transactionRef,
+      );
 
       expect(result).toStrictEqual(expectedResult);
     });
@@ -1756,7 +1835,21 @@ describe("AdminController", () => {
         expectedResult,
       );
 
-      const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.ALL, transactionRef);
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const result: TransactionDTO = await adminController.getTransaction(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        IncludeEventTypes.ALL,
+        transactionRef,
+      );
 
       expect(result).toStrictEqual(expectedResult);
     });
@@ -1765,9 +1858,23 @@ describe("AdminController", () => {
       const transactionRef = "transactionRef";
       when(adminService.getTransactionByTransactionRef(transactionRef)).thenResolve(null);
 
-      expect(async () => await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef)).rejects.toThrow(
-        NotFoundException,
-      );
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+      expect(
+        async () =>
+          await adminController.getTransaction(
+            {
+              user: { entity: requestingNobaAdmin },
+            },
+            IncludeEventTypes.NONE,
+            transactionRef,
+          ),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -1794,7 +1901,6 @@ describe("AdminController", () => {
         pageLimit: 5,
         pageOffset: 1,
       };
-      console.log(consumerID);
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
       when(adminService.getFilteredTransactions(deepEqual(filter))).thenResolve({
         items: [transaction],

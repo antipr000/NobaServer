@@ -409,9 +409,15 @@ export class AdminController {
   })
   @ApiNotFoundResponse({ description: "Requested transaction is not found" })
   async getTransaction(
+    @Request() request,
     @Query("includeEvents") includeEvents: IncludeEventTypes,
     @Param("transactionRef") transactionRef: string,
   ): Promise<TransactionDTO> {
+    const authenticatedUser: Admin = request.user.entity;
+    if (!(authenticatedUser instanceof Admin)) {
+      throw new ForbiddenException("User is forbidden from calling this API.");
+    }
+
     const transaction = await this.adminService.getTransactionByTransactionRef(transactionRef);
     if (!transaction) {
       throw new NotFoundException(`Transaction with ref: ${transactionRef} not found for user`);
