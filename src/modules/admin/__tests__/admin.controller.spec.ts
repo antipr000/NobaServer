@@ -42,7 +42,7 @@ import { Utils } from "../../../core/utils/Utils";
 import { MonoTransaction, MonoTransactionState, MonoTransactionType } from "../../../modules/psp/domain/Mono";
 import { TransactionEvent } from "../../../modules/transaction/domain/TransactionEvent";
 import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
-import { TransactionService } from "src/modules/transaction/transaction.service";
+import { TransactionService } from "../../../modules/transaction/transaction.service";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -153,7 +153,7 @@ describe("AdminController", () => {
         {
           provide: TransactionService,
           useFactory: () => instance(transactionService),
-        }
+        },
         {
           provide: MonoService,
           useFactory: () => instance(monoService),
@@ -1520,7 +1520,7 @@ describe("AdminController", () => {
         },
       };
 
-      when(monoService.getTransactionByNobaTransactionID(monoTransaction.id)).thenResolve(monoTransaction);
+      // when(monoService.getTransactionByNobaTransactionID(monoTransaction.id)).thenResolve(monoTransaction);
 
       const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
       const expectedResult: TransactionDTO = {
