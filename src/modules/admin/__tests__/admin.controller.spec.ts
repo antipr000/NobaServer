@@ -43,6 +43,7 @@ import { MonoTransaction, MonoTransactionState, MonoTransactionType } from "../.
 import { TransactionEvent } from "../../../modules/transaction/domain/TransactionEvent";
 import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
 import { TransactionService } from "../../../modules/transaction/transaction.service";
+import { getMockTransactionMapperServiceWithDefaults } from "../../../modules/transaction/mocks/mock.transaction.mapper.service";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -107,7 +108,7 @@ describe("AdminController", () => {
   let employeeService: EmployeeService;
   let employerService: EmployerService;
   let transactionService: TransactionService;
-  let transactionMappingService: TransactionMappingService;
+  // let transactionMappingService: TransactionMappingService;
   let monoService: MonoService;
 
   beforeEach(async () => {
@@ -122,7 +123,7 @@ describe("AdminController", () => {
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
     employeeService = getMockEmployeeServiceWithDefaults();
     employerService = getMockEmployerServiceWithDefaults();
-    transactionMappingService = new TransactionMappingService();
+    // transactionMappingService = getMockTransactionMapperServiceWithDefaults();
     transactionService = getMockTransactionServiceWithDefaults();
     monoService = getMockMonoServiceWithDefaults();
 
@@ -167,6 +168,7 @@ describe("AdminController", () => {
       ],
     }).compile();
 
+    when(monoService.getTransactionByNobaTransactionID(anything())).thenResolve(null);
     adminController = app.get<AdminController>(AdminController);
     consumerMapper = app.get<ConsumerMapper>(ConsumerMapper);
   });
