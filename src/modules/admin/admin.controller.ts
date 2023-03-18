@@ -426,6 +426,6 @@ export class AdminController {
       );
     }
 
-    return await this.transactionMapper.toTransactionDTO(transaction, undefined, transactionEvents);
+    return this.transactionMapper.toTransactionDTO(transaction, undefined, transactionEvents);
   }
 }

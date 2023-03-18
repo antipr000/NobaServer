@@ -41,6 +41,8 @@ import { TransactionDTO } from "../../../modules/transaction/dto/TransactionDTO"
 import { Utils } from "../../../core/utils/Utils";
 import { MonoTransaction, MonoTransactionState, MonoTransactionType } from "../../../modules/psp/domain/Mono";
 import { TransactionEvent } from "../../../modules/transaction/domain/TransactionEvent";
+import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
+import { TransactionService } from "src/modules/transaction/transaction.service";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -104,6 +106,7 @@ describe("AdminController", () => {
   let consumerMapper: ConsumerMapper;
   let employeeService: EmployeeService;
   let employerService: EmployerService;
+  let transactionService: TransactionService;
   let transactionMappingService: TransactionMappingService;
   let monoService: MonoService;
 
@@ -120,7 +123,8 @@ describe("AdminController", () => {
     employeeService = getMockEmployeeServiceWithDefaults();
     employerService = getMockEmployerServiceWithDefaults();
     transactionMappingService = new TransactionMappingService();
-    monoService = new MonoService();
+    transactionService = getMockTransactionServiceWithDefaults();
+    monoService = getMockMonoServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -146,6 +150,10 @@ describe("AdminController", () => {
           provide: EmployerService,
           useFactory: () => instance(employerService),
         },
+        {
+          provide: TransactionService,
+          useFactory: () => instance(transactionService),
+        }
         {
           provide: MonoService,
           useFactory: () => instance(monoService),
@@ -1492,14 +1500,13 @@ describe("AdminController", () => {
       expect(result).toStrictEqual(expectedResult);
     });
 
-    it.skip("should return transaction with paymentCollectionLink for WALLET_DEPOSIT", async () => {
+    it("should return transaction with paymentCollectionLink for WALLET_DEPOSIT", async () => {
       const consumerID = "testConsumerID";
       const consumer = getRandomConsumer(consumerID);
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
       when(adminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
-
       const monoTransaction: MonoTransaction = {
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
@@ -1513,7 +1520,7 @@ describe("AdminController", () => {
         },
       };
 
-      when(monoService.getTransactionByNobaTransactionID(anything())).thenResolve(monoTransaction);
+      when(monoService.getTransactionByNobaTransactionID(monoTransaction.id)).thenResolve(monoTransaction);
 
       const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef);
       const expectedResult: TransactionDTO = {
@@ -1548,6 +1555,8 @@ describe("AdminController", () => {
         totalFees: 10,
       };
 
+      console.log(result);
+      console.log(expectedResult);
       expect(result).toStrictEqual(expectedResult);
     });
 
