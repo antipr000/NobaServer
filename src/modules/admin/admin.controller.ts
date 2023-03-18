@@ -371,8 +371,17 @@ export class AdminController {
     status: HttpStatus.OK,
     type: TransactionQueryResultDTO,
   })
+  @ApiForbiddenResponse({ description: "User forbidden from getting all transactions" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
-  async getAllTransactions(@Query() filters: TransactionFilterOptionsDTO): Promise<TransactionQueryResultDTO> {
+  async getAllTransactions(
+    @Request() request,
+    @Query() filters: TransactionFilterOptionsDTO,
+  ): Promise<TransactionQueryResultDTO> {
+    const authenticatedUser: Admin = request.user.entity;
+    if (!(authenticatedUser instanceof Admin)) {
+      throw new ForbiddenException("User is forbidden from calling this API.");
+    }
+
     filters.pageLimit = Number(filters.pageLimit) || 10;
     filters.pageOffset = Number(filters.pageOffset) || 1;
     const allTransactions = await this.adminService.getFilteredTransactions(filters);

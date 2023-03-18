@@ -36,7 +36,9 @@ import {
   TransactionMappingService,
   TRANSACTION_MAPPING_SERVICE_PROVIDER,
 } from "../../../modules/transaction/mapper/transaction.mapper.service";
-import { MonoService } from "src/modules/psp/mono/mono.service";
+import { MonoService } from "../../../modules/psp/mono/mono.service";
+import { IncludeEventTypes } from "src/modules/transaction/dto/TransactionEventDTO";
+import { TransactionDTO } from "src/modules/transaction/dto/TransactionDTO";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -1301,8 +1303,424 @@ describe("AdminController", () => {
     
   });*/
 
+  // describe("getTransaction", () => {
+  //   it("should return the transaction after resolving debit consumer id to tag", async () => {
+  //     const consumerID = "testConsumerID";
+  //     const consumer = getRandomConsumer(consumerID);
+  //     const transactionRef = "transactionRef";
+  //     const transaction: Transaction = getRandomTransaction(consumerID);
+  //     when(mockAdminService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+
+  //     const result: TransactionDTO = await adminController.getTransaction(
+  //       IncludeEventTypes.NONE,
+  //       transactionRef,
+  //       consumer,
+  //     );
+  //     const expectedResult: TransactionDTO = {
+  //       id: transaction.id,
+  //       transactionRef: transaction.transactionRef,
+  //       workflowName: transaction.workflowName,
+  //       debitConsumer: {
+  //         id: consumer.props.id,
+  //         firstName: consumer.props.firstName,
+  //         handle: consumer.props.handle,
+  //         lastName: consumer.props.lastName,
+  //       },
+  //       creditConsumer: null,
+  //       debitCurrency: transaction.debitCurrency,
+  //       creditCurrency: transaction.creditCurrency,
+  //       debitAmount: transaction.debitAmount,
+  //       creditAmount: transaction.creditAmount,
+  //       exchangeRate: transaction.exchangeRate.toString(),
+  //       status: transaction.status,
+  //       createdTimestamp: transaction.createdTimestamp,
+  //       updatedTimestamp: transaction.updatedTimestamp,
+  //       memo: transaction.memo,
+  //       transactionEvents: undefined,
+  //       transactionFees: [
+  //         {
+  //           amount: 10,
+  //           currency: "USD",
+  //           type: FeeType.NOBA,
+  //         },
+  //       ],
+  //       totalFees: 10,
+  //     };
+
+  //     expect(result).toStrictEqual(expectedResult);
+  //   });
+
+  //   it("should return the transaction after resolving credit consumer id to tag", async () => {
+  //     const consumerID = "testConsumerID";
+  //     const consumer = getRandomConsumer(consumerID);
+  //     const transactionRef = "transactionRef";
+  //     const transaction: Transaction = getRandomTransaction(consumerID, true);
+  //     when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+
+  //     const result: TransactionDTO = await transactionController.getTransaction(
+  //       IncludeEventTypes.NONE,
+  //       transactionRef,
+  //       consumer,
+  //     );
+  //     const expectedResult: TransactionDTO = {
+  //       id: transaction.id,
+  //       transactionRef: transaction.transactionRef,
+  //       workflowName: transaction.workflowName,
+  //       creditConsumer: {
+  //         id: consumer.props.id,
+  //         firstName: consumer.props.firstName,
+  //         handle: consumer.props.handle,
+  //         lastName: consumer.props.lastName,
+  //       },
+  //       debitConsumer: null,
+  //       debitCurrency: transaction.debitCurrency,
+  //       creditCurrency: transaction.creditCurrency,
+  //       debitAmount: transaction.debitAmount,
+  //       creditAmount: transaction.creditAmount,
+  //       exchangeRate: transaction.exchangeRate.toString(),
+  //       status: transaction.status,
+  //       createdTimestamp: transaction.createdTimestamp,
+  //       updatedTimestamp: transaction.updatedTimestamp,
+  //       memo: transaction.memo,
+  //       transactionEvents: undefined,
+  //       transactionFees: [
+  //         {
+  //           amount: 10,
+  //           currency: "USD",
+  //           type: FeeType.NOBA,
+  //         },
+  //       ],
+  //       totalFees: 10,
+  //     };
+
+  //     expect(result).toStrictEqual(expectedResult);
+  //   });
+
+  //   it("should return a transfer transaction after resolving both credit and debit consumer IDs to tags", async () => {
+  //     const consumerID = "testConsumerID";
+  //     const consumer = getRandomConsumer(consumerID);
+  //     const creditConsumer = getRandomConsumer("creditConsumerID");
+  //     const transactionRef = "transactionRef";
+  //     const transaction: Transaction = getRandomTransaction(consumerID);
+  //     transaction.creditConsumerID = creditConsumer.props.id;
+
+  //     when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+  //     when(consumerService.getConsumer(creditConsumer.props.id)).thenResolve(creditConsumer);
+
+  //     const result: TransactionDTO = await transactionController.getTransaction(
+  //       IncludeEventTypes.NONE,
+  //       transactionRef,
+  //       consumer,
+  //     );
+  //     const expectedResult: TransactionDTO = {
+  //       id: transaction.id,
+  //       transactionRef: transaction.transactionRef,
+  //       workflowName: transaction.workflowName,
+  //       creditConsumer: {
+  //         id: creditConsumer.props.id,
+  //         firstName: creditConsumer.props.firstName,
+  //         handle: creditConsumer.props.handle,
+  //         lastName: creditConsumer.props.lastName,
+  //       },
+  //       debitConsumer: {
+  //         id: consumer.props.id,
+  //         firstName: consumer.props.firstName,
+  //         handle: consumer.props.handle,
+  //         lastName: consumer.props.lastName,
+  //       },
+  //       debitCurrency: transaction.debitCurrency,
+  //       creditCurrency: transaction.creditCurrency,
+  //       debitAmount: transaction.debitAmount,
+  //       creditAmount: transaction.creditAmount,
+  //       exchangeRate: transaction.exchangeRate.toString(),
+  //       status: transaction.status,
+  //       createdTimestamp: transaction.createdTimestamp,
+  //       updatedTimestamp: transaction.updatedTimestamp,
+  //       memo: transaction.memo,
+  //       transactionEvents: undefined,
+  //       transactionFees: [
+  //         {
+  //           amount: 10,
+  //           currency: "USD",
+  //           type: FeeType.NOBA,
+  //         },
+  //       ],
+  //       totalFees: 10,
+  //     };
+
+  //     expect(result).toStrictEqual(expectedResult);
+  //   });
+
+  //   it("should return transaction without resolving consumer id to tag", async () => {
+  //     const consumerID = "testConsumerID";
+  //     const consumer = getRandomConsumer(consumerID);
+  //     const transactionRef = "transactionRef";
+  //     const transaction: Transaction = getRandomTransaction(consumerID);
+  //     when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+
+  //     const result: TransactionDTO = await transactionController.getTransaction(
+  //       IncludeEventTypes.NONE,
+  //       transactionRef,
+  //       consumer,
+  //     );
+  //     const expectedResult: TransactionDTO = {
+  //       id: transaction.id,
+  //       transactionRef: transaction.transactionRef,
+  //       workflowName: transaction.workflowName,
+  //       debitConsumer: {
+  //         id: consumer.props.id,
+  //         firstName: consumer.props.firstName,
+  //         handle: consumer.props.handle,
+  //         lastName: consumer.props.lastName,
+  //       },
+  //       creditConsumer: null,
+  //       debitCurrency: transaction.debitCurrency,
+  //       creditCurrency: transaction.creditCurrency,
+  //       debitAmount: transaction.debitAmount,
+  //       creditAmount: transaction.creditAmount,
+  //       exchangeRate: transaction.exchangeRate.toString(),
+  //       status: transaction.status,
+  //       createdTimestamp: transaction.createdTimestamp,
+  //       updatedTimestamp: transaction.updatedTimestamp,
+  //       memo: transaction.memo,
+  //       transactionEvents: undefined,
+  //       transactionFees: [
+  //         {
+  //           amount: 10,
+  //           currency: "USD",
+  //           type: FeeType.NOBA,
+  //         },
+  //       ],
+  //       totalFees: 10,
+  //     };
+
+  //     expect(result).toStrictEqual(expectedResult);
+  //   });
+
+  //   it("should return transaction with paymentCollectionLink for WALLET_DEPOSIT", async () => {
+  //     const consumerID = "testConsumerID";
+  //     const consumer = getRandomConsumer(consumerID);
+  //     const transactionRef = "transactionRef";
+  //     const transaction: Transaction = getRandomTransaction(consumerID);
+  //     when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+
+  //     const monoTransaction: MonoTransaction = {
+  //       createdTimestamp: new Date(),
+  //       updatedTimestamp: new Date(),
+  //       id: "monoTransactionID",
+  //       nobaTransactionID: transaction.id,
+  //       state: MonoTransactionState.SUCCESS,
+  //       type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
+  //       collectionLinkDepositDetails: {
+  //         collectionURL: "collectionURL",
+  //         collectionLinkID: "collectionLinkID",
+  //       },
+  //     };
+
+  //     when(monoService.getTransactionByNobaTransactionID(anything())).thenResolve(monoTransaction);
+
+  //     const result: TransactionDTO = await transactionController.getTransaction(
+  //       IncludeEventTypes.NONE,
+  //       transactionRef,
+  //       consumer,
+  //     );
+  //     const expectedResult: TransactionDTO = {
+  //       id: transaction.id,
+  //       transactionRef: transaction.transactionRef,
+  //       workflowName: transaction.workflowName,
+  //       debitConsumer: {
+  //         id: consumer.props.id,
+  //         firstName: consumer.props.firstName,
+  //         handle: consumer.props.handle,
+  //         lastName: consumer.props.lastName,
+  //       },
+  //       creditConsumer: null,
+  //       debitCurrency: transaction.debitCurrency,
+  //       creditCurrency: transaction.creditCurrency,
+  //       debitAmount: transaction.debitAmount,
+  //       creditAmount: transaction.creditAmount,
+  //       exchangeRate: transaction.exchangeRate.toString(),
+  //       status: transaction.status,
+  //       createdTimestamp: transaction.createdTimestamp,
+  //       updatedTimestamp: transaction.updatedTimestamp,
+  //       memo: transaction.memo,
+  //       transactionEvents: undefined,
+  //       paymentCollectionLink: monoTransaction.collectionLinkDepositDetails.collectionURL,
+  //       transactionFees: [
+  //         {
+  //           amount: 10,
+  //           currency: "USD",
+  //           type: FeeType.NOBA,
+  //         },
+  //       ],
+  //       totalFees: 10,
+  //     };
+
+  //     expect(result).toStrictEqual(expectedResult);
+  //   });
+
+  //   it("should return the transaction with events", async () => {
+  //     const consumerID = "testConsumerID";
+  //     const transactionRef = "transactionRef";
+  //     const transaction: Transaction = getRandomTransaction(consumerID);
+  //     const consumer = getRandomConsumer(consumerID);
+  //     when(transactionService.getTransactionByTransactionRef(transactionRef, consumerID)).thenResolve(transaction);
+
+  //     const transactionEvents: TransactionEvent[] = [
+  //       {
+  //         id: "testEventID",
+  //         timestamp: new Date(),
+  //         transactionID: transaction.id,
+  //         message: "Test event",
+  //         details: "This is a test event",
+  //         internal: false,
+  //         key: "EVENT_KEY",
+  //         param1: "Param 1",
+  //         param2: "Param 2",
+  //         param3: "Param 3",
+  //         param4: "Param 4",
+  //         param5: "Param 5",
+  //       },
+  //       {
+  //         id: "testEvent2ID",
+  //         timestamp: new Date(),
+  //         transactionID: transaction.id,
+  //         message: "Test event 2",
+  //         details: "This is a test event 2",
+  //         internal: false,
+  //         key: "EVENT_KEY_2",
+  //         param1: "Param 1",
+  //         param2: "Param 2",
+  //         param3: "Param 3",
+  //         param4: "Param 4",
+  //         param5: "Param 5",
+  //       },
+  //     ];
+
+  //     const transactionEventsToReturn: TransactionEventDTO[] = [
+  //       {
+  //         message: "Test event",
+  //         details: "This is a test event",
+  //         internal: false,
+  //         key: "EVENT_KEY",
+  //         parameters: ["Param 1", "Param 2", "Param 3", "Param 4", "Param 5"],
+  //         timestamp: transactionEvents[0].timestamp,
+  //       },
+  //       {
+  //         message: "Test event 2",
+  //         details: "This is a test event 2",
+  //         internal: false,
+  //         key: "EVENT_KEY_2",
+  //         parameters: ["Param 1", "Param 2", "Param 3", "Param 4", "Param 5"],
+  //         timestamp: transactionEvents[1].timestamp,
+  //       },
+  //     ];
+
+  //     when(transactionService.getTransactionEvents(transaction.id, true)).thenResolve(transactionEvents);
+
+  //     const result: TransactionDTO = await transactionController.getTransaction(
+  //       IncludeEventTypes.ALL,
+  //       transactionRef,
+  //       consumer,
+  //     );
+
+  //     const expectedResult: TransactionDTO = {
+  //       id: transaction.id,
+  //       transactionRef: transaction.transactionRef,
+  //       workflowName: transaction.workflowName,
+  //       debitConsumer: {
+  //         id: consumer.props.id,
+  //         firstName: consumer.props.firstName,
+  //         handle: consumer.props.handle,
+  //         lastName: consumer.props.lastName,
+  //       },
+  //       creditConsumer: null,
+  //       debitCurrency: transaction.debitCurrency,
+  //       creditCurrency: transaction.creditCurrency,
+  //       debitAmount: transaction.debitAmount,
+  //       creditAmount: transaction.creditAmount,
+  //       exchangeRate: transaction.exchangeRate.toString(),
+  //       status: transaction.status,
+  //       createdTimestamp: transaction.createdTimestamp,
+  //       updatedTimestamp: transaction.updatedTimestamp,
+  //       memo: transaction.memo,
+  //       transactionEvents: transactionEventsToReturn,
+  //       transactionFees: [
+  //         {
+  //           amount: 10,
+  //           currency: "USD",
+  //           type: FeeType.NOBA,
+  //         },
+  //       ],
+  //       totalFees: 10,
+  //     };
+
+  //     expect(result).toStrictEqual(expectedResult);
+  //   });
+
+  //   it("should return empty events array if events requested but none exist", async () => {
+  //     const consumerID = "testConsumerID";
+  //     const transactionRef = "transactionRef";
+  //     const transaction: Transaction = getRandomTransaction(consumerID);
+  //     when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
+  //     when(mockAdminService.getTransactionEvents(transaction.id, true)).thenResolve([]);
+
+  //     const result: TransactionDTO = await adminController.getTransaction(IncludeEventTypes.ALL, transactionRef);
+
+  //     const expectedResult: TransactionDTO = {
+  //       id: transaction.id,
+  //       transactionRef: transaction.transactionRef,
+  //       workflowName: transaction.workflowName,
+  //       debitConsumer: {
+  //         id: consumer.props.id,
+  //         firstName: consumer.props.firstName,
+  //         handle: consumer.props.handle,
+  //         lastName: consumer.props.lastName,
+  //       },
+  //       creditConsumer: null,
+  //       debitCurrency: transaction.debitCurrency,
+  //       creditCurrency: transaction.creditCurrency,
+  //       debitAmount: transaction.debitAmount,
+  //       creditAmount: transaction.creditAmount,
+  //       exchangeRate: transaction.exchangeRate.toString(),
+  //       status: transaction.status,
+  //       createdTimestamp: transaction.createdTimestamp,
+  //       updatedTimestamp: transaction.updatedTimestamp,
+  //       memo: transaction.memo,
+  //       transactionEvents: [],
+  //       transactionFees: [
+  //         {
+  //           amount: 10,
+  //           currency: "USD",
+  //           type: FeeType.NOBA,
+  //         },
+  //       ],
+  //       totalFees: 10,
+  //     };
+
+  //     expect(result).toStrictEqual(expectedResult);
+  //   });
+
+  //   it("should throw NotFoundException when transaction is not found", async () => {
+  //     const transactionRef = "transactionRef";
+  //     when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(null);
+
+  //     expect(async () => await adminController.getTransaction(IncludeEventTypes.NONE, transactionRef)).rejects.toThrow(
+  //       NotFoundException,
+  //     );
+  //   });
+  // });
+
   describe("getAllTransactions", () => {
     it("should get filtered transactions with resolved tags", async () => {
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
       const consumerID = "testConsumerID";
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
@@ -1323,11 +1741,19 @@ describe("AdminController", () => {
         totalItems: 1,
       });
 
-      const allTransactions = await adminController.getAllTransactions({
-        transactionStatus: TransactionStatus.COMPLETED,
-        pageLimit: 5,
-        pageOffset: 1,
-      });
+      const allTransactions = await adminController.getAllTransactions(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        {
+          consumerID: consumerID,
+          transactionStatus: TransactionStatus.COMPLETED,
+          pageLimit: 5,
+          pageOffset: 1,
+        },
+      );
+
+      console.log(allTransactions);
 
       expect(allTransactions.items.length).toBe(1);
       expect(allTransactions.items[0].transactionRef).toBe(transactionRef);
