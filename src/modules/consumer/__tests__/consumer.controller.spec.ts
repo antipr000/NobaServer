@@ -17,6 +17,7 @@ import {
   AggregatedWalletState,
   DocumentVerificationErrorReason,
   DocumentVerificationState,
+  Gender,
   KycVerificationState,
   UserState,
 } from "../domain/ExternalStates";
@@ -141,6 +142,7 @@ describe("ConsumerController", () => {
       const requestData: UpdateConsumerRequestDTO = {
         firstName: "New Mock",
         dateOfBirth: "1999-02-02",
+        gender: Gender.MALE,
       };
 
       when(
@@ -149,6 +151,7 @@ describe("ConsumerController", () => {
             id: consumer.props.id,
             firstName: requestData.firstName,
             dateOfBirth: requestData.dateOfBirth,
+            gender: requestData.gender,
           }),
         ),
       ).thenResolve(
@@ -156,6 +159,7 @@ describe("ConsumerController", () => {
           ...consumer.props,
           firstName: requestData.firstName,
           dateOfBirth: requestData.dateOfBirth,
+          gender: requestData.gender,
         }),
       );
       when(consumerService.getAllConsumerWallets(consumer.props.id)).thenResolve([]);
