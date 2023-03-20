@@ -133,6 +133,7 @@ export class ConsumerController {
         ...(requestBody.firstName && { firstName: requestBody.firstName }),
         ...(requestBody.lastName && { lastName: requestBody.lastName }),
         ...(requestBody.locale && { locale: requestBody.locale }),
+        ...(requestBody.gender && { gender: requestBody.gender }),
         ...(requestBody.address && {
           address: {
             ...(requestBody.address.streetLine1 && { streetLine1: requestBody.address.streetLine1 }),

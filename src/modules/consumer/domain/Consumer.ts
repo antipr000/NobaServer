@@ -19,6 +19,7 @@ export class ConsumerProps implements ConsumerModel {
   referralCode: string | null;
   phone: string | null;
   locale: string | null;
+  gender: string | null;
   dateOfBirth: string | null;
   isLocked: boolean;
   isDisabled: boolean;
@@ -38,6 +39,7 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
   email: Joi.string().email().allow(null).optional(),
   handle: Joi.string().optional().allow(null),
   locale: Joi.string().optional().allow(null),
+  gender: Joi.string().optional().allow(null),
   displayEmail: Joi.string().email().optional().allow(null),
   referralCode: Joi.string().optional(),
   phone: Joi.string()
