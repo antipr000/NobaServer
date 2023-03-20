@@ -213,6 +213,14 @@ describe("TransactionServiceTests", () => {
         transactionService.getTransactionByTransactionRef(transaction.transactionRef, "anotherConsumerID"),
       ).rejects.toThrowError(ServiceException);
     });
+
+    it("should succeed if transaction is found but consumer is not passed", async () => {
+      const { transaction } = getRandomTransaction("consumerID", "consumerID2");
+      when(transactionRepo.getTransactionByTransactionRef(transaction.transactionRef)).thenResolve(transaction);
+
+      const returnedTransaction = await transactionService.getTransactionByTransactionRef(transaction.transactionRef);
+      expect(returnedTransaction).toEqual(transaction);
+    });
   });
 
   describe("getTransactionByTransactionID", () => {
