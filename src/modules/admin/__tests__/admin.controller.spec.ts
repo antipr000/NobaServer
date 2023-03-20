@@ -102,15 +102,16 @@ describe("AdminController", () => {
   jest.setTimeout(2000);
 
   let adminController: AdminController;
-  let adminService: AdminService;
-  let consumerService: ConsumerService;
-  let exchangeRateService: ExchangeRateService;
   let consumerMapper: ConsumerMapper;
-  let employeeService: EmployeeService;
-  let employerService: EmployerService;
-  let transactionService: TransactionService;
-  let transactionMappingService: TransactionMappingService;
-  let monoService: MonoService;
+
+  let mockAdminService: AdminService;
+  let mockConsumerService: ConsumerService;
+  let mockExchangeRateService: ExchangeRateService;
+  let mockEmployeeService: EmployeeService;
+  let mockEmployerService: EmployerService;
+  let mockTransactionService: TransactionService;
+  let mockTransactionMappingService: TransactionMappingService;
+  let mockMonoService: MonoService;
 
   beforeEach(async () => {
     process.env = {
@@ -119,14 +120,14 @@ describe("AdminController", () => {
       CONFIGS_DIR: __dirname.split("/src")[0] + "/appconfigs",
     };
 
-    adminService = getMockAdminServiceWithDefaults();
-    consumerService = getMockConsumerServiceWithDefaults();
-    exchangeRateService = getMockExchangeRateServiceWithDefaults();
-    employeeService = getMockEmployeeServiceWithDefaults();
-    employerService = getMockEmployerServiceWithDefaults();
-    transactionMappingService = getMockTransactionMapperServiceWithDefaults();
-    transactionService = getMockTransactionServiceWithDefaults();
-    monoService = getMockMonoServiceWithDefaults();
+    mockAdminService = getMockAdminServiceWithDefaults();
+    mockConsumerService = getMockConsumerServiceWithDefaults();
+    mockExchangeRateService = getMockExchangeRateServiceWithDefaults();
+    mockEmployeeService = getMockEmployeeServiceWithDefaults();
+    mockEmployerService = getMockEmployerServiceWithDefaults();
+    mockTransactionMappingService = getMockTransactionMapperServiceWithDefaults();
+    mockTransactionService = getMockTransactionServiceWithDefaults();
+    mockMonoService = getMockMonoServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -134,46 +135,42 @@ describe("AdminController", () => {
       providers: [
         {
           provide: AdminService,
-          useFactory: () => instance(adminService),
+          useFactory: () => instance(mockAdminService),
         },
         {
           provide: ConsumerService,
-          useFactory: () => instance(consumerService),
+          useFactory: () => instance(mockConsumerService),
         },
         {
           provide: ExchangeRateService,
-          useFactory: () => instance(exchangeRateService),
+          useFactory: () => instance(mockExchangeRateService),
         },
         {
           provide: EmployeeService,
-          useFactory: () => instance(employeeService),
+          useFactory: () => instance(mockEmployeeService),
         },
         {
           provide: EmployerService,
-          useFactory: () => instance(employerService),
+          useFactory: () => instance(mockEmployerService),
         },
         {
           provide: TransactionService,
-          useFactory: () => instance(transactionService),
+          useFactory: () => instance(mockTransactionService),
         },
         {
           provide: MonoService,
-          useFactory: () => instance(monoService),
+          useFactory: () => instance(mockMonoService),
         },
-        // {
-        //   provide: TRANSACTION_MAPPING_SERVICE_PROVIDER,
-        //   useClass: TransactionMappingService,
-        // },
         {
           provide: TRANSACTION_MAPPING_SERVICE_PROVIDER,
-          useFactory: () => instance(transactionMappingService),
+          useFactory: () => instance(mockTransactionMappingService),
         },
         AdminMapper,
         ConsumerMapper,
       ],
     }).compile();
 
-    when(monoService.getTransactionByNobaTransactionID(anything())).thenResolve(null);
+    when(mockMonoService.getTransactionByNobaTransactionID(anything())).thenResolve(null);
     adminController = app.get<AdminController>(AdminController);
     consumerMapper = app.get<ConsumerMapper>(ConsumerMapper);
   });
@@ -254,7 +251,7 @@ describe("AdminController", () => {
         role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
-      when(adminService.addNobaAdmin(anything())).thenResolve(
+      when(mockAdminService.addNobaAdmin(anything())).thenResolve(
         Admin.createAdmin({
           id: "1111111111",
           email: newNobaAdmin.email,
@@ -267,7 +264,7 @@ describe("AdminController", () => {
         { user: { entity: authenticatedNobaAdmin } },
         newNobaAdmin,
       );
-      const addNobaAdminArgument: Admin = capture(adminService.addNobaAdmin).last()[0];
+      const addNobaAdminArgument: Admin = capture(mockAdminService.addNobaAdmin).last()[0];
 
       expect(result.id).toBeDefined();
       expect(result.email).toEqual(newNobaAdmin.email);
@@ -291,7 +288,7 @@ describe("AdminController", () => {
         role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
-      when(adminService.addNobaAdmin(anything())).thenResolve(undefined);
+      when(mockAdminService.addNobaAdmin(anything())).thenResolve(undefined);
 
       try {
         await adminController.createNobaAdmin({ user: { entity: authenticatedNobaAdmin } }, newNobaAdmin);
@@ -385,7 +382,7 @@ describe("AdminController", () => {
         }),
       ];
 
-      when(adminService.getAllNobaAdmins()).thenResolve(allAdmins);
+      when(mockAdminService.getAllNobaAdmins()).thenResolve(allAdmins);
 
       const queriedNobaAdmins = await adminController.getAllNobaAdmins({
         user: {
@@ -469,7 +466,7 @@ describe("AdminController", () => {
         role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
-      when(adminService.getAdminById(TARGET_ADMINid)).thenResolve(
+      when(mockAdminService.getAdminById(TARGET_ADMINid)).thenResolve(
         Admin.createAdmin({
           id: TARGET_ADMINid,
           name: "Admin",
@@ -478,7 +475,7 @@ describe("AdminController", () => {
         }),
       );
 
-      when(adminService.updateNobaAdmin(TARGET_ADMINid, UPDATED_ROLE, "Admin")).thenResolve(
+      when(mockAdminService.updateNobaAdmin(TARGET_ADMINid, UPDATED_ROLE, "Admin")).thenResolve(
         Admin.createAdmin({
           id: TARGET_ADMINid,
           name: "Admin",
@@ -516,7 +513,7 @@ describe("AdminController", () => {
         role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
-      when(adminService.getAdminById(TARGET_ADMINid)).thenResolve(
+      when(mockAdminService.getAdminById(TARGET_ADMINid)).thenResolve(
         Admin.createAdmin({
           id: TARGET_ADMINid,
           name: CURRENT_NAME,
@@ -525,7 +522,7 @@ describe("AdminController", () => {
         }),
       );
 
-      when(adminService.updateNobaAdmin(TARGET_ADMINid, NOBA_ADMIN_ROLE_TYPES.BASIC, UPDATED_NAME)).thenResolve(
+      when(mockAdminService.updateNobaAdmin(TARGET_ADMINid, NOBA_ADMIN_ROLE_TYPES.BASIC, UPDATED_NAME)).thenResolve(
         Admin.createAdmin({
           id: TARGET_ADMINid,
           name: UPDATED_NAME,
@@ -566,7 +563,7 @@ describe("AdminController", () => {
         role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
-      when(adminService.getAdminById(TARGET_ADMINid)).thenResolve(
+      when(mockAdminService.getAdminById(TARGET_ADMINid)).thenResolve(
         Admin.createAdmin({
           id: TARGET_ADMINid,
           name: CURRENT_NAME,
@@ -575,7 +572,7 @@ describe("AdminController", () => {
         }),
       );
 
-      when(adminService.updateNobaAdmin(TARGET_ADMINid, UPDATE_ROLE, UPDATED_NAME)).thenResolve(
+      when(mockAdminService.updateNobaAdmin(TARGET_ADMINid, UPDATE_ROLE, UPDATED_NAME)).thenResolve(
         Admin.createAdmin({
           id: TARGET_ADMINid,
           name: UPDATED_NAME,
@@ -631,7 +628,7 @@ describe("AdminController", () => {
         role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
-      when(adminService.getAdminById(ADMINid)).thenReject(new NotFoundException());
+      when(mockAdminService.getAdminById(ADMINid)).thenReject(new NotFoundException());
 
       try {
         const request: UpdateNobaAdminDTO = {
@@ -700,7 +697,7 @@ describe("AdminController", () => {
       });
 
       const adminId = "1111111111";
-      when(adminService.deleteNobaAdmin(adminId)).thenResolve(adminId);
+      when(mockAdminService.deleteNobaAdmin(adminId)).thenResolve(adminId);
 
       const result: DeleteNobaAdminDTO = await adminController.deleteNobaAdmin(
         { user: { entity: authenticatedNobaAdmin } },
@@ -718,7 +715,7 @@ describe("AdminController", () => {
       });
 
       const adminId = "1111111111";
-      when(adminService.deleteNobaAdmin(adminId)).thenReject(new BadRequestError({ message: "Not Found" }));
+      when(mockAdminService.deleteNobaAdmin(adminId)).thenReject(new BadRequestError({ message: "Not Found" }));
       expect(
         async () => await adminController.deleteNobaAdmin({ user: { entity: authenticatedNobaAdmin } }, adminId),
       ).rejects.toThrow(NotFoundException);
@@ -795,16 +792,16 @@ describe("AdminController", () => {
         ...updatedConsumerProps,
       });
 
-      when(consumerService.getAllConsumerWallets("test-consumer-1234")).thenResolve([]);
-      when(consumerService.getAllPaymentMethodsForConsumer("test-consumer-1234")).thenResolve([]);
+      when(mockConsumerService.getAllConsumerWallets("test-consumer-1234")).thenResolve([]);
+      when(mockConsumerService.getAllPaymentMethodsForConsumer("test-consumer-1234")).thenResolve([]);
 
-      when(consumerService.getConsumer(consumerProps.id))
+      when(mockConsumerService.getConsumer(consumerProps.id))
         .thenResolve(Consumer.createConsumer(consumerProps))
         .thenResolve(updatedConsumerObj);
 
-      when(consumerService.updateConsumer(anything())).thenResolve(updatedConsumerObj);
+      when(mockConsumerService.updateConsumer(anything())).thenResolve(updatedConsumerObj);
 
-      when(adminService.updateConsumer(consumerProps.id, anything())).thenResolve({
+      when(mockAdminService.updateConsumer(consumerProps.id, anything())).thenResolve({
         ...updatedConsumerObj.props,
       });
 
@@ -853,8 +850,8 @@ describe("AdminController", () => {
         expirationTimestamp: newExchangeRate.expirationTimestamp,
       };
 
-      const createSpy = jest.spyOn(exchangeRateService, "createExchangeRate");
-      when(exchangeRateService.createExchangeRate(newExchangeRate)).thenResolve(createdExchangeRate);
+      const createSpy = jest.spyOn(mockExchangeRateService, "createExchangeRate");
+      when(mockExchangeRateService.createExchangeRate(newExchangeRate)).thenResolve(createdExchangeRate);
 
       const returnedExchangeRate = await adminController.createExchangeRate(
         {
@@ -910,7 +907,7 @@ describe("AdminController", () => {
         role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
       });
 
-      when(exchangeRateService.createExchangeRate(newExchangeRate)).thenResolve(null);
+      when(mockExchangeRateService.createExchangeRate(newExchangeRate)).thenResolve(null);
 
       expect(
         async () =>
@@ -1019,8 +1016,8 @@ describe("AdminController", () => {
         expirationTimestamp: inverseNewExchangeRate.expirationTimestamp,
       };
 
-      when(exchangeRateService.createExchangeRate(deepEqual(newExchangeRate))).thenResolve(createdExchangeRate);
-      when(exchangeRateService.createExchangeRate(deepEqual(inverseCreatedExchangeRate))).thenResolve(
+      when(mockExchangeRateService.createExchangeRate(deepEqual(newExchangeRate))).thenResolve(createdExchangeRate);
+      when(mockExchangeRateService.createExchangeRate(deepEqual(inverseCreatedExchangeRate))).thenResolve(
         inverseCreatedExchangeRate,
       );
 
@@ -1032,8 +1029,8 @@ describe("AdminController", () => {
         "true",
       );
 
-      const [firstExchangeRate] = capture(exchangeRateService.createExchangeRate).first();
-      const [secondExchangeRate] = capture(exchangeRateService.createExchangeRate).second();
+      const [firstExchangeRate] = capture(mockExchangeRateService.createExchangeRate).first();
+      const [secondExchangeRate] = capture(mockExchangeRateService.createExchangeRate).second();
       expect(firstExchangeRate).toEqual(newExchangeRate);
       expect(secondExchangeRate).toEqual(inverseCreatedExchangeRate);
       expect(returnedExchangeRates[0]).toEqual(newExchangeRate);
@@ -1081,8 +1078,8 @@ describe("AdminController", () => {
         expirationTimestamp: inverseNewExchangeRate.expirationTimestamp,
       };
 
-      when(exchangeRateService.createExchangeRate(deepEqual(newExchangeRate))).thenResolve(createdExchangeRate);
-      when(exchangeRateService.createExchangeRate(deepEqual(inverseCreatedExchangeRate))).thenResolve(null);
+      when(mockExchangeRateService.createExchangeRate(deepEqual(newExchangeRate))).thenResolve(createdExchangeRate);
+      when(mockExchangeRateService.createExchangeRate(deepEqual(inverseCreatedExchangeRate))).thenResolve(null);
 
       expect(
         async () =>
@@ -1095,7 +1092,7 @@ describe("AdminController", () => {
           ),
       ).rejects.toThrow(BadRequestException);
 
-      const [firstExchangeRate] = capture(exchangeRateService.createExchangeRate).first();
+      const [firstExchangeRate] = capture(mockExchangeRateService.createExchangeRate).first();
       expect(firstExchangeRate).toEqual(newExchangeRate);
     });
   });
@@ -1123,7 +1120,7 @@ describe("AdminController", () => {
       ];
 
       when(
-        adminService.getBalanceForAccounts(
+        mockAdminService.getBalanceForAccounts(
           ACCOUNT_BALANCE_TYPES.CIRCLE,
           deepEqual(["test-account-id", "test-account-id-2"]),
         ),
@@ -1158,7 +1155,7 @@ describe("AdminController", () => {
       ];
 
       when(
-        adminService.getBalanceForAccounts(ACCOUNT_BALANCE_TYPES.CIRCLE, deepEqual(["test-account-id"])),
+        mockAdminService.getBalanceForAccounts(ACCOUNT_BALANCE_TYPES.CIRCLE, deepEqual(["test-account-id"])),
       ).thenResolve(expectedAccountBalances);
 
       const accountBalances = await adminController.getAccountBalances(
@@ -1206,7 +1203,7 @@ describe("AdminController", () => {
       });
       const payroll = getRandomPayroll("EMPLOYER_ID").payroll;
 
-      when(employerService.updatePayroll(payroll.id, anything())).thenResolve(payroll);
+      when(mockEmployerService.updatePayroll(payroll.id, anything())).thenResolve(payroll);
 
       const returnedPayroll = await adminController.updatePayrollStatus(
         {
@@ -1229,7 +1226,7 @@ describe("AdminController", () => {
         status: payroll.status,
       });
 
-      const [propagatedPayrollID, propagatedRequestBody] = capture(employerService.updatePayroll).last();
+      const [propagatedPayrollID, propagatedRequestBody] = capture(mockEmployerService.updatePayroll).last();
       expect(propagatedPayrollID).toBe(payroll.id);
       expect(propagatedRequestBody).toStrictEqual({
         status: PayrollStatus.FUNDED,
@@ -1332,8 +1329,8 @@ describe("AdminController", () => {
       const consumer = getRandomConsumer(consumerID);
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
-      when(adminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
-      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
       const expectedResult: TransactionDTO = {
         id: transaction.id,
         transactionRef: transaction.transactionRef,
@@ -1365,7 +1362,9 @@ describe("AdminController", () => {
         totalFees: 10,
       };
 
-      when(transactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(expectedResult);
+      when(mockTransactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(
+        expectedResult,
+      );
 
       const adminID = "AAAAAAAAAAA";
 
@@ -1392,8 +1391,8 @@ describe("AdminController", () => {
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID, true);
 
-      when(adminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
-      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
       const expectedResult: TransactionDTO = {
         id: transaction.id,
         transactionRef: transaction.transactionRef,
@@ -1424,7 +1423,9 @@ describe("AdminController", () => {
         ],
         totalFees: 10,
       };
-      when(transactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(expectedResult);
+      when(mockTransactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(
+        expectedResult,
+      );
 
       const adminID = "AAAAAAAAAAA";
 
@@ -1453,9 +1454,9 @@ describe("AdminController", () => {
       const transaction: Transaction = getRandomTransaction(consumerID);
       transaction.creditConsumerID = creditConsumer.props.id;
 
-      when(adminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
-      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
-      when(consumerService.getConsumer(creditConsumer.props.id)).thenResolve(creditConsumer);
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(mockConsumerService.getConsumer(creditConsumer.props.id)).thenResolve(creditConsumer);
 
       const expectedResult: TransactionDTO = {
         id: transaction.id,
@@ -1492,7 +1493,9 @@ describe("AdminController", () => {
         ],
         totalFees: 10,
       };
-      when(transactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(expectedResult);
+      when(mockTransactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(
+        expectedResult,
+      );
 
       const adminID = "AAAAAAAAAAA";
 
@@ -1518,9 +1521,9 @@ describe("AdminController", () => {
       const consumer = getRandomConsumer(consumerID);
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
-      when(adminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
 
-      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
 
       const expectedResult: TransactionDTO = {
         id: transaction.id,
@@ -1552,7 +1555,9 @@ describe("AdminController", () => {
         ],
         totalFees: 10,
       };
-      when(transactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(expectedResult);
+      when(mockTransactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(
+        expectedResult,
+      );
 
       const adminID = "AAAAAAAAAAA";
 
@@ -1578,8 +1583,8 @@ describe("AdminController", () => {
       const consumer = getRandomConsumer(consumerID);
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
-      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
-      when(adminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
       const monoTransaction: MonoTransaction = {
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
@@ -1592,7 +1597,7 @@ describe("AdminController", () => {
           collectionLinkID: "collectionLinkID",
         },
       };
-      when(monoService.getTransactionByNobaTransactionID(anything())).thenResolve(monoTransaction);
+      when(mockMonoService.getTransactionByNobaTransactionID(anything())).thenResolve(monoTransaction);
 
       const expectedResult: TransactionDTO = {
         id: transaction.id,
@@ -1625,7 +1630,9 @@ describe("AdminController", () => {
         ],
         totalFees: 10,
       };
-      when(transactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(expectedResult);
+      when(mockTransactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(
+        expectedResult,
+      );
 
       const adminID = "AAAAAAAAAAA";
 
@@ -1651,7 +1658,7 @@ describe("AdminController", () => {
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
       const consumer = getRandomConsumer(consumerID);
-      when(adminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
 
       const transactionEvents: TransactionEvent[] = [
         {
@@ -1703,8 +1710,8 @@ describe("AdminController", () => {
         },
       ];
 
-      when(adminService.getTransactionEvents(transaction.id, true)).thenResolve(transactionEvents);
-      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(mockAdminService.getTransactionEvents(transaction.id, true)).thenResolve(transactionEvents);
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
 
       const expectedResult: TransactionDTO = {
         id: transaction.id,
@@ -1769,7 +1776,7 @@ describe("AdminController", () => {
       ];
 
       when(
-        transactionMappingService.toTransactionDTO(transaction, undefined, deepEqual(transactionEventToReturn)),
+        mockTransactionMappingService.toTransactionDTO(transaction, undefined, deepEqual(transactionEventToReturn)),
       ).thenResolve(expectedResult);
 
       const adminID = "AAAAAAAAAAA";
@@ -1796,9 +1803,9 @@ describe("AdminController", () => {
       const transactionRef = "transactionRef";
       const transaction: Transaction = getRandomTransaction(consumerID);
       const consumer = getRandomConsumer(consumerID);
-      when(adminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
-      when(adminService.getTransactionEvents(transaction.id, true)).thenResolve([]);
-      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
+      when(mockAdminService.getTransactionEvents(transaction.id, true)).thenResolve([]);
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
 
       const expectedResult: TransactionDTO = {
         id: transaction.id,
@@ -1831,7 +1838,7 @@ describe("AdminController", () => {
         totalFees: 10,
       };
 
-      when(transactionMappingService.toTransactionDTO(transaction, undefined, deepEqual([]))).thenResolve(
+      when(mockTransactionMappingService.toTransactionDTO(transaction, undefined, deepEqual([]))).thenResolve(
         expectedResult,
       );
 
@@ -1856,7 +1863,7 @@ describe("AdminController", () => {
 
     it("should throw NotFoundException when transaction is not found", async () => {
       const transactionRef = "transactionRef";
-      when(adminService.getTransactionByTransactionRef(transactionRef)).thenResolve(null);
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(null);
 
       const adminID = "AAAAAAAAAAA";
 
@@ -1901,8 +1908,8 @@ describe("AdminController", () => {
         pageLimit: 5,
         pageOffset: 1,
       };
-      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
-      when(adminService.getFilteredTransactions(deepEqual(filter))).thenResolve({
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(mockAdminService.getFilteredTransactions(deepEqual(filter))).thenResolve({
         items: [transaction],
         page: 1,
         hasNextPage: false,
@@ -1910,7 +1917,7 @@ describe("AdminController", () => {
         totalItems: 1,
       });
 
-      when(transactionMappingService.toTransactionDTO(transaction)).thenResolve({
+      when(mockTransactionMappingService.toTransactionDTO(transaction)).thenResolve({
         id: transaction.id,
         transactionRef: transaction.transactionRef,
         workflowName: transaction.workflowName,
