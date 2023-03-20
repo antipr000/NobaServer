@@ -174,6 +174,7 @@ describe("ConsumerController", () => {
         email: consumer.props.email,
         referralCode: consumer.props.referralCode,
         status: "ActionRequired",
+        gender: "Male",
         kycVerificationData: {
           kycVerificationStatus: "NotSubmitted",
           updatedTimestamp: 0,
@@ -233,6 +234,7 @@ describe("ConsumerController", () => {
         email: consumer.props.email,
         referralCode: consumer.props.referralCode,
         status: "ActionRequired",
+        gender: "Other",
         kycVerificationData: {
           kycVerificationStatus: "NotSubmitted",
           updatedTimestamp: 0,

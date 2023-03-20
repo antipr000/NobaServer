@@ -27,6 +27,7 @@ import { Employee } from "../../../modules/employee/domain/Employee";
 import { DocumentVerificationStatus, KYCProvider, KYCStatus } from "@prisma/client";
 import { AdminUpdateConsumerRequestDTO } from "../dto/AdminUpdateConsumerRequestDTO";
 import { ConsumerInternalDTO } from "../../../modules/consumer/dto/ConsumerInternalDTO";
+import { Gender } from "../../../modules/consumer/domain/ExternalStates";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);
@@ -380,12 +381,14 @@ describe("AdminService", () => {
         firstName: "Rosie",
         lastName: "Noba",
         email: "rosie@noba.com",
+        gender: "Male",
       });
       const consumer2 = Consumer.createConsumer({
         id: "22222222222",
         firstName: "Rosie",
         lastName: "Noba",
         email: "rosie2@noba.com",
+        gender: "Female",
       });
 
       const filterCriteria: ConsumerSearchDTO = {
@@ -435,8 +438,8 @@ describe("AdminService", () => {
       };
 
       when(consumerService.findConsumers(filterCriteria)).thenResolve([consumer1, consumer2]);
-      when(consumerMapper.toConsumerInternalDTO(consumer1)).thenReturn({ ...consumer1.props });
-      when(consumerMapper.toConsumerInternalDTO(consumer2)).thenReturn({ ...consumer2.props });
+      when(consumerMapper.toConsumerInternalDTO(consumer1)).thenReturn({ ...consumer1.props, gender: Gender.MALE });
+      when(consumerMapper.toConsumerInternalDTO(consumer2)).thenReturn({ ...consumer2.props, gender: Gender.FEMALE });
       when(circleService.getOrCreateWallet(consumer1.props.id)).thenResolve("wallet-id-1");
       when(circleService.getOrCreateWallet(consumer2.props.id)).thenResolve("wallet-id-2");
       when(employeeService.getEmployeesForConsumerID(consumer1.props.id, true)).thenResolve([employee1Details]);
@@ -449,6 +452,7 @@ describe("AdminService", () => {
           firstName: consumer1.props.firstName,
           lastName: consumer1.props.lastName,
           email: consumer1.props.email,
+          gender: Gender.MALE,
           walletDetails: [
             {
               walletProvider: "Circle",
@@ -472,6 +476,7 @@ describe("AdminService", () => {
           firstName: consumer2.props.firstName,
           lastName: consumer2.props.lastName,
           email: consumer2.props.email,
+          gender: Gender.FEMALE,
           walletDetails: [
             {
               walletProvider: "Circle",
@@ -502,6 +507,7 @@ describe("AdminService", () => {
         lastName: "Noba",
         handle: "rosie-noba",
         email: "rosie@noba.com",
+        gender: "Male",
         phone: "+1234567890",
         referralCode: "rosie-referral-code",
         referredByID: "referred-by-1",
@@ -527,6 +533,7 @@ describe("AdminService", () => {
 
       const consumerInternalDTO: ConsumerInternalDTO = {
         ...updatedConsumer1.props,
+        gender: Gender.MALE,
         address: {
           ...(consumer1.props.address as any),
         },
@@ -573,6 +580,7 @@ describe("AdminService", () => {
         phone: "+1234567890",
         dateOfBirth: "1990-01-01",
         handle: "rosie-noba",
+        gender: "other-gender",
         address: {
           streetLine1: "123 Main St",
           streetLine2: "Apt 1",
@@ -645,6 +653,7 @@ describe("AdminService", () => {
 
       const consumerInternalDTO: ConsumerInternalDTO = {
         ...updatedConsumer1.props,
+        gender: Gender.OTHER,
         address: {
           ...updatedConsumer1.props.address,
         },
