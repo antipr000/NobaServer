@@ -43,4 +43,5 @@ export enum AggregatedPaymentMethodState {
 export enum Gender {
   MALE = "Male",
   FEMALE = "Female",
+  OTHER = "Other",
 }

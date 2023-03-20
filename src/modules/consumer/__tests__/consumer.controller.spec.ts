@@ -929,6 +929,64 @@ describe("ConsumerController", () => {
       expect(response.kycVerificationData.kycVerificationStatus).toBe(KycVerificationState.APPROVED);
       expect(response.documentVerificationData.documentVerificationStatus).toBe(DocumentVerificationState.NOT_REQUIRED);
     });
+
+    it("should return gender as MALE when gender string is Male", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        isDisabled: false,
+        isLocked: false,
+        gender: "Male",
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        verificationData: {
+          kycCheckStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
+          isSuspectedFraud: false,
+          documentVerificationTimestamp: new Date(),
+          kycVerificationTimestamp: new Date(),
+        },
+      });
+
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getAllConsumerWallets(consumer.props.id)).thenResolve([]);
+      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([]);
+
+      const response = await consumerController.getConsumer(consumer);
+
+      expect(response.gender).toBe(Gender.MALE);
+    });
+
+    it("should return gender as OTHER when gender string is unknown", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        isDisabled: false,
+        isLocked: false,
+        gender: "unknown",
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        verificationData: {
+          kycCheckStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
+          isSuspectedFraud: false,
+          documentVerificationTimestamp: new Date(),
+          kycVerificationTimestamp: new Date(),
+        },
+      });
+
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getAllConsumerWallets(consumer.props.id)).thenResolve([]);
+      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([]);
+
+      const response = await consumerController.getConsumer(consumer);
+
+      expect(response.gender).toBe(Gender.OTHER);
+    });
   });
 
   describe("devicecontacts", () => {

@@ -80,6 +80,8 @@ export class ConsumerController {
   async getConsumer(@AuthUser() consumer: Consumer): Promise<ConsumerDTO> {
     const consumerID: string = consumer.props.id;
     const entity: Consumer = await this.consumerService.getConsumer(consumerID);
+    console.log(entity);
+
     if (!entity) {
       throw new NotFoundException("Requested user details not found");
     }

@@ -94,6 +94,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
       this.statesMapper.getDocumentVerificationState(
         p.verificationData ? p.verificationData.documentVerificationStatus : DocumentVerificationStatus.NOT_REQUIRED,
       );
+
     return {
       id: p.id,
       firstName: p.firstName,
@@ -103,6 +104,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
       referralCode: p.referralCode,
       phone: p.phone,
       status: this.statesMapper.getUserState(consumer, paymentMethods, cryptoWallets),
+      gender: this.statesMapper.getGender(p.gender),
       kycVerificationData: {
         kycVerificationStatus: this.statesMapper.getKycVerificationState(
           p.verificationData ? p.verificationData.kycCheckStatus : KYCStatus.NOT_SUBMITTED,
