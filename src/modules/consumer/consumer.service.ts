@@ -200,6 +200,7 @@ export class ConsumerService {
       ...consumer.props,
       ...consumerProps,
     });
+    console.log(consumerProps);
 
     try {
       return await this.consumerRepo.updateConsumer(consumer.props.id, consumerProps);
