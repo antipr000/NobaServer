@@ -183,6 +183,9 @@ export class AdminService {
       ...(this.shouldUpdateField(updateDetails.phone, consumer.props.phone) && {
         phone: this.cleanValue(updateDetails.phone),
       }),
+      ...(this.shouldUpdateField(updateDetails.gender, consumer.props.gender) && {
+        gender: this.cleanValue(updateDetails.gender),
+      }),
       ...(this.shouldUpdateField(updateDetails.dateOfBirth, consumer.props.dateOfBirth) && {
         dateOfBirth: this.cleanValue(updateDetails.dateOfBirth),
       }),

@@ -190,6 +190,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
   public toConsumerInternalDTO(consumer: Consumer): ConsumerInternalDTO {
     const consumerInternalDTO: ConsumerInternalDTO = {
       ...consumer.props,
+      gender: this.statesMapper.getGender(consumer.props.gender),
       address: {
         ...consumer.props.address,
       },
