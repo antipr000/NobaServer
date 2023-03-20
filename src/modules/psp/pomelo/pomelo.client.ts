@@ -24,7 +24,7 @@ export class PomeloClient {
 
   private async makeAPICall(request: {
     method: Method;
-    endpoint: string;
+    url: string;
     body?: any;
     queryParams?: any;
     accessToken?: string;
@@ -32,7 +32,7 @@ export class PomeloClient {
   }): Promise<AxiosResponse> {
     return axios.request({
       method: request.method,
-      url: `${this.pomeloConfigs.authBaseUrl}/${request.endpoint}`,
+      url: request.url,
       headers: {
         "Content-Type": "application/json; charset=utf-8",
         ...(request.accessToken && {
@@ -62,7 +62,7 @@ export class PomeloClient {
     try {
       const { data } = await this.makeAPICall({
         method: "POST",
-        endpoint: "oauth/token",
+        url: `${this.pomeloConfigs.authBaseUrl}/oauth/token`,
         body: body,
       });
       return data.access_token;
@@ -81,7 +81,7 @@ export class PomeloClient {
       const { data } = await this.makeAPICall({
         method: "POST",
         body: request,
-        endpoint: "users/v1",
+        url: `${this.pomeloConfigs.apiBaseUrl}/users/v1`,
         accessToken: accessToken,
         idempotencyKey: consumerID,
       });
@@ -105,7 +105,7 @@ export class PomeloClient {
     try {
       const { data } = await this.makeAPICall({
         method: "GET",
-        endpoint: `/users/v1/${id}`,
+        url: `${this.pomeloConfigs.apiBaseUrl}/users/v1/${id}`,
         accessToken: accessToken,
       });
 
@@ -134,7 +134,7 @@ export class PomeloClient {
     try {
       const { data } = await this.makeAPICall({
         method: "PATCH",
-        endpoint: `users/v1/${id}`,
+        url: `${this.pomeloConfigs.apiBaseUrl}/users/v1/${id}`,
         body: request,
         accessToken: accessToken,
       });
@@ -158,13 +158,35 @@ export class PomeloClient {
     }
   }
 
+  public async createUserToken(userID: string): Promise<string> {
+    const accessToken = await this.getAccessToken();
+    try {
+      const { data } = await this.makeAPICall({
+        method: "POST",
+        url: `${this.pomeloConfigs.apiBaseUrl}/secure-data/v1/token`,
+        body: {
+          user_id: userID,
+        },
+        accessToken: accessToken,
+      });
+
+      return data.access_token;
+    } catch (e) {
+      this.logger.error(`Failed to generate access token for user: ${userID}. Reason: ${JSON.stringify(e)}`);
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: "Failed to fetch access token for user",
+      });
+    }
+  }
+
   public async createCard(idempotencyKey: string, request: CreateCardRequest): Promise<PomeloCard> {
     const accessToken = await this.getAccessToken();
 
     try {
       const { data } = await this.makeAPICall({
         method: "POST",
-        endpoint: "cards/v1",
+        url: `${this.pomeloConfigs.apiBaseUrl}/cards/v1`,
         body: request,
         accessToken: accessToken,
         idempotencyKey: idempotencyKey,
@@ -196,7 +218,7 @@ export class PomeloClient {
     try {
       const { data } = await this.makeAPICall({
         method: "GET",
-        endpoint: `cards/v1/${id}`,
+        url: `${this.pomeloConfigs.apiBaseUrl}/cards/v1/${id}`,
         accessToken: accessToken,
       });
 
@@ -232,7 +254,7 @@ export class PomeloClient {
     try {
       await this.makeAPICall({
         method: "PATCH",
-        endpoint: `cards/v1/${id}`,
+        url: `${this.pomeloConfigs.apiBaseUrl}/cards/v1/${id}`,
         accessToken: accessToken,
         body: request,
       });
