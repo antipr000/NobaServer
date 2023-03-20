@@ -56,10 +56,13 @@ export class TransactionService {
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID?: string): Promise<Transaction> {
     const transaction: Transaction = await this.transactionRepo.getTransactionByTransactionRef(transactionRef);
-    if (
-      transaction === null ||
-      (transaction.debitConsumerID !== consumerID && transaction.creditConsumerID !== consumerID)
-    ) {
+    if (!transaction) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Could not find transaction with transactionRef: ${transactionRef}`,
+      });
+    }
+    if (consumerID && transaction.debitConsumerID !== consumerID && transaction.creditConsumerID !== consumerID) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
         message: `Could not find transaction with transactionRef: ${transactionRef} for consumerID: ${consumerID}`,

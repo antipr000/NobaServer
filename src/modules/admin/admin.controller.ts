@@ -401,7 +401,7 @@ export class AdminController {
   }
 
   @Get("/transactions/:transactionRef")
-  @ApiOperation({ summary: "Gets details of a any transaction" })
+  @ApiOperation({ summary: "Gets details of any transaction" })
   @ApiQuery({ name: "includeEvents", enum: IncludeEventTypes, required: false })
   @ApiResponse({
     status: HttpStatus.OK,
