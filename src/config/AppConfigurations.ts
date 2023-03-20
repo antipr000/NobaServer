@@ -136,6 +136,16 @@ import {
   DEPENDENCY_DASHBOARD_CLIENT,
   NOBA_PAYROLL_ACCOUNT_NUMBER,
   NOBA_PAYROLL_AWS_SECRET_KEY_FOR_NOBA_PAYROLL_ACCOUNT_NUMBER,
+  POMELO_CONFIG_KEY,
+  POMELO_AWS_SECRET_KEY_FOR_CLIENT_ID,
+  POMELO_CLIENT_ID,
+  POMELO_AWS_SECRET_KEY_FOR_CLIENT_SECRET,
+  POMELO_CLIENT_SECRET,
+  POMELO_AWS_SECRET_KEY_FOR_AFFINITY_GROUP,
+  POMELO_AFFINITY_GROUP,
+  POMELO_AUTH_BASE_URL,
+  POMELO_API_BASE_URL,
+  POMELO_AUDIENCE,
 } from "./ConfigurationUtils";
 import fs from "fs";
 
@@ -155,6 +165,7 @@ import { NobaWorkflowConfig } from "./configtypes/NobaWorkflowConfig";
 import { MonoConfigs } from "./configtypes/MonoConfig";
 import { SecretProvider } from "./SecretProvider";
 import { BubbleConfigs } from "./configtypes/BubbleConfigs";
+import { PomeloConfigs } from "./configtypes/PomeloConfigs";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -428,6 +439,41 @@ async function configureMonoCredentials(
   );
 
   configs[MONO_CONFIG_KEY] = monoConfig;
+  return configs;
+}
+
+async function configurePomeloCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const pomeloConfig: PomeloConfigs = configs[POMELO_CONFIG_KEY];
+
+  if (pomeloConfig === undefined) {
+    const errorMessage =
+      "\n'Pomelo' configurations are required. Please configure the Mono credentials in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${POMELO_CONFIG_KEY}" and populate ` +
+      `("${POMELO_AWS_SECRET_KEY_FOR_CLIENT_ID}" or "${POMELO_CLIENT_ID}") ` +
+      `("${POMELO_AWS_SECRET_KEY_FOR_CLIENT_SECRET}" or "${POMELO_CLIENT_SECRET}") ` +
+      `("${POMELO_AWS_SECRET_KEY_FOR_AFFINITY_GROUP}" or "${POMELO_AFFINITY_GROUP}") ` +
+      `("${POMELO_AUDIENCE}" ` +
+      `("${POMELO_AUTH_BASE_URL}" AND` +
+      `("${POMELO_API_BASE_URL}" ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+
+    throw Error(errorMessage);
+  }
+
+  pomeloConfig.clientID = await getParameterValue(pomeloConfig.awsSecretNameForClientID, pomeloConfig.clientID);
+  pomeloConfig.clientSecret = await getParameterValue(
+    pomeloConfig.awsSecretNameForClientSecret,
+    pomeloConfig.clientSecret,
+  );
+  pomeloConfig.affinityGroup = await getParameterValue(
+    pomeloConfig.awsSecretNameForAffinityGroup,
+    pomeloConfig.affinityGroup,
+  );
+
+  configs[POMELO_CONFIG_KEY] = pomeloConfig;
   return configs;
 }
 

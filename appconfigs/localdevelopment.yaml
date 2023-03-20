@@ -143,6 +143,17 @@ circle:
   masterWalletID: "1001404309"
   awsSecretNameForMasterWalletID: ""
 
+pomelo:
+  clientID: "5y8NSzLGYSegboKhGT3N8CXjnrv9yDVK"
+  awsSecretNameForClientID: ""
+  clientSecret: "pp3NcIQ5byqtgQqmGBKNiUONB5AoLeu3nsET1tIZWKu2p4ubq_mwkWee1YgH99cC"
+  awsSecretNameForClientSecret: ""
+  affinityGroup: "afg-2IB3A8TeAYjfogaa1E3Mv88nBkq"
+  awsSecretNameForAffinityGroup: ""
+  authBaseUrl: "https://auth-stage.pomelo.la"
+  audience: "https://auth-staging.pomelo.la"
+  apiBaseUrl: "https://api-stage.pomelo.la"
+
 nobaWorkflow:
   taskQueue: "NOBA_TASK_QUEUE"
   awsSecretNameForTaskQueue: ""
