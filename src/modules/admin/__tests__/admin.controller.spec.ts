@@ -689,6 +689,7 @@ describe("AdminController", () => {
         firstName: "Fake",
         lastName: "Consumer",
         phone: null,
+        gender: "Female",
         dateOfBirth: "1992-10-12",
         isLocked: false,
         isDisabled: false,
