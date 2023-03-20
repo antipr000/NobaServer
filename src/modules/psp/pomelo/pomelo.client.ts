@@ -5,13 +5,10 @@ import { Logger } from "winston";
 import { PomeloConfigs } from "../../../config/configtypes/PomeloConfigs";
 import { POMELO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import axios from "axios";
-import {
-  CreateCardRequest,
-  CreateUserRequest,
-  PomeloCard,
-  UpdateCardRequest,
-  UpdateUserRequest,
-} from "./dto/pomelo.client.dto";
+import { CreateCardRequest, CreateUserRequest, UpdateCardRequest, UpdateUserRequest } from "./dto/pomelo.client.dto";
+
+import { PomeloCard } from "./domain/PomeloCard";
+import { PomeloUser } from "./domain/PomeloUser";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 @Injectable()
@@ -51,40 +48,24 @@ export class PomeloClient {
     }
   }
 
-  public async createUser(request: CreateUserRequest): Promise<string> {
+  public async createUser(consumerID: string, request: CreateUserRequest): Promise<PomeloUser> {
     const url = `${this.pomeloConfigs.apiBaseUrl}/users/v1`;
-
-    const body = {
-      name: request.firstName,
-      surname: request.lastName,
-      birthdate: request.dateOfBirth,
-      email: request.email,
-      phone: request.phoneNumber,
-      identification_type: request.identificationType,
-      identification_value: request.identificationNumber,
-      gender: request.gender,
-      legal_address: {
-        street_name: request.address.streetName,
-        zip_code: request.address.pinCode,
-        city: request.address.city,
-        region: request.address.region,
-        country: request.countryCode,
-      },
-      operation_country: request.countryCode,
-    };
 
     const accessToken = await this.getAccessToken();
 
     try {
-      const { data } = await axios.post(url, body, {
+      const { data } = await axios.post(url, request, {
         headers: {
           "Content-Type": "application/json; charset=utf-8",
           Authorization: `Bearer ${accessToken}`,
-          "x-idempotency-key": request.consumerID,
+          "x-idempotency-key": consumerID,
         },
       });
 
-      return data.data.id;
+      return {
+        id: data.data.id,
+        status: data.data.status,
+      };
     } catch (e) {
       this.logger.error(`Failed to create user in Pomelo. Reason: ${JSON.stringify(e)}`);
       throw new ServiceException({
@@ -94,7 +75,7 @@ export class PomeloClient {
     }
   }
 
-  public async getUser(id: string): Promise<any> {
+  public async getUser(id: string): Promise<PomeloUser> {
     const url = `${this.pomeloConfigs.apiBaseUrl}/users/v1/${id}`;
 
     const accessToken = await this.getAccessToken();
@@ -107,7 +88,10 @@ export class PomeloClient {
         },
       });
 
-      return data.data;
+      return {
+        id: data.data.id,
+        status: data.data.status,
+      };
     } catch (e) {
       this.logger.error(`Failed to get user from Pomelo. Reason: ${JSON.stringify(e)}`);
       if (e.response.status === HttpStatus.NOT_FOUND) {
@@ -123,41 +107,23 @@ export class PomeloClient {
     }
   }
 
-  public async updateUser(id: string, request: UpdateUserRequest): Promise<string> {
+  public async updateUser(id: string, request: UpdateUserRequest): Promise<PomeloUser> {
     const url = `${this.pomeloConfigs.apiBaseUrl}/users/v1/${id}`;
-    const body = {
-      ...(request.firstName && { name: request.firstName }),
-      ...(request.lastName && { surname: request.lastName }),
-      ...(request.dateOfBirth && { birthdate: request.dateOfBirth }),
-      ...(request.email && { email: request.email }),
-      ...(request.phoneNumber && { phone: request.phoneNumber }),
-      ...(request.identificationType && { identification_type: request.identificationType }),
-      ...(request.identificationNumber && { identification_value: request.identificationNumber }),
-      ...(request.gender && { gender: request.gender }),
-      ...(request.address && {
-        legal_address: {
-          street_name: request.address.streetName,
-          zip_code: request.address.pinCode,
-          city: request.address.city,
-          region: request.address.region,
-          country: request.address.country,
-        },
-      }),
-      ...(request.status && { status: request.status }),
-      ...(request.statusReason && { status_reason: request.statusReason }),
-    };
 
     const accessToken = await this.getAccessToken();
 
     try {
-      const { data } = await axios.patch(url, body, {
+      const { data } = await axios.patch(url, request, {
         headers: {
           "Content-Type": "application/json; charset=utf-8",
           Authorization: `Bearer ${accessToken}`,
         },
       });
 
-      return data.data.id;
+      return {
+        id: data.data.id,
+        status: data.data.status,
+      };
     } catch (e) {
       this.logger.error(`Failed to update user in Pomelo. Reason: ${JSON.stringify(e)}`);
       if (e.response.status === HttpStatus.NOT_FOUND) {
@@ -176,30 +142,10 @@ export class PomeloClient {
   public async createCard(idempotencyKey: string, request: CreateCardRequest): Promise<PomeloCard> {
     const url = `${this.pomeloConfigs.apiBaseUrl}/cards/v1`;
 
-    const body = {
-      user_id: request.userID,
-      affinity_group_id: this.pomeloConfigs.affinityGroup,
-      card_type: request.cardType,
-      ...(request.address && {
-        address: {
-          street_name: request.address.streetName,
-          street_number: request.address.streetNumber,
-          floor: request.address.floor,
-          apartment: request.address.apartment,
-          city: request.address.city,
-          region: request.address.region,
-          country: request.address.country,
-          zip_code: request.address.zipCode,
-          neighborhood: request.address.neighborhood,
-        },
-      }),
-      ...(request.previousCardID && { previous_card_id: request.previousCardID }),
-    };
-
     const accessToken = await this.getAccessToken();
 
     try {
-      const { data } = await axios.post(url, body, {
+      const { data } = await axios.post(url, request, {
         headers: {
           "Content-Type": "application/json; charset=utf-8",
           Authorization: `Bearer ${accessToken}`,
@@ -269,16 +215,10 @@ export class PomeloClient {
   public async updateCard(id: string, request: UpdateCardRequest): Promise<void> {
     const url = `${this.pomeloConfigs.apiBaseUrl}/cards/v1/${id}`;
 
-    const body = {
-      ...(request.status && { status: request.status }),
-      ...(request.statusReason && { status_reason: request.statusReason }),
-      ...(request.pin && { pin: request.pin }),
-    };
-
     const accessToken = await this.getAccessToken();
 
     try {
-      await axios.patch(url, body, {
+      await axios.patch(url, request, {
         headers: {
           "Content-Type": "application/json; charset=utf-8",
           Authorization: `Bearer ${accessToken}`,

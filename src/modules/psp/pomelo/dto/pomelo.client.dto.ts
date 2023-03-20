@@ -1,56 +1,43 @@
+import { CardStatus, CardType } from "../domain/PomeloCard";
+import { UserStatus } from "../domain/PomeloUser";
+
 export class CreateUserRequest {
-  firstName: string;
-  lastName: string;
-  dateOfBirth: string;
-  email: string;
-  phoneNumber: string;
-  countryCode: string;
-  consumerID: string;
+  name: string;
+  surname: string;
+  identification_type: string;
+  identification_value: string;
+  birthdate: string;
   gender: string;
-  identificationType: string;
-  identificationNumber: string;
-  address: {
-    streetName: string;
-    pinCode: string;
+  email: string;
+  phone: string;
+  operation_country: string;
+  legal_address: {
+    street_name: string;
+    zip_code: string;
     city: string;
     region: string;
+    country: string;
   };
 }
 
-export enum UserStatus {
-  ACTIVE = "ACTIVE",
-  BLOCKED = "BLOCKED",
-}
-
 export class UpdateUserRequest {
-  firstName?: string;
-  lastName?: string;
-  dateOfBirth?: string;
+  name?: string;
+  surname?: string;
+  birthdate?: string;
   email?: string;
-  phoneNumber?: string;
+  phone?: string;
   gender?: string;
-  identificationType?: string;
-  identificationNumber?: string;
-  address?: {
-    streetName: string;
-    pinCode: string;
+  identification_type?: string;
+  identification_value?: string;
+  legal_address?: {
+    street_name: string;
+    zip_code: string;
     city: string;
     region: string;
     country: string;
   };
   status?: UserStatus;
-  statusReason?: string;
-}
-
-export enum CardType {
-  PHYSICAL = "PHYSICAL",
-  VIRTUAL = "VIRTUAL",
-}
-
-export enum CardStatus {
-  BLOCKED = "BLOCKED",
-  DISABLED = "DISABLED",
-  ACTIVE = "ACTIVE",
+  status_reason?: string;
 }
 
 export enum CardStatusReason {
@@ -63,36 +50,24 @@ export enum CardStatusReason {
 }
 
 export class CreateCardRequest {
-  userID: string;
-  cardType: CardType;
+  user_id: string;
+  card_type: CardType;
   address?: {
-    streetName: string;
-    streetNumber: string;
+    street_name: string;
+    street_number: string;
     floor: string;
     apartment: string;
     city: string;
     region: string;
     country: string;
-    zipCode: string;
+    zip_code: string;
     neighborhood: string;
   };
-  previousCardID?: string;
-}
-
-export class PomeloCard {
-  id: string;
-  cardType: CardType;
-  productType: string;
-  status: CardStatus;
-  shipmentID: string;
-  userID: string;
-  startDate: string;
-  lastFour: string;
-  provider: string;
+  previous_card_id?: string;
 }
 
 export class UpdateCardRequest {
   status?: CardStatus;
-  statusReason?: CardStatusReason;
+  status_reason?: CardStatusReason;
   pin?: string;
 }
