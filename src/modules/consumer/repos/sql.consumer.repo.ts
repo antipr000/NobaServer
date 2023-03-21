@@ -360,7 +360,6 @@ export class SQLConsumerRepo implements IConsumerRepo {
   }
 
   async updateConsumer(consumerID: string, consumer: Partial<ConsumerProps>): Promise<Consumer> {
-    console.log(consumer);
     try {
       if (consumer.socialSecurityNumber) {
         consumer.socialSecurityNumber = await this.kmsService.encryptString(
@@ -368,9 +367,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
           KmsKeyType.SSN,
         );
       }
-      console.log(consumer);
       const updateConsumerInput = this.mapper.toUpdateConsumerInput(consumer);
-      console.log(updateConsumerInput);
       const consumerProps = await this.prisma.consumer.update({
         where: { id: consumerID },
         data: updateConsumerInput,

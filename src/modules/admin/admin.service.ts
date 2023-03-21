@@ -241,7 +241,6 @@ export class AdminService {
     };
     await this.consumerService.updateConsumer(updateConsumerPayload);
     const updatedConsumer = await this.consumerService.getConsumer(consumerID);
-    console.log(updatedConsumer);
     return this.decorateConsumer(updatedConsumer);
   }
 
