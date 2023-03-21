@@ -235,6 +235,7 @@ describe("ConsumerController", () => {
         lastName: consumer.props.lastName,
         email: consumer.props.email,
         referralCode: consumer.props.referralCode,
+        gender: null,
         status: "ActionRequired",
         kycVerificationData: {
           kycVerificationStatus: "NotSubmitted",
