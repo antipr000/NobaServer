@@ -5,10 +5,16 @@ import { Logger } from "winston";
 import { PomeloConfigs } from "../../../config/configtypes/PomeloConfigs";
 import { POMELO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import axios, { AxiosResponse, Method } from "axios";
-import { CreateCardRequest, CreateUserRequest, UpdateCardRequest, UpdateUserRequest } from "./dto/pomelo.client.dto";
+import {
+  ClientCreateCardRequest,
+  ClientCreateUserRequest,
+  ClientUpdateCardRequest,
+  ClientUpdateUserRequest,
+  ClientPomeloUser,
+  ClientUserStatus,
+} from "./dto/pomelo.client.dto";
 
 import { PomeloCard } from "./domain/PomeloCard";
-import { PomeloUser } from "./domain/PomeloUser";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 @Injectable()
@@ -75,7 +81,7 @@ export class PomeloClient {
     }
   }
 
-  public async createUser(consumerID: string, request: CreateUserRequest): Promise<PomeloUser> {
+  public async createUser(consumerID: string, request: ClientCreateUserRequest): Promise<ClientPomeloUser> {
     const accessToken = await this.getAccessToken();
     try {
       const { data } = await this.makeAPICall({
@@ -99,7 +105,7 @@ export class PomeloClient {
     }
   }
 
-  public async getUser(id: string): Promise<PomeloUser> {
+  public async getUser(id: string): Promise<ClientPomeloUser> {
     const accessToken = await this.getAccessToken();
 
     try {
@@ -128,7 +134,7 @@ export class PomeloClient {
     }
   }
 
-  public async updateUser(id: string, request: UpdateUserRequest): Promise<PomeloUser> {
+  public async updateUser(id: string, request: ClientUpdateUserRequest): Promise<ClientPomeloUser> {
     const accessToken = await this.getAccessToken();
 
     try {
@@ -180,7 +186,7 @@ export class PomeloClient {
     }
   }
 
-  public async createCard(idempotencyKey: string, request: CreateCardRequest): Promise<PomeloCard> {
+  public async createCard(idempotencyKey: string, request: ClientCreateCardRequest): Promise<PomeloCard> {
     const accessToken = await this.getAccessToken();
 
     try {
@@ -248,7 +254,7 @@ export class PomeloClient {
     }
   }
 
-  public async updateCard(id: string, request: UpdateCardRequest): Promise<void> {
+  public async updateCard(id: string, request: ClientUpdateCardRequest): Promise<void> {
     const accessToken = await this.getAccessToken();
 
     try {

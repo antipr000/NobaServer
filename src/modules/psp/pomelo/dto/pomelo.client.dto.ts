@@ -1,7 +1,6 @@
 import { CardStatus, CardType } from "../domain/PomeloCard";
-import { UserStatus } from "../domain/PomeloUser";
 
-export class CreateUserRequest {
+export class ClientCreateUserRequest {
   name: string;
   surname: string;
   identification_type: string;
@@ -20,7 +19,7 @@ export class CreateUserRequest {
   };
 }
 
-export class UpdateUserRequest {
+export class ClientUpdateUserRequest {
   name?: string;
   surname?: string;
   birthdate?: string;
@@ -36,11 +35,11 @@ export class UpdateUserRequest {
     region: string;
     country: string;
   };
-  status?: UserStatus;
+  status?: ClientUserStatus;
   status_reason?: string;
 }
 
-export enum CardStatusReason {
+export enum ClientCardStatusReason {
   CLIENT_INTERNAL_REASON = "CLIENT_INTERNAL_REASON",
   USER_INTERNAL_REASON = "USER_INTERNAL_REASON",
   LOST = "LOST",
@@ -49,7 +48,7 @@ export enum CardStatusReason {
   UPGRADE = "UPGRADE",
 }
 
-export class CreateCardRequest {
+export class ClientCreateCardRequest {
   user_id: string;
   card_type: CardType;
   address?: {
@@ -66,8 +65,18 @@ export class CreateCardRequest {
   previous_card_id?: string;
 }
 
-export class UpdateCardRequest {
+export class ClientUpdateCardRequest {
   status?: CardStatus;
-  status_reason?: CardStatusReason;
+  status_reason?: ClientCardStatusReason;
   pin?: string;
+}
+
+export class ClientPomeloUser {
+  id: string;
+  status: ClientUserStatus;
+}
+
+export enum ClientUserStatus {
+  ACTIVE = "ACTIVE",
+  BLOCKED = "BLOCKED",
 }
