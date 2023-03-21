@@ -603,9 +603,16 @@ describe("ConsumerService", () => {
     });
 
     it("should throw error if gender is unknown", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        email: "fake@mock.com",
+      });
+
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+
       expect(
         consumerService.updateConsumer({
-          id: "fake-consumer-1",
+          id: consumer.props.id,
           gender: "unknown",
         }),
       ).rejects.toThrow(ServiceException);
