@@ -108,6 +108,6 @@ export const EmailTemplates = {
     en: "d-f085402c06584fe2a843c8e9dff2ed4b", // For now added deposit completed as default. Replace with proper template id once created
   },
   EMPLOYER_REQUEST_EMAIL: {
-    en: "d-b1dab19d47344441852b1b03343719f2",
+    en: "d-db917173c48448fb90dadcb77259f4cc",
   },
 };
