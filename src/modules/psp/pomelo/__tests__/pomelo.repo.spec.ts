@@ -16,7 +16,7 @@ const getAllPomeloUserRecords = async (prismaService: PrismaService): Promise<Pr
   return prismaService.pomeloUser.findMany({});
 };
 
-describe("SqlMonoRepoTests", () => {
+describe("SqlPomeloRepoTests", () => {
   jest.setTimeout(20000);
 
   let pomeloRepo: PomeloRepo;
@@ -43,8 +43,6 @@ describe("SqlMonoRepoTests", () => {
   });
 
   beforeEach(async () => {
-    await prismaService.mono.deleteMany();
-
     // *****************************  WARNING **********************************
     // *                                                                       *
     // * This can have a potential race condition if the tests run in parallel *

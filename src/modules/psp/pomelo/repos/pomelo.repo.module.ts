@@ -15,4 +15,4 @@ export const POMELO_REPO_PROVIDER = "POMELO_REPO";
   ],
   exports: [POMELO_REPO_PROVIDER],
 })
-export class MonoRepoModule {}
+export class PomeloRepoModule {}
