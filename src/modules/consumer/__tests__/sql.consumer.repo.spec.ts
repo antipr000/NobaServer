@@ -1080,9 +1080,33 @@ describe("ConsumerRepoTests", () => {
       const identification = getRandomIdentification(consumer.props.id);
       await consumerRepo.addIdentification(identification);
 
-      const result = await consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.props.id);
+      const result = await consumerRepo.getIdentificationForConsumer(identification.props.id, consumer.props.id);
       expect(result).not.toBeNull();
       expect(result.props.id).toBe(identification.props.id);
+    });
+  });
+
+  describe("getAllIdentificationsForConsumer", () => {
+    it("should return empty array if no identifications exist", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+
+      const allIdentifications = await consumerRepo.getAllIdentificationsForConsumer(consumer.props.id);
+      expect(allIdentifications).toHaveLength(0);
+    });
+
+    it("should return all identifications for consumer", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+
+      const identification1 = getRandomIdentification(consumer.props.id);
+      await consumerRepo.addIdentification(identification1);
+
+      const identification2 = getRandomIdentification(consumer.props.id);
+      await consumerRepo.addIdentification(identification2);
+
+      const allIdentifications = await consumerRepo.getAllIdentificationsForConsumer(consumer.props.id);
+      expect(allIdentifications).toHaveLength(2);
     });
   });
 
@@ -1150,7 +1174,7 @@ const getRandomCryptoWallet = (consumerID: string): CryptoWallet => {
 const getRandomIdentification = (consumerID: string): Identification => {
   const props: IdentificationProps = {
     id: `${uuid()}_${new Date().valueOf()}`,
-    type: "Fake type",
+    type: `${uuid()}-type`,
     value: "Fake value",
     consumerID: consumerID,
   };
