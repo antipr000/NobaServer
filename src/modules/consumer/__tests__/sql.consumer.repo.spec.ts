@@ -21,6 +21,7 @@ import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/moc
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { Gender } from "../domain/ExternalStates";
 import { Identification, IdentificationProps } from "../domain/Identification";
+import { RepoException } from "../../../core/exception/repo.exception";
 
 const getAllConsumerRecords = async (prismaService: PrismaService): Promise<ConsumerProps[]> => {
   const allConsumerProps = await prismaService.consumer.findMany({});
@@ -1107,6 +1108,41 @@ describe("ConsumerRepoTests", () => {
 
       const allIdentifications = await consumerRepo.getAllIdentificationsForConsumer(consumer.props.id);
       expect(allIdentifications).toHaveLength(2);
+    });
+  });
+
+  describe("updateIdentification", () => {
+    it("should update identification", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+
+      const identification = getRandomIdentification(consumer.props.id);
+      await consumerRepo.addIdentification(identification);
+
+      const updateIdentification: Partial<IdentificationProps> = {
+        id: identification.props.id,
+        type: "identification_type",
+        value: "identification_value",
+      };
+
+      const updatedIdentification = await consumerRepo.updateIdentification(
+        identification.props.id,
+        updateIdentification,
+      );
+
+      expect(updatedIdentification.props.type).toBe("identification_type");
+      expect(updatedIdentification.props.value).toBe("identification_value");
+    });
+
+    it("should throw error if identification does not exist", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+
+      const identification = getRandomIdentification(consumer.props.id);
+
+      expect(
+        async () => await consumerRepo.updateIdentification(identification.props.id, identification.props),
+      ).rejects.toThrow(RepoException);
     });
   });
 

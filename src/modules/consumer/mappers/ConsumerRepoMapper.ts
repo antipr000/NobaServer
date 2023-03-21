@@ -161,7 +161,7 @@ export class ConsumerRepoMapper {
   toUpdateIdentificationInput(identification: Partial<IdentificationProps>): Prisma.IdentificationUpdateInput {
     return {
       ...(identification.type && { type: identification.type }),
-      ...(identification.value && { number: identification.value }),
+      ...(identification.value && { value: identification.value }),
     };
   }
 
