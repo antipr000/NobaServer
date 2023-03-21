@@ -19,6 +19,7 @@ import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mo
 import { KmsService } from "../../../modules/common/kms.service";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
+import { Gender } from "../domain/ExternalStates";
 
 const getAllConsumerRecords = async (prismaService: PrismaService): Promise<ConsumerProps[]> => {
   const allConsumerProps = await prismaService.consumer.findMany({});
@@ -842,6 +843,24 @@ describe("ConsumerRepoTests", () => {
 
       expect(updatedConsumerRecord.props.locale).toBe("es");
       expect(consumerRecord.locale).toBe("es");
+    });
+
+    it("should update gender for consumer", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+
+      const updateRequest: Partial<ConsumerProps> = {
+        gender: Gender.FEMALE,
+      };
+
+      const updatedConsumerRecord = await consumerRepo.updateConsumer(consumer.props.id, updateRequest);
+
+      const consumerRecord = (await getAllConsumerRecords(prismaService)).filter(record => {
+        return record.id === consumer.props.id;
+      })[0];
+
+      expect(updatedConsumerRecord.props.gender).toBe("Female");
+      expect(consumerRecord.gender).toBe("Female");
     });
 
     it("should encrypt SocialSecurityNumber if provided", async () => {

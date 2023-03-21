@@ -33,6 +33,7 @@ model Consumer {
   referralCode         String           @unique()
   phone                String?          @unique()
   locale               String?
+  gender               String?          @db.VarChar(20) // Variable length to support other genders
   dateOfBirth          String?          @db.VarChar(10)
   isLocked             Boolean          @default(false)
   isDisabled           Boolean          @default(false)

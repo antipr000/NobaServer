@@ -4,6 +4,7 @@ import {
   AggregatedWalletState,
   DocumentVerificationErrorReason,
   DocumentVerificationState,
+  Gender,
   KycVerificationState,
   UserState,
 } from "../domain/ExternalStates";
@@ -119,8 +120,11 @@ export class ConsumerDTO {
   @ApiProperty()
   email: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   handle?: string;
+
+  @ApiPropertyOptional({ enum: Gender })
+  gender?: Gender;
 
   @ApiProperty()
   referralCode: string;
