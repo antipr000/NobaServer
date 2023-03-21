@@ -14,6 +14,7 @@ import { KmsService } from "../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { FindConsumerByStructuredFieldsDTO } from "../dto/consumer.search.dto";
 import { Identification, IdentificationProps } from "../domain/Identification";
+import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
@@ -483,7 +484,10 @@ export class SQLConsumerRepo implements IConsumerRepo {
       });
       return Identification.createIdentification(updatedIdentificationProps);
     } catch (e) {
-      throw new BadRequestError({ message: `Failed to update identification. Reason: ${e.message}` });
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: `Failed to update identification. Reason: ${e.message}`,
+      });
     }
   }
 }
