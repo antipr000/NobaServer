@@ -20,6 +20,7 @@ import { KmsService } from "../../../modules/common/kms.service";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { Gender } from "../domain/ExternalStates";
+import { Identification, IdentificationProps } from "../domain/Identification";
 
 const getAllConsumerRecords = async (prismaService: PrismaService): Promise<ConsumerProps[]> => {
   const allConsumerProps = await prismaService.consumer.findMany({});
@@ -1039,6 +1040,52 @@ describe("ConsumerRepoTests", () => {
     });
   });
 
+  describe("addIdentification", () => {
+    it("should add identification to consumer", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+
+      const identification = getRandomIdentification(consumer.props.id);
+      await consumerRepo.addIdentification(identification);
+
+      const allIdentifications = await consumerRepo.getAllIdentificationsForConsumer(consumer.props.id);
+      expect(allIdentifications).toHaveLength(1);
+      expect(allIdentifications[0].props.id).toBe(identification.props.id);
+    });
+
+    it("should throw error if identification already exists", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+
+      const identification = getRandomIdentification(consumer.props.id);
+      await consumerRepo.addIdentification(identification);
+
+      expect(async () => await consumerRepo.addIdentification(identification)).rejects.toThrow(BadRequestError);
+    });
+  });
+
+  describe("getIdentificationForConsumer", () => {
+    it("should return null if identification does not exist", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+
+      const identification = await consumerRepo.getIdentificationForConsumer(consumer.props.id, "fake-id");
+      expect(identification).toBeNull();
+    });
+
+    it("should return identification if it exists", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+
+      const identification = getRandomIdentification(consumer.props.id);
+      await consumerRepo.addIdentification(identification);
+
+      const result = await consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.props.id);
+      expect(result).not.toBeNull();
+      expect(result.props.id).toBe(identification.props.id);
+    });
+  });
+
   describe("isHandleTaken", () => {
     it("should return 'true' if there already exist an user with same handle", async () => {
       const consumer = getRandomUser();
@@ -1098,4 +1145,14 @@ const getRandomCryptoWallet = (consumerID: string): CryptoWallet => {
     consumerID: consumerID,
   };
   return CryptoWallet.createCryptoWallet(props);
+};
+
+const getRandomIdentification = (consumerID: string): Identification => {
+  const props: IdentificationProps = {
+    id: `${uuid()}_${new Date().valueOf()}`,
+    type: "Fake type",
+    value: "Fake value",
+    consumerID: consumerID,
+  };
+  return Identification.createIdentification(props);
 };
