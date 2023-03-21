@@ -7,7 +7,7 @@ export abstract class EmailClient {
   constructor(protected readonly logger: Logger) {}
 
   async sendEmail(request: EmailRequest): Promise<void> {
-    this.logger.debug(`Sending email with following parameters: ${JSON.stringify(request)}`);
+    this.logger.info(`Sending email with following parameters: ${JSON.stringify(request)}`);
     try {
       await this.sendEmailInternal(request);
     } catch (e) {
