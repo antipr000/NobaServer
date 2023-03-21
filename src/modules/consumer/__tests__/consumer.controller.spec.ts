@@ -42,6 +42,8 @@ import { Employer } from "../../../modules/employer/domain/Employer";
 import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
 import { uuid } from "uuidv4";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
+import { ServiceError } from "@temporalio/client";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -234,7 +236,6 @@ describe("ConsumerController", () => {
         email: consumer.props.email,
         referralCode: consumer.props.referralCode,
         status: "ActionRequired",
-        gender: "Other",
         kycVerificationData: {
           kycVerificationStatus: "NotSubmitted",
           updatedTimestamp: 0,
@@ -251,6 +252,36 @@ describe("ConsumerController", () => {
         paymentMethodStatus: "NotSubmitted",
         walletStatus: "NotSubmitted",
       });
+    });
+
+    it("should fail to update unknown gender", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        referralCode: "mock-referral-code",
+      });
+
+      const requestData: UpdateConsumerRequestDTO = {
+        gender: "unknown" as Gender,
+      };
+      when(
+        consumerService.updateConsumer(
+          deepEqual({
+            id: consumer.props.id,
+            gender: "unknown" as Gender,
+          }),
+        ),
+      ).thenReject(
+        new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        }),
+      );
+      expect(consumerController.updateConsumer(consumer, requestData)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
     });
   });
 
@@ -959,35 +990,6 @@ describe("ConsumerController", () => {
       const response = await consumerController.getConsumer(consumer);
 
       expect(response.gender).toBe(Gender.MALE);
-    });
-
-    it("should return gender as OTHER when gender string is unknown", async () => {
-      const consumer = Consumer.createConsumer({
-        id: "mock-consumer-1",
-        firstName: "Mock",
-        lastName: "Consumer",
-        isDisabled: false,
-        isLocked: false,
-        gender: "unknown",
-        dateOfBirth: "1998-01-01",
-        email: "mock@noba.com",
-        verificationData: {
-          kycCheckStatus: KYCStatus.APPROVED,
-          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
-          provider: KYCProvider.SARDINE,
-          isSuspectedFraud: false,
-          documentVerificationTimestamp: new Date(),
-          kycVerificationTimestamp: new Date(),
-        },
-      });
-
-      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(consumerService.getAllConsumerWallets(consumer.props.id)).thenResolve([]);
-      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([]);
-
-      const response = await consumerController.getConsumer(consumer);
-
-      expect(response.gender).toBe(Gender.OTHER);
     });
   });
 

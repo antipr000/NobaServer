@@ -601,6 +601,15 @@ describe("ConsumerService", () => {
         expect(e).toBeInstanceOf(NotFoundException);
       }
     });
+
+    it("should throw error if gender is unknown", async () => {
+      expect(
+        consumerService.updateConsumer({
+          id: "fake-consumer-1",
+          gender: "unknown",
+        }),
+      ).rejects.toThrow(ServiceException);
+    });
   });
 
   describe("generateDefaultHandle", () => {
