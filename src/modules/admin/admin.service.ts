@@ -17,6 +17,11 @@ import { Employee } from "../employee/domain/Employee";
 import { ConsumerEmployeeDetailsDTO, ConsumerInternalDTO } from "../consumer/dto/ConsumerInternalDTO";
 import { AdminUpdateConsumerRequestDTO } from "./dto/AdminUpdateConsumerRequestDTO";
 import { Consumer } from "../consumer/domain/Consumer";
+import { TransactionService } from "../transaction/transaction.service";
+import { TransactionFilterOptionsDTO } from "../transaction/dto/TransactionFilterOptionsDTO";
+import { Transaction } from "../transaction/domain/Transaction";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
+import { TransactionEvent } from "../transaction/domain/TransactionEvent";
 
 @Injectable()
 export class AdminService {
@@ -40,6 +45,9 @@ export class AdminService {
 
   @Inject("AdminTransactionRepo")
   private readonly adminRepo: IAdminRepo;
+
+  @Inject()
+  private readonly transactionService: TransactionService;
 
   private readonly adminPSPMapper: AdminPSPMapper;
 
@@ -242,6 +250,18 @@ export class AdminService {
     await this.consumerService.updateConsumer(updateConsumerPayload);
     const updatedConsumer = await this.consumerService.getConsumer(consumerID);
     return this.decorateConsumer(updatedConsumer);
+  }
+
+  async getFilteredTransactions(filter: TransactionFilterOptionsDTO): Promise<PaginatedResult<Transaction>> {
+    return this.transactionService.getFilteredTransactions(filter);
+  }
+
+  async getTransactionByTransactionRef(transactionRef: string): Promise<Transaction> {
+    return this.transactionService.getTransactionByTransactionRef(transactionRef);
+  }
+
+  async getTransactionEvents(transactionID: string, includeInternalEvents: boolean): Promise<TransactionEvent[]> {
+    return this.transactionService.getTransactionEvents(transactionID, includeInternalEvents);
   }
 
   private shouldUpdateField(newValue: any, oldValue: any): boolean {
