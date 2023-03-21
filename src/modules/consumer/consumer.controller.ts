@@ -56,6 +56,7 @@ import { UpdateEmployerAllocationDTO } from "./dto/UpdateEmployerAllocationDTO";
 import { OptionalLimitQueryDTO } from "../common/dto/OptionalLimitQueryDTO";
 import { RequestEmployerDTO } from "./dto/RequestEmployerDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
+import { ServiceException } from "src/core/exception/service.exception";
 
 @Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
@@ -154,6 +155,8 @@ export class ConsumerController {
     } catch (e) {
       if (e instanceof BadRequestError) {
         throw new BadRequestException(e.message);
+      } else if (e instanceof ServiceException) {
+        throw e;
       } else {
         this.logger.error(`Error updating consumer record: ${JSON.stringify(e)}`);
         throw new BadRequestException("Failed to update requested details");

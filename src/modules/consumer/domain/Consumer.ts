@@ -8,6 +8,8 @@ import { isValidDateOfBirth } from "../../../core/utils/DateUtils";
 import { KeysRequired } from "../../common/domain/Types";
 import { differenceInDays } from "date-fns";
 import { KYC, kycValidationJoiKeys } from "./KYC";
+import { Gender } from "./ExternalStates";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 export class ConsumerProps implements ConsumerModel {
   id: string;
@@ -76,6 +78,13 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
       if (!isValidDateOfBirth(consumerProps.dateOfBirth)) {
         throw new BadRequestException("dateOfBirth should be valid and of the format YYYY-MM-DD");
       }
+    }
+
+    if (consumerProps.gender && !Object.values(Gender).includes(consumerProps.gender as Gender)) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "User must be defined within gender enum.",
+      });
     }
 
     if (consumerProps.verificationData && !consumerProps.verificationData.provider)

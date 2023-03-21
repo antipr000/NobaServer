@@ -159,7 +159,7 @@ export class StatesMapper {
       case "Female":
         return Gender.FEMALE;
       default:
-        return Gender.OTHER;
+        null;
     }
   }
 }

@@ -683,7 +683,6 @@ describe("AdminService", () => {
       });
       expect(updatedConsumer).toStrictEqual({
         ...updatedConsumer1.props,
-        gender: Gender.OTHER,
         employeeDetails: [],
         walletDetails: [
           {
