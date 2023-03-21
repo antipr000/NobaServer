@@ -8,6 +8,7 @@ export class IdentificationProps implements Partial<IdentificationModel> {
   id: string;
   type: string;
   value: string;
+  consumerID: string;
   createdTimestamp?: Date | null;
   updatedTimestamp?: Date | null;
 }
@@ -17,6 +18,7 @@ export const identificationJoiValidationKeys: KeysRequired<IdentificationProps> 
   id: Joi.string().required(),
   type: Joi.string().required(),
   value: Joi.string().required(),
+  consumerID: Joi.string().required(),
 };
 
 export const identificationJoiSchema = Joi.object(identificationJoiValidationKeys).options({

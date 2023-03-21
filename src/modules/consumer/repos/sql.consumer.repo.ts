@@ -13,6 +13,7 @@ import { ContactInfo } from "../domain/ContactInfo";
 import { KmsService } from "../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { FindConsumerByStructuredFieldsDTO } from "../dto/consumer.search.dto";
+import { Identification, IdentificationProps } from "../domain/Identification";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
@@ -445,6 +446,44 @@ export class SQLConsumerRepo implements IConsumerRepo {
       return CryptoWallet.createCryptoWallet(updatedWalletProps);
     } catch (e) {
       throw new BadRequestError({ message: `Failed to update crypto wallet. Reason: ${e.message}` });
+    }
+  }
+
+  async addIdentification(identification: Identification): Promise<Identification> {
+    try {
+      const identificationInput = this.mapper.toCreateIdentificationInput(identification);
+      const identificationProps = await this.prisma.identification.create({ data: identificationInput });
+      return Identification.createIdentification(identificationProps);
+    } catch (e) {
+      throw new BadRequestError({ message: `Failed to add identification. Reason: ${e.message}` });
+    }
+  }
+
+  async getAllIdentificationsForConsumer(consumerID: string): Promise<Identification[]> {
+    const allIdentifications = await this.prisma.identification.findMany({
+      where: { consumerID: consumerID },
+    });
+    return allIdentifications.map(identification => Identification.createIdentification(identification));
+  }
+
+  async getIdentificationForConsumer(id: string, consumerID: string): Promise<Identification> {
+    const identificationProps = await this.prisma.identification.findFirst({
+      where: { id: id, consumerID: consumerID },
+    });
+    if (!identificationProps) return null;
+    return Identification.createIdentification(identificationProps);
+  }
+
+  async updateIdentification(id: string, identificationProps: Partial<IdentificationProps>): Promise<Identification> {
+    try {
+      const identificationUpdateInput = this.mapper.toUpdateIdentificationInput(identificationProps);
+      const updatedIdentificationProps = await this.prisma.identification.update({
+        where: { id: id },
+        data: identificationUpdateInput,
+      });
+      return Identification.createIdentification(updatedIdentificationProps);
+    } catch (e) {
+      throw new BadRequestError({ message: `Failed to update identification. Reason: ${e.message}` });
     }
   }
 }
