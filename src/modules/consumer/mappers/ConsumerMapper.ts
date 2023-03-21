@@ -209,7 +209,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
       case "Female":
         return Gender.FEMALE;
       default:
-        null;
+        return null;
     }
   }
 }
