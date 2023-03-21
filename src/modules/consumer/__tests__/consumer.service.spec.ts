@@ -59,6 +59,7 @@ import { BubbleService } from "../../bubble/bubble.service";
 import { getMockBubbleServiceWithDefaults } from "../../../modules/bubble/mocks/mock.bubble.service";
 import { ConsumerMapper } from "../mappers/ConsumerMapper";
 import { getMockConsumerMapperWithDefaults } from "../mocks/mock.consumer.mapper";
+import { Gender } from "../domain/ExternalStates";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -429,6 +430,7 @@ describe("ConsumerService", () => {
         ...consumer.props,
         firstName: firstName,
         lastName: lastName,
+        gender: Gender.FEMALE,
       });
 
       when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
@@ -439,6 +441,7 @@ describe("ConsumerService", () => {
             id: consumer.props.id,
             firstName: firstName,
             lastName: lastName,
+            gender: Gender.FEMALE,
           }),
         ),
       ).thenResolve(updatedConsumerData);
@@ -447,6 +450,7 @@ describe("ConsumerService", () => {
         id: consumer.props.id,
         firstName: firstName,
         lastName: lastName,
+        gender: Gender.FEMALE,
       });
 
       expect(response).toStrictEqual(updatedConsumerData);
@@ -596,6 +600,22 @@ describe("ConsumerService", () => {
       } catch (e) {
         expect(e).toBeInstanceOf(NotFoundException);
       }
+    });
+
+    it("should throw error if gender is unknown", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        email: "fake@mock.com",
+      });
+
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+
+      expect(
+        consumerService.updateConsumer({
+          id: consumer.props.id,
+          gender: "unknown",
+        }),
+      ).rejects.toThrow(ServiceException);
     });
   });
 

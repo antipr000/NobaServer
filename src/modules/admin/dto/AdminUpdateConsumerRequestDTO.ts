@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Address } from "../../consumer/domain/Address";
 import { KYCStatus, DocumentVerificationStatus, KYCProvider } from "@prisma/client";
 import { KYC } from "../../../modules/consumer/domain/KYC";
+import { Gender } from "../../../modules/consumer/domain/ExternalStates";
 class AddressDTO implements Partial<Address> {
   @ApiPropertyOptional()
   streetLine1?: string;
@@ -45,6 +46,9 @@ export class AdminUpdateConsumerRequestDTO {
 
   @ApiPropertyOptional()
   phone?: string;
+
+  @ApiPropertyOptional({ enum: Gender })
+  gender?: Gender;
 
   @ApiPropertyOptional()
   dateOfBirth?: string;
