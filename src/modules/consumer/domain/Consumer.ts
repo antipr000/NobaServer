@@ -83,7 +83,7 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
     if (consumerProps.gender && !Object.values(Gender).includes(consumerProps.gender as Gender)) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: "User must be defined within gender enum.",
+        message: "User must be defined gender.",
       });
     }
 

@@ -585,7 +585,7 @@ describe("AdminService", () => {
         phone: "+1234567890",
         dateOfBirth: "1990-01-01",
         handle: "rosie-noba",
-        gender: "other-gender",
+        gender: "Male",
         address: {
           streetLine1: "123 Main St",
           streetLine2: "Apt 1",
@@ -612,6 +612,7 @@ describe("AdminService", () => {
         phone: "+12345678901",
         dateOfBirth: "1990-01-02",
         handle: "rosie-noba-update",
+        gender: Gender.FEMALE,
         address: {
           streetLine1: "123 Main St-update",
           streetLine2: "Apt 1 Update",
@@ -638,6 +639,7 @@ describe("AdminService", () => {
         phone: "+12345678901",
         dateOfBirth: "1990-01-02",
         handle: "rosie-noba-update",
+        gender: Gender.FEMALE,
         address: {
           streetLine1: "123 Main St-update",
           streetLine2: "Apt 1 Update",
@@ -658,7 +660,7 @@ describe("AdminService", () => {
 
       const consumerInternalDTO: ConsumerInternalDTO = {
         ...updatedConsumer1.props,
-        gender: Gender.OTHER,
+        gender: Gender.FEMALE,
         address: {
           ...updatedConsumer1.props.address,
         },

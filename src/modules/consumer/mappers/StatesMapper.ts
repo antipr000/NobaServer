@@ -5,7 +5,6 @@ import {
   AggregatedWalletState,
   DocumentVerificationErrorReason,
   DocumentVerificationState,
-  Gender,
   KycVerificationState,
   UserState,
 } from "../domain/ExternalStates";
@@ -150,16 +149,5 @@ export class StatesMapper {
     }
 
     return UserState.PENDING;
-  }
-
-  getGender(gender: string): Gender {
-    switch (gender) {
-      case "Male":
-        return Gender.MALE;
-      case "Female":
-        return Gender.FEMALE;
-      default:
-        null;
-    }
   }
 }
