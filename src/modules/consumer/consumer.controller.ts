@@ -153,7 +153,6 @@ export class ConsumerController {
       const res = await this.consumerService.updateConsumer(consumerProps);
       return await this.mapToDTO(res);
     } catch (e) {
-      console.log(e);
       if (e instanceof BadRequestError) {
         throw new BadRequestException(e.message);
       } else if (e instanceof ServiceException) {
