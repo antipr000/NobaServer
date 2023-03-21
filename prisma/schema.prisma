@@ -51,6 +51,7 @@ model Consumer {
   creditTransactions   Transaction[]   @relation("creditConsumer")
   Employee             Employee[]
   pushTokens           PushToken[]
+  PomeloUsers          PomeloUser?
 
   @@index([email])
   @@index([handle])
@@ -338,6 +339,15 @@ model Mono {
   // See https://github.com/prisma/prisma/issues/3387 for more details.
 
   @@index([nobaTransactionID])
+}
+
+model PomeloUser {
+  id               String    @id @default(uuid())
+  consumerID       String    @unique()
+  consumer         Consumer  @relation(fields: [consumerID], references: [id], onDelete: Cascade)
+  pomeloID         String    @unique()
+  createdTimestamp DateTime? @default(now())
+  updatedTimestamp DateTime? @updatedAt
 }
 
 model Token {
