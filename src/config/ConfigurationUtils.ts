@@ -174,6 +174,17 @@ export const CIRCLE_AWS_SECRET_KEY_FOR_API_KEY = "awsSecretNameForApiKey";
 export const CIRCLE_MASTER_WALLET_ID = "masterWalletID";
 export const CIRCLE_AWS_SECRET_KEY_FOR_MASTER_WALLET_ID = "awsSecretNameForMasterWalletID";
 
+export const POMELO_CONFIG_KEY = "pomelo";
+export const POMELO_CLIENT_ID = "clientID";
+export const POMELO_CLIENT_SECRET = "clientSecret";
+export const POMELO_AWS_SECRET_KEY_FOR_CLIENT_ID = "awsSecretNameForClientID";
+export const POMELO_AWS_SECRET_KEY_FOR_CLIENT_SECRET = "awsSecretNameForClientSecret";
+export const POMELO_AFFINITY_GROUP = "affinityGroup";
+export const POMELO_AWS_SECRET_KEY_FOR_AFFINITY_GROUP = "awsSecretNameForAffinityGroup";
+export const POMELO_AUTH_BASE_URL = "authBaseUrl";
+export const POMELO_AUDIENCE = "audience";
+export const POMELO_API_BASE_URL = "apiBaseUrl";
+
 export const NOBA_WORKFLOW_CONFIG_KEY = "nobaWorkflow";
 export const NOBA_WORKFLOW_TASK_QUEUE = "taskQueue";
 export const NOBA_WORKFLOW_CLIENT_URL = "clientUrl";

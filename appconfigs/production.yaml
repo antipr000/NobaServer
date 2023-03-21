@@ -167,6 +167,17 @@ mono:
   webhookSecret: ""
   awsSecretNameForWebhookSecret: "PROD_MONO_WEBHOOK_SECRET"
 
+pomelo:
+  clientID: ""
+  awsSecretNameForClientID: "PROD_POMELO_CLIENT_ID"
+  clientSecret: ""
+  awsSecretNameForClientSecret: "PROD_POMELO_SECRET"
+  affinityGroup: "afg-2IB3A8TeAYjfogaa1E3Mv88nBkq"
+  awsSecretNameForAffinityGroup: ""
+  authBaseUrl: "https://auth.pomelo.la"
+  audience: "https://auth-staging.pomelo.la"
+  apiBaseUrl: "https://api.pomelo.la"
+
 bubble:
   bearerToken: ""
   awsSecretNameForBearerToken: "PROD_BUBBLE_BEARER_TOKEN"
