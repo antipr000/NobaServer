@@ -275,14 +275,8 @@ describe("ConsumerController", () => {
             gender: "unknown" as Gender,
           }),
         ),
-      ).thenReject(
-        new ServiceException({
-          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        }),
-      );
-      expect(consumerController.updateConsumer(consumer, requestData)).rejects.toThrowServiceException(
-        ServiceErrorCode.SEMANTIC_VALIDATION,
-      );
+      ).thenReject(new BadRequestException("Failed to update requested details"));
+      expect(consumerController.updateConsumer(consumer, requestData)).rejects.toThrow(BadRequestException);
     });
   });
 

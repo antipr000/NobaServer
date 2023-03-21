@@ -155,9 +155,10 @@ export class ConsumerController {
     } catch (e) {
       if (e instanceof BadRequestError) {
         throw new BadRequestException(e.message);
-      } else if (e instanceof ServiceException) {
+      } /* This may be ideal, but it would break the app. We can consider changing this when we have a better way to handle errors in the app.
+      else if (e instanceof ServiceException) {
         throw e;
-      } else {
+      } */ else {
         this.logger.error(`Error updating consumer record: ${JSON.stringify(e)}`);
         throw new BadRequestException("Failed to update requested details");
       }
