@@ -167,14 +167,16 @@ export class SQLTransactionRepo implements ITransactionRepo {
     );
     const filterQuery: Prisma.TransactionFindManyArgs = {
       where: {
-        OR: [
-          {
-            creditConsumerID: transactionFilterOptions.consumerID,
-          },
-          {
-            debitConsumerID: transactionFilterOptions.consumerID,
-          },
-        ],
+        ...(transactionFilterOptions.consumerID && {
+          OR: [
+            {
+              creditConsumerID: transactionFilterOptions.consumerID,
+            },
+            {
+              debitConsumerID: transactionFilterOptions.consumerID,
+            },
+          ],
+        }),
         ...(transactionFilterOptions.debitCurrency && { debitCurrency: transactionFilterOptions.debitCurrency }),
         ...(transactionFilterOptions.creditCurrency && { creditCurrency: transactionFilterOptions.creditCurrency }),
         ...(transactionFilterOptions.transactionStatus && { status: transactionFilterOptions.transactionStatus }),

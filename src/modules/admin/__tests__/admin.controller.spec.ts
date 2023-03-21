@@ -14,7 +14,6 @@ import { DeleteNobaAdminDTO } from "../dto/DeleteNobaAdminDTO";
 import { Consumer, ConsumerProps } from "../../consumer/domain/Consumer";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
-import { TransactionService } from "../../../modules/transaction/transaction.service";
 import { KYCStatus, DocumentVerificationStatus, KYCProvider } from "@prisma/client";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
 import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
@@ -28,22 +27,91 @@ import { EmployerService } from "../../../modules/employer/employer.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { getRandomPayroll } from "../../../modules/employer/test_utils/payroll.test.utils";
+import { Transaction, TransactionStatus, WorkflowName } from "../../../modules/transaction/domain/Transaction";
+import { v4 } from "uuid";
+import { FeeType } from "../../../modules/transaction/domain/TransactionFee";
+import { TransactionFilterOptionsDTO } from "../../../modules/transaction/dto/TransactionFilterOptionsDTO";
+import {
+  TransactionMappingService,
+  TRANSACTION_MAPPING_SERVICE_PROVIDER,
+} from "../../../modules/transaction/mapper/transaction.mapper.service";
+import { MonoService } from "../../../modules/psp/mono/mono.service";
+import { IncludeEventTypes, TransactionEventDTO } from "../../../modules/transaction/dto/TransactionEventDTO";
+import { TransactionDTO } from "../../../modules/transaction/dto/TransactionDTO";
+import { Utils } from "../../../core/utils/Utils";
+import { MonoTransaction, MonoTransactionState, MonoTransactionType } from "../../../modules/psp/domain/Mono";
+import { TransactionEvent } from "../../../modules/transaction/domain/TransactionEvent";
+import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
+import { TransactionService } from "../../../modules/transaction/transaction.service";
+import { getMockTransactionMapperServiceWithDefaults } from "../../../modules/transaction/mocks/mock.transaction.mapper.service";
+import { timestamp } from "rxjs";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
 const LOGGED_IN_ADMIN_EMAIL = "authenticated@noba.com";
 
+const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
+  const transaction: Transaction = {
+    transactionRef: v4(),
+    exchangeRate: 1,
+    status: TransactionStatus.INITIATED,
+    workflowName: WorkflowName.WALLET_DEPOSIT,
+    id: v4(),
+    sessionKey: v4(),
+    memo: "New transaction",
+    createdTimestamp: new Date(),
+    updatedTimestamp: new Date(),
+    transactionFees: [
+      {
+        amount: 10,
+        currency: "USD",
+        type: FeeType.NOBA,
+        id: v4(),
+        timestamp: new Date(),
+      },
+    ],
+  };
+
+  if (isCreditTransaction) {
+    transaction.creditAmount = 100;
+    transaction.creditCurrency = "USD";
+    transaction.creditConsumerID = consumerID;
+  } else {
+    transaction.debitAmount = 100;
+    transaction.debitCurrency = "USD";
+    transaction.debitConsumerID = consumerID;
+  }
+  return transaction;
+};
+
+const getRandomConsumer = (consumerID: string): Consumer => {
+  const email = `${v4()}_${new Date().valueOf()}@noba.com`;
+  const props: Partial<ConsumerProps> = {
+    id: consumerID,
+    firstName: "Noba",
+    lastName: "lastName",
+    email: email,
+    displayEmail: email.toUpperCase(),
+    referralCode: Utils.getAlphaNanoID(15),
+    phone: `+1${Math.floor(Math.random() * 1000000000)}`,
+  };
+  return Consumer.createConsumer(props);
+};
+
 describe("AdminController", () => {
   jest.setTimeout(2000);
 
   let adminController: AdminController;
+  let consumerMapper: ConsumerMapper;
+
   let mockAdminService: AdminService;
   let mockConsumerService: ConsumerService;
-  let mockTransactionService: TransactionService;
   let mockExchangeRateService: ExchangeRateService;
-  let consumerMapper: ConsumerMapper;
-  let employeeService: EmployeeService;
-  let employerService: EmployerService;
+  let mockEmployeeService: EmployeeService;
+  let mockEmployerService: EmployerService;
+  let mockTransactionService: TransactionService;
+  let mockTransactionMappingService: TransactionMappingService;
+  let mockMonoService: MonoService;
 
   beforeEach(async () => {
     process.env = {
@@ -54,10 +122,12 @@ describe("AdminController", () => {
 
     mockAdminService = getMockAdminServiceWithDefaults();
     mockConsumerService = getMockConsumerServiceWithDefaults();
-    mockTransactionService = getMockTransactionServiceWithDefaults();
     mockExchangeRateService = getMockExchangeRateServiceWithDefaults();
-    employeeService = getMockEmployeeServiceWithDefaults();
-    employerService = getMockEmployerServiceWithDefaults();
+    mockEmployeeService = getMockEmployeeServiceWithDefaults();
+    mockEmployerService = getMockEmployerServiceWithDefaults();
+    mockTransactionMappingService = getMockTransactionMapperServiceWithDefaults();
+    mockTransactionService = getMockTransactionServiceWithDefaults();
+    mockMonoService = getMockMonoServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -72,26 +142,35 @@ describe("AdminController", () => {
           useFactory: () => instance(mockConsumerService),
         },
         {
-          provide: TransactionService,
-          useFactory: () => instance(mockTransactionService),
-        },
-        {
           provide: ExchangeRateService,
           useFactory: () => instance(mockExchangeRateService),
         },
         {
           provide: EmployeeService,
-          useFactory: () => instance(employeeService),
+          useFactory: () => instance(mockEmployeeService),
         },
         {
           provide: EmployerService,
-          useFactory: () => instance(employerService),
+          useFactory: () => instance(mockEmployerService),
+        },
+        {
+          provide: TransactionService,
+          useFactory: () => instance(mockTransactionService),
+        },
+        {
+          provide: MonoService,
+          useFactory: () => instance(mockMonoService),
+        },
+        {
+          provide: TRANSACTION_MAPPING_SERVICE_PROVIDER,
+          useFactory: () => instance(mockTransactionMappingService),
         },
         AdminMapper,
         ConsumerMapper,
       ],
     }).compile();
 
+    when(mockMonoService.getTransactionByNobaTransactionID(anything())).thenResolve(null);
     adminController = app.get<AdminController>(AdminController);
     consumerMapper = app.get<ConsumerMapper>(ConsumerMapper);
   });
@@ -1124,7 +1203,7 @@ describe("AdminController", () => {
       });
       const payroll = getRandomPayroll("EMPLOYER_ID").payroll;
 
-      when(employerService.updatePayroll(payroll.id, anything())).thenResolve(payroll);
+      when(mockEmployerService.updatePayroll(payroll.id, anything())).thenResolve(payroll);
 
       const returnedPayroll = await adminController.updatePayrollStatus(
         {
@@ -1147,7 +1226,7 @@ describe("AdminController", () => {
         status: payroll.status,
       });
 
-      const [propagatedPayrollID, propagatedRequestBody] = capture(employerService.updatePayroll).last();
+      const [propagatedPayrollID, propagatedRequestBody] = capture(mockEmployerService.updatePayroll).last();
       expect(propagatedPayrollID).toBe(payroll.id);
       expect(propagatedRequestBody).toStrictEqual({
         status: PayrollStatus.FUNDED,
@@ -1242,7 +1321,649 @@ describe("AdminController", () => {
 
       expect(consumers).toEqual(expectedConsumers);
     });
-
-    
   });*/
+
+  describe("getTransaction", () => {
+    it("should return the transaction after resolving debit consumer id to tag", async () => {
+      const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
+      const expectedResult: TransactionDTO = {
+        id: transaction.id,
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        creditConsumer: null,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: undefined,
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
+      };
+
+      when(mockTransactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(
+        expectedResult,
+      );
+
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const result: TransactionDTO = await adminController.getTransaction(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        IncludeEventTypes.NONE,
+        transactionRef,
+      );
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it("should return the transaction after resolving credit consumer id to tag", async () => {
+      const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID, true);
+
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
+      const expectedResult: TransactionDTO = {
+        id: transaction.id,
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        creditConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        debitConsumer: null,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: undefined,
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
+      };
+      when(mockTransactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(
+        expectedResult,
+      );
+
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const result: TransactionDTO = await adminController.getTransaction(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        IncludeEventTypes.NONE,
+        transactionRef,
+      );
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it("should return a transfer transaction after resolving both credit and debit consumer IDs to tags", async () => {
+      const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
+      const creditConsumer = getRandomConsumer("creditConsumerID");
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      transaction.creditConsumerID = creditConsumer.props.id;
+
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(mockConsumerService.getConsumer(creditConsumer.props.id)).thenResolve(creditConsumer);
+
+      const expectedResult: TransactionDTO = {
+        id: transaction.id,
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        creditConsumer: {
+          id: creditConsumer.props.id,
+          firstName: creditConsumer.props.firstName,
+          handle: creditConsumer.props.handle,
+          lastName: creditConsumer.props.lastName,
+        },
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: undefined,
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
+      };
+      when(mockTransactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(
+        expectedResult,
+      );
+
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const result: TransactionDTO = await adminController.getTransaction(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        IncludeEventTypes.NONE,
+        transactionRef,
+      );
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it("should return transaction without resolving consumer id to tag", async () => {
+      const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
+
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
+
+      const expectedResult: TransactionDTO = {
+        id: transaction.id,
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        creditConsumer: null,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: undefined,
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
+      };
+      when(mockTransactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(
+        expectedResult,
+      );
+
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const result: TransactionDTO = await adminController.getTransaction(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        IncludeEventTypes.NONE,
+        transactionRef,
+      );
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it("should return transaction with paymentCollectionLink for WALLET_DEPOSIT", async () => {
+      const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
+      const monoTransaction: MonoTransaction = {
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        id: "monoTransactionID",
+        nobaTransactionID: transaction.id,
+        state: MonoTransactionState.SUCCESS,
+        type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
+        collectionLinkDepositDetails: {
+          collectionURL: "collectionURL",
+          collectionLinkID: "collectionLinkID",
+        },
+      };
+      when(mockMonoService.getTransactionByNobaTransactionID(anything())).thenResolve(monoTransaction);
+
+      const expectedResult: TransactionDTO = {
+        id: transaction.id,
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        creditConsumer: null,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: undefined,
+        paymentCollectionLink: monoTransaction.collectionLinkDepositDetails.collectionURL,
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
+      };
+      when(mockTransactionMappingService.toTransactionDTO(transaction, undefined, undefined)).thenResolve(
+        expectedResult,
+      );
+
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const result: TransactionDTO = await adminController.getTransaction(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        IncludeEventTypes.NONE,
+        transactionRef,
+      );
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it("should return the transaction with events", async () => {
+      const consumerID = "testConsumerID";
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      const consumer = getRandomConsumer(consumerID);
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
+
+      const transactionEvents: TransactionEvent[] = [
+        {
+          id: "testEventID",
+          timestamp: new Date(),
+          transactionID: transaction.id,
+          message: "Test event",
+          details: "This is a test event",
+          internal: false,
+          key: "EVENT_KEY",
+          param1: "Param 1",
+          param2: "Param 2",
+          param3: "Param 3",
+          param4: "Param 4",
+          param5: "Param 5",
+        },
+        {
+          id: "testEvent2ID",
+          timestamp: new Date(),
+          transactionID: transaction.id,
+          message: "Test event 2",
+          details: "This is a test event 2",
+          internal: false,
+          key: "EVENT_KEY_2",
+          param1: "Param 1",
+          param2: "Param 2",
+          param3: "Param 3",
+          param4: "Param 4",
+          param5: "Param 5",
+        },
+      ];
+
+      const transactionEventsToReturn: TransactionEventDTO[] = [
+        {
+          message: "Test event",
+          details: "This is a test event",
+          internal: false,
+          key: "EVENT_KEY",
+          parameters: ["Param 1", "Param 2", "Param 3", "Param 4", "Param 5"],
+          timestamp: transactionEvents[0].timestamp,
+        },
+        {
+          message: "Test event 2",
+          details: "This is a test event 2",
+          internal: false,
+          key: "EVENT_KEY_2",
+          parameters: ["Param 1", "Param 2", "Param 3", "Param 4", "Param 5"],
+          timestamp: transactionEvents[1].timestamp,
+        },
+      ];
+
+      when(mockAdminService.getTransactionEvents(transaction.id, true)).thenResolve(transactionEvents);
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
+
+      const expectedResult: TransactionDTO = {
+        id: transaction.id,
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        creditConsumer: null,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: transactionEventsToReturn,
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
+      };
+
+      const transactionEventToReturn: TransactionEvent[] = [
+        {
+          id: "testEventID",
+          timestamp: transactionEvents[0].timestamp,
+          transactionID: transaction.id,
+          message: transactionEventsToReturn[0].message,
+          details: transactionEventsToReturn[0].details,
+          internal: false,
+          key: "EVENT_KEY",
+          param1: "Param 1",
+          param2: "Param 2",
+          param3: "Param 3",
+          param4: "Param 4",
+          param5: "Param 5",
+        },
+        {
+          id: "testEvent2ID",
+          timestamp: transactionEvents[1].timestamp,
+          transactionID: transaction.id,
+          message: transactionEventsToReturn[1].message,
+          details: transactionEventsToReturn[1].details,
+          internal: false,
+          key: "EVENT_KEY_2",
+          param1: "Param 1",
+          param2: "Param 2",
+          param3: "Param 3",
+          param4: "Param 4",
+          param5: "Param 5",
+        },
+      ];
+
+      when(
+        mockTransactionMappingService.toTransactionDTO(transaction, undefined, deepEqual(transactionEventToReturn)),
+      ).thenResolve(expectedResult);
+
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const result: TransactionDTO = await adminController.getTransaction(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        IncludeEventTypes.ALL,
+        transactionRef,
+      );
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it("should return empty events array if events requested but none exist", async () => {
+      const consumerID = "testConsumerID";
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      const consumer = getRandomConsumer(consumerID);
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(transaction);
+      when(mockAdminService.getTransactionEvents(transaction.id, true)).thenResolve([]);
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
+
+      const expectedResult: TransactionDTO = {
+        id: transaction.id,
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        creditConsumer: null,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: [],
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
+      };
+
+      when(mockTransactionMappingService.toTransactionDTO(transaction, undefined, deepEqual([]))).thenResolve(
+        expectedResult,
+      );
+
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const result: TransactionDTO = await adminController.getTransaction(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        IncludeEventTypes.ALL,
+        transactionRef,
+      );
+
+      expect(result).toStrictEqual(expectedResult);
+    });
+
+    it("should throw NotFoundException when transaction is not found", async () => {
+      const transactionRef = "transactionRef";
+      when(mockAdminService.getTransactionByTransactionRef(transactionRef)).thenResolve(null);
+
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+      expect(
+        async () =>
+          await adminController.getTransaction(
+            {
+              user: { entity: requestingNobaAdmin },
+            },
+            IncludeEventTypes.NONE,
+            transactionRef,
+          ),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe("getAllTransactions", () => {
+    it("should get filtered transactions with resolved tags", async () => {
+      const adminID = "AAAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
+      const transactionRef = "transactionRef";
+      const transaction: Transaction = getRandomTransaction(consumerID);
+      transaction.transactionRef = transactionRef;
+      transaction.status = TransactionStatus.COMPLETED;
+
+      const filter: TransactionFilterOptionsDTO = {
+        consumerID: consumerID,
+        transactionStatus: TransactionStatus.COMPLETED,
+        pageLimit: 5,
+        pageOffset: 1,
+      };
+      when(mockConsumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(mockAdminService.getFilteredTransactions(deepEqual(filter))).thenResolve({
+        items: [transaction],
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+      });
+
+      when(mockTransactionMappingService.toTransactionDTO(transaction)).thenResolve({
+        id: transaction.id,
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        creditConsumer: null,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: [],
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
+      });
+
+      const allTransactions = await adminController.getAllTransactions(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        {
+          consumerID: consumerID,
+          transactionStatus: TransactionStatus.COMPLETED,
+          pageLimit: 5,
+          pageOffset: 1,
+        },
+      );
+
+      expect(allTransactions.items.length).toBe(1);
+      expect(allTransactions.items[0].transactionRef).toBe(transactionRef);
+      expect(allTransactions.items[0].debitConsumer.id).toBe(consumerID);
+      expect(allTransactions.items[0].creditConsumer).toBeNull();
+    });
+  });
 });

@@ -27,6 +27,7 @@ import { Employee } from "../../../modules/employee/domain/Employee";
 import { DocumentVerificationStatus, KYCProvider, KYCStatus } from "@prisma/client";
 import { AdminUpdateConsumerRequestDTO } from "../dto/AdminUpdateConsumerRequestDTO";
 import { ConsumerInternalDTO } from "../../../modules/consumer/dto/ConsumerInternalDTO";
+import { TransactionService } from "../../../modules/transaction/transaction.service";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);
@@ -74,6 +75,10 @@ describe("AdminService", () => {
         {
           provide: EmployeeService,
           useFactory: () => instance(employeeService),
+        },
+        {
+          provide: TransactionService,
+          useFactory: () => instance(TransactionService),
         },
         AdminMapper,
       ],

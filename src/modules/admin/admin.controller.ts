@@ -51,6 +51,15 @@ import { ConsumerInternalDTO } from "../consumer/dto/ConsumerInternalDTO";
 import { UpdatePayrollRequestDTO } from "../employer/dto/payroll.workflow.controller.dto";
 import { PayrollDTO } from "../employer/dto/PayrollDTO";
 import { EmployerService } from "../employer/employer.service";
+import {
+  TransactionMappingService,
+  TRANSACTION_MAPPING_SERVICE_PROVIDER,
+} from "../transaction/mapper/transaction.mapper.service";
+import { TransactionDTO } from "../transaction/dto/TransactionDTO";
+import { TransactionFilterOptionsDTO } from "../transaction/dto/TransactionFilterOptionsDTO";
+import { TransactionQueryResultDTO } from "../transaction/dto/TransactionQueryResultDTO";
+import { IncludeEventTypes } from "../transaction/dto/TransactionEventDTO";
+import { TransactionEvent } from "../transaction/domain/TransactionEvent";
 
 @Roles(Role.NOBA_ADMIN)
 @Controller("v1/admins")
@@ -77,6 +86,9 @@ export class AdminController {
 
   @Inject()
   private readonly employerService: EmployerService;
+
+  @Inject(TRANSACTION_MAPPING_SERVICE_PROVIDER)
+  private readonly transactionMapper: TransactionMappingService;
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   constructor() {}
@@ -351,5 +363,74 @@ export class AdminController {
     }
 
     return insertedExchangeRates;
+  }
+
+  @Get("/transactions/")
+  @ApiOperation({ summary: "Gets all transactions for supplied filters" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: TransactionQueryResultDTO,
+  })
+  @ApiForbiddenResponse({ description: "User forbidden from getting all transactions" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async getAllTransactions(
+    @Request() request,
+    @Query() filters: TransactionFilterOptionsDTO,
+  ): Promise<TransactionQueryResultDTO> {
+    const authenticatedUser: Admin = request.user.entity;
+    if (!(authenticatedUser instanceof Admin)) {
+      throw new ForbiddenException("User is forbidden from calling this API.");
+    }
+
+    filters.pageLimit = Number(filters.pageLimit) || 10;
+    filters.pageOffset = Number(filters.pageOffset) || 1;
+    const allTransactions = await this.adminService.getFilteredTransactions(filters);
+    if (allTransactions == null) return null;
+
+    const transactions = allTransactions.items;
+
+    const transactionDTOPromises: Promise<TransactionDTO>[] = transactions.map(
+      async transaction => await this.transactionMapper.toTransactionDTO(transaction),
+    );
+
+    const transactionDTOs = await Promise.all(transactionDTOPromises);
+    return {
+      ...allTransactions,
+      items: transactionDTOs,
+    };
+  }
+
+  @Get("/transactions/:transactionRef")
+  @ApiOperation({ summary: "Gets details of any transaction" })
+  @ApiQuery({ name: "includeEvents", enum: IncludeEventTypes, required: false })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: TransactionDTO,
+  })
+  @ApiNotFoundResponse({ description: "Requested transaction is not found" })
+  async getTransaction(
+    @Request() request,
+    @Query("includeEvents") includeEvents: IncludeEventTypes,
+    @Param("transactionRef") transactionRef: string,
+  ): Promise<TransactionDTO> {
+    const authenticatedUser: Admin = request.user.entity;
+    if (!(authenticatedUser instanceof Admin)) {
+      throw new ForbiddenException("User is forbidden from calling this API.");
+    }
+
+    const transaction = await this.adminService.getTransactionByTransactionRef(transactionRef);
+    if (!transaction) {
+      throw new NotFoundException(`Transaction with ref: ${transactionRef} not found for user`);
+    }
+
+    let transactionEvents: TransactionEvent[];
+    if (includeEvents && includeEvents !== IncludeEventTypes.NONE) {
+      transactionEvents = await this.adminService.getTransactionEvents(
+        transaction.id,
+        includeEvents === IncludeEventTypes.ALL,
+      );
+    }
+
+    return this.transactionMapper.toTransactionDTO(transaction, undefined, transactionEvents);
   }
 }

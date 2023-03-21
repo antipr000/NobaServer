@@ -479,6 +479,28 @@ describe("PostgresTransactionRepoTests", () => {
   });
 
   describe("getFilteredTransactions", () => {
+    it("should return all transactions for all consumers", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const consumerID2 = await createTestConsumer(prismaService);
+
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID));
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID, true));
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID2));
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID));
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID));
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID2));
+      const randomTransaction = await transactionRepo.createTransaction(getRandomTransaction(consumerID, true));
+
+      const result1 = await transactionRepo.getFilteredTransactions({
+        pageLimit: 3,
+        pageOffset: 1,
+      });
+
+      expect(result1.items.length).toBe(3);
+      expect(result1.items).toContainEqual(randomTransaction);
+      expect(result1.totalItems).toBe(7);
+    });
+
     it("should return filtered transactions for consumer", async () => {
       const consumerID = await createTestConsumer(prismaService);
       const consumerID2 = await createTestConsumer(prismaService);
