@@ -52,6 +52,7 @@ model Consumer {
   Employee             Employee[]
   pushTokens           PushToken[]
   PomeloUsers          PomeloUser?
+  PomeloCards          PomeloCard[]
 
   @@index([email])
   @@index([handle])
@@ -348,6 +349,19 @@ model PomeloUser {
   pomeloID         String    @unique()
   createdTimestamp DateTime? @default(now())
   updatedTimestamp DateTime? @updatedAt
+}
+
+model PomeloCard {
+  id               String    @id @default(uuid())
+  status           String
+  pomeloID         String
+  nobaConsumerID   String
+  type             String
+  consumer         Consumer  @relation(fields: [nobaConsumerID], references: [id], onDelete: Cascade)
+  createdTimestamp DateTime? @default(now())
+  updatedTimestamp DateTime? @updatedAt
+
+  @@unique([nobaConsumerID, pomeloID])
 }
 
 model Token {
