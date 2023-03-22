@@ -149,6 +149,7 @@ model PayrollDisbursement {
   transaction      Transaction? @relation(fields: [transactionID], references: [id], onDelete: Cascade)
   transactionID    String?      @unique()
   allocationAmount Float
+  creditAmount     Float?
 
   @@unique([payrollID, employeeID])
 }

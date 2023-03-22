@@ -66,6 +66,8 @@ import { PayrollDisbursement } from "../../../modules/employer/domain/PayrollDis
 import { AlertService } from "../../../modules/common/alerts/alert.service";
 import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
 import { KYCStatus } from "@prisma/client";
+import { getRandomEmployer } from "../../../modules/employer/test_utils/employer.test.utils";
+import { Employer } from "../../../modules/employer/domain/Employer";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -603,10 +605,10 @@ describe("TransactionServiceTests", () => {
       }
     });
 
-    it("should throw ServiceException with UNKNOWN error if the Employee is not found", async () => {
-      const employerID = uuid();
-      const employee: Employee = getRandomEmployee(employerID);
-      const payroll: Payroll = getRandomPayroll(employerID).payroll;
+    it("should throw ServiceException with UNKNOWN error if the Employer is not found", async () => {
+      const employer: Employer = getRandomEmployer("Test Employer");
+      const employee: Employee = getRandomEmployee(employer.id);
+      const payroll: Payroll = getRandomPayroll(employer.id).payroll;
       const payrollDisbursement: PayrollDisbursement = getRandomPayrollDisbursement(
         payroll.id,
         employee.id,
@@ -614,6 +616,29 @@ describe("TransactionServiceTests", () => {
 
       when(employerService.getDisbursement(payrollDisbursement.id)).thenResolve(payrollDisbursement);
       when(employerService.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(employerService.getEmployerByID(employer.id)).thenResolve(null);
+
+      try {
+        await transactionService.initiateTransactionForPayrolls(payrollDisbursement.id);
+      } catch (ex) {
+        expect(ex).toBeInstanceOf(ServiceException);
+        expect(ex.errorCode).toBe(ServiceErrorCode.UNKNOWN);
+        expect(ex.message).toEqual(expect.stringContaining(employer.id));
+      }
+    });
+
+    it("should throw ServiceException with UNKNOWN error if the Employee is not found", async () => {
+      const employer: Employer = getRandomEmployer("Test Employer");
+      const employee: Employee = getRandomEmployee(employer.id);
+      const payroll: Payroll = getRandomPayroll(employer.id).payroll;
+      const payrollDisbursement: PayrollDisbursement = getRandomPayrollDisbursement(
+        payroll.id,
+        employee.id,
+      ).payrollDisbursement;
+
+      when(employerService.getDisbursement(payrollDisbursement.id)).thenResolve(payrollDisbursement);
+      when(employerService.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
       when(employeeService.getEmployeeByID(employee.id)).thenResolve(null);
 
       try {
@@ -626,9 +651,9 @@ describe("TransactionServiceTests", () => {
     });
 
     it("should returns the transaction with proper fields on success", async () => {
-      const employerID = uuid();
-      const employee: Employee = getRandomEmployee(employerID);
-      const payroll: Payroll = getRandomPayroll(employerID).payroll;
+      const employer: Employer = getRandomEmployer("Test Employer");
+      const employee: Employee = getRandomEmployee(employer.id);
+      const payroll: Payroll = getRandomPayroll(employer.id).payroll;
       const payrollDisbursement: PayrollDisbursement = getRandomPayrollDisbursement(
         payroll.id,
         employee.id,
@@ -636,6 +661,7 @@ describe("TransactionServiceTests", () => {
 
       when(employerService.getPayrollByID(payroll.id)).thenResolve(payroll);
       when(employerService.getDisbursement(payrollDisbursement.id)).thenResolve(payrollDisbursement);
+      when(employerService.getEmployerByID(employer.id)).thenResolve(employer);
       when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
       when(transactionRepo.createTransaction(anything())).thenResolve(null);
 

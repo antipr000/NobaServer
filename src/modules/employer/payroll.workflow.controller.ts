@@ -81,6 +81,19 @@ export class PayrollWorkflowController {
     return {};
   }
 
+  @Post("/:payrollID/receipts")
+  @ApiOperation({ summary: "Creates a receipt for employer" })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    type: BlankResponseDTO,
+  })
+  @ApiNotFoundResponse({ description: "Requested employer is not found" })
+  @ApiBadRequestResponse({ description: "Failed to create receipt" })
+  async createReceipt(@Param("payrollID") payrollID: string): Promise<BlankResponseDTO> {
+    await this.employerService.createInvoiceReceipt(payrollID);
+    return {};
+  }
+
   @Get("/:payrollID")
   @ApiOperation({ summary: "Gets details of payroll" })
   @ApiResponse({

@@ -14,4 +14,7 @@ export class CreateDisbursementRequestDTO {
 export class UpdateDisbursementRequestDTO {
   @ApiPropertyOptional()
   transactionID?: string;
+
+  @ApiPropertyOptional()
+  creditAmount?: number;
 }

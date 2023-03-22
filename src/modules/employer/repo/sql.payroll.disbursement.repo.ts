@@ -80,6 +80,7 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
             },
           },
         }),
+        ...(payrollDisbursement.creditAmount && { creditAmount: payrollDisbursement.creditAmount }),
       };
 
       const returnedPayrollDisbursement: PrismaPayrollDisbursementModel =

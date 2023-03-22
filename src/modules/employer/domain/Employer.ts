@@ -18,6 +18,7 @@ export class Employer {
 export type EmployeeDisbursement = {
   employeeName: string;
   amount: number;
+  creditAmount: number;
 };
 export class EmployerCreateRequest {
   name: string;

@@ -42,9 +42,10 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { KmsService } from "../../../modules/common/kms.service";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
-import { InvoiceTemplateFields } from "../templates/payroll.invoice.dto";
+import { InvoiceReceiptTemplateFields, InvoiceTemplateFields } from "../templates/payroll.invoice.dto";
 import dayjs from "dayjs";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
+import { PayrollDisbursement } from "../domain/PayrollDisbursement";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -63,30 +64,43 @@ const getRandomEmployer = (): Employer => {
   return employer;
 };
 
+const amountStrEnglish100 = Number(100).toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString(), {
+  minimumFractionDigits: 2,
+});
+const creditAmountStrEnglish5 = Number(5).toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString(), {
+  minimumFractionDigits: 2,
+});
+const amountStrSpanish100 = Number(100).toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString(), {
+  minimumFractionDigits: 2,
+});
+const creditAmountStrSpanish5 = Number(5).toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString(), {
+  minimumFractionDigits: 2,
+});
+
 describe("EmployerServiceTests", () => {
   jest.setTimeout(20000);
 
-  let employerRepo: IEmployerRepo;
+  let mockEmployerRepo: IEmployerRepo;
   let app: TestingModule;
   let employerService: EmployerService;
-  let employeeService: EmployeeService;
-  let consumerService: ConsumerService;
-  let payrollRepo: IPayrollRepo;
-  let payrollDisbursementRepo: IPayrollDisbursementRepo;
-  let exchangeRateService: ExchangeRateService;
-  let s3Service: S3Service;
-  let kmsService: KmsService;
+  let mockEmployeeService: EmployeeService;
+  let mockConsumerService: ConsumerService;
+  let mockPayrollRepo: IPayrollRepo;
+  let mockPayrollDisbursementRepo: IPayrollDisbursementRepo;
+  let mockExchangeRateService: ExchangeRateService;
+  let mockS3Service: S3Service;
+  let mockKMSService: KmsService;
   let mockTemplateProcessorInstance;
 
   beforeEach(async () => {
-    employerRepo = getMockEmployerRepoWithDefaults();
-    employeeService = getMockEmployeeServiceWithDefaults();
-    consumerService = getMockConsumerServiceWithDefaults();
-    payrollDisbursementRepo = getMockPayrollDisbursementRepoWithDefaults();
-    payrollRepo = getMockPayrollRepoWithDefaults();
-    exchangeRateService = getMockExchangeRateServiceWithDefaults();
-    s3Service = getMockS3ServiceWithDefaults();
-    kmsService = getMockKMSServiceWithDefaults();
+    mockEmployerRepo = getMockEmployerRepoWithDefaults();
+    mockEmployeeService = getMockEmployeeServiceWithDefaults();
+    mockConsumerService = getMockConsumerServiceWithDefaults();
+    mockPayrollDisbursementRepo = getMockPayrollDisbursementRepoWithDefaults();
+    mockPayrollRepo = getMockPayrollRepoWithDefaults();
+    mockExchangeRateService = getMockExchangeRateServiceWithDefaults();
+    mockS3Service = getMockS3ServiceWithDefaults();
+    mockKMSService = getMockKMSServiceWithDefaults();
     mockTemplateProcessorInstance = instance(mockTemplateProcessor);
     constructorSpy.mockImplementationOnce(() => mockTemplateProcessorInstance);
     mockTemplateProcessorInstance.locales = new Set();
@@ -106,35 +120,35 @@ describe("EmployerServiceTests", () => {
       providers: [
         {
           provide: EMPLOYER_REPO_PROVIDER,
-          useFactory: () => instance(employerRepo),
+          useFactory: () => instance(mockEmployerRepo),
         },
         {
           provide: PAYROLL_REPO_PROVIDER,
-          useFactory: () => instance(payrollRepo),
+          useFactory: () => instance(mockPayrollRepo),
         },
         {
           provide: PAYROLL_DISBURSEMENT_REPO_PROVIDER,
-          useFactory: () => instance(payrollDisbursementRepo),
+          useFactory: () => instance(mockPayrollDisbursementRepo),
         },
         {
           provide: EmployeeService,
-          useFactory: () => instance(employeeService),
+          useFactory: () => instance(mockEmployeeService),
         },
         {
           provide: ExchangeRateService,
-          useFactory: () => instance(exchangeRateService),
+          useFactory: () => instance(mockExchangeRateService),
         },
         {
           provide: S3Service,
-          useFactory: () => instance(s3Service),
+          useFactory: () => instance(mockS3Service),
         },
         {
           provide: ConsumerService,
-          useFactory: () => instance(consumerService),
+          useFactory: () => instance(mockConsumerService),
         },
         {
           provide: KmsService,
-          useFactory: () => instance(kmsService),
+          useFactory: () => instance(mockKMSService),
         },
         EmployerService,
       ],
@@ -143,15 +157,19 @@ describe("EmployerServiceTests", () => {
     employerService = app.get<EmployerService>(EmployerService);
   });
 
-  afterEach(async () => {
-    jest.clearAllMocks();
+  afterAll(() => {
+    //jest.clearAllMocks();
     app.close();
+  });
+
+  afterEach(() => {
+    constructorSpy.mockReset();
   });
 
   describe("createEmployer", () => {
     it("should create an employer and 'always' send the 'COP' as allocationCurrency", async () => {
       const employer = getRandomEmployer();
-      when(employerRepo.createEmployer(anything())).thenResolve(employer);
+      when(mockEmployerRepo.createEmployer(anything())).thenResolve(employer);
 
       const createdEmployer = await employerService.createEmployer({
         name: employer.name,
@@ -164,7 +182,7 @@ describe("EmployerServiceTests", () => {
 
       expect(createdEmployer).toEqual(employer);
 
-      const [propagatedEmployerCreateRequest] = capture(employerRepo.createEmployer).last();
+      const [propagatedEmployerCreateRequest] = capture(mockEmployerRepo.createEmployer).last();
       expect(propagatedEmployerCreateRequest).toEqual({
         name: employer.name,
         logoURI: employer.logoURI,
@@ -178,7 +196,7 @@ describe("EmployerServiceTests", () => {
     it("should create an employer with provided maxAllocationPercent", async () => {
       const employer = getRandomEmployer();
       employer.maxAllocationPercent = 20;
-      when(employerRepo.createEmployer(anything())).thenResolve(employer);
+      when(mockEmployerRepo.createEmployer(anything())).thenResolve(employer);
 
       const createdEmployer = await employerService.createEmployer({
         name: employer.name,
@@ -192,7 +210,7 @@ describe("EmployerServiceTests", () => {
 
       expect(createdEmployer).toEqual(employer);
 
-      const [propagatedEmployerCreateRequest] = capture(employerRepo.createEmployer).last();
+      const [propagatedEmployerCreateRequest] = capture(mockEmployerRepo.createEmployer).last();
       expect(propagatedEmployerCreateRequest).toEqual({
         name: employer.name,
         logoURI: employer.logoURI,
@@ -207,7 +225,7 @@ describe("EmployerServiceTests", () => {
     it("should create an employer with no payroll dates", async () => {
       const employer = getRandomEmployer();
       delete employer.payrollDates;
-      when(employerRepo.createEmployer(anything())).thenResolve(employer);
+      when(mockEmployerRepo.createEmployer(anything())).thenResolve(employer);
 
       const createdEmployer = await employerService.createEmployer({
         name: employer.name,
@@ -223,7 +241,7 @@ describe("EmployerServiceTests", () => {
     it("should create an employer with empty payroll dates", async () => {
       const employer = getRandomEmployer();
       employer.payrollDates = [];
-      when(employerRepo.createEmployer(anything())).thenResolve(employer);
+      when(mockEmployerRepo.createEmployer(anything())).thenResolve(employer);
 
       const createdEmployer = await employerService.createEmployer({
         name: employer.name,
@@ -238,7 +256,7 @@ describe("EmployerServiceTests", () => {
 
     it("should set default 'leadDays' as '1' if not specified", async () => {
       const employer = getRandomEmployer();
-      when(employerRepo.createEmployer(anything())).thenResolve(employer);
+      when(mockEmployerRepo.createEmployer(anything())).thenResolve(employer);
 
       const createdEmployer = await employerService.createEmployer({
         name: employer.name,
@@ -251,7 +269,7 @@ describe("EmployerServiceTests", () => {
       employer.leadDays = 1;
       expect(createdEmployer).toEqual(employer);
 
-      const [propagatedEmployerCreateRequest] = capture(employerRepo.createEmployer).last();
+      const [propagatedEmployerCreateRequest] = capture(mockEmployerRepo.createEmployer).last();
       expect(propagatedEmployerCreateRequest).toEqual({
         name: employer.name,
         logoURI: employer.logoURI,
@@ -288,7 +306,7 @@ describe("EmployerServiceTests", () => {
   describe("updateEmployer", () => {
     it("should update 'only' the logoURI of the employer", async () => {
       const employer = getRandomEmployer();
-      when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+      when(mockEmployerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
 
       const updatedEmployer = await employerService.updateEmployer(employer.id, {
         logoURI: "https://new-logo-uri.com",
@@ -296,7 +314,7 @@ describe("EmployerServiceTests", () => {
 
       expect(updatedEmployer).toEqual(employer);
 
-      const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
+      const [employerID, propagatedEmployerUpdateRequest] = capture(mockEmployerRepo.updateEmployer).last();
       expect(employerID).toEqual(employer.id);
       expect(propagatedEmployerUpdateRequest).toEqual({
         logoURI: "https://new-logo-uri.com",
@@ -306,14 +324,14 @@ describe("EmployerServiceTests", () => {
     it("should update 'only' the maxAllocationPercent of the employer", async () => {
       const employer = getRandomEmployer();
       employer.maxAllocationPercent = 20;
-      when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+      when(mockEmployerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
 
       const updatedEmployer = await employerService.updateEmployer(employer.id, {
         maxAllocationPercent: 20,
       });
 
       expect(updatedEmployer).toEqual(employer);
-      const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
+      const [employerID, propagatedEmployerUpdateRequest] = capture(mockEmployerRepo.updateEmployer).last();
       expect(employerID).toEqual(employer.id);
       expect(propagatedEmployerUpdateRequest).toEqual({
         maxAllocationPercent: 20,
@@ -322,7 +340,7 @@ describe("EmployerServiceTests", () => {
 
     it("should update 'only' the referralID of the employer", async () => {
       const employer = getRandomEmployer();
-      when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+      when(mockEmployerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
 
       const updatedEmployer = await employerService.updateEmployer(employer.id, {
         referralID: "new-referral-id",
@@ -330,7 +348,7 @@ describe("EmployerServiceTests", () => {
 
       expect(updatedEmployer).toEqual(employer);
 
-      const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
+      const [employerID, propagatedEmployerUpdateRequest] = capture(mockEmployerRepo.updateEmployer).last();
       expect(employerID).toEqual(employer.id);
       expect(propagatedEmployerUpdateRequest).toEqual({
         referralID: "new-referral-id",
@@ -339,7 +357,7 @@ describe("EmployerServiceTests", () => {
 
     it("should update 'only' the leadDays of the employer", async () => {
       const employer = getRandomEmployer();
-      when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+      when(mockEmployerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
 
       const updatedEmployer = await employerService.updateEmployer(employer.id, {
         leadDays: 4,
@@ -347,7 +365,7 @@ describe("EmployerServiceTests", () => {
 
       expect(updatedEmployer).toEqual(employer);
 
-      const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
+      const [employerID, propagatedEmployerUpdateRequest] = capture(mockEmployerRepo.updateEmployer).last();
       expect(employerID).toEqual(employer.id);
       expect(propagatedEmployerUpdateRequest).toEqual({
         leadDays: 4,
@@ -373,7 +391,7 @@ describe("EmployerServiceTests", () => {
 
     it("should update 'only' the payrollDays of the employer", async () => {
       const employer = getRandomEmployer();
-      when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+      when(mockEmployerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
 
       const payrollDates = ["2020-03-04", "2020-03-18"];
       const updatedEmployer = await employerService.updateEmployer(employer.id, {
@@ -382,7 +400,7 @@ describe("EmployerServiceTests", () => {
 
       expect(updatedEmployer).toEqual(employer);
 
-      const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
+      const [employerID, propagatedEmployerUpdateRequest] = capture(mockEmployerRepo.updateEmployer).last();
       expect(employerID).toEqual(employer.id);
       expect(propagatedEmployerUpdateRequest).toEqual({
         payrollDates: payrollDates,
@@ -391,7 +409,7 @@ describe("EmployerServiceTests", () => {
 
     it("should update 'only' the payrollAccountNumber of the employer", async () => {
       const employer = getRandomEmployer();
-      when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+      when(mockEmployerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
 
       const updatedEmployer = await employerService.updateEmployer(employer.id, {
         payrollAccountNumber: "12345",
@@ -399,7 +417,7 @@ describe("EmployerServiceTests", () => {
 
       expect(updatedEmployer).toEqual(employer);
 
-      const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
+      const [employerID, propagatedEmployerUpdateRequest] = capture(mockEmployerRepo.updateEmployer).last();
       expect(employerID).toEqual(employer.id);
       expect(propagatedEmployerUpdateRequest).toEqual({
         payrollAccountNumber: "12345",
@@ -408,7 +426,7 @@ describe("EmployerServiceTests", () => {
 
     it("should update all the fields", async () => {
       const employer = getRandomEmployer();
-      when(employerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+      when(mockEmployerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
 
       const payrollDates = ["2020-03-17", "2020-03-30"];
       const updatedEmployer = await employerService.updateEmployer(employer.id, {
@@ -422,7 +440,7 @@ describe("EmployerServiceTests", () => {
 
       expect(updatedEmployer).toStrictEqual(employer);
 
-      const [employerID, propagatedEmployerUpdateRequest] = capture(employerRepo.updateEmployer).last();
+      const [employerID, propagatedEmployerUpdateRequest] = capture(mockEmployerRepo.updateEmployer).last();
       expect(employerID).toEqual(employer.id);
       expect(propagatedEmployerUpdateRequest).toEqual({
         logoURI: "https://new-logo-uri.com",
@@ -480,13 +498,13 @@ describe("EmployerServiceTests", () => {
 
     it("should get an employer by ID", async () => {
       const employer = getRandomEmployer();
-      when(employerRepo.getEmployerByID(anything())).thenResolve(employer);
+      when(mockEmployerRepo.getEmployerByID(anything())).thenResolve(employer);
 
       const retrievedEmployer = await employerService.getEmployerByID(employer.id);
 
       expect(retrievedEmployer).toEqual(employer);
 
-      const [employerID] = capture(employerRepo.getEmployerByID).last();
+      const [employerID] = capture(mockEmployerRepo.getEmployerByID).last();
       expect(employerID).toEqual(employer.id);
       expect(retrievedEmployer.maxAllocationPercent).toBeUndefined();
     });
@@ -494,13 +512,13 @@ describe("EmployerServiceTests", () => {
     it("should return 'maxAllocationPercent' when available", async () => {
       const employer = getRandomEmployer();
       employer.maxAllocationPercent = 20;
-      when(employerRepo.getEmployerByID(anything())).thenResolve(employer);
+      when(mockEmployerRepo.getEmployerByID(anything())).thenResolve(employer);
 
       const retrievedEmployer = await employerService.getEmployerByID(employer.id);
 
       expect(retrievedEmployer).toEqual(employer);
 
-      const [employerID] = capture(employerRepo.getEmployerByID).last();
+      const [employerID] = capture(mockEmployerRepo.getEmployerByID).last();
       expect(employerID).toEqual(employer.id);
       expect(retrievedEmployer.maxAllocationPercent).toBe(20);
     });
@@ -515,13 +533,13 @@ describe("EmployerServiceTests", () => {
   describe("getEmployerByReferralID", () => {
     it("should get an employer by ID", async () => {
       const employer = getRandomEmployer();
-      when(employerRepo.getEmployerByID(anything())).thenResolve(employer);
+      when(mockEmployerRepo.getEmployerByID(anything())).thenResolve(employer);
 
       const retrievedEmployer = await employerService.getEmployerByID(employer.referralID);
 
       expect(retrievedEmployer).toEqual(employer);
 
-      const [referralID] = capture(employerRepo.getEmployerByID).last();
+      const [referralID] = capture(mockEmployerRepo.getEmployerByID).last();
       expect(referralID).toEqual(employer.referralID);
     });
 
@@ -535,13 +553,13 @@ describe("EmployerServiceTests", () => {
   describe("getEmployerByBubbleID", () => {
     it("should get an employer by ID", async () => {
       const employer = getRandomEmployer();
-      when(employerRepo.getEmployerByID(anything())).thenResolve(employer);
+      when(mockEmployerRepo.getEmployerByID(anything())).thenResolve(employer);
 
       const retrievedEmployer = await employerService.getEmployerByID(employer.bubbleID);
 
       expect(retrievedEmployer).toEqual(employer);
 
-      const [bubbleID] = capture(employerRepo.getEmployerByID).last();
+      const [bubbleID] = capture(mockEmployerRepo.getEmployerByID).last();
       expect(bubbleID).toEqual(employer.bubbleID);
     });
 
@@ -558,7 +576,7 @@ describe("EmployerServiceTests", () => {
       const employee1 = getRandomEmployee(employer.id);
       const employee2 = getRandomEmployee(employer.id);
 
-      when(employeeService.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2]);
+      when(mockEmployeeService.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2]);
 
       try {
         await employerService.getAllEmployees(null);
@@ -574,7 +592,7 @@ describe("EmployerServiceTests", () => {
       const employee1 = getRandomEmployee(employer.id);
       const employee2 = getRandomEmployee(employer.id);
 
-      when(employeeService.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2]);
+      when(mockEmployeeService.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2]);
 
       const retrievedEmployer = await employerService.getAllEmployees(employer.id);
 
@@ -587,7 +605,7 @@ describe("EmployerServiceTests", () => {
       const employerID = "fake-employer";
       const { payroll } = getRandomPayroll(employerID);
 
-      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
 
       const retrievedPayroll = await employerService.getPayrollByID(payroll.id);
 
@@ -599,7 +617,7 @@ describe("EmployerServiceTests", () => {
     });
 
     it("should return null when payroll with id does not exist", async () => {
-      when(payrollRepo.getPayrollByID(anything())).thenResolve(null);
+      when(mockPayrollRepo.getPayrollByID(anything())).thenResolve(null);
 
       const retrievedPayroll = await employerService.getPayrollByID("fake-id");
 
@@ -612,7 +630,7 @@ describe("EmployerServiceTests", () => {
       const employerID = "fake-employer";
       const { payroll } = getRandomPayroll(employerID);
 
-      when(payrollRepo.getAllPayrollsForEmployer(employerID, deepEqual({}))).thenResolve([payroll]);
+      when(mockPayrollRepo.getAllPayrollsForEmployer(employerID, deepEqual({}))).thenResolve([payroll]);
 
       const retrievedPayrolls = await employerService.getAllPayrollsForEmployer(employerID);
 
@@ -633,13 +651,13 @@ describe("EmployerServiceTests", () => {
 
       const spy = jest.spyOn(Utils, "generateLowercaseUUID").mockImplementation(() => "fake-uuid");
 
-      when(payrollRepo.addPayroll(anything())).thenResolve(payroll);
+      when(mockPayrollRepo.addPayroll(anything())).thenResolve(payroll);
 
       const response = await employerService.createPayroll(employerID, payrollDate);
 
       expect(response).toStrictEqual(payroll);
 
-      const [payrollRequest] = capture(payrollRepo.addPayroll).last();
+      const [payrollRequest] = capture(mockPayrollRepo.addPayroll).last();
       expect(payrollRequest).toEqual({
         employerID: employerID,
         payrollDate: payrollDate,
@@ -666,8 +684,8 @@ describe("EmployerServiceTests", () => {
       const { payroll } = getRandomPayroll(employerID);
       payroll.status = PayrollStatus.PREPARED;
 
-      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
-      when(payrollRepo.updatePayroll(anyString(), anything())).thenResolve({
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockPayrollRepo.updatePayroll(anyString(), anything())).thenResolve({
         ...payroll,
         status: PayrollStatus.INVOICED,
       });
@@ -681,7 +699,7 @@ describe("EmployerServiceTests", () => {
         status: PayrollStatus.INVOICED,
       });
 
-      const [payrollID, payrollUpdateRequest] = capture(payrollRepo.updatePayroll).last();
+      const [payrollID, payrollUpdateRequest] = capture(mockPayrollRepo.updatePayroll).last();
       expect(payrollID).toEqual(payroll.id);
       expect(payrollUpdateRequest).toEqual({
         status: PayrollStatus.INVOICED,
@@ -694,9 +712,9 @@ describe("EmployerServiceTests", () => {
       const { payroll } = getRandomPayroll(employerID);
       payroll.status = PayrollStatus.IN_PROGRESS;
 
-      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
 
-      when(payrollRepo.updatePayroll(anyString(), anything())).thenResolve({
+      when(mockPayrollRepo.updatePayroll(anyString(), anything())).thenResolve({
         ...payroll,
         status: PayrollStatus.COMPLETED,
       });
@@ -709,7 +727,7 @@ describe("EmployerServiceTests", () => {
         status: PayrollStatus.COMPLETED,
       });
 
-      const [payrollID, payrollUpdateRequest] = capture(payrollRepo.updatePayroll).last();
+      const [payrollID, payrollUpdateRequest] = capture(mockPayrollRepo.updatePayroll).last();
       expect(payrollID).toEqual(payroll.id);
       expect(payrollUpdateRequest.status).toEqual(PayrollStatus.COMPLETED);
       expect(payrollUpdateRequest.completedTimestamp).toBeDefined();
@@ -725,20 +743,20 @@ describe("EmployerServiceTests", () => {
       disbursement1.allocationAmount = 10000;
       disbursement2.allocationAmount = 20000;
 
-      when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([
+      when(mockPayrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([
         disbursement1,
         disbursement2,
       ]);
 
-      when(exchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve({
+      when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve({
         nobaRate: 0.0025,
         bankRate: 0.0025,
         numeratorCurrency: "COP",
         denominatorCurrency: "USD",
       });
 
-      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
-      when(payrollRepo.updatePayroll(anyString(), anything())).thenResolve(payroll);
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockPayrollRepo.updatePayroll(anyString(), anything())).thenResolve(payroll);
 
       const updatedPayroll = await employerService.updatePayroll(payroll.id, {
         status: PayrollStatus.PREPARED,
@@ -746,7 +764,7 @@ describe("EmployerServiceTests", () => {
 
       expect(updatedPayroll).toStrictEqual(payroll);
 
-      const [payrollID, payrollUpdateRequest] = capture(payrollRepo.updatePayroll).last();
+      const [payrollID, payrollUpdateRequest] = capture(mockPayrollRepo.updatePayroll).last();
       expect(payrollID).toEqual(payroll.id);
       expect(payrollUpdateRequest).toEqual({
         status: PayrollStatus.PREPARED,
@@ -783,20 +801,20 @@ describe("EmployerServiceTests", () => {
       disbursement1.allocationAmount = 10000;
       disbursement2.allocationAmount = 20000;
 
-      when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([
+      when(mockPayrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([
         disbursement1,
         disbursement2,
       ]);
 
-      when(exchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve({
+      when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve({
         nobaRate: 0.0025,
         bankRate: 0.0025,
         numeratorCurrency: "COP",
         denominatorCurrency: "USD",
       });
 
-      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
-      when(payrollRepo.updatePayroll(anyString(), anything())).thenResolve({
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockPayrollRepo.updatePayroll(anyString(), anything())).thenResolve({
         ...payroll,
         status: toStatus,
       });
@@ -810,7 +828,7 @@ describe("EmployerServiceTests", () => {
         status: toStatus,
       });
 
-      const [payrollID, payrollUpdateRequest] = capture(payrollRepo.updatePayroll).last();
+      const [payrollID, payrollUpdateRequest] = capture(mockPayrollRepo.updatePayroll).last();
       expect(payrollID).toEqual(payroll.id);
       expect(payrollUpdateRequest.status).toEqual(toStatus);
     });
@@ -852,14 +870,14 @@ describe("EmployerServiceTests", () => {
       const { payroll } = getRandomPayroll(employerID);
       payroll.status = fromStatus;
 
-      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
 
       const response = await employerService.updatePayroll(payroll.id, {
         status: toStatus,
       });
 
       expect(response).toStrictEqual(payroll);
-      verify(payrollRepo.updatePayroll(anyString(), anything())).never();
+      verify(mockPayrollRepo.updatePayroll(anyString(), anything())).never();
     });
 
     it("should throw ServiceException when status is not within allowed PayrollStatus values", async () => {
@@ -867,7 +885,7 @@ describe("EmployerServiceTests", () => {
       const { payroll } = getRandomPayroll(employerID);
       payroll.status = PayrollStatus.CREATED;
 
-      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
 
       await expect(
         employerService.updatePayroll(payroll.id, {
@@ -890,8 +908,8 @@ describe("EmployerServiceTests", () => {
       const employee = getRandomEmployee("fake-employer");
       const { payrollDisbursement } = getRandomPayrollDisbursement("fake-payroll", employee.id);
 
-      when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
-      when(payrollDisbursementRepo.createPayrollDisbursement(anything())).thenResolve(payrollDisbursement);
+      when(mockEmployeeService.getEmployeeByID(employee.id)).thenResolve(employee);
+      when(mockPayrollDisbursementRepo.createPayrollDisbursement(anything())).thenResolve(payrollDisbursement);
 
       const response = await employerService.createDisbursement("fake-payroll", {
         employeeID: employee.id,
@@ -899,7 +917,7 @@ describe("EmployerServiceTests", () => {
 
       expect(response).toStrictEqual(payrollDisbursement);
 
-      const [disbursementRequest] = capture(payrollDisbursementRepo.createPayrollDisbursement).last();
+      const [disbursementRequest] = capture(mockPayrollDisbursementRepo.createPayrollDisbursement).last();
       expect(disbursementRequest).toEqual({
         payrollID: "fake-payroll",
         employeeID: employee.id,
@@ -924,7 +942,7 @@ describe("EmployerServiceTests", () => {
     });
 
     it("should throw 'ServiceException' when employee does not exist", async () => {
-      when(employeeService.getEmployeeByID(anything())).thenResolve(null);
+      when(mockEmployeeService.getEmployeeByID(anything())).thenResolve(null);
 
       await expect(
         employerService.createDisbursement("fake-payroll", {
@@ -938,8 +956,12 @@ describe("EmployerServiceTests", () => {
     it("should update disbursement", async () => {
       const { payrollDisbursement } = getRandomPayrollDisbursement("fake-payroll", "fake-employee");
 
-      when(payrollDisbursementRepo.getPayrollDisbursementByID(payrollDisbursement.id)).thenResolve(payrollDisbursement);
-      when(payrollDisbursementRepo.updatePayrollDisbursement(anyString(), anything())).thenResolve(payrollDisbursement);
+      when(mockPayrollDisbursementRepo.getPayrollDisbursementByID(payrollDisbursement.id)).thenResolve(
+        payrollDisbursement,
+      );
+      when(mockPayrollDisbursementRepo.updatePayrollDisbursement(anyString(), anything())).thenResolve(
+        payrollDisbursement,
+      );
 
       const response = await employerService.updateDisbursement(payrollDisbursement.payrollID, payrollDisbursement.id, {
         transactionID: "fake-transaction",
@@ -949,7 +971,7 @@ describe("EmployerServiceTests", () => {
       expect(response).toStrictEqual(payrollDisbursement);
 
       const [disbursementID, disbursementUpdateRequest] = capture(
-        payrollDisbursementRepo.updatePayrollDisbursement,
+        mockPayrollDisbursementRepo.updatePayrollDisbursement,
       ).last();
       expect(disbursementID).toEqual(payrollDisbursement.id);
       expect(disbursementUpdateRequest).toEqual({
@@ -974,7 +996,7 @@ describe("EmployerServiceTests", () => {
     });
 
     it("should throw 'ServiceException' when disbursement does not exist", async () => {
-      when(payrollDisbursementRepo.getPayrollDisbursementByID(anything())).thenResolve(null);
+      when(mockPayrollDisbursementRepo.getPayrollDisbursementByID(anything())).thenResolve(null);
 
       await expect(
         employerService.updateDisbursement("fake-payroll", "fake-disbursement", {
@@ -986,8 +1008,12 @@ describe("EmployerServiceTests", () => {
     it("should throw ServiceException when payroll id for disbursement is different", async () => {
       const { payrollDisbursement } = getRandomPayrollDisbursement("fake-payroll", "fake-employee");
 
-      when(payrollDisbursementRepo.getPayrollDisbursementByID(payrollDisbursement.id)).thenResolve(payrollDisbursement);
-      when(payrollDisbursementRepo.updatePayrollDisbursement(anyString(), anything())).thenResolve(payrollDisbursement);
+      when(mockPayrollDisbursementRepo.getPayrollDisbursementByID(payrollDisbursement.id)).thenResolve(
+        payrollDisbursement,
+      );
+      when(mockPayrollDisbursementRepo.updatePayrollDisbursement(anyString(), anything())).thenResolve(
+        payrollDisbursement,
+      );
 
       await expect(
         async () =>
@@ -1002,7 +1028,9 @@ describe("EmployerServiceTests", () => {
     it("should return all disbursements for payroll", async () => {
       const { payrollDisbursement } = getRandomPayrollDisbursement("fake-payroll", "fake-employee");
 
-      when(payrollDisbursementRepo.getAllDisbursementsForPayroll("fake-payroll")).thenResolve([payrollDisbursement]);
+      when(mockPayrollDisbursementRepo.getAllDisbursementsForPayroll("fake-payroll")).thenResolve([
+        payrollDisbursement,
+      ]);
 
       const response = await employerService.getAllDisbursementsForPayroll("fake-payroll");
 
@@ -1018,7 +1046,9 @@ describe("EmployerServiceTests", () => {
     it("should return all disbursements for employee", async () => {
       const { payrollDisbursement } = getRandomPayrollDisbursement("fake-payroll", "fake-employee");
 
-      when(payrollDisbursementRepo.getAllDisbursementsForEmployee("fake-employee")).thenResolve([payrollDisbursement]);
+      when(mockPayrollDisbursementRepo.getAllDisbursementsForEmployee("fake-employee")).thenResolve([
+        payrollDisbursement,
+      ]);
 
       const response = await employerService.getAllDisbursementsForEmployee("fake-employee");
 
@@ -1038,11 +1068,11 @@ describe("EmployerServiceTests", () => {
       const { payrollDisbursement } = getRandomPayrollDisbursement(payroll.id, "fake-employee");
       payrollDisbursement.transactionID = transactionID;
 
-      when(payrollDisbursementRepo.getPayrollDisbursementByTransactionID(transactionID)).thenResolve(
+      when(mockPayrollDisbursementRepo.getPayrollDisbursementByTransactionID(transactionID)).thenResolve(
         payrollDisbursement,
       );
-      when(payrollRepo.getPayrollByID(payrollDisbursement.payrollID)).thenResolve(payroll);
-      when(employerRepo.getEmployerByID(payroll.employerID)).thenResolve(employer);
+      when(mockPayrollRepo.getPayrollByID(payrollDisbursement.payrollID)).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(payroll.employerID)).thenResolve(employer);
 
       const response = await employerService.getEmployerForTransactionID(transactionID);
 
@@ -1050,7 +1080,7 @@ describe("EmployerServiceTests", () => {
     });
 
     it("should return null if disbursement cannot be found", async () => {
-      when(payrollDisbursementRepo.getPayrollDisbursementByTransactionID("1234")).thenResolve(null);
+      when(mockPayrollDisbursementRepo.getPayrollDisbursementByTransactionID("1234")).thenResolve(null);
       expect(await employerService.getEmployerForTransactionID("1234")).toBeNull();
     });
 
@@ -1061,10 +1091,10 @@ describe("EmployerServiceTests", () => {
       const { payrollDisbursement } = getRandomPayrollDisbursement(payroll.id, "fake-employee");
       payrollDisbursement.transactionID = transactionID;
 
-      when(payrollDisbursementRepo.getPayrollDisbursementByTransactionID(transactionID)).thenResolve(
+      when(mockPayrollDisbursementRepo.getPayrollDisbursementByTransactionID(transactionID)).thenResolve(
         payrollDisbursement,
       );
-      when(payrollRepo.getPayrollByID(payrollDisbursement.payrollID)).thenResolve(null);
+      when(mockPayrollRepo.getPayrollByID(payrollDisbursement.payrollID)).thenResolve(null);
 
       expect(await employerService.getEmployerForTransactionID(transactionID)).toBeNull();
     });
@@ -1078,18 +1108,18 @@ describe("EmployerServiceTests", () => {
     });
 
     it("should throw SEMANTIC_VALIDATION when payrollID is not found", async () => {
-      when(payrollRepo.getPayrollByID("fake-payroll")).thenResolve(null);
+      when(mockPayrollRepo.getPayrollByID("fake-payroll")).thenResolve(null);
 
       expect(employerService.createInvoice("fake-payroll")).rejects.toThrowServiceException(
         ServiceErrorCode.SEMANTIC_VALIDATION,
       );
     });
 
-    it("should throw SEMANTIC_VALIDATION when employeeID is not found", async () => {
+    it("should throw SEMANTIC_VALIDATION when employerID is not found", async () => {
       const { payroll } = getRandomPayroll("fake-employer");
 
-      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
-      when(employerRepo.getEmployerByID(payroll.employerID)).thenResolve(null);
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(payroll.employerID)).thenResolve(null);
 
       expect(employerService.createInvoice(payroll.id)).rejects.toThrowServiceException(
         ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -1100,9 +1130,9 @@ describe("EmployerServiceTests", () => {
       const employer = getRandomEmployer();
       const { payroll } = getRandomPayroll(employer.id);
 
-      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
-      when(employerRepo.getEmployerByID(employer.id)).thenResolve(employer);
-      when(kmsService.decryptString(employer.payrollAccountNumber, anything())).thenResolve(null);
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(employer.id)).thenResolve(employer);
+      when(mockKMSService.decryptString(employer.payrollAccountNumber, anything())).thenResolve(null);
 
       expect(employerService.createInvoice(payroll.id)).rejects.toThrowServiceException(
         ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -1113,13 +1143,13 @@ describe("EmployerServiceTests", () => {
       const employer = getRandomEmployer();
       const { payroll } = getRandomPayroll(employer.id);
 
-      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
-      when(employerRepo.getEmployerByID(employer.id)).thenResolve(employer);
-      when(kmsService.decryptString(employer.payrollAccountNumber, anything())).thenResolve(
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(employer.id)).thenResolve(employer);
+      when(mockKMSService.decryptString(employer.payrollAccountNumber, anything())).thenResolve(
         employer.payrollAccountNumber,
       );
 
-      when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([]);
+      when(mockPayrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([]);
 
       when(mockTemplateProcessor.addFormat(anything())).thenResolve();
       when(mockTemplateProcessor.addLocale(anything())).thenResolve();
@@ -1140,7 +1170,9 @@ describe("EmployerServiceTests", () => {
         payrollDate: dayjs(payroll.payrollDate)
           .locale(TemplateProcessModule.TemplateLocale.ENGLISH.toString())
           .format("MMMM D, YYYY"),
-        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString()),
+        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString(), {
+          minimumFractionDigits: 2,
+        }),
       };
 
       const spanishTemplateFields: InvoiceTemplateFields = {
@@ -1148,7 +1180,9 @@ describe("EmployerServiceTests", () => {
         payrollDate: dayjs(payroll.payrollDate)
           .locale(TemplateProcessModule.TemplateLocale.SPANISH.toString())
           .format("MMMM D, YYYY"),
-        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString()),
+        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString(), {
+          minimumFractionDigits: 2,
+        }),
       };
 
       when(
@@ -1191,9 +1225,9 @@ describe("EmployerServiceTests", () => {
         phone: "+123456789",
       });
 
-      when(payrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
-      when(employerRepo.getEmployerByID(employer.id)).thenResolve(employer);
-      when(kmsService.decryptString(employer.payrollAccountNumber, anything())).thenResolve(
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(employer.id)).thenResolve(employer);
+      when(mockKMSService.decryptString(employer.payrollAccountNumber, anything())).thenResolve(
         employer.payrollAccountNumber,
       );
 
@@ -1209,7 +1243,7 @@ describe("EmployerServiceTests", () => {
 
       when(mockTemplateProcessor.loadTemplates()).thenResolve();
 
-      const payrollDisbursements = [
+      const payrollDisbursements: PayrollDisbursement[] = [
         {
           id: "fake-disbursement",
           createdTimestamp: new Date(),
@@ -1218,6 +1252,7 @@ describe("EmployerServiceTests", () => {
           employeeID: employee1.id,
           transactionID: "fake-transaction",
           allocationAmount: 100,
+          creditAmount: 5,
         },
         {
           id: "fake-disbursement-2",
@@ -1227,17 +1262,7 @@ describe("EmployerServiceTests", () => {
           employeeID: employee2.id,
           transactionID: "fake-transaction",
           allocationAmount: 100,
-        },
-      ];
-
-      const allocations = [
-        {
-          employeeName: `${consumer1.props.firstName} ${consumer1.props.lastName}`,
-          amount: "100",
-        },
-        {
-          employeeName: `${consumer2.props.firstName} ${consumer2.props.lastName}`,
-          amount: "100",
+          creditAmount: 5,
         },
       ];
 
@@ -1245,7 +1270,7 @@ describe("EmployerServiceTests", () => {
         companyName: employer.name,
         payrollReference: payroll.referenceNumber.toString().padStart(8, "0"),
         currency: payroll.debitCurrency,
-        allocations: allocations,
+        allocations: [],
         nobaAccountNumber: employer.payrollAccountNumber,
         payrollDate: "",
         totalAmount: "",
@@ -1256,7 +1281,19 @@ describe("EmployerServiceTests", () => {
         payrollDate: dayjs(payroll.payrollDate)
           .locale(TemplateProcessModule.TemplateLocale.ENGLISH.toString())
           .format("MMMM D, YYYY"),
-        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString()),
+        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString(), {
+          minimumFractionDigits: 2,
+        }),
+        allocations: [
+          {
+            employeeName: `${consumer1.props.firstName} ${consumer1.props.lastName}`,
+            amount: amountStrEnglish100,
+          },
+          {
+            employeeName: `${consumer2.props.firstName} ${consumer2.props.lastName}`,
+            amount: amountStrEnglish100,
+          },
+        ],
       };
 
       const spanishTemplateFields: InvoiceTemplateFields = {
@@ -1264,15 +1301,27 @@ describe("EmployerServiceTests", () => {
         payrollDate: dayjs(payroll.payrollDate)
           .locale(TemplateProcessModule.TemplateLocale.SPANISH.toString())
           .format("MMMM D, YYYY"),
-        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString()),
+        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString(), {
+          minimumFractionDigits: 2,
+        }),
+        allocations: [
+          {
+            employeeName: `${consumer1.props.firstName} ${consumer1.props.lastName}`,
+            amount: amountStrSpanish100,
+          },
+          {
+            employeeName: `${consumer2.props.firstName} ${consumer2.props.lastName}`,
+            amount: amountStrSpanish100,
+          },
+        ],
       };
 
-      when(payrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve(payrollDisbursements);
-      when(employeeService.getEmployeeByID(employee1.id)).thenResolve(employee1);
-      when(employeeService.getEmployeeByID(employee2.id)).thenResolve(employee2);
+      when(mockPayrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve(payrollDisbursements);
+      when(mockEmployeeService.getEmployeeByID(employee1.id)).thenResolve(employee1);
+      when(mockEmployeeService.getEmployeeByID(employee2.id)).thenResolve(employee2);
 
-      when(consumerService.getConsumer(employee1.consumerID)).thenResolve(consumer1);
-      when(consumerService.getConsumer(employee2.consumerID)).thenResolve(consumer2);
+      when(mockConsumerService.getConsumer(employee1.consumerID)).thenResolve(consumer1);
+      when(mockConsumerService.getConsumer(employee2.consumerID)).thenResolve(consumer2);
       when(
         mockTemplateProcessor.populateTemplate(
           TemplateProcessModule.TemplateLocale.ENGLISH,
@@ -1288,12 +1337,287 @@ describe("EmployerServiceTests", () => {
 
       when(mockTemplateProcessor.destroy()).thenResolve();
 
+      const addFormatSpy = jest.spyOn(mockTemplateProcessorInstance, "addFormat");
+      const addLocaleSpy = jest.spyOn(mockTemplateProcessorInstance, "addLocale");
+
       await employerService.createInvoice(payroll.id);
+
       expect(constructorSpy).toHaveBeenCalledTimes(1);
-      verify(mockTemplateProcessor.addFormat(TemplateProcessModule.TemplateFormat.PDF)).twice();
-      verify(mockTemplateProcessor.addFormat(TemplateProcessModule.TemplateFormat.HTML)).twice();
-      verify(mockTemplateProcessor.addLocale(TemplateProcessModule.TemplateLocale.SPANISH)).twice();
-      verify(mockTemplateProcessor.addLocale(TemplateProcessModule.TemplateLocale.ENGLISH)).twice();
+      expect(addFormatSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateFormat.HTML);
+      expect(addFormatSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateFormat.PDF);
+      expect(addLocaleSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateLocale.ENGLISH);
+      expect(addLocaleSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateLocale.SPANISH);
+    });
+  });
+
+  describe("createInvoiceReceipt", () => {
+    it("should throw SEMANTIC_VALIDATION when payrollID is undefined", async () => {
+      expect(employerService.createInvoiceReceipt(undefined)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should throw SEMANTIC_VALIDATION when payrollID is not found", async () => {
+      when(mockPayrollRepo.getPayrollByID("fake-payroll")).thenResolve(null);
+
+      expect(employerService.createInvoiceReceipt("fake-payroll")).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it.each([
+      PayrollStatus.CREATED,
+      PayrollStatus.INVOICED,
+      PayrollStatus.PREPARED,
+      PayrollStatus.INVESTIGATION,
+      PayrollStatus.FUNDED,
+      PayrollStatus.EXPIRED,
+    ])("should throw SEMANTIC_VALIDATION when payroll is found but in the wrong status (%s)", async status => {
+      const { payroll } = getRandomPayroll("fake-employer");
+      payroll.status = status;
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+
+      expect(employerService.createInvoiceReceipt(payroll.id)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should throw SEMANTIC_VALIDATION when employerID is not found", async () => {
+      const { payroll } = getRandomPayroll("fake-employer");
+      payroll.status = PayrollStatus.IN_PROGRESS;
+
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(payroll.employerID)).thenResolve(null);
+
+      expect(employerService.createInvoiceReceipt(payroll.id)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should successfully create a receipt", async () => {
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll(employer.id);
+      payroll.status = PayrollStatus.IN_PROGRESS;
+
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(employer.id)).thenResolve(employer);
+
+      when(mockPayrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve([]);
+
+      when(mockTemplateProcessor.addFormat(anything())).thenResolve();
+      when(mockTemplateProcessor.addLocale(anything())).thenResolve();
+      when(mockTemplateProcessor.loadTemplates()).thenResolve();
+
+      const baseTemplateFields: InvoiceReceiptTemplateFields = {
+        companyName: employer.name,
+        payrollReference: payroll.referenceNumber.toString().padStart(8, "0"),
+        currency: payroll.debitCurrency,
+        allocations: [],
+        payrollDate: "",
+        totalAmount: "",
+        totalCreditAmount: "",
+      };
+
+      const englishTemplateFields: InvoiceReceiptTemplateFields = {
+        ...baseTemplateFields,
+        payrollDate: dayjs(payroll.payrollDate)
+          .locale(TemplateProcessModule.TemplateLocale.ENGLISH.toString())
+          .format("MMMM D, YYYY"),
+        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString(), {
+          minimumFractionDigits: 2,
+        }),
+        totalCreditAmount: payroll.totalCreditAmount.toLocaleString(
+          TemplateProcessModule.TemplateLocale.ENGLISH.toString(),
+          { minimumFractionDigits: 2 },
+        ),
+      };
+
+      const spanishTemplateFields: InvoiceReceiptTemplateFields = {
+        ...baseTemplateFields,
+        payrollDate: dayjs(payroll.payrollDate)
+          .locale(TemplateProcessModule.TemplateLocale.SPANISH.toString())
+          .format("MMMM D, YYYY"),
+        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString(), {
+          minimumFractionDigits: 2,
+        }),
+        totalCreditAmount: payroll.totalCreditAmount.toLocaleString(
+          TemplateProcessModule.TemplateLocale.SPANISH.toString(),
+          { minimumFractionDigits: 2 },
+        ),
+      };
+
+      when(
+        mockTemplateProcessor.populateTemplate(
+          TemplateProcessModule.TemplateLocale.ENGLISH,
+          deepEqual(englishTemplateFields),
+        ),
+      ).thenResolve();
+      when(
+        mockTemplateProcessor.populateTemplate(
+          TemplateProcessModule.TemplateLocale.SPANISH,
+          deepEqual(spanishTemplateFields),
+        ),
+      ).thenResolve();
+
+      when(mockTemplateProcessor.destroy()).thenResolve();
+
+      await employerService.createInvoiceReceipt(payroll.id);
+      expect(constructorSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("should successfully create receipt with disbursements", async () => {
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll(employer.id);
+      payroll.status = PayrollStatus.COMPLETED;
+
+      const employee1 = getRandomEmployee(employer.id);
+      const employee2 = getRandomEmployee(employer.id);
+      const consumer1 = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        dateOfBirth: "1998-01-01",
+        phone: "+123456789",
+      });
+      const consumer2 = Consumer.createConsumer({
+        id: "mock-consumer-2",
+        firstName: "Mock",
+        lastName: "Consumer2",
+        dateOfBirth: "1998-01-01",
+        phone: "+123456789",
+      });
+
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(employer.id)).thenResolve(employer);
+
+      when(mockTemplateProcessor.addFormat(TemplateProcessModule.TemplateFormat.HTML)).thenResolve();
+      when(mockTemplateProcessor.addFormat(TemplateProcessModule.TemplateFormat.PDF)).thenResolve();
+      when(mockTemplateProcessor.addLocale(TemplateProcessModule.TemplateLocale.ENGLISH)).thenResolve();
+      when(mockTemplateProcessor.addLocale(TemplateProcessModule.TemplateLocale.SPANISH)).thenResolve();
+
+      mockTemplateProcessorInstance.locales = new Set([
+        TemplateProcessModule.TemplateLocale.ENGLISH,
+        TemplateProcessModule.TemplateLocale.SPANISH,
+      ]);
+
+      when(mockTemplateProcessor.loadTemplates()).thenResolve();
+
+      const payrollDisbursements: PayrollDisbursement[] = [
+        {
+          id: "fake-disbursement",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          payrollID: payroll.id,
+          employeeID: employee1.id,
+          transactionID: "fake-transaction",
+          allocationAmount: 100,
+          creditAmount: 5,
+        },
+        {
+          id: "fake-disbursement-2",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          payrollID: payroll.id,
+          employeeID: employee2.id,
+          transactionID: "fake-transaction",
+          allocationAmount: 100,
+          creditAmount: 5,
+        },
+      ];
+
+      const baseTemplateFields: InvoiceReceiptTemplateFields = {
+        companyName: employer.name,
+        payrollReference: payroll.referenceNumber.toString().padStart(8, "0"),
+        currency: payroll.debitCurrency,
+        allocations: [],
+        payrollDate: "",
+        totalAmount: "",
+        totalCreditAmount: "",
+      };
+
+      const englishTemplateFields: InvoiceReceiptTemplateFields = {
+        ...baseTemplateFields,
+        payrollDate: dayjs(payroll.payrollDate)
+          .locale(TemplateProcessModule.TemplateLocale.ENGLISH.toString())
+          .format("MMMM D, YYYY"),
+        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString(), {
+          minimumFractionDigits: 2,
+        }),
+        totalCreditAmount: payroll.totalCreditAmount.toLocaleString(
+          TemplateProcessModule.TemplateLocale.ENGLISH.toString(),
+          { minimumFractionDigits: 2 },
+        ),
+        allocations: [
+          {
+            employeeName: `${consumer1.props.firstName} ${consumer1.props.lastName}`,
+            amount: amountStrEnglish100,
+            creditAmount: creditAmountStrEnglish5,
+          },
+          {
+            employeeName: `${consumer2.props.firstName} ${consumer2.props.lastName}`,
+            amount: amountStrEnglish100,
+            creditAmount: creditAmountStrEnglish5,
+          },
+        ],
+      };
+
+      const spanishTemplateFields: InvoiceReceiptTemplateFields = {
+        ...baseTemplateFields,
+        payrollDate: dayjs(payroll.payrollDate)
+          .locale(TemplateProcessModule.TemplateLocale.SPANISH.toString())
+          .format("MMMM D, YYYY"),
+        totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString(), {
+          minimumFractionDigits: 2,
+        }),
+        totalCreditAmount: payroll.totalCreditAmount.toLocaleString(
+          TemplateProcessModule.TemplateLocale.SPANISH.toString(),
+          { minimumFractionDigits: 2 },
+        ),
+        allocations: [
+          {
+            employeeName: `${consumer1.props.firstName} ${consumer1.props.lastName}`,
+            amount: amountStrSpanish100,
+            creditAmount: creditAmountStrSpanish5,
+          },
+          {
+            employeeName: `${consumer2.props.firstName} ${consumer2.props.lastName}`,
+            amount: amountStrSpanish100,
+            creditAmount: creditAmountStrSpanish5,
+          },
+        ],
+      };
+
+      when(mockPayrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve(payrollDisbursements);
+      when(mockEmployeeService.getEmployeeByID(employee1.id)).thenResolve(employee1);
+      when(mockEmployeeService.getEmployeeByID(employee2.id)).thenResolve(employee2);
+
+      when(mockConsumerService.getConsumer(employee1.consumerID)).thenResolve(consumer1);
+      when(mockConsumerService.getConsumer(employee2.consumerID)).thenResolve(consumer2);
+      when(
+        mockTemplateProcessor.populateTemplate(
+          TemplateProcessModule.TemplateLocale.ENGLISH,
+          deepEqual(englishTemplateFields),
+        ),
+      ).thenResolve();
+      when(
+        mockTemplateProcessor.populateTemplate(
+          TemplateProcessModule.TemplateLocale.SPANISH,
+          deepEqual(spanishTemplateFields),
+        ),
+      ).thenResolve();
+
+      when(mockTemplateProcessor.destroy()).thenResolve();
+
+      const addFormatSpy = jest.spyOn(mockTemplateProcessorInstance, "addFormat");
+      const addLocaleSpy = jest.spyOn(mockTemplateProcessorInstance, "addLocale");
+
+      await employerService.createInvoiceReceipt(payroll.id);
+
+      expect(constructorSpy).toHaveBeenCalledTimes(1);
+      expect(addFormatSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateFormat.HTML);
+      expect(addFormatSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateFormat.PDF);
+      expect(addLocaleSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateLocale.ENGLISH);
+      expect(addLocaleSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateLocale.SPANISH);
     });
   });
 });

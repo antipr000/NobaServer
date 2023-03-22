@@ -39,7 +39,12 @@ import {
 import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 import { Employee } from "../employee/domain/Employee";
 import { TemplateProcessor, TemplateFormat, TemplateLocale } from "../common/utils/template.processor";
-import { InvoiceEmployeeDisbursement, InvoiceTemplateFields } from "./templates/payroll.invoice.dto";
+import {
+  InvoiceEmployeeDisbursement,
+  InvoiceReceiptEmployeeDisbursement,
+  InvoiceReceiptTemplateFields,
+  InvoiceTemplateFields,
+} from "./templates/payroll.invoice.dto";
 
 @Injectable()
 export class EmployerService {
@@ -252,7 +257,7 @@ export class EmployerService {
 
       const employeeAllocations: InvoiceEmployeeDisbursement[] = employeeDisbursements.map(allocation => ({
         employeeName: allocation.employeeName,
-        amount: allocation.amount.toLocaleString(locale.toString()),
+        amount: allocation.amount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
       }));
 
       const templateFields: InvoiceTemplateFields = {
@@ -261,7 +266,7 @@ export class EmployerService {
         payrollDate: dayjs(payroll.payrollDate).locale(locale.toString()).format("MMMM D, YYYY"),
         currency: currency,
         allocations: employeeAllocations,
-        totalAmount: payroll.totalDebitAmount.toLocaleString(locale.toString()),
+        totalAmount: payroll.totalDebitAmount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
         nobaAccountNumber: accountNumber,
       };
 
@@ -275,8 +280,89 @@ export class EmployerService {
     await templateProcessor.destroy();
   }
 
-  async generateInvoiceForLocale(locale) {
-    throw new Error("Not implemented");
+  async createInvoiceReceipt(payrollID: string): Promise<void> {
+    if (!payrollID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Payroll ID is required",
+      });
+    }
+
+    const payroll = await this.payrollRepo.getPayrollByID(payrollID);
+
+    if (!payroll) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Payroll not found",
+      });
+    }
+
+    // We can create a receipt only if the payroll is IN_PROGRESS or COMPLETED
+    if (payroll.status !== PayrollStatus.IN_PROGRESS && payroll.status !== PayrollStatus.COMPLETED) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: `Receipt can only be generated for payroll in status IN_PROGRESS or COMPLETED. Current status: ${payroll.status}`,
+      });
+    }
+
+    const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
+    if (!employer) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Employer not found",
+      });
+    }
+
+    const templateProcessor = new TemplateProcessor(
+      this.logger,
+      this.s3Service,
+      `${this.invoiceTemplateBucketPath}/payroll-receipt/`,
+      `template_LOCALE.hbs`,
+      `${this.invoicesFolderBucketPath}/${employer.id}/`,
+      `rct_${payroll.id}`,
+    );
+
+    templateProcessor.addFormat(TemplateFormat.HTML);
+    templateProcessor.addFormat(TemplateFormat.PDF);
+    templateProcessor.addLocale(TemplateLocale.ENGLISH);
+    templateProcessor.addLocale(TemplateLocale.SPANISH); // Should be configured on employer record
+
+    // Loads templates for each specified locale
+    await templateProcessor.loadTemplates();
+
+    const employeeDisbursements = await this.getEmployeeDisbursements(payrollID);
+
+    const companyName = employer.name;
+    const currency = payroll.debitCurrency;
+
+    // Populate templates for each locale
+    for (const element of templateProcessor.locales) {
+      const locale = element;
+
+      const employeeAllocations: InvoiceReceiptEmployeeDisbursement[] = employeeDisbursements.map(allocation => ({
+        employeeName: allocation.employeeName,
+        amount: allocation.amount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
+        creditAmount: allocation.creditAmount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
+      }));
+
+      const templateFields: InvoiceReceiptTemplateFields = {
+        companyName: companyName,
+        payrollReference: payroll.referenceNumber.toString().padStart(8, "0"),
+        payrollDate: dayjs(payroll.payrollDate).locale(locale.toString()).format("MMMM D, YYYY"),
+        currency: currency,
+        allocations: employeeAllocations,
+        totalAmount: payroll.totalDebitAmount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
+        totalCreditAmount: payroll.totalCreditAmount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
+      };
+
+      templateProcessor.populateTemplate(locale, templateFields);
+    }
+
+    // Upload templates
+    await templateProcessor.uploadPopulatedTemplates();
+
+    // Destroy template context
+    await templateProcessor.destroy();
   }
 
   async getPayrollByID(id: string): Promise<Payroll> {
@@ -439,6 +525,7 @@ export class EmployerService {
 
     return this.payrollDisbursementRepo.updatePayrollDisbursement(disbursementID, {
       transactionID: updateDisbursementRequest.transactionID,
+      creditAmount: updateDisbursementRequest.creditAmount,
     });
   }
 
@@ -488,15 +575,27 @@ export class EmployerService {
   private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDisbursement[]> {
     const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
 
-    return Promise.all(
+    const enrichedDisbursements = await Promise.all(
       disbursements.map(async disbursement => {
         const employee = await this.employeeService.getEmployeeByID(disbursement.employeeID);
         const consumer = await this.consumerService.getConsumer(employee.consumerID);
         return {
           employeeName: consumer.props.firstName + " " + consumer.props.lastName,
           amount: disbursement.allocationAmount,
+          creditAmount: disbursement.creditAmount,
         };
       }),
     );
+
+    // Sort enriched disbursements by employee name
+    return enrichedDisbursements.sort((a, b) => {
+      if (a.employeeName < b.employeeName) {
+        return -1;
+      }
+      if (a.employeeName > b.employeeName) {
+        return 1;
+      }
+      return 0;
+    });
   }
 }

@@ -38,6 +38,7 @@ import { EmployeeService } from "../employee/employee.service";
 import { Employee } from "../employee/domain/Employee";
 import { AlertService } from "../common/alerts/alert.service";
 import { AlertKey } from "../common/alerts/alert.dto";
+import { Employer } from "../employer/domain/Employer";
 
 @Injectable()
 export class TransactionService {
@@ -92,28 +93,38 @@ export class TransactionService {
     if (!payroll) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
-        message: `Payroll disbursement with ID '${payrollDisbursement.id}' exist but corresponding Payroll with ID '${payrollDisbursement.payrollID} not found.'.`,
+        message: `Payroll disbursement with ID '${payrollDisbursement.id}' exist but corresponding Payroll with ID '${payrollDisbursement.payrollID} not found.`,
       });
     }
+
+    const employer: Employer = await this.employerService.getEmployerByID(payroll.employerID);
+    if (!employer) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: `Employer '${payroll.employerID}' for payroll ID '${payroll.id}' does not exist.`,
+      });
+    }
+
+    const employerName = employer.name;
 
     const employee: Employee = await this.employeeService.getEmployeeByID(payrollDisbursement.employeeID);
     if (!employee) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
-        message: `Employee with ID '${payrollDisbursement.employeeID}' not found.'.`,
+        message: `Employee with ID '${payrollDisbursement.employeeID}' not found.`,
       });
     }
 
     const transaction: InputTransaction = {
       workflowName: WorkflowName.PAYROLL_DEPOSIT,
       exchangeRate: payroll.exchangeRate,
-      memo: `${payroll.payrollDate} Payroll`,
+      memo: `${employerName} Payroll for ${payroll.payrollDate}`,
       transactionRef: Utils.generateLowercaseUUID(true),
       transactionFees: [],
       sessionKey: "PAYROLL",
       debitAmount: payrollDisbursement.allocationAmount,
       debitCurrency: Currency.COP,
-      creditAmount: payrollDisbursement.allocationAmount * payroll.exchangeRate,
+      creditAmount: Utils.roundTo2DecimalNumber(payrollDisbursement.allocationAmount * payroll.exchangeRate),
       creditCurrency: Currency.USD,
       creditConsumerID: employee.consumerID,
     };
