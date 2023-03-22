@@ -14,11 +14,11 @@ describe("EmployerWorkflowControllerTests", () => {
   jest.setTimeout(20000);
 
   let app: TestingModule;
-  let employerService: EmployerService;
+  let mockEmployerService: EmployerService;
   let payrollWorkflowController: PayrollWorkflowController;
 
   beforeEach(async () => {
-    employerService = getMockEmployerServiceWithDefaults();
+    mockEmployerService = getMockEmployerServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -30,7 +30,7 @@ describe("EmployerWorkflowControllerTests", () => {
       providers: [
         {
           provide: EmployerService,
-          useFactory: () => instance(employerService),
+          useFactory: () => instance(mockEmployerService),
         },
         PayrollWorkflowController,
       ],
@@ -49,7 +49,7 @@ describe("EmployerWorkflowControllerTests", () => {
       const { payrollDisbursement } = getRandomPayrollDisbursement("fake-payroll", "fake-employee");
 
       when(
-        employerService.createDisbursement(
+        mockEmployerService.createDisbursement(
           "fake-payroll",
           deepEqual({
             employeeID: "fake-employee",
@@ -74,13 +74,15 @@ describe("EmployerWorkflowControllerTests", () => {
     it("should patch a disbursement", async () => {
       const { payrollDisbursement } = getRandomPayrollDisbursement("fake-payroll", "fake-employee");
 
-      when(employerService.updateDisbursement(anyString(), anyString(), anything())).thenResolve(payrollDisbursement);
+      when(mockEmployerService.updateDisbursement(anyString(), anyString(), anything())).thenResolve(
+        payrollDisbursement,
+      );
 
       await payrollWorkflowController.patchDisbursement("fake-payroll", "fake-disbursement", {
         transactionID: "fake-transaction",
       });
 
-      const [payrollID, disbursementID, updateRequest] = capture(employerService.updateDisbursement).last();
+      const [payrollID, disbursementID, updateRequest] = capture(mockEmployerService.updateDisbursement).last();
       expect(payrollID).toBe("fake-payroll");
       expect(disbursementID).toBe("fake-disbursement");
       expect(updateRequest).toStrictEqual({ transactionID: "fake-transaction" });
@@ -91,7 +93,7 @@ describe("EmployerWorkflowControllerTests", () => {
     it("should get a payroll", async () => {
       const { payroll } = getRandomPayroll("fake-employer");
 
-      when(employerService.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockEmployerService.getPayrollByID(payroll.id)).thenResolve(payroll);
 
       const result = await payrollWorkflowController.getPayroll(payroll.id);
 
@@ -110,7 +112,7 @@ describe("EmployerWorkflowControllerTests", () => {
     });
 
     it("should throw NotFoundException when payroll with id does not exist", async () => {
-      when(employerService.getPayrollByID(anyString())).thenResolve(undefined);
+      when(mockEmployerService.getPayrollByID(anyString())).thenResolve(undefined);
 
       await expect(payrollWorkflowController.getPayroll("fake-payroll")).rejects.toThrow(NotFoundException);
     });
@@ -120,15 +122,31 @@ describe("EmployerWorkflowControllerTests", () => {
     it("should update payroll", async () => {
       const { payroll } = getRandomPayroll("fake-employer");
 
-      when(employerService.updatePayroll(anyString(), anything())).thenResolve(payroll);
+      when(mockEmployerService.updatePayroll(anyString(), anything())).thenResolve(payroll);
 
       await payrollWorkflowController.patchPayroll(payroll.id, {
         status: PayrollStatus.COMPLETED,
       });
 
-      const [payrollID, updateRequest] = capture(employerService.updatePayroll).last();
+      const [payrollID, updateRequest] = capture(mockEmployerService.updatePayroll).last();
       expect(payrollID).toBe(payroll.id);
       expect(updateRequest).toStrictEqual({ status: "COMPLETED" });
+    });
+  });
+
+  describe("createInvoice", () => {
+    it("should create an invoice", async () => {
+      const payrollID = "payroll-id";
+      when(mockEmployerService.createInvoice(payrollID)).thenResolve();
+      payrollWorkflowController.createInvoice(payrollID);
+    });
+  });
+
+  describe("createReceipt", () => {
+    it("should create a receipt", async () => {
+      const payrollID = "payroll-id";
+      when(mockEmployerService.createInvoiceReceipt(payrollID)).thenResolve();
+      payrollWorkflowController.createReceipt(payrollID);
     });
   });
 });
