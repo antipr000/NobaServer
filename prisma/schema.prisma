@@ -53,7 +53,7 @@ model Consumer {
   Employee             Employee[]
   pushTokens           PushToken[]
   PomeloUsers          PomeloUser?
-  Identifications      Identification[]
+  identifications      Identification[]
 
   @@index([email])
   @@index([handle])
