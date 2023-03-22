@@ -18,9 +18,11 @@ export class IdentificationCreateRequest {
 }
 
 export class IdentificationUpdateRequest {
-  type: string;
   value: string;
-  consumerID: string;
+}
+
+export class IdentificationDeleteRequest {
+  id: string;
 }
 
 export const validateCreateIdentificationRequest = (identification: IdentificationCreateRequest) => {
@@ -39,9 +41,19 @@ export const validateCreateIdentificationRequest = (identification: Identificati
 
 export const validateUpdateIdentificationRequest = (identification: IdentificationUpdateRequest) => {
   const identificationJoiValidationKeys: KeysRequired<IdentificationUpdateRequest> = {
-    type: Joi.string().required(),
     value: Joi.string().required(),
-    consumerID: Joi.string().required(),
+  };
+
+  const identificationJoiSchema = Joi.object(identificationJoiValidationKeys).options({
+    allowUnknown: false,
+    stripUnknown: true,
+  });
+  Joi.attempt(identification, identificationJoiSchema);
+};
+
+export const validateDeleteIdentificationRequest = (identification: IdentificationDeleteRequest) => {
+  const identificationJoiValidationKeys: KeysRequired<IdentificationDeleteRequest> = {
+    id: Joi.string().required(),
   };
 
   const identificationJoiSchema = Joi.object(identificationJoiValidationKeys).options({

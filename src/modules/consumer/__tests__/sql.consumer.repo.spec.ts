@@ -1095,9 +1095,23 @@ describe("ConsumerRepoTests", () => {
     });
   });
 
-  // describe("updateIdentification", () => {
-  //   it("should update identification", async () => {});
-  // });
+  describe("updateIdentification", () => {
+    it("should update identification", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const { identification } = getRandomIdentification(consumerID);
+
+      const updatedIdentification = await consumerRepo.updateIdentification(identification.id, {
+        value: "updated-value",
+      });
+
+      expect(updatedIdentification.value).toBe("updated-value");
+      expect(updatedIdentification.id).toBe(identification.id);
+    });
+
+    it("should throw error if identification does not exist", async () => {
+      expect(consumerRepo.updateIdentification("fake-id", { value: "updated-value" })).rejects.toThrowRepoException();
+    });
+  });
 
   describe("isHandleTaken", () => {
     it("should return 'true' if there already exist an user with same handle", async () => {

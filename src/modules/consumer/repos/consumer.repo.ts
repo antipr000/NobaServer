@@ -32,4 +32,5 @@ export interface IConsumerRepo {
   getAllIdentificationsForConsumer(consumerID: string): Promise<Identification[]>;
   getIdentificationForConsumer(consumerID: string, type: string): Promise<Identification>;
   updateIdentification(id: string, identification: IdentificationUpdateRequest): Promise<Identification>;
+  deleteIdentification(id: string): Promise<void>;
 }

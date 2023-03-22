@@ -514,14 +514,6 @@ export class SQLConsumerRepo implements IConsumerRepo {
 
     try {
       const identificationUpdateInput: Prisma.IdentificationUpdateInput = {
-        ...(identification.consumerID && {
-          consumer: {
-            connect: {
-              id: identification.consumerID,
-            },
-          },
-        }),
-        ...(identification.type && { type: identification.type }),
         ...(identification.value && { value: identification.value }),
       };
 
@@ -576,6 +568,17 @@ export class SQLConsumerRepo implements IConsumerRepo {
       return returnedIdentifications.map(identification => convertToDomainIdentification(identification));
     } catch (err) {
       return [];
+    }
+  }
+
+  async deleteIdentification(id: string): Promise<void> {
+    try {
+      await this.prisma.identification.delete({ where: { id: id } });
+    } catch (e) {
+      throw new RepoException({
+        errorCode: RepoErrorCode.NOT_FOUND,
+        message: `Identification with id ${id} not found!`,
+      });
     }
   }
 }
