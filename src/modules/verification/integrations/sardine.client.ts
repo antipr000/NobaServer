@@ -94,7 +94,11 @@ export class Sardine implements IDVProvider {
     consumerInfo: ConsumerInformation,
     kycFlow: KYCFlow[],
   ): Promise<ConsumerVerificationResult> {
-    const flowType = consumerInfo.address?.countryCode.toLocaleLowerCase() === "us" ? "kyc-us" : "kyc-non-us";
+    const flowType = kycFlow.includes(KYCFlow.LOGIN)
+      ? "login"
+      : consumerInfo.address?.countryCode.toLocaleLowerCase() === "us"
+      ? "kyc-us"
+      : "kyc-non-us";
     const sardineRequest: SardineCustomerRequest = {
       flow: flowType,
       sessionKey: sessionKey,

@@ -1,4 +1,5 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
+import { Gender } from "../domain/ExternalStates";
 
 export class UpdateAddressDTO {
   @ApiPropertyOptional()
@@ -32,6 +33,9 @@ export class UpdateConsumerRequestDTO {
 
   @ApiPropertyOptional()
   locale?: string;
+
+  @ApiPropertyOptional({ enum: Gender })
+  gender?: Gender;
 
   @ApiPropertyOptional()
   handle?: string;

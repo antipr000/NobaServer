@@ -213,6 +213,69 @@ describe("SardineTests", () => {
       expect(response.idvProviderRiskLevel).toBe("low");
     });
 
+    it("Should return status APPROVED if risk level is 'low' when using login flow", async () => {
+      const consumerInformation: ConsumerInformation = {
+        userID: "test-user-1234",
+        firstName: "Test",
+        lastName: "User",
+        address: {
+          streetLine1: "Test street",
+          streetLine2: "Test street line 2",
+          countryCode: "US",
+          city: "CA",
+          regionCode: "RC",
+          postalCode: "123456",
+        },
+        dateOfBirth: "1860-03-03",
+        email: "test+user@noba.com",
+        phoneNumber: "+1 234 567 8900", // Spaces to be replaced in code
+        nationalID: {
+          type: NationalIDTypes.SOCIAL_SECURITY,
+          number: "000000002",
+        },
+      };
+
+      const sardineRequest: SardineCustomerRequest = {
+        flow: "login",
+        sessionKey: KYC_SSN_LOW_RISK.data.sessionKey,
+        customer: {
+          id: consumerInformation.userID,
+          firstName: consumerInformation.firstName,
+          lastName: consumerInformation.lastName,
+          address: {
+            street1: consumerInformation.address.streetLine1,
+            street2: consumerInformation.address.streetLine2,
+            city: consumerInformation.address.city,
+            regionCode: consumerInformation.address.regionCode,
+            postalCode: consumerInformation.address.postalCode,
+            countryCode: consumerInformation.address.countryCode,
+          },
+          createdAtMillis: undefined,
+          type: CustomerType.CUSTOMER,
+          phone: "+12345678900",
+          isPhoneVerified: false,
+          emailAddress: consumerInformation.email,
+          isEmailVerified: true,
+          dateOfBirth: consumerInformation.dateOfBirth,
+          taxId: consumerInformation.nationalID.number,
+        },
+        checkpoints: ["login"],
+      };
+
+      const responsePromise = sardine.verifyConsumerInformation(KYC_SSN_LOW_RISK.data.sessionKey, consumerInformation, [
+        KYCFlow.LOGIN,
+      ]);
+      expect(mockAxios.post).toHaveBeenCalledWith("http://localhost:8080/sardine/v1/customers", sardineRequest, {
+        auth: { password: "test-secret-key", username: "test-client-id" },
+      });
+      mockAxios.mockResponse(KYC_SSN_LOW_RISK);
+
+      const response = await responsePromise;
+
+      expect(response.status).toBe(KYCStatus.APPROVED);
+      expect(response.idvProviderRiskLevel).toBe("low");
+    });
+
     it("Should return status PENDING and riskLevel high if sardine response risk level is high", async () => {
       const consumerInformation: ConsumerInformation = {
         userID: "test-user-1234",

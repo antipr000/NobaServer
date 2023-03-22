@@ -44,7 +44,7 @@ import { TransactionEvent } from "../../../modules/transaction/domain/Transactio
 import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
 import { TransactionService } from "../../../modules/transaction/transaction.service";
 import { getMockTransactionMapperServiceWithDefaults } from "../../../modules/transaction/mocks/mock.transaction.mapper.service";
-import { timestamp } from "rxjs";
+import { Gender } from "../../../modules/consumer/domain/ExternalStates";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -768,6 +768,7 @@ describe("AdminController", () => {
         firstName: "Fake",
         lastName: "Consumer",
         phone: null,
+        gender: "Female",
         dateOfBirth: "1992-10-12",
         isLocked: false,
         isDisabled: false,
@@ -803,6 +804,7 @@ describe("AdminController", () => {
 
       when(mockAdminService.updateConsumer(consumerProps.id, anything())).thenResolve({
         ...updatedConsumerObj.props,
+        gender: Gender.FEMALE,
       });
 
       const result = await adminController.updateConsumer(

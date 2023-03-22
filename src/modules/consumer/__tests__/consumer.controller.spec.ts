@@ -17,6 +17,7 @@ import {
   AggregatedWalletState,
   DocumentVerificationErrorReason,
   DocumentVerificationState,
+  Gender,
   KycVerificationState,
   UserState,
 } from "../domain/ExternalStates";
@@ -41,6 +42,8 @@ import { Employer } from "../../../modules/employer/domain/Employer";
 import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
 import { uuid } from "uuidv4";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
+import { ServiceError } from "@temporalio/client";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -141,6 +144,7 @@ describe("ConsumerController", () => {
       const requestData: UpdateConsumerRequestDTO = {
         firstName: "New Mock",
         dateOfBirth: "1999-02-02",
+        gender: Gender.MALE,
       };
 
       when(
@@ -149,6 +153,7 @@ describe("ConsumerController", () => {
             id: consumer.props.id,
             firstName: requestData.firstName,
             dateOfBirth: requestData.dateOfBirth,
+            gender: requestData.gender,
           }),
         ),
       ).thenResolve(
@@ -156,6 +161,7 @@ describe("ConsumerController", () => {
           ...consumer.props,
           firstName: requestData.firstName,
           dateOfBirth: requestData.dateOfBirth,
+          gender: requestData.gender,
         }),
       );
       when(consumerService.getAllConsumerWallets(consumer.props.id)).thenResolve([]);
@@ -170,6 +176,7 @@ describe("ConsumerController", () => {
         email: consumer.props.email,
         referralCode: consumer.props.referralCode,
         status: "ActionRequired",
+        gender: "Male",
         kycVerificationData: {
           kycVerificationStatus: "NotSubmitted",
           updatedTimestamp: 0,
@@ -228,6 +235,7 @@ describe("ConsumerController", () => {
         lastName: consumer.props.lastName,
         email: consumer.props.email,
         referralCode: consumer.props.referralCode,
+        gender: null,
         status: "ActionRequired",
         kycVerificationData: {
           kycVerificationStatus: "NotSubmitted",
@@ -245,6 +253,30 @@ describe("ConsumerController", () => {
         paymentMethodStatus: "NotSubmitted",
         walletStatus: "NotSubmitted",
       });
+    });
+
+    it("should fail to update unknown gender", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        referralCode: "mock-referral-code",
+      });
+
+      const requestData: UpdateConsumerRequestDTO = {
+        gender: "unknown" as Gender,
+      };
+      when(
+        consumerService.updateConsumer(
+          deepEqual({
+            id: consumer.props.id,
+            gender: "unknown" as Gender,
+          }),
+        ),
+      ).thenReject(new BadRequestException("Failed to update requested details"));
+      expect(consumerController.updateConsumer(consumer, requestData)).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -924,6 +956,35 @@ describe("ConsumerController", () => {
       expect(response.cryptoWallets).toHaveLength(0);
       expect(response.kycVerificationData.kycVerificationStatus).toBe(KycVerificationState.APPROVED);
       expect(response.documentVerificationData.documentVerificationStatus).toBe(DocumentVerificationState.NOT_REQUIRED);
+    });
+
+    it("should return gender as MALE when gender string is Male", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        isDisabled: false,
+        isLocked: false,
+        gender: "Male",
+        dateOfBirth: "1998-01-01",
+        email: "mock@noba.com",
+        verificationData: {
+          kycCheckStatus: KYCStatus.APPROVED,
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+          provider: KYCProvider.SARDINE,
+          isSuspectedFraud: false,
+          documentVerificationTimestamp: new Date(),
+          kycVerificationTimestamp: new Date(),
+        },
+      });
+
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(consumerService.getAllConsumerWallets(consumer.props.id)).thenResolve([]);
+      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([]);
+
+      const response = await consumerController.getConsumer(consumer);
+
+      expect(response.gender).toBe(Gender.MALE);
     });
   });
 

@@ -56,6 +56,7 @@ import { UpdateEmployerAllocationDTO } from "./dto/UpdateEmployerAllocationDTO";
 import { OptionalLimitQueryDTO } from "../common/dto/OptionalLimitQueryDTO";
 import { RequestEmployerDTO } from "./dto/RequestEmployerDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
+import { ServiceException } from "../../core/exception/service.exception";
 
 @Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
@@ -80,6 +81,7 @@ export class ConsumerController {
   async getConsumer(@AuthUser() consumer: Consumer): Promise<ConsumerDTO> {
     const consumerID: string = consumer.props.id;
     const entity: Consumer = await this.consumerService.getConsumer(consumerID);
+
     if (!entity) {
       throw new NotFoundException("Requested user details not found");
     }
@@ -133,6 +135,7 @@ export class ConsumerController {
         ...(requestBody.firstName && { firstName: requestBody.firstName }),
         ...(requestBody.lastName && { lastName: requestBody.lastName }),
         ...(requestBody.locale && { locale: requestBody.locale }),
+        ...(requestBody.gender && { gender: requestBody.gender }),
         ...(requestBody.address && {
           address: {
             ...(requestBody.address.streetLine1 && { streetLine1: requestBody.address.streetLine1 }),
@@ -152,7 +155,10 @@ export class ConsumerController {
     } catch (e) {
       if (e instanceof BadRequestError) {
         throw new BadRequestException(e.message);
-      } else {
+      } /* This may be ideal, but it would break the app. We can consider changing this when we have a better way to handle errors in the app.
+      else if (e instanceof ServiceException) {
+        throw e;
+      } */ else {
         this.logger.error(`Error updating consumer record: ${JSON.stringify(e)}`);
         throw new BadRequestException("Failed to update requested details");
       }

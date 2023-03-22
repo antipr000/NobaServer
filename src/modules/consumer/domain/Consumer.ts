@@ -8,6 +8,8 @@ import { isValidDateOfBirth } from "../../../core/utils/DateUtils";
 import { KeysRequired } from "../../common/domain/Types";
 import { differenceInDays } from "date-fns";
 import { KYC, kycValidationJoiKeys } from "./KYC";
+import { Gender } from "./ExternalStates";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 export class ConsumerProps implements ConsumerModel {
   id: string;
@@ -19,6 +21,7 @@ export class ConsumerProps implements ConsumerModel {
   referralCode: string | null;
   phone: string | null;
   locale: string | null;
+  gender: string | null;
   dateOfBirth: string | null;
   isLocked: boolean;
   isDisabled: boolean;
@@ -38,6 +41,7 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
   email: Joi.string().email().allow(null).optional(),
   handle: Joi.string().optional().allow(null),
   locale: Joi.string().optional().allow(null),
+  gender: Joi.string().optional().allow(null),
   displayEmail: Joi.string().email().optional().allow(null),
   referralCode: Joi.string().optional(),
   phone: Joi.string()
@@ -74,6 +78,13 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
       if (!isValidDateOfBirth(consumerProps.dateOfBirth)) {
         throw new BadRequestException("dateOfBirth should be valid and of the format YYYY-MM-DD");
       }
+    }
+
+    if (consumerProps.gender && !Object.values(Gender).includes(consumerProps.gender as Gender)) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "User must be defined gender.",
+      });
     }
 
     if (consumerProps.verificationData && !consumerProps.verificationData.provider)

@@ -39,3 +39,8 @@ export enum AggregatedPaymentMethodState {
   PENDING = "Pending",
   NOT_SUBMITTED = "NotSubmitted",
 }
+
+export enum Gender {
+  MALE = "Male",
+  FEMALE = "Female",
+}

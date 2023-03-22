@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { DocumentVerificationStatus, KYCProvider, KYCStatus } from "@prisma/client";
+import { Gender } from "../domain/ExternalStates";
 
 export class ConsumerInternalAddressDTO {
   @ApiPropertyOptional()
@@ -117,6 +118,9 @@ export class ConsumerInternalDTO {
 
   @ApiPropertyOptional()
   dateOfBirth?: string;
+
+  @ApiPropertyOptional({ enum: Gender })
+  gender?: Gender;
 
   @ApiPropertyOptional()
   isLocked?: boolean;
