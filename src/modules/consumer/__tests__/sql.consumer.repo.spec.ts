@@ -20,8 +20,14 @@ import { KmsService } from "../../../modules/common/kms.service";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { Gender } from "../domain/ExternalStates";
-import { Identification, IdentificationProps } from "../domain/Identification";
+import {
+  convertToDomainIdentification,
+  Identification,
+  IdentificationCreateRequest,
+  IdentificationProps,
+} from "../domain/Identification";
 import { RepoException } from "../../../core/exception/repo.exception";
+import { createTestConsumer } from "../test_utils/test.utils";
 
 const getAllConsumerRecords = async (prismaService: PrismaService): Promise<ConsumerProps[]> => {
   const allConsumerProps = await prismaService.consumer.findMany({});
@@ -1049,7 +1055,7 @@ describe("ConsumerRepoTests", () => {
       const identification = getRandomIdentification(consumer.props.id);
       await consumerRepo.addIdentification(identification);
 
-      const result = await consumerRepo.getIdentificationForConsumer(identification.props.id, consumer.props.id);
+      const result = await consumerRepo.getIdentificationForConsumer(consumer.props.id);
       expect(result).not.toBeNull();
       expect(result.props.id).toBe(identification.props.id);
     });
@@ -1197,12 +1203,42 @@ const getRandomCryptoWallet = (consumerID: string): CryptoWallet => {
   return CryptoWallet.createCryptoWallet(props);
 };
 
-const getRandomIdentification = (consumerID: string): Identification => {
-  const props: IdentificationProps = {
+const getRandomIdentification = (
+  consumerID: string,
+): { identification: Identification; identificationCreateInput: IdentificationCreateRequest } => {
+  const identification: Identification = {
     id: `${uuid()}_${new Date().valueOf()}`,
     type: `${uuid()}-type`,
     value: "Fake value",
     consumerID: consumerID,
+    createdTimestamp: new Date("2023-02-20"),
+    updatedTimestamp: new Date("2023-02-20"),
   };
-  return Identification.createIdentification(props);
+
+  const identificationCreateInput: IdentificationCreateRequest = {
+    consumerID: consumerID,
+    type: identification.type,
+    value: identification.value,
+  };
+
+  return {
+    identification,
+    identificationCreateInput,
+  };
+};
+
+const saveAndGetIdentification = async (prismaService: PrismaService, consumerID?: string): Promise<Identification> => {
+  consumerID = consumerID ?? (await createTestConsumer(prismaService));
+  const createdIdentification = await prismaService.identification.create({
+    data: {
+      id: uuid(),
+      consumerID: consumerID,
+      type: `${uuid()}-type`,
+      value: "Fake value",
+      createdTimestamp: new Date("2023-02-20"),
+      updatedTimestamp: new Date("2023-02-20"),
+    },
+  });
+
+  return convertToDomainIdentification(createdIdentification);
 };
