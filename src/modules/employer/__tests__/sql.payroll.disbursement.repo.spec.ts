@@ -82,6 +82,7 @@ describe("SqlPayrollDisbursementRepo tests", () => {
         payrollDisbursement.id,
         {
           transactionID: transactionID,
+          creditAmount: 1000,
         },
       );
 
@@ -91,6 +92,7 @@ describe("SqlPayrollDisbursementRepo tests", () => {
       expect(updatedPayrollDisbursement).toStrictEqual({
         ...payrollDisbursement,
         transactionID: transactionID,
+        creditAmount: 1000,
       });
     });
 
@@ -101,6 +103,7 @@ describe("SqlPayrollDisbursementRepo tests", () => {
         async () =>
           await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement.id, {
             transactionID: "fake-transaction-id",
+            creditAmount: 1000,
           }),
       ).rejects.toThrow(DatabaseInternalErrorException);
     });
@@ -112,6 +115,7 @@ describe("SqlPayrollDisbursementRepo tests", () => {
         async () =>
           await payrollDisbursementRepo.updatePayrollDisbursement("fake-id", {
             transactionID: transactionID,
+            creditAmount: 1000,
           }),
       ).rejects.toThrow(DatabaseInternalErrorException);
     });
