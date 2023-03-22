@@ -21,7 +21,7 @@ import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/moc
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { Gender } from "../domain/ExternalStates";
 import { convertToDomainIdentification, Identification, IdentificationCreateRequest } from "../domain/Identification";
-import { RepoException } from "../../../core/exception/repo.exception";
+import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
 import { createTestConsumer } from "../test_utils/test.utils";
 
 const getAllConsumerRecords = async (prismaService: PrismaService): Promise<ConsumerProps[]> => {
@@ -1045,7 +1045,7 @@ describe("ConsumerRepoTests", () => {
   describe("addIdentification", () => {
     it("should create identification", async () => {
       const consumerID = await createTestConsumer(prismaService);
-      const { identification, identificationCreateInput } = getRandomIdentification(consumerID);
+      const { identificationCreateInput } = getRandomIdentification(consumerID);
 
       const createResponse = await consumerRepo.addIdentification(identificationCreateInput);
 
@@ -1066,7 +1066,9 @@ describe("ConsumerRepoTests", () => {
     it("should throw error if consumer does not exist", async () => {
       const { identificationCreateInput } = getRandomIdentification("fake-consumer-id");
 
-      expect(consumerRepo.addIdentification(identificationCreateInput)).rejects.toThrowRepoException();
+      expect(consumerRepo.addIdentification(identificationCreateInput)).rejects.toThrowRepoException(
+        RepoErrorCode.NOT_FOUND,
+      );
     });
   });
 
@@ -1098,7 +1100,9 @@ describe("ConsumerRepoTests", () => {
   describe("updateIdentification", () => {
     it("should update identification", async () => {
       const consumerID = await createTestConsumer(prismaService);
-      const { identification } = getRandomIdentification(consumerID);
+      const { identificationCreateInput } = getRandomIdentification(consumerID);
+
+      const identification = await consumerRepo.addIdentification(identificationCreateInput);
 
       const updatedIdentification = await consumerRepo.updateIdentification(identification.id, {
         value: "updated-value",
@@ -1109,7 +1113,45 @@ describe("ConsumerRepoTests", () => {
     });
 
     it("should throw error if identification does not exist", async () => {
-      expect(consumerRepo.updateIdentification("fake-id", { value: "updated-value" })).rejects.toThrowRepoException();
+      expect(consumerRepo.updateIdentification("fake-id", { value: "updated-value" })).rejects.toThrowRepoException(
+        RepoErrorCode.NOT_FOUND,
+      );
+    });
+  });
+
+  describe("deleteIdentification", () => {
+    it("should delete identification", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const { identificationCreateInput } = getRandomIdentification(consumerID);
+
+      const identification = await consumerRepo.addIdentification(identificationCreateInput);
+
+      await consumerRepo.deleteIdentification(identification.id);
+
+      const result = await consumerRepo.getIdentificationForConsumer(consumerID, identification.type);
+      expect(result).toBeNull();
+    });
+
+    it("should throw error if identification does not exist", async () => {
+      expect(consumerRepo.deleteIdentification("fake-id")).rejects.toThrowRepoException(RepoErrorCode.NOT_FOUND);
+    });
+  });
+
+  describe("getAllIdentificationsForConsumer", () => {
+    it("should return all identifications", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const { identificationCreateInput } = getRandomIdentification(consumerID);
+
+      const identification = await consumerRepo.addIdentification(identificationCreateInput);
+
+      const result = await consumerRepo.getAllIdentificationsForConsumer(consumerID);
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(identification.id);
+    });
+
+    it("should return empty array if consumer does not exist", async () => {
+      const result = await consumerRepo.getAllIdentificationsForConsumer("fake-consumer-id");
+      expect(result).toHaveLength(0);
     });
   });
 
