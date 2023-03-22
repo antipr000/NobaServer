@@ -21,6 +21,12 @@ export class LocationDTO {
   @ApiProperty()
   countryISOCode: string;
 
+  @ApiProperty()
+  alpha3ISOCode: string;
+
+  @ApiProperty()
+  phoneExtension: string;
+
   @ApiPropertyOptional({ type: [SubdivisionDTO] })
   subdivisions?: Array<SubdivisionDTO>;
 
