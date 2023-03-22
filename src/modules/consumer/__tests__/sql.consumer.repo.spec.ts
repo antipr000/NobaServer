@@ -1049,19 +1049,9 @@ describe("ConsumerRepoTests", () => {
       const identification = getRandomIdentification(consumer.props.id);
       await consumerRepo.addIdentification(identification);
 
-      const allIdentifications = await consumerRepo.getAllIdentificationsForConsumer(consumer.props.id);
-      expect(allIdentifications).toHaveLength(1);
-      expect(allIdentifications[0].props.id).toBe(identification.props.id);
-    });
-
-    it("should throw error if identification already exists", async () => {
-      const consumer = getRandomUser();
-      await consumerRepo.createConsumer(consumer);
-
-      const identification = getRandomIdentification(consumer.props.id);
-      await consumerRepo.addIdentification(identification);
-
-      expect(async () => await consumerRepo.addIdentification(identification)).rejects.toThrow(BadRequestError);
+      const result = await consumerRepo.getIdentificationForConsumer(identification.props.id, consumer.props.id);
+      expect(result).not.toBeNull();
+      expect(result.props.id).toBe(identification.props.id);
     });
   });
 

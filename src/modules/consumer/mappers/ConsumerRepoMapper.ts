@@ -4,7 +4,6 @@ import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
 import { Address } from "../domain/Address";
 import { KYC } from "../domain/KYC";
-import { Identification, IdentificationProps } from "../domain/Identification";
 
 export class ConsumerRepoMapper {
   toCreateConsumerInput(consumer: Consumer): Prisma.ConsumerCreateInput {
@@ -142,26 +141,6 @@ export class ConsumerRepoMapper {
       ...(wallet.name && { name: wallet.name }),
       ...(wallet.status && { status: wallet.status }),
       ...(wallet.riskScore && { riskScore: wallet.riskScore }),
-    };
-  }
-
-  toCreateIdentificationInput(identification: Identification): Prisma.IdentificationCreateInput {
-    return {
-      id: identification.props.id,
-      type: identification.props.type,
-      value: identification.props.value,
-      consumer: {
-        connect: {
-          id: identification.props.consumerID,
-        },
-      },
-    };
-  }
-
-  toUpdateIdentificationInput(identification: Partial<IdentificationProps>): Prisma.IdentificationUpdateInput {
-    return {
-      ...(identification.type && { type: identification.type }),
-      ...(identification.value && { value: identification.value }),
     };
   }
 
