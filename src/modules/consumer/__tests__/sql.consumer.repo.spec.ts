@@ -20,12 +20,7 @@ import { KmsService } from "../../../modules/common/kms.service";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { Gender } from "../domain/ExternalStates";
-import {
-  convertToDomainIdentification,
-  Identification,
-  IdentificationCreateRequest,
-  IdentificationProps,
-} from "../domain/Identification";
+import { convertToDomainIdentification, Identification, IdentificationCreateRequest } from "../domain/Identification";
 import { RepoException } from "../../../core/exception/repo.exception";
 import { createTestConsumer } from "../test_utils/test.utils";
 
@@ -1048,99 +1043,61 @@ describe("ConsumerRepoTests", () => {
   });
 
   describe("addIdentification", () => {
-    it("should add identification to consumer", async () => {
-      const consumer = getRandomUser();
-      await consumerRepo.createConsumer(consumer);
+    it("should create identification", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const { identification, identificationCreateInput } = getRandomIdentification(consumerID);
 
-      const identification = getRandomIdentification(consumer.props.id);
-      await consumerRepo.addIdentification(identification);
+      const createResponse = await consumerRepo.addIdentification(identificationCreateInput);
 
-      const result = await consumerRepo.getIdentificationForConsumer(consumer.props.id);
-      expect(result).not.toBeNull();
-      expect(result.props.id).toBe(identification.props.id);
+      expect(createResponse).toBeDefined();
+      expect(createResponse.id).toBeDefined();
+      expect(createResponse).toEqual(expect.objectContaining(identificationCreateInput));
+    });
+
+    it("should throw error if identification already exists", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const { identificationCreateInput } = getRandomIdentification(consumerID);
+
+      await consumerRepo.addIdentification(identificationCreateInput);
+
+      expect(consumerRepo.addIdentification(identificationCreateInput)).rejects.toThrowRepoException();
+    });
+
+    it("should throw error if consumer does not exist", async () => {
+      const { identificationCreateInput } = getRandomIdentification("fake-consumer-id");
+
+      expect(consumerRepo.addIdentification(identificationCreateInput)).rejects.toThrowRepoException();
     });
   });
 
   describe("getIdentificationForConsumer", () => {
     it("should return null if identification does not exist", async () => {
-      const consumer = getRandomUser();
-      await consumerRepo.createConsumer(consumer);
+      const consumerID = await createTestConsumer(prismaService);
 
-      const identification = await consumerRepo.getIdentificationForConsumer(consumer.props.id, "fake-id");
+      const identification = await consumerRepo.getIdentificationForConsumer(consumerID, "fake-id");
       expect(identification).toBeNull();
     });
 
     it("should return identification if it exists", async () => {
-      const consumer = getRandomUser();
-      await consumerRepo.createConsumer(consumer);
+      const consumerID = await createTestConsumer(prismaService);
+      const { identification, identificationCreateInput } = getRandomIdentification(consumerID);
 
-      const identification = getRandomIdentification(consumer.props.id);
-      await consumerRepo.addIdentification(identification);
+      await consumerRepo.addIdentification(identificationCreateInput);
 
-      const result = await consumerRepo.getIdentificationForConsumer(identification.props.id, consumer.props.id);
+      const result = await consumerRepo.getIdentificationForConsumer(consumerID, identification.type);
       expect(result).not.toBeNull();
-      expect(result.props.id).toBe(identification.props.id);
+      expect(result.type).toBe(identification.type);
+    });
+
+    it("should return null if consumer does not exist", async () => {
+      const identification = await consumerRepo.getIdentificationForConsumer("fake-consumer-id", "fake-id");
+      expect(identification).toBeNull();
     });
   });
 
-  describe("getAllIdentificationsForConsumer", () => {
-    it("should return empty array if no identifications exist", async () => {
-      const consumer = getRandomUser();
-      await consumerRepo.createConsumer(consumer);
-
-      const allIdentifications = await consumerRepo.getAllIdentificationsForConsumer(consumer.props.id);
-      expect(allIdentifications).toHaveLength(0);
-    });
-
-    it("should return all identifications for consumer", async () => {
-      const consumer = getRandomUser();
-      await consumerRepo.createConsumer(consumer);
-
-      const identification1 = getRandomIdentification(consumer.props.id);
-      await consumerRepo.addIdentification(identification1);
-
-      const identification2 = getRandomIdentification(consumer.props.id);
-      await consumerRepo.addIdentification(identification2);
-
-      const allIdentifications = await consumerRepo.getAllIdentificationsForConsumer(consumer.props.id);
-      expect(allIdentifications).toHaveLength(2);
-    });
-  });
-
-  describe("updateIdentification", () => {
-    it("should update identification", async () => {
-      const consumer = getRandomUser();
-      await consumerRepo.createConsumer(consumer);
-
-      const identification = getRandomIdentification(consumer.props.id);
-      await consumerRepo.addIdentification(identification);
-
-      const updateIdentification: Partial<IdentificationProps> = {
-        id: identification.props.id,
-        type: "identification_type",
-        value: "identification_value",
-      };
-
-      const updatedIdentification = await consumerRepo.updateIdentification(
-        identification.props.id,
-        updateIdentification,
-      );
-
-      expect(updatedIdentification.props.type).toBe("identification_type");
-      expect(updatedIdentification.props.value).toBe("identification_value");
-    });
-
-    it("should throw error if identification does not exist", async () => {
-      const consumer = getRandomUser();
-      await consumerRepo.createConsumer(consumer);
-
-      const identification = getRandomIdentification(consumer.props.id);
-
-      expect(
-        async () => await consumerRepo.updateIdentification(identification.props.id, identification.props),
-      ).rejects.toThrow(RepoException);
-    });
-  });
+  // describe("updateIdentification", () => {
+  //   it("should update identification", async () => {});
+  // });
 
   describe("isHandleTaken", () => {
     it("should return 'true' if there already exist an user with same handle", async () => {

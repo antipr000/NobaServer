@@ -24,7 +24,7 @@ expect.extend({
       return mismatchResult("Not a Repo Exception");
     }
 
-    if (received.errorCode && received.errorCode !== expectedErrorCode) {
+    if (expectedErrorCode && received.errorCode !== expectedErrorCode) {
       return mismatchResult(
         `Recieved Exception error code:"${received.errorCode}" different from expected error code:"${expectedErrorCode}"`,
       );
