@@ -30,7 +30,6 @@ import {
   validateUpdateIdentificationRequest,
 } from "../domain/Identification";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
-import { PayrollUpdateRequest } from "src/modules/employer/domain/Payroll";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {

@@ -3,7 +3,7 @@ import { Logger } from "winston";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { DashboardClient } from "./dashboard.client";
 import { NewEmployeeRegisterRequest } from "../domain/dashboard.client.dto";
-import { PayrollStatus } from "src/modules/employer/domain/Payroll";
+import { PayrollStatus } from "../../../../src/modules/employer/domain/Payroll";
 
 @Injectable()
 export class StubDashboardClient implements DashboardClient {
