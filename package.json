@@ -155,7 +155,8 @@
     "testEnvironment": "node",
     "setupFilesAfterEnv": [
       "../test/matchers/base.exception.errorcode.ts",
-      "../test/matchers/service.exception.errorcode.ts"
+      "../test/matchers/service.exception.errorcode.ts",
+      "../test/matchers/repo.exception.errorcode.ts"
     ]
   },
   "prisma": {

@@ -2,6 +2,7 @@ import { Result } from "../../../core/logic/Result";
 import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { ContactInfo } from "../domain/ContactInfo";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
+import { Identification, IdentificationCreateRequest, IdentificationUpdateRequest } from "../domain/Identification";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
 import { FindConsumerByStructuredFieldsDTO } from "../dto/consumer.search.dto";
 
@@ -27,4 +28,9 @@ export interface IConsumerRepo {
   getCryptoWalletForConsumer(id: string, consumerID: string): Promise<CryptoWallet>;
   getAllCryptoWalletsForConsumer(consumerID: string): Promise<CryptoWallet[]>;
   updateCryptoWallet(id: string, cryptoWalletProps: Partial<CryptoWalletProps>): Promise<CryptoWallet>;
+  addIdentification(identification: IdentificationCreateRequest): Promise<Identification>;
+  getAllIdentificationsForConsumer(consumerID: string): Promise<Identification[]>;
+  getIdentificationForConsumer(consumerID: string, type: string): Promise<Identification>;
+  updateIdentification(id: string, identification: IdentificationUpdateRequest): Promise<Identification>;
+  deleteIdentification(id: string): Promise<void>;
 }

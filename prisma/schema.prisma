@@ -24,35 +24,36 @@ datasource db {
 }
 
 model Consumer {
-  id                   String          @id @default(uuid())
+  id                   String           @id @default(uuid())
   firstName            String?
   lastName             String?
-  email                String?         @unique()
+  email                String?          @unique()
   displayEmail         String?
-  handle               String?         @unique()
-  referralCode         String          @unique()
-  phone                String?         @unique()
+  handle               String?          @unique()
+  referralCode         String           @unique()
+  phone                String?          @unique()
   locale               String?
-  gender               String?         @db.VarChar(20) // Variable length to support other genders
-  dateOfBirth          String?         @db.VarChar(10)
-  isLocked             Boolean         @default(false)
-  isDisabled           Boolean         @default(false)
-  createdTimestamp     DateTime?       @default(now()) // Marking optional so we don't need to set in tests
-  updatedTimestamp     DateTime?       @updatedAt // Marking optional so we don't need to set in tests
+  gender               String?          @db.VarChar(20) // Variable length to support other genders
+  dateOfBirth          String?          @db.VarChar(10)
+  isLocked             Boolean          @default(false)
+  isDisabled           Boolean          @default(false)
+  createdTimestamp     DateTime?        @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp     DateTime?        @updatedAt // Marking optional so we don't need to set in tests
   socialSecurityNumber String?
   referredByID         String?
-  referredBy           Consumer?       @relation("ReferredBy", fields: [referredByID], references: [id])
-  referredConsumers    Consumer[]      @relation("ReferredBy")
+  referredBy           Consumer?        @relation("ReferredBy", fields: [referredByID], references: [id])
+  referredConsumers    Consumer[]       @relation("ReferredBy")
   address              Address?
   verificationData     KYC?
   cryptoWallets        CryptoWallet[]
   paymentMethods       PaymentMethod[]
   circleAccountData    Circle?
-  debitTransactions    Transaction[]   @relation("debitConsumer")
-  creditTransactions   Transaction[]   @relation("creditConsumer")
+  debitTransactions    Transaction[]    @relation("debitConsumer")
+  creditTransactions   Transaction[]    @relation("creditConsumer")
   Employee             Employee[]
   pushTokens           PushToken[]
   PomeloUsers          PomeloUser?
+  identifications      Identification[]
 
   @@index([email])
   @@index([handle])
@@ -435,6 +436,18 @@ model PushToken {
   updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
 
   @@unique([consumerID, pushToken])
+}
+
+model Identification {
+  id               String    @id @default(uuid())
+  consumer         Consumer  @relation(fields: [consumerID], references: [id], onDelete: Cascade)
+  consumerID       String
+  type             String
+  value            String
+  createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
+
+  @@unique([consumerID, type])
 }
 
 enum IdentityType {

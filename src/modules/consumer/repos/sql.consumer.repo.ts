@@ -3,7 +3,14 @@ import { Result } from "../../../core/logic/Result";
 import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { IConsumerRepo } from "./consumer.repo";
 import { PrismaService } from "../../../infraproviders/PrismaService";
-import { DocumentVerificationStatus, KYCStatus, PaymentMethodStatus, Prisma, WalletStatus } from "@prisma/client";
+import {
+  DocumentVerificationStatus,
+  KYCStatus,
+  PaymentMethodStatus,
+  Prisma,
+  WalletStatus,
+  Identification as PrismaIdentificationModel,
+} from "@prisma/client";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
 import { ConsumerRepoMapper } from "../mappers/ConsumerRepoMapper";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
@@ -13,6 +20,16 @@ import { ContactInfo } from "../domain/ContactInfo";
 import { KmsService } from "../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { FindConsumerByStructuredFieldsDTO } from "../dto/consumer.search.dto";
+import {
+  convertToDomainIdentification,
+  Identification,
+  IdentificationCreateRequest,
+  IdentificationUpdateRequest,
+  validateCreateIdentificationRequest,
+  validateIdentification,
+  validateUpdateIdentificationRequest,
+} from "../domain/Identification";
+import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
@@ -445,6 +462,122 @@ export class SQLConsumerRepo implements IConsumerRepo {
       return CryptoWallet.createCryptoWallet(updatedWalletProps);
     } catch (e) {
       throw new BadRequestError({ message: `Failed to update crypto wallet. Reason: ${e.message}` });
+    }
+  }
+
+  async addIdentification(identification: IdentificationCreateRequest): Promise<Identification> {
+    validateCreateIdentificationRequest(identification);
+    let savedIdentification: Identification = null;
+
+    try {
+      const identificationInput: Prisma.IdentificationCreateInput = {
+        consumer: {
+          connect: {
+            id: identification.consumerID,
+          },
+        },
+        type: identification.type,
+        value: identification.value,
+      };
+
+      const returnedIdentification: PrismaIdentificationModel = await this.prisma.identification.create({
+        data: identificationInput,
+      });
+      savedIdentification = convertToDomainIdentification(returnedIdentification);
+    } catch (err) {
+      if (err.code === "P2025") {
+        throw new RepoException({
+          errorCode: RepoErrorCode.NOT_FOUND,
+          message: `Failed to store Identification in database because consumer with id ${identification.consumerID} was not found`,
+        });
+      }
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: "Error saving Identification in database",
+      });
+    }
+
+    try {
+      validateIdentification(savedIdentification);
+      return savedIdentification;
+    } catch (err) {
+      throw new RepoException({
+        errorCode: RepoErrorCode.INVALID_DATABASE_RECORD,
+        message: "Error saving Identification in database",
+      });
+    }
+  }
+
+  async updateIdentification(id: string, identification: IdentificationUpdateRequest): Promise<Identification> {
+    validateUpdateIdentificationRequest(identification);
+
+    try {
+      const identificationUpdateInput: Prisma.IdentificationUpdateInput = {
+        ...(identification.value && { value: identification.value }),
+      };
+
+      const returnedIdentification: PrismaIdentificationModel = await this.prisma.identification.update({
+        data: identificationUpdateInput,
+        where: {
+          id: id,
+        },
+      });
+
+      return convertToDomainIdentification(returnedIdentification);
+    } catch (err) {
+      if (err.meta && err.meta.cause === "Record to update not found.") {
+        throw new RepoException({
+          errorCode: RepoErrorCode.NOT_FOUND,
+          message: `Record to update not found for Identification with ID: '${id}'`,
+        });
+      }
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: `Error updating the Identification with ID: '${id}'`,
+      });
+    }
+  }
+
+  async getIdentificationForConsumer(consumerID: string, type: string): Promise<Identification> {
+    try {
+      const returnedIdentification: PrismaIdentificationModel = await this.prisma.identification.findUnique({
+        where: {
+          consumerID_type: {
+            consumerID: consumerID,
+            type: type,
+          },
+        },
+      });
+      return convertToDomainIdentification(returnedIdentification);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  async getAllIdentificationsForConsumer(consumerID: string): Promise<Identification[]> {
+    try {
+      const identificationFilter: Prisma.IdentificationWhereInput = {
+        consumerID: consumerID,
+      };
+
+      const returnedIdentifications: PrismaIdentificationModel[] = await this.prisma.identification.findMany({
+        where: identificationFilter,
+      });
+
+      return returnedIdentifications.map(identification => convertToDomainIdentification(identification));
+    } catch (err) {
+      return [];
+    }
+  }
+
+  async deleteIdentification(id: string): Promise<void> {
+    try {
+      await this.prisma.identification.delete({ where: { id: id } });
+    } catch (e) {
+      throw new RepoException({
+        errorCode: RepoErrorCode.NOT_FOUND,
+        message: `Identification with id ${id} not found!`,
+      });
     }
   }
 }

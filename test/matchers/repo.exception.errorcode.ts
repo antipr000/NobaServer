@@ -1,9 +1,9 @@
-import { ServiceErrorCode, ServiceException } from "../../src/core/exception/service.exception";
+import { RepoErrorCode, RepoException } from "../../src/core/exception/repo.exception";
 
 declare global {
   namespace jest {
     interface Matchers<R> {
-      toThrowServiceException(expectedErrorCode?: ServiceErrorCode, expectedMessage?: string): CustomMatcherResult;
+      toThrowRepoException(expectedErrorCode?: RepoErrorCode, expectedMessage?: string): CustomMatcherResult;
     }
   }
 }
@@ -14,14 +14,14 @@ const mismatchResult = (message: string) => ({
 });
 
 expect.extend({
-  toThrowServiceException(
-    received: ServiceException,
-    expectedErrorCode?: ServiceErrorCode,
+  toThrowRepoException(
+    received: RepoException,
+    expectedErrorCode?: RepoErrorCode,
     expectedMessage?: string,
   ): jest.CustomMatcherResult {
-    const isServiceException = received instanceof ServiceException;
-    if (!isServiceException) {
-      return mismatchResult("Not a Service Exception");
+    const isRepoException = received instanceof RepoException;
+    if (!isRepoException) {
+      return mismatchResult("Not a Repo Exception");
     }
 
     if (expectedErrorCode && received.errorCode !== expectedErrorCode) {
