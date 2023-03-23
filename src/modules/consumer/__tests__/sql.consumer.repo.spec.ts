@@ -1076,7 +1076,7 @@ describe("ConsumerRepoTests", () => {
     it("should return null if identification does not exist", async () => {
       const consumerID = await createTestConsumer(prismaService);
 
-      const identification = await consumerRepo.getIdentificationForConsumer(consumerID, "fake-id");
+      const identification = await consumerRepo.getIdentificationForConsumer(consumerID, "fake-id", "");
       expect(identification).toBeNull();
     });
 
@@ -1086,13 +1086,35 @@ describe("ConsumerRepoTests", () => {
 
       await consumerRepo.addIdentification(identificationCreateInput);
 
-      const result = await consumerRepo.getIdentificationForConsumer(consumerID, identification.type);
+      const result = await consumerRepo.getIdentificationForConsumer(consumerID, identification.type, "CO");
       expect(result).not.toBeNull();
       expect(result.type).toBe(identification.type);
+      expect(result.countryCode).toBe("CO");
+    });
+
+    it("should return correct identification if it exists", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const { identification, identificationCreateInput } = getRandomIdentification(consumerID);
+      const { identification: identification2, identificationCreateInput: identificationCreateInput2 } =
+        getRandomIdentification(consumerID);
+      identificationCreateInput2.countryCode = "US";
+
+      await consumerRepo.addIdentification(identificationCreateInput);
+      await consumerRepo.addIdentification(identificationCreateInput2);
+
+      const result = await consumerRepo.getIdentificationForConsumer(consumerID, identification.type, "CO");
+      expect(result).not.toBeNull();
+      expect(result.type).toBe(identification.type);
+      expect(result.countryCode).toBe("CO");
+
+      const result2 = await consumerRepo.getIdentificationForConsumer(consumerID, identification2.type, "US");
+      expect(result2).not.toBeNull();
+      expect(result2.type).toBe(identification2.type);
+      expect(result2.countryCode).toBe("US");
     });
 
     it("should return null if consumer does not exist", async () => {
-      const identification = await consumerRepo.getIdentificationForConsumer("fake-consumer-id", "fake-id");
+      const identification = await consumerRepo.getIdentificationForConsumer("fake-consumer-id", "fake-id", "CO");
       expect(identification).toBeNull();
     });
   });
@@ -1106,18 +1128,16 @@ describe("ConsumerRepoTests", () => {
 
       const updatedIdentification = await consumerRepo.updateIdentification(identification.id, {
         value: "updated-value",
-        countryCode: "US",
       });
 
       expect(updatedIdentification.value).toBe("updated-value");
-      expect(updatedIdentification.countryCode).toBe("US");
       expect(updatedIdentification.id).toBe(identification.id);
     });
 
     it("should throw error if identification does not exist", async () => {
-      expect(
-        consumerRepo.updateIdentification("fake-id", { value: "updated-value", countryCode: "US" }),
-      ).rejects.toThrowRepoException(RepoErrorCode.NOT_FOUND);
+      expect(consumerRepo.updateIdentification("fake-id", { value: "updated-value" })).rejects.toThrowRepoException(
+        RepoErrorCode.NOT_FOUND,
+      );
     });
   });
 
@@ -1130,7 +1150,11 @@ describe("ConsumerRepoTests", () => {
 
       await consumerRepo.deleteIdentification(identification.id);
 
-      const result = await consumerRepo.getIdentificationForConsumer(consumerID, identification.type);
+      const result = await consumerRepo.getIdentificationForConsumer(
+        consumerID,
+        identification.type,
+        identification.countryCode,
+      );
       expect(result).toBeNull();
     });
 

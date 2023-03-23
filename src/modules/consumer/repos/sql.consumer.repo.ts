@@ -515,7 +515,6 @@ export class SQLConsumerRepo implements IConsumerRepo {
     try {
       const identificationUpdateInput: Prisma.IdentificationUpdateInput = {
         ...(identification.value && { value: identification.value }),
-        ...(identification.countryCode && { countryCode: identification.countryCode }),
       };
 
       const returnedIdentification: PrismaIdentificationModel = await this.prisma.identification.update({
@@ -540,13 +539,14 @@ export class SQLConsumerRepo implements IConsumerRepo {
     }
   }
 
-  async getIdentificationForConsumer(consumerID: string, type: string): Promise<Identification> {
+  async getIdentificationForConsumer(consumerID: string, type: string, countryCode: string): Promise<Identification> {
     try {
       const returnedIdentification: PrismaIdentificationModel = await this.prisma.identification.findUnique({
         where: {
-          consumerID_type: {
+          consumerID_type_countryCode: {
             consumerID: consumerID,
             type: type,
+            countryCode: countryCode,
           },
         },
       });
