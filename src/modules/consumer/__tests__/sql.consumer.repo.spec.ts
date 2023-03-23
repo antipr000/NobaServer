@@ -1106,16 +1106,18 @@ describe("ConsumerRepoTests", () => {
 
       const updatedIdentification = await consumerRepo.updateIdentification(identification.id, {
         value: "updated-value",
+        countryCode: "US",
       });
 
       expect(updatedIdentification.value).toBe("updated-value");
+      expect(updatedIdentification.countryCode).toBe("US");
       expect(updatedIdentification.id).toBe(identification.id);
     });
 
     it("should throw error if identification does not exist", async () => {
-      expect(consumerRepo.updateIdentification("fake-id", { value: "updated-value" })).rejects.toThrowRepoException(
-        RepoErrorCode.NOT_FOUND,
-      );
+      expect(
+        consumerRepo.updateIdentification("fake-id", { value: "updated-value", countryCode: "US" }),
+      ).rejects.toThrowRepoException(RepoErrorCode.NOT_FOUND);
     });
   });
 
@@ -1223,6 +1225,7 @@ const getRandomIdentification = (
     id: `${uuid()}_${new Date().valueOf()}`,
     type: `${uuid()}-type`,
     value: "Fake value",
+    countryCode: "CO",
     consumerID: consumerID,
     createdTimestamp: new Date("2023-02-20"),
     updatedTimestamp: new Date("2023-02-20"),
@@ -1232,6 +1235,7 @@ const getRandomIdentification = (
     consumerID: consumerID,
     type: identification.type,
     value: identification.value,
+    countryCode: identification.countryCode,
   };
 
   return {
@@ -1248,6 +1252,7 @@ const saveAndGetIdentification = async (prismaService: PrismaService, consumerID
       consumerID: consumerID,
       type: `${uuid()}-type`,
       value: "Fake value",
+      countryCode: "CO",
       createdTimestamp: new Date("2023-02-20"),
       updatedTimestamp: new Date("2023-02-20"),
     },
