@@ -57,6 +57,7 @@ import { OptionalLimitQueryDTO } from "../common/dto/OptionalLimitQueryDTO";
 import { RequestEmployerDTO } from "./dto/RequestEmployerDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { ServiceException } from "../../core/exception/service.exception";
+import { IdentificationDTO } from "./dto/identification.dto";
 
 @Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
@@ -501,6 +502,20 @@ export class ConsumerController {
     return {
       base64OfImage: await this.consumerService.getBase64EncodedQRCode(url),
     };
+  }
+
+  @Post("/identifications")
+  @ApiOperation({ summary: "Adds an identification document for the logged-in consumer" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Added identification document for consumer",
+    type: IdentificationDTO,
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid identification document" })
+  async addIdentification(@Body() requestBody: IdentificationDTO, @AuthUser() consumer: Consumer) {
+    const identification = await this.consumerService.addIdentification(consumer, requestBody);
+    return {}; // return empty response for now
   }
 
   private verifyOrReplaceNotificationMethod(
