@@ -39,7 +39,7 @@ jobs:
           ls -la src
           yarn add lcov-result-merger
           mkdir coverage
-          yarn lcov-result-merger 'src/coverage-*/*.lcov' 'coverage/lcov.info'
+          yarn lcov-result-merger 'src/coverage-*/lcov.info' 'coverage/lcov.info'
           rm -rf src/coverage-*
           ls -l coverage/lcov.info
 
