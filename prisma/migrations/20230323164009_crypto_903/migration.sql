@@ -36,4 +36,7 @@ CREATE UNIQUE INDEX "PomeloCard_pomeloUserID_pomeloCardID_key" ON "PomeloCard"("
 ALTER TABLE "NobaCard" ADD CONSTRAINT "NobaCard_consumerID_fkey" FOREIGN KEY ("consumerID") REFERENCES "Consumer"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "PomeloCard" ADD CONSTRAINT "PomeloCard_pomeloUserID_fkey" FOREIGN KEY ("pomeloUserID") REFERENCES "PomeloUser"("pomeloID") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "PomeloCard" ADD CONSTRAINT "PomeloCard_nobaCardID_fkey" FOREIGN KEY ("nobaCardID") REFERENCES "NobaCard"("id") ON DELETE CASCADE ON UPDATE CASCADE;
