@@ -7,17 +7,35 @@ jobs:
     name: SonarCloud Scan
     runs-on: ubuntu-latest
     steps:
-      - name: Restore environment from cache
+      - name: Restore tests1 environment from cache
         id: restore-environment
         uses: actions/cache@v3
         env:
-          cache-name: ${{ github.run_number }}-tests
+          cache-name: ${{ github.run_number }}-tests1
         with:
           path: ./
-          key: ${{ runner.os }}-build-${{ github.run_number }}-tests
+          key: ${{ runner.os }}-build-${{ github.run_number }}-tests1
+
+      - name: Restore tests2 environment from cache
+        id: restore-environment
+        uses: actions/cache@v3
+        env:
+          cache-name: ${{ github.run_number }}-tests1
+        with:
+          path: ./
+          key: ${{ runner.os }}-build-${{ github.run_number }}-tests1
+
+      - name: Merge lcov files
+        run: |
+          ls -la
+          ls coverage*.lcov
+          yarn add lcov-result-merger
+          yarn lcov-result-merger 'coverage-*/*.lcov' coverage_merged.lcov
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
+        with:
+          coverageReportPaths: 'coverage_merged.lcov'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

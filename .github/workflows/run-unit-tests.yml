@@ -53,7 +53,7 @@ jobs:
         id: cache-test-results
         uses: actions/cache@v3
         env:
-          cache-name: ${{ github.run_number }}-tests
+          cache-name: ${{ github.run_number }}-tests1
         with:
           path: ./
-          key: ${{ runner.os }}-build-${{ github.run_number }}-tests
+          key: ${{ runner.os }}-build-${{ github.run_number }}-tests1
