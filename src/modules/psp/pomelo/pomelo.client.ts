@@ -11,10 +11,8 @@ import {
   ClientUpdateCardRequest,
   ClientUpdateUserRequest,
   ClientPomeloUser,
-  ClientUserStatus,
+  ClientPomeloCard,
 } from "./dto/pomelo.client.dto";
-
-import { PomeloCard } from "./domain/PomeloCard";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 @Injectable()
@@ -186,7 +184,7 @@ export class PomeloClient {
     }
   }
 
-  public async createCard(idempotencyKey: string, request: ClientCreateCardRequest): Promise<PomeloCard> {
+  public async createCard(idempotencyKey: string, request: ClientCreateCardRequest): Promise<ClientPomeloCard> {
     const accessToken = await this.getAccessToken();
 
     try {
@@ -218,7 +216,7 @@ export class PomeloClient {
     }
   }
 
-  public async getCard(id: string): Promise<PomeloCard> {
+  public async getCard(id: string): Promise<ClientPomeloCard> {
     const accessToken = await this.getAccessToken();
 
     try {

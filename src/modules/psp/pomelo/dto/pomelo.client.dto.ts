@@ -1,4 +1,4 @@
-import { CardStatus, CardType } from "../domain/PomeloCard";
+import { NobaCardStatus, NobaCardType } from "../../card/domain/NobaCard";
 
 export class ClientCreateUserRequest {
   name: string;
@@ -50,7 +50,7 @@ export enum ClientCardStatusReason {
 
 export class ClientCreateCardRequest {
   user_id: string;
-  card_type: CardType;
+  card_type: NobaCardType;
   address?: {
     street_name: string;
     street_number: string;
@@ -66,7 +66,7 @@ export class ClientCreateCardRequest {
 }
 
 export class ClientUpdateCardRequest {
-  status?: CardStatus;
+  status?: NobaCardStatus;
   status_reason?: ClientCardStatusReason;
   pin?: string;
 }
@@ -79,4 +79,16 @@ export class ClientPomeloUser {
 export enum ClientUserStatus {
   ACTIVE = "ACTIVE",
   BLOCKED = "BLOCKED",
+}
+
+export class ClientPomeloCard {
+  id: string;
+  cardType: NobaCardType;
+  productType: string;
+  status: NobaCardStatus;
+  shipmentID: string;
+  userID: string;
+  startDate: string;
+  lastFour: string;
+  provider: string;
 }

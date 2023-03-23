@@ -1,22 +1,89 @@
-export enum CardType {
-  PHYSICAL = "PHYSICAL",
-  VIRTUAL = "VIRTUAL",
-}
-
-export enum CardStatus {
-  BLOCKED = "BLOCKED",
-  DISABLED = "DISABLED",
-  ACTIVE = "ACTIVE",
-}
+import Joi from "joi";
+import { KeysRequired } from "../../../../modules/common/domain/Types";
+import { PomeloCard as PrismaPomeloCardModel } from "@prisma/client";
+import { NobaCardStatus, NobaCardType } from "../../card/domain/NobaCard";
 
 export class PomeloCard {
   id: string;
-  cardType: CardType;
-  productType: string;
-  status: CardStatus;
-  shipmentID: string;
-  userID: string;
-  startDate: string;
-  lastFour: string;
-  provider: string;
+  nobaCardID: string;
+  pomeloCardID: string;
+  pomeloUserID: string;
+  createdTimestamp: Date;
+  updatedTimestamp: Date;
 }
+
+export class PomeloCardSaveRequest {
+  pomeloCardID: string;
+  pomeloUserID: string;
+  nobaConsumerID: string;
+  status: NobaCardStatus;
+  type: NobaCardType;
+}
+
+export class PomeloCardUpdateRequest {
+  nobaCardID: string;
+  status: NobaCardStatus;
+}
+
+export const validateSavePomeloCardRequest = (request: PomeloCardSaveRequest) => {
+  const pomeloCardJoiValidationKeys: KeysRequired<PomeloCardSaveRequest> = {
+    pomeloCardID: Joi.string().required(),
+    pomeloUserID: Joi.string().required(),
+    nobaConsumerID: Joi.string().required(),
+    status: Joi.string()
+      .required()
+      .valid(...Object.values(NobaCardStatus)),
+    type: Joi.string()
+      .required()
+      .valid(...Object.values(NobaCardType)),
+  };
+  const pomeloCardJoiSchema = Joi.object(pomeloCardJoiValidationKeys).options({
+    allowUnknown: false,
+    stripUnknown: true,
+  });
+
+  Joi.attempt(request, pomeloCardJoiSchema);
+};
+
+export const validateUpdatePomeloCardRequest = (request: PomeloCardUpdateRequest) => {
+  const pomeloCardJoiValidationKeys: KeysRequired<PomeloCardUpdateRequest> = {
+    nobaCardID: Joi.string().required(),
+    status: Joi.string()
+      .required()
+      .valid(...Object.values(NobaCardStatus)),
+  };
+  const pomeloCardJoiSchema = Joi.object(pomeloCardJoiValidationKeys).options({
+    allowUnknown: false,
+    stripUnknown: true,
+  });
+
+  Joi.attempt(request, pomeloCardJoiSchema);
+};
+
+export const validatePomeloCard = (pomeloCard: PomeloCard) => {
+  const pomeloCardJoiValidationKeys: KeysRequired<PomeloCard> = {
+    id: Joi.string().required(),
+    pomeloCardID: Joi.string().required(),
+    nobaCardID: Joi.string().required(),
+    pomeloUserID: Joi.string().required(),
+    createdTimestamp: Joi.date().required(),
+    updatedTimestamp: Joi.date().required(),
+  };
+  const pomeloCardJoiSchema = Joi.object(pomeloCardJoiValidationKeys).options({
+    allowUnknown: false,
+    stripUnknown: true,
+  });
+
+  Joi.attempt(pomeloCard, pomeloCardJoiSchema);
+};
+
+export const convertToDomainPomeloCard = (pomeloCard: PrismaPomeloCardModel): PomeloCard => {
+  return {
+    id: pomeloCard.id,
+    pomeloCardID: pomeloCard.pomeloCardID,
+    nobaCardID: pomeloCard.nobaCardID,
+    pomeloUserID: pomeloCard.pomeloUserID,
+    createdTimestamp: pomeloCard.createdTimestamp,
+    updatedTimestamp: pomeloCard.updatedTimestamp,
+  };
+};

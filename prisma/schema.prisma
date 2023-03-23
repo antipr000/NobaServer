@@ -52,7 +52,8 @@ model Consumer {
   creditTransactions   Transaction[]    @relation("creditConsumer")
   Employee             Employee[]
   pushTokens           PushToken[]
-  PomeloUsers          PomeloUser?
+  pomeloUsers          PomeloUser?
+  nobaCards            NobaCard[]
   identifications      Identification[]
 
   @@index([referredByID])
@@ -328,12 +329,38 @@ model Mono {
 }
 
 model PomeloUser {
-  id               String    @id @default(uuid())
-  consumerID       String    @unique()
-  consumer         Consumer  @relation(fields: [consumerID], references: [id], onDelete: Cascade)
-  pomeloID         String    @unique()
-  createdTimestamp DateTime? @default(now())
-  updatedTimestamp DateTime? @updatedAt
+  id               String       @id @default(uuid())
+  consumerID       String       @unique()
+  consumer         Consumer     @relation(fields: [consumerID], references: [id], onDelete: Cascade)
+  pomeloID         String       @unique()
+  createdTimestamp DateTime?    @default(now())
+  updatedTimestamp DateTime?    @updatedAt
+  pomeloCard       PomeloCard[]
+}
+
+model NobaCard {
+  id               String      @id @default(uuid())
+  provider         String
+  status           String
+  type             String
+  consumerID       String
+  consumer         Consumer    @relation(fields: [consumerID], references: [id], onDelete: Cascade)
+  createdTimestamp DateTime?   @default(now())
+  updatedTimestamp DateTime?   @updatedAt
+  pomeloCard       PomeloCard?
+}
+
+model PomeloCard {
+  id               String     @id @default(uuid())
+  nobaCardID       String     @unique()
+  pomeloCardID     String     @unique()
+  pomeloUserID     String
+  pomeloUser       PomeloUser @relation(fields: [pomeloUserID], references: [pomeloID], onDelete: Cascade)
+  nobaCard         NobaCard   @relation(fields: [nobaCardID], references: [id], onDelete: Cascade)
+  createdTimestamp DateTime?  @default(now())
+  updatedTimestamp DateTime?  @updatedAt
+
+  @@unique([pomeloUserID, pomeloCardID])
 }
 
 model Token {
