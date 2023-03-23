@@ -451,6 +451,7 @@ model Identification {
   consumerID       String
   type             String
   value            String
+  countryCode      String    @db.VarChar(2)
   createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
 
