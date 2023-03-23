@@ -25,7 +25,7 @@ export class LocationDTO {
   alpha3ISOCode: string;
 
   @ApiProperty()
-  phoneExtension: string;
+  dialingPrefix: string;
 
   @ApiPropertyOptional({ type: [SubdivisionDTO] })
   subdivisions?: Array<SubdivisionDTO>;

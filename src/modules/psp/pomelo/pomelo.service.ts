@@ -40,7 +40,7 @@ export class PomeloService {
         throw new Error("Could not find subdivision details for region code");
       }
 
-      const phoneWithoutExtension = consumer.props.phone.replace(`+${locationDetails.phoneExtension}`, "");
+      const phoneWithoutExtension = consumer.props.phone.replace(`+${locationDetails.dialingPrefix}`, "");
 
       // TODO: Fill identificatioon_type and identification_value
       const createUserRequest: ClientCreateUserRequest = {

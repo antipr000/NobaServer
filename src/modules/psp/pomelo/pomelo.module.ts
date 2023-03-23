@@ -8,7 +8,13 @@ import { CommonModule } from "../../../modules/common/common.module";
 @Module({
   imports: [PomeloRepoModule, ConsumerModule, CommonModule],
   controllers: [],
-  providers: [PomeloClient, PomeloService],
+  providers: [
+    PomeloClient,
+    {
+      provide: "CardService",
+      useClass: PomeloService,
+    },
+  ],
   exports: [PomeloService],
 })
 export class PomeloModule {}

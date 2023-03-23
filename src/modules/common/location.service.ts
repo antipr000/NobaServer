@@ -67,7 +67,7 @@ export class LocationService {
             subdivisions: subdivisions,
             alternateCountryName: zhCountryName,
             alpha3ISOCode: element.iso3,
-            phoneExtension: element.phone_code,
+            dialingPrefix: element.phone_code,
           });
 
           // Store without subdivision data
@@ -76,7 +76,7 @@ export class LocationService {
             countryISOCode: element.iso2,
             alternateCountryName: zhCountryName,
             alpha3ISOCode: element.iso3,
-            phoneExtension: element.phone_code,
+            dialingPrefix: element.phone_code,
           });
         }
       }
