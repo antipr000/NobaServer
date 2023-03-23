@@ -21,7 +21,6 @@ export class IdentificationCreateRequest {
 
 export class IdentificationUpdateRequest {
   value?: string;
-  countryCode?: string;
 }
 
 export class IdentificationDeleteRequest {
@@ -46,7 +45,6 @@ export const validateCreateIdentificationRequest = (identification: Identificati
 export const validateUpdateIdentificationRequest = (identification: IdentificationUpdateRequest) => {
   const identificationJoiValidationKeys: KeysRequired<IdentificationUpdateRequest> = {
     value: Joi.string().optional(),
-    countryCode: Joi.string().optional(),
   };
 
   const identificationJoiSchema = Joi.object(identificationJoiValidationKeys).options({
