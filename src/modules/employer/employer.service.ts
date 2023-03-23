@@ -297,8 +297,8 @@ export class EmployerService {
       });
     }
 
-    // We can create a receipt only if the payroll is IN_PROGRESS or COMPLETED
-    if (payroll.status !== PayrollStatus.IN_PROGRESS && payroll.status !== PayrollStatus.COMPLETED) {
+    // We can create a receipt only if the payroll is in the RECEIPT status
+    if (payroll.status !== PayrollStatus.RECEIPT) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: `Receipt can only be generated for payroll in status IN_PROGRESS or COMPLETED. Current status: ${payroll.status}`,

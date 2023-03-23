@@ -10,6 +10,7 @@ export enum PayrollStatus {
   INVESTIGATION = "INVESTIGATION",
   FUNDED = "FUNDED",
   IN_PROGRESS = "IN_PROGRESS",
+  RECEIPT = "RECEIPT",
   COMPLETED = "COMPLETED",
   EXPIRED = "EXPIRED",
 }
@@ -32,15 +33,18 @@ export const isStatusTransitionAllowed = (oldStatus: PayrollStatus, newStatus: P
       // As funded is from a webhook event, we will only disallow status updates from IN_PROGRESS, COMPLETED and EXPIRED
       return (
         oldStatus !== PayrollStatus.IN_PROGRESS &&
+        oldStatus !== PayrollStatus.RECEIPT &&
         oldStatus !== PayrollStatus.COMPLETED &&
         oldStatus !== PayrollStatus.EXPIRED
       );
     case PayrollStatus.IN_PROGRESS:
       // For in_progress we should allow status updates from FUNDED
       return oldStatus === PayrollStatus.FUNDED;
+    case PayrollStatus.RECEIPT:
+      return oldStatus === PayrollStatus.IN_PROGRESS;
     case PayrollStatus.COMPLETED:
       // For completed we allow status updates from IN_PROGRESS
-      return oldStatus === PayrollStatus.IN_PROGRESS;
+      return oldStatus === PayrollStatus.RECEIPT;
     case PayrollStatus.EXPIRED:
       // For expired we allow status updates from CREATED and INVOICED and INVESTIGATION
       return (

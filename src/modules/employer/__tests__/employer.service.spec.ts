@@ -710,7 +710,7 @@ describe("EmployerServiceTests", () => {
     it("should update 'status' and 'completedTimestamp' when status is COMPLETED", async () => {
       const employerID = "fake-employer";
       const { payroll } = getRandomPayroll(employerID);
-      payroll.status = PayrollStatus.IN_PROGRESS;
+      payroll.status = PayrollStatus.RECEIPT;
 
       when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
 
@@ -786,7 +786,8 @@ describe("EmployerServiceTests", () => {
       [PayrollStatus.INVOICED, PayrollStatus.INVESTIGATION],
       [PayrollStatus.FUNDED, PayrollStatus.INVESTIGATION],
       [PayrollStatus.FUNDED, PayrollStatus.IN_PROGRESS],
-      [PayrollStatus.IN_PROGRESS, PayrollStatus.COMPLETED],
+      [PayrollStatus.IN_PROGRESS, PayrollStatus.RECEIPT],
+      [PayrollStatus.RECEIPT, PayrollStatus.COMPLETED],
       [PayrollStatus.CREATED, PayrollStatus.EXPIRED],
       [PayrollStatus.INVOICED, PayrollStatus.EXPIRED],
       [PayrollStatus.INVESTIGATION, PayrollStatus.EXPIRED],
@@ -860,6 +861,12 @@ describe("EmployerServiceTests", () => {
       [PayrollStatus.PREPARED, PayrollStatus.EXPIRED],
       [PayrollStatus.IN_PROGRESS, PayrollStatus.EXPIRED],
       [PayrollStatus.IN_PROGRESS, PayrollStatus.EXPIRED],
+      [PayrollStatus.CREATED, PayrollStatus.RECEIPT],
+      [PayrollStatus.PREPARED, PayrollStatus.RECEIPT],
+      [PayrollStatus.COMPLETED, PayrollStatus.RECEIPT],
+      [PayrollStatus.FUNDED, PayrollStatus.RECEIPT],
+      [PayrollStatus.EXPIRED, PayrollStatus.RECEIPT],
+      [PayrollStatus.INVESTIGATION, PayrollStatus.RECEIPT],
       [PayrollStatus.CREATED, PayrollStatus.COMPLETED],
       [PayrollStatus.INVOICED, PayrollStatus.COMPLETED],
       [PayrollStatus.FUNDED, PayrollStatus.COMPLETED],
@@ -1372,6 +1379,8 @@ describe("EmployerServiceTests", () => {
       PayrollStatus.INVESTIGATION,
       PayrollStatus.FUNDED,
       PayrollStatus.EXPIRED,
+      PayrollStatus.IN_PROGRESS,
+      PayrollStatus.COMPLETED,
     ])("should throw SEMANTIC_VALIDATION when payroll is found but in the wrong status (%s)", async status => {
       const { payroll } = getRandomPayroll("fake-employer");
       payroll.status = status;
@@ -1384,7 +1393,7 @@ describe("EmployerServiceTests", () => {
 
     it("should throw SEMANTIC_VALIDATION when employerID is not found", async () => {
       const { payroll } = getRandomPayroll("fake-employer");
-      payroll.status = PayrollStatus.IN_PROGRESS;
+      payroll.status = PayrollStatus.RECEIPT;
 
       when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
       when(mockEmployerRepo.getEmployerByID(payroll.employerID)).thenResolve(null);
@@ -1397,7 +1406,7 @@ describe("EmployerServiceTests", () => {
     it("should successfully create a receipt", async () => {
       const employer = getRandomEmployer();
       const { payroll } = getRandomPayroll(employer.id);
-      payroll.status = PayrollStatus.IN_PROGRESS;
+      payroll.status = PayrollStatus.RECEIPT;
 
       when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
       when(mockEmployerRepo.getEmployerByID(employer.id)).thenResolve(employer);
@@ -1468,7 +1477,7 @@ describe("EmployerServiceTests", () => {
     it("should successfully create receipt with disbursements", async () => {
       const employer = getRandomEmployer();
       const { payroll } = getRandomPayroll(employer.id);
-      payroll.status = PayrollStatus.COMPLETED;
+      payroll.status = PayrollStatus.RECEIPT;
 
       const employee1 = getRandomEmployee(employer.id);
       const employee2 = getRandomEmployee(employer.id);
