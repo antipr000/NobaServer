@@ -30,7 +30,7 @@ export interface IConsumerRepo {
   updateCryptoWallet(id: string, cryptoWalletProps: Partial<CryptoWalletProps>): Promise<CryptoWallet>;
   addIdentification(identification: IdentificationCreateRequest): Promise<Identification>;
   getAllIdentificationsForConsumer(consumerID: string): Promise<Identification[]>;
-  getIdentificationForConsumer(consumerID: string, id: string): Promise<Identification>;
+  getIdentificationForConsumer(id: string, consumerID: string): Promise<Identification>;
   updateIdentification(id: string, identification: IdentificationUpdateRequest): Promise<Identification>;
   deleteIdentification(id: string): Promise<void>;
 }

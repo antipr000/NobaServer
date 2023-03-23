@@ -539,7 +539,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
     }
   }
 
-  async getIdentificationForConsumer(consumerID: string, id: string): Promise<Identification> {
+  async getIdentificationForConsumer(id: string, consumerID: string): Promise<Identification> {
     try {
       const returnedIdentification: PrismaIdentificationModel = await this.prisma.identification.findFirst({
         where: {
