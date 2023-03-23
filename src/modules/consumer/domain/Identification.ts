@@ -6,6 +6,7 @@ export class Identification {
   id: string;
   type: string;
   value: string;
+  countryCode: string;
   consumerID: string;
   createdTimestamp: Date;
   updatedTimestamp: Date;
@@ -14,11 +15,13 @@ export class Identification {
 export class IdentificationCreateRequest {
   type: string;
   value: string;
+  countryCode: string;
   consumerID: string;
 }
 
 export class IdentificationUpdateRequest {
-  value: string;
+  value?: string;
+  countryCode?: string;
 }
 
 export class IdentificationDeleteRequest {
@@ -30,6 +33,7 @@ export const validateCreateIdentificationRequest = (identification: Identificati
     type: Joi.string().required(),
     value: Joi.string().required(),
     consumerID: Joi.string().required(),
+    countryCode: Joi.string().required(),
   };
 
   const identificationJoiSchema = Joi.object(identificationJoiValidationKeys).options({
@@ -41,7 +45,8 @@ export const validateCreateIdentificationRequest = (identification: Identificati
 
 export const validateUpdateIdentificationRequest = (identification: IdentificationUpdateRequest) => {
   const identificationJoiValidationKeys: KeysRequired<IdentificationUpdateRequest> = {
-    value: Joi.string().required(),
+    value: Joi.string().optional(),
+    countryCode: Joi.string().optional(),
   };
 
   const identificationJoiSchema = Joi.object(identificationJoiValidationKeys).options({
@@ -68,6 +73,7 @@ export const validateIdentification = (identification: Identification) => {
     id: Joi.string().required(),
     type: Joi.string().required(),
     value: Joi.string().required(),
+    countryCode: Joi.string().required(),
     consumerID: Joi.string().required(),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
@@ -85,6 +91,7 @@ export const convertToDomainIdentification = (identification: PrismaIdentificati
     id: identification.id,
     type: identification.type,
     value: identification.value,
+    countryCode: identification.countryCode,
     consumerID: identification.consumerID,
     createdTimestamp: identification.createdTimestamp,
     updatedTimestamp: identification.updatedTimestamp,

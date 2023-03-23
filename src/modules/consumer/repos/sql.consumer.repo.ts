@@ -478,6 +478,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
         },
         type: identification.type,
         value: identification.value,
+        countryCode: identification.countryCode,
       };
 
       const returnedIdentification: PrismaIdentificationModel = await this.prisma.identification.create({
@@ -514,6 +515,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
     try {
       const identificationUpdateInput: Prisma.IdentificationUpdateInput = {
         ...(identification.value && { value: identification.value }),
+        ...(identification.countryCode && { countryCode: identification.countryCode }),
       };
 
       const returnedIdentification: PrismaIdentificationModel = await this.prisma.identification.update({
