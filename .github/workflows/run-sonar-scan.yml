@@ -25,11 +25,13 @@ jobs:
           path: ./
           key: ${{ runner.os }}-build-${{ github.run_number }}-tests2
 
-      # - name: Merge lcov files
-      #   run: |
-      #     ls -la src
-      #     yarn add lcov-result-merger
-      #     yarn lcov-result-merger 'coverage-*/*.lcov' coverage_merged.lcov
+      - name: Merge lcov files
+        run: |
+          ls -la src
+          yarn add lcov-result-merger
+          mkdir coverage
+          yarn lcov-result-merger 'coverage-*/*.lcov' 'coverage/lcov.info'
+          rm -rf src/coverage-*
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master

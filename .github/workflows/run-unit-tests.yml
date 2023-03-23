@@ -6,7 +6,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   test:
-    name: Unit Tests
+    name: Repo Unit Tests
     runs-on: ubuntu-latest
     services:
       # Label used to access the service container
