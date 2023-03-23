@@ -55,11 +55,7 @@ model Consumer {
   PomeloUsers          PomeloUser?
   identifications      Identification[]
 
-  @@index([email])
-  @@index([handle])
-  @@index([phone])
   @@index([referredByID])
-  @@index([referralCode])
 }
 
 model Address {
@@ -105,8 +101,6 @@ model Employer {
   payrollAccountNumber String?
   Employee             Employee[]
   Payroll              Payroll[]
-
-  @@index([referralID])
 }
 
 model Employee {
@@ -123,7 +117,6 @@ model Employee {
   PayrollDisbursement PayrollDisbursement[]
 
   @@unique([consumerID, employerID])
-  @@index([consumerID])
 }
 
 model Payroll {
@@ -171,8 +164,6 @@ model CryptoWallet {
   riskScore        Float?
   consumer         Consumer     @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   consumerID       String
-
-  @@index([address])
 }
 
 model PaymentMethod {
@@ -190,8 +181,6 @@ model PaymentMethod {
   consumerID       String
   cardData         Card?
   achData          ACH?
-
-  @@index([paymentToken])
 }
 
 model Card {
@@ -224,8 +213,6 @@ model Circle {
   walletID         String    @unique()
   consumer         Consumer  @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   consumerID       String    @unique()
-
-  @@index([consumerID])
 }
 
 model Otp {
@@ -238,7 +225,6 @@ model Otp {
   identityType           IdentityType
 
   @@unique([otpIdentifier, identityType], name: "uniqueIdentifier")
-  @@index([otpIdentifier, identityType])
   @@index([otp])
 }
 
@@ -339,8 +325,6 @@ model Mono {
 
   // Can't add @unique() on 'collectionLinkID' or 'transferID'
   // See https://github.com/prisma/prisma/issues/3387 for more details.
-
-  @@index([nobaTransactionID])
 }
 
 model PomeloUser {
@@ -369,8 +353,6 @@ model Admin {
   role             String
   createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
-
-  @@index([email])
 }
 
 model Verification {
@@ -397,7 +379,6 @@ model CreditCardBIN {
   createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
 
-  @@index([bin])
   @@index([supported])
 }
 
@@ -423,8 +404,6 @@ model WithdrawalDetails {
   documentType   String
   transaction    Transaction @relation(fields: [transactionID], references: [id], onDelete: Cascade)
   transactionID  String      @unique()
-
-  @@index([transactionID])
 }
 
 model PushToken {
