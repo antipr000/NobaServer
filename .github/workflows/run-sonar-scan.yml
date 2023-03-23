@@ -28,10 +28,10 @@ jobs:
       - name: Merge lcov files
         run: |
           ls -la src
-          yarn add lcov-result-merger
-          mkdir coverage
-          yarn lcov-result-merger 'coverage-*/*.lcov' 'coverage/lcov.info'
-          rm -rf src/coverage-*
+          #yarn add lcov-result-merger
+          #mkdir coverage
+          #yarn lcov-result-merger 'coverage-*/*.lcov' 'coverage/lcov.info'
+          #rm -rf src/coverage-*
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
