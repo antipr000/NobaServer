@@ -20,6 +20,9 @@ import { KmsService } from "../../../modules/common/kms.service";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { Gender } from "../domain/ExternalStates";
+import { convertToDomainIdentification, Identification, IdentificationCreateRequest } from "../domain/Identification";
+import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
+import { createTestConsumer } from "../test_utils/test.utils";
 
 const getAllConsumerRecords = async (prismaService: PrismaService): Promise<ConsumerProps[]> => {
   const allConsumerProps = await prismaService.consumer.findMany({});
@@ -1039,6 +1042,119 @@ describe("ConsumerRepoTests", () => {
     });
   });
 
+  describe("addIdentification", () => {
+    it("should create identification", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const { identificationCreateInput } = getRandomIdentification(consumerID);
+
+      const createResponse = await consumerRepo.addIdentification(identificationCreateInput);
+
+      expect(createResponse).toBeDefined();
+      expect(createResponse.id).toBeDefined();
+      expect(createResponse).toEqual(expect.objectContaining(identificationCreateInput));
+    });
+
+    it("should throw error if identification already exists", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const { identificationCreateInput } = getRandomIdentification(consumerID);
+
+      await consumerRepo.addIdentification(identificationCreateInput);
+
+      expect(consumerRepo.addIdentification(identificationCreateInput)).rejects.toThrowRepoException();
+    });
+
+    it("should throw error if consumer does not exist", async () => {
+      const { identificationCreateInput } = getRandomIdentification("fake-consumer-id");
+
+      expect(consumerRepo.addIdentification(identificationCreateInput)).rejects.toThrowRepoException(
+        RepoErrorCode.NOT_FOUND,
+      );
+    });
+  });
+
+  describe("getIdentificationForConsumer", () => {
+    it("should return null if identification does not exist", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const identification = await consumerRepo.getIdentificationForConsumer(consumerID, "fake-id");
+      expect(identification).toBeNull();
+    });
+
+    it("should return identification if it exists", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const { identification, identificationCreateInput } = getRandomIdentification(consumerID);
+
+      await consumerRepo.addIdentification(identificationCreateInput);
+
+      const result = await consumerRepo.getIdentificationForConsumer(consumerID, identification.type);
+      expect(result).not.toBeNull();
+      expect(result.type).toBe(identification.type);
+    });
+
+    it("should return null if consumer does not exist", async () => {
+      const identification = await consumerRepo.getIdentificationForConsumer("fake-consumer-id", "fake-id");
+      expect(identification).toBeNull();
+    });
+  });
+
+  describe("updateIdentification", () => {
+    it("should update identification", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const { identificationCreateInput } = getRandomIdentification(consumerID);
+
+      const identification = await consumerRepo.addIdentification(identificationCreateInput);
+
+      const updatedIdentification = await consumerRepo.updateIdentification(identification.id, {
+        value: "updated-value",
+      });
+
+      expect(updatedIdentification.value).toBe("updated-value");
+      expect(updatedIdentification.id).toBe(identification.id);
+    });
+
+    it("should throw error if identification does not exist", async () => {
+      expect(consumerRepo.updateIdentification("fake-id", { value: "updated-value" })).rejects.toThrowRepoException(
+        RepoErrorCode.NOT_FOUND,
+      );
+    });
+  });
+
+  describe("deleteIdentification", () => {
+    it("should delete identification", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const { identificationCreateInput } = getRandomIdentification(consumerID);
+
+      const identification = await consumerRepo.addIdentification(identificationCreateInput);
+
+      await consumerRepo.deleteIdentification(identification.id);
+
+      const result = await consumerRepo.getIdentificationForConsumer(consumerID, identification.type);
+      expect(result).toBeNull();
+    });
+
+    it("should throw error if identification does not exist", async () => {
+      expect(consumerRepo.deleteIdentification("fake-id")).rejects.toThrowRepoException(RepoErrorCode.NOT_FOUND);
+    });
+  });
+
+  describe("getAllIdentificationsForConsumer", () => {
+    it("should return all identifications", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const { identificationCreateInput } = getRandomIdentification(consumerID);
+
+      const identification = await consumerRepo.addIdentification(identificationCreateInput);
+
+      const result = await consumerRepo.getAllIdentificationsForConsumer(consumerID);
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(identification.id);
+    });
+
+    it("should return empty array if consumer does not exist", async () => {
+      const result = await consumerRepo.getAllIdentificationsForConsumer("fake-consumer-id");
+      expect(result).toHaveLength(0);
+    });
+  });
+
   describe("isHandleTaken", () => {
     it("should return 'true' if there already exist an user with same handle", async () => {
       const consumer = getRandomUser();
@@ -1098,4 +1214,44 @@ const getRandomCryptoWallet = (consumerID: string): CryptoWallet => {
     consumerID: consumerID,
   };
   return CryptoWallet.createCryptoWallet(props);
+};
+
+const getRandomIdentification = (
+  consumerID: string,
+): { identification: Identification; identificationCreateInput: IdentificationCreateRequest } => {
+  const identification: Identification = {
+    id: `${uuid()}_${new Date().valueOf()}`,
+    type: `${uuid()}-type`,
+    value: "Fake value",
+    consumerID: consumerID,
+    createdTimestamp: new Date("2023-02-20"),
+    updatedTimestamp: new Date("2023-02-20"),
+  };
+
+  const identificationCreateInput: IdentificationCreateRequest = {
+    consumerID: consumerID,
+    type: identification.type,
+    value: identification.value,
+  };
+
+  return {
+    identification,
+    identificationCreateInput,
+  };
+};
+
+const saveAndGetIdentification = async (prismaService: PrismaService, consumerID?: string): Promise<Identification> => {
+  consumerID = consumerID ?? (await createTestConsumer(prismaService));
+  const createdIdentification = await prismaService.identification.create({
+    data: {
+      id: uuid(),
+      consumerID: consumerID,
+      type: `${uuid()}-type`,
+      value: "Fake value",
+      createdTimestamp: new Date("2023-02-20"),
+      updatedTimestamp: new Date("2023-02-20"),
+    },
+  });
+
+  return convertToDomainIdentification(createdIdentification);
 };
