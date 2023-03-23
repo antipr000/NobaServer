@@ -30,10 +30,10 @@ import { findFlag } from "country-list-with-dial-code-and-flag";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { EmployeeService } from "../employee/employee.service";
 import { Employee, EmployeeAllocationCurrency } from "../employee/domain/Employee";
-import { BubbleService } from "../bubble/bubble.service";
 import { ConsumerSearchDTO } from "./dto/consumer.search.dto";
 import { ConsumerMapper } from "./mappers/ConsumerMapper";
 import { Identification } from "./domain/Identification";
+import { CreateIdentificationDTO } from "./dto/create.identification.dto";
 
 @Injectable()
 export class ConsumerService {
@@ -734,8 +734,11 @@ export class ConsumerService {
     });
   }
 
-  async addIdentification(consumer: Consumer, identification: Identification): Promise<Identification> {
-    const result = await this.consumerRepo.addIdentification(identification);
+  async addIdentification(consumerID: string, identification: CreateIdentificationDTO): Promise<Identification> {
+    const result = await this.consumerRepo.addIdentification({
+      consumerID: consumerID,
+      ...identification,
+    });
     return result;
   }
 

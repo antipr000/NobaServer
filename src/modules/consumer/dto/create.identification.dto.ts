@@ -1,6 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class UpdateIdentificationDTO {
+export class CreateIdentificationDTO {
+  @ApiProperty()
+  type: string;
+
   @ApiProperty()
   value: string;
 

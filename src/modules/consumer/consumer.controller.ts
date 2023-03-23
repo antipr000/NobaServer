@@ -58,6 +58,7 @@ import { RequestEmployerDTO } from "./dto/RequestEmployerDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { ServiceException } from "../../core/exception/service.exception";
 import { IdentificationDTO } from "./dto/identification.dto";
+import { CreateIdentificationDTO } from "./dto/create.identification.dto";
 
 @Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
@@ -513,8 +514,8 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid identification document" })
-  async addIdentification(@Body() requestBody: IdentificationDTO, @AuthUser() consumer: Consumer) {
-    const identification = await this.consumerService.addIdentification(consumer, requestBody);
+  async addIdentification(@Body() requestBody: CreateIdentificationDTO, @AuthUser() consumer: Consumer) {
+    const identification = await this.consumerService.addIdentification(consumer.props.id, requestBody);
     return {}; // return empty response for now
   }
 
