@@ -7,7 +7,7 @@ import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { uuid } from "uuidv4";
 import { createTestConsumer } from "../../../../modules/consumer/test_utils/test.utils";
 import { NobaCardRepo } from "../repos/card.repo";
-import { SqlNobaCardRepo } from "../repos/sql.card.repo";
+import { SQLNobaCardRepo } from "../repos/sql.card.repo";
 import { CardProvider, NobaCard } from "../domain/NobaCard";
 import { createNobaCard } from "../test_utils/util";
 
@@ -30,10 +30,10 @@ describe("SqlNobaCardRepo", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SqlNobaCardRepo],
+      providers: [PrismaService, SQLNobaCardRepo],
     }).compile();
 
-    nobaCardRepo = app.get<SqlNobaCardRepo>(SqlNobaCardRepo);
+    nobaCardRepo = app.get<SQLNobaCardRepo>(SQLNobaCardRepo);
     prismaService = app.get<PrismaService>(PrismaService);
   });
 
@@ -89,7 +89,7 @@ describe("SqlNobaCardRepo", () => {
       const nobaCard1: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
       const nobaCard2: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
 
-      const response = await nobaCardRepo.getCardsByID(uuid());
+      const response = await nobaCardRepo.getCardByID(uuid());
 
       expect(response).toBeNull();
     });
@@ -104,7 +104,7 @@ describe("SqlNobaCardRepo", () => {
       const nobaCard22: NobaCard = await createNobaCard(consumerID2, CardProvider.POMELO, prismaService);
       const nobaCard23: NobaCard = await createNobaCard(consumerID2, CardProvider.POMELO, prismaService);
 
-      const response = await nobaCardRepo.getCardsByID(nobaCard22.id);
+      const response = await nobaCardRepo.getCardByID(nobaCard22.id);
 
       expect(response).toStrictEqual(nobaCard22);
     });

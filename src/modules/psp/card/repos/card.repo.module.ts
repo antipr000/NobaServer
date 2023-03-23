@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { InfraProvidersModule } from "../../../../infraproviders/infra.module";
-import { SqlNobaCardRepo } from "./sql.card.repo";
+import { SQLNobaCardRepo } from "./sql.card.repo";
 
 export const NOBA_CARD_REPO_PROVIDER = "NOBA_CARD_REPO";
 
@@ -10,7 +10,7 @@ export const NOBA_CARD_REPO_PROVIDER = "NOBA_CARD_REPO";
   providers: [
     {
       provide: NOBA_CARD_REPO_PROVIDER,
-      useClass: SqlNobaCardRepo,
+      useClass: SQLNobaCardRepo,
     },
   ],
   exports: [NOBA_CARD_REPO_PROVIDER],

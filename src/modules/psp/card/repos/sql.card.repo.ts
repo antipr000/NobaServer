@@ -8,7 +8,7 @@ import { NobaCardRepo } from "./card.repo";
 import { RepoErrorCode, RepoException } from "../../../../core/exception/repo.exception";
 
 @Injectable()
-export class SqlNobaCardRepo implements NobaCardRepo {
+export class SQLNobaCardRepo implements NobaCardRepo {
   constructor(
     private readonly prismaService: PrismaService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
@@ -22,7 +22,7 @@ export class SqlNobaCardRepo implements NobaCardRepo {
         },
       });
 
-      const nobaCards: NobaCard[] = returnedNobaCards.map(primsaNobaCard => convertToDomainNobaCard(primsaNobaCard));
+      const nobaCards: NobaCard[] = returnedNobaCards.map(prismaNobaCard => convertToDomainNobaCard(prismaNobaCard));
       return nobaCards;
     } catch (err) {
       this.logger.error(JSON.stringify(err));
@@ -33,7 +33,7 @@ export class SqlNobaCardRepo implements NobaCardRepo {
     }
   }
 
-  async getCardsByID(id: string): Promise<NobaCard> {
+  async getCardByID(id: string): Promise<NobaCard> {
     try {
       const returnedNobaCard: PrismaNobaCardModel = await this.prismaService.nobaCard.findUnique({
         where: {

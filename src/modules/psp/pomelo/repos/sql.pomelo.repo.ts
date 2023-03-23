@@ -27,7 +27,7 @@ import {
 import { CardProvider, convertToDomainNobaCard, validateNobaCard, NobaCard } from "../../card/domain/NobaCard";
 
 @Injectable()
-export class SqlPomeloRepo implements PomeloRepo {
+export class SQLPomeloRepo implements PomeloRepo {
   constructor(
     private readonly prismaService: PrismaService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,

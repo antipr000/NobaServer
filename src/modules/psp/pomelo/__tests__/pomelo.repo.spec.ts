@@ -12,7 +12,7 @@ import { uuid } from "uuidv4";
 import { RepoErrorCode, RepoException } from "../../../../core/exception/repo.exception";
 import { PomeloUser, PomeloUserSaveRequest } from "../domain/PomeloUser";
 import { PomeloRepo } from "../repos/pomelo.repo";
-import { SqlPomeloRepo } from "../repos/sql.pomelo.repo";
+import { SQLPomeloRepo } from "../repos/sql.pomelo.repo";
 import { createTestConsumer } from "../../../../modules/consumer/test_utils/test.utils";
 import { createPomeloCard, createPomeloCardWithPredefinedPomeloUser, createPomeloUser } from "../test_utils/util";
 import { PomeloCard, PomeloCardSaveRequest, PomeloCardUpdateRequest } from "../domain/PomeloCard";
@@ -46,10 +46,10 @@ describe("SqlPomeloRepoTests", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SqlPomeloRepo],
+      providers: [PrismaService, SQLPomeloRepo],
     }).compile();
 
-    pomeloRepo = app.get<SqlPomeloRepo>(SqlPomeloRepo);
+    pomeloRepo = app.get<SQLPomeloRepo>(SQLPomeloRepo);
     prismaService = app.get<PrismaService>(PrismaService);
   });
 

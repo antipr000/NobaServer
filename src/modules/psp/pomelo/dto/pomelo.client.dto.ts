@@ -1,4 +1,4 @@
-import { NobaCardStatus, NobaCardType } from "../domain/PomeloCard";
+import { NobaCardStatus, NobaCardType } from "../../card/domain/NobaCard";
 
 export class ClientCreateUserRequest {
   name: string;

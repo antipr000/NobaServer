@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { InfraProvidersModule } from "../../../../infraproviders/infra.module";
-import { SqlPomeloRepo } from "./sql.pomelo.repo";
+import { SQLPomeloRepo } from "./sql.pomelo.repo";
 
 export const POMELO_REPO_PROVIDER = "POMELO_REPO";
 
@@ -10,7 +10,7 @@ export const POMELO_REPO_PROVIDER = "POMELO_REPO";
   providers: [
     {
       provide: POMELO_REPO_PROVIDER,
-      useClass: SqlPomeloRepo,
+      useClass: SQLPomeloRepo,
     },
   ],
   exports: [POMELO_REPO_PROVIDER],
