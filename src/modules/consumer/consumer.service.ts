@@ -735,6 +735,27 @@ export class ConsumerService {
   }
 
   async addIdentification(consumerID: string, identification: CreateIdentificationDTO): Promise<Identification> {
+    if (!identification.type) {
+      throw new ServiceException({
+        message: "Identification type is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    if (!identification.countryCode) {
+      throw new ServiceException({
+        message: "Country code is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    if (!identification.value) {
+      throw new ServiceException({
+        message: "Identification value is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
     const result = await this.consumerRepo.addIdentification({
       consumerID: consumerID,
       ...identification,
