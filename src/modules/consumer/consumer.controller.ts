@@ -59,6 +59,7 @@ import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { ServiceException } from "../../core/exception/service.exception";
 import { IdentificationDTO } from "./dto/identification.dto";
 import { CreateIdentificationDTO } from "./dto/create.identification.dto";
+import { id } from "date-fns/locale";
 
 @Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
@@ -517,6 +518,40 @@ export class ConsumerController {
   async addIdentification(@Body() requestBody: CreateIdentificationDTO, @AuthUser() consumer: Consumer) {
     const identification = await this.consumerService.addIdentification(consumer.props.id, requestBody);
     return {}; // return empty response for now
+  }
+
+  @Get("/identifications")
+  @ApiOperation({ summary: "Lists all identification documents for the logged-in consumer" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "List of identification documents for consumer",
+    type: [IdentificationDTO],
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  async listIdentifications(@AuthUser() consumer: Consumer): Promise<IdentificationDTO[]> {
+    const identifications = await this.consumerService.getAllIdentifications(consumer.props.id);
+    return identifications.map(identification => {
+      return {
+        ...identification,
+      };
+    });
+  }
+
+  @Delete("/identifications/:identificationID")
+  @ApiOperation({ summary: "Deletes an identification document for the logged-in consumer" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Deleted identification document for consumer",
+    type: IdentificationDTO,
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid identification document" })
+  async deleteIdentification(
+    @Param("identificationID") identificationID: string,
+    @AuthUser() consumer: Consumer,
+  ): Promise<IdentificationDTO> {
+    const identification = await this.consumerService.deleteIdentification(consumer.props.id, identificationID);
+    return {};
   }
 
   private verifyOrReplaceNotificationMethod(

@@ -539,15 +539,12 @@ export class SQLConsumerRepo implements IConsumerRepo {
     }
   }
 
-  async getIdentificationForConsumer(consumerID: string, type: string, countryCode: string): Promise<Identification> {
+  async getIdentificationForConsumer(consumerID: string, id: string): Promise<Identification> {
     try {
-      const returnedIdentification: PrismaIdentificationModel = await this.prisma.identification.findUnique({
+      const returnedIdentification: PrismaIdentificationModel = await this.prisma.identification.findFirst({
         where: {
-          consumerID_type_countryCode: {
-            consumerID: consumerID,
-            type: type,
-            countryCode: countryCode,
-          },
+          id: id,
+          consumerID: consumerID,
         },
       });
       return convertToDomainIdentification(returnedIdentification);
