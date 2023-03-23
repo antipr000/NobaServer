@@ -7,8 +7,8 @@ import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
 import { Consumer } from "../consumer/domain/Consumer";
 import { AuthUser } from "../auth/auth.decorator";
-import { PomeloService } from "./pomelo/pomelo.service";
 import { CardResponseDTO } from "./dto/card.controller.dto";
+import { CardService } from "./card/card.service";
 
 @Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
@@ -18,7 +18,7 @@ import { CardResponseDTO } from "./dto/card.controller.dto";
 export class CardController {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-    private readonly pomeloService: PomeloService,
+    private readonly cardService: CardService,
   ) {}
 
   @Post("/")
@@ -26,12 +26,10 @@ export class CardController {
   @ApiResponse({ status: HttpStatus.CREATED, type: CardResponseDTO })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   async createCard(@AuthUser() consumer: Consumer): Promise<CardResponseDTO> {
-    const card = await this.pomeloService.createCard(consumer.props.id);
+    const card = await this.cardService.createCard(consumer.props.id);
     return {
       id: card.id,
-      providerUserID: card.userID,
-      startDate: card.startDate,
-      lastFour: card.lastFour,
+      lastFourDigits: "", // TODO: Add it to NobaCard
     };
   }
 }

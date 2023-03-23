@@ -1,4 +1,4 @@
-import { PrismaService } from "../../../../infraproviders/PrismaService";
+import { PrismaService } from "../../../../../../infraproviders/PrismaService";
 import { uuid } from "uuidv4";
 import { PomeloCard } from "../domain/PomeloCard";
 import { PomeloUser } from "../domain/PomeloUser";

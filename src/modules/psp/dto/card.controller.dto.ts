@@ -5,11 +5,5 @@ export class CardResponseDTO {
   id: string;
 
   @ApiProperty()
-  providerUserID: string;
-
-  @ApiProperty()
-  startDate: string;
-
-  @ApiProperty()
-  lastFour: string;
+  lastFourDigits: string;
 }

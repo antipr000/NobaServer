@@ -1,4 +1,4 @@
-import { NobaCard } from "../../card/domain/NobaCard";
+import { NobaCard } from "../../../domain/NobaCard";
 import { PomeloCard, PomeloCardSaveRequest, PomeloCardUpdateRequest } from "../domain/PomeloCard";
 import { PomeloTransactionSaveRequest, PomeloTransaction } from "../domain/PomeloTransaction";
 import { PomeloUser, PomeloUserSaveRequest } from "../domain/PomeloUser";

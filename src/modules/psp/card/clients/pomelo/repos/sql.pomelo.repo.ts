@@ -1,7 +1,7 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { PrismaService } from "../../../../infraproviders/PrismaService";
+import { PrismaService } from "../../../../../../infraproviders/PrismaService";
 import { Logger } from "winston";
 import { PomeloUser as PrismaPomeloUserModel } from "@prisma/client";
 import { PomeloCard as PrismaPomeloCardModel } from "@prisma/client";
@@ -15,16 +15,16 @@ import {
   validateSavePomeloUserRequest,
 } from "../domain/PomeloUser";
 import { PomeloRepo } from "./pomelo.repo";
-import { RepoErrorCode, RepoException } from "../../../../core/exception/repo.exception";
+import { RepoErrorCode, RepoException } from "../../../../../../core/exception/repo.exception";
 import {
   PomeloCard,
   convertToDomainPomeloCard,
   PomeloCardSaveRequest,
   PomeloCardUpdateRequest,
-  validatePomeloCard,
   validateSavePomeloCardRequest,
   validateUpdatePomeloCardRequest,
 } from "../domain/PomeloCard";
+<<<<<<< HEAD:src/modules/psp/pomelo/repos/sql.pomelo.repo.ts
 import { CardProvider, convertToDomainNobaCard, validateNobaCard, NobaCard } from "../../card/domain/NobaCard";
 import {
   convertToDomainPomeloTransaction,
@@ -33,6 +33,9 @@ import {
   validateSavePomeloTransactionRequest,
   validatePomeloTransaction,
 } from "../domain/PomeloTransaction";
+=======
+import { CardProvider, convertToDomainNobaCard, validateNobaCard, NobaCard } from "../../../domain/NobaCard";
+>>>>>>> 2cb2151e (Restructured card service as factory pattern):src/modules/psp/card/clients/pomelo/repos/sql.pomelo.repo.ts
 
 @Injectable()
 export class SQLPomeloRepo implements PomeloRepo {

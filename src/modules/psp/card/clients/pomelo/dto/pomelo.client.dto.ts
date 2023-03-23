@@ -1,4 +1,4 @@
-import { NobaCardStatus, NobaCardType } from "../../card/domain/NobaCard";
+import { NobaCardStatus, NobaCardType } from "../../../domain/NobaCard";
 
 export class ClientCreateUserRequest {
   name: string;
@@ -16,6 +16,7 @@ export class ClientCreateUserRequest {
     city: string;
     region: string;
     country: string;
+    additional_info?: string;
   };
 }
 

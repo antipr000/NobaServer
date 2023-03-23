@@ -2,14 +2,17 @@ import { Inject, Injectable } from "@nestjs/common";
 import { PomeloClient } from "./pomelo.client";
 import { POMELO_REPO_PROVIDER } from "./repos/pomelo.repo.module";
 import { PomeloRepo } from "./repos/pomelo.repo";
-import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { ClientCreateUserRequest } from "./dto/pomelo.client.dto";
-import { LocationService } from "../../../modules/common/location.service";
+import { LocationService } from "../../../../common/location.service";
 import { uuid } from "uuidv4";
-import { CardType, PomeloCard } from "./domain/PomeloCard";
+import { NobaCard, NobaCardType } from "../../domain/NobaCard";
+import { ServiceErrorCode, ServiceException } from "../../../../../core/exception/service.exception";
+import { PomeloCardSaveRequest } from "./domain/PomeloCard";
+import { ICardClientService } from "../card.client.service";
+import { Consumer } from "../../../../../modules/consumer/domain/Consumer";
 
 @Injectable()
-export class PomeloService {
+export class PomeloService implements ICardClientService {
   @Inject()
   private readonly pomeloClient: PomeloClient;
 
@@ -17,27 +20,32 @@ export class PomeloService {
   private readonly pomeloRepo: PomeloRepo;
 
   @Inject()
-  private readonly consumerService: ConsumerService;
-
-  @Inject()
   private readonly locationService: LocationService;
 
-  public async createCard(consumerID: string): Promise<PomeloCard> {
-    const consumer = await this.consumerService.getActiveConsumer(consumerID);
-
-    let pomeloUser = await this.pomeloRepo.getPomeloUserByConsumerID(consumerID);
+  public async createCard(consumer: Consumer): Promise<NobaCard> {
+    let pomeloUser = await this.pomeloRepo.getPomeloUserByConsumerID(consumer.props.id);
 
     if (!pomeloUser) {
       // Create user in Pomelo
 
       const locationDetails = await this.locationService.getLocationDetails(consumer.props.address.countryCode);
 
+      if (!locationDetails) {
+        throw new ServiceException({
+          message: "Could not find location details for country code",
+          errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        });
+      }
+
       const subdivisionDetails = locationDetails.subdivisions.find(
         subdivision => subdivision.code === consumer.props.address.regionCode,
       );
 
       if (!subdivisionDetails) {
-        throw new Error("Could not find subdivision details for region code");
+        throw new ServiceException({
+          message: "Could not find subdivision details for region code",
+          errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        });
       }
 
       const phoneWithoutExtension = consumer.props.phone.replace(`+${locationDetails.dialingPrefix}`, "");
@@ -55,6 +63,7 @@ export class PomeloService {
         operation_country: locationDetails.alpha3ISOCode,
         legal_address: {
           street_name: consumer.props.address.streetLine1,
+          ...(consumer.props.address.streetLine2 && { additional_info: consumer.props.address.streetLine2 }),
           zip_code: consumer.props.address.postalCode,
           city: consumer.props.address.city,
           region: subdivisionDetails.name,
@@ -62,22 +71,30 @@ export class PomeloService {
         },
       };
 
-      const pomeloClientUser = await this.pomeloClient.createUser(consumerID, createUserRequest);
+      const pomeloClientUser = await this.pomeloClient.createUser(consumer.props.id, createUserRequest);
 
       pomeloUser = await this.pomeloRepo.createPomeloUser({
-        consumerID,
+        consumerID: consumer.props.id,
         pomeloUserID: pomeloClientUser.id,
       });
     }
 
     // Create card in Pomelo
     const idempotencyKey = uuid();
-    const pomeloCard = await this.pomeloClient.createCard(idempotencyKey, {
+    const pomeloClientCard = await this.pomeloClient.createCard(idempotencyKey, {
       user_id: pomeloUser.pomeloID,
-      card_type: CardType.VIRTUAL,
+      card_type: NobaCardType.VIRTUAL,
     });
 
-    // TODO: Create card in our DB
+    const pomeloCardCreateRequest: PomeloCardSaveRequest = {
+      pomeloCardID: pomeloClientCard.id,
+      pomeloUserID: pomeloUser.id,
+      nobaConsumerID: consumer.props.id,
+      status: pomeloClientCard.status,
+      type: pomeloClientCard.cardType,
+    };
+
+    const pomeloCard = await this.pomeloRepo.createPomeloCard(pomeloCardCreateRequest);
 
     return pomeloCard;
   }

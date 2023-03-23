@@ -5,16 +5,16 @@ import {
   PomeloTransaction as PrismaPomeloTransactionModel,
 } from "@prisma/client";
 import { Test, TestingModule } from "@nestjs/testing";
-import { PrismaService } from "../../../../infraproviders/PrismaService";
-import { SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
-import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
-import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
+import { PrismaService } from "../../../../../../infraproviders/PrismaService";
+import { SERVER_LOG_FILE_PATH } from "../../../../../../config/ConfigurationUtils";
+import { TestConfigModule } from "../../../../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../../../../core/utils/WinstonModule";
 import { uuid } from "uuidv4";
-import { RepoErrorCode, RepoException } from "../../../../core/exception/repo.exception";
+import { RepoErrorCode, RepoException } from "../../../../../../core/exception/repo.exception";
 import { PomeloUser, PomeloUserSaveRequest } from "../domain/PomeloUser";
 import { PomeloRepo } from "../repos/pomelo.repo";
 import { SQLPomeloRepo } from "../repos/sql.pomelo.repo";
-import { createTestConsumer } from "../../../../modules/consumer/test_utils/test.utils";
+import { createTestConsumer } from "../../../../../../modules/consumer/test_utils/test.utils";
 import {
   createPomeloCard,
   createPomeloCardWithPredefinedPomeloUser,
@@ -22,9 +22,13 @@ import {
   createPomeloUser,
 } from "../test_utils/util";
 import { PomeloCard, PomeloCardSaveRequest, PomeloCardUpdateRequest } from "../domain/PomeloCard";
-import { CardProvider, NobaCard, NobaCardStatus, NobaCardType } from "../../card/domain/NobaCard";
-import { createNobaCard } from "../../card/test_utils/util";
-import { PomeloCurrency, PomeloTransaction, PomeloTransactionSaveRequest } from "../domain/PomeloTransaction";
+import { CardProvider, NobaCard, NobaCardStatus, NobaCardType } from "../../../../card/domain/NobaCard";
+import { createNobaCard } from "../../../../card/test_utils/util";
+import {
+  PomeloCurrency,
+  PomeloTransaction,
+  PomeloTransactionSaveRequest,
+} from "../../../../pomelo/domain/PomeloTransaction";
 
 const getAllPomeloUserRecords = async (prismaService: PrismaService): Promise<PrismaPomeloUserModel[]> => {
   return prismaService.pomeloUser.findMany({});
@@ -107,7 +111,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.createPomeloUser(pomeloUserSaveRequest);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`pomeloUserID`));
+        expect(err.message).toEqual(expect.stringContaining("pomeloUserID"));
       }
 
       expect(await getAllPomeloUserRecords(prismaService)).toStrictEqual([]);
@@ -121,7 +125,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.createPomeloUser(pomeloUserSaveRequest);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`consumerID`));
+        expect(err.message).toEqual(expect.stringContaining("consumerID"));
       }
 
       expect(await getAllPomeloUserRecords(prismaService)).toStrictEqual([]);
@@ -226,7 +230,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.createPomeloCard(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`pomeloCardID`));
+        expect(err.message).toEqual(expect.stringContaining("pomeloCardID"));
       }
 
       expect(await getAllPomeloCardRecords(prismaService)).toStrictEqual([]);
@@ -243,7 +247,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.createPomeloCard(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`nobaConsumerID`));
+        expect(err.message).toEqual(expect.stringContaining("nobaConsumerID"));
       }
 
       expect(await getAllPomeloCardRecords(prismaService)).toStrictEqual([]);
@@ -260,7 +264,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.createPomeloCard(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`pomeloUserID`));
+        expect(err.message).toEqual(expect.stringContaining("pomeloUserID"));
       }
 
       expect(await getAllPomeloCardRecords(prismaService)).toStrictEqual([]);
@@ -278,7 +282,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.createPomeloCard(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`status`));
+        expect(err.message).toEqual(expect.stringContaining("status"));
       }
 
       expect(await getAllPomeloCardRecords(prismaService)).toStrictEqual([]);
@@ -296,7 +300,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.createPomeloCard(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`type`));
+        expect(err.message).toEqual(expect.stringContaining("type"));
       }
 
       expect(await getAllPomeloCardRecords(prismaService)).toStrictEqual([]);
@@ -384,7 +388,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.updatePomeloCard(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`nobaCardID`));
+        expect(err.message).toEqual(expect.stringContaining("nobaCardID"));
       }
 
       const allCards = await getAllNobaCardRecords(prismaService);
@@ -404,7 +408,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.updatePomeloCard(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`status`));
+        expect(err.message).toEqual(expect.stringContaining("status"));
       }
 
       const allCards = await getAllNobaCardRecords(prismaService);
@@ -425,7 +429,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.updatePomeloCard(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`status`));
+        expect(err.message).toEqual(expect.stringContaining("status"));
       }
 
       const allCards = await getAllNobaCardRecords(prismaService);
@@ -448,7 +452,7 @@ describe("SqlPomeloRepoTests", () => {
       } catch (err) {
         expect(err).toBeInstanceOf(RepoException);
         expect(err.errorCode).toBe(RepoErrorCode.NOT_FOUND);
-        expect(err.message).toEqual(expect.stringContaining(`nobaCardID`));
+        expect(err.message).toEqual(expect.stringContaining("nobaCardID"));
         expect(err.message).toEqual(expect.stringContaining(`${request.nobaCardID}`));
       }
 
@@ -581,7 +585,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.createPomeloTransaction(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`pomeloTransactionID`));
+        expect(err.message).toEqual(expect.stringContaining("pomeloTransactionID"));
       }
 
       expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
@@ -599,7 +603,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.createPomeloTransaction(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`nobaTransactionID`));
+        expect(err.message).toEqual(expect.stringContaining("nobaTransactionID"));
       }
 
       expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
@@ -617,7 +621,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.createPomeloTransaction(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`pomeloCardID`));
+        expect(err.message).toEqual(expect.stringContaining("pomeloCardID"));
       }
 
       expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
@@ -635,7 +639,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.createPomeloTransaction(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`amountInUSD`));
+        expect(err.message).toEqual(expect.stringContaining("amountInUSD"));
       }
 
       expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
@@ -653,7 +657,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.createPomeloTransaction(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`amountInLocalCurrency`));
+        expect(err.message).toEqual(expect.stringContaining("amountInLocalCurrency"));
       }
 
       expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
@@ -671,7 +675,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.createPomeloTransaction(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`localCurrency`));
+        expect(err.message).toEqual(expect.stringContaining("localCurrency"));
       }
 
       expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
@@ -690,7 +694,7 @@ describe("SqlPomeloRepoTests", () => {
         await pomeloRepo.createPomeloTransaction(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`localCurrency`));
+        expect(err.message).toEqual(expect.stringContaining("localCurrency"));
       }
 
       expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);

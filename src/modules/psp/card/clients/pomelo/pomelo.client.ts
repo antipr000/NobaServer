@@ -1,9 +1,9 @@
 import { HttpStatus, Inject, Injectable } from "@nestjs/common";
-import { CustomConfigService } from "../../../core/utils/AppConfigModule";
+import { CustomConfigService } from "../../../../../core/utils/AppConfigModule";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { PomeloConfigs } from "../../../config/configtypes/PomeloConfigs";
-import { POMELO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
+import { PomeloConfigs } from "../../../../../config/configtypes/PomeloConfigs";
+import { POMELO_CONFIG_KEY } from "../../../../../config/ConfigurationUtils";
 import axios, { AxiosResponse, Method } from "axios";
 import {
   ClientCreateCardRequest,
@@ -13,7 +13,7 @@ import {
   ClientPomeloUser,
   ClientPomeloCard,
 } from "./dto/pomelo.client.dto";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
+import { ServiceErrorCode, ServiceException } from "../../../../../core/exception/service.exception";
 
 @Injectable()
 export class PomeloClient {

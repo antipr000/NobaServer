@@ -1,7 +1,7 @@
 import Joi from "joi";
-import { KeysRequired } from "../../../../modules/common/domain/Types";
+import { KeysRequired } from "../../../../../common/domain/Types";
 import { PomeloCard as PrismaPomeloCardModel } from "@prisma/client";
-import { NobaCardStatus, NobaCardType } from "../../card/domain/NobaCard";
+import { NobaCardStatus, NobaCardType } from "../../../domain/NobaCard";
 
 export class PomeloCard {
   id: string;
