@@ -33,6 +33,7 @@ import { Employee, EmployeeAllocationCurrency } from "../employee/domain/Employe
 import { BubbleService } from "../bubble/bubble.service";
 import { ConsumerSearchDTO } from "./dto/consumer.search.dto";
 import { ConsumerMapper } from "./mappers/ConsumerMapper";
+import { Identification } from "./domain/Identification";
 
 @Injectable()
 export class ConsumerService {
@@ -731,6 +732,11 @@ export class ConsumerService {
       firstName: firstName,
       lastName: lastName,
     });
+  }
+
+  async addIdentification(consumer: Consumer, identification: Identification): Promise<Identification> {
+    const result = await this.consumerRepo.addIdentification(identification);
+    return result;
   }
 
   getVerificationStatus(consumer: Consumer): UserVerificationStatus {
