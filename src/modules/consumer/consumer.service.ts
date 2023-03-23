@@ -798,9 +798,15 @@ export class ConsumerService {
       });
     }
 
-    // await this.consumerRepo.getIdentificationForConsumer
+    const identification = await this.consumerRepo.getIdentificationForConsumer(consumerID, identificationID);
+    if (!identification) {
+      throw new ServiceException({
+        message: `Identification for consumer: ${consumerID} does not exist`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
 
-    // await this.consumerRepo.deleteIdentification(consumerID, identificationID);
+    await this.consumerRepo.deleteIdentification(identificationID);
   }
 
   getVerificationStatus(consumer: Consumer): UserVerificationStatus {
