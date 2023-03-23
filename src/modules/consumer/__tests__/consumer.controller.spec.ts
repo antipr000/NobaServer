@@ -1268,4 +1268,27 @@ describe("ConsumerController", () => {
       await consumerController.postEmployerRequestEmail({ email: "rosie@noba.com" }, consumer);
     });
   });
+
+  describe("addIdentification", () => {
+    it("should forward the call to consumerService", async () => {
+      const consumer = getRandomConsumer();
+      const identification = {
+        type: "CC",
+        value: "123456789",
+        countryCode: "CO  ",
+      };
+      when(consumerService.addIdentification(consumer.props.id, identification)).thenResolve();
+
+      await consumerController.addIdentification(consumer, identification);
+    });
+  });
+
+  describe("deleteIdentification", () => {
+    it("should forward the call to consumerService", async () => {
+      const consumer = getRandomConsumer();
+      when(consumerService.deleteIdentification(consumer.props.id, "123")).thenResolve();
+
+      await consumerController.deleteIdentification(consumer, "123");
+    });
+  });
 });

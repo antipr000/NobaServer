@@ -515,7 +515,7 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid identification document" })
-  async addIdentification(@Body() requestBody: CreateIdentificationDTO, @AuthUser() consumer: Consumer) {
+  async addIdentification(@AuthUser() consumer: Consumer, @Body() requestBody: CreateIdentificationDTO) {
     const identification = await this.consumerService.addIdentification(consumer.props.id, requestBody);
     return {}; // return empty response for now
   }
@@ -546,12 +546,9 @@ export class ConsumerController {
   })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   @ApiBadRequestResponse({ description: "Invalid identification document" })
-  async deleteIdentification(
-    @Param("identificationID") identificationID: string,
-    @AuthUser() consumer: Consumer,
-  ): Promise<IdentificationDTO> {
+  async deleteIdentification(@AuthUser() consumer: Consumer, @Param("identificationID") identificationID: string) {
     const identification = await this.consumerService.deleteIdentification(consumer.props.id, identificationID);
-    return {};
+    return {}; // return empty response for now
   }
 
   private verifyOrReplaceNotificationMethod(
