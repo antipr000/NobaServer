@@ -1,4 +1,8 @@
-import { PomeloUser as PrismaPomeloUserModel, PomeloCard as PrimsaPomeloCardModel } from "@prisma/client";
+import {
+  PomeloUser as PrismaPomeloUserModel,
+  PomeloCard as PrimsaPomeloCardModel,
+  NobaCard as PrismaNobaCardModel,
+} from "@prisma/client";
 import { Test, TestingModule } from "@nestjs/testing";
 import { PrismaService } from "../../../../infraproviders/PrismaService";
 import { SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
@@ -10,14 +14,10 @@ import { PomeloUser, PomeloUserSaveRequest } from "../domain/PomeloUser";
 import { PomeloRepo } from "../repos/pomelo.repo";
 import { SqlPomeloRepo } from "../repos/sql.pomelo.repo";
 import { createTestConsumer } from "../../../../modules/consumer/test_utils/test.utils";
-import { createPomeloCard, createPomeloUser } from "../test_utils/util";
-import {
-  PomeloCard,
-  PomeloCardSaveRequest,
-  PomeloCardStatus,
-  PomeloCardType,
-  PomeloCardUpdateRequest,
-} from "../domain/PomeloCard";
+import { createPomeloCard, createPomeloCardWithPredefinedPomeloUser, createPomeloUser } from "../test_utils/util";
+import { PomeloCard, PomeloCardSaveRequest, PomeloCardUpdateRequest } from "../domain/PomeloCard";
+import { CardProvider, NobaCard, NobaCardStatus, NobaCardType } from "../../card/domain/NobaCard";
+import { createNobaCard } from "../../card/test_utils/util";
 
 const getAllPomeloUserRecords = async (prismaService: PrismaService): Promise<PrismaPomeloUserModel[]> => {
   return prismaService.pomeloUser.findMany({});
@@ -25,6 +25,10 @@ const getAllPomeloUserRecords = async (prismaService: PrismaService): Promise<Pr
 
 const getAllPomeloCardRecords = async (prismaService: PrismaService): Promise<PrimsaPomeloCardModel[]> => {
   return prismaService.pomeloCard.findMany({});
+};
+
+const getAllNobaCardRecords = async (prismaService: PrismaService): Promise<PrismaNobaCardModel[]> => {
+  return prismaService.nobaCard.findMany({});
 };
 
 describe("SqlPomeloRepoTests", () => {
@@ -183,8 +187,9 @@ describe("SqlPomeloRepoTests", () => {
       const request: PomeloCardSaveRequest = {
         nobaConsumerID: uuid(),
         pomeloCardID: uuid(),
-        status: PomeloCardStatus.ACTIVE,
-        type: PomeloCardType.VIRTUAL,
+        pomeloUserID: uuid(),
+        status: NobaCardStatus.ACTIVE,
+        type: NobaCardType.VIRTUAL,
       };
       try {
         await pomeloRepo.createPomeloCard(request);
@@ -200,8 +205,9 @@ describe("SqlPomeloRepoTests", () => {
     it("should throw an error if the 'pomeloCardID' is not specified", async () => {
       const request: PomeloCardSaveRequest = {
         nobaConsumerID: uuid(),
-        status: PomeloCardStatus.ACTIVE,
-        type: PomeloCardType.VIRTUAL,
+        pomeloUserID: uuid(),
+        status: NobaCardStatus.ACTIVE,
+        type: NobaCardType.VIRTUAL,
       } as any;
       try {
         await pomeloRepo.createPomeloCard(request);
@@ -216,8 +222,9 @@ describe("SqlPomeloRepoTests", () => {
     it("should throw an error if the 'nobaConsumerID' is not specified", async () => {
       const request: PomeloCardSaveRequest = {
         pomeloCardID: uuid(),
-        status: PomeloCardStatus.ACTIVE,
-        type: PomeloCardType.VIRTUAL,
+        pomeloUserID: uuid(),
+        status: NobaCardStatus.ACTIVE,
+        type: NobaCardType.VIRTUAL,
       } as any;
       try {
         await pomeloRepo.createPomeloCard(request);
@@ -229,12 +236,30 @@ describe("SqlPomeloRepoTests", () => {
       expect(await getAllPomeloCardRecords(prismaService)).toStrictEqual([]);
     });
 
+    it("should throw an error if the 'pomeloUserID' is not specified", async () => {
+      const request: PomeloCardSaveRequest = {
+        nobaConsumerID: uuid(),
+        pomeloCardID: uuid(),
+        status: NobaCardStatus.ACTIVE,
+        type: NobaCardType.VIRTUAL,
+      } as any;
+      try {
+        await pomeloRepo.createPomeloCard(request);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err.message).toEqual(expect.stringContaining(`pomeloUserID`));
+      }
+
+      expect(await getAllPomeloCardRecords(prismaService)).toStrictEqual([]);
+    });
+
     it("should throw an error an invalid value for 'status' is specified", async () => {
       const request: PomeloCardSaveRequest = {
         nobaConsumerID: uuid(),
         pomeloCardID: uuid(),
+        pomeloUserID: uuid(),
         status: "INVALID_STATUS",
-        type: PomeloCardType.VIRTUAL,
+        type: NobaCardType.VIRTUAL,
       } as any;
       try {
         await pomeloRepo.createPomeloCard(request);
@@ -250,7 +275,8 @@ describe("SqlPomeloRepoTests", () => {
       const request: PomeloCardSaveRequest = {
         nobaConsumerID: uuid(),
         pomeloCardID: uuid(),
-        status: PomeloCardStatus.ACTIVE,
+        pomeloUserID: uuid(),
+        status: NobaCardStatus.ACTIVE,
         type: "INVALID_TYPE",
       } as any;
       try {
@@ -263,27 +289,66 @@ describe("SqlPomeloRepoTests", () => {
       expect(await getAllPomeloCardRecords(prismaService)).toStrictEqual([]);
     });
 
-    it("should create a PomeloCard", async () => {
+    it("should throw error if the 'pomeloUserID' is invalid", async () => {
       const consumerID: string = await createTestConsumer(prismaService);
+      const pomeloCardID: string = uuid();
+
       const request: PomeloCardSaveRequest = {
         nobaConsumerID: consumerID,
-        pomeloCardID: uuid(),
-        status: PomeloCardStatus.ACTIVE,
-        type: PomeloCardType.VIRTUAL,
+        pomeloUserID: uuid(),
+        pomeloCardID: pomeloCardID,
+        status: NobaCardStatus.ACTIVE,
+        type: NobaCardType.VIRTUAL,
       };
 
-      const response = await pomeloRepo.createPomeloCard(request);
+      try {
+        await pomeloRepo.createPomeloCard(request);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(RepoException);
+        expect(err.errorCode).toBe(RepoErrorCode.DATABASE_INTERNAL_ERROR);
+      }
 
-      expect(response.pomeloID).toBe(request.pomeloCardID);
-      expect(response.nobaConsumerID).toBe(request.nobaConsumerID);
+      expect(await getAllPomeloCardRecords(prismaService)).toStrictEqual([]);
+      expect(await getAllNobaCardRecords(prismaService)).toStrictEqual([]);
+    });
+
+    it("should create a PomeloCard & NobaCard simultaneously", async () => {
+      const consumerID: string = await createTestConsumer(prismaService);
+      const pomeloUser: PomeloUser = await createPomeloUser(consumerID, prismaService);
+      const pomeloCardID: string = uuid();
+
+      const request: PomeloCardSaveRequest = {
+        nobaConsumerID: consumerID,
+        pomeloUserID: pomeloUser.pomeloID,
+        pomeloCardID: pomeloCardID,
+        status: NobaCardStatus.ACTIVE,
+        type: NobaCardType.VIRTUAL,
+      };
+
+      const response: NobaCard = await pomeloRepo.createPomeloCard(request);
+
+      expect(response.provider).toBe(CardProvider.POMELO);
+      expect(response.consumerID).toBe(request.nobaConsumerID);
       expect(response.type).toBe(request.type);
       expect(response.status).toBe(request.status);
 
-      const allUsers = await getAllPomeloCardRecords(prismaService);
-      expect(allUsers).toHaveLength(1);
-      expect(allUsers[0]).toStrictEqual({
-        nobaConsumerID: consumerID,
-        pomeloID: request.pomeloCardID,
+      const allPomeloCards = await getAllPomeloCardRecords(prismaService);
+      expect(allPomeloCards).toHaveLength(1);
+      expect(allPomeloCards[0]).toStrictEqual({
+        pomeloUserID: pomeloUser.pomeloID,
+        pomeloCardID: request.pomeloCardID,
+        nobaCardID: response.id,
+        id: expect.any(String),
+        createdTimestamp: expect.any(Date),
+        updatedTimestamp: expect.any(Date),
+      });
+
+      const allNobaCards = await getAllNobaCardRecords(prismaService);
+      expect(allNobaCards).toHaveLength(1);
+      expect(allNobaCards[0]).toStrictEqual({
+        consumerID: consumerID,
+        provider: CardProvider.POMELO,
         type: request.type,
         status: request.status,
         id: response.id,
@@ -294,53 +359,33 @@ describe("SqlPomeloRepoTests", () => {
   });
 
   describe("updatePomeloCard", () => {
-    it("should throw error if 'nobaConsumerID' is not specified", async () => {
-      const consumerID: string = await createTestConsumer(prismaService);
-      const card = await createPomeloCard(consumerID, prismaService);
+    it("should throw error if 'nobaCardID' is not specified", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const nobaCard: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard: PomeloCard = await createPomeloCard(consumerID, nobaCard.id, prismaService);
 
       const request: PomeloCardUpdateRequest = {
-        pomeloCardID: uuid(),
-        status: PomeloCardStatus.BLOCKED,
+        status: NobaCardStatus.BLOCKED,
       } as any;
       try {
         await pomeloRepo.updatePomeloCard(request);
         expect(true).toBe(false);
       } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`nobaConsumerID`));
+        expect(err.message).toEqual(expect.stringContaining(`nobaCardID`));
       }
 
-      const allCards = await getAllPomeloCardRecords(prismaService);
+      const allCards = await getAllNobaCardRecords(prismaService);
       expect(allCards).toHaveLength(1);
-      expect(allCards[0].status).toBe(card.status);
-    });
-
-    it("should throw error if 'pomeloCardID' is not specified", async () => {
-      const consumerID: string = await createTestConsumer(prismaService);
-      const card = await createPomeloCard(consumerID, prismaService);
-
-      const request: PomeloCardUpdateRequest = {
-        nobaConsumerID: uuid(),
-        status: PomeloCardStatus.BLOCKED,
-      } as any;
-      try {
-        await pomeloRepo.updatePomeloCard(request);
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining(`pomeloCardID`));
-      }
-
-      const allCards = await getAllPomeloCardRecords(prismaService);
-      expect(allCards).toHaveLength(1);
-      expect(allCards[0].status).toBe(card.status);
+      expect(allCards[0].status).toBe(NobaCardStatus.ACTIVE);
     });
 
     it("should throw error if 'status' is not specified", async () => {
-      const consumerID: string = await createTestConsumer(prismaService);
-      const card = await createPomeloCard(consumerID, prismaService);
+      const consumerID = await createTestConsumer(prismaService);
+      const nobaCard: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard: PomeloCard = await createPomeloCard(consumerID, nobaCard.id, prismaService);
 
       const request: PomeloCardUpdateRequest = {
-        nobaConsumerID: uuid(),
-        pomeloCardID: uuid(),
+        nobaCardID: nobaCard.id,
       } as any;
       try {
         await pomeloRepo.updatePomeloCard(request);
@@ -349,18 +394,18 @@ describe("SqlPomeloRepoTests", () => {
         expect(err.message).toEqual(expect.stringContaining(`status`));
       }
 
-      const allCards = await getAllPomeloCardRecords(prismaService);
+      const allCards = await getAllNobaCardRecords(prismaService);
       expect(allCards).toHaveLength(1);
-      expect(allCards[0].status).toBe(card.status);
+      expect(allCards[0].status).toBe(NobaCardStatus.ACTIVE);
     });
 
     it("should throw error if 'status' value is not valid", async () => {
-      const consumerID: string = await createTestConsumer(prismaService);
-      const card = await createPomeloCard(consumerID, prismaService);
+      const consumerID = await createTestConsumer(prismaService);
+      const nobaCard: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard: PomeloCard = await createPomeloCard(consumerID, nobaCard.id, prismaService);
 
       const request: PomeloCardUpdateRequest = {
-        nobaConsumerID: uuid(),
-        pomeloCardID: uuid(),
+        nobaCardID: nobaCard.id,
         status: "INVALID_STATUS",
       } as any;
       try {
@@ -370,19 +415,19 @@ describe("SqlPomeloRepoTests", () => {
         expect(err.message).toEqual(expect.stringContaining(`status`));
       }
 
-      const allCards = await getAllPomeloCardRecords(prismaService);
+      const allCards = await getAllNobaCardRecords(prismaService);
       expect(allCards).toHaveLength(1);
-      expect(allCards[0].status).toBe(card.status);
+      expect(allCards[0].status).toBe(NobaCardStatus.ACTIVE);
     });
 
-    it("should throw NOT_FOUND error if the requested (consumerID, pomeloCardID) record was not found", async () => {
-      const consumerID: string = await createTestConsumer(prismaService);
-      const card = await createPomeloCard(consumerID, prismaService);
+    it("should throw NOT_FOUND error if the requested `nobaCardID` record was not found", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const nobaCard: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard: PomeloCard = await createPomeloCard(consumerID, nobaCard.id, prismaService);
 
       const request: PomeloCardUpdateRequest = {
-        nobaConsumerID: uuid(),
-        pomeloCardID: uuid(),
-        status: PomeloCardStatus.BLOCKED,
+        nobaCardID: uuid(),
+        status: NobaCardStatus.BLOCKED,
       };
       try {
         await pomeloRepo.updatePomeloCard(request);
@@ -390,90 +435,121 @@ describe("SqlPomeloRepoTests", () => {
       } catch (err) {
         expect(err).toBeInstanceOf(RepoException);
         expect(err.errorCode).toBe(RepoErrorCode.NOT_FOUND);
-        expect(err.message).toEqual(expect.stringContaining(`consumerID`));
-        expect(err.message).toEqual(expect.stringContaining(`pomeloCardID`));
-        expect(err.message).toEqual(expect.stringContaining(`${request.nobaConsumerID}`));
-        expect(err.message).toEqual(expect.stringContaining(`${request.pomeloCardID}`));
+        expect(err.message).toEqual(expect.stringContaining(`nobaCardID`));
+        expect(err.message).toEqual(expect.stringContaining(`${request.nobaCardID}`));
       }
 
-      const allCards = await getAllPomeloCardRecords(prismaService);
+      const allCards = await getAllNobaCardRecords(prismaService);
       expect(allCards).toHaveLength(1);
-      expect(allCards[0].status).toBe(card.status);
+      expect(allCards[0].status).toBe(NobaCardStatus.ACTIVE);
     });
 
     it("should update the requested record successfully", async () => {
-      const consumerID: string = await createTestConsumer(prismaService);
-      const card = await createPomeloCard(consumerID, prismaService);
+      const consumerID1 = await createTestConsumer(prismaService);
+      const nobaCard1: NobaCard = await createNobaCard(consumerID1, CardProvider.POMELO, prismaService);
+      const pomeloCard1: PomeloCard = await createPomeloCard(consumerID1, nobaCard1.id, prismaService);
+
+      const consumerID2 = await createTestConsumer(prismaService);
+      const nobaCard2: NobaCard = await createNobaCard(consumerID2, CardProvider.POMELO, prismaService);
+      const pomeloCard2: PomeloCard = await createPomeloCard(consumerID2, nobaCard2.id, prismaService);
 
       const request: PomeloCardUpdateRequest = {
-        nobaConsumerID: consumerID,
-        pomeloCardID: card.pomeloID,
-        status: PomeloCardStatus.BLOCKED,
+        nobaCardID: nobaCard2.id,
+        status: NobaCardStatus.BLOCKED,
       };
 
       const response = await pomeloRepo.updatePomeloCard(request);
 
-      const allCards = await getAllPomeloCardRecords(prismaService);
-      expect(allCards).toHaveLength(1);
-      expect(allCards[0].status).toBe(PomeloCardStatus.BLOCKED);
+      const allCards = await getAllNobaCardRecords(prismaService);
+      expect(allCards).toHaveLength(2);
+      expect(allCards).toContainEqual(nobaCard1);
+      expect(allCards).toContainEqual({
+        ...nobaCard2,
+        status: NobaCardStatus.BLOCKED,
+        updatedTimestamp: expect.any(Date),
+      });
 
-      expect(response).toStrictEqual(allCards[0]);
+      expect(allCards).toContainEqual(response);
     });
   });
 
-  describe("getPomeloCard", () => {
-    it("should return null when cards with same 'consumerID' exists but matching '(consumerID, pomeloCardID)' is not found", async () => {
+  describe("getPomeloCardByPomeloCardID", () => {
+    it("should return null when card with same 'pomeloCardID' doesn't exists", async () => {
       const consumerID = await createTestConsumer(prismaService);
-      const pomeloCard1: PomeloCard = await createPomeloCard(consumerID, prismaService);
-      const pomeloCard2: PomeloCard = await createPomeloCard(consumerID, prismaService);
+      const nobaCard: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard: PomeloCard = await createPomeloCard(consumerID, nobaCard.id, prismaService);
 
-      const response = await pomeloRepo.getPomeloCard(consumerID, uuid());
+      const response = await pomeloRepo.getPomeloCardByPomeloCardID(uuid());
 
       expect(response).toBe(null);
     });
 
-    it("should return null when cards with same 'pomeloCardID' exists but matching '(consumerID, pomeloCardID)' is not found", async () => {
-      const consumerID = await createTestConsumer(prismaService);
-      const pomeloCard: PomeloCard = await createPomeloCard(consumerID, prismaService);
-
-      const response = await pomeloRepo.getPomeloCard(uuid(), pomeloCard.pomeloID);
-
-      expect(response).toBe(null);
-    });
-
-    it("should return PomeloCard with the matching '(consumerID, pomeloCardID)'", async () => {
+    it("should return PomeloCard with the matching 'pomeloCardID'", async () => {
       const consumerID1 = await createTestConsumer(prismaService);
-      const pomeloCard1: PomeloCard = await createPomeloCard(consumerID1, prismaService);
-      const pomeloCard2: PomeloCard = await createPomeloCard(consumerID1, prismaService);
+      const pomeloUserID1 = await createPomeloUser(consumerID1, prismaService);
+      const nobaCard11: NobaCard = await createNobaCard(consumerID1, CardProvider.POMELO, prismaService);
+      const pomeloCard11: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUserID1.pomeloID,
+        nobaCard11.id,
+        prismaService,
+      );
+      const nobaCard12: NobaCard = await createNobaCard(consumerID1, CardProvider.POMELO, prismaService);
+      const pomeloCard12: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUserID1.pomeloID,
+        nobaCard12.id,
+        prismaService,
+      );
+
       const consumerID2 = await createTestConsumer(prismaService);
-      const pomeloCard3: PomeloCard = await createPomeloCard(consumerID2, prismaService);
-      const pomeloCard4: PomeloCard = await createPomeloCard(consumerID2, prismaService);
+      const pomeloUserID2 = await createPomeloUser(consumerID2, prismaService);
+      const nobaCard21: NobaCard = await createNobaCard(consumerID2, CardProvider.POMELO, prismaService);
+      const pomeloCard21: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUserID2.pomeloID,
+        nobaCard21.id,
+        prismaService,
+      );
+      const nobaCard22: NobaCard = await createNobaCard(consumerID2, CardProvider.POMELO, prismaService);
+      const pomeloCard22: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUserID2.pomeloID,
+        nobaCard22.id,
+        prismaService,
+      );
 
-      const response = await pomeloRepo.getPomeloCard(consumerID2, pomeloCard3.pomeloID);
+      const response = await pomeloRepo.getPomeloCardByPomeloCardID(pomeloCard21.pomeloCardID);
 
-      expect(response).toStrictEqual(pomeloCard3);
+      expect(response).toStrictEqual(pomeloCard21);
     });
   });
 
-  describe("getPomeloCardByID", () => {
-    it("should return null when matching 'id' is not found", async () => {
-      const consumerID1 = await createTestConsumer(prismaService);
-      const pomeloCard1: PomeloCard = await createPomeloCard(consumerID1, prismaService);
-      const consumerID2 = await createTestConsumer(prismaService);
-      const pomeloCard2: PomeloCard = await createPomeloCard(consumerID2, prismaService);
+  describe("getPomeloCardByNobaCardID", () => {
+    it("should return null when matching 'nobaCardID' is not found", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const nobaCard: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard: PomeloCard = await createPomeloCard(consumerID, nobaCard.id, prismaService);
 
-      const response = await pomeloRepo.getPomeloCardByID(uuid());
+      const response = await pomeloRepo.getPomeloCardByNobaCardID(uuid());
 
       expect(response).toBe(null);
     });
 
-    it("should return PomeloCard with the matching 'id'", async () => {
-      const consumerID1 = await createTestConsumer(prismaService);
-      const pomeloCard1: PomeloCard = await createPomeloCard(consumerID1, prismaService);
-      const consumerID2 = await createTestConsumer(prismaService);
-      const pomeloCard2: PomeloCard = await createPomeloCard(consumerID2, prismaService);
+    it("should return PomeloCard with the matching 'nobaCardID'", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const pomeloUser = await createPomeloUser(consumerID, prismaService);
 
-      const response = await pomeloRepo.getPomeloCardByID(pomeloCard2.id);
+      const nobaCard1: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard1: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUser.pomeloID,
+        nobaCard1.id,
+        prismaService,
+      );
+      const nobaCard2: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard2: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUser.pomeloID,
+        nobaCard2.id,
+        prismaService,
+      );
+
+      const response = await pomeloRepo.getPomeloCardByNobaCardID(nobaCard2.id);
 
       expect(response).toStrictEqual(pomeloCard2);
     });

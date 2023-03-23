@@ -1,6 +1,6 @@
 import { PrismaService } from "../../../../infraproviders/PrismaService";
 import { uuid } from "uuidv4";
-import { PomeloCard, PomeloCardStatus, PomeloCardType } from "../domain/PomeloCard";
+import { PomeloCard } from "../domain/PomeloCard";
 import { PomeloUser } from "../domain/PomeloUser";
 
 export const getRandomPomeloUser = (consumerID: string): PomeloUser => {
@@ -34,38 +34,75 @@ export const createPomeloUser = async (consumerID: string, prismaService: Prisma
   };
 };
 
-export const getRandomPomeloCard = (consumerID: string): PomeloCard => {
+export const getRandomPomeloCard = (nobaCardID: string): PomeloCard => {
   return {
     id: uuid(),
-    nobaConsumerID: consumerID,
-    pomeloID: uuid(),
-    status: PomeloCardStatus.ACTIVE,
-    type: PomeloCardType.VIRTUAL,
+    nobaCardID: nobaCardID,
+    pomeloUserID: uuid(),
+    pomeloCardID: uuid(),
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };
 };
 
-export const createPomeloCard = async (consumerID: string, prismaService: PrismaService): Promise<PomeloCard> => {
+export const createPomeloCard = async (
+  consumerID: string,
+  nobaCardID: string,
+  prismaService: PrismaService,
+): Promise<PomeloCard> => {
+  const pomeloUser: PomeloUser = await createPomeloUser(consumerID, prismaService);
   const savedPomeloCard = await prismaService.pomeloCard.create({
     data: {
-      pomeloID: uuid(),
-      consumer: {
+      nobaCard: {
         connect: {
-          id: consumerID,
+          id: nobaCardID,
         },
       },
-      status: PomeloCardStatus.ACTIVE,
-      type: PomeloCardType.VIRTUAL,
+      pomeloUser: {
+        connect: {
+          pomeloID: pomeloUser.pomeloID,
+        },
+      },
+      pomeloCardID: uuid(),
     },
   });
 
   return {
     id: savedPomeloCard.id,
-    nobaConsumerID: savedPomeloCard.nobaConsumerID,
-    pomeloID: savedPomeloCard.pomeloID,
-    status: savedPomeloCard.status as PomeloCardStatus,
-    type: savedPomeloCard.type as PomeloCardType,
+    nobaCardID: savedPomeloCard.nobaCardID,
+    pomeloCardID: savedPomeloCard.pomeloCardID,
+    pomeloUserID: savedPomeloCard.pomeloUserID,
+    createdTimestamp: savedPomeloCard.createdTimestamp,
+    updatedTimestamp: savedPomeloCard.updatedTimestamp,
+  };
+};
+
+export const createPomeloCardWithPredefinedPomeloUser = async (
+  pomeloUserID: string,
+  nobaCardID: string,
+  prismaService: PrismaService,
+): Promise<PomeloCard> => {
+  const savedPomeloCard = await prismaService.pomeloCard.create({
+    data: {
+      nobaCard: {
+        connect: {
+          id: nobaCardID,
+        },
+      },
+      pomeloUser: {
+        connect: {
+          pomeloID: pomeloUserID,
+        },
+      },
+      pomeloCardID: uuid(),
+    },
+  });
+
+  return {
+    id: savedPomeloCard.id,
+    nobaCardID: savedPomeloCard.nobaCardID,
+    pomeloCardID: savedPomeloCard.pomeloCardID,
+    pomeloUserID: savedPomeloCard.pomeloUserID,
     createdTimestamp: savedPomeloCard.createdTimestamp,
     updatedTimestamp: savedPomeloCard.updatedTimestamp,
   };

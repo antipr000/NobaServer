@@ -1,51 +1,41 @@
 import Joi from "joi";
 import { KeysRequired } from "../../../../modules/common/domain/Types";
 import { PomeloCard as PrismaPomeloCardModel } from "@prisma/client";
-
-export enum PomeloCardType {
-  PHYSICAL = "PHYSICAL",
-  VIRTUAL = "VIRTUAL",
-}
-
-export enum PomeloCardStatus {
-  BLOCKED = "BLOCKED",
-  DISABLED = "DISABLED",
-  ACTIVE = "ACTIVE",
-}
+import { NobaCardStatus, NobaCardType } from "../../card/domain/NobaCard";
 
 export class PomeloCard {
   id: string;
-  status: PomeloCardStatus;
-  pomeloID: string;
-  nobaConsumerID: string;
-  type: PomeloCardType;
+  nobaCardID: string;
+  pomeloCardID: string;
+  pomeloUserID: string;
   createdTimestamp: Date;
   updatedTimestamp: Date;
 }
 
 export class PomeloCardSaveRequest {
   pomeloCardID: string;
+  pomeloUserID: string;
   nobaConsumerID: string;
-  status: PomeloCardStatus;
-  type: PomeloCardType;
+  status: NobaCardStatus;
+  type: NobaCardType;
 }
 
 export class PomeloCardUpdateRequest {
-  nobaConsumerID: string;
-  pomeloCardID: string;
-  status: PomeloCardStatus;
+  nobaCardID: string;
+  status: NobaCardStatus;
 }
 
 export const validateSavePomeloCardRequest = (request: PomeloCardSaveRequest) => {
   const pomeloCardJoiValidationKeys: KeysRequired<PomeloCardSaveRequest> = {
     pomeloCardID: Joi.string().required(),
+    pomeloUserID: Joi.string().required(),
     nobaConsumerID: Joi.string().required(),
     status: Joi.string()
       .required()
-      .valid(...Object.values(PomeloCardStatus)),
+      .valid(...Object.values(NobaCardStatus)),
     type: Joi.string()
       .required()
-      .valid(...Object.values(PomeloCardType)),
+      .valid(...Object.values(NobaCardType)),
   };
   const pomeloCardJoiSchema = Joi.object(pomeloCardJoiValidationKeys).options({
     allowUnknown: false,
@@ -57,11 +47,10 @@ export const validateSavePomeloCardRequest = (request: PomeloCardSaveRequest) =>
 
 export const validateUpdatePomeloCardRequest = (request: PomeloCardUpdateRequest) => {
   const pomeloCardJoiValidationKeys: KeysRequired<PomeloCardUpdateRequest> = {
-    pomeloCardID: Joi.string().required(),
-    nobaConsumerID: Joi.string().required(),
+    nobaCardID: Joi.string().required(),
     status: Joi.string()
       .required()
-      .valid(...Object.values(PomeloCardStatus)),
+      .valid(...Object.values(NobaCardStatus)),
   };
   const pomeloCardJoiSchema = Joi.object(pomeloCardJoiValidationKeys).options({
     allowUnknown: false,
@@ -73,15 +62,10 @@ export const validateUpdatePomeloCardRequest = (request: PomeloCardUpdateRequest
 
 export const validatePomeloCard = (pomeloCard: PomeloCard) => {
   const pomeloCardJoiValidationKeys: KeysRequired<PomeloCard> = {
-    pomeloID: Joi.string().required(),
-    nobaConsumerID: Joi.string().required(),
-    status: Joi.string()
-      .required()
-      .valid(...Object.values(PomeloCardStatus)),
-    type: Joi.string()
-      .required()
-      .valid(...Object.values(PomeloCardType)),
     id: Joi.string().required(),
+    pomeloCardID: Joi.string().required(),
+    nobaCardID: Joi.string().required(),
+    pomeloUserID: Joi.string().required(),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
   };
@@ -96,10 +80,9 @@ export const validatePomeloCard = (pomeloCard: PomeloCard) => {
 export const convertToDomainPomeloCard = (pomeloCard: PrismaPomeloCardModel): PomeloCard => {
   return {
     id: pomeloCard.id,
-    pomeloID: pomeloCard.pomeloID,
-    nobaConsumerID: pomeloCard.nobaConsumerID,
-    status: pomeloCard.status as PomeloCardStatus,
-    type: pomeloCard.type as PomeloCardType,
+    pomeloCardID: pomeloCard.pomeloCardID,
+    nobaCardID: pomeloCard.nobaCardID,
+    pomeloUserID: pomeloCard.pomeloUserID,
     createdTimestamp: pomeloCard.createdTimestamp,
     updatedTimestamp: pomeloCard.updatedTimestamp,
   };

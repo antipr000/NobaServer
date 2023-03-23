@@ -1,5 +1,5 @@
-import { PomeloCard } from "@prisma/client";
-import { PomeloCardSaveRequest, PomeloCardUpdateRequest } from "../domain/PomeloCard";
+import { NobaCard } from "../../card/domain/NobaCard";
+import { PomeloCard, PomeloCardSaveRequest, PomeloCardUpdateRequest } from "../domain/PomeloCard";
 import { PomeloUser, PomeloUserSaveRequest } from "../domain/PomeloUser";
 
 export interface PomeloRepo {
@@ -7,8 +7,8 @@ export interface PomeloRepo {
   getPomeloUserByConsumerID(consumerID: string): Promise<PomeloUser>;
   getPomeloUserByPomeloID(pomeloUserID: string): Promise<PomeloUser>;
 
-  createPomeloCard(request: PomeloCardSaveRequest): Promise<PomeloCard>;
-  updatePomeloCard(request: PomeloCardUpdateRequest): Promise<PomeloCard>;
-  getPomeloCard(consumerID: string, pomeloCardID: string): Promise<PomeloCard>;
-  getPomeloCardByID(id: string): Promise<PomeloCard>;
+  createPomeloCard(request: PomeloCardSaveRequest): Promise<NobaCard>;
+  updatePomeloCard(request: PomeloCardUpdateRequest): Promise<NobaCard>;
+  getPomeloCardByPomeloCardID(pomeloCardID: string): Promise<PomeloCard>;
+  getPomeloCardByNobaCardID(nobaCardID: string): Promise<PomeloCard>;
 }
