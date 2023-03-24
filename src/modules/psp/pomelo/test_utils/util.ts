@@ -2,6 +2,7 @@ import { PrismaService } from "../../../../infraproviders/PrismaService";
 import { uuid } from "uuidv4";
 import { PomeloCard } from "../domain/PomeloCard";
 import { PomeloUser } from "../domain/PomeloUser";
+import { PomeloCurrency, PomeloTransaction } from "../domain/PomeloTransaction";
 
 export const getRandomPomeloUser = (consumerID: string): PomeloUser => {
   return {
@@ -105,5 +106,52 @@ export const createPomeloCardWithPredefinedPomeloUser = async (
     pomeloUserID: savedPomeloCard.pomeloUserID,
     createdTimestamp: savedPomeloCard.createdTimestamp,
     updatedTimestamp: savedPomeloCard.updatedTimestamp,
+  };
+};
+
+export const createPomeloTransaction = async (
+  pomeloCardID: string,
+  nobaTransactionID: string,
+  prismaService: PrismaService,
+): Promise<PomeloTransaction> => {
+  const savedTransaction = await prismaService.pomeloTransaction.create({
+    data: {
+      pomeloCard: {
+        connect: {
+          pomeloCardID: pomeloCardID,
+        },
+      },
+      nobaTransactionID: nobaTransactionID,
+      pomeloTransactionID: uuid(),
+      amountInUSD: 10,
+      amountInLocalCurrency: 500,
+      localCurrency: PomeloCurrency.COP,
+    },
+  });
+
+  return {
+    id: savedTransaction.id,
+    pomeloTransactionID: savedTransaction.pomeloTransactionID,
+    pomeloCardID: savedTransaction.pomeloCardID,
+    nobaTransactionID: savedTransaction.nobaTransactionID,
+    amountInUSD: savedTransaction.amountInUSD,
+    amountInLocalCurrency: savedTransaction.amountInLocalCurrency,
+    localCurrency: savedTransaction.localCurrency as PomeloCurrency,
+    createdTimestamp: savedTransaction.createdTimestamp,
+    updatedTimestamp: savedTransaction.updatedTimestamp,
+  };
+};
+
+export const getRandomPomeloTransaction = (pomeloCardID: string, nobaTransactionID: string): PomeloTransaction => {
+  return {
+    id: uuid(),
+    pomeloTransactionID: uuid(),
+    pomeloCardID: pomeloCardID,
+    nobaTransactionID: nobaTransactionID,
+    amountInUSD: 10,
+    amountInLocalCurrency: 500,
+    localCurrency: PomeloCurrency.COP,
+    createdTimestamp: new Date(),
+    updatedTimestamp: new Date(),
   };
 };
