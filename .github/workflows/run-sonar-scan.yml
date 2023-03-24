@@ -34,17 +34,15 @@ jobs:
           path: ./
           key: ${{ runner.os }}-build-${{ github.run_number }}-others
 
-      - name: Merge lcov files
+      - name: Clean up coverage reports
         run: |
-          ls -la src
-          yarn add lcov-result-merger
-          mkdir coverage
-          yarn lcov-result-merger 'src/coverage-*/lcov.info' 'coverage/lcov.info'
-          rm -rf src/coverage-*
-          ls -l coverage/lcov.info
+          rm -rf src/coverage-*/lcov-report
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
+        with:
+          args: >
+            -Dsonar.javascript.lcov.reportPaths=src/coverage-*/lcov.info
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

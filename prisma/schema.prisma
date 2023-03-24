@@ -352,16 +352,31 @@ model NobaCard {
 }
 
 model PomeloCard {
-  id               String     @id @default(uuid())
-  nobaCardID       String     @unique()
-  pomeloCardID     String     @unique()
-  pomeloUserID     String
-  pomeloUser       PomeloUser @relation(fields: [pomeloUserID], references: [pomeloID], onDelete: Cascade)
-  nobaCard         NobaCard   @relation(fields: [nobaCardID], references: [id], onDelete: Cascade)
-  createdTimestamp DateTime?  @default(now())
-  updatedTimestamp DateTime?  @updatedAt
+  id                String              @id @default(uuid())
+  nobaCardID        String              @unique()
+  pomeloCardID      String              @unique()
+  pomeloUserID      String
+  pomeloUser        PomeloUser          @relation(fields: [pomeloUserID], references: [pomeloID], onDelete: Cascade)
+  nobaCard          NobaCard            @relation(fields: [nobaCardID], references: [id], onDelete: Cascade)
+  createdTimestamp  DateTime?           @default(now())
+  updatedTimestamp  DateTime?           @updatedAt
+  PomeloTransaction PomeloTransaction[]
 
   @@unique([pomeloUserID, pomeloCardID])
+}
+
+model PomeloTransaction {
+  id                    String     @id @default(uuid())
+  pomeloTransactionID   String     @unique()
+  // Note that this is not linked to "Transaction" model intentionally.
+  nobaTransactionID     String     @unique()
+  pomeloCardID          String
+  pomeloCard            PomeloCard @relation(fields: [pomeloCardID], references: [pomeloCardID], onDelete: Cascade)
+  amountInUSD           Float
+  amountInLocalCurrency Float
+  localCurrency         String
+  createdTimestamp      DateTime?  @default(now())
+  updatedTimestamp      DateTime?  @updatedAt
 }
 
 model Token {
