@@ -383,7 +383,7 @@ describe("VerificationService", () => {
       const sessionKey = "fake-session";
 
       const consumerVerificationResult: ConsumerVerificationResult = {
-        status: KYCStatus.APPROVED,
+        status: KYCStatus.NOT_SUBMITTED,
         idvProviderRiskLevel: "fake-risk-rating",
       };
 
@@ -396,7 +396,7 @@ describe("VerificationService", () => {
         phone: consumerInformation.phoneNumber,
         verificationData: {
           ...consumer.props.verificationData,
-          kycCheckStatus: consumerVerificationResult.status,
+          kycCheckStatus: KYCStatus.NOT_SUBMITTED,
           kycVerificationTimestamp: new Date(),
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
           riskRating: consumerVerificationResult.idvProviderRiskLevel,
@@ -417,11 +417,11 @@ describe("VerificationService", () => {
       const result = await verificationService.verifyConsumerInformationForLogin(consumer.props.id, sessionKey);
       expect(result).toStrictEqual(consumerVerificationResult.status);
       verify(notificationService.sendNotification(anything(), anything())).never();
-      verify(idvProvider.postConsumerFeedback(sessionKey, consumer.props.id, consumerVerificationResult.status)).once();
     });
 
-    it("should return REJECTED status when Sardine marks consumerInformation as high risk and not send email", async () => {
+    it("should return REJECTED status when Sardine marks consumerInformation as high risk upon login", async () => {
       const consumer = getFakeConsumer();
+      consumer.props.verificationData.kycCheckStatus = KYCStatus.APPROVED;
       const consumerInformation = getFakeConsumerInformation(consumer);
 
       const sessionKey = "fake-session";
@@ -440,7 +440,7 @@ describe("VerificationService", () => {
         phone: consumerInformation.phoneNumber,
         verificationData: {
           ...consumer.props.verificationData,
-          kycCheckStatus: consumerVerificationResult.status,
+          kycCheckStatus: KYCStatus.REJECTED,
           kycVerificationTimestamp: new Date(),
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
           riskRating: consumerVerificationResult.idvProviderRiskLevel,
@@ -460,11 +460,11 @@ describe("VerificationService", () => {
       const result = await verificationService.verifyConsumerInformationForLogin(consumer.props.id, sessionKey);
       expect(result).toStrictEqual(consumerVerificationResult.status);
       verify(notificationService.sendNotification(anything(), anything())).never();
-      verify(idvProvider.postConsumerFeedback(sessionKey, consumer.props.id, consumerVerificationResult.status)).once();
     });
 
-    it("should return PENDING status when Sardine marks consumerInformation as medium risk and should send flagged email", async () => {
+    it("should return PENDING status when Sardine marks consumerInformation as medium risk upon login", async () => {
       const consumer = getFakeConsumer();
+      consumer.props.verificationData.kycCheckStatus = KYCStatus.APPROVED;
       const consumerInformation = getFakeConsumerInformation(consumer);
 
       const sessionKey = "fake-session";
@@ -483,7 +483,7 @@ describe("VerificationService", () => {
         phone: consumerInformation.phoneNumber,
         verificationData: {
           ...consumer.props.verificationData,
-          kycCheckStatus: consumerVerificationResult.status,
+          kycCheckStatus: KYCStatus.APPROVED,
           kycVerificationTimestamp: new Date(),
           documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
           riskRating: consumerVerificationResult.idvProviderRiskLevel,
@@ -499,9 +499,6 @@ describe("VerificationService", () => {
       const result = await verificationService.verifyConsumerInformationForLogin(consumer.props.id, sessionKey);
       expect(result).toStrictEqual(consumerVerificationResult.status);
       verify(notificationService.sendNotification(anything(), anything())).never();
-      verify(
-        idvProvider.postConsumerFeedback(sessionKey, consumer.props.id, consumerVerificationResult.status),
-      ).never();
     });
   });
 

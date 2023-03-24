@@ -74,14 +74,15 @@ export abstract class AuthService {
   ): Promise<LoginResponseDTO> {
     if (this.getIdentityType() == IdentityType.CONSUMER) {
       // Run login KYC on the user
-      if (!sessionKey)
+      if (!sessionKey) {
         this.logger.error(
           `Session key is missing for consumer ${consumerID} access token request. Calling with generic "NOT_PROVIDED" session key.`,
         );
-
-      this.verificationService.verifyConsumerInformationForLogin(consumerID, sessionKey || "NOT_PROVIDED");
-      // We don't do anything with the return value (status) here, but the consumer data has been updated and when the caller (app)
-      // gets the consumer data it will see that the user is blocked.
+      } else {
+        await this.verificationService.verifyConsumerInformationForLogin(consumerID, sessionKey);
+        // We don't do anything with the return value (status) here, but the consumer data has been updated and when the caller (app)
+        // gets the consumer data it will see that the user is blocked.
+      }
     }
 
     let refreshToken = "";

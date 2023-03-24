@@ -47,23 +47,30 @@ export class VerificationService {
   }
 
   async verifyConsumerInformationForLogin(consumerID: string, sessionKey: string): Promise<KYCStatus> {
-    const verifiedConsumerData = await this.verifyConsumerInformationInternal(consumerID, sessionKey, [KYCFlow.LOGIN]);
-    await this.consumerService.updateConsumer(verifiedConsumerData);
+    const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
+    if (
+      !consumer.props.verificationData?.kycCheckStatus ||
+      consumer.props.verificationData.kycCheckStatus === KYCStatus.NOT_SUBMITTED
+    ) {
+      // Don't call login checkpoint if user hasn't gone through KYC flow yet
+      return KYCStatus.NOT_SUBMITTED;
+    }
+
+    const verifiedConsumerData = await this.verifyConsumerInformationInternal(consumer, sessionKey, [KYCFlow.LOGIN]);
     const status = verifiedConsumerData.verificationData.kycCheckStatus;
-    if (status === KYCStatus.APPROVED) {
-      await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
-    } else if (status === KYCStatus.REJECTED) {
-      await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
+    if (status === KYCStatus.REJECTED) {
+      await this.consumerService.updateConsumer(verifiedConsumerData);
+      //await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
     } else {
-      // This means it's pending. Do we want to do anything more here?
+      // No-op
     }
     return status;
   }
 
   async verifyConsumerInformation(consumerID: string, sessionKey: string): Promise<KYCStatus> {
-    const verifiedConsumerData = await this.verifyConsumerInformationInternal(consumerID, sessionKey, [
-      KYCFlow.CUSTOMER,
-    ]);
+    const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
+
+    const verifiedConsumerData = await this.verifyConsumerInformationInternal(consumer, sessionKey, [KYCFlow.CUSTOMER]);
     const updatedConsumer = await this.consumerService.updateConsumer(verifiedConsumerData);
     const status = verifiedConsumerData.verificationData.kycCheckStatus;
 
@@ -98,15 +105,13 @@ export class VerificationService {
   }
 
   private async verifyConsumerInformationInternal(
-    consumerID: string,
+    consumer: Consumer,
     sessionKey: string,
     kycFlow: KYCFlow[],
   ): Promise<ConsumerProps> {
-    const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
-
     // Augment request with created timestamp info for verification provider
     const consumerInformation: ConsumerInformation = {
-      userID: consumerID,
+      userID: consumer.props.id,
       firstName: consumer.props.firstName,
       lastName: consumer.props.lastName,
       dateOfBirth: consumer.props.dateOfBirth,

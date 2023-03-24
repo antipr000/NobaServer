@@ -116,36 +116,45 @@ describe("UserAuthService", () => {
     });
 
     describe("generateAccessToken", () => {
-      it("generate access token without refresh token", async () => {
+      it("generate access token without refresh token and without session key", async () => {
         const id = "nobauser";
-        when(mockVerificationService.verifyConsumerInformationForLogin(id, "NOT_PROVIDED")).thenResolve();
         const jwt = await userAuthService.generateAccessToken(id, false);
         expect(jwt.accessToken).toBeDefined();
         expect(jwt.userID).toBe(id);
         expect(jwt.refreshToken).toBe("");
-        verify(mockVerificationService.verifyConsumerInformationForLogin(id, "NOT_PROVIDED")).once();
+        verify(mockVerificationService.verifyConsumerInformationForLogin(id, anything())).never();
+      });
+
+      it("generate access token without refresh token and with session key", async () => {
+        const id = "nobauser";
+        when(mockVerificationService.verifyConsumerInformationForLogin(id, "session-key")).thenResolve();
+        const jwt = await userAuthService.generateAccessToken(id, false, "session-key");
+        expect(jwt.accessToken).toBeDefined();
+        expect(jwt.userID).toBe(id);
+        expect(jwt.refreshToken).toBe("");
+        verify(mockVerificationService.verifyConsumerInformationForLogin(id, "session-key")).once();
       });
 
       it("generate access token with refresh token", async () => {
         const id = "nobauser1";
         when(mockTokenRepo.saveToken(anything())).thenResolve();
-        when(mockVerificationService.verifyConsumerInformationForLogin(id, "NOT_PROVIDED")).thenResolve();
-        const jwt = await userAuthService.generateAccessToken(id, true);
+        when(mockVerificationService.verifyConsumerInformationForLogin(id, "session-key")).thenResolve();
+        const jwt = await userAuthService.generateAccessToken(id, true, "session-key");
         expect(jwt.accessToken).toBeDefined();
         expect(jwt.userID).toBe(id);
         expect(jwt.refreshToken).toBeDefined();
-        verify(mockVerificationService.verifyConsumerInformationForLogin(id, "NOT_PROVIDED")).once();
+        verify(mockVerificationService.verifyConsumerInformationForLogin(id, "session-key")).once();
       });
 
       it("generate access token with refresh token and session id", async () => {
         const id = "nobauser2";
         when(mockTokenRepo.saveToken(anything())).thenResolve();
-        when(mockVerificationService.verifyConsumerInformationForLogin(id, "session-id")).thenResolve();
-        const jwt = await userAuthService.generateAccessToken(id, true, "session-id");
+        when(mockVerificationService.verifyConsumerInformationForLogin(id, "session-key")).thenResolve();
+        const jwt = await userAuthService.generateAccessToken(id, true, "session-key");
         expect(jwt.accessToken).toBeDefined();
         expect(jwt.userID).toBe(id);
         expect(jwt.refreshToken).toBeDefined();
-        verify(mockVerificationService.verifyConsumerInformationForLogin(id, "session-id")).once();
+        verify(mockVerificationService.verifyConsumerInformationForLogin(id, "session-key")).once();
       });
     });
 
