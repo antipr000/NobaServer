@@ -79,6 +79,7 @@ export const getRandomPayrollDisbursement = (
     payrollID: payrollID,
     employeeID: employeeID,
     allocationAmount: 10,
+    creditAmount: 2,
   };
 
   const payrollDisbursementCreateInput: PayrollDisbursementCreateRequest = {

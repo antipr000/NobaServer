@@ -10,6 +10,7 @@ export class PayrollDisbursement {
   employeeID: string;
   transactionID?: string;
   allocationAmount: number;
+  creditAmount: number;
 }
 
 export class PayrollDisbursementCreateRequest {
@@ -20,6 +21,7 @@ export class PayrollDisbursementCreateRequest {
 
 export class PayrollDisbursementUpdateRequest {
   transactionID?: string;
+  creditAmount?: number;
 }
 
 export const validateCreatePayrollDisbursementRequest = (payrollDisbursement: PayrollDisbursementCreateRequest) => {
@@ -39,6 +41,7 @@ export const validateCreatePayrollDisbursementRequest = (payrollDisbursement: Pa
 export const validateUpdatePayrollDisbursementRequest = (payrollDisbursement: PayrollDisbursementUpdateRequest) => {
   const payrollDisbursementJoiValidationKeys: KeysRequired<PayrollDisbursementUpdateRequest> = {
     transactionID: Joi.string().optional(),
+    creditAmount: Joi.number().required(),
   };
 
   const payrollDisbursementJoiSchema = Joi.object(payrollDisbursementJoiValidationKeys).options({
@@ -57,6 +60,7 @@ export const validatePayrollDisbursement = (payrollDisbursement: PayrollDisburse
     employeeID: Joi.string().required(),
     transactionID: Joi.string().optional().allow(null),
     allocationAmount: Joi.number().required(),
+    creditAmount: Joi.number().optional().allow(null),
   };
 
   const payrollDisbursementJoiSchema = Joi.object(payrollDisbursementJoiValidationKeys).options({
@@ -77,5 +81,6 @@ export const convertToDomainPayrollDisbursement = (
     employeeID: payrollDisbursement.employeeID,
     transactionID: payrollDisbursement.transactionID,
     allocationAmount: payrollDisbursement.allocationAmount,
+    creditAmount: payrollDisbursement.creditAmount,
   };
 };

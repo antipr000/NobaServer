@@ -1,0 +1,36 @@
+name: _Run Unit Tests (Others)
+
+on:
+  workflow_call:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  test:
+    name: Other Unit Tests
+    runs-on: ubuntu-latest
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Restore environment from cache
+        id: restore-environment
+        uses: actions/cache@v3
+        env:
+          cache-name: ${{ github.run_number }}
+        with:
+          path: ./
+          key: ${{ runner.os }}-build-${{ github.run_number }}
+
+      - name: Unit tests with coverage
+        env:
+          NODE_OPTIONS: "--max_old_space_size=8192"
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: yarn test-others
+
+      - name: Cache test results
+        id: cache-test-results
+        uses: actions/cache@v3
+        env:
+          cache-name: ${{ github.run_number }}-others
+        with:
+          path: ./
+          key: ${{ runner.os }}-build-${{ github.run_number }}-others

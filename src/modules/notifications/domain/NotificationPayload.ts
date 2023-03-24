@@ -52,7 +52,6 @@ export function prepareNotificationPayload(
   consumer: Consumer,
   additionalPayload: Partial<NotificationPayload>,
 ): NotificationPayload {
-  console.log(`Preparing notification payload. Locale: ${consumer.props.locale}`);
   return {
     email: consumer.props.email,
     phone: consumer.props.phone,

@@ -1,4 +1,4 @@
-name: _Run Unit Tests
+name: _Run Unit Tests (Repos)
 
 on:
   workflow_call:
@@ -6,7 +6,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   test:
-    name: Unit Tests
+    name: Repo Unit Tests
     runs-on: ubuntu-latest
     services:
       # Label used to access the service container
@@ -47,13 +47,13 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test?connect_timeout=300
-        run: yarn test:cov
+        run: yarn test-repos
 
       - name: Cache test results
         id: cache-test-results
         uses: actions/cache@v3
         env:
-          cache-name: ${{ github.run_number }}-tests
+          cache-name: ${{ github.run_number }}-repos
         with:
           path: ./
-          key: ${{ runner.os }}-build-${{ github.run_number }}-tests
+          key: ${{ runner.os }}-build-${{ github.run_number }}-repos

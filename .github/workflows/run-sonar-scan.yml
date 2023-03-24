@@ -7,14 +7,41 @@ jobs:
     name: SonarCloud Scan
     runs-on: ubuntu-latest
     steps:
-      - name: Restore environment from cache
-        id: restore-environment
+      - name: Restore repos tests environment from cache
+        id: restore-environment-repos
         uses: actions/cache@v3
         env:
-          cache-name: ${{ github.run_number }}-tests
+          cache-name: ${{ github.run_number }}-repos
         with:
           path: ./
-          key: ${{ runner.os }}-build-${{ github.run_number }}-tests
+          key: ${{ runner.os }}-build-${{ github.run_number }}-repos
+
+      - name: Restore controllers tests environment from cache
+        id: restore-environment-controllers
+        uses: actions/cache@v3
+        env:
+          cache-name: ${{ github.run_number }}-controllers
+        with:
+          path: ./
+          key: ${{ runner.os }}-build-${{ github.run_number }}-controllers
+
+      - name: Restore controllers others environment from cache
+        id: restore-environment-others
+        uses: actions/cache@v3
+        env:
+          cache-name: ${{ github.run_number }}-others
+        with:
+          path: ./
+          key: ${{ runner.os }}-build-${{ github.run_number }}-others
+
+      - name: Merge lcov files
+        run: |
+          ls -la src
+          yarn add lcov-result-merger
+          mkdir coverage
+          yarn lcov-result-merger 'src/coverage-*/lcov.info' 'coverage/lcov.info'
+          rm -rf src/coverage-*
+          ls -l coverage/lcov.info
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
