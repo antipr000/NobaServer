@@ -4,7 +4,6 @@ import { POMELO_REPO_PROVIDER } from "./repos/pomelo.repo.module";
 import { PomeloRepo } from "./repos/pomelo.repo";
 import { ClientCreateUserRequest } from "./dto/pomelo.client.dto";
 import { LocationService } from "../../../../common/location.service";
-import { uuid } from "uuidv4";
 import { NobaCard, NobaCardType } from "../../domain/NobaCard";
 import { ServiceErrorCode, ServiceException } from "../../../../../core/exception/service.exception";
 import { PomeloCardSaveRequest } from "./domain/PomeloCard";
@@ -32,7 +31,7 @@ export class PomeloService implements ICardProviderService {
     if (!pomeloUser) {
       // Create user in Pomelo
 
-      const locationDetails = await this.locationService.getLocationDetails(consumer.props.address.countryCode);
+      const locationDetails = this.locationService.getLocationDetails(consumer.props.address.countryCode);
 
       if (!locationDetails) {
         throw new ServiceException({
@@ -84,7 +83,7 @@ export class PomeloService implements ICardProviderService {
     }
 
     // Create card in Pomelo
-    const idempotencyKey = uuid();
+    const idempotencyKey = `${pomeloUser.id}-${type}`; //TODO: Hash this value
     const pomeloClientCard = await this.pomeloClient.createCard(idempotencyKey, {
       user_id: pomeloUser.pomeloID,
       card_type: type,
@@ -92,7 +91,7 @@ export class PomeloService implements ICardProviderService {
 
     const pomeloCardCreateRequest: PomeloCardSaveRequest = {
       pomeloCardID: pomeloClientCard.id,
-      pomeloUserID: pomeloUser.id,
+      pomeloUserID: pomeloUser.pomeloID,
       nobaConsumerID: consumer.props.id,
       status: pomeloClientCard.status,
       type: pomeloClientCard.cardType,
