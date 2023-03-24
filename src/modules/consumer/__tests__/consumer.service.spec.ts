@@ -2014,7 +2014,7 @@ describe("ConsumerService", () => {
       const consumer = getRandomConsumer();
       const { identification } = getRandomIdentification(consumer.props.id);
 
-      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(identification);
+      when(consumerRepo.getIdentificationForConsumer(identification.id, consumer.props.id)).thenResolve(identification);
 
       const response = await consumerService.getIdentificationForConsumer(consumer.props.id, identification.id);
 
