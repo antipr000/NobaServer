@@ -25,10 +25,10 @@ describe("PomeloServiceTests", () => {
   jest.setTimeout(20000);
 
   let pomeloService: PomeloService;
-  let pomeloRepo: PomeloRepo;
-  let locationService: LocationService;
-  let consumerService: ConsumerService;
-  let pomeloClient: PomeloClient;
+  let mockPomeloRepo: PomeloRepo;
+  let mockLocationService: LocationService;
+  let mockConsumerService: ConsumerService;
+  let mockPomeloClient: PomeloClient;
 
   let app: TestingModule;
 
@@ -38,29 +38,29 @@ describe("PomeloServiceTests", () => {
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
-    pomeloRepo = getMockPomeloRepoWithDefaults();
-    locationService = getMockLocationServiceWithDefaults();
-    consumerService = getMockConsumerServiceWithDefaults();
-    pomeloClient = getMockPomeloClientWithDefaults();
+    mockPomeloRepo = getMockPomeloRepoWithDefaults();
+    mockLocationService = getMockLocationServiceWithDefaults();
+    mockConsumerService = getMockConsumerServiceWithDefaults();
+    mockPomeloClient = getMockPomeloClientWithDefaults();
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
       providers: [
         {
           provide: POMELO_REPO_PROVIDER,
-          useFactory: () => instance(pomeloRepo),
+          useFactory: () => instance(mockPomeloRepo),
         },
         {
           provide: LocationService,
-          useFactory: () => instance(locationService),
+          useFactory: () => instance(mockLocationService),
         },
         {
           provide: ConsumerService,
-          useFactory: () => instance(consumerService),
+          useFactory: () => instance(mockConsumerService),
         },
         {
           provide: PomeloClient,
-          useFactory: () => instance(pomeloClient),
+          useFactory: () => instance(mockPomeloClient),
         },
         PomeloService,
       ],
@@ -121,13 +121,13 @@ describe("PomeloServiceTests", () => {
         updatedTimestamp: new Date(),
       };
 
-      when(locationService.getLocationDetails(consumer.props.address.countryCode)).thenReturn(locationDetails);
-      when(pomeloClient.createUser(anyString(), anything())).thenResolve({
+      when(mockLocationService.getLocationDetails(consumer.props.address.countryCode)).thenReturn(locationDetails);
+      when(mockPomeloClient.createUser(anyString(), anything())).thenResolve({
         id: pomeloUser.pomeloID,
         status: ClientUserStatus.ACTIVE,
       });
 
-      when(pomeloClient.createCard(anyString(), anything())).thenResolve({
+      when(mockPomeloClient.createCard(anyString(), anything())).thenResolve({
         id: pomeloCard.pomeloCardID,
         status: NobaCardStatus.ACTIVE,
         cardType: NobaCardType.VIRTUAL,
@@ -139,16 +139,16 @@ describe("PomeloServiceTests", () => {
         provider: "MasterCard",
       });
 
-      when(pomeloRepo.getPomeloUserByConsumerID(consumer.props.id)).thenResolve(null);
-      when(pomeloRepo.createPomeloUser(anything())).thenResolve(pomeloUser);
-      when(pomeloRepo.createPomeloCard(anything())).thenResolve(nobaCard);
+      when(mockPomeloRepo.getPomeloUserByConsumerID(consumer.props.id)).thenResolve(null);
+      when(mockPomeloRepo.createPomeloUser(anything())).thenResolve(pomeloUser);
+      when(mockPomeloRepo.createPomeloCard(anything())).thenResolve(nobaCard);
 
       const createdCard = await pomeloService.createCard(consumer, NobaCardType.VIRTUAL);
 
       expect(createdCard).toEqual(nobaCard);
 
       verify(
-        pomeloClient.createUser(
+        mockPomeloClient.createUser(
           consumer.props.id,
           deepEqual({
             name: consumer.props.firstName,
@@ -173,7 +173,7 @@ describe("PomeloServiceTests", () => {
       ).once();
 
       verify(
-        pomeloClient.createCard(
+        mockPomeloClient.createCard(
           `${pomeloUser.id}-${NobaCardType.VIRTUAL}`,
           deepEqual({
             user_id: pomeloUser.pomeloID,
@@ -183,7 +183,7 @@ describe("PomeloServiceTests", () => {
       ).once();
 
       verify(
-        pomeloRepo.createPomeloUser(
+        mockPomeloRepo.createPomeloUser(
           deepEqual({
             consumerID: consumer.props.id,
             pomeloUserID: pomeloUser.pomeloID,
@@ -192,7 +192,7 @@ describe("PomeloServiceTests", () => {
       ).once();
 
       verify(
-        pomeloRepo.createPomeloCard(
+        mockPomeloRepo.createPomeloCard(
           deepEqual({
             pomeloCardID: pomeloCard.pomeloCardID,
             pomeloUserID: pomeloUser.pomeloID,
@@ -252,9 +252,9 @@ describe("PomeloServiceTests", () => {
         updatedTimestamp: new Date(),
       };
 
-      when(locationService.getLocationDetails(consumer.props.address.countryCode)).thenReturn(locationDetails);
+      when(mockLocationService.getLocationDetails(consumer.props.address.countryCode)).thenReturn(locationDetails);
 
-      when(pomeloClient.createCard(anyString(), anything())).thenResolve({
+      when(mockPomeloClient.createCard(anyString(), anything())).thenResolve({
         id: pomeloCard.pomeloCardID,
         status: NobaCardStatus.ACTIVE,
         cardType: NobaCardType.VIRTUAL,
@@ -266,17 +266,17 @@ describe("PomeloServiceTests", () => {
         provider: "MasterCard",
       });
 
-      when(pomeloRepo.getPomeloUserByConsumerID(consumer.props.id)).thenResolve(pomeloUser);
-      when(pomeloRepo.createPomeloCard(anything())).thenResolve(nobaCard);
+      when(mockPomeloRepo.getPomeloUserByConsumerID(consumer.props.id)).thenResolve(pomeloUser);
+      when(mockPomeloRepo.createPomeloCard(anything())).thenResolve(nobaCard);
 
       const createdCard = await pomeloService.createCard(consumer, NobaCardType.VIRTUAL);
 
       expect(createdCard).toEqual(nobaCard);
 
-      verify(pomeloClient.createUser(anyString(), anything())).never();
+      verify(mockPomeloClient.createUser(anyString(), anything())).never();
 
       verify(
-        pomeloClient.createCard(
+        mockPomeloClient.createCard(
           `${pomeloUser.id}-${NobaCardType.VIRTUAL}`,
           deepEqual({
             user_id: pomeloUser.pomeloID,
@@ -286,7 +286,7 @@ describe("PomeloServiceTests", () => {
       ).once();
 
       verify(
-        pomeloRepo.createPomeloCard(
+        mockPomeloRepo.createPomeloCard(
           deepEqual({
             pomeloCardID: pomeloCard.pomeloCardID,
             pomeloUserID: pomeloUser.pomeloID,
@@ -302,9 +302,9 @@ describe("PomeloServiceTests", () => {
     it("should throw 'ServiceException' when locationDetails is not found", async () => {
       const consumer = getRandomActiveConsumer("57", "CO");
 
-      when(pomeloRepo.getPomeloUserByConsumerID(consumer.props.id)).thenResolve(null);
+      when(mockPomeloRepo.getPomeloUserByConsumerID(consumer.props.id)).thenResolve(null);
 
-      when(locationService.getLocationDetails("CO")).thenReturn(null);
+      when(mockLocationService.getLocationDetails("CO")).thenReturn(null);
 
       await expect(async () => await pomeloService.createCard(consumer, NobaCardType.VIRTUAL)).rejects.toThrow(
         ServiceException,
@@ -326,8 +326,8 @@ describe("PomeloServiceTests", () => {
         ],
       };
 
-      when(pomeloRepo.getPomeloUserByConsumerID(consumer.props.id)).thenResolve(null);
-      when(locationService.getLocationDetails("CO")).thenReturn(locationDetails);
+      when(mockPomeloRepo.getPomeloUserByConsumerID(consumer.props.id)).thenResolve(null);
+      when(mockLocationService.getLocationDetails("CO")).thenReturn(locationDetails);
 
       await expect(async () => await pomeloService.createCard(consumer, NobaCardType.VIRTUAL)).rejects.toThrow(
         ServiceException,
@@ -372,21 +372,21 @@ describe("PomeloServiceTests", () => {
         updatedTimestamp: new Date(),
       };
 
-      when(locationService.getLocationDetails(consumer.props.address.countryCode)).thenReturn(locationDetails);
-      when(pomeloClient.createUser(anyString(), anything())).thenResolve({
+      when(mockLocationService.getLocationDetails(consumer.props.address.countryCode)).thenReturn(locationDetails);
+      when(mockPomeloClient.createUser(anyString(), anything())).thenResolve({
         id: pomeloUser.pomeloID,
         status: ClientUserStatus.ACTIVE,
       });
 
-      when(pomeloClient.createCard(anyString(), anything())).thenReject(
+      when(mockPomeloClient.createCard(anyString(), anything())).thenReject(
         new ServiceException({
           message: "Pomelo User does not exist",
           errorCode: ServiceErrorCode.DOES_NOT_EXIST,
         }),
       );
 
-      when(pomeloRepo.getPomeloUserByConsumerID(consumer.props.id)).thenResolve(null);
-      when(pomeloRepo.createPomeloUser(anything())).thenResolve(pomeloUser);
+      when(mockPomeloRepo.getPomeloUserByConsumerID(consumer.props.id)).thenResolve(null);
+      when(mockPomeloRepo.createPomeloUser(anything())).thenResolve(pomeloUser);
 
       await expect(async () => await pomeloService.createCard(consumer, NobaCardType.VIRTUAL)).rejects.toThrow(
         ServiceException,

@@ -1,3 +1,4 @@
+import { uuid } from "uuidv4";
 import { PrismaService } from "../../../../infraproviders/PrismaService";
 import { CardProvider, NobaCard, NobaCardStatus, NobaCardType } from "../domain/NobaCard";
 
@@ -29,5 +30,18 @@ export const createNobaCard = async (
     createdTimestamp: savedNobaCard.createdTimestamp,
     updatedTimestamp: savedNobaCard.updatedTimestamp,
     last4Digits: savedNobaCard.last4Digits,
+  };
+};
+
+export const getRandomNobaCard = (consumerID: string, status: NobaCardStatus): NobaCard => {
+  return {
+    id: uuid(),
+    consumerID,
+    provider: CardProvider.POMELO,
+    status: status,
+    type: NobaCardType.VIRTUAL,
+    createdTimestamp: new Date(),
+    updatedTimestamp: new Date(),
+    last4Digits: "1234",
   };
 };

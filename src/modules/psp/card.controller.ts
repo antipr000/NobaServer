@@ -30,6 +30,9 @@ export class CardController {
     return {
       id: card.id,
       lastFourDigits: card.last4Digits,
+      status: card.status,
+      type: card.type,
+      consumerID: card.consumerID,
     };
   }
 }
