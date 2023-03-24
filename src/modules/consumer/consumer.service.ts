@@ -830,6 +830,13 @@ export class ConsumerService {
     }
 
     const identification = await this.consumerRepo.getIdentificationForConsumer(identificationID, consumerID); // These are getting reversed, is this okay?
+    if (!identification) {
+      throw new ServiceException({
+        message: "Identification does not exist",
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
     const decryptedValue = await this.kmsService.decryptString(identification.value, KmsKeyType.SSN);
 
     return {
