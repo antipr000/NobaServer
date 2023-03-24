@@ -2124,4 +2124,46 @@ describe("ConsumerService", () => {
       },
     );
   });
+
+  describe("updateIdentification", () => {
+    it("should throw ServiceException if consumerID is undefined or null", async () => {
+      expect(
+        consumerService.updateIdentification(null, "fake", {
+          value: "fake",
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException if identificationID is undefined or null", async () => {
+      expect(
+        consumerService.updateIdentification("fake", null, {
+          value: "fake",
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException if identificationUpdateInput is undefined or null", async () => {
+      expect(consumerService.updateIdentification("fake", "fake", null)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should update an identification for the consumer", async () => {
+      const consumer = getRandomConsumer();
+      const { identification } = getRandomIdentification(consumer.props.id);
+
+      when(mockKMSService.encryptString(identification.value, KmsKeyType.SSN)).thenResolve("mockedEncryptedValue");
+
+      const encryptedIdentification = { ...identification, value: "mockedEncryptedValue" };
+      when(
+        consumerRepo.updateIdentification(identification.id, deepEqual({ value: encryptedIdentification.value })),
+      ).thenResolve(encryptedIdentification);
+
+      const response = await consumerService.updateIdentification(consumer.props.id, identification.id, {
+        value: identification.value,
+      });
+
+      expect(response).toEqual(encryptedIdentification);
+    });
+  });
 });

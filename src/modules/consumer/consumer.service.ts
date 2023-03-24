@@ -801,8 +801,16 @@ export class ConsumerService {
       });
     }
 
+    if (!identification) {
+      throw new ServiceException({
+        message: "Identification is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const encryptedValue = await this.kmsService.encryptString(identification.value, KmsKeyType.SSN);
     return this.consumerRepo.updateIdentification(identificationID, {
-      value: identification.value,
+      value: encryptedValue,
     });
   }
 
