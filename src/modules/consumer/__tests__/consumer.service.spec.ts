@@ -2166,4 +2166,39 @@ describe("ConsumerService", () => {
       expect(response).toEqual(encryptedIdentification);
     });
   });
+
+  describe("deleteIdentification", () => {
+    it("should throw ServiceException if consumerID is undefined or null", async () => {
+      expect(consumerService.deleteIdentification(null, "fake")).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should throw ServiceException if identificationID is undefined or null", async () => {
+      expect(consumerService.deleteIdentification("fake", null)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should delete an identification for the consumer", async () => {
+      const consumer = getRandomConsumer();
+      const { identification } = getRandomIdentification(consumer.props.id);
+
+      when(consumerRepo.deleteIdentification(identification.id)).thenResolve();
+      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(identification);
+
+      await consumerService.deleteIdentification(consumer.props.id, identification.id);
+    });
+
+    it("should throw ServiceException if identification does not exist", async () => {
+      const consumer = getRandomConsumer();
+      const { identification } = getRandomIdentification(consumer.props.id);
+
+      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(null);
+
+      expect(
+        consumerService.deleteIdentification(consumer.props.id, identification.id),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
+    });
+  });
 });
