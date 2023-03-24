@@ -44,6 +44,7 @@ import { uuid } from "uuidv4";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 import { ServiceError } from "@temporalio/client";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
+import { getRandomIdentification } from "../test_utils/identification.test.utils";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -1289,6 +1290,44 @@ describe("ConsumerController", () => {
       when(consumerService.deleteIdentification(consumer.props.id, "123")).thenResolve();
 
       await consumerController.deleteIdentification(consumer, "123");
+    });
+  });
+
+  describe("listIdentifications", () => {
+    it("should forward the call to consumerService", async () => {
+      const consumer = getRandomConsumer();
+      const { identification } = getRandomIdentification(consumer.props.id);
+
+      when(consumerService.getAllIdentifications(consumer.props.id)).thenResolve([identification]);
+
+      const response = await consumerController.listIdentifications(consumer);
+      expect(response).toEqual([identification]);
+    });
+  });
+
+  describe("updateIdentification", () => {
+    it("should forward the call to consumerService", async () => {
+      const consumer = getRandomConsumer();
+      const identification = {
+        type: "CC",
+        value: "123456789",
+        countryCode: "CO  ",
+      };
+      when(consumerService.updateIdentification(consumer.props.id, "123", identification)).thenResolve();
+
+      await consumerController.updateIdentification(consumer, "123", identification);
+    });
+  });
+
+  describe("getIdentification", () => {
+    it("should forward the call to consumerService", async () => {
+      const consumer = getRandomConsumer();
+      const { identification } = getRandomIdentification(consumer.props.id);
+
+      when(consumerService.getIdentificationForConsumer(consumer.props.id, "123")).thenResolve(identification);
+
+      const response = await consumerController.getIdentification(consumer, "123");
+      expect(response).toEqual(identification);
     });
   });
 });

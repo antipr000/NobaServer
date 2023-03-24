@@ -60,6 +60,7 @@ import { ServiceException } from "../../core/exception/service.exception";
 import { IdentificationDTO } from "./dto/identification.dto";
 import { CreateIdentificationDTO } from "./dto/create.identification.dto";
 import { id } from "date-fns/locale";
+import { UpdateIdentificationDTO } from "./dto/update.identification.dto";
 
 @Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
@@ -520,6 +521,25 @@ export class ConsumerController {
     return {}; // return empty response for now
   }
 
+  @Get("/identifications/:identificationID")
+  @ApiOperation({ summary: "Gets an identification document for the logged-in consumer" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Added identification document for consumer",
+    type: IdentificationDTO,
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid identification document" })
+  async getIdentification(
+    @AuthUser() consumer: Consumer,
+    @Param("identificationID") identificationID: string,
+  ): Promise<IdentificationDTO> {
+    const identification = await this.consumerService.getIdentificationForConsumer(consumer.props.id, identificationID);
+    return {
+      ...identification,
+    };
+  }
+
   @Get("/identifications")
   @ApiOperation({ summary: "Lists all identification documents for the logged-in consumer" })
   @ApiResponse({
@@ -548,6 +568,28 @@ export class ConsumerController {
   @ApiBadRequestResponse({ description: "Invalid identification document" })
   async deleteIdentification(@AuthUser() consumer: Consumer, @Param("identificationID") identificationID: string) {
     const identification = await this.consumerService.deleteIdentification(consumer.props.id, identificationID);
+    return {}; // return empty response for now
+  }
+
+  @Patch("/identifications/:identificationID")
+  @ApiOperation({ summary: "Updates an identification document for the logged-in consumer" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Updated identification document for consumer",
+    type: IdentificationDTO,
+  })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  @ApiBadRequestResponse({ description: "Invalid identification document" })
+  async updateIdentification(
+    @AuthUser() consumer: Consumer,
+    @Param("identificationID") identificationID: string,
+    @Body() requestBody: UpdateIdentificationDTO,
+  ) {
+    const identification = await this.consumerService.updateIdentification(
+      consumer.props.id,
+      identificationID,
+      requestBody,
+    );
     return {}; // return empty response for now
   }
 
