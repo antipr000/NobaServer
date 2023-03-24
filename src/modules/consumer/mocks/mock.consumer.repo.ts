@@ -30,5 +30,12 @@ export function getMockConsumerRepoWithDefaults(): IConsumerRepo {
     new Error("Method not implemented"),
   );
   when(mockConsumerRepo.updatePaymentMethod(anyString(), anything())).thenReject(new Error("Method not implemented"));
+  when(mockConsumerRepo.addIdentification(anything())).thenReject(new Error("Method not implemented"));
+  when(mockConsumerRepo.getAllIdentificationsForConsumer(anyString())).thenReject(new Error("Method not implemented"));
+  when(mockConsumerRepo.getIdentificationForConsumer(anyString(), anyString())).thenReject(
+    new Error("Method not implemented"),
+  );
+  when(mockConsumerRepo.updateIdentification(anyString(), anything())).thenReject(new Error("Method not implemented"));
+  when(mockConsumerRepo.deleteIdentification(anyString())).thenReject(new Error("Method not implemented"));
   return mockConsumerRepo;
 }

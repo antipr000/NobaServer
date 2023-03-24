@@ -34,7 +34,6 @@ import { ConsumerSearchDTO } from "./dto/consumer.search.dto";
 import { ConsumerMapper } from "./mappers/ConsumerMapper";
 import { Identification } from "./domain/Identification";
 import { CreateIdentificationDTO } from "./dto/create.identification.dto";
-import { identity } from "rxjs";
 
 @Injectable()
 export class ConsumerService {
@@ -766,6 +765,24 @@ export class ConsumerService {
       value: encryptedValue,
     });
     return result;
+  }
+
+  async getIdentificationForConsumer(consumerID: string, identificationID: string): Promise<Identification> {
+    if (!consumerID) {
+      throw new ServiceException({
+        message: "Consumer ID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    if (!identificationID) {
+      throw new ServiceException({
+        message: "Identification ID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    return this.consumerRepo.getIdentificationForConsumer(identificationID, consumerID); // These are getting reversed, is this okay?
   }
 
   async getAllIdentifications(consumerID: string): Promise<Identification[]> {

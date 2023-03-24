@@ -60,6 +60,7 @@ import { getMockBubbleServiceWithDefaults } from "../../../modules/bubble/mocks/
 import { ConsumerMapper } from "../mappers/ConsumerMapper";
 import { getMockConsumerMapperWithDefaults } from "../mocks/mock.consumer.mapper";
 import { Gender } from "../domain/ExternalStates";
+import { getRandomIdentification } from "../test_utils/identification.test.utils";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -1993,6 +1994,31 @@ describe("ConsumerService", () => {
           }),
         ),
       ).once();
+    });
+  });
+
+  describe("getIdenficationForConsumer", () => {
+    it("should throw ServiceException if consumerID is undefined or null", async () => {
+      expect(consumerService.getIdentificationForConsumer(null, "fake")).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should throw ServiceException if identificationType is undefined or null", async () => {
+      expect(consumerService.getIdentificationForConsumer("fake", null)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should return the identification for the consumer", async () => {
+      const consumer = getRandomConsumer();
+      const { identification } = getRandomIdentification(consumer.props.id);
+
+      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(identification);
+
+      const response = await consumerService.getIdentificationForConsumer(consumer.props.id, identification.id);
+
+      expect(response).toEqual(identification);
     });
   });
 });
