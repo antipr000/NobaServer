@@ -207,6 +207,7 @@ describe("SqlPomeloRepoTests", () => {
         pomeloUserID: uuid(),
         status: NobaCardStatus.ACTIVE,
         type: NobaCardType.VIRTUAL,
+        last4Digits: "1234",
       };
       try {
         await pomeloRepo.createPomeloCard(request);
@@ -316,6 +317,7 @@ describe("SqlPomeloRepoTests", () => {
         pomeloCardID: pomeloCardID,
         status: NobaCardStatus.ACTIVE,
         type: NobaCardType.VIRTUAL,
+        last4Digits: "1234",
       };
 
       try {
@@ -341,6 +343,7 @@ describe("SqlPomeloRepoTests", () => {
         pomeloCardID: pomeloCardID,
         status: NobaCardStatus.ACTIVE,
         type: NobaCardType.VIRTUAL,
+        last4Digits: "1234",
       };
 
       const response: NobaCard = await pomeloRepo.createPomeloCard(request);
@@ -371,6 +374,7 @@ describe("SqlPomeloRepoTests", () => {
         id: response.id,
         createdTimestamp: response.createdTimestamp,
         updatedTimestamp: response.updatedTimestamp,
+        last4Digits: request.last4Digits,
       });
     });
   });

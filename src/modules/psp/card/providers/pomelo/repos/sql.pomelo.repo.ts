@@ -155,6 +155,7 @@ export class SQLPomeloRepo implements PomeloRepo {
         },
         provider: CardProvider.POMELO,
         status: request.status,
+        last4Digits: request.last4Digits,
         type: request.type,
       };
 

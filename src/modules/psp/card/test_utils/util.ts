@@ -1,4 +1,3 @@
-import { uuid } from "uuidv4";
 import { PrismaService } from "../../../../infraproviders/PrismaService";
 import { CardProvider, NobaCard, NobaCardStatus, NobaCardType } from "../domain/NobaCard";
 
@@ -17,6 +16,7 @@ export const createNobaCard = async (
       type: NobaCardType.VIRTUAL,
       status: NobaCardStatus.ACTIVE,
       provider: cardProvider,
+      last4Digits: "1234",
     },
   });
 
@@ -28,5 +28,6 @@ export const createNobaCard = async (
     type: savedNobaCard.type as NobaCardType,
     createdTimestamp: savedNobaCard.createdTimestamp,
     updatedTimestamp: savedNobaCard.updatedTimestamp,
+    last4Digits: savedNobaCard.last4Digits,
   };
 };

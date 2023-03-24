@@ -1,10 +1,10 @@
 import { Module } from "@nestjs/common";
-import { CardClientModule } from "./clients/card.client.module";
+import { CardProviderModule } from "./providers/card.provider.module";
 import { ConsumerModule } from "../../../modules/consumer/consumer.module";
 import { CardService } from "./card.service";
 
 @Module({
-  imports: [CardClientModule, ConsumerModule],
+  imports: [CardProviderModule, ConsumerModule],
   controllers: [],
   providers: [CardService],
   exports: [CardService],

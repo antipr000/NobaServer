@@ -1,4 +1,4 @@
-import { Controller, HttpStatus, Inject, Post } from "@nestjs/common";
+import { Body, Controller, HttpStatus, Inject, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiForbiddenResponse, ApiHeaders, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { getCommonHeaders } from "../../core/utils/CommonHeaders";
@@ -7,7 +7,7 @@ import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
 import { Consumer } from "../consumer/domain/Consumer";
 import { AuthUser } from "../auth/auth.decorator";
-import { CardResponseDTO } from "./dto/card.controller.dto";
+import { CardCreateRequestDTO, CardResponseDTO } from "./dto/card.controller.dto";
 import { CardService } from "./card/card.service";
 
 @Roles(Role.CONSUMER)
@@ -25,11 +25,11 @@ export class CardController {
   @ApiOperation({ summary: "Create a new card for the consumer" })
   @ApiResponse({ status: HttpStatus.CREATED, type: CardResponseDTO })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
-  async createCard(@AuthUser() consumer: Consumer): Promise<CardResponseDTO> {
-    const card = await this.cardService.createCard(consumer.props.id);
+  async createCard(@AuthUser() consumer: Consumer, @Body() request: CardCreateRequestDTO): Promise<CardResponseDTO> {
+    const card = await this.cardService.createCard(consumer.props.id, request.type);
     return {
       id: card.id,
-      lastFourDigits: "", // TODO: Add it to NobaCard
+      lastFourDigits: card.last4Digits,
     };
   }
 }

@@ -21,6 +21,7 @@ export class NobaCard {
   provider: CardProvider;
   status: NobaCardStatus;
   type: NobaCardType;
+  last4Digits: string;
   consumerID: string;
   createdTimestamp: Date;
   updatedTimestamp: Date;
@@ -39,6 +40,7 @@ export const validateNobaCard = (nobaCard: NobaCard) => {
     type: Joi.string()
       .required()
       .valid(...Object.values(NobaCardType)),
+    last4Digits: Joi.string().required(),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
   };
@@ -56,6 +58,7 @@ export const convertToDomainNobaCard = (nobaCard: PrismaNobaCardModel): NobaCard
     provider: nobaCard.provider as CardProvider,
     consumerID: nobaCard.consumerID,
     type: nobaCard.type as NobaCardType,
+    last4Digits: nobaCard.last4Digits,
     status: nobaCard.status as NobaCardStatus,
     createdTimestamp: nobaCard.createdTimestamp,
     updatedTimestamp: nobaCard.updatedTimestamp,

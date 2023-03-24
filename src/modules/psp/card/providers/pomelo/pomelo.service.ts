@@ -8,13 +8,17 @@ import { uuid } from "uuidv4";
 import { NobaCard, NobaCardType } from "../../domain/NobaCard";
 import { ServiceErrorCode, ServiceException } from "../../../../../core/exception/service.exception";
 import { PomeloCardSaveRequest } from "./domain/PomeloCard";
-import { ICardClientService } from "../card.client.service";
-import { Consumer } from "../../../../../modules/consumer/domain/Consumer";
+import { ICardProviderService } from "../card.provider.service";
+import { Consumer } from "../../../../consumer/domain/Consumer";
+import { ConsumerService } from "../../../../../modules/consumer/consumer.service";
 
 @Injectable()
-export class PomeloService implements ICardClientService {
+export class PomeloService implements ICardProviderService {
   @Inject()
   private readonly pomeloClient: PomeloClient;
+
+  @Inject()
+  private readonly consumerService: ConsumerService;
 
   @Inject(POMELO_REPO_PROVIDER)
   private readonly pomeloRepo: PomeloRepo;
@@ -22,7 +26,7 @@ export class PomeloService implements ICardClientService {
   @Inject()
   private readonly locationService: LocationService;
 
-  public async createCard(consumer: Consumer): Promise<NobaCard> {
+  public async createCard(consumer: Consumer, type: NobaCardType): Promise<NobaCard> {
     let pomeloUser = await this.pomeloRepo.getPomeloUserByConsumerID(consumer.props.id);
 
     if (!pomeloUser) {
@@ -83,7 +87,7 @@ export class PomeloService implements ICardClientService {
     const idempotencyKey = uuid();
     const pomeloClientCard = await this.pomeloClient.createCard(idempotencyKey, {
       user_id: pomeloUser.pomeloID,
-      card_type: NobaCardType.VIRTUAL,
+      card_type: type,
     });
 
     const pomeloCardCreateRequest: PomeloCardSaveRequest = {
@@ -92,6 +96,7 @@ export class PomeloService implements ICardClientService {
       nobaConsumerID: consumer.props.id,
       status: pomeloClientCard.status,
       type: pomeloClientCard.cardType,
+      last4Digits: pomeloClientCard.lastFour,
     };
 
     const pomeloCard = await this.pomeloRepo.createPomeloCard(pomeloCardCreateRequest);

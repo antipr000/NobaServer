@@ -1,18 +1,18 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { NobaCard } from "./domain/NobaCard";
-import { CardClientFactory } from "./clients/card.client.factory";
+import { NobaCard, NobaCardType } from "./domain/NobaCard";
+import { CardProviderFactory } from "./providers/card.provider.factory";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 @Injectable()
 export class CardService {
   @Inject()
-  private readonly cardClientFactory: CardClientFactory;
+  private readonly cardProviderFactory: CardProviderFactory;
 
   @Inject()
   private readonly consumerService: ConsumerService;
 
-  public async createCard(consumerID: string): Promise<NobaCard> {
+  public async createCard(consumerID: string, cardType: NobaCardType): Promise<NobaCard> {
     const consumer = await this.consumerService.getActiveConsumer(consumerID);
 
     if (!consumer) {
@@ -29,8 +29,8 @@ export class CardService {
       });
     }
 
-    const cardClientService = this.cardClientFactory.getCardClientService(consumer.props.address.countryCode);
+    const cardProviderService = this.cardProviderFactory.getCardProviderService(consumer.props.address.countryCode);
 
-    return cardClientService.createCard(consumer);
+    return cardProviderService.createCard(consumer, cardType);
   }
 }

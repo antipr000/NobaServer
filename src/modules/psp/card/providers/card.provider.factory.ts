@@ -1,14 +1,14 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { PomeloService } from "./pomelo/pomelo.service";
-import { ICardClientService } from "./card.client.service";
+import { ICardProviderService } from "./card.provider.service";
 import { ServiceErrorCode, ServiceException } from "../../../../core/exception/service.exception";
 
 @Injectable()
-export class CardClientFactory {
+export class CardProviderFactory {
   @Inject()
   private readonly pomeloService: PomeloService;
 
-  public getCardClientService(countryCode: string): ICardClientService {
+  public getCardProviderService(countryCode: string): ICardProviderService {
     switch (countryCode) {
       case "CO":
         return this.pomeloService;

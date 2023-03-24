@@ -17,6 +17,7 @@ export class PomeloCardSaveRequest {
   pomeloUserID: string;
   nobaConsumerID: string;
   status: NobaCardStatus;
+  last4Digits: string;
   type: NobaCardType;
 }
 
@@ -36,6 +37,7 @@ export const validateSavePomeloCardRequest = (request: PomeloCardSaveRequest) =>
     type: Joi.string()
       .required()
       .valid(...Object.values(NobaCardType)),
+    last4Digits: Joi.string().required(),
   };
   const pomeloCardJoiSchema = Joi.object(pomeloCardJoiValidationKeys).options({
     allowUnknown: false,

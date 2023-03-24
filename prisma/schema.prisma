@@ -344,6 +344,7 @@ model NobaCard {
   provider         String
   status           String
   type             String
+  last4Digits      String
   consumerID       String
   consumer         Consumer    @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   createdTimestamp DateTime?   @default(now())

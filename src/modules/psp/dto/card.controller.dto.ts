@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { NobaCardType } from "../card/domain/NobaCard";
 
 export class CardResponseDTO {
   @ApiProperty()
@@ -6,4 +7,9 @@ export class CardResponseDTO {
 
   @ApiProperty()
   lastFourDigits: string;
+}
+
+export class CardCreateRequestDTO {
+  @ApiProperty({ enum: NobaCardType })
+  type: NobaCardType;
 }
