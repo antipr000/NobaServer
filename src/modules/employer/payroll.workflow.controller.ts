@@ -122,6 +122,28 @@ export class PayrollWorkflowController {
     };
   }
 
+  @Get("/:payrollID/disbursements")
+  @ApiOperation({ summary: "Gets all disbursements for a given payroll" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: PayrollDTO,
+  })
+  @ApiNotFoundResponse({ description: "Requested payroll is not found" })
+  async getAllDisbursements(@Param("payrollID") payrollID: string): Promise<PayrollDisbursementDTO[]> {
+    const payrollDisbursements = await this.employerService.getAllDisbursementsForPayroll(payrollID);
+
+    if (!payrollDisbursements) {
+      return [];
+    }
+
+    return payrollDisbursements.map(disbursement => ({
+      id: disbursement.id,
+      employeeID: disbursement.employeeID,
+      payrollID: disbursement.payrollID,
+      allocationAmount: disbursement.allocationAmount,
+    }));
+  }
+
   @Patch("/:payrollID")
   @ApiOperation({ summary: "Updates the payroll" })
   @ApiResponse({

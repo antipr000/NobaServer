@@ -118,6 +118,36 @@ describe("EmployerWorkflowControllerTests", () => {
     });
   });
 
+  describe("getAllDisbursements", () => {
+    it("should get all disbursements for a payroll", async () => {
+      const { payroll } = getRandomPayroll("fake-employer");
+      const disbursements = [
+        getRandomPayrollDisbursement(payroll.id, "fake-employee-1").payrollDisbursement,
+        getRandomPayrollDisbursement(payroll.id, "fake-employee-2").payrollDisbursement,
+      ];
+
+      when(mockEmployerService.getAllDisbursementsForPayroll(payroll.id)).thenResolve(disbursements);
+
+      const result = await payrollWorkflowController.getAllDisbursements(payroll.id);
+
+      expect(result).toStrictEqual(
+        disbursements.map(disbursement => ({
+          id: disbursement.id,
+          employeeID: disbursement.employeeID,
+          payrollID: disbursement.payrollID,
+          allocationAmount: disbursement.allocationAmount,
+        })),
+      );
+    });
+
+    it("should throw NotFoundException when payroll with id does not exist", async () => {
+      when(mockEmployerService.getAllDisbursementsForPayroll("payroll-id")).thenResolve(undefined);
+
+      const result = await payrollWorkflowController.getAllDisbursements("payroll-id");
+      expect(result).toStrictEqual([]);
+    });
+  });
+
   describe("updatePayroll", () => {
     it("should update payroll", async () => {
       const { payroll } = getRandomPayroll("fake-employer");
