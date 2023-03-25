@@ -10,9 +10,18 @@ import { CommonModule } from "../common/common.module";
 import { EmployerWorkflowController } from "./employer.workflow.controller";
 import { ConsumerModule } from "../consumer/consumer.module";
 import { PayrollWorkflowController } from "./payroll.workflow.controller";
+import { TemporalModule } from "../../infra/temporal/temporal.module";
 
 @Module({
-  imports: [InfraProvidersModule, EmployerRepoModule, EmployeeModule, CommonModule, PayrollRepoModule, ConsumerModule],
+  imports: [
+    InfraProvidersModule,
+    EmployerRepoModule,
+    EmployeeModule,
+    CommonModule,
+    PayrollRepoModule,
+    ConsumerModule,
+    TemporalModule,
+  ],
   controllers: [EmployerController, EmployerWorkflowController, PayrollWorkflowController],
   providers: [EmployerService, S3Service],
   exports: [EmployerService],

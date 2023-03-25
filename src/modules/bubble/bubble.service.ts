@@ -13,12 +13,11 @@ import {
 } from "./dto/bubble.service.dto";
 import { EmployerService } from "../employer/employer.service";
 import { Employer } from "../employer/domain/Employer";
-import { Payroll, PayrollFilter, PayrollStatus } from "../employer/domain/Payroll";
+import { Payroll } from "../employer/domain/Payroll";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
 import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
-import { uuid } from "uuidv4";
 
 @Injectable()
 export class BubbleService {
@@ -95,7 +94,7 @@ export class BubbleService {
     }
   }
 
-  async createPayroll(referralID: string, payrollDate: string, repair: boolean = false): Promise<Payroll> {
+  async createPayroll(referralID: string, payrollDate: string): Promise<Payroll> {
     const employer = await this.employerService.getEmployerByReferralID(referralID);
     if (!employer) {
       throw new ServiceException({
@@ -104,41 +103,12 @@ export class BubbleService {
       });
     }
 
-    // First, see if the payroll already exists
-    const existingPayrollForDate = await this.getAllPayrollsForEmployer(referralID, { payrollDate });
-    // If this returns anything, it's the payroll that we're trying to create
-    if (existingPayrollForDate.length > 0) {
-      this.logger.info(`Payroll already exists for employer ${referralID} on date ${payrollDate}`);
-      if (
-        repair &&
-        [PayrollStatus.CREATED, PayrollStatus.FUNDED, PayrollStatus.INVOICED, PayrollStatus.RECEIPT].includes(
-          existingPayrollForDate[0].status,
-        )
-      ) {
-        // We are expecting this scenario
-        this.logger.info(
-          `Picking up payroll ${existingPayrollForDate[0].id} from where it left off in status ${existingPayrollForDate[0].status}...`,
-        );
-        // TODO: Add check to ensure workflow is not still running
-        await this.workflowExecutor.executePayrollProcessingWorkflow(
-          `${existingPayrollForDate[0].id}:${uuid}`,
-          existingPayrollForDate[0].id,
-        );
-        return existingPayrollForDate[0];
-      } else {
-        throw new ServiceException({
-          message: `Payroll already exists for employer ${referralID} on date ${payrollDate} and is in status ${existingPayrollForDate[0].status}`,
-          errorCode: ServiceErrorCode.ALREADY_EXISTS,
-        });
-      }
-    } else {
-      const payroll: Payroll = await this.employerService.createPayroll(employer.id, payrollDate);
-      await this.workflowExecutor.executePayrollProcessingWorkflow(payroll.id, payroll.id);
-      return payroll;
-    }
+    const payroll: Payroll = await this.employerService.createPayroll(employer.id, payrollDate);
+    await this.workflowExecutor.executePayrollProcessingWorkflow(payroll.id, payroll.id);
+    return payroll;
   }
 
-  async getAllPayrollsForEmployer(referralID: string, filter?: PayrollFilter): Promise<Payroll[]> {
+  async getAllPayrollsForEmployer(referralID: string): Promise<Payroll[]> {
     const employer = await this.employerService.getEmployerByReferralID(referralID);
     if (!employer) {
       throw new ServiceException({
@@ -147,7 +117,7 @@ export class BubbleService {
       });
     }
 
-    return this.employerService.getAllPayrollsForEmployer(employer.id, filter);
+    return this.employerService.getAllPayrollsForEmployer(employer.id);
   }
 
   async getPayrollWithDisbursements(

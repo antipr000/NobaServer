@@ -17,7 +17,7 @@ import { S3Service } from "../common/s3.service";
 import "dayjs/locale/es";
 import { IPayrollRepo } from "./repo/payroll.repo";
 import { IPayrollDisbursementRepo } from "./repo/payroll.disbursement.repo";
-import { Payroll, PayrollCreateRequest, isStatusTransitionAllowed, PayrollFilter } from "./domain/Payroll";
+import { Payroll, PayrollCreateRequest, isStatusTransitionAllowed } from "./domain/Payroll";
 import {
   CreateDisbursementRequestDTO,
   UpdateDisbursementRequestDTO,
@@ -45,6 +45,8 @@ import {
   InvoiceReceiptTemplateFields,
   InvoiceTemplateFields,
 } from "./templates/payroll.invoice.dto";
+import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
+import { uuid } from "uuidv4";
 
 @Injectable()
 export class EmployerService {
@@ -67,6 +69,9 @@ export class EmployerService {
 
   @Inject()
   private readonly kmsService: KmsService;
+
+  @Inject()
+  private readonly workflowExecutor: WorkflowExecutor;
 
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
@@ -376,7 +381,7 @@ export class EmployerService {
     return this.payrollRepo.getPayrollByID(id);
   }
 
-  async getAllPayrollsForEmployer(employerID: string, filter: PayrollFilter = {}): Promise<Payroll[]> {
+  async getAllPayrollsForEmployer(employerID: string): Promise<Payroll[]> {
     if (!employerID) {
       throw new ServiceException({
         message: "employerID is required",
@@ -384,7 +389,7 @@ export class EmployerService {
       });
     }
 
-    return this.payrollRepo.getAllPayrollsForEmployer(employerID, filter);
+    return this.payrollRepo.getAllPayrollsForEmployer(employerID, {});
   }
 
   async createPayroll(employerID: string, payrollDate: string): Promise<Payroll> {
@@ -452,6 +457,35 @@ export class EmployerService {
     const updatedPayroll = await this.payrollRepo.updatePayroll(payrollID, payrollUpdateRequest);
 
     return updatedPayroll;
+  }
+
+  async retryPayroll(payrollID: string) {
+    if (!payrollID) {
+      throw new ServiceException({
+        message: "payrollID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const payroll = await this.getPayrollByID(payrollID);
+
+    if (
+      payroll && // Only allow payroll to be retried for certain statuses
+      [PayrollStatus.CREATED, PayrollStatus.FUNDED, PayrollStatus.INVOICED, PayrollStatus.RECEIPT].includes(
+        payroll.status,
+      )
+    ) {
+      // We are expecting this scenario
+      this.logger.info(`Picking up payroll ${payroll.id} from where it left off in status ${payroll.status}...`);
+      // TODO: Add check to ensure workflow is not still running
+      await this.workflowExecutor.executePayrollProcessingWorkflow(`${payroll.id}:${uuid}`, payroll.id);
+      return payroll;
+    } else {
+      throw new ServiceException({
+        message: `Payroll ${payroll.id} cannot be retried from status ${payroll.status}`,
+        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+      });
+    }
   }
 
   async createDisbursement(

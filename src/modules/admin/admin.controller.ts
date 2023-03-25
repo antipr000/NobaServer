@@ -300,6 +300,33 @@ export class AdminController {
     };
   }
 
+  @Post("/payrolls/:payrollID/retry")
+  @ApiOperation({ summary: "Retries an existing payroll" })
+  @ApiResponse({ status: HttpStatus.OK, description: "Payroll is retried successfully" })
+  @ApiForbiddenResponse({
+    description: "User forbidden from updating the Payroll status",
+  })
+  async retryPayroll(@Request() request, @Param("payrollID") payrollID: string): Promise<PayrollDTO> {
+    const authenticatedUser: Admin = request.user.entity;
+    if (!(authenticatedUser instanceof Admin)) {
+      throw new ForbiddenException("User is forbidden from calling this API.");
+    }
+
+    const payroll = await this.employerService.retryPayroll(payrollID);
+    return {
+      id: payroll.id,
+      employerID: payroll.employerID,
+      reference: payroll.referenceNumber,
+      payrollDate: payroll.payrollDate,
+      totalDebitAmount: payroll.totalDebitAmount,
+      totalCreditAmount: payroll.totalCreditAmount,
+      exchangeRate: payroll.exchangeRate,
+      debitCurrency: payroll.debitCurrency,
+      creditCurrency: payroll.creditCurrency,
+      status: payroll.status,
+    };
+  }
+
   @Get("/consumers")
   @ApiOperation({ summary: "Gets all consumers or a subset based on query parameters" })
   @ApiResponse({ status: HttpStatus.OK, type: ConsumerInternalDTO, description: "List of consumers", isArray: true })
