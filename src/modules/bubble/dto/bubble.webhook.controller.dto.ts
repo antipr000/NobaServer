@@ -55,7 +55,7 @@ export class CreatePayrollRequestDTO {
   payrollDate: string;
 
   @ApiPropertyOptional()
-  repair: boolean;
+  repair?: boolean;
 }
 
 export class CreatePayrollResponseDTO {
