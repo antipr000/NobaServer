@@ -95,7 +95,7 @@ export class BubbleService {
     }
   }
 
-  async createPayroll(referralID: string, payrollDate: string, repair: boolean): Promise<Payroll> {
+  async createPayroll(referralID: string, payrollDate: string, repair: boolean = false): Promise<Payroll> {
     const employer = await this.employerService.getEmployerByReferralID(referralID);
     if (!employer) {
       throw new ServiceException({
