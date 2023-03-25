@@ -121,6 +121,7 @@ export class SqlPayrollRepo implements IPayrollRepo {
       const payrollFilter: Prisma.PayrollWhereInput = {
         employerID: employerID,
         ...(filters.status && { status: filters.status }),
+        ...(filters.payrollDate && { payrollDate: filters.payrollDate }),
       };
 
       const returnedPayrolls: PrismaPayrollModel[] = await this.prismaService.payroll.findMany({

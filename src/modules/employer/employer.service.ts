@@ -17,7 +17,7 @@ import { S3Service } from "../common/s3.service";
 import "dayjs/locale/es";
 import { IPayrollRepo } from "./repo/payroll.repo";
 import { IPayrollDisbursementRepo } from "./repo/payroll.disbursement.repo";
-import { Payroll, PayrollCreateRequest, isStatusTransitionAllowed } from "./domain/Payroll";
+import { Payroll, PayrollCreateRequest, isStatusTransitionAllowed, PayrollFilter } from "./domain/Payroll";
 import {
   CreateDisbursementRequestDTO,
   UpdateDisbursementRequestDTO,
@@ -376,7 +376,7 @@ export class EmployerService {
     return this.payrollRepo.getPayrollByID(id);
   }
 
-  async getAllPayrollsForEmployer(employerID: string): Promise<Payroll[]> {
+  async getAllPayrollsForEmployer(employerID: string, filter: PayrollFilter = {}): Promise<Payroll[]> {
     if (!employerID) {
       throw new ServiceException({
         message: "employerID is required",
@@ -384,7 +384,7 @@ export class EmployerService {
       });
     }
 
-    return this.payrollRepo.getAllPayrollsForEmployer(employerID, {});
+    return this.payrollRepo.getAllPayrollsForEmployer(employerID, filter);
   }
 
   async createPayroll(employerID: string, payrollDate: string): Promise<Payroll> {
