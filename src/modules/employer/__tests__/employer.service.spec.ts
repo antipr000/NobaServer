@@ -951,11 +951,11 @@ describe("EmployerServiceTests", () => {
         payroll.status = status;
 
         when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
-        when(mockWorkflowExecutor.executePayrollProcessingWorkflow(anyString(), payroll.id)).thenResolve();
+        when(mockWorkflowExecutor.executePayrollProcessingWorkflow(payroll.id, anyString())).thenResolve();
 
         await employerService.retryPayroll(payroll.id);
 
-        verify(mockWorkflowExecutor.executePayrollProcessingWorkflow(anyString(), payroll.id)).once();
+        verify(mockWorkflowExecutor.executePayrollProcessingWorkflow(payroll.id, anyString())).once();
       },
     );
   });

@@ -130,21 +130,21 @@ describe("EmployerWorkflowControllerTests", () => {
 
       const result = await payrollWorkflowController.getAllDisbursements(payroll.id);
 
-      expect(result).toStrictEqual(
-        disbursements.map(disbursement => ({
+      expect(result).toStrictEqual({
+        disbursements: disbursements.map(disbursement => ({
           id: disbursement.id,
           employeeID: disbursement.employeeID,
           payrollID: disbursement.payrollID,
           allocationAmount: disbursement.allocationAmount,
         })),
-      );
+      });
     });
 
     it("should throw NotFoundException when payroll with id does not exist", async () => {
       when(mockEmployerService.getAllDisbursementsForPayroll("payroll-id")).thenResolve(undefined);
 
       const result = await payrollWorkflowController.getAllDisbursements("payroll-id");
-      expect(result).toStrictEqual([]);
+      expect(result).toStrictEqual({ disbursements: [] });
     });
   });
 

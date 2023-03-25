@@ -16,7 +16,7 @@ import {
   UpdatePayrollRequestDTO,
 } from "./dto/payroll.workflow.controller.dto";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
-import { PayrollDisbursementDTO } from "./dto/PayrollDisbursementDTO";
+import { PayrollDisbursementDTO, PayrollDisbursementDTOWrapper } from "./dto/PayrollDisbursementDTO";
 import { EmployerService } from "./employer.service";
 
 @Controller("wf/v1/payrolls")
@@ -129,19 +129,21 @@ export class PayrollWorkflowController {
     type: PayrollDTO,
   })
   @ApiNotFoundResponse({ description: "Requested payroll is not found" })
-  async getAllDisbursements(@Param("payrollID") payrollID: string): Promise<PayrollDisbursementDTO[]> {
+  async getAllDisbursements(@Param("payrollID") payrollID: string): Promise<PayrollDisbursementDTOWrapper> {
     const payrollDisbursements = await this.employerService.getAllDisbursementsForPayroll(payrollID);
 
     if (!payrollDisbursements) {
-      return [];
+      return { disbursements: [] };
     }
 
-    return payrollDisbursements.map(disbursement => ({
+    const disbursements = payrollDisbursements.map(disbursement => ({
       id: disbursement.id,
       employeeID: disbursement.employeeID,
       payrollID: disbursement.payrollID,
       allocationAmount: disbursement.allocationAmount,
     }));
+
+    return { disbursements: disbursements };
   }
 
   @Patch("/:payrollID")
