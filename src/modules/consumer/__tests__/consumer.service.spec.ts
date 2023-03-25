@@ -2004,33 +2004,35 @@ describe("ConsumerService", () => {
     });
   });
 
-  describe("getIdenficationForConsumer", () => {
+  describe("getIdentificationForConsumer", () => {
     it("should throw ServiceException if consumerID is undefined or null", async () => {
-      expect(consumerService.getIdentificationForConsumer(null, "fake")).rejects.toThrowServiceException(
-        ServiceErrorCode.SEMANTIC_VALIDATION,
-      );
-    });
-
-    it("should throw ServiceException if identificationType is undefined or null", async () => {
       expect(consumerService.getIdentificationForConsumer("fake", null)).rejects.toThrowServiceException(
         ServiceErrorCode.SEMANTIC_VALIDATION,
       );
     });
-
+    it("should throw ServiceException if identificationType is undefined or null", async () => {
+      expect(consumerService.getIdentificationForConsumer(null, "fake")).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
     it("should return the identification for the consumer", async () => {
       const consumer = getRandomConsumer();
       const { identification } = getRandomIdentification(consumer.props.id);
-
       when(consumerRepo.getIdentificationForConsumer(identification.id, consumer.props.id)).thenResolve(identification);
       const decryptedIdentification = { ...identification, value: identification.value + "-decrypted" };
-
       when(mockKMSService.decryptString(identification.value, KmsKeyType.SSN)).thenResolve(
         identification.value + "-decrypted",
       );
-
       const response = await consumerService.getIdentificationForConsumer(consumer.props.id, identification.id);
-
       expect(response).toEqual(decryptedIdentification);
+    });
+    it("should throw ServiceException if identification is not found", async () => {
+      const consumer = getRandomConsumer();
+      const { identification } = getRandomIdentification(consumer.props.id);
+      when(consumerRepo.getIdentificationForConsumer(identification.id, consumer.props.id)).thenResolve(null);
+      expect(
+        consumerService.getIdentificationForConsumer(consumer.props.id, identification.id),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
     });
   });
 
@@ -2185,7 +2187,7 @@ describe("ConsumerService", () => {
       const { identification } = getRandomIdentification(consumer.props.id);
 
       when(consumerRepo.deleteIdentification(identification.id)).thenResolve();
-      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(identification);
+      when(consumerRepo.getIdentificationForConsumer(identification.id, consumer.props.id)).thenResolve(identification);
 
       await consumerService.deleteIdentification(consumer.props.id, identification.id);
     });
@@ -2194,7 +2196,7 @@ describe("ConsumerService", () => {
       const consumer = getRandomConsumer();
       const { identification } = getRandomIdentification(consumer.props.id);
 
-      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(null);
+      when(consumerRepo.getIdentificationForConsumer(identification.id, consumer.props.id)).thenResolve(null);
 
       expect(
         consumerService.deleteIdentification(consumer.props.id, identification.id),

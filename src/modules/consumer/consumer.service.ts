@@ -882,7 +882,7 @@ export class ConsumerService {
       });
     }
 
-    const identification = await this.consumerRepo.getIdentificationForConsumer(consumerID, identificationID);
+    const identification = await this.consumerRepo.getIdentificationForConsumer(identificationID, consumerID); // These are getting reversed, is this okay?
     if (!identification) {
       throw new ServiceException({
         message: `Identification for consumer: ${consumerID} does not exist`,
