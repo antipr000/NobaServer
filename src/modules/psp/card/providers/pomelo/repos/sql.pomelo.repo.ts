@@ -24,8 +24,6 @@ import {
   validateSavePomeloCardRequest,
   validateUpdatePomeloCardRequest,
 } from "../domain/PomeloCard";
-<<<<<<< HEAD:src/modules/psp/pomelo/repos/sql.pomelo.repo.ts
-import { CardProvider, convertToDomainNobaCard, validateNobaCard, NobaCard } from "../../card/domain/NobaCard";
 import {
   convertToDomainPomeloTransaction,
   PomeloTransactionSaveRequest,
@@ -33,9 +31,7 @@ import {
   validateSavePomeloTransactionRequest,
   validatePomeloTransaction,
 } from "../domain/PomeloTransaction";
-=======
 import { CardProvider, convertToDomainNobaCard, validateNobaCard, NobaCard } from "../../../domain/NobaCard";
->>>>>>> 2cb2151e (Restructured card service as factory pattern):src/modules/psp/card/clients/pomelo/repos/sql.pomelo.repo.ts
 
 @Injectable()
 export class SQLPomeloRepo implements PomeloRepo {
