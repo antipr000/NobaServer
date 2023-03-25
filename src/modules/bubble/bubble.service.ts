@@ -13,7 +13,7 @@ import {
 } from "./dto/bubble.service.dto";
 import { EmployerService } from "../employer/employer.service";
 import { Employer } from "../employer/domain/Employer";
-import { Payroll, PayrollFilter } from "../employer/domain/Payroll";
+import { Payroll, PayrollFilter, PayrollStatus } from "../employer/domain/Payroll";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
@@ -109,7 +109,12 @@ export class BubbleService {
     // If this returns anything, it's the payroll that we're trying to create
     if (existingPayrollForDate.length > 0) {
       this.logger.info(`Payroll already exists for employer ${referralID} on date ${payrollDate}`);
-      if (repair) {
+      if (
+        repair &&
+        [PayrollStatus.CREATED, PayrollStatus.FUNDED, PayrollStatus.INVOICED, PayrollStatus.RECEIPT].includes(
+          existingPayrollForDate[0].status,
+        )
+      ) {
         // We are expecting this scenario
         this.logger.info(
           `Picking up payroll ${existingPayrollForDate[0].id} from where it left off in status ${existingPayrollForDate[0].status}...`,
@@ -122,7 +127,7 @@ export class BubbleService {
         return existingPayrollForDate[0];
       } else {
         throw new ServiceException({
-          message: `Payroll already exists for employer ${referralID} on date ${payrollDate}`,
+          message: `Payroll already exists for employer ${referralID} on date ${payrollDate} and is in status ${existingPayrollForDate[0].status}`,
           errorCode: ServiceErrorCode.ALREADY_EXISTS,
         });
       }
