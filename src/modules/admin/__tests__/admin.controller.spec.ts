@@ -1254,6 +1254,61 @@ describe("AdminController", () => {
     });
   });
 
+  describe("retryPayroll", () => {
+    it("NobaAdmin with 'Admin' role should be able to retry the Payroll", async () => {
+      const adminID = "AAAAAAAAAA";
+
+      const requestingNobaAdmin = Admin.createAdmin({
+        id: adminID,
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+      const payroll = getRandomPayroll("EMPLOYER_ID").payroll;
+
+      when(mockEmployerService.retryPayroll(payroll.id)).thenResolve(payroll);
+
+      const returnedPayroll = await adminController.retryPayroll(
+        {
+          user: { entity: requestingNobaAdmin },
+        },
+        payroll.id,
+      );
+
+      expect(returnedPayroll).toStrictEqual({
+        id: payroll.id,
+        employerID: payroll.employerID,
+        reference: payroll.referenceNumber,
+        payrollDate: payroll.payrollDate,
+        totalDebitAmount: payroll.totalDebitAmount,
+        totalCreditAmount: payroll.totalCreditAmount,
+        exchangeRate: payroll.exchangeRate,
+        debitCurrency: payroll.debitCurrency,
+        creditCurrency: payroll.creditCurrency,
+        status: payroll.status,
+      });
+
+      const [propagatedPayrollID] = capture(mockEmployerService.retryPayroll).last();
+      expect(propagatedPayrollID).toBe(payroll.id);
+    });
+
+    it("Regular user (non-admin) should not be able to retry the payroll", async () => {
+      const authenticatedConsumer: Consumer = Consumer.createConsumer({
+        id: "XXXXXXXXXX",
+        email: LOGGED_IN_ADMIN_EMAIL,
+      });
+
+      expect(
+        async () =>
+          await adminController.retryPayroll(
+            {
+              user: { entity: authenticatedConsumer },
+            },
+            "PAYROLL_ID",
+          ),
+      ).rejects.toThrow(ForbiddenException);
+    });
+  });
+
   /*describe("getConsumers", () => {
     it("Should return expected consumers", async () => {
       const requestingNobaAdmin = Admin.createAdmin({

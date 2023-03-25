@@ -179,6 +179,5 @@ export const convertToDomainPayroll = (payroll: PrismaPayrollModel): Payroll => 
 };
 
 export type PayrollFilter = {
-  payrollDate?: string;
   status?: PayrollStatus;
 };
