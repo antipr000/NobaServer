@@ -10,6 +10,7 @@ import { PomeloCardSaveRequest } from "./domain/PomeloCard";
 import { ICardProviderService } from "../card.provider.service";
 import { Consumer } from "../../../../consumer/domain/Consumer";
 import { ConsumerService } from "../../../../../modules/consumer/consumer.service";
+import { countryToSupportedIdentificationTypes } from "./domain/PomeloConstants";
 
 @Injectable()
 export class PomeloService implements ICardProviderService {
@@ -53,12 +54,29 @@ export class PomeloService implements ICardProviderService {
 
       const phoneWithoutExtension = consumer.props.phone.replace(`+${locationDetails.dialingPrefix}`, "");
 
+      const allIdentificationsForConsumer = await this.consumerService.getAllIdentifications(consumer.props.id);
+
+      const acceptableDocuments = countryToSupportedIdentificationTypes[consumer.props.address.countryCode];
+
+      const identification = allIdentificationsForConsumer.find(
+        identification =>
+          acceptableDocuments.includes(identification.type) &&
+          identification.countryCode === consumer.props.address.countryCode,
+      );
+
+      if (!identification) {
+        throw new ServiceException({
+          message: "Could not find identification for consumer. Supported types: CC, CE, PASSPORT, PEP",
+          errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        });
+      }
+
       // TODO: Fill identificatioon_type and identification_value
       const createUserRequest: ClientCreateUserRequest = {
         name: consumer.props.firstName,
         surname: consumer.props.lastName,
-        identification_type: "",
-        identification_value: "",
+        identification_type: identification.type,
+        identification_value: identification.value,
         birthdate: consumer.props.dateOfBirth,
         gender: consumer.props.gender,
         email: consumer.props.email,

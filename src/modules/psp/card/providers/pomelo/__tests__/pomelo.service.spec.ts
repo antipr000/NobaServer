@@ -20,6 +20,7 @@ import { CardProvider, NobaCard, NobaCardStatus, NobaCardType } from "../../../d
 import { PomeloUser } from "../domain/PomeloUser";
 import { PomeloCard } from "../domain/PomeloCard";
 import { ServiceErrorCode, ServiceException } from "../../../../../../core/exception/service.exception";
+import { Identification } from "../../../../../../modules/consumer/domain/Identification";
 
 describe("PomeloServiceTests", () => {
   jest.setTimeout(20000);
@@ -93,6 +94,16 @@ describe("PomeloServiceTests", () => {
         ],
       };
 
+      const identification: Identification = {
+        type: "CC",
+        value: "123456789",
+        id: "identification-id-123",
+        consumerID: consumer.props.id,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        countryCode: "CO",
+      };
+
       const pomeloUser: PomeloUser = {
         id: "fake-id-123",
         pomeloID: "123",
@@ -142,6 +153,7 @@ describe("PomeloServiceTests", () => {
       when(mockPomeloRepo.getPomeloUserByConsumerID(consumer.props.id)).thenResolve(null);
       when(mockPomeloRepo.createPomeloUser(anything())).thenResolve(pomeloUser);
       when(mockPomeloRepo.createPomeloCard(anything())).thenResolve(nobaCard);
+      when(mockConsumerService.getAllIdentifications(consumer.props.id)).thenResolve([identification]);
 
       const createdCard = await pomeloService.createCard(consumer, NobaCardType.VIRTUAL);
 
@@ -153,8 +165,8 @@ describe("PomeloServiceTests", () => {
           deepEqual({
             name: consumer.props.firstName,
             surname: consumer.props.lastName,
-            identification_type: "",
-            identification_value: "",
+            identification_type: identification.type,
+            identification_value: identification.value,
             birthdate: consumer.props.dateOfBirth,
             gender: consumer.props.gender,
             email: consumer.props.email,
@@ -352,6 +364,15 @@ describe("PomeloServiceTests", () => {
           },
         ],
       };
+      const identification: Identification = {
+        type: "CC",
+        value: "123456789",
+        id: "identification-id-123",
+        consumerID: consumer.props.id,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        countryCode: "CO",
+      };
 
       const pomeloUser: PomeloUser = {
         id: "fake-id-123",
@@ -387,6 +408,45 @@ describe("PomeloServiceTests", () => {
 
       when(mockPomeloRepo.getPomeloUserByConsumerID(consumer.props.id)).thenResolve(null);
       when(mockPomeloRepo.createPomeloUser(anything())).thenResolve(pomeloUser);
+      when(mockConsumerService.getAllIdentifications(consumer.props.id)).thenResolve([identification]);
+
+      await expect(async () => await pomeloService.createCard(consumer, NobaCardType.VIRTUAL)).rejects.toThrow(
+        ServiceException,
+      );
+    });
+
+    it("should throw 'ServiceException' if supported identification type does not exist", async () => {
+      const consumer = getRandomActiveConsumer("57", "CO");
+      const locationDetails: LocationDTO = {
+        countryName: "Colombia",
+        countryISOCode: "CO",
+        alpha3ISOCode: "COL",
+        dialingPrefix: "57",
+        subdivisions: [
+          {
+            code: "CO-DC",
+            name: "Distrito Capital de Bogotá",
+          },
+          {
+            code: "BO",
+            name: "Bolívar",
+          },
+        ],
+      };
+
+      const identification: Identification = {
+        type: "SSN",
+        value: "123456789",
+        id: "identification-id-123",
+        consumerID: consumer.props.id,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        countryCode: "CO",
+      };
+
+      when(mockPomeloRepo.getPomeloUserByConsumerID(consumer.props.id)).thenResolve(null);
+      when(mockLocationService.getLocationDetails("CO")).thenReturn(locationDetails);
+      when(mockConsumerService.getAllIdentifications(consumer.props.id)).thenResolve([identification]);
 
       await expect(async () => await pomeloService.createCard(consumer, NobaCardType.VIRTUAL)).rejects.toThrow(
         ServiceException,
