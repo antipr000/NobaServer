@@ -469,8 +469,15 @@ export class EmployerService {
 
     const payroll = await this.getPayrollByID(payrollID);
 
+    if (!payroll) {
+      throw new ServiceException({
+        message: `Payroll ${payrollID} not found`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    // Only allow payroll to be retried for certain statuses
     if (
-      payroll && // Only allow payroll to be retried for certain statuses
       [PayrollStatus.CREATED, PayrollStatus.FUNDED, PayrollStatus.INVOICED, PayrollStatus.RECEIPT].includes(
         payroll.status,
       )

@@ -46,6 +46,8 @@ import { InvoiceReceiptTemplateFields, InvoiceTemplateFields } from "../template
 import dayjs from "dayjs";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { PayrollDisbursement } from "../domain/PayrollDisbursement";
+import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
+import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -90,6 +92,7 @@ describe("EmployerServiceTests", () => {
   let mockExchangeRateService: ExchangeRateService;
   let mockS3Service: S3Service;
   let mockKMSService: KmsService;
+  let mockWorkflowExecutor: WorkflowExecutor;
   let mockTemplateProcessorInstance;
 
   beforeEach(async () => {
@@ -101,6 +104,7 @@ describe("EmployerServiceTests", () => {
     mockExchangeRateService = getMockExchangeRateServiceWithDefaults();
     mockS3Service = getMockS3ServiceWithDefaults();
     mockKMSService = getMockKMSServiceWithDefaults();
+    mockWorkflowExecutor = getMockWorkflowExecutorWithDefaults();
     mockTemplateProcessorInstance = instance(mockTemplateProcessor);
     constructorSpy.mockImplementationOnce(() => mockTemplateProcessorInstance);
     mockTemplateProcessorInstance.locales = new Set();
@@ -149,6 +153,10 @@ describe("EmployerServiceTests", () => {
         {
           provide: KmsService,
           useFactory: () => instance(mockKMSService),
+        },
+        {
+          provide: WorkflowExecutor,
+          useFactory: () => instance(mockWorkflowExecutor),
         },
         EmployerService,
       ],
@@ -908,6 +916,48 @@ describe("EmployerServiceTests", () => {
         }),
       ).rejects.toThrowError(ServiceException);
     });
+  });
+
+  describe("retryPayroll", () => {
+    it("should throw ServiceException when payrollID is not provided", async () => {
+      await expect(employerService.retryPayroll(undefined)).rejects.toThrowError(ServiceException);
+
+      await expect(employerService.retryPayroll(null)).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw ServiceException when payroll is not found", async () => {
+      when(mockPayrollRepo.getPayrollByID("payroll-id")).thenResolve(undefined);
+
+      await expect(employerService.retryPayroll("payroll-id")).rejects.toThrowError(ServiceException);
+    });
+    it.each([PayrollStatus.COMPLETED, PayrollStatus.EXPIRED, PayrollStatus.INVESTIGATION, PayrollStatus.IN_PROGRESS])(
+      "should throw a ServiceException if payroll is in %s status",
+      async status => {
+        const employerID = "fake-employer";
+        const { payroll } = getRandomPayroll(employerID);
+        payroll.status = status;
+
+        when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+
+        await expect(employerService.retryPayroll(payroll.id)).rejects.toThrowError(ServiceException);
+      },
+    );
+
+    it.each([PayrollStatus.CREATED, PayrollStatus.FUNDED, PayrollStatus.INVOICED, PayrollStatus.RECEIPT])(
+      "should retry payroll if payroll is in %s status",
+      async status => {
+        const employerID = "fake-employer";
+        const { payroll } = getRandomPayroll(employerID);
+        payroll.status = status;
+
+        when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+        when(mockWorkflowExecutor.executePayrollProcessingWorkflow(anyString(), payroll.id)).thenResolve();
+
+        await employerService.retryPayroll(payroll.id);
+
+        verify(mockWorkflowExecutor.executePayrollProcessingWorkflow(anyString(), payroll.id)).once();
+      },
+    );
   });
 
   describe("createDisbursement", () => {
