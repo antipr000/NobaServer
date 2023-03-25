@@ -21,6 +21,7 @@ import { PomeloUser } from "../domain/PomeloUser";
 import { PomeloCard } from "../domain/PomeloCard";
 import { ServiceErrorCode, ServiceException } from "../../../../../../core/exception/service.exception";
 import { Identification } from "../../../../../../modules/consumer/domain/Identification";
+import CryptoJS from "crypto-js";
 
 describe("PomeloServiceTests", () => {
   jest.setTimeout(20000);
@@ -186,7 +187,7 @@ describe("PomeloServiceTests", () => {
 
       verify(
         mockPomeloClient.createCard(
-          `${pomeloUser.id}-${NobaCardType.VIRTUAL}`,
+          String(CryptoJS.SHA256(`${pomeloUser.id}-${NobaCardType.VIRTUAL}`)),
           deepEqual({
             user_id: pomeloUser.pomeloID,
             card_type: NobaCardType.VIRTUAL,
@@ -289,7 +290,7 @@ describe("PomeloServiceTests", () => {
 
       verify(
         mockPomeloClient.createCard(
-          `${pomeloUser.id}-${NobaCardType.VIRTUAL}`,
+          String(CryptoJS.SHA256(`${pomeloUser.id}-${NobaCardType.VIRTUAL}`)),
           deepEqual({
             user_id: pomeloUser.pomeloID,
             card_type: NobaCardType.VIRTUAL,

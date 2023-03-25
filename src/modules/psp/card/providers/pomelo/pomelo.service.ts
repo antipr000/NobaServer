@@ -11,6 +11,7 @@ import { ICardProviderService } from "../card.provider.service";
 import { Consumer } from "../../../../consumer/domain/Consumer";
 import { ConsumerService } from "../../../../../modules/consumer/consumer.service";
 import { countryToSupportedIdentificationTypes } from "./domain/PomeloConstants";
+import CryptoJS from "crypto-js";
 
 @Injectable()
 export class PomeloService implements ICardProviderService {
@@ -101,7 +102,7 @@ export class PomeloService implements ICardProviderService {
     }
 
     // Create card in Pomelo
-    const idempotencyKey = `${pomeloUser.id}-${type}`; //TODO: Hash this value
+    const idempotencyKey = String(CryptoJS.SHA256(`${pomeloUser.id}-${type}`));
     const pomeloClientCard = await this.pomeloClient.createCard(idempotencyKey, {
       user_id: pomeloUser.pomeloID,
       card_type: type,
