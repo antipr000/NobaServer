@@ -17,6 +17,8 @@ import { CircleService } from "./circle.service";
 import { CircleRepoModule } from "./repos/circle.repo.module";
 import { CircleWorkflowController } from "./circle.workflow.controller";
 import { BankFactoryModule } from "./factory/bank.factory.module";
+import { CardController } from "./card.controller";
+import { CardModule } from "./card/card.module";
 
 // This is made to ensure that the "webhooks" are correctly registered
 // before the server starts processing the requests.
@@ -38,8 +40,9 @@ export const CheckoutClientProvider: Provider = {
     TransactionRepoModule,
     CircleRepoModule,
     BankFactoryModule,
+    CardModule,
   ],
-  controllers: [PaymentWebhooksController, CircleController],
+  controllers: [PaymentWebhooksController, CircleController, CardController],
   providers: [CheckoutClientProvider, PlaidClient, PaymentService, CheckoutWebhooksMapper, CircleClient, CircleService],
   exports: [CheckoutClient, PlaidClient, PaymentService, CircleClient, CircleService],
 })

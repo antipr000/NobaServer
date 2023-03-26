@@ -41,6 +41,8 @@ describe("LocationService", () => {
       expect(us.countryName).toBe("United States");
       expect(us.alternateCountryName).toBe("United States");
       expect(us.subdivisions).toBeUndefined();
+      expect(us.dialingPrefix).toBe("1");
+      expect(us.alpha3ISOCode).toBe("USA");
     });
 
     it("should obtain 205 countries with subdivisions", async () => {

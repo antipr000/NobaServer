@@ -108,6 +108,8 @@ describe("AppController", () => {
     countryISOCode: "US",
     alternateCountryName: "USA",
     countryFlagIconPath: "xyz",
+    alpha3ISOCode: "USA",
+    dialingPrefix: "1",
   };
 
   const usWithSubdivisionData = {
@@ -115,6 +117,8 @@ describe("AppController", () => {
     countryISOCode: "US",
     alternateCountryName: "USA",
     countryFlagIconPath: "xyz",
+    alpha3ISOCode: "USA",
+    dialingPrefix: "1",
     subdivisions: [{ code: "WA", name: "Washington", supported: true }],
   };
 

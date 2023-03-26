@@ -123,7 +123,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
     }
 
     // If search term starts with $, sort by handle. Otherwise sort by last name.
-    let order: Prisma.ConsumerOrderByWithRelationInput = handleOnly ? { handle: "asc" } : { lastName: "asc" };
+    const order: Prisma.ConsumerOrderByWithRelationInput = handleOnly ? { handle: "asc" } : { lastName: "asc" };
 
     const query: Prisma.ConsumerWhereInput = {
       isLocked: false,

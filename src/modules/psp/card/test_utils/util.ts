@@ -17,6 +17,7 @@ export const createNobaCard = async (
       type: NobaCardType.VIRTUAL,
       status: NobaCardStatus.ACTIVE,
       provider: cardProvider,
+      last4Digits: "1234",
     },
   });
 
@@ -28,5 +29,19 @@ export const createNobaCard = async (
     type: savedNobaCard.type as NobaCardType,
     createdTimestamp: savedNobaCard.createdTimestamp,
     updatedTimestamp: savedNobaCard.updatedTimestamp,
+    last4Digits: savedNobaCard.last4Digits,
+  };
+};
+
+export const getRandomNobaCard = (consumerID: string, status: NobaCardStatus): NobaCard => {
+  return {
+    id: uuid(),
+    consumerID,
+    provider: CardProvider.POMELO,
+    status: status,
+    type: NobaCardType.VIRTUAL,
+    createdTimestamp: new Date(),
+    updatedTimestamp: new Date(),
+    last4Digits: "1234",
   };
 };

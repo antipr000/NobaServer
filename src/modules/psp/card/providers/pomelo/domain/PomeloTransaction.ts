@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { PomeloTransaction as PrismaPomeloTransactionModel } from "@prisma/client";
-import { KeysRequired } from "../../../../modules/common/domain/Types";
+import { KeysRequired } from "../../../../../common/domain/Types";
 
 export class PomeloTransaction {
   id: string;
