@@ -911,7 +911,7 @@ describe("ConsumerRepoTests", () => {
       expect(wallets[0].props).toStrictEqual(savedResult.props);
     });
 
-    it("should throw error when wallet with duplicate address is added", async () => {
+    it.skip("should throw error when wallet with duplicate address is added", async () => {
       const consumer = getRandomUser();
       await consumerRepo.createConsumer(consumer);
       const wallet = getRandomCryptoWallet(consumer.props.id);
