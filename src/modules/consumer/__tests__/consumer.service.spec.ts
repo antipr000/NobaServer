@@ -2018,7 +2018,7 @@ describe("ConsumerService", () => {
     it("should return the identification for the consumer", async () => {
       const consumer = getRandomConsumer();
       const { identification } = getRandomIdentification(consumer.props.id);
-      when(consumerRepo.getIdentificationForConsumer(identification.id, consumer.props.id)).thenResolve(identification);
+      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(identification);
       const decryptedIdentification = { ...identification, value: identification.value + "-decrypted" };
       when(mockKMSService.decryptString(identification.value, KmsKeyType.SSN)).thenResolve(
         identification.value + "-decrypted",
@@ -2029,7 +2029,7 @@ describe("ConsumerService", () => {
     it("should throw ServiceException if identification is not found", async () => {
       const consumer = getRandomConsumer();
       const { identification } = getRandomIdentification(consumer.props.id);
-      when(consumerRepo.getIdentificationForConsumer(identification.id, consumer.props.id)).thenResolve(null);
+      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(null);
       expect(
         consumerService.getIdentificationForConsumer(consumer.props.id, identification.id),
       ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
@@ -2187,7 +2187,7 @@ describe("ConsumerService", () => {
       const { identification } = getRandomIdentification(consumer.props.id);
 
       when(consumerRepo.deleteIdentification(identification.id)).thenResolve();
-      when(consumerRepo.getIdentificationForConsumer(identification.id, consumer.props.id)).thenResolve(identification);
+      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(identification);
 
       await consumerService.deleteIdentification(consumer.props.id, identification.id);
     });
@@ -2196,7 +2196,7 @@ describe("ConsumerService", () => {
       const consumer = getRandomConsumer();
       const { identification } = getRandomIdentification(consumer.props.id);
 
-      when(consumerRepo.getIdentificationForConsumer(identification.id, consumer.props.id)).thenResolve(null);
+      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(null);
 
       expect(
         consumerService.deleteIdentification(consumer.props.id, identification.id),

@@ -829,7 +829,7 @@ export class ConsumerService {
       });
     }
 
-    const identification = await this.consumerRepo.getIdentificationForConsumer(identificationID, consumerID); // These are getting reversed, is this okay?
+    const identification = await this.consumerRepo.getIdentificationForConsumer(consumerID, identificationID);
     if (!identification) {
       throw new ServiceException({
         message: "Identification does not exist",
@@ -882,7 +882,7 @@ export class ConsumerService {
       });
     }
 
-    const identification = await this.consumerRepo.getIdentificationForConsumer(identificationID, consumerID); // These are getting reversed, is this okay?
+    const identification = await this.consumerRepo.getIdentificationForConsumer(consumerID, identificationID);
     if (!identification) {
       throw new ServiceException({
         message: `Identification for consumer: ${consumerID} does not exist`,

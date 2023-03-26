@@ -1076,7 +1076,7 @@ describe("ConsumerRepoTests", () => {
     it("should return null if identification does not exist", async () => {
       const consumerID = await createTestConsumer(prismaService);
 
-      const identification = await consumerRepo.getIdentificationForConsumer("fake-id", consumerID);
+      const identification = await consumerRepo.getIdentificationForConsumer(consumerID, "fake-id");
       expect(identification).toBeNull();
     });
 
@@ -1086,7 +1086,7 @@ describe("ConsumerRepoTests", () => {
 
       const addedIdentification = await consumerRepo.addIdentification(identificationCreateInput);
 
-      const result = await consumerRepo.getIdentificationForConsumer(addedIdentification.id, consumerID);
+      const result = await consumerRepo.getIdentificationForConsumer(consumerID, addedIdentification.id);
       expect(result).not.toBeNull();
       expect(result.type).toBe(identification.type);
       expect(result.countryCode).toBe("CO");
@@ -1104,19 +1104,19 @@ describe("ConsumerRepoTests", () => {
       const addedIdentification = await consumerRepo.addIdentification(identificationCreateInput);
       const addedIdentification2 = await consumerRepo.addIdentification(identificationCreateInput2);
 
-      const result = await consumerRepo.getIdentificationForConsumer(addedIdentification.id, consumerID);
+      const result = await consumerRepo.getIdentificationForConsumer(consumerID, addedIdentification.id);
       expect(result).not.toBeNull();
       expect(result.type).toBe(identification.type);
       expect(result.countryCode).toBe("CO");
 
-      const result2 = await consumerRepo.getIdentificationForConsumer(addedIdentification2.id, consumerID2);
+      const result2 = await consumerRepo.getIdentificationForConsumer(consumerID2, addedIdentification2.id);
       expect(result2).not.toBeNull();
       expect(result2.type).toBe(identification2.type);
       expect(result2.countryCode).toBe("US");
     });
 
     it("should return null if consumer does not exist", async () => {
-      const identification = await consumerRepo.getIdentificationForConsumer("fake-id", "fake-consumer-id");
+      const identification = await consumerRepo.getIdentificationForConsumer("fake-consumer-id", "fake-id");
       expect(identification).toBeNull();
     });
   });
@@ -1152,7 +1152,7 @@ describe("ConsumerRepoTests", () => {
 
       await consumerRepo.deleteIdentification(identification.id);
 
-      const result = await consumerRepo.getIdentificationForConsumer(identification.id, consumerID);
+      const result = await consumerRepo.getIdentificationForConsumer(consumerID, identification.id);
       expect(result).toBeNull();
     });
 
