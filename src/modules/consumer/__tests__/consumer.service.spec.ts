@@ -61,6 +61,8 @@ import { ConsumerMapper } from "../mappers/ConsumerMapper";
 import { getMockConsumerMapperWithDefaults } from "../mocks/mock.consumer.mapper";
 import { Gender } from "../domain/ExternalStates";
 import { getRandomIdentification } from "../test_utils/identification.test.utils";
+import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
+import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -114,6 +116,7 @@ describe("ConsumerService", () => {
   let employeeService: EmployeeService;
   let employerService: EmployerService;
   let bubbleService: BubbleService;
+  let mockKMSService: KmsService;
 
   jest.setTimeout(30000);
 
@@ -130,6 +133,7 @@ describe("ConsumerService", () => {
     employeeService = getMockEmployeeServiceWithDefaults();
     employerService = getMockEmployerServiceWithDefaults();
     bubbleService = getMockBubbleServiceWithDefaults();
+    mockKMSService = getMockKMSServiceWithDefaults();
 
     const ConsumerRepoProvider = {
       provide: "ConsumerRepo",
@@ -195,7 +199,10 @@ describe("ConsumerService", () => {
           provide: BubbleService,
           useFactory: () => instance(bubbleService),
         },
-        KmsService,
+        {
+          provide: KmsService,
+          useFactory: () => instance(mockKMSService),
+        },
       ],
     }).compile();
 
@@ -1997,28 +2004,203 @@ describe("ConsumerService", () => {
     });
   });
 
-  describe("getIdenficationForConsumer", () => {
+  describe("getIdentificationForConsumer", () => {
     it("should throw ServiceException if consumerID is undefined or null", async () => {
-      expect(consumerService.getIdentificationForConsumer(null, "fake")).rejects.toThrowServiceException(
-        ServiceErrorCode.SEMANTIC_VALIDATION,
-      );
-    });
-
-    it("should throw ServiceException if identificationType is undefined or null", async () => {
       expect(consumerService.getIdentificationForConsumer("fake", null)).rejects.toThrowServiceException(
         ServiceErrorCode.SEMANTIC_VALIDATION,
       );
     });
-
+    it("should throw ServiceException if identificationType is undefined or null", async () => {
+      expect(consumerService.getIdentificationForConsumer(null, "fake")).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
     it("should return the identification for the consumer", async () => {
       const consumer = getRandomConsumer();
       const { identification } = getRandomIdentification(consumer.props.id);
-
-      when(consumerRepo.getIdentificationForConsumer(identification.id, consumer.props.id)).thenResolve(identification);
-
+      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(identification);
+      const decryptedIdentification = { ...identification, value: identification.value + "-decrypted" };
+      when(mockKMSService.decryptString(identification.value, KmsKeyType.SSN)).thenResolve(
+        identification.value + "-decrypted",
+      );
       const response = await consumerService.getIdentificationForConsumer(consumer.props.id, identification.id);
+      expect(response).toEqual(decryptedIdentification);
+    });
+    it("should throw ServiceException if identification is not found", async () => {
+      const consumer = getRandomConsumer();
+      const { identification } = getRandomIdentification(consumer.props.id);
+      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(null);
+      expect(
+        consumerService.getIdentificationForConsumer(consumer.props.id, identification.id),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
+    });
+  });
+
+  describe("getAllIdentificationsForConsumer", () => {
+    it("should throw ServiceException if consumerID is undefined or null", async () => {
+      expect(consumerService.getAllIdentifications(null)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should return all identifications for the consumer", async () => {
+      const consumer = getRandomConsumer();
+      const { identification } = getRandomIdentification(consumer.props.id);
+      const { identification: identification2 } = getRandomIdentification(consumer.props.id);
+
+      when(consumerRepo.getAllIdentificationsForConsumer(consumer.props.id)).thenResolve([
+        identification,
+        identification2,
+      ]);
+
+      const decryptedIdentification = { ...identification, value: identification.value + "-decrypted" };
+      const decryptedIdentification2 = { ...identification2, value: identification2.value + "-decrypted" };
+      when(mockKMSService.decryptString(identification.value, KmsKeyType.SSN)).thenResolve(
+        identification.value + "-decrypted",
+      );
+      when(mockKMSService.decryptString(identification2.value, KmsKeyType.SSN)).thenResolve(
+        identification2.value + "-decrypted",
+      );
+
+      const response = await consumerService.getAllIdentifications(consumer.props.id);
+
+      expect(response).toEqual([decryptedIdentification, decryptedIdentification2]);
+    });
+
+    it("should return empty array if no identifications exist", async () => {
+      const consumer = getRandomConsumer();
+
+      when(consumerRepo.getAllIdentificationsForConsumer(consumer.props.id)).thenResolve([]);
+
+      const response = await consumerService.getAllIdentifications(consumer.props.id);
+
+      expect(response).toEqual([]);
+    });
+  });
+
+  describe("addIdentification", () => {
+    it("should throw ServiceException if consumerID is undefined or null", async () => {
+      expect(
+        consumerService.addIdentification(null, {
+          type: "fake",
+          value: "fake",
+          countryCode: "CO",
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException if identificationType is undefined or null", async () => {
+      expect(consumerService.addIdentification("fake", null)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should add an identification for the consumer", async () => {
+      const consumer = getRandomConsumer();
+      const { identification, identificationCreateInput } = getRandomIdentification(consumer.props.id);
+
+      when(mockKMSService.encryptString(identificationCreateInput.value, KmsKeyType.SSN)).thenResolve(
+        "mockedEncryptedValue",
+      );
+      when(
+        consumerRepo.addIdentification(deepEqual({ ...identificationCreateInput, value: "mockedEncryptedValue" })),
+      ).thenResolve(identification);
+
+      const response = await consumerService.addIdentification(consumer.props.id, identificationCreateInput);
 
       expect(response).toEqual(identification);
+    });
+
+    it.each([["type"], ["value"], ["countryCode"]])(
+      "should throw ServiceException if identificationCreateInput is missing %s",
+      async missingField => {
+        const consumer = getRandomConsumer();
+        const { identificationCreateInput } = getRandomIdentification(consumer.props.id);
+
+        const input = { ...identificationCreateInput };
+        delete input[missingField];
+
+        expect(consumerService.addIdentification(consumer.props.id, input)).rejects.toThrowServiceException(
+          ServiceErrorCode.SEMANTIC_VALIDATION,
+        );
+      },
+    );
+  });
+
+  describe("updateIdentification", () => {
+    it("should throw ServiceException if consumerID is undefined or null", async () => {
+      expect(
+        consumerService.updateIdentification(null, "fake", {
+          value: "fake",
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException if identificationID is undefined or null", async () => {
+      expect(
+        consumerService.updateIdentification("fake", null, {
+          value: "fake",
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException if identificationUpdateInput is undefined or null", async () => {
+      expect(consumerService.updateIdentification("fake", "fake", null)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should update an identification for the consumer", async () => {
+      const consumer = getRandomConsumer();
+      const { identification } = getRandomIdentification(consumer.props.id);
+
+      when(mockKMSService.encryptString(identification.value, KmsKeyType.SSN)).thenResolve("mockedEncryptedValue");
+
+      const encryptedIdentification = { ...identification, value: "mockedEncryptedValue" };
+      when(
+        consumerRepo.updateIdentification(identification.id, deepEqual({ value: encryptedIdentification.value })),
+      ).thenResolve(encryptedIdentification);
+
+      const response = await consumerService.updateIdentification(consumer.props.id, identification.id, {
+        value: identification.value,
+      });
+
+      expect(response).toEqual(encryptedIdentification);
+    });
+  });
+
+  describe("deleteIdentification", () => {
+    it("should throw ServiceException if consumerID is undefined or null", async () => {
+      expect(consumerService.deleteIdentification(null, "fake")).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should throw ServiceException if identificationID is undefined or null", async () => {
+      expect(consumerService.deleteIdentification("fake", null)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should delete an identification for the consumer", async () => {
+      const consumer = getRandomConsumer();
+      const { identification } = getRandomIdentification(consumer.props.id);
+
+      when(consumerRepo.deleteIdentification(identification.id)).thenResolve();
+      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(identification);
+
+      await consumerService.deleteIdentification(consumer.props.id, identification.id);
+    });
+
+    it("should throw ServiceException if identification does not exist", async () => {
+      const consumer = getRandomConsumer();
+      const { identification } = getRandomIdentification(consumer.props.id);
+
+      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(null);
+
+      expect(
+        consumerService.deleteIdentification(consumer.props.id, identification.id),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
     });
   });
 });

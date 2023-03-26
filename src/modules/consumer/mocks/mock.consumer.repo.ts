@@ -37,5 +37,6 @@ export function getMockConsumerRepoWithDefaults(): IConsumerRepo {
   );
   when(mockConsumerRepo.updateIdentification(anyString(), anything())).thenReject(new Error("Method not implemented"));
   when(mockConsumerRepo.deleteIdentification(anyString())).thenReject(new Error("Method not implemented"));
+
   return mockConsumerRepo;
 }

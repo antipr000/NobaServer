@@ -34,6 +34,7 @@ import { ConsumerSearchDTO } from "./dto/consumer.search.dto";
 import { ConsumerMapper } from "./mappers/ConsumerMapper";
 import { Identification } from "./domain/Identification";
 import { CreateIdentificationDTO } from "./dto/create.identification.dto";
+import { UpdateIdentificationDTO } from "./dto/update.identification.dto";
 
 @Injectable()
 export class ConsumerService {
@@ -735,6 +736,20 @@ export class ConsumerService {
   }
 
   async addIdentification(consumerID: string, identification: CreateIdentificationDTO): Promise<Identification> {
+    if (!consumerID) {
+      throw new ServiceException({
+        message: "Consumer ID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    if (!identification) {
+      throw new ServiceException({
+        message: "Identification is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
     if (!identification.type) {
       throw new ServiceException({
         message: "Identification type is required",
@@ -767,6 +782,38 @@ export class ConsumerService {
     return result;
   }
 
+  async updateIdentification(
+    consumerID: string,
+    identificationID: string,
+    identification: UpdateIdentificationDTO,
+  ): Promise<Identification> {
+    if (!consumerID) {
+      throw new ServiceException({
+        message: "Consumer ID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    if (!identificationID) {
+      throw new ServiceException({
+        message: "Identification ID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    if (!identification) {
+      throw new ServiceException({
+        message: "Identification is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const encryptedValue = await this.kmsService.encryptString(identification.value, KmsKeyType.SSN);
+    return this.consumerRepo.updateIdentification(identificationID, {
+      value: encryptedValue,
+    });
+  }
+
   async getIdentificationForConsumer(consumerID: string, identificationID: string): Promise<Identification> {
     if (!consumerID) {
       throw new ServiceException({
@@ -782,10 +829,30 @@ export class ConsumerService {
       });
     }
 
-    return this.consumerRepo.getIdentificationForConsumer(identificationID, consumerID); // These are getting reversed, is this okay?
+    const identification = await this.consumerRepo.getIdentificationForConsumer(consumerID, identificationID);
+    if (!identification) {
+      throw new ServiceException({
+        message: "Identification does not exist",
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    const decryptedValue = await this.kmsService.decryptString(identification.value, KmsKeyType.SSN);
+
+    return {
+      ...identification,
+      value: decryptedValue,
+    };
   }
 
   async getAllIdentifications(consumerID: string): Promise<Identification[]> {
+    if (!consumerID) {
+      throw new ServiceException({
+        message: "Consumer ID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
     // eventually implement filters
     const identifications = await this.consumerRepo.getAllIdentificationsForConsumer(consumerID);
     const decryptedIdentifications = identifications.map(async identification => {
