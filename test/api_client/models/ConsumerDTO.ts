@@ -13,7 +13,8 @@ export type ConsumerDTO = {
   firstName?: string;
   lastName?: string;
   email: string;
-  handle: string;
+  handle?: string;
+  gender?: "Male" | "Female";
   referralCode: string;
   status: "Approved" | "Pending" | "ActionRequired" | "TemporaryHold" | "PermanentHold";
   kycVerificationData: KycVerificationDTO;

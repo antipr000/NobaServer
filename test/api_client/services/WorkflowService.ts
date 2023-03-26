@@ -13,6 +13,7 @@ import type { DebitBankRequestDTO } from "../models/DebitBankRequestDTO";
 import type { EmployerWorkflowDTO } from "../models/EmployerWorkflowDTO";
 import type { MonoTransactionDTO } from "../models/MonoTransactionDTO";
 import type { PayrollDisbursementDTO } from "../models/PayrollDisbursementDTO";
+import type { PayrollDisbursementDTOWrapper } from "../models/PayrollDisbursementDTOWrapper";
 import type { PayrollDTO } from "../models/PayrollDTO";
 import type { SendNotificationRequestDTO } from "../models/SendNotificationRequestDTO";
 import type { UpdateDisbursementRequestDTO } from "../models/UpdateDisbursementRequestDTO";
@@ -194,6 +195,28 @@ export class WorkflowService {
   }
 
   /**
+   * Gets all disbursements for a given payroll
+   * @returns PayrollDisbursementDTOWrapper
+   * @throws ApiError
+   */
+  public static getAllDisbursements({
+    payrollId,
+  }: {
+    payrollId: string;
+  }): CancelablePromise<PayrollDisbursementDTOWrapper> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/wf/v1/payrolls/{payrollID}/disbursements",
+      path: {
+        payrollID: payrollId,
+      },
+      errors: {
+        404: `Requested payroll is not found`,
+      },
+    });
+  }
+
+  /**
    * Updates the disbursement record for an employee
    * @returns BlankResponseDTO
    * @throws ApiError
@@ -237,6 +260,25 @@ export class WorkflowService {
       },
       errors: {
         400: `Failed to create invoice`,
+        404: `Requested employer is not found`,
+      },
+    });
+  }
+
+  /**
+   * Creates a receipt for employer
+   * @returns BlankResponseDTO
+   * @throws ApiError
+   */
+  public static createReceipt({ payrollId }: { payrollId: string }): CancelablePromise<BlankResponseDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/wf/v1/payrolls/{payrollID}/receipts",
+      path: {
+        payrollID: payrollId,
+      },
+      errors: {
+        400: `Failed to create receipt`,
         404: `Requested employer is not found`,
       },
     });

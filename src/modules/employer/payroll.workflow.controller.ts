@@ -48,6 +48,7 @@ export class PayrollWorkflowController {
       employeeID: disbursement.employeeID,
       payrollID: disbursement.payrollID,
       allocationAmount: disbursement.allocationAmount,
+      transactionID: disbursement.transactionID,
     };
   }
 
@@ -126,7 +127,7 @@ export class PayrollWorkflowController {
   @ApiOperation({ summary: "Gets all disbursements for a given payroll" })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: PayrollDTO,
+    type: PayrollDisbursementDTOWrapper,
   })
   @ApiNotFoundResponse({ description: "Requested payroll is not found" })
   async getAllDisbursements(@Param("payrollID") payrollID: string): Promise<PayrollDisbursementDTOWrapper> {
@@ -141,6 +142,7 @@ export class PayrollWorkflowController {
       employeeID: disbursement.employeeID,
       payrollID: disbursement.payrollID,
       allocationAmount: disbursement.allocationAmount,
+      transactionID: disbursement.transactionID,
     }));
 
     return { disbursements: disbursements };

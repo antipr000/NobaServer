@@ -3,5 +3,14 @@
 /* eslint-disable */
 
 export type UpdatePayrollRequestDTO = {
-  status?: "CREATED" | "INVOICED" | "PREPARED" | "INVESTIGATION" | "FUNDED" | "IN_PROGRESS" | "COMPLETED" | "EXPIRED";
+  status?:
+    | "CREATED"
+    | "INVOICED"
+    | "PREPARED"
+    | "INVESTIGATION"
+    | "FUNDED"
+    | "IN_PROGRESS"
+    | "RECEIPT"
+    | "COMPLETED"
+    | "EXPIRED";
 };

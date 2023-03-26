@@ -10,6 +10,7 @@ export type AdminUpdateConsumerRequestDTO = {
   lastName?: string;
   email?: string;
   phone?: string;
+  gender?: "Male" | "Female";
   dateOfBirth?: string;
   address?: AddressDTO;
   handle?: string;

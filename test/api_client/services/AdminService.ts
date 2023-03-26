@@ -11,6 +11,8 @@ import type { DeleteNobaAdminDTO } from "../models/DeleteNobaAdminDTO";
 import type { ExchangeRateDTO } from "../models/ExchangeRateDTO";
 import type { LoginResponseDTO } from "../models/LoginResponseDTO";
 import type { NobaAdminDTO } from "../models/NobaAdminDTO";
+import type { TransactionDTO } from "../models/TransactionDTO";
+import type { TransactionQueryResultDTO } from "../models/TransactionQueryResultDTO";
 import type { TransactionStatsDTO } from "../models/TransactionStatsDTO";
 import type { UpdateNobaAdminDTO } from "../models/UpdateNobaAdminDTO";
 import type { UpdatePayrollRequestDTO } from "../models/UpdatePayrollRequestDTO";
@@ -256,6 +258,24 @@ export class AdminService {
   }
 
   /**
+   * Retries an existing payroll
+   * @returns any Payroll is retried successfully
+   * @throws ApiError
+   */
+  public static retryPayroll({ payrollId }: { payrollId: string }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/admins/payrolls/{payrollID}/retry",
+      path: {
+        payrollID: payrollId,
+      },
+      errors: {
+        403: `User forbidden from updating the Payroll status`,
+      },
+    });
+  }
+
+  /**
    * Gets all consumers or a subset based on query parameters
    * @returns ConsumerInternalDTO List of consumers
    * @throws ApiError
@@ -317,6 +337,101 @@ export class AdminService {
       mediaType: "application/json",
       errors: {
         403: `User forbidden from adding new exchange rate`,
+      },
+    });
+  }
+
+  /**
+   * Gets all transactions for supplied filters
+   * @returns TransactionQueryResultDTO
+   * @throws ApiError
+   */
+  public static getAllTransactions({
+    consumerId,
+    startDate,
+    endDate,
+    pageOffset,
+    pageLimit,
+    creditCurrency,
+    debitCurrency,
+    transactionStatus,
+  }: {
+    /**
+     * Consumer ID whose transactions is needed
+     */
+    consumerId?: string;
+    /**
+     * Format: YYYY-MM-DD, example: 2010-04-27
+     */
+    startDate?: string;
+    /**
+     * Format: YYYY-MM-DD, example: 2010-04-27
+     */
+    endDate?: string;
+    /**
+     * number of pages to skip, offset 0 means first page results, 1 means second page etc.
+     */
+    pageOffset?: number;
+    /**
+     * number of items per page
+     */
+    pageLimit?: number;
+    /**
+     * filter for a particular credit currency
+     */
+    creditCurrency?: string;
+    /**
+     * filter for a particular debit currency
+     */
+    debitCurrency?: string;
+    /**
+     * filter for a particular transaction status
+     */
+    transactionStatus?: "INITIATED" | "COMPLETED" | "FAILED" | "PROCESSING" | "EXPIRED";
+  }): CancelablePromise<TransactionQueryResultDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/admins/transactions",
+      query: {
+        consumerID: consumerId,
+        startDate: startDate,
+        endDate: endDate,
+        pageOffset: pageOffset,
+        pageLimit: pageLimit,
+        creditCurrency: creditCurrency,
+        debitCurrency: debitCurrency,
+        transactionStatus: transactionStatus,
+      },
+      errors: {
+        400: `Invalid request parameters`,
+        403: `User forbidden from getting all transactions`,
+      },
+    });
+  }
+
+  /**
+   * Gets details of any transaction
+   * @returns TransactionDTO
+   * @throws ApiError
+   */
+  public static getTransaction({
+    transactionRef,
+    includeEvents,
+  }: {
+    transactionRef: string;
+    includeEvents?: "All" | "External Only" | "None";
+  }): CancelablePromise<TransactionDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/admins/transactions/{transactionRef}",
+      path: {
+        transactionRef: transactionRef,
+      },
+      query: {
+        includeEvents: includeEvents,
+      },
+      errors: {
+        404: `Requested transaction is not found`,
       },
     });
   }

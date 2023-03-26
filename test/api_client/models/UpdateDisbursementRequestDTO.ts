@@ -4,4 +4,5 @@
 
 export type UpdateDisbursementRequestDTO = {
   transactionID?: string;
+  creditAmount?: number;
 };

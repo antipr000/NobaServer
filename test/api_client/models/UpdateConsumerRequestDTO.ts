@@ -9,6 +9,7 @@ export type UpdateConsumerRequestDTO = {
   lastName?: string;
   dateOfBirth?: string;
   locale?: string;
+  gender?: "Male" | "Female";
   handle?: string;
   address?: UpdateAddressDTO;
   referredByCode?: string;

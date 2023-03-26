@@ -66,6 +66,7 @@ describe("EmployerWorkflowControllerTests", () => {
         employeeID: payrollDisbursement.employeeID,
         payrollID: payrollDisbursement.payrollID,
         allocationAmount: payrollDisbursement.allocationAmount,
+        transactionID: payrollDisbursement.transactionID,
       });
     });
   });
@@ -136,6 +137,7 @@ describe("EmployerWorkflowControllerTests", () => {
           employeeID: disbursement.employeeID,
           payrollID: disbursement.payrollID,
           allocationAmount: disbursement.allocationAmount,
+          transactionID: disbursement.transactionID,
         })),
       });
     });

@@ -12,6 +12,7 @@ export type SendNotificationRequestDTO = {
     | "INVESTIGATION"
     | "FUNDED"
     | "IN_PROGRESS"
+    | "RECEIPT"
     | "COMPLETED"
     | "EXPIRED";
 };

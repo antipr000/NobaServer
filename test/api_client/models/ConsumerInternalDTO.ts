@@ -18,6 +18,7 @@ export type ConsumerInternalDTO = {
   phone?: string;
   locale?: string;
   dateOfBirth?: string;
+  gender?: "Male" | "Female";
   isLocked?: boolean;
   isDisabled?: boolean;
   createdTimestamp?: string;

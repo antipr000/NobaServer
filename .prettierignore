@@ -4,4 +4,7 @@ node_modules/*
 .github/*
 appconfigs/countries+states.json
 prisma/generated/*
+coverage/*
+test/coverage/*
+dist/*
 *.hbs

@@ -7,7 +7,16 @@ export type PayrollDTO = {
   payrollDate: string;
   reference: string;
   completedTimestamp?: string;
-  status: "CREATED" | "INVOICED" | "PREPARED" | "INVESTIGATION" | "FUNDED" | "IN_PROGRESS" | "COMPLETED" | "EXPIRED";
+  status:
+    | "CREATED"
+    | "INVOICED"
+    | "PREPARED"
+    | "INVESTIGATION"
+    | "FUNDED"
+    | "IN_PROGRESS"
+    | "RECEIPT"
+    | "COMPLETED"
+    | "EXPIRED";
   payrollISODate: string;
   totalDebitAmount?: number;
   totalCreditAmount?: number;
