@@ -11,7 +11,7 @@ import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { anyString, anything, deepEqual, instance, verify, when } from "ts-mockito";
 import { getRandomActiveConsumer } from "../../../../modules/consumer/test_utils/test.utils";
 import { getRandomNobaCard } from "../test_utils/util";
-import { NobaCardStatus, NobaCardType } from "../domain/NobaCard";
+import { CardProvider, NobaCardStatus, NobaCardType } from "../domain/NobaCard";
 import { ServiceException } from "../../../../core/exception/service.exception";
 import { NobaCardRepo } from "../repos/card.repo";
 import { getMockCardRepoWithDefaults } from "../mocks/mock.card.repo";
@@ -156,6 +156,30 @@ describe("CardService tests", () => {
 
     it("should throw 'ServiceException' when consumerID is null", async () => {
       await expect(async () => await cardService.getCard("fake-id", null)).rejects.toThrow(ServiceException);
+    });
+  });
+
+  describe("getWebViewToken", () => {
+    it("should get web view token", async () => {
+      const consumer = getRandomActiveConsumer("57", "CO");
+      const nobaCard = getRandomNobaCard(consumer.props.id, NobaCardStatus.ACTIVE);
+
+      const pomeloInstance = instance(mockPomeloService);
+
+      when(mockCardProviderFactory.getCardProviderServiceByProvider(CardProvider.POMELO)).thenReturn(pomeloInstance);
+      when(mockConsumerService.getActiveConsumer(consumer.props.id)).thenResolve(consumer);
+      when(mockCardRepo.getCardByID(nobaCard.id)).thenResolve(nobaCard);
+      when(mockPomeloService.getWebViewToken(deepEqual(nobaCard))).thenResolve({
+        accessToken: "fake-token",
+        providerCardID: "fake-pomelo-id",
+      });
+
+      const response = await cardService.getWebViewToken(nobaCard.id, consumer.props.id);
+
+      expect(response).toStrictEqual({
+        accessToken: "fake-token",
+        providerCardID: "fake-pomelo-id",
+      });
     });
   });
 });

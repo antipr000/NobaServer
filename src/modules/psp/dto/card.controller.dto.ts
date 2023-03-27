@@ -22,3 +22,11 @@ export class CardCreateRequestDTO {
   @ApiProperty({ enum: NobaCardType })
   type: NobaCardType;
 }
+
+export class WebViewTokenResponseDTO {
+  @ApiProperty()
+  accessToken: string;
+
+  @ApiProperty()
+  providerCardID: string;
+}

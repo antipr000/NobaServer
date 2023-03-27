@@ -86,4 +86,21 @@ describe("CardController tests", () => {
       });
     });
   });
+
+  describe("getWebViewToken", () => {
+    it("should return a web view token", async () => {
+      const consumer = getRandomActiveConsumer("57", "CO");
+
+      when(mockCardService.getWebViewToken("fake-card-id", consumer.props.id)).thenResolve({
+        accessToken: "fake-token",
+        providerCardID: "fake-provider-card-id",
+      });
+
+      const token = await cardController.getWebViewToken(consumer, "fake-card-id");
+      expect(token).toStrictEqual({
+        accessToken: "fake-token",
+        providerCardID: "fake-provider-card-id",
+      });
+    });
+  });
 });

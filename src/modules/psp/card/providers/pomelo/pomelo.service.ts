@@ -12,6 +12,7 @@ import { Consumer } from "../../../../consumer/domain/Consumer";
 import { ConsumerService } from "../../../../../modules/consumer/consumer.service";
 import { countryToSupportedIdentificationTypes } from "./domain/PomeloConstants";
 import CryptoJS from "crypto-js";
+import { WebViewTokenResponseDTO } from "src/modules/psp/dto/card.controller.dto";
 
 @Injectable()
 export class PomeloService implements ICardProviderService {
@@ -120,5 +121,22 @@ export class PomeloService implements ICardProviderService {
     const pomeloCard = await this.pomeloRepo.createPomeloCard(pomeloCardCreateRequest);
 
     return pomeloCard;
+  }
+
+  public async getWebViewToken(nobaCard: NobaCard): Promise<WebViewTokenResponseDTO> {
+    const pomeloCard = await this.pomeloRepo.getPomeloCardByNobaCardID(nobaCard.id);
+    if (!pomeloCard) {
+      throw new ServiceException({
+        message: "Could not find card",
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    const accessToken = await this.pomeloClient.createUserToken(pomeloCard.pomeloUserID);
+
+    return {
+      accessToken,
+      providerCardID: pomeloCard.pomeloCardID,
+    };
   }
 }

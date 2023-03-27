@@ -5,6 +5,7 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { NOBA_CARD_REPO_PROVIDER } from "./repos/card.repo.module";
 import { NobaCardRepo } from "./repos/card.repo";
+import { WebViewTokenResponseDTO } from "../dto/card.controller.dto";
 
 @Injectable()
 export class CardService {
@@ -90,5 +91,13 @@ export class CardService {
     }
 
     return card;
+  }
+
+  async getWebViewToken(cardID: string, consumerID: string): Promise<WebViewTokenResponseDTO> {
+    const card = await this.getCard(cardID, consumerID);
+
+    const cardProviderService = this.cardProviderFactory.getCardProviderServiceByProvider(card.provider);
+
+    return cardProviderService.getWebViewToken(card);
   }
 }

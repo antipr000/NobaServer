@@ -7,7 +7,7 @@ import { Role } from "../auth/role.enum";
 import { Roles } from "../auth/roles.decorator";
 import { Consumer } from "../consumer/domain/Consumer";
 import { AuthUser } from "../auth/auth.decorator";
-import { CardCreateRequestDTO, CardResponseDTO } from "./dto/card.controller.dto";
+import { CardCreateRequestDTO, CardResponseDTO, WebViewTokenResponseDTO } from "./dto/card.controller.dto";
 import { CardService } from "./card/card.service";
 import { CardMapper } from "./mapper/card.mapper";
 
@@ -42,6 +42,14 @@ export class CardController {
   async getAllCardsForConsumer(@AuthUser() consumer: Consumer): Promise<CardResponseDTO[]> {
     const cards = await this.cardService.getAllCardsForConsumer(consumer.props.id);
     return cards.map(card => this.cardMapper.toCardResponseDTO(card));
+  }
+
+  @Get("/:id/token")
+  @ApiOperation({ summary: "Gets webview token for card" })
+  @ApiResponse({ status: HttpStatus.OK, type: WebViewTokenResponseDTO })
+  @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
+  async getWebViewToken(@AuthUser() consumer: Consumer, @Param("id") cardID: string): Promise<WebViewTokenResponseDTO> {
+    return await this.cardService.getWebViewToken(cardID, consumer.props.id);
   }
 
   @Get("/:id")

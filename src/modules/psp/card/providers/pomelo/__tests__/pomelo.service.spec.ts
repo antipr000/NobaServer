@@ -454,4 +454,56 @@ describe("PomeloServiceTests", () => {
       );
     });
   });
+
+  describe("getWebViewToken", () => {
+    it("should return a valid token", async () => {
+      const pomeloCard: PomeloCard = {
+        id: "fake-id-123",
+        pomeloCardID: "pomelo-card-1234",
+        pomeloUserID: "pomelo-user-1234",
+        nobaCardID: "nobaCard-id",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+      };
+
+      const nobaCard: NobaCard = {
+        id: pomeloCard.nobaCardID,
+        consumerID: "fake-consumer-id",
+        type: NobaCardType.VIRTUAL,
+        status: NobaCardStatus.ACTIVE,
+        last4Digits: "1234",
+        provider: CardProvider.POMELO,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+      };
+
+      when(mockPomeloRepo.getPomeloCardByNobaCardID(pomeloCard.nobaCardID)).thenResolve(pomeloCard);
+
+      when(mockPomeloClient.createUserToken(pomeloCard.pomeloUserID)).thenResolve("fake-token");
+
+      const response = await pomeloService.getWebViewToken(nobaCard);
+
+      expect(response).toStrictEqual({
+        accessToken: "fake-token",
+        providerCardID: pomeloCard.pomeloCardID,
+      });
+    });
+
+    it("should throw 'ServiceException' when pomelo card does not exist", async () => {
+      const nobaCard: NobaCard = {
+        id: "nobaCard-id",
+        consumerID: "fake-consumer-id",
+        type: NobaCardType.VIRTUAL,
+        status: NobaCardStatus.ACTIVE,
+        last4Digits: "1234",
+        provider: CardProvider.POMELO,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+      };
+
+      when(mockPomeloRepo.getPomeloCardByNobaCardID(nobaCard.id)).thenResolve(null);
+
+      await expect(async () => await pomeloService.getWebViewToken(nobaCard)).rejects.toThrow(ServiceException);
+    });
+  });
 });
