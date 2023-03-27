@@ -5,6 +5,8 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
 import { IDENTIFICATION_TYPES_FILE_PATH } from "../../config/ConfigurationUtils";
 import { IdentificationTypeDTO } from "./dto/identification.type.dto";
+import { IdentificationType } from "./domain/IdentificationTypes";
+import { IdentificationTypeCountryDTO } from "./dto/identification.type.country.dto";
 
 @Injectable()
 export class IdentificationService {
@@ -13,7 +15,7 @@ export class IdentificationService {
     Even though this results in duplication of data, it is more efficient than simply storing once with subdivisions
     and excluding subdivisions at runtime if requested to not include them.
   */
-  private identificationTypes: Map<string, IdentificationTypeDTO[]>;
+  private identificationTypes: Map<string, IdentificationType[]>;
   private isIdentificationTypesLoaded: boolean;
 
   constructor(private readonly configService: CustomConfigService) {
@@ -31,16 +33,21 @@ export class IdentificationService {
     this.identificationTypes = identificationTypes;
   }
 
-  getIdentificationTypes(): Map<string, IdentificationTypeDTO[]> {
+  getIdentificationTypes(): IdentificationTypeCountryDTO[] {
     if (!this.isIdentificationTypesLoaded) {
       this.loadIdentificationTypesFromFile();
       this.isIdentificationTypesLoaded = true;
     }
 
-    return this.identificationTypes;
+    const identificationTypes = [];
+    this.identificationTypes.forEach((value, key) => {
+      identificationTypes.push({ countryCode: key, identificationTypes: value });
+    });
+
+    return identificationTypes;
   }
 
-  getIdentificationTypesForCountry(countryCode: string): IdentificationTypeDTO[] {
+  getIdentificationTypesForCountry(countryCode: string): IdentificationTypeCountryDTO {
     if (!this.isIdentificationTypesLoaded) {
       this.loadIdentificationTypesFromFile();
       this.isIdentificationTypesLoaded = true;
@@ -51,6 +58,9 @@ export class IdentificationService {
       throw new NotFoundException(`No identification types found for country code ${countryCode}`);
     }
 
-    return identificationTypes;
+    return {
+      countryCode: countryCode,
+      identificationTypes: identificationTypes,
+    };
   }
 }

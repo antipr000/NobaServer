@@ -43,7 +43,7 @@ import { ALLOWED_DEPTH, HealthCheckQueryDTO } from "./modules/common/dto/HealthC
 import { WorkflowExecutor } from "./infra/temporal/workflow.executor";
 import { IdentificationTypeDTO } from "./modules/common/dto/identification.type.dto";
 import { IdentificationService } from "./modules/common/identifications.service";
-import { IdentificationTypeMapDTO } from "./modules/common/dto/identification.type.map.dto";
+import { IdentificationTypeCountryDTO } from "./modules/common/dto/identification.type.country.dto";
 
 @Controller("v1")
 @ApiHeaders(getCommonHeaders())
@@ -194,16 +194,21 @@ export class AppController {
   }
 
   @Public()
-  @Get("identificationtypes/:countryCode")
+  @Get("identificationtypes")
   @ApiOperation({ summary: "Returns a list of identification types" })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: "Map of identification types",
-    type: IdentificationTypeMapDTO,
+    description: "Map of country identification types",
+    type: [IdentificationTypeCountryDTO],
   })
+  @ApiQuery({ name: "countryCode", type: "string", description: "Country code", required: false })
   @ApiTags("Assets")
-  async getIdentificationTypes(@Param("countryCode") countryCode?: string): Promise<[]> {
-    return this.identificationService.getIdentificationTypes(countryCode);
+  async getIdentificationTypes(@Query("countryCode") countryCode?: string): Promise<IdentificationTypeCountryDTO[]> {
+    if (countryCode) {
+      return [this.identificationService.getIdentificationTypesForCountry(countryCode)];
+    }
+
+    return this.identificationService.getIdentificationTypes();
   }
 
   @Public()
