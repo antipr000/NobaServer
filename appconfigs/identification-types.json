@@ -12,6 +12,18 @@
       "maxLength": 10,
       "regex": "^\\d{10}PEP$"
     }
+    {
+      "type": "CE",
+      "name": "Cédula de Extranjería",
+      "maxLength": 10,
+      "regex": "^E\\d{9}$"
+    },
+    {
+      "type": "PASSPORT",
+      "name": "Pasaporte",
+      "maxLength": 10,
+      "regex": "^[A-Z]{2}\\d{6}[A-Z]{2}$"
+    }
   ],
   "AR": []
 }
