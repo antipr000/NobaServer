@@ -52,4 +52,38 @@ describe("CardController tests", () => {
       });
     });
   });
+
+  describe("getAllCardsForConsumer", () => {
+    it("should return all cards for consumer", async () => {
+      const consumer = getRandomActiveConsumer("57", "CO");
+      const nobaCard = getRandomNobaCard(consumer.props.id, NobaCardStatus.ACTIVE);
+      when(mockCardService.getAllCardsForConsumer(consumer.props.id)).thenResolve([nobaCard]);
+      const cards = await cardController.getAllCardsForConsumer(consumer);
+      expect(cards).toStrictEqual([
+        {
+          id: nobaCard.id,
+          lastFourDigits: nobaCard.last4Digits,
+          status: nobaCard.status,
+          type: nobaCard.type,
+          consumerID: nobaCard.consumerID,
+        },
+      ]);
+    });
+  });
+
+  describe("getCard", () => {
+    it("should return a card", async () => {
+      const consumer = getRandomActiveConsumer("57", "CO");
+      const nobaCard = getRandomNobaCard(consumer.props.id, NobaCardStatus.ACTIVE);
+      when(mockCardService.getCard(consumer.props.id, nobaCard.id)).thenResolve(nobaCard);
+      const card = await cardController.getCard(consumer, nobaCard.id);
+      expect(card).toStrictEqual({
+        id: nobaCard.id,
+        lastFourDigits: nobaCard.last4Digits,
+        status: nobaCard.status,
+        type: nobaCard.type,
+        consumerID: nobaCard.consumerID,
+      });
+    });
+  });
 });
