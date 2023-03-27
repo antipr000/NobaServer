@@ -41,6 +41,9 @@ import { HealthCheckStatus } from "./core/domain/HealthCheckTypes";
 import { CircleService } from "./modules/psp/circle.service";
 import { ALLOWED_DEPTH, HealthCheckQueryDTO } from "./modules/common/dto/HealthCheckQueryDTO";
 import { WorkflowExecutor } from "./infra/temporal/workflow.executor";
+import { IdentificationTypeDTO } from "./modules/common/dto/identification.type.dto";
+import { IdentificationService } from "./modules/common/identifications.service";
+import { IdentificationTypeMapDTO } from "./modules/common/dto/identification.type.map.dto";
 
 @Controller("v1")
 @ApiHeaders(getCommonHeaders())
@@ -49,6 +52,7 @@ export class AppController {
     private readonly currencyService: CurrencyService,
     private readonly exchangeRateService: ExchangeRateService,
     private readonly locationService: LocationService,
+    private readonly identificationService: IdentificationService,
     private readonly creditCardService: CreditCardService,
     private readonly configurationsProviderService: ConfigurationProviderService,
     private readonly monoService: MonoService,
@@ -190,6 +194,19 @@ export class AppController {
   }
 
   @Public()
+  @Get("identificationtypes/:countryCode")
+  @ApiOperation({ summary: "Returns a list of identification types" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Map of identification types",
+    type: IdentificationTypeMapDTO,
+  })
+  @ApiTags("Assets")
+  async getIdentificationTypes(@Param("countryCode") countryCode?: string): Promise<[]> {
+    return this.identificationService.getIdentificationTypes(countryCode);
+  }
+
+  @Public()
   @Get("config")
   @ApiOperation({ summary: "Returns common api configurations" })
   @ApiResponse({ status: HttpStatus.OK, description: "Common api configurations", type: ConfigurationsDTO })
@@ -212,4 +229,7 @@ export class AppController {
     }
     return binDetails;
   }
+}
+interface MyDictionary {
+  [key: string]: IdentificationTypeDTO;
 }
