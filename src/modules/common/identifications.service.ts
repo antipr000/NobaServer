@@ -4,7 +4,7 @@ import path from "path";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
 import { IDENTIFICATION_TYPES_FILE_PATH } from "../../config/ConfigurationUtils";
-import { IdentificationTypeDTO } from "./dto/Identification.type.dto";
+import { IdentificationTypeDTO } from "./dto/identification.type.dto";
 
 @Injectable()
 export class IdentificationService {
@@ -13,7 +13,7 @@ export class IdentificationService {
     Even though this results in duplication of data, it is more efficient than simply storing once with subdivisions
     and excluding subdivisions at runtime if requested to not include them.
   */
-  private identificationTypes: Map<string, IdentificationTypeDTO>;
+  private identificationTypes: Map<string, IdentificationTypeDTO[]>;
   private isIdentificationTypesLoaded: boolean;
 
   constructor(private readonly configService: CustomConfigService) {
@@ -31,19 +31,26 @@ export class IdentificationService {
     this.identificationTypes = identificationTypes;
   }
 
-  getIdentificationTypes(): Map<string, IdentificationTypeDTO> {
-    if (!this.isIdentificationTypesLoaded) {
-      this.loadIdentificationTypesFromFile();
-      this.isIdentificationTypesLoaded = true;
-    }
-    return this.identificationTypes;
-  }
-  getIdentificationTypesByCountryCode(countryCode: string): IdentificationTypeDTO {
+  getIdentificationTypes(): Map<string, IdentificationTypeDTO[]> {
     if (!this.isIdentificationTypesLoaded) {
       this.loadIdentificationTypesFromFile();
       this.isIdentificationTypesLoaded = true;
     }
 
-    return this.identificationTypes.get(countryCode);
+    return this.identificationTypes;
+  }
+
+  getIdentificationTypesForCountry(countryCode: string): IdentificationTypeDTO[] {
+    if (!this.isIdentificationTypesLoaded) {
+      this.loadIdentificationTypesFromFile();
+      this.isIdentificationTypesLoaded = true;
+    }
+
+    const identificationTypes = this.identificationTypes.get(countryCode);
+    if (!identificationTypes) {
+      throw new NotFoundException(`No identification types found for country code ${countryCode}`);
+    }
+
+    return identificationTypes;
   }
 }

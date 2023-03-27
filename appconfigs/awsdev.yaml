@@ -183,6 +183,7 @@ bubble:
   awsSecretNameForBaseURL: "TEST_BUBBLE_BASE_URL"
 
 locationDataFileName: "countries+states.json"
+identificationTypesFileName: "identification-types.json"
 dbDumpFilesBucketPath: "dump"
 assetsBucketName: "prod-noba-assets"
 generatedDataBucketName: "noba-generated-data"

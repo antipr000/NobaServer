@@ -27,6 +27,7 @@ import { IdentificationService } from "./identifications.service";
     CurrencyService,
     CreditCardService,
     LocationService,
+    IdentificationService,
     ExchangeRateService,
     ConfigurationProviderService,
     EllipticService,
