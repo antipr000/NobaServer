@@ -235,6 +235,3 @@ export class AppController {
     return binDetails;
   }
 }
-interface MyDictionary {
-  [key: string]: IdentificationTypeDTO;
-}

@@ -4,7 +4,6 @@ import path from "path";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
 import { IDENTIFICATION_TYPES_FILE_PATH } from "../../config/ConfigurationUtils";
-import { IdentificationTypeDTO } from "./dto/identification.type.dto";
 import { IdentificationType } from "./domain/IdentificationTypes";
 import { IdentificationTypeCountryDTO } from "./dto/identification.type.country.dto";
 
@@ -30,7 +29,7 @@ export class IdentificationService {
 
     const identificationTypes = JSON.parse(identificationTypesRaw);
 
-    this.identificationTypes = identificationTypes;
+    this.identificationTypes = new Map<string, IdentificationType[]>(Object.entries(identificationTypes));
   }
 
   getIdentificationTypes(): IdentificationTypeCountryDTO[] {
@@ -53,7 +52,7 @@ export class IdentificationService {
       this.isIdentificationTypesLoaded = true;
     }
 
-    const identificationTypes = this.identificationTypes.get(countryCode);
+    const identificationTypes = this.identificationTypes.get(countryCode.toUpperCase());
     if (!identificationTypes) {
       throw new NotFoundException(`No identification types found for country code ${countryCode}`);
     }
