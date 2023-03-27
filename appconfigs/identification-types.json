@@ -1,0 +1,17 @@
+{
+  "CO": [
+    {
+      "type": "CC",
+      "name": "Cedula de Ciudania",
+      "maxLength": 10,
+      "regex": "^[1-9]{1}[0-9]{9}$"
+    },
+    {
+      "type": "PEP",
+      "name": "Persona Expuesta Políticamente",
+      "maxLength": 10,
+      "regex": "^\\d{10}PEP$"
+    }
+  ],
+  "AR": []
+}

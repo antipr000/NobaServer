@@ -146,6 +146,8 @@ import {
   POMELO_AUTH_BASE_URL,
   POMELO_API_BASE_URL,
   POMELO_AUDIENCE,
+  IDENTIFICATION_TYPES_FILE_NAME,
+  IDENTIFICATION_TYPES_FILE_PATH,
 } from "./ConfigurationUtils";
 import fs from "fs";
 
@@ -225,6 +227,7 @@ export default async function loadAppConfigs() {
 
   const configs = readConfigsFromYamlFiles(mainPropertyFile, ...extraSecretsFiles);
   configs[LOCATION_DATA_FILE_PATH] = join(configsDir, configs[LOCATION_DATA_FILE_NAME]);
+  configs[IDENTIFICATION_TYPES_FILE_PATH] = join(configsDir, configs[IDENTIFICATION_TYPES_FILE_NAME]);
 
   const updatedAwsConfigs = configureAwsCredentials(environment, configs);
   await SecretProvider.loadAWSMasterSecret(configs[AWS_MASTER_SECRET]);

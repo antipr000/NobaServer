@@ -192,6 +192,7 @@ dependencies:
   dashboardClient: "BUBBLE"
 
 locationDataFileName: "countries+states.json"
+identificationTypesDataFileName: "identification-types.json"
 dbDumpFilesBucketPath: "dump"
 assetsBucketName: "prod-noba-assets"
 generatedDataBucketName: "noba-generated-data"
