@@ -6,6 +6,7 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { IDENTIFICATION_TYPES_FILE_PATH } from "../../config/ConfigurationUtils";
 import { IdentificationType } from "./domain/IdentificationTypes";
 import { IdentificationTypeCountryDTO } from "./dto/identification.type.country.dto";
+import { ServiceErrorCode, ServiceException } from "src/core/exception/service.exception";
 
 @Injectable()
 export class IdentificationService {
@@ -61,5 +62,43 @@ export class IdentificationService {
       countryCode: countryCode,
       identificationTypes: identificationTypes,
     };
+  }
+
+  isIdentificationTypeValid(countryCode: string, identificationType: string, identificationValue: string): void {
+    if (!this.isIdentificationTypesLoaded) {
+      this.loadIdentificationTypesFromFile();
+      this.isIdentificationTypesLoaded = true;
+    }
+
+    const foundIdentificationTypes = this.identificationTypes.get(countryCode.toUpperCase());
+    if (!foundIdentificationTypes) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `No identification types found for country code ${countryCode}`,
+      });
+    }
+
+    const foundIdentificationType = foundIdentificationTypes.find(type => type.type === identificationType);
+    if (!identificationType) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `No identification type found for type ${identificationType}`,
+      });
+    }
+
+    if (foundIdentificationType.maxLength < identificationValue.length) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: `Identification value exceeds maximum length of ${foundIdentificationType.maxLength}`,
+      });
+    }
+
+    const regex = new RegExp(foundIdentificationType.regex);
+    if (!regex.test(identificationValue)) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: `Identification value does not match the expected format`,
+      });
+    }
   }
 }
