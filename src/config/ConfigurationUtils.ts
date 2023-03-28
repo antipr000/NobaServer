@@ -85,6 +85,8 @@ export const AWS_SECRET_KEY_FOR_NOBA_PRIVATE_BEARER_TOKEN = "awsSecretKeyForPriv
 export const AWS_SECRET_KEY_FOR_NOBA_APP_SECRET_KEY = "awsSecretKeyForAppSecretKey";
 export const AWS_SECRET_KEY_FOR_NOBA_BUBBLE_BEARER_TOKEN = "awsSecretKeyForBubbleBearerToken";
 export const AWS_SECRET_KEY_FOR_NOBA_ADMIN_BEARER_TOKEN = "awsSecretKeyForAdminBearerToken";
+export const NOBA_PROXY_IP = "proxyIP";
+export const NOBA_PROXY_PORT = "proxyPort";
 
 export const NOBA_TRANSACTION_CONFIG_KEY = "transaction";
 export const SPREAD_PERCENTAGE = "spreadPercentage";

@@ -146,6 +146,8 @@ import {
   POMELO_AUTH_BASE_URL,
   POMELO_API_BASE_URL,
   POMELO_AUDIENCE,
+  NOBA_PROXY_IP,
+  NOBA_PROXY_PORT,
 } from "./ConfigurationUtils";
 import fs from "fs";
 
@@ -612,6 +614,8 @@ async function configureNobaParameters(
       `("${NOBA_BUBBLE_BEARER_TOKEN}" or "${AWS_SECRET_KEY_FOR_NOBA_BUBBLE_BEARER_TOKEN}"), ` +
       `("${NOBA_PRIVATE_BEARER_TOKEN}" or "${AWS_SECRET_KEY_FOR_NOBA_PRIVATE_BEARER_TOKEN}"), ` +
       `("${NOBA_ADMIN_BEARER_TOKEN}" or "${AWS_SECRET_KEY_FOR_NOBA_ADMIN_BEARER_TOKEN}"), ` +
+      `("${NOBA_PROXY_IP}"` +
+      `("${NOBA_PROXY_PORT}"` +
       "and populate " +
       `("${SPREAD_PERCENTAGE}" or "${AWS_SECRET_KEY_FOR_SPREAD_PERCENTAGE}"), ` +
       `("${DYNAMIC_CREDIT_CARD_FEE_PRECENTAGE}" or "${AWS_SECRET_KEY_FOR_DYNAMIC_CREDIT_CARD_FEE_PERCENTAGE}"), ` +
@@ -637,6 +641,7 @@ async function configureNobaParameters(
     nobaConfigs.awsSecretKeyForBubbleBearerToken,
     nobaConfigs.bubbleBearerToken,
   );
+
   nobaConfigs.transaction.dynamicCreditCardFeePercentage = Number(
     await getParameterValue(
       nobaConfigs.transaction.awsSecretKeyForDynamicCreditCardFeePercentage,
