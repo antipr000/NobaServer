@@ -33,7 +33,7 @@ export class IdentificationService {
     this.identificationTypes = new Map<string, IdentificationType[]>(Object.entries(identificationTypes));
   }
 
-  getIdentificationTypes(): IdentificationTypeCountryDTO[] {
+  async getIdentificationTypes(): Promise<IdentificationTypeCountryDTO[]> {
     if (!this.isIdentificationTypesLoaded) {
       this.loadIdentificationTypesFromFile();
       this.isIdentificationTypesLoaded = true;
@@ -47,7 +47,7 @@ export class IdentificationService {
     return identificationTypes;
   }
 
-  getIdentificationTypesForCountry(countryCode: string): IdentificationTypeCountryDTO {
+  async getIdentificationTypesForCountry(countryCode: string): Promise<IdentificationTypeCountryDTO> {
     if (!this.isIdentificationTypesLoaded) {
       this.loadIdentificationTypesFromFile();
       this.isIdentificationTypesLoaded = true;
@@ -55,7 +55,10 @@ export class IdentificationService {
 
     const identificationTypes = this.identificationTypes.get(countryCode.toUpperCase());
     if (!identificationTypes) {
-      throw new NotFoundException(`No identification types found for country code ${countryCode}`);
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `No identification types found for country code ${countryCode}`,
+      });
     }
 
     return {
@@ -64,7 +67,7 @@ export class IdentificationService {
     };
   }
 
-  isIdentificationTypeValid(countryCode: string, identificationType: string, identificationValue: string): void {
+  async isIdentificationTypeValid(countryCode: string, identificationType: string, identificationValue: string) {
     if (!this.isIdentificationTypesLoaded) {
       this.loadIdentificationTypesFromFile();
       this.isIdentificationTypesLoaded = true;
