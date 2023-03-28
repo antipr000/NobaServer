@@ -367,6 +367,6 @@ export enum DocumentType {
 
 export enum AccountType {
   CHECKING = "checking",
-  SAVINGS = "savings",
+  SAVINGS = "saving",
   OTHER = "other",
 }
