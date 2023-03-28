@@ -35,6 +35,7 @@ import { ConsumerMapper } from "./mappers/ConsumerMapper";
 import { Identification } from "./domain/Identification";
 import { CreateIdentificationDTO } from "./dto/create.identification.dto";
 import { UpdateIdentificationDTO } from "./dto/update.identification.dto";
+import { IdentificationService } from "../common/identification.service";
 
 @Injectable()
 export class ConsumerService {
@@ -55,6 +56,9 @@ export class ConsumerService {
 
   @Inject()
   private readonly otpService: OTPService;
+
+  @Inject()
+  private readonly identificationService: IdentificationService;
 
   @Inject()
   private readonly consumerMapper: ConsumerMapper;
@@ -771,6 +775,12 @@ export class ConsumerService {
       });
     }
 
+    await this.identificationService.validateIdentificationType(
+      identification.countryCode,
+      identification.type,
+      identification.value,
+    );
+
     const encryptedValue = await this.kmsService.encryptString(identification.value, KmsKeyType.SSN);
 
     const result = await this.consumerRepo.addIdentification({
@@ -807,6 +817,13 @@ export class ConsumerService {
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
+
+    const existingIdentification = await this.consumerRepo.getIdentificationForConsumer(consumerID, identificationID);
+    await this.identificationService.validateIdentificationType(
+      existingIdentification.countryCode,
+      existingIdentification.type,
+      identification.value,
+    );
 
     const encryptedValue = await this.kmsService.encryptString(identification.value, KmsKeyType.SSN);
     return this.consumerRepo.updateIdentification(identificationID, {

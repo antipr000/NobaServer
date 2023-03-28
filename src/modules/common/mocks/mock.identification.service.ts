@@ -8,7 +8,7 @@ export const getMockIdentificationServiceWithDefaults = () => {
   when(mockIdentificationService.getIdentificationTypesForCountry(anyString())).thenReject(
     new Error("Not implemented!"),
   );
-  when(mockIdentificationService.isIdentificationTypeValid(anyString(), anyString(), anyString())).thenReject(
+  when(mockIdentificationService.validateIdentificationType(anyString(), anyString(), anyString())).thenReject(
     new Error("Not implemented!"),
   );
 

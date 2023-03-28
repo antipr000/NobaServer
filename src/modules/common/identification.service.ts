@@ -67,7 +67,7 @@ export class IdentificationService {
     };
   }
 
-  async isIdentificationTypeValid(countryCode: string, identificationType: string, identificationValue: string) {
+  async validateIdentificationType(countryCode: string, identificationType: string, identificationValue: string) {
     if (!this.isIdentificationTypesLoaded) {
       this.loadIdentificationTypesFromFile();
       this.isIdentificationTypesLoaded = true;

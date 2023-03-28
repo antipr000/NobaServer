@@ -52,31 +52,31 @@ describe("Identification", () => {
 
     describe("isIdentificationTypeValid", () => {
       it("should throw exception when identification type for country is not found", async () => {
-        expect(identificationService.isIdentificationTypeValid("XX", "XX", "123456")).rejects.toThrowServiceException(
+        expect(identificationService.validateIdentificationType("XX", "XX", "123456")).rejects.toThrowServiceException(
           ServiceErrorCode.DOES_NOT_EXIST,
         );
       });
 
       it("should throw exception when identification type is not found", async () => {
-        expect(identificationService.isIdentificationTypeValid("CO", "XX", "123456")).rejects.toThrowServiceException(
+        expect(identificationService.validateIdentificationType("CO", "XX", "123456")).rejects.toThrowServiceException(
           ServiceErrorCode.DOES_NOT_EXIST,
         );
       });
 
       it("should throw exception when identification value is greater than max length", async () => {
         expect(
-          identificationService.isIdentificationTypeValid("CO", "CC", "123456789012345678901"),
+          identificationService.validateIdentificationType("CO", "CC", "123456789012345678901"),
         ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION, "length");
       });
 
       it("should throw exception when identification value does not match the regex", async () => {
-        expect(identificationService.isIdentificationTypeValid("CO", "CC", "fake-CC")).rejects.toThrowServiceException(
+        expect(identificationService.validateIdentificationType("CO", "CC", "fake-CC")).rejects.toThrowServiceException(
           ServiceErrorCode.SEMANTIC_VALIDATION,
           "format",
         );
       });
       it("should not throw when identification value is valid", async () => {
-        await identificationService.isIdentificationTypeValid("CO", "CC", "9876543210");
+        await identificationService.validateIdentificationType("CO", "CC", "9876543210");
       });
     });
   });
