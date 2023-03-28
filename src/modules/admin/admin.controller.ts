@@ -460,4 +460,46 @@ export class AdminController {
 
     return this.transactionMapper.toTransactionDTO(transaction, undefined, transactionEvents);
   }
+
+  @Get("exchangerates")
+  @ApiOperation({ summary: "Get exchange rate between a currency pair" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: ExchangeRateDTO,
+  })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  @ApiNotFoundResponse({ description: "Exchange rate not found" })
+  async getExchangeRate(
+    @Query("numeratorCurrency") numeratorCurrency: string,
+    @Query("denominatorCurrency") denominatorCurrency: string,
+    @Request() request,
+  ): Promise<ExchangeRateDTO> {
+    const authenticatedUser: Admin = request.user.entity;
+    if (!(authenticatedUser instanceof Admin)) {
+      throw new ForbiddenException("User is forbidden from calling this API.");
+    }
+
+    if (!numeratorCurrency) {
+      throw new BadRequestException("Numerator currency is required");
+    } else if (!denominatorCurrency) {
+      throw new BadRequestException("Denominator currency is required");
+    }
+
+    if (numeratorCurrency.length !== 3) {
+      throw new BadRequestException("Numerator currency must be a 3 letter ISO code");
+    } else if (denominatorCurrency.length !== 3) {
+      throw new BadRequestException("Denominator currency must be a 3 letter ISO code");
+    }
+
+    const exchangeRate = await this.exchangeRateService.getExchangeRateForCurrencyPair(
+      numeratorCurrency,
+      denominatorCurrency,
+    );
+
+    if (!exchangeRate) {
+      throw new NotFoundException("Exchange rate not found");
+    }
+
+    return exchangeRate;
+  }
 }
