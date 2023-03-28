@@ -49,6 +49,7 @@ describe("CardController tests", () => {
         status: nobaCard.status,
         type: nobaCard.type,
         consumerID: nobaCard.consumerID,
+        provider: nobaCard.provider,
       });
     });
   });
@@ -66,6 +67,7 @@ describe("CardController tests", () => {
           status: nobaCard.status,
           type: nobaCard.type,
           consumerID: nobaCard.consumerID,
+          provider: nobaCard.provider,
         },
       ]);
     });
@@ -83,6 +85,7 @@ describe("CardController tests", () => {
         status: nobaCard.status,
         type: nobaCard.type,
         consumerID: nobaCard.consumerID,
+        provider: nobaCard.provider,
       });
     });
   });

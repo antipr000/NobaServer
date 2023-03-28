@@ -16,6 +16,9 @@ export class CardResponseDTO {
 
   @ApiProperty()
   consumerID: string;
+
+  @ApiProperty({ enum: CardProvider })
+  provider: CardProvider;
 }
 
 export class CardCreateRequestDTO {

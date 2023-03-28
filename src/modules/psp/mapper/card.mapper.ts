@@ -9,6 +9,7 @@ export class CardMapper {
       status: card.status,
       type: card.type,
       consumerID: card.consumerID,
+      provider: card.provider,
     };
   }
 }
