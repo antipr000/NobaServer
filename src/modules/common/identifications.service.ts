@@ -6,7 +6,7 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { IDENTIFICATION_TYPES_FILE_PATH } from "../../config/ConfigurationUtils";
 import { IdentificationType } from "./domain/IdentificationTypes";
 import { IdentificationTypeCountryDTO } from "./dto/identification.type.country.dto";
-import { ServiceErrorCode, ServiceException } from "src/core/exception/service.exception";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 
 @Injectable()
 export class IdentificationService {

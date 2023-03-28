@@ -11,7 +11,7 @@
       "name": "Persona Expuesta Políticamente",
       "maxLength": 10,
       "regex": "^\\d{10}PEP$"
-    }
+    },
     {
       "type": "CE",
       "name": "Cédula de Extranjería",
