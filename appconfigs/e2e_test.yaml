@@ -77,8 +77,8 @@ noba:
   awsSecretKeyForAppSecretKey: ""
   bubbleBearerToken: "DUMMY_TOKEN"
   awsSecretKeyForBubbleBearerToken: ""
-  proxyIP: "172.31.8.170"
-  proxyPort: "3128"
+  proxyIP: ""
+  proxyPort: ""
   transaction:
     spreadPercentage: "0.029"
     awsSecretKeyForSpreadPercentage: ""
