@@ -138,7 +138,7 @@ export class ConsumerService {
     }
   }
 
-  // get's consumer object if consumer already exists, otherwise creates a new consumer if createIfNotExists is true
+  // get's consumer object if consumer already exists, otherwise creates a new consumer, with optional details if passed
   async getOrCreateConsumerConditionally(emailOrPhone: string): Promise<Consumer> {
     const isEmail = Utils.isEmail(emailOrPhone);
     const email = isEmail ? emailOrPhone : null;
@@ -148,7 +148,7 @@ export class ConsumerService {
       const newConsumer = Consumer.createConsumer({
         email: email ? email.toLowerCase() : undefined,
         displayEmail: email ?? undefined,
-        phone,
+        phone: phone ?? undefined,
         referralCode: Utils.getAlphaNanoID(15),
       });
 
@@ -198,13 +198,13 @@ export class ConsumerService {
       this.analyseHandle(consumerProps.handle);
     }
 
-    Consumer.createConsumer({
+    const updatedConsumer = Consumer.createConsumer({
       ...consumer.props,
       ...consumerProps,
     });
 
     try {
-      return await this.consumerRepo.updateConsumer(consumer.props.id, consumerProps);
+      return await this.consumerRepo.updateConsumer(consumer.props.id, updatedConsumer.props);
     } catch (e) {
       this.logger.error(`updateConsumer failed with error: ${e}`);
       throw new ServiceException({
@@ -218,7 +218,7 @@ export class ConsumerService {
     const otp = this.generateOTP();
     await this.otpService.saveOTP(phone, consumerIdentityIdentifier, otp);
     await this.notificationService.sendNotification(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT, {
-      locale: phone.startsWith("+57") ? "es_co" : "en_us", // TODO: CRYPTO-894
+      locale: phone?.startsWith("+57") ? "es_co" : "en_us", // TODO: CRYPTO-894
       phone,
       otp: otp.toString(),
     });

@@ -90,8 +90,17 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
     if (consumerProps.verificationData && !consumerProps.verificationData.provider)
       consumerProps.verificationData.provider = KYCProvider.SARDINE;
 
-    if (!consumerProps.locale && consumerProps.address?.countryCode) {
-      consumerProps.locale = consumerProps.address.countryCode === "CO" ? "es_co" : "en_us"; // TODO: CRYPTO-894
+    // Locale was not explicitly set, so attempt to determine from country code or phone number
+    // TODO: CRYPTO-894: Remove this logic once all consumers have a locale set as part of onboarding
+    if (!consumerProps.locale) {
+      if (consumerProps.address?.countryCode) {
+        consumerProps.locale = consumerProps.address?.countryCode == "CO" ? "es_co" : "en_us";
+      } else if (consumerProps.phone) {
+        // Should never be undefined in current app flow but API usage does allow this
+        consumerProps.locale = consumerProps.phone.startsWith("+57") ? "es_co" : "en_us";
+      }
+      // Note that we do not want a default here, as if a user is created with email address
+      // we could get stuck with a default locale of en_us that would not be correct.
     }
 
     return new Consumer(Joi.attempt(consumerProps, consumerJoiSchema));

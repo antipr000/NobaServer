@@ -1610,7 +1610,7 @@ const getFakeConsumer = (): Consumer => {
     email: "fake+consumer@noba.com",
     firstName: "fake",
     lastName: "consumer",
-    phone: "+351234123412",
+    phone: "+571234123412",
     dateOfBirth: "1990-01-01",
     address: {
       countryCode: "CO",

@@ -7,8 +7,8 @@ export abstract class SMSClient {
   abstract sendSMSInternal(recipientPhoneNumber: string, templateKey: string, payload: TemplatePayload): Promise<void>;
 
   async sendSMS(recipientPhoneNumber: string, templateKey: string, payload: TemplatePayload): Promise<void> {
-    this.logger.debug(
-      `Sending SMS with following parameters: recipientPhoneNumber: ${recipientPhoneNumber}, templateKey: ${templateKey}, payload: ${JSON.stringify(
+    this.logger.info(
+      `Sending SMS with the following parameters: recipientPhoneNumber: ${recipientPhoneNumber}, templateKey: ${templateKey}, payload: ${JSON.stringify(
         payload,
       )}`,
     );
