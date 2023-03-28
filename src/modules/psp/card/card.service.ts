@@ -24,7 +24,7 @@ export class CardService {
     if (!consumer) {
       throw new ServiceException({
         message: "Consumer does not exist or is not active",
-        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
       });
     }
 
@@ -53,7 +53,7 @@ export class CardService {
     if (!consumer) {
       throw new ServiceException({
         message: "Consumer does not exist or is not active",
-        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
       });
     }
     return this.cardRepo.getCardsByConsumerID(consumerID);
