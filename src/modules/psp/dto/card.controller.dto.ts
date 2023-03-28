@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { NobaCardStatus, NobaCardType } from "../card/domain/NobaCard";
+import { CardProvider, NobaCardStatus, NobaCardType } from "../card/domain/NobaCard";
 
 export class CardResponseDTO {
   @ApiProperty()
@@ -29,4 +29,7 @@ export class WebViewTokenResponseDTO {
 
   @ApiProperty()
   providerCardID: string;
+
+  @ApiProperty({ enum: CardProvider })
+  provider: CardProvider;
 }

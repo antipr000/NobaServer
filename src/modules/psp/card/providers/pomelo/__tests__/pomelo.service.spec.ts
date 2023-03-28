@@ -486,6 +486,7 @@ describe("PomeloServiceTests", () => {
       expect(response).toStrictEqual({
         accessToken: "fake-token",
         providerCardID: pomeloCard.pomeloCardID,
+        provider: "POMELO",
       });
     });
 

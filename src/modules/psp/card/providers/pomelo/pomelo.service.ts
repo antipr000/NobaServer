@@ -4,7 +4,7 @@ import { POMELO_REPO_PROVIDER } from "./repos/pomelo.repo.module";
 import { PomeloRepo } from "./repos/pomelo.repo";
 import { ClientCreateUserRequest } from "./dto/pomelo.client.dto";
 import { LocationService } from "../../../../common/location.service";
-import { NobaCard, NobaCardType } from "../../domain/NobaCard";
+import { CardProvider, NobaCard, NobaCardType } from "../../domain/NobaCard";
 import { ServiceErrorCode, ServiceException } from "../../../../../core/exception/service.exception";
 import { PomeloCardSaveRequest } from "./domain/PomeloCard";
 import { ICardProviderService } from "../card.provider.service";
@@ -12,7 +12,7 @@ import { Consumer } from "../../../../consumer/domain/Consumer";
 import { ConsumerService } from "../../../../../modules/consumer/consumer.service";
 import { countryToSupportedIdentificationTypes } from "./domain/PomeloConstants";
 import CryptoJS from "crypto-js";
-import { WebViewTokenResponseDTO } from "src/modules/psp/dto/card.controller.dto";
+import { WebViewTokenResponseDTO } from "../../../../../modules/psp/dto/card.controller.dto";
 
 @Injectable()
 export class PomeloService implements ICardProviderService {
@@ -137,6 +137,7 @@ export class PomeloService implements ICardProviderService {
     return {
       accessToken,
       providerCardID: pomeloCard.pomeloCardID,
+      provider: CardProvider.POMELO,
     };
   }
 }

@@ -172,6 +172,7 @@ describe("CardService tests", () => {
       when(mockPomeloService.getWebViewToken(deepEqual(nobaCard))).thenResolve({
         accessToken: "fake-token",
         providerCardID: "fake-pomelo-id",
+        provider: CardProvider.POMELO,
       });
 
       const response = await cardService.getWebViewToken(nobaCard.id, consumer.props.id);
@@ -179,6 +180,7 @@ describe("CardService tests", () => {
       expect(response).toStrictEqual({
         accessToken: "fake-token",
         providerCardID: "fake-pomelo-id",
+        provider: CardProvider.POMELO,
       });
     });
   });

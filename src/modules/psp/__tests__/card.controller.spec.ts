@@ -6,7 +6,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { instance, when } from "ts-mockito";
 import { getRandomActiveConsumer } from "../../../modules/consumer/test_utils/test.utils";
-import { NobaCardStatus, NobaCardType } from "../card/domain/NobaCard";
+import { CardProvider, NobaCardStatus, NobaCardType } from "../card/domain/NobaCard";
 import { getRandomNobaCard } from "../card/test_utils/util";
 
 describe("CardController tests", () => {
@@ -94,12 +94,14 @@ describe("CardController tests", () => {
       when(mockCardService.getWebViewToken("fake-card-id", consumer.props.id)).thenResolve({
         accessToken: "fake-token",
         providerCardID: "fake-provider-card-id",
+        provider: CardProvider.POMELO,
       });
 
       const token = await cardController.getWebViewToken(consumer, "fake-card-id");
       expect(token).toStrictEqual({
         accessToken: "fake-token",
         providerCardID: "fake-provider-card-id",
+        provider: CardProvider.POMELO,
       });
     });
   });
