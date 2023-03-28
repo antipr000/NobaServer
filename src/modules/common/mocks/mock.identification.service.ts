@@ -1,5 +1,5 @@
 import { anyString, mock, when } from "ts-mockito";
-import { IdentificationService } from "../identifications.service";
+import { IdentificationService } from "../identification.service";
 
 export const getMockIdentificationServiceWithDefaults = () => {
   const mockIdentificationService: IdentificationService = mock(IdentificationService);

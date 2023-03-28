@@ -17,7 +17,7 @@ import { SQLExchangeRateRepo } from "./repo/sql.exchangerate.repo";
 import { ExchangeRateService } from "./exchangerate.service";
 import { S3Service } from "./s3.service";
 import { AlertService } from "./alerts/alert.service";
-import { IdentificationService } from "./identifications.service";
+import { IdentificationService } from "./identification.service";
 
 @Module({
   imports: [InfraProvidersModule],

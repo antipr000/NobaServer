@@ -41,7 +41,7 @@ import { HealthCheckStatus } from "./core/domain/HealthCheckTypes";
 import { CircleService } from "./modules/psp/circle.service";
 import { ALLOWED_DEPTH, HealthCheckQueryDTO } from "./modules/common/dto/HealthCheckQueryDTO";
 import { WorkflowExecutor } from "./infra/temporal/workflow.executor";
-import { IdentificationService } from "./modules/common/identifications.service";
+import { IdentificationService } from "./modules/common/identification.service";
 import { IdentificationTypeCountryDTO } from "./modules/common/dto/identification.type.country.dto";
 
 @Controller("v1")

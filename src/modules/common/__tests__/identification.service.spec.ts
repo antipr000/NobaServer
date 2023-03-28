@@ -1,7 +1,7 @@
 import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { IdentificationService } from "../identifications.service";
+import { IdentificationService } from "../identification.service";
 import { ServiceErrorCode } from "src/core/exception/service.exception";
 
 describe("Identification", () => {
@@ -70,9 +70,10 @@ describe("Identification", () => {
       });
 
       it("should throw exception when identification value does not match the regex", async () => {
-        expect(
-          identificationService.isIdentificationTypeValid("CO", "CC", "fake-Cedula"),
-        ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION, "format");
+        expect(identificationService.isIdentificationTypeValid("CO", "CC", "fake-CC")).rejects.toThrowServiceException(
+          ServiceErrorCode.SEMANTIC_VALIDATION,
+          "format",
+        );
       });
       it("should not throw when identification value is valid", async () => {
         await identificationService.isIdentificationTypeValid("CO", "CC", "9876543210");
