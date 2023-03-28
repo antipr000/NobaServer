@@ -10,7 +10,7 @@
       "type": "PEP",
       "name": "Persona Expuesta Políticamente",
       "maxLength": 10,
-      "regex": "^\\d{10}PEP$"
+      "regex": ".*"
     },
     {
       "type": "CE",

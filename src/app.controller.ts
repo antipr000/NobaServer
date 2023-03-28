@@ -205,7 +205,10 @@ export class AppController {
   @ApiTags("Assets")
   async getIdentificationTypes(@Query("countryCode") countryCode?: string): Promise<IdentificationTypeCountryDTO[]> {
     if (countryCode) {
-      return [this.identificationService.getIdentificationTypesForCountry(countryCode)];
+      const identificationTypes = await this.identificationService.getIdentificationTypesForCountry(countryCode);
+      if (identificationTypes) {
+        return [identificationTypes];
+      }
     }
 
     return this.identificationService.getIdentificationTypes();

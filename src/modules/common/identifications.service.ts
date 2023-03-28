@@ -82,7 +82,8 @@ export class IdentificationService {
     }
 
     const foundIdentificationType = foundIdentificationTypes.find(type => type.type === identificationType);
-    if (!identificationType) {
+    console.log(foundIdentificationType);
+    if (!foundIdentificationType) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
         message: `No identification type found for type ${identificationType}`,
