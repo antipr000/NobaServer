@@ -30,7 +30,6 @@ describe("Identification", () => {
       it("should return identification types", async () => {
         const identificationTypes = await identificationService.getIdentificationTypes();
         expect(identificationTypes.length).toBe(1);
-
         expect(identificationTypes.map(type => type.countryCode)).toContain("CO");
         expect(identificationTypes.find(type => type.countryCode === "CO").identificationTypes.length).toBe(4);
         expect(
