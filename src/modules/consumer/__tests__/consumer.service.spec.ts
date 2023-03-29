@@ -2071,11 +2071,13 @@ describe("ConsumerService", () => {
         ServiceErrorCode.SEMANTIC_VALIDATION,
       );
     });
+
     it("should throw ServiceException if identificationType is undefined or null", async () => {
       expect(consumerService.getIdentificationForConsumer(null, "fake")).rejects.toThrowServiceException(
         ServiceErrorCode.SEMANTIC_VALIDATION,
       );
     });
+
     it("should return the identification for the consumer", async () => {
       const consumer = getRandomConsumer();
       const { identification } = getRandomIdentification(consumer.props.id);
@@ -2089,6 +2091,7 @@ describe("ConsumerService", () => {
       const response = await consumerService.getIdentificationForConsumer(consumer.props.id, identification.id);
       expect(response).toEqual(decryptedIdentification);
     });
+
     it("should throw ServiceException if identification is not found", async () => {
       const consumer = getRandomConsumer();
       const { identification } = getRandomIdentification(consumer.props.id);

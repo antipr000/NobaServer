@@ -29,10 +29,13 @@ describe("Identification", () => {
     describe("getIdentificationTypes", () => {
       it("should return identification types", async () => {
         const identificationTypes = await identificationService.getIdentificationTypes();
-        expect(identificationTypes.length).toBeGreaterThan(0);
-        expect(identificationTypes[0].countryCode).toBe("CO");
-        expect(identificationTypes[0].identificationTypes.length).toBeGreaterThan(0);
-        expect(identificationTypes[0].identificationTypes.some(type => type.name === "Pasaporte")).toBeTruthy();
+        expect(identificationTypes.length).toBe(1);
+
+        expect(identificationTypes.map(type => type.countryCode)).toContain("CO");
+        expect(identificationTypes.find(type => type.countryCode === "CO").identificationTypes.length).toBe(4);
+        expect(
+          identificationTypes.find(type => type.countryCode === "CO").identificationTypes.map(type => type.name),
+        ).toEqual(["Cédula de ciudadanía", "Pasaporte", "Cédula de extranjería", "Tarjeta de identidad"]);
       });
     });
 

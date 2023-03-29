@@ -12,10 +12,4 @@ export class IdentificationDTO {
 
   @ApiProperty()
   countryCode: string;
-
-  @ApiProperty()
-  consumerID: string;
-
-  @ApiProperty()
-  createdTimestamp: Date;
 }

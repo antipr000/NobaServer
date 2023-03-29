@@ -347,6 +347,12 @@ describe("AppController", () => {
       expect(result.length).toEqual(1);
       expect(result[0]).toEqual(northAmericanCountries[0]);
     });
+
+    it("should throw not found error when country doesn't exist", async () => {
+      when(mockIdentificationService.getIdentificationTypesForCountry("ZZ")).thenThrow(new NotFoundException());
+
+      expect(appController.getIdentificationTypes("ZZ")).rejects.toThrow(NotFoundException);
+    });
   });
 
   describe("getCommonConfigurations()", () => {

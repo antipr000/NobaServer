@@ -207,6 +207,8 @@ export class AppController {
       const identificationTypes = await this.identificationService.getIdentificationTypesForCountry(countryCode);
       if (identificationTypes) {
         return [identificationTypes];
+      } else {
+        throw new NotFoundException(`Identification types not found for country code ${countryCode}`);
       }
     }
 

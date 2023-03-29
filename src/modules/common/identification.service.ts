@@ -4,17 +4,12 @@ import path from "path";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 
 import { IDENTIFICATION_TYPES_FILE_PATH } from "../../config/ConfigurationUtils";
-import { IdentificationType } from "./domain/IdentificationTypes";
+import { IdentificationType } from "./domain/IdentificationType";
 import { IdentificationTypeCountryDTO } from "./dto/identification.type.country.dto";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 
 @Injectable()
 export class IdentificationService {
-  /*
-    Locations stores the locations without subdivisions and locationsWithSubdivisions includes subdivisions.
-    Even though this results in duplication of data, it is more efficient than simply storing once with subdivisions
-    and excluding subdivisions at runtime if requested to not include them.
-  */
   private identificationTypes: Map<string, IdentificationType[]>;
   private isIdentificationTypesLoaded: boolean;
 
