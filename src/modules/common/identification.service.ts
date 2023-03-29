@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { readFileSync } from "fs";
 import path from "path";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
