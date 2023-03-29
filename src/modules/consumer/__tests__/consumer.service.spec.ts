@@ -228,8 +228,8 @@ describe("ConsumerService", () => {
       expect(consumer.props.locale).toBeUndefined(); // Don't set a default if no phone number
       expect(consumer.props.referralCode).not.toBe(null);
 
-      when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
-      when(consumerRepo.createConsumer(anything())).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
+      when(mockConsumerRepo.createConsumer(anything())).thenResolve(consumer);
 
       const response = await consumerService.getOrCreateConsumerConditionally(email);
       expect(response).toStrictEqual(consumer);
@@ -449,9 +449,9 @@ describe("ConsumerService", () => {
         gender: Gender.FEMALE,
       });
 
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(
-        consumerRepo.updateConsumer(
+        mockConsumerRepo.updateConsumer(
           consumer.props.id,
           deepEqual({
             id: consumer.props.id,
