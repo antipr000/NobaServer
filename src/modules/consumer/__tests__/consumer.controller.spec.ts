@@ -1295,11 +1295,20 @@ describe("ConsumerController", () => {
     it("should forward the call to consumerService", async () => {
       const consumer = getRandomConsumer();
       const { identification } = getRandomIdentification(consumer.props.id);
+      const { identification: identification2 } = getRandomIdentification(consumer.props.id);
 
-      when(consumerService.getAllIdentifications(consumer.props.id)).thenResolve([identification]);
+      const { consumerID, updatedTimestamp, createdTimestamp, ...identificationDTO } = identification;
+      const {
+        consumerID: consumerID2,
+        updatedTimestamp: updatedTimestamp2,
+        createdTimestamp: createdTimestamp2,
+        ...identificationDTO2
+      } = identification2;
+
+      when(consumerService.getAllIdentifications(consumer.props.id)).thenResolve([identification, identification2]);
 
       const response = await consumerController.listIdentifications(consumer);
-      expect(response).toEqual([identification]);
+      expect(response).toEqual([identificationDTO, identificationDTO2]);
     });
   });
 
@@ -1322,10 +1331,12 @@ describe("ConsumerController", () => {
       const consumer = getRandomConsumer();
       const { identification } = getRandomIdentification(consumer.props.id);
 
+      const { consumerID, updatedTimestamp, createdTimestamp, ...identificationDTO } = identification;
+
       when(consumerService.getIdentificationForConsumer(consumer.props.id, "123")).thenResolve(identification);
 
       const response = await consumerController.getIdentification(consumer, "123");
-      expect(response).toEqual(identification);
+      expect(response).toEqual(identificationDTO);
     });
   });
 });

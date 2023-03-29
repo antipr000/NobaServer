@@ -18,6 +18,8 @@ import { Employer } from "../../../modules/employer/domain/Employer";
 import { Inject, Injectable } from "@nestjs/common";
 import { AggregatedPaymentMethodState, AggregatedWalletState, Gender } from "../domain/ExternalStates";
 import { ConsumerInternalDTO } from "../dto/ConsumerInternalDTO";
+import { IdentificationDTO } from "../dto/identification.dto";
+import { Identification } from "../domain/Identification";
 
 @Injectable()
 export class ConsumerMapper implements Mapper<Consumer> {
@@ -76,6 +78,15 @@ export class ConsumerMapper implements Mapper<Consumer> {
     }
   }
 
+  public static toIdentificationDTO(identification: Identification): IdentificationDTO {
+    return {
+      id: identification.id,
+      type: identification.type,
+      value: identification.value,
+      countryCode: identification.countryCode,
+    };
+  }
+
   private getCryptoWalletsDTO(cryptoWallets: CryptoWallet[]): CryptoWalletsDTO[] {
     return cryptoWallets
       .filter(cryptoWallet => cryptoWallet.props.status === WalletStatus.APPROVED)
@@ -86,6 +97,10 @@ export class ConsumerMapper implements Mapper<Consumer> {
     return paymentMethods
       .filter(paymentMethod => paymentMethod.props.status === PaymentMethodStatus.APPROVED)
       .map(paymentMethod => this.toPaymentMethodsDTO(paymentMethod));
+  }
+
+  public static toIdentificationsDTO(identifications: Identification[]): IdentificationDTO[] {
+    return identifications.map(identification => this.toIdentificationDTO(identification));
   }
 
   public toDTO(consumer: Consumer, paymentMethods?: PaymentMethod[], cryptoWallets?: CryptoWallet[]): ConsumerDTO {
