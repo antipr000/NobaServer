@@ -93,7 +93,10 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
     // Locale was not explicitly set, so attempt to determine from country code or phone number
     // TODO: CRYPTO-894: Remove this logic once all consumers have a locale set as part of onboarding
     if (!consumerProps.locale) {
-      consumerProps.locale = Consumer.predictLocale(consumerProps);
+      const predictedLocale = Consumer.predictLocale(consumerProps);
+      if (predictedLocale) {
+        consumerProps.locale = predictedLocale;
+      }
       // Note that we do not want a default here, as if a user is created with email address
       // we could get stuck with a default locale of en_us that would not be correct.
     }
