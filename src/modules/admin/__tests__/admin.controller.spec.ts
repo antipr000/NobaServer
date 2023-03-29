@@ -2023,4 +2023,96 @@ describe("AdminController", () => {
       expect(allTransactions.items[0].creditConsumer).toBeNull();
     });
   });
+
+  describe("getExchangeRates()", () => {
+    it("should return the requested exchange rate", async () => {
+      const requestingAdmin = Admin.createAdmin({
+        id: "fake-admin-1234",
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+      when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve({
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 5000,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(),
+      });
+
+      const result = await adminController.getExchangeRate("USD", "COP", {
+        user: { entity: requestingAdmin },
+      });
+
+      // Just ensuring something's returned. Other unit tests are responsible for exactly what's returned.
+      expect(result).not.toBeNull();
+    });
+
+    it("should throw NotFoundException if the currency pair doesn't exist", async () => {
+      const requestingAdmin = Admin.createAdmin({
+        id: "fake-admin-1234",
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+      when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(null);
+
+      expect(async () => {
+        await adminController.getExchangeRate("USD", "COP", {
+          user: { entity: requestingAdmin },
+        });
+      }).rejects.toThrow(NotFoundException);
+    });
+
+    it("should throw BadRequestException if the numerator currency is not provided", async () => {
+      const requestingAdmin = Admin.createAdmin({
+        id: "fake-admin-1234",
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+      expect(async () => {
+        await adminController.getExchangeRate(null, "COP", { user: { entity: requestingAdmin } });
+      }).rejects.toThrow(BadRequestException);
+
+      expect(async () => {
+        await adminController.getExchangeRate(undefined, "COP", { user: { entity: requestingAdmin } });
+      }).rejects.toThrow(BadRequestException);
+    });
+
+    it("should throw BadRequestException if the denominator currency is not provided", async () => {
+      const requestingAdmin = Admin.createAdmin({
+        id: "fake-admin-1234",
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+      expect(async () => {
+        await adminController.getExchangeRate("USD", null, { user: { entity: requestingAdmin } });
+      }).rejects.toThrow(BadRequestException);
+
+      expect(async () => {
+        await adminController.getExchangeRate(undefined, null, { user: { entity: requestingAdmin } });
+      }).rejects.toThrow(BadRequestException);
+    });
+
+    it("should throw BadRequestException if either currency is not 3 characters", async () => {
+      const requestingAdmin = Admin.createAdmin({
+        id: "fake-admin-1234",
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+      expect(async () => {
+        await adminController.getExchangeRate("US", "COP", { user: { entity: requestingAdmin } });
+      }).rejects.toThrow(BadRequestException);
+
+      expect(async () => {
+        await adminController.getExchangeRate("USD", "CO", { user: { entity: requestingAdmin } });
+      }).rejects.toThrow(BadRequestException);
+    });
+
+    it("should throw 'ForbiddenException' if requesting user is not Admin", async () => {
+      const consumer = getRandomConsumer("fake-consumer-1234");
+
+      expect(async () => {
+        await adminController.getExchangeRate("USD", "COP", { user: { entity: consumer } });
+      }).rejects.toThrow(ForbiddenException);
+    });
+  });
 });

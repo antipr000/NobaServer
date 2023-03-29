@@ -2,7 +2,7 @@ import { Circle, CircleEnvironments, CreateWalletResponse, TransferErrorCode } f
 import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { CircleConfigs } from "../../config/configtypes/CircleConfigs";
-import { AppEnvironment, CIRCLE_CONFIG_KEY, getEnvironmentName } from "../../config/ConfigurationUtils";
+import { CIRCLE_CONFIG_KEY, NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Logger } from "winston";
 import { AxiosRequestConfig, AxiosResponse } from "axios";
@@ -12,31 +12,28 @@ import { Utils } from "../../core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { IClient } from "../../core/domain/IClient";
 import { HealthCheckResponse, HealthCheckStatus } from "../../core/domain/HealthCheckTypes";
+import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 
 @Injectable()
 export class CircleClient implements IClient {
   private readonly circleApi: Circle;
   private readonly masterWalletID: string;
 
-  // TODO: Move to config yaml
-  HOST = "172.31.8.170";
-  HTTP_PORT = 3128;
-
-  private axiosConfig: AxiosRequestConfig =
-    getEnvironmentName() === AppEnvironment.DEV || getEnvironmentName() === AppEnvironment.E2E_TEST
-      ? {}
-      : {
-          proxy: {
-            protocol: "http",
-            host: this.HOST,
-            port: this.HTTP_PORT,
-          },
-        };
+  private readonly axiosConfig: AxiosRequestConfig;
 
   constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
     const circleConfigs: CircleConfigs = configService.get<CircleConfigs>(CIRCLE_CONFIG_KEY);
     this.circleApi = new Circle(circleConfigs.apiKey, CircleEnvironments[circleConfigs.env]);
     this.masterWalletID = circleConfigs.masterWalletID;
+    this.axiosConfig = configService.get<NobaConfigs>(NOBA_CONFIG_KEY).proxyIP
+      ? {
+          proxy: {
+            protocol: "http",
+            host: configService.get<NobaConfigs>(NOBA_CONFIG_KEY).proxyIP,
+            port: configService.get<NobaConfigs>(NOBA_CONFIG_KEY).proxyPort,
+          },
+        }
+      : {};
   }
 
   async getHealth(): Promise<HealthCheckResponse> {

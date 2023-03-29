@@ -6,7 +6,7 @@ import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { instance, when } from "ts-mockito";
 import { getRandomActiveConsumer } from "../../../modules/consumer/test_utils/test.utils";
-import { NobaCardStatus, NobaCardType } from "../card/domain/NobaCard";
+import { CardProvider, NobaCardStatus, NobaCardType } from "../card/domain/NobaCard";
 import { getRandomNobaCard } from "../card/test_utils/util";
 
 describe("CardController tests", () => {
@@ -49,6 +49,62 @@ describe("CardController tests", () => {
         status: nobaCard.status,
         type: nobaCard.type,
         consumerID: nobaCard.consumerID,
+        provider: nobaCard.provider,
+      });
+    });
+  });
+
+  describe("getAllCardsForConsumer", () => {
+    it("should return all cards for consumer", async () => {
+      const consumer = getRandomActiveConsumer("57", "CO");
+      const nobaCard = getRandomNobaCard(consumer.props.id, NobaCardStatus.ACTIVE);
+      when(mockCardService.getAllCardsForConsumer(consumer.props.id)).thenResolve([nobaCard]);
+      const cards = await cardController.getAllCardsForConsumer(consumer);
+      expect(cards).toStrictEqual([
+        {
+          id: nobaCard.id,
+          lastFourDigits: nobaCard.last4Digits,
+          status: nobaCard.status,
+          type: nobaCard.type,
+          consumerID: nobaCard.consumerID,
+          provider: nobaCard.provider,
+        },
+      ]);
+    });
+  });
+
+  describe("getCard", () => {
+    it("should return a card", async () => {
+      const consumer = getRandomActiveConsumer("57", "CO");
+      const nobaCard = getRandomNobaCard(consumer.props.id, NobaCardStatus.ACTIVE);
+      when(mockCardService.getCard(consumer.props.id, nobaCard.id)).thenResolve(nobaCard);
+      const card = await cardController.getCard(consumer, nobaCard.id);
+      expect(card).toStrictEqual({
+        id: nobaCard.id,
+        lastFourDigits: nobaCard.last4Digits,
+        status: nobaCard.status,
+        type: nobaCard.type,
+        consumerID: nobaCard.consumerID,
+        provider: nobaCard.provider,
+      });
+    });
+  });
+
+  describe("getWebViewToken", () => {
+    it("should return a web view token", async () => {
+      const consumer = getRandomActiveConsumer("57", "CO");
+
+      when(mockCardService.getWebViewToken("fake-card-id", consumer.props.id)).thenResolve({
+        accessToken: "fake-token",
+        providerCardID: "fake-provider-card-id",
+        provider: CardProvider.POMELO,
+      });
+
+      const token = await cardController.getWebViewToken(consumer, "fake-card-id");
+      expect(token).toStrictEqual({
+        accessToken: "fake-token",
+        providerCardID: "fake-provider-card-id",
+        provider: CardProvider.POMELO,
       });
     });
   });

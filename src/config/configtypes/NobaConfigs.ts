@@ -38,6 +38,8 @@ import {
   NOBA_PAYROLL_AWS_SECRET_KEY_FOR_NOBA_PAYROLL_ACCOUNT_NUMBER,
   NOBA_PAYROLL_CONFIG_KEY,
   AppEnvironment,
+  NOBA_PROXY_IP,
+  NOBA_PROXY_PORT,
 } from "../ConfigurationUtils";
 
 export interface NobaConfigs {
@@ -52,6 +54,8 @@ export interface NobaConfigs {
   [AWS_SECRET_KEY_FOR_NOBA_ADMIN_BEARER_TOKEN]: string;
   [NOBA_TRANSACTION_CONFIG_KEY]: NobaTransactionConfigs;
   [NOBA_PAYROLL_CONFIG_KEY]: NobaPayrollConfigs;
+  [NOBA_PROXY_IP]: string;
+  [NOBA_PROXY_PORT]: number;
 }
 
 export interface NobaTransactionConfigs {
