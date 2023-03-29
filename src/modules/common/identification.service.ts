@@ -77,7 +77,7 @@ export class IdentificationService {
     if (!foundIdentificationTypes) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-        message: `No identification types found for country code ${countryCode}`,
+        message: `Invalid identification type for country code: ${countryCode}.`,
       });
     }
 
@@ -85,14 +85,14 @@ export class IdentificationService {
     if (!foundIdentificationType) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-        message: `No identification type found for type ${identificationType}`,
+        message: `Invalid identification type: ${identificationType}.`,
       });
     }
 
     if (foundIdentificationType.maxLength < identificationValue.length) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: `Identification value exceeds maximum length of ${foundIdentificationType.maxLength}`,
+        message: `Identification value exceeds maximum length of ${foundIdentificationType.maxLength}.`,
       });
     }
 
@@ -100,7 +100,7 @@ export class IdentificationService {
     if (!regex.test(identificationValue)) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-        message: `Identification value does not match the expected format`,
+        message: `Identification value does not match the expected format.`,
       });
     }
   }
