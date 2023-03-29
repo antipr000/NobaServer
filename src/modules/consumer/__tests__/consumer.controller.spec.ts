@@ -1,7 +1,7 @@
 import { BadRequestException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { UserEmailUpdateRequest } from "test/api_client";
-import { anyString, anything, deepEqual, instance, verify, when } from "ts-mockito";
+import { deepEqual, instance, verify, when } from "ts-mockito";
 import { PhoneVerificationOtpRequest } from "../../../../test/api_client/models/PhoneVerificationOtpRequest";
 import { UserPhoneUpdateRequest } from "../../../../test/api_client/models/UserPhoneUpdateRequest";
 import { Result } from "../../../core/logic/Result";
@@ -42,8 +42,6 @@ import { Employer } from "../../../modules/employer/domain/Employer";
 import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
 import { uuid } from "uuidv4";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
-import { ServiceError } from "@temporalio/client";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { getRandomIdentification } from "../test_utils/identification.test.utils";
 
 const getRandomEmployer = (): Employer => {

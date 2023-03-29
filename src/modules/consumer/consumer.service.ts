@@ -142,7 +142,7 @@ export class ConsumerService {
     }
   }
 
-  // get's consumer object if consumer already exists, otherwise creates a new consumer if createIfNotExists is true
+  // get's consumer object if consumer already exists, otherwise creates a new consumer, with optional details if passed
   async getOrCreateConsumerConditionally(emailOrPhone: string): Promise<Consumer> {
     const isEmail = Utils.isEmail(emailOrPhone);
     const email = isEmail ? emailOrPhone : null;
@@ -152,7 +152,7 @@ export class ConsumerService {
       const newConsumer = Consumer.createConsumer({
         email: email ? email.toLowerCase() : undefined,
         displayEmail: email ?? undefined,
-        phone,
+        phone: phone ?? undefined,
         referralCode: Utils.getAlphaNanoID(15),
       });
 
@@ -180,14 +180,14 @@ export class ConsumerService {
     return this.removeAllUnsupportedHandleCharacters(handle);
   }
 
-  async updateConsumer(consumerProps: Partial<ConsumerProps>): Promise<Consumer> {
-    const consumer = await this.getConsumer(consumerProps.id);
+  async updateConsumer(updateConsumerProps: Partial<ConsumerProps>): Promise<Consumer> {
+    const consumer = await this.getConsumer(updateConsumerProps.id);
     // If we don't have a handle, but we do have a first name, then we can generate a handle.
     // Else if the handle is being set NOW, we need to validate it.
     if (!consumer.props.handle && consumer.props.firstName && consumer.props.lastName) {
-      consumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
+      updateConsumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
       let counter = 0;
-      while (!(await this.isHandleAvailable(consumerProps.handle))) {
+      while (!(await this.isHandleAvailable(updateConsumerProps.handle))) {
         if (counter > 5) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
@@ -195,20 +195,34 @@ export class ConsumerService {
           });
         }
 
-        consumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
+        updateConsumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
         counter++;
       }
-    } else if (consumerProps.handle !== undefined && consumerProps.handle !== null) {
-      this.analyseHandle(consumerProps.handle);
+    } else if (updateConsumerProps.handle !== undefined && updateConsumerProps.handle !== null) {
+      this.analyseHandle(updateConsumerProps.handle);
     }
 
+    const consumerPropsWithUpdatedData = {
+      ...consumer.props,
+      ...updateConsumerProps,
+    };
+
+    if (!consumerPropsWithUpdatedData.locale) {
+      const predictedLocale = Consumer.predictLocale(consumerPropsWithUpdatedData);
+
+      if (predictedLocale) {
+        updateConsumerProps.locale = predictedLocale;
+      }
+    }
+
+    // This is just for JOI validation
     Consumer.createConsumer({
       ...consumer.props,
-      ...consumerProps,
+      ...updateConsumerProps,
     });
 
     try {
-      return await this.consumerRepo.updateConsumer(consumer.props.id, consumerProps);
+      return await this.consumerRepo.updateConsumer(consumer.props.id, updateConsumerProps);
     } catch (e) {
       this.logger.error(`updateConsumer failed with error: ${e}`);
       throw new ServiceException({
@@ -222,7 +236,7 @@ export class ConsumerService {
     const otp = this.generateOTP();
     await this.otpService.saveOTP(phone, consumerIdentityIdentifier, otp);
     await this.notificationService.sendNotification(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT, {
-      locale: phone.startsWith("+57") ? "es_co" : "en_us", // TODO: CRYPTO-894
+      locale: phone?.startsWith("+57") ? "es_co" : "en_us", // TODO: CRYPTO-894
       phone,
       otp: otp.toString(),
     });

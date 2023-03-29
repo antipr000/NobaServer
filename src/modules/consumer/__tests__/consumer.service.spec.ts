@@ -28,7 +28,6 @@ import { ConsumerService } from "../consumer.service";
 import { Consumer } from "../domain/Consumer";
 import { CryptoWallet } from "../domain/CryptoWallet";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
-import { FiatTransactionStatus } from "../domain/Types";
 import { NotificationMethod } from "../dto/AddCryptoWalletDTO";
 import { UserEmailUpdateRequest } from "../dto/EmailVerificationDTO";
 import { getMockConsumerRepoWithDefaults } from "../mocks/mock.consumer.repo";
@@ -218,17 +217,19 @@ describe("ConsumerService", () => {
   });
 
   describe("createConsumerIfFirstTimeLogin", () => {
-    it("should create user if not present", async () => {
+    it("should create user if not present, setting default values as expected", async () => {
       const email = "mock-user@noba.com";
 
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         email: email,
-        address: { countryCode: "CO" },
       });
 
-      when(mockConsumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
-      when(mockConsumerRepo.createConsumer(anything())).thenResolve(consumer);
+      expect(consumer.props.locale).toBeUndefined(); // Don't set a default if no phone number
+      expect(consumer.props.referralCode).not.toBe(null);
+
+      when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
+      when(consumerRepo.createConsumer(anything())).thenResolve(consumer);
 
       const response = await consumerService.getOrCreateConsumerConditionally(email);
       expect(response).toStrictEqual(consumer);
@@ -431,7 +432,7 @@ describe("ConsumerService", () => {
   });
 
   describe("updateConsumer", () => {
-    it("should update consumer details", async () => {
+    it("should update consumer details created with email", async () => {
       const email = "mock-user@noba.com";
 
       const consumer = Consumer.createConsumer({
@@ -441,12 +442,55 @@ describe("ConsumerService", () => {
 
       const firstName = "First";
       const lastName = "Last";
-
       const updatedConsumerData = Consumer.createConsumer({
         ...consumer.props,
         firstName: firstName,
         lastName: lastName,
         gender: Gender.FEMALE,
+      });
+
+      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(
+        consumerRepo.updateConsumer(
+          consumer.props.id,
+          deepEqual({
+            id: consumer.props.id,
+            firstName: firstName,
+            lastName: lastName,
+            gender: Gender.FEMALE,
+          }),
+        ),
+      ).thenResolve(updatedConsumerData);
+
+      const response = await consumerService.updateConsumer({
+        id: consumer.props.id,
+        firstName: firstName,
+        lastName: lastName,
+        gender: Gender.FEMALE,
+      });
+
+      expect(response).toStrictEqual(updatedConsumerData);
+    });
+
+    it.each([
+      ["+12222222222", "en_us"],
+      ["+570000000001", "es_co"],
+    ])("should update consumer details created with phone and proper default locale", async (phone, locale) => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        phone: phone,
+      });
+
+      delete consumer.props.locale; // Remove setting of it in creation
+
+      const firstName = "First";
+      const lastName = "Last";
+      const updatedConsumerData = Consumer.createConsumer({
+        ...consumer.props,
+        firstName: firstName,
+        lastName: lastName,
+        gender: Gender.FEMALE,
+        locale: locale,
       });
 
       when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
@@ -458,6 +502,7 @@ describe("ConsumerService", () => {
             firstName: firstName,
             lastName: lastName,
             gender: Gender.FEMALE,
+            locale: locale,
           }),
         ),
       ).thenResolve(updatedConsumerData);
