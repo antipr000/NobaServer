@@ -5,6 +5,7 @@ import type { ConfigurationsDTO } from "../models/ConfigurationsDTO";
 import type { CreditCardDTO } from "../models/CreditCardDTO";
 import type { CurrencyDTO } from "../models/CurrencyDTO";
 import type { ExchangeRateDTO } from "../models/ExchangeRateDTO";
+import type { IdentificationTypeCountryDTO } from "../models/IdentificationTypeCountryDTO";
 import type { LocationDTO } from "../models/LocationDTO";
 import type { SupportedBanksDTO } from "../models/SupportedBanksDTO";
 
@@ -205,6 +206,42 @@ export class AssetsService {
       },
       errors: {
         404: `Country code not found`,
+      },
+    });
+  }
+
+  /**
+   * Returns a list of identification types
+   * @returns IdentificationTypeCountryDTO Map of country identification types
+   * @throws ApiError
+   */
+  public static getIdentificationTypes({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+    countryCode,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+    /**
+     * Country code
+     */
+    countryCode?: string;
+  }): CancelablePromise<Array<IdentificationTypeCountryDTO>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/identificationtypes",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      query: {
+        countryCode: countryCode,
       },
     });
   }
