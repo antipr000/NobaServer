@@ -104,6 +104,7 @@ export class ConsumerMapper implements Mapper<Consumer> {
       referralCode: p.referralCode,
       phone: p.phone,
       status: this.statesMapper.getUserState(consumer, paymentMethods, cryptoWallets),
+      locale: p.locale,
       gender: this.getGender(p.gender),
       kycVerificationData: {
         kycVerificationStatus: this.statesMapper.getKycVerificationState(

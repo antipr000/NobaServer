@@ -123,6 +123,9 @@ export class ConsumerDTO {
   @ApiPropertyOptional()
   handle?: string;
 
+  @ApiPropertyOptional()
+  locale?: string;
+
   @ApiPropertyOptional({ enum: Gender })
   gender?: Gender;
 
