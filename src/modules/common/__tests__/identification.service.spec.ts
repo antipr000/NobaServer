@@ -33,8 +33,8 @@ describe("Identification", () => {
         expect(identificationTypes.map(type => type.countryCode)).toContain("CO");
         expect(identificationTypes.find(type => type.countryCode === "CO").identificationTypes.length).toBe(4);
         expect(
-          identificationTypes.find(type => type.countryCode === "CO").identificationTypes.map(type => type.name),
-        ).toEqual(["Cédula de ciudadanía", "Pasaporte", "Cédula de extranjería", "Tarjeta de identidad"]);
+          identificationTypes.find(type => type.countryCode === "CO").identificationTypes.map(type => type.type),
+        ).toEqual(["CC", "PEP", "CE", "PASSPORT"]);
       });
     });
 
