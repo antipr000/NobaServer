@@ -93,12 +93,7 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
     // Locale was not explicitly set, so attempt to determine from country code or phone number
     // TODO: CRYPTO-894: Remove this logic once all consumers have a locale set as part of onboarding
     if (!consumerProps.locale) {
-      if (consumerProps.address?.countryCode) {
-        consumerProps.locale = consumerProps.address?.countryCode == "CO" ? "es_co" : "en_us";
-      } else if (consumerProps.phone) {
-        // Should never be undefined in current app flow but API usage does allow this
-        consumerProps.locale = consumerProps.phone.startsWith("+57") ? "es_co" : "en_us";
-      }
+      consumerProps.locale = Consumer.predictLocale(consumerProps);
       // Note that we do not want a default here, as if a user is created with email address
       // we could get stuck with a default locale of en_us that would not be correct.
     }
@@ -111,14 +106,14 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
     return differenceInDays(new Date(), createdTimestamp);
   }
 
-  public predictLocale(): string {
+  public static predictLocale(props: Partial<ConsumerProps>): string {
     let locale: string;
-    if (!this.props.locale) {
-      if (this.props.address?.countryCode) {
-        locale = this.props.address?.countryCode == "CO" ? "es_co" : "en_us";
-      } else if (this.props.phone) {
+    if (!props.locale) {
+      if (props.address?.countryCode) {
+        locale = props.address?.countryCode == "CO" ? "es_co" : "en_us";
+      } else if (props.phone) {
         // Should never be undefined in current app flow but API usage does allow this
-        locale = this.props.phone.startsWith("+57") ? "es_co" : "en_us";
+        locale = props.phone.startsWith("+57") ? "es_co" : "en_us";
       }
       // Note that we do not want a default here, as if a user is created with email address
       // we could get stuck with a default locale of en_us that would not be correct.

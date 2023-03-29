@@ -198,13 +198,16 @@ export class ConsumerService {
       this.analyseHandle(updateConsumerProps.handle);
     }
 
-    if (!consumer.props.locale && !updateConsumerProps.locale) {
-      const predictedLocale = consumer.predictLocale();
+    const consumerPropsWithUpdatedData = {
+      ...consumer.props,
+      ...updateConsumerProps,
+    };
 
-      console.log("Predicted locale: ", predictedLocale);
+    if (!consumerPropsWithUpdatedData.locale) {
+      const predictedLocale = Consumer.predictLocale(consumerPropsWithUpdatedData);
 
       if (predictedLocale) {
-        updateConsumerProps.locale = consumer.predictLocale();
+        updateConsumerProps.locale = predictedLocale;
       }
     }
 
