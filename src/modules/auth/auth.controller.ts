@@ -108,8 +108,8 @@ export class AuthController {
     } else {
       // Signup flow
       {
-        if (userExists)
-          throw new ForbiddenException(`User "${emailOrPhone}" is already registered - use log in flow instead.`);
+        // The exception text is important, as the frontend uses it to determine if the user is already registered or not.
+        if (userExists) throw new ForbiddenException("USER_ALREADY_EXISTS");
       }
     }
 
