@@ -1,0 +1,48 @@
+{
+  "US": [
+    {
+      "type": "PASSPORT",
+      "name": "Passport",
+      "maxLength": 9,
+      "pattern": "^[0-9]{9}$"
+    },
+    {
+      "type": "SSN",
+      "name": "Social Security Number",
+      "maxLength": 9,
+      "pattern": "^[0-9]{9}$"
+    },
+    {
+      "type": "DRIVERS_LICENSE",
+      "name": "Driver's License",
+      "maxLength": 8,
+      "pattern": "^[A-Za-z]{1}[0-9]{7}$"
+    }
+  ],
+  "CO": [
+    {
+      "type": "CC",
+      "name": "Cedula de Ciudania",
+      "maxLength": 10,
+      "regex": "^[1-9]{1}[0-9]{9}$"
+    },
+    {
+      "type": "PEP",
+      "name": "Persona Expuesta Políticamente",
+      "maxLength": 10,
+      "regex": ".*"
+    },
+    {
+      "type": "CE",
+      "name": "Cédula de Extranjería",
+      "maxLength": 10,
+      "regex": "^E\\d{9}$"
+    },
+    {
+      "type": "PASSPORT",
+      "name": "Pasaporte",
+      "maxLength": 10,
+      "regex": "^[A-Z]{2}\\d{6}[A-Z]{2}$"
+    }
+  ]
+}
