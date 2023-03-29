@@ -28,7 +28,6 @@ import { ConsumerService } from "../consumer.service";
 import { Consumer } from "../domain/Consumer";
 import { CryptoWallet } from "../domain/CryptoWallet";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
-import { FiatTransactionStatus } from "../domain/Types";
 import { NotificationMethod } from "../dto/AddCryptoWalletDTO";
 import { UserEmailUpdateRequest } from "../dto/EmailVerificationDTO";
 import { getMockConsumerRepoWithDefaults } from "../mocks/mock.consumer.repo";
@@ -451,7 +450,6 @@ describe("ConsumerService", () => {
             firstName: firstName,
             lastName: lastName,
             gender: Gender.FEMALE,
-            email: email,
           }),
         ),
       ).thenResolve(updatedConsumerData);
@@ -475,6 +473,8 @@ describe("ConsumerService", () => {
         phone: phone,
       });
 
+      delete consumer.props.locale; // Remove setting of it in creation
+
       const firstName = "First";
       const lastName = "Last";
       const updatedConsumerData = Consumer.createConsumer({
@@ -482,6 +482,7 @@ describe("ConsumerService", () => {
         firstName: firstName,
         lastName: lastName,
         gender: Gender.FEMALE,
+        locale: locale,
       });
 
       when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
@@ -493,7 +494,6 @@ describe("ConsumerService", () => {
             firstName: firstName,
             lastName: lastName,
             gender: Gender.FEMALE,
-            phone: phone,
             locale: locale,
           }),
         ),
@@ -532,7 +532,6 @@ describe("ConsumerService", () => {
             id: consumer.props.id,
             firstName: firstName,
             lastName: lastName,
-            email: email,
           }),
         ),
       ).thenResolve(updatedConsumerData);
@@ -578,7 +577,6 @@ describe("ConsumerService", () => {
             firstName: firstName,
             lastName: lastName,
             handle: anyString(),
-            email: email,
           }),
         ),
       ).thenResolve(updatedConsumerData);

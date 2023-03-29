@@ -176,14 +176,14 @@ export class ConsumerService {
     return this.removeAllUnsupportedHandleCharacters(handle);
   }
 
-  async updateConsumer(consumerProps: Partial<ConsumerProps>): Promise<Consumer> {
-    const consumer = await this.getConsumer(consumerProps.id);
+  async updateConsumer(updateConsumerProps: Partial<ConsumerProps>): Promise<Consumer> {
+    const consumer = await this.getConsumer(updateConsumerProps.id);
     // If we don't have a handle, but we do have a first name, then we can generate a handle.
     // Else if the handle is being set NOW, we need to validate it.
     if (!consumer.props.handle && consumer.props.firstName && consumer.props.lastName) {
-      consumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
+      updateConsumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
       let counter = 0;
-      while (!(await this.isHandleAvailable(consumerProps.handle))) {
+      while (!(await this.isHandleAvailable(updateConsumerProps.handle))) {
         if (counter > 5) {
           throw new ServiceException({
             errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
@@ -191,20 +191,31 @@ export class ConsumerService {
           });
         }
 
-        consumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
+        updateConsumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
         counter++;
       }
-    } else if (consumerProps.handle !== undefined && consumerProps.handle !== null) {
-      this.analyseHandle(consumerProps.handle);
+    } else if (updateConsumerProps.handle !== undefined && updateConsumerProps.handle !== null) {
+      this.analyseHandle(updateConsumerProps.handle);
     }
 
-    const updatedConsumer = Consumer.createConsumer({
+    if (!consumer.props.locale && !updateConsumerProps.locale) {
+      const predictedLocale = consumer.predictLocale();
+
+      console.log("Predicted locale: ", predictedLocale);
+
+      if (predictedLocale) {
+        updateConsumerProps.locale = consumer.predictLocale();
+      }
+    }
+
+    // This is just for JOI validation
+    Consumer.createConsumer({
       ...consumer.props,
-      ...consumerProps,
+      ...updateConsumerProps,
     });
 
     try {
-      return await this.consumerRepo.updateConsumer(consumer.props.id, updatedConsumer.props);
+      return await this.consumerRepo.updateConsumer(consumer.props.id, updateConsumerProps);
     } catch (e) {
       this.logger.error(`updateConsumer failed with error: ${e}`);
       throw new ServiceException({
