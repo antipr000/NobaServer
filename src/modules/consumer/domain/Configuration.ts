@@ -1,4 +1,4 @@
-import { Configuration as PrismaConfigurationModel } from "@prisma/client";
+import { ConsumerConfiguration as PrismaConfigurationModel } from "@prisma/client";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 import Joi from "joi";
 

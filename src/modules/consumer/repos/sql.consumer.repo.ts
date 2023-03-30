@@ -10,7 +10,7 @@ import {
   Prisma,
   WalletStatus,
   Identification as PrismaIdentificationModel,
-  Configuration as PrismaConfigurationModel,
+  ConsumerConfiguration as PrismaConfigurationModel,
 } from "@prisma/client";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
 import { ConsumerRepoMapper } from "../mappers/ConsumerRepoMapper";
@@ -595,7 +595,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
     let savedConfiguration: Configuration = null;
 
     try {
-      const configurationInput: Prisma.ConfigurationCreateInput = {
+      const configurationInput: Prisma.ConsumerConfigurationCreateInput = {
         consumer: {
           connect: {
             id: configuration.consumerID,
@@ -605,7 +605,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
         value: configuration.value,
       };
 
-      const returnedConfiguration: PrismaConfigurationModel = await this.prisma.configuration.create({
+      const returnedConfiguration: PrismaConfigurationModel = await this.prisma.consumerConfiguration.create({
         data: configurationInput,
       });
       savedConfiguration = convertToDomainConfiguration(returnedConfiguration);
@@ -637,11 +637,11 @@ export class SQLConsumerRepo implements IConsumerRepo {
     validateUpdateConfigurationRequest(configuration);
 
     try {
-      const configurationUpdateInput: Prisma.ConfigurationUpdateInput = {
+      const configurationUpdateInput: Prisma.ConsumerConfigurationUpdateInput = {
         ...(configuration.value && { value: configuration.value }),
       };
 
-      const returnedConfiguration: PrismaConfigurationModel = await this.prisma.configuration.update({
+      const returnedConfiguration: PrismaConfigurationModel = await this.prisma.consumerConfiguration.update({
         data: configurationUpdateInput,
         where: {
           id: id,
@@ -665,7 +665,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
 
   async getAllConfigurationsForConsumer(consumerID: string): Promise<Configuration[]> {
     try {
-      const returnedConfiguration: PrismaConfigurationModel[] = await this.prisma.configuration.findMany({
+      const returnedConfiguration: PrismaConfigurationModel[] = await this.prisma.consumerConfiguration.findMany({
         where: {
           consumerID: consumerID,
         },
@@ -678,7 +678,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
 
   async deleteConfiguration(id: string): Promise<void> {
     try {
-      await this.prisma.configuration.delete({ where: { id: id } });
+      await this.prisma.consumerConfiguration.delete({ where: { id: id } });
     } catch (e) {
       throw new RepoException({
         errorCode: RepoErrorCode.NOT_FOUND,
