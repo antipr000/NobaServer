@@ -256,7 +256,7 @@ describe("AuthController", () => {
             emailOrPhone: unregisteredConsumer,
             autoCreate: true,
           }),
-      ).rejects.toThrow(ForbiddenException);
+      ).rejects.toThrow(new ForbiddenException("USER_ALREADY_EXISTS"));
     });
   });
 

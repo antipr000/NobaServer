@@ -5,9 +5,10 @@ import { PomeloService } from "./pomelo/pomelo.service";
 import { CommonModule } from "../../../common/common.module";
 import { CardProviderFactory } from "./card.provider.factory";
 import { ConsumerModule } from "../../../../modules/consumer/consumer.module";
+import { PomeloTransactionProcessorModule } from "./pomelo/transaction/pomelo.transaction.module";
 
 @Module({
-  imports: [PomeloRepoModule, CommonModule, ConsumerModule],
+  imports: [PomeloRepoModule, CommonModule, ConsumerModule, PomeloTransactionProcessorModule],
   controllers: [],
   providers: [PomeloClient, PomeloService, CardProviderFactory],
   exports: [CardProviderFactory],
