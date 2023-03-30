@@ -1647,8 +1647,8 @@ describe("EmployerServiceTests", () => {
         ],
       };
 
-      console.log(englishTemplateFields.totalCreditAmount);
-      console.log(spanishTemplateFields.totalCreditAmount);
+      console.log(`totalCreditAmount english: ` + englishTemplateFields.totalCreditAmount);
+      console.log(`totalCreditAmount spanish: ` + spanishTemplateFields.totalCreditAmount);
 
       when(mockPayrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve(payrollDisbursements);
       when(mockEmployeeService.getEmployeeByID(employee1.id)).thenResolve(employee1);

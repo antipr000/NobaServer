@@ -365,7 +365,10 @@ export class EmployerService {
         totalCreditAmount: totalCreditAmount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
       };
 
-      console.log(templateFields.totalCreditAmount);
+      console.log(
+        `totalCreditAmount ${locale}: ` +
+          totalCreditAmount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
+      );
 
       templateProcessor.populateTemplate(locale, templateFields);
     }
