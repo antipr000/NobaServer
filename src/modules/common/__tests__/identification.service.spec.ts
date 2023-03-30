@@ -2,7 +2,7 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { IdentificationService } from "../identification.service";
-import { ServiceErrorCode } from "src/core/exception/service.exception";
+import { ServiceErrorCode } from "../../../core/exception/service.exception";
 import { AppEnvironment } from "../../../config/ConfigurationUtils";
 
 describe("Identification", () => {
