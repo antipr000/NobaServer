@@ -69,15 +69,21 @@ const getRandomEmployer = (): Employer => {
 const amountStrEnglish100 = Number(100).toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString(), {
   minimumFractionDigits: 2,
 });
-const creditAmountStrEnglish5 = Number(5).toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString(), {
-  minimumFractionDigits: 2,
-});
+const creditAmountStrEnglishDecimal = Number(65.5392).toLocaleString(
+  TemplateProcessModule.TemplateLocale.ENGLISH.toString(),
+  {
+    minimumFractionDigits: 2,
+  },
+);
 const amountStrSpanish100 = Number(100).toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString(), {
   minimumFractionDigits: 2,
 });
-const creditAmountStrSpanish5 = Number(5).toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString(), {
-  minimumFractionDigits: 2,
-});
+const creditAmountStrSpanishDecimal = Number(65.5392).toLocaleString(
+  TemplateProcessModule.TemplateLocale.SPANISH.toString(),
+  {
+    minimumFractionDigits: 2,
+  },
+);
 
 describe("EmployerServiceTests", () => {
   jest.setTimeout(20000);
@@ -1570,7 +1576,7 @@ describe("EmployerServiceTests", () => {
           employeeID: employee1.id,
           transactionID: "fake-transaction",
           allocationAmount: 100,
-          creditAmount: 15.321,
+          creditAmount: 65.5392,
         },
         {
           id: "fake-disbursement-2",
@@ -1585,8 +1591,7 @@ describe("EmployerServiceTests", () => {
       ];
 
       const totalCreditAmount =
-        Utils.roundToSpecifiedDecimalNumber(15.321, 2) + Utils.roundToSpecifiedDecimalNumber(65.5392, 2);
-      console.log(totalCreditAmount);
+        Utils.roundToSpecifiedDecimalNumber(65.5392, 2) + Utils.roundToSpecifiedDecimalNumber(65.5392, 2);
       const baseTemplateFields: InvoiceReceiptTemplateFields = {
         companyName: employer.name,
         payrollReference: payroll.referenceNumber.toString().padStart(8, "0"),
@@ -1612,12 +1617,12 @@ describe("EmployerServiceTests", () => {
           {
             employeeName: `${consumer1.props.firstName} ${consumer1.props.lastName}`,
             amount: amountStrEnglish100,
-            creditAmount: creditAmountStrEnglish5,
+            creditAmount: creditAmountStrEnglishDecimal,
           },
           {
             employeeName: `${consumer2.props.firstName} ${consumer2.props.lastName}`,
             amount: amountStrEnglish100,
-            creditAmount: creditAmountStrEnglish5,
+            creditAmount: creditAmountStrEnglishDecimal,
           },
         ],
       };
@@ -1637,18 +1642,15 @@ describe("EmployerServiceTests", () => {
           {
             employeeName: `${consumer1.props.firstName} ${consumer1.props.lastName}`,
             amount: amountStrSpanish100,
-            creditAmount: creditAmountStrSpanish5,
+            creditAmount: creditAmountStrSpanishDecimal,
           },
           {
             employeeName: `${consumer2.props.firstName} ${consumer2.props.lastName}`,
             amount: amountStrSpanish100,
-            creditAmount: creditAmountStrSpanish5,
+            creditAmount: creditAmountStrSpanishDecimal,
           },
         ],
       };
-
-      console.log(`totalCreditAmount english: ` + englishTemplateFields.totalCreditAmount);
-      console.log(`totalCreditAmount spanish: ` + spanishTemplateFields.totalCreditAmount);
 
       when(mockPayrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve(payrollDisbursements);
       when(mockEmployeeService.getEmployeeByID(employee1.id)).thenResolve(employee1);
