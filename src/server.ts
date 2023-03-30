@@ -1,7 +1,7 @@
 import { INestApplication, Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, OpenAPIObject, SwaggerDocumentOptions, SwaggerModule } from "@nestjs/swagger";
-import { json, urlencoded } from "express";
+import { json, urlencoded, text } from "express";
 import { writeFileSync } from "fs";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -23,7 +23,10 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
     const environmentKey = environmentKeys[i];
     process.env[environmentKey] = environmentVariables[environmentKey];
   }
-  const app = await NestFactory.create(AppModule, {});
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true,
+    bodyParser: true,
+  });
 
   const logger: Logger = app.get(WINSTON_MODULE_NEST_PROVIDER); //logger is of Nestjs type
   const winstonLogger = app.get(WINSTON_MODULE_PROVIDER); //logger of winston type
@@ -37,8 +40,8 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
   app.use(getMorgan(winstonLogger));
   app.useGlobalFilters(new DefaultExceptionsFilter(winstonLogger));
   // the next two lines did the trick
-  app.use(json({ limit: "50mb" }));
-  app.use(urlencoded({ extended: true, limit: "50mb" }));
+  // app.use(json({ limit: "50mb" }));
+  // app.use(urlencoded({ extended: true, limit: "50mb" }));
 
   // Config and doc generation options for all APIs, which includes public & private
   const swaggerConfig = new DocumentBuilder()
