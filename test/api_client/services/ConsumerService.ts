@@ -4,6 +4,8 @@
 import type { AddCryptoWalletDTO } from "../models/AddCryptoWalletDTO";
 import type { AddCryptoWalletResponseDTO } from "../models/AddCryptoWalletResponseDTO";
 import type { BlankResponseDTO } from "../models/BlankResponseDTO";
+import type { CardCreateRequestDTO } from "../models/CardCreateRequestDTO";
+import type { CardResponseDTO } from "../models/CardResponseDTO";
 import type { CircleWalletBalanceResponseDTO } from "../models/CircleWalletBalanceResponseDTO";
 import type { CircleWalletResponseDTO } from "../models/CircleWalletResponseDTO";
 import type { ConfirmWalletUpdateDTO } from "../models/ConfirmWalletUpdateDTO";
@@ -22,6 +24,7 @@ import type { RegisterWithEmployerDTO } from "../models/RegisterWithEmployerDTO"
 import type { RequestEmployerDTO } from "../models/RequestEmployerDTO";
 import type { UpdateConsumerRequestDTO } from "../models/UpdateConsumerRequestDTO";
 import type { UpdateEmployerAllocationDTO } from "../models/UpdateEmployerAllocationDTO";
+import type { UpdateIdentificationDTO } from "../models/UpdateIdentificationDTO";
 import type { UpdatePaymentMethodDTO } from "../models/UpdatePaymentMethodDTO";
 import type { UserEmailUpdateRequest } from "../models/UserEmailUpdateRequest";
 import type { UserPhoneUpdateRequest } from "../models/UserPhoneUpdateRequest";
@@ -805,6 +808,43 @@ export class ConsumerService {
   }
 
   /**
+   * Gets an identification document for the logged-in consumer
+   * @returns IdentificationDTO Added identification document for consumer
+   * @throws ApiError
+   */
+  public static getIdentification({
+    xNobaApiKey,
+    identificationId,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    identificationId: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<IdentificationDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/consumers/identifications/{identificationID}",
+      path: {
+        identificationID: identificationId,
+      },
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      errors: {
+        400: `Invalid identification document`,
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
    * Deletes an identification document for the logged-in consumer
    * @returns IdentificationDTO Deleted identification document for consumer
    * @throws ApiError
@@ -834,6 +874,47 @@ export class ConsumerService {
         "x-noba-signature": xNobaSignature,
         "x-noba-timestamp": xNobaTimestamp,
       },
+      errors: {
+        400: `Invalid identification document`,
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
+   * Updates an identification document for the logged-in consumer
+   * @returns IdentificationDTO Updated identification document for consumer
+   * @throws ApiError
+   */
+  public static updateIdentification({
+    xNobaApiKey,
+    identificationId,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    identificationId: string;
+    requestBody: UpdateIdentificationDTO;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<IdentificationDTO> {
+    return __request(OpenAPI, {
+      method: "PATCH",
+      url: "/v1/consumers/identifications/{identificationID}",
+      path: {
+        identificationID: identificationId,
+      },
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         400: `Invalid identification document`,
         403: `Logged-in user is not a Consumer`,
@@ -933,6 +1014,41 @@ export class ConsumerService {
         "x-noba-signature": xNobaSignature,
         "x-noba-timestamp": xNobaTimestamp,
       },
+      errors: {
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
+   * Create a new card for the consumer
+   * @returns CardResponseDTO
+   * @throws ApiError
+   */
+  public static createCard({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    requestBody: CardCreateRequestDTO;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<CardResponseDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/consumers/cards",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      body: requestBody,
+      mediaType: "application/json",
       errors: {
         403: `Logged-in user is not a Consumer`,
       },

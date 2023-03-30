@@ -56,10 +56,8 @@ import { UpdateEmployerAllocationDTO } from "./dto/UpdateEmployerAllocationDTO";
 import { OptionalLimitQueryDTO } from "../common/dto/OptionalLimitQueryDTO";
 import { RequestEmployerDTO } from "./dto/RequestEmployerDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
-import { ServiceException } from "../../core/exception/service.exception";
 import { IdentificationDTO } from "./dto/identification.dto";
 import { CreateIdentificationDTO } from "./dto/create.identification.dto";
-import { id } from "date-fns/locale";
 import { UpdateIdentificationDTO } from "./dto/update.identification.dto";
 
 @Roles(Role.CONSUMER)
@@ -535,9 +533,7 @@ export class ConsumerController {
     @Param("identificationID") identificationID: string,
   ): Promise<IdentificationDTO> {
     const identification = await this.consumerService.getIdentificationForConsumer(consumer.props.id, identificationID);
-    return {
-      ...identification,
-    };
+    return ConsumerMapper.toIdentificationDTO(identification);
   }
 
   @Get("/identifications")
@@ -550,11 +546,7 @@ export class ConsumerController {
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
   async listIdentifications(@AuthUser() consumer: Consumer): Promise<IdentificationDTO[]> {
     const identifications = await this.consumerService.getAllIdentifications(consumer.props.id);
-    return identifications.map(identification => {
-      return {
-        ...identification,
-      };
-    });
+    return ConsumerMapper.toIdentificationsDTO(identifications);
   }
 
   @Delete("/identifications/:identificationID")

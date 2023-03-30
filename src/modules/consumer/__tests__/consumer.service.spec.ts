@@ -62,6 +62,8 @@ import { Gender } from "../domain/ExternalStates";
 import { getRandomIdentification } from "../test_utils/identification.test.utils";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
+import { IdentificationService } from "../../../modules/common/identification.service";
+import { getMockIdentificationServiceWithDefaults } from "../../../modules/common/mocks/mock.identification.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -103,7 +105,7 @@ const getRandomConsumer = (): Consumer => {
 
 describe("ConsumerService", () => {
   let consumerService: ConsumerService;
-  let consumerRepo: IConsumerRepo;
+  let mockConsumerRepo: IConsumerRepo;
   let consumerMapper: ConsumerMapper;
   let notificationService: NotificationService;
   let otpService: OTPService;
@@ -116,11 +118,12 @@ describe("ConsumerService", () => {
   let employerService: EmployerService;
   let bubbleService: BubbleService;
   let mockKMSService: KmsService;
+  let mockIdentificationService: IdentificationService;
 
   jest.setTimeout(30000);
 
   beforeEach(async () => {
-    consumerRepo = getMockConsumerRepoWithDefaults();
+    mockConsumerRepo = getMockConsumerRepoWithDefaults();
     consumerMapper = getMockConsumerMapperWithDefaults();
     notificationService = getMockNotificationServiceWithDefaults();
     otpService = getMockOTPServiceWithDefaults();
@@ -133,10 +136,11 @@ describe("ConsumerService", () => {
     employerService = getMockEmployerServiceWithDefaults();
     bubbleService = getMockBubbleServiceWithDefaults();
     mockKMSService = getMockKMSServiceWithDefaults();
+    mockIdentificationService = getMockIdentificationServiceWithDefaults();
 
     const ConsumerRepoProvider = {
       provide: "ConsumerRepo",
-      useFactory: () => instance(consumerRepo),
+      useFactory: () => instance(mockConsumerRepo),
     };
 
     const app: TestingModule = await Test.createTestingModule({
@@ -202,6 +206,10 @@ describe("ConsumerService", () => {
           provide: KmsService,
           useFactory: () => instance(mockKMSService),
         },
+        {
+          provide: IdentificationService,
+          useFactory: () => instance(mockIdentificationService),
+        },
       ],
     }).compile();
 
@@ -220,8 +228,8 @@ describe("ConsumerService", () => {
       expect(consumer.props.locale).toBeUndefined(); // Don't set a default if no phone number
       expect(consumer.props.referralCode).not.toBe(null);
 
-      when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
-      when(consumerRepo.createConsumer(anything())).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
+      when(mockConsumerRepo.createConsumer(anything())).thenResolve(consumer);
 
       const response = await consumerService.getOrCreateConsumerConditionally(email);
       expect(response).toStrictEqual(consumer);
@@ -250,13 +258,13 @@ describe("ConsumerService", () => {
         email: email,
       });
 
-      when(consumerRepo.getConsumer(consumerID)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumerID)).thenResolve(consumer);
       const response = await consumerService.getConsumer(consumerID);
       expect(response).toStrictEqual(consumer);
     });
 
     it("should not find the consumer if it doesn't exist", async () => {
-      when(consumerRepo.getConsumer("missing-consumer")).thenThrow(new NotFoundException());
+      when(mockConsumerRepo.getConsumer("missing-consumer")).thenThrow(new NotFoundException());
 
       expect(async () => {
         await consumerService.getConsumer("missing-consumer");
@@ -290,13 +298,13 @@ describe("ConsumerService", () => {
       const requestHandle = "$mock-handle";
       const consumer = getKYCdConsumer(consumerID, email, handle);
 
-      when(consumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
       const response = await consumerService.getActiveConsumer(requestHandle);
       expect(response).toStrictEqual(consumer);
     });
 
     it("should not find the consumer by handle if it doesn't exist", async () => {
-      when(consumerRepo.getConsumerByHandle("$missing-handle")).thenResolve(null);
+      when(mockConsumerRepo.getConsumerByHandle("$missing-handle")).thenResolve(null);
 
       expect(async () => {
         await consumerService.getActiveConsumer("$missing-handle");
@@ -308,13 +316,13 @@ describe("ConsumerService", () => {
       const consumerID = "mock-consumer-1";
       const consumer = getKYCdConsumer(consumerID, email, null);
 
-      when(consumerRepo.getConsumer(consumerID)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumerID)).thenResolve(consumer);
       const response = await consumerService.getActiveConsumer(consumerID);
       expect(response).toStrictEqual(consumer);
     });
 
     it("should not find the consumer by ID if it doesn't exist", async () => {
-      when(consumerRepo.getConsumer("missing-consumer-id")).thenResolve(null);
+      when(mockConsumerRepo.getConsumer("missing-consumer-id")).thenResolve(null);
 
       expect(async () => {
         await consumerService.getActiveConsumer("missing-consumer-id");
@@ -328,7 +336,7 @@ describe("ConsumerService", () => {
       const consumer = getKYCdConsumer(consumerID, email, handle);
       consumer.props.isLocked = true;
 
-      when(consumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
       expect(async () => {
         await consumerService.getActiveConsumer(handle);
       }).rejects.toThrow(ServiceException);
@@ -341,7 +349,7 @@ describe("ConsumerService", () => {
       const consumer = getKYCdConsumer(consumerID, email, handle);
       consumer.props.isDisabled = true;
 
-      when(consumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
       expect(async () => {
         await consumerService.getActiveConsumer(handle);
       }).rejects.toThrow(ServiceException);
@@ -354,7 +362,7 @@ describe("ConsumerService", () => {
       const consumer = getKYCdConsumer(consumerID, email, handle);
       delete consumer.props.verificationData;
 
-      when(consumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
       expect(async () => {
         await consumerService.getActiveConsumer(handle);
       }).rejects.toThrow(ServiceException);
@@ -367,7 +375,7 @@ describe("ConsumerService", () => {
       const consumer = getKYCdConsumer(consumerID, email, handle);
       consumer.props.verificationData.kycCheckStatus = KYCStatus.PENDING;
 
-      when(consumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
       expect(async () => {
         await consumerService.getActiveConsumer(handle);
       }).rejects.toThrow(ServiceException);
@@ -387,7 +395,7 @@ describe("ConsumerService", () => {
         const consumer = getKYCdConsumer(consumerID, email, handle);
         consumer.props.verificationData.documentVerificationStatus = status;
 
-        when(consumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
+        when(mockConsumerRepo.getConsumerByHandle(handle)).thenResolve(consumer);
         expect(async () => {
           await consumerService.getActiveConsumer(handle);
         }).rejects.toThrow(ServiceException);
@@ -407,7 +415,7 @@ describe("ConsumerService", () => {
         handle: handle,
       });
 
-      when(consumerRepo.getConsumer(consumerID)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumerID)).thenResolve(consumer);
 
       const response = await consumerService.getConsumerHandle(consumerID);
 
@@ -416,7 +424,7 @@ describe("ConsumerService", () => {
 
     it("should return null if consumer id is not found", async () => {
       const consumerID = "mock-consumer-1";
-      when(consumerRepo.getConsumer(consumerID)).thenResolve(null);
+      when(mockConsumerRepo.getConsumer(consumerID)).thenResolve(null);
 
       const response = await consumerService.getConsumerHandle(consumerID);
       expect(response).toBeNull();
@@ -441,9 +449,9 @@ describe("ConsumerService", () => {
         gender: Gender.FEMALE,
       });
 
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(
-        consumerRepo.updateConsumer(
+        mockConsumerRepo.updateConsumer(
           consumer.props.id,
           deepEqual({
             id: consumer.props.id,
@@ -485,9 +493,9 @@ describe("ConsumerService", () => {
         locale: locale,
       });
 
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(
-        consumerRepo.updateConsumer(
+        mockConsumerRepo.updateConsumer(
           consumer.props.id,
           deepEqual({
             id: consumer.props.id,
@@ -524,9 +532,9 @@ describe("ConsumerService", () => {
         lastName: lastName,
       });
 
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(
-        consumerRepo.updateConsumer(
+        mockConsumerRepo.updateConsumer(
           consumer.props.id,
           deepEqual({
             id: consumer.props.id,
@@ -542,7 +550,7 @@ describe("ConsumerService", () => {
         lastName: lastName,
       });
 
-      const [updateCallConsumerID, updateConsumerCall] = capture(consumerRepo.updateConsumer).last();
+      const [updateCallConsumerID, updateConsumerCall] = capture(mockConsumerRepo.updateConsumer).last();
       expect(updateCallConsumerID).toBe(consumer.props.id);
       expect(updateConsumerCall.handle).toBeUndefined();
 
@@ -568,9 +576,9 @@ describe("ConsumerService", () => {
         handle: "<PLACEHOLDER_AS_HANDLE_IS_RANDOM>",
       });
 
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(
-        consumerRepo.updateConsumer(
+        mockConsumerRepo.updateConsumer(
           consumer.props.id,
           deepEqual({
             id: consumer.props.id,
@@ -580,7 +588,7 @@ describe("ConsumerService", () => {
           }),
         ),
       ).thenResolve(updatedConsumerData);
-      when(consumerRepo.isHandleTaken(anyString())).thenResolve(false);
+      when(mockConsumerRepo.isHandleTaken(anyString())).thenResolve(false);
 
       const returnedResult = await consumerService.updateConsumer({
         id: consumer.props.id,
@@ -588,7 +596,7 @@ describe("ConsumerService", () => {
         lastName: lastName,
       });
 
-      const [updateCallConsumerID, updateConsumerCall] = capture(consumerRepo.updateConsumer).last();
+      const [updateCallConsumerID, updateConsumerCall] = capture(mockConsumerRepo.updateConsumer).last();
       expect(updateCallConsumerID).toBe(consumer.props.id);
       expect(updateConsumerCall.handle).toBeDefined();
       expect(updateConsumerCall.handle.indexOf(".")).toBe(-1);
@@ -618,10 +626,10 @@ describe("ConsumerService", () => {
         lastName: lastName,
         handle: "<PLACEHOLDER_AS_HANDLE_IS_RANDOM>",
       });
-      when(consumerRepo.isHandleTaken(anyString())).thenResolve(true);
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(mockConsumerRepo.isHandleTaken(anyString())).thenResolve(true);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(
-        consumerRepo.updateConsumer(
+        mockConsumerRepo.updateConsumer(
           consumer.props.id,
           deepEqual({
             id: consumer.props.id,
@@ -643,7 +651,7 @@ describe("ConsumerService", () => {
     it("should throw error if user does not exist", async () => {
       const consumerId = "fake-consumer-1";
 
-      when(consumerRepo.getConsumer(consumerId)).thenReject(new NotFoundException("Not Found"));
+      when(mockConsumerRepo.getConsumer(consumerId)).thenReject(new NotFoundException("Not Found"));
 
       try {
         await consumerService.updateConsumer({
@@ -661,7 +669,7 @@ describe("ConsumerService", () => {
         email: "fake@mock.com",
       });
 
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
 
       expect(
         consumerService.updateConsumer({
@@ -763,7 +771,7 @@ describe("ConsumerService", () => {
         consumerID: consumer.props.id,
       });
 
-      when(consumerRepo.getPaymentMethodForConsumer("fake-id", consumer.props.id)).thenResolve(paymentMethod);
+      when(mockConsumerRepo.getPaymentMethodForConsumer("fake-id", consumer.props.id)).thenResolve(paymentMethod);
 
       const response = await consumerService.getPaymentMethodProvider(consumer.props.id, "fake-id");
       expect(response).toBe(PaymentProvider.CHECKOUT);
@@ -778,7 +786,7 @@ describe("ConsumerService", () => {
         displayEmail: "fake+email@noba.com",
       });
 
-      when(consumerRepo.getPaymentMethodForConsumer("fake-id", consumer.props.id)).thenResolve(null);
+      when(mockConsumerRepo.getPaymentMethodForConsumer("fake-id", consumer.props.id)).thenResolve(null);
 
       expect(async () => await consumerService.getPaymentMethodProvider(consumer.props.id, "fake-id")).rejects.toThrow(
         NotFoundException,
@@ -842,8 +850,8 @@ describe("ConsumerService", () => {
         name: "New Fake Name",
       };
 
-      when(consumerRepo.getPaymentMethodForConsumer("fake-id", consumer.props.id)).thenResolve(paymentMethod);
-      when(consumerRepo.updatePaymentMethod(updatedPaymentMethod.id, deepEqual(updatedPaymentMethod))).thenResolve(
+      when(mockConsumerRepo.getPaymentMethodForConsumer("fake-id", consumer.props.id)).thenResolve(paymentMethod);
+      when(mockConsumerRepo.updatePaymentMethod(updatedPaymentMethod.id, deepEqual(updatedPaymentMethod))).thenResolve(
         PaymentMethod.createPaymentMethod({
           ...paymentMethod.props,
           name: "New Fake Name",
@@ -872,7 +880,7 @@ describe("ConsumerService", () => {
         displayEmail: email,
       });
 
-      when(consumerRepo.getPaymentMethodForConsumer(paymentMethodID, consumer.props.id)).thenResolve(null);
+      when(mockConsumerRepo.getPaymentMethodForConsumer(paymentMethodID, consumer.props.id)).thenResolve(null);
       expect(
         async () =>
           await consumerService.updatePaymentMethod(consumer.props.id, { id: paymentMethodID, name: "Fake Name" }),
@@ -911,13 +919,13 @@ describe("ConsumerService", () => {
       expiryDate.setMinutes(expiryDate.getMinutes() + 5);
 
       when(otpService.checkIfOTPIsValidAndCleanup(email, IdentityType.CONSUMER, otp)).thenResolve(true);
-      when(consumerRepo.getCryptoWalletForConsumer("fake-wallet", consumer.props.id)).thenResolve(wallet);
+      when(mockConsumerRepo.getCryptoWalletForConsumer("fake-wallet", consumer.props.id)).thenResolve(wallet);
       when(sanctionedCryptoWalletService.isWalletSanctioned(walletAddress)).thenResolve(false);
-      when(consumerRepo.updateCryptoWallet(anyString(), anything())).thenResolve();
+      when(mockConsumerRepo.updateCryptoWallet(anyString(), anything())).thenResolve();
       await consumerService.confirmWalletUpdateOTP(consumer, "fake-wallet", otp, NotificationMethod.EMAIL);
 
       verify(
-        consumerRepo.updateCryptoWallet(
+        mockConsumerRepo.updateCryptoWallet(
           "fake-wallet",
           deepEqual({
             ...wallet.props,
@@ -940,7 +948,7 @@ describe("ConsumerService", () => {
         displayEmail: email,
       });
 
-      when(consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(null);
+      when(mockConsumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(null);
 
       expect(
         async () => await consumerService.confirmWalletUpdateOTP(consumer, walletID, otp, NotificationMethod.EMAIL),
@@ -972,7 +980,7 @@ describe("ConsumerService", () => {
         consumerID: consumer.props.id,
       });
 
-      when(consumerRepo.getCryptoWalletForConsumer("fake-wallet", consumer.props.id)).thenResolve(wallet);
+      when(mockConsumerRepo.getCryptoWalletForConsumer("fake-wallet", consumer.props.id)).thenResolve(wallet);
 
       when(otpService.checkIfOTPIsValidAndCleanup(consumer.props.email, IdentityType.CONSUMER, wrongOtp)).thenResolve(
         false,
@@ -1005,7 +1013,7 @@ describe("ConsumerService", () => {
         consumerID: consumer.props.id,
       });
 
-      when(consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(wallet);
+      when(mockConsumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(wallet);
 
       const response = await consumerService.getCryptoWallet(consumer, walletID);
       expect(response).toStrictEqual(wallet);
@@ -1022,7 +1030,7 @@ describe("ConsumerService", () => {
         email: email,
         displayEmail: email,
       });
-      when(consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(null);
+      when(mockConsumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(null);
 
       const response = await consumerService.getCryptoWallet(consumer, walletID);
       expect(response).toStrictEqual(null);
@@ -1049,11 +1057,11 @@ describe("ConsumerService", () => {
         consumerID: consumer.props.id,
       });
 
-      when(consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(wallet);
-      when(consumerRepo.updateCryptoWallet(anyString(), anything())).thenResolve();
+      when(mockConsumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(wallet);
+      when(mockConsumerRepo.updateCryptoWallet(anyString(), anything())).thenResolve();
       await consumerService.removeCryptoWallet(consumer, walletID);
       verify(
-        consumerRepo.updateCryptoWallet(
+        mockConsumerRepo.updateCryptoWallet(
           walletID,
           deepEqual({
             ...wallet.props,
@@ -1085,11 +1093,11 @@ describe("ConsumerService", () => {
       });
 
       when(otpService.saveOTP(consumer.props.email, IdentityType.CONSUMER, 111111)).thenResolve();
-      when(consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(null);
-      when(consumerRepo.addCryptoWallet(anything())).thenResolve();
+      when(mockConsumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(null);
+      when(mockConsumerRepo.addCryptoWallet(anything())).thenResolve();
       await consumerService.addOrUpdateCryptoWallet(consumer, wallet, NotificationMethod.EMAIL);
 
-      verify(consumerRepo.addCryptoWallet(deepEqual(wallet))).once();
+      verify(mockConsumerRepo.addCryptoWallet(deepEqual(wallet))).once();
 
       verify(
         notificationService.sendNotification(
@@ -1127,11 +1135,11 @@ describe("ConsumerService", () => {
       });
 
       when(otpService.saveOTP(consumer.props.phone, IdentityType.CONSUMER, 111111)).thenResolve();
-      when(consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(null);
-      when(consumerRepo.addCryptoWallet(anything())).thenResolve();
+      when(mockConsumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(null);
+      when(mockConsumerRepo.addCryptoWallet(anything())).thenResolve();
       await consumerService.addOrUpdateCryptoWallet(consumer, wallet, NotificationMethod.PHONE);
 
-      verify(consumerRepo.addCryptoWallet(deepEqual(wallet))).once();
+      verify(mockConsumerRepo.addCryptoWallet(deepEqual(wallet))).once();
 
       verify(
         notificationService.sendNotification(
@@ -1171,11 +1179,11 @@ describe("ConsumerService", () => {
         ...wallet.props,
         status: WalletStatus.APPROVED,
       });
-      when(consumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(wallet);
-      when(consumerRepo.updateCryptoWallet(anyString(), anything())).thenResolve();
+      when(mockConsumerRepo.getCryptoWalletForConsumer(walletID, consumer.props.id)).thenResolve(wallet);
+      when(mockConsumerRepo.updateCryptoWallet(anyString(), anything())).thenResolve();
       await consumerService.addOrUpdateCryptoWallet(consumer, updatedWallet, NotificationMethod.EMAIL);
 
-      verify(consumerRepo.updateCryptoWallet(walletID, deepEqual(updatedWallet.props))).once();
+      verify(mockConsumerRepo.updateCryptoWallet(walletID, deepEqual(updatedWallet.props))).once();
     });
   });
 
@@ -1224,7 +1232,7 @@ describe("ConsumerService", () => {
         phone: phone,
       });
 
-      when(consumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
+      when(mockConsumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
       when(otpService.checkIfOTPIsValidAndCleanup(phone, IdentityType.CONSUMER, phoneUpdateRequest.otp)).thenResolve(
         false,
       );
@@ -1234,19 +1242,19 @@ describe("ConsumerService", () => {
       );
 
       phoneUpdateRequest.otp = otp; //correct otp
-      when(consumerRepo.getConsumerByPhone(phone)).thenResolve(Result.fail(anything()));
+      when(mockConsumerRepo.getConsumerByPhone(phone)).thenResolve(Result.fail(anything()));
       when(otpService.checkIfOTPIsValidAndCleanup(phone, IdentityType.CONSUMER, phoneUpdateRequest.otp)).thenResolve(
         true,
       );
-      when(consumerRepo.isHandleTaken(anyString())).thenResolve(false);
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(consumerRepo.updateConsumer(anyString(), anything())).thenResolve(expectedUpdatedConsumer);
+      when(mockConsumerRepo.isHandleTaken(anyString())).thenResolve(false);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(mockConsumerRepo.updateConsumer(anyString(), anything())).thenResolve(expectedUpdatedConsumer);
 
       const updateConsumerResponse = await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
 
       expect(updateConsumerResponse).toEqual(expectedUpdatedConsumer);
 
-      const [consumerID, updatedConsumer] = capture(consumerRepo.updateConsumer).last();
+      const [consumerID, updatedConsumer] = capture(mockConsumerRepo.updateConsumer).last();
       expect(consumerID).toBe(consumer.props.id);
       expect(updatedConsumer.phone).toStrictEqual(expectedUpdatedConsumer.props.phone);
       expect(updatedConsumer.handle).toBeDefined();
@@ -1271,7 +1279,7 @@ describe("ConsumerService", () => {
         otp: otp, //correct otp
       };
 
-      when(consumerRepo.getConsumerByPhone(phone)).thenResolve(Result.ok(anything()));
+      when(mockConsumerRepo.getConsumerByPhone(phone)).thenResolve(Result.ok(anything()));
       when(otpService.checkIfOTPIsValidAndCleanup(phone, IdentityType.CONSUMER, phoneUpdateRequest.otp)).thenResolve(
         true,
       );
@@ -1335,8 +1343,8 @@ describe("ConsumerService", () => {
         { phoneNumbers: [], emails: [consumer2.props.email] },
       ];
 
-      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactListDTO[0]))).thenResolve(Result.ok(consumer));
-      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactListDTO[1]))).thenResolve(Result.ok(consumer2));
+      when(mockConsumerRepo.findConsumerByContactInfo(deepEqual(contactListDTO[0]))).thenResolve(Result.ok(consumer));
+      when(mockConsumerRepo.findConsumerByContactInfo(deepEqual(contactListDTO[1]))).thenResolve(Result.ok(consumer2));
 
       const consumers = await consumerService.findConsumersByContactInfo(contactListDTO);
       expect(consumers).toEqual([consumer, consumer2]);
@@ -1348,8 +1356,12 @@ describe("ConsumerService", () => {
         { phoneNumbers: [], emails: ["mock-unknown-2@mock.com"] },
       ];
 
-      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactListDTO[0]))).thenResolve(Result.fail("Not found"));
-      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactListDTO[1]))).thenResolve(Result.fail("Not found"));
+      when(mockConsumerRepo.findConsumerByContactInfo(deepEqual(contactListDTO[0]))).thenResolve(
+        Result.fail("Not found"),
+      );
+      when(mockConsumerRepo.findConsumerByContactInfo(deepEqual(contactListDTO[1]))).thenResolve(
+        Result.fail("Not found"),
+      );
 
       const consumers = await consumerService.findConsumersByContactInfo(contactListDTO);
       expect(consumers).toEqual([null, null]);
@@ -1376,8 +1388,8 @@ describe("ConsumerService", () => {
 
       const contactInfo = { phoneNumbers: ["+15553339999"], emails: [] };
       const contactInfo2 = { phoneNumbers: ["+575553339999"], emails: [] };
-      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactInfo))).thenResolve(Result.ok(consumer));
-      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactInfo2))).thenResolve(Result.ok(consumer2));
+      when(mockConsumerRepo.findConsumerByContactInfo(deepEqual(contactInfo))).thenResolve(Result.ok(consumer));
+      when(mockConsumerRepo.findConsumerByContactInfo(deepEqual(contactInfo2))).thenResolve(Result.ok(consumer2));
 
       await consumerService.findConsumersByContactInfo(contactListDTO);
     });
@@ -1400,8 +1412,8 @@ describe("ConsumerService", () => {
 
       const contactInfo = { phoneNumbers: [], emails: ["mock@mock.com"] };
       const contactInfo2 = { phoneNumbers: [], emails: ["mock2@mock.com"] };
-      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactInfo))).thenResolve(Result.ok(consumer));
-      when(consumerRepo.findConsumerByContactInfo(deepEqual(contactInfo2))).thenResolve(Result.ok(consumer2));
+      when(mockConsumerRepo.findConsumerByContactInfo(deepEqual(contactInfo))).thenResolve(Result.ok(consumer));
+      when(mockConsumerRepo.findConsumerByContactInfo(deepEqual(contactInfo2))).thenResolve(Result.ok(consumer2));
 
       await consumerService.findConsumersByContactInfo(contactListDTO);
     });
@@ -1442,7 +1454,9 @@ describe("ConsumerService", () => {
 
       const expectedConsumers = [consumer, consumer2];
 
-      when(consumerRepo.findConsumersByPublicInfo("jon", 3)).thenResolve(Result.ok<Array<Consumer>>(expectedConsumers));
+      when(mockConsumerRepo.findConsumersByPublicInfo("jon", 3)).thenResolve(
+        Result.ok<Array<Consumer>>(expectedConsumers),
+      );
 
       const consumers = await consumerService.findConsumersByPublicInfo("jon", 3);
       expect(consumers).toEqual(expectedConsumers);
@@ -1481,21 +1495,21 @@ describe("ConsumerService", () => {
         },
       });
 
-      when(consumerRepo.findConsumersByPublicInfo("jon", 3)).thenResolve(Result.ok<Array<Consumer>>([]));
+      when(mockConsumerRepo.findConsumersByPublicInfo("jon", 3)).thenResolve(Result.ok<Array<Consumer>>([]));
 
       const consumers = await consumerService.findConsumersByPublicInfo("jon", 3);
       expect(consumers).toEqual([]);
     });
 
     it("should return empty array if no consumers found", async () => {
-      when(consumerRepo.findConsumersByPublicInfo("unknown", 2)).thenResolve(Result.ok([]));
+      when(mockConsumerRepo.findConsumersByPublicInfo("unknown", 2)).thenResolve(Result.ok([]));
 
       const consumers = await consumerService.findConsumersByPublicInfo("unknown", 2);
       expect(consumers).toEqual([]);
     });
 
     it("should throw ServiceException if findConsumers fails", async () => {
-      when(consumerRepo.findConsumersByPublicInfo("unknown", 2)).thenResolve(Result.fail("Prisma failed!"));
+      when(mockConsumerRepo.findConsumersByPublicInfo("unknown", 2)).thenResolve(Result.fail("Prisma failed!"));
 
       expect(consumerService.findConsumersByPublicInfo("unknown", 2)).rejects.toThrow(ServiceException);
     });
@@ -1505,8 +1519,8 @@ describe("ConsumerService", () => {
     it("should find consumers by specific ID", async () => {
       const consumer = getRandomConsumer();
 
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      const structuredFieldSearchSpy = jest.spyOn(consumerRepo, "findConsumersByStructuredFields");
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      const structuredFieldSearchSpy = jest.spyOn(mockConsumerRepo, "findConsumersByStructuredFields");
 
       const consumers = await consumerService.findConsumers({ consumerID: consumer.props.id });
       expect(consumers).toEqual([consumer]);
@@ -1514,7 +1528,7 @@ describe("ConsumerService", () => {
     });
 
     it("should return empty array if no consumers found by specific ID", async () => {
-      when(consumerRepo.getConsumer("1234567890")).thenResolve(undefined);
+      when(mockConsumerRepo.getConsumer("1234567890")).thenResolve(undefined);
 
       const consumers = await consumerService.findConsumers({ consumerID: "1234567890" });
       expect(consumers).toEqual([]);
@@ -1525,10 +1539,10 @@ describe("ConsumerService", () => {
       consumer.props.firstName = "Rosie";
       consumer.props.lastName = "Noba";
 
-      when(consumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Rosie Noba" }))).thenResolve(
+      when(mockConsumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Rosie Noba" }))).thenResolve(
         Result.ok<Array<Consumer>>([consumer]),
       );
-      const idSearchSpy = jest.spyOn(consumerRepo, "getConsumer");
+      const idSearchSpy = jest.spyOn(mockConsumerRepo, "getConsumer");
 
       const consumers = await consumerService.findConsumers({ name: "Rosie Noba" });
       expect(consumers).toEqual([consumer]);
@@ -1555,7 +1569,7 @@ describe("ConsumerService", () => {
       });
 
       when(
-        consumerRepo.findConsumersByStructuredFields(
+        mockConsumerRepo.findConsumersByStructuredFields(
           deepEqual({
             name: `${consumer.props.firstName} ${consumer.props.lastName}`,
             email: consumer.props.email,
@@ -1565,7 +1579,7 @@ describe("ConsumerService", () => {
           }),
         ),
       ).thenResolve(Result.ok<Array<Consumer>>([consumer]));
-      const idSearchSpy = jest.spyOn(consumerRepo, "getConsumer");
+      const idSearchSpy = jest.spyOn(mockConsumerRepo, "getConsumer");
 
       const consumers = await consumerService.findConsumers({
         name: "Rosie Noba",
@@ -1579,14 +1593,16 @@ describe("ConsumerService", () => {
     });
 
     it("should return empty array if no consumers found", async () => {
-      when(consumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(Result.ok([]));
+      when(mockConsumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
+        Result.ok([]),
+      );
 
       const consumers = await consumerService.findConsumers({ name: "Blah Blah" });
       expect(consumers).toEqual([]);
     });
 
     it("should throw ServiceException if findConsumers fails", async () => {
-      when(consumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
+      when(mockConsumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
         Result.fail("Prisma failed!"),
       );
 
@@ -1623,7 +1639,7 @@ describe("ConsumerService", () => {
 
       emailUpdateRequest.otp = otp; //correct otp
 
-      when(consumerRepo.getConsumerByEmail(email.toLowerCase())).thenResolve(Result.fail(anything()));
+      when(mockConsumerRepo.getConsumerByEmail(email.toLowerCase())).thenResolve(Result.fail(anything()));
       const expectedUpdatedConsumer = Consumer.createConsumer({
         ...consumer.props,
         email: email.toLowerCase(),
@@ -1632,9 +1648,9 @@ describe("ConsumerService", () => {
       when(otpService.checkIfOTPIsValidAndCleanup(email, IdentityType.CONSUMER, emailUpdateRequest.otp)).thenResolve(
         true,
       );
-      when(consumerRepo.isHandleTaken(anyString())).thenResolve(false);
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(consumerRepo.updateConsumer(anyString(), anything())).thenResolve(expectedUpdatedConsumer);
+      when(mockConsumerRepo.isHandleTaken(anyString())).thenResolve(false);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(mockConsumerRepo.updateConsumer(anyString(), anything())).thenResolve(expectedUpdatedConsumer);
       when(
         notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
           locale: consumer.props.locale,
@@ -1648,7 +1664,7 @@ describe("ConsumerService", () => {
       // update consumer
       const updateConsumerResponse = await consumerService.updateConsumerEmail(consumer, emailUpdateRequest);
 
-      const [consumerID, updatedConsumer] = capture(consumerRepo.updateConsumer).last();
+      const [consumerID, updatedConsumer] = capture(mockConsumerRepo.updateConsumer).last();
       expect(consumerID).toBe(consumer.props.id);
       expect(updatedConsumer.email).toStrictEqual(expectedUpdatedConsumer.props.email);
       expect(updatedConsumer.displayEmail).toStrictEqual(expectedUpdatedConsumer.props.displayEmail);
@@ -1690,7 +1706,7 @@ describe("ConsumerService", () => {
         otp: otp, //correct otp
       };
 
-      when(consumerRepo.getConsumerByEmail(email.toLowerCase())).thenResolve(Result.ok(anything()));
+      when(mockConsumerRepo.getConsumerByEmail(email.toLowerCase())).thenResolve(Result.ok(anything()));
       when(otpService.checkIfOTPIsValidAndCleanup(email, IdentityType.CONSUMER, otp)).thenResolve(true);
       expect(async () => await consumerService.updateConsumerEmail(consumer, emailUpdateRequest)).rejects.toThrow(
         BadRequestException,
@@ -1711,7 +1727,7 @@ describe("ConsumerService", () => {
         email: "rosie@noba.com",
         handle: handle,
       });
-      when(consumerRepo.getConsumerIDByHandle(handle)).thenResolve(consumer.props.id);
+      when(mockConsumerRepo.getConsumerIDByHandle(handle)).thenResolve(consumer.props.id);
       const consumerId = await consumerService.findConsumerIDByHandle(handle);
       expect(consumerId).toEqual(consumer.props.id);
     });
@@ -1725,14 +1741,14 @@ describe("ConsumerService", () => {
         email: "rosie@noba.com",
         handle: handle,
       });
-      when(consumerRepo.getConsumerIDByHandle(handle)).thenResolve(consumer.props.id);
+      when(mockConsumerRepo.getConsumerIDByHandle(handle)).thenResolve(consumer.props.id);
       const consumerId = await consumerService.findConsumerIDByHandle("$" + handle);
       expect(consumerId).toEqual(consumer.props.id);
     });
 
     it("should return null if handle doesn't exist", async () => {
       const handle = "rosie";
-      when(consumerRepo.getConsumerIDByHandle(handle)).thenResolve(null);
+      when(mockConsumerRepo.getConsumerIDByHandle(handle)).thenResolve(null);
       const consumerId = await consumerService.findConsumerIDByHandle("$" + handle);
       expect(consumerId).toEqual(null);
     });
@@ -1748,14 +1764,14 @@ describe("ConsumerService", () => {
         email: "rosie@noba.com",
         referralCode: referralCode,
       });
-      when(consumerRepo.getConsumerIDByReferralCode(referralCode)).thenResolve(consumer.props.id);
+      when(mockConsumerRepo.getConsumerIDByReferralCode(referralCode)).thenResolve(consumer.props.id);
       const consumerId = await consumerService.findConsumerIDByReferralCode(referralCode);
       expect(consumerId).toEqual(consumer.props.id);
     });
 
     it("should return null if referral code doesn't exist", async () => {
       const referralCode = "1234567890";
-      when(consumerRepo.getConsumerIDByReferralCode(referralCode)).thenResolve(null);
+      when(mockConsumerRepo.getConsumerIDByReferralCode(referralCode)).thenResolve(null);
       const consumerId = await consumerService.findConsumerIDByReferralCode(referralCode);
       expect(consumerId).toEqual(null);
     });
@@ -1801,7 +1817,7 @@ describe("ConsumerService", () => {
     });
 
     it("should allow handle less than 22 characters and different cases", async () => {
-      when(consumerRepo.isHandleTaken("aBCdEfghIjklMnopQRSTuv")).thenResolve(false);
+      when(mockConsumerRepo.isHandleTaken("aBCdEfghIjklMnopQRSTuv")).thenResolve(false);
       const response = await consumerService.isHandleAvailable("aBCdEfghIjklMnopQRSTuv");
       expect(response).toBeTruthy();
     });
@@ -1814,7 +1830,7 @@ describe("ConsumerService", () => {
     });
 
     it("should allow handle if it starts with upper case letter or number", async () => {
-      when(consumerRepo.isHandleTaken(anything())).thenResolve(false);
+      when(mockConsumerRepo.isHandleTaken(anything())).thenResolve(false);
 
       const response1 = await consumerService.isHandleAvailable("My-Name");
       const response2 = await consumerService.isHandleAvailable("007-Bond");
@@ -1823,7 +1839,7 @@ describe("ConsumerService", () => {
     });
 
     it("should allow valid handle with spanish characters", async () => {
-      when(consumerRepo.isHandleTaken(anything())).thenResolve(false);
+      when(mockConsumerRepo.isHandleTaken(anything())).thenResolve(false);
 
       const response = await consumerService.isHandleAvailable("ñOBa-éícd");
       expect(response).toBeTruthy();
@@ -1857,21 +1873,21 @@ describe("ConsumerService", () => {
     });
 
     it("should return 'true' if 'handle' has hiphen in between", async () => {
-      when(consumerRepo.isHandleTaken("ab-cd")).thenResolve(false);
+      when(mockConsumerRepo.isHandleTaken("ab-cd")).thenResolve(false);
 
       const isHandleAvaialble = await consumerService.isHandleAvailable("ab-cd");
       expect(isHandleAvaialble).toBe(true);
     });
 
     it("should return 'false' if the handle is already taken", async () => {
-      when(consumerRepo.isHandleTaken("test")).thenResolve(true);
+      when(mockConsumerRepo.isHandleTaken("test")).thenResolve(true);
 
       const isHandleAvaialble = await consumerService.isHandleAvailable("test");
       expect(isHandleAvaialble).toBe(false);
     });
 
     it("should return 'true' if the handle is not taken", async () => {
-      when(consumerRepo.isHandleTaken("test")).thenResolve(false);
+      when(mockConsumerRepo.isHandleTaken("test")).thenResolve(false);
 
       const isHandleAvaialble = await consumerService.isHandleAvailable("test");
       expect(isHandleAvaialble).toBe(true);
@@ -1896,7 +1912,7 @@ describe("ConsumerService", () => {
       const employee = getRandomEmployee(consumer.props.id, employer.id);
 
       when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
-      when(consumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(notificationService.sendNotification(anyString(), anything())).thenResolve();
 
       const response = await consumerService.registerWithAnEmployer(employer.id, consumer.props.id, 100);
@@ -2055,15 +2071,19 @@ describe("ConsumerService", () => {
         ServiceErrorCode.SEMANTIC_VALIDATION,
       );
     });
+
     it("should throw ServiceException if identificationType is undefined or null", async () => {
       expect(consumerService.getIdentificationForConsumer(null, "fake")).rejects.toThrowServiceException(
         ServiceErrorCode.SEMANTIC_VALIDATION,
       );
     });
+
     it("should return the identification for the consumer", async () => {
       const consumer = getRandomConsumer();
       const { identification } = getRandomIdentification(consumer.props.id);
-      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(identification);
+      when(mockConsumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(
+        identification,
+      );
       const decryptedIdentification = { ...identification, value: identification.value + "-decrypted" };
       when(mockKMSService.decryptString(identification.value, KmsKeyType.SSN)).thenResolve(
         identification.value + "-decrypted",
@@ -2071,10 +2091,11 @@ describe("ConsumerService", () => {
       const response = await consumerService.getIdentificationForConsumer(consumer.props.id, identification.id);
       expect(response).toEqual(decryptedIdentification);
     });
+
     it("should throw ServiceException if identification is not found", async () => {
       const consumer = getRandomConsumer();
       const { identification } = getRandomIdentification(consumer.props.id);
-      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(null);
+      when(mockConsumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(null);
       expect(
         consumerService.getIdentificationForConsumer(consumer.props.id, identification.id),
       ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
@@ -2093,7 +2114,7 @@ describe("ConsumerService", () => {
       const { identification } = getRandomIdentification(consumer.props.id);
       const { identification: identification2 } = getRandomIdentification(consumer.props.id);
 
-      when(consumerRepo.getAllIdentificationsForConsumer(consumer.props.id)).thenResolve([
+      when(mockConsumerRepo.getAllIdentificationsForConsumer(consumer.props.id)).thenResolve([
         identification,
         identification2,
       ]);
@@ -2115,7 +2136,7 @@ describe("ConsumerService", () => {
     it("should return empty array if no identifications exist", async () => {
       const consumer = getRandomConsumer();
 
-      when(consumerRepo.getAllIdentificationsForConsumer(consumer.props.id)).thenResolve([]);
+      when(mockConsumerRepo.getAllIdentificationsForConsumer(consumer.props.id)).thenResolve([]);
 
       const response = await consumerService.getAllIdentifications(consumer.props.id);
 
@@ -2144,11 +2165,18 @@ describe("ConsumerService", () => {
       const consumer = getRandomConsumer();
       const { identification, identificationCreateInput } = getRandomIdentification(consumer.props.id);
 
+      when(
+        mockIdentificationService.validateIdentificationType(
+          identificationCreateInput.countryCode,
+          identificationCreateInput.type,
+          identificationCreateInput.value,
+        ),
+      ).thenResolve();
       when(mockKMSService.encryptString(identificationCreateInput.value, KmsKeyType.SSN)).thenResolve(
         "mockedEncryptedValue",
       );
       when(
-        consumerRepo.addIdentification(deepEqual({ ...identificationCreateInput, value: "mockedEncryptedValue" })),
+        mockConsumerRepo.addIdentification(deepEqual({ ...identificationCreateInput, value: "mockedEncryptedValue" })),
       ).thenResolve(identification);
 
       const response = await consumerService.addIdentification(consumer.props.id, identificationCreateInput);
@@ -2200,10 +2228,20 @@ describe("ConsumerService", () => {
       const { identification } = getRandomIdentification(consumer.props.id);
 
       when(mockKMSService.encryptString(identification.value, KmsKeyType.SSN)).thenResolve("mockedEncryptedValue");
+      when(
+        mockIdentificationService.validateIdentificationType(
+          identification.countryCode,
+          identification.type,
+          identification.value,
+        ),
+      ).thenResolve();
 
+      when(mockConsumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(
+        identification,
+      );
       const encryptedIdentification = { ...identification, value: "mockedEncryptedValue" };
       when(
-        consumerRepo.updateIdentification(identification.id, deepEqual({ value: encryptedIdentification.value })),
+        mockConsumerRepo.updateIdentification(identification.id, deepEqual({ value: encryptedIdentification.value })),
       ).thenResolve(encryptedIdentification);
 
       const response = await consumerService.updateIdentification(consumer.props.id, identification.id, {
@@ -2231,8 +2269,10 @@ describe("ConsumerService", () => {
       const consumer = getRandomConsumer();
       const { identification } = getRandomIdentification(consumer.props.id);
 
-      when(consumerRepo.deleteIdentification(identification.id)).thenResolve();
-      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(identification);
+      when(mockConsumerRepo.deleteIdentification(identification.id)).thenResolve();
+      when(mockConsumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(
+        identification,
+      );
 
       await consumerService.deleteIdentification(consumer.props.id, identification.id);
     });
@@ -2241,7 +2281,7 @@ describe("ConsumerService", () => {
       const consumer = getRandomConsumer();
       const { identification } = getRandomIdentification(consumer.props.id);
 
-      when(consumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(null);
+      when(mockConsumerRepo.getIdentificationForConsumer(consumer.props.id, identification.id)).thenResolve(null);
 
       expect(
         consumerService.deleteIdentification(consumer.props.id, identification.id),

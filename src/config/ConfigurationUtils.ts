@@ -22,6 +22,8 @@ export const SERVER_LOG_FILE_PATH = "logFilePath";
 // It is assumed that the every dependent files are present in 'appconfigs/' folder itself.
 export const LOCATION_DATA_FILE_NAME = "locationDataFileName";
 export const LOCATION_DATA_FILE_PATH = "LOCATION_DATA_FILE_PATH";
+export const IDENTIFICATION_TYPES_FILE_NAME = "identificationTypesFileName";
+export const IDENTIFICATION_TYPES_FILE_PATH = "IDENTIFICATION_TYPES_FILE_PATH";
 export const ASSETS_BUCKET_NAME = "assetsBucketName";
 export const GENERATED_DATA_BUCKET_NAME = "generatedDataBucketName";
 export const DB_DUMP_FILES_BUCKET_PATH = "dbDumpFilesBucketPath";

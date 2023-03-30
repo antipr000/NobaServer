@@ -27,6 +27,8 @@ import { HealthCheckStatus } from "../core/domain/HealthCheckTypes";
 import { ALLOWED_DEPTH } from "../modules/common/dto/HealthCheckQueryDTO";
 import { WorkflowExecutor } from "../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../infra/temporal/mocks/mock.workflow.executor";
+import { IdentificationService } from "../modules/common/identification.service";
+import { getMockIdentificationServiceWithDefaults } from "../modules/common/mocks/mock.identification.service";
 
 describe("AppController", () => {
   let appController: AppController;
@@ -40,6 +42,7 @@ describe("AppController", () => {
   let mockVerificationService: VerificationService;
   let mockCircleService: CircleService;
   let mockWorkflowExecutor: WorkflowExecutor;
+  let mockIdentificationService: IdentificationService;
 
   beforeEach(async () => {
     appService = getMockAppServiceWithDefaults();
@@ -52,6 +55,7 @@ describe("AppController", () => {
     mockVerificationService = getMockVerificationServiceWithDefaults();
     mockCircleService = getMockCircleServiceWithDefaults();
     mockWorkflowExecutor = getMockWorkflowExecutorWithDefaults();
+    mockIdentificationService = getMockIdentificationServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -96,6 +100,10 @@ describe("AppController", () => {
         {
           provide: WorkflowExecutor,
           useFactory: () => instance(mockWorkflowExecutor),
+        },
+        {
+          provide: IdentificationService,
+          useFactory: () => instance(mockIdentificationService),
         },
       ],
     }).compile();
@@ -269,6 +277,81 @@ describe("AppController", () => {
       expect(async () => {
         const result = await appController.getSupportedCountry("ZZ");
       }).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe("getIdentificationTypes()", () => {
+    it("should return the list of identification types", async () => {
+      const northAmericanCountries = [
+        {
+          countryCode: "US",
+          identificationTypes: [
+            {
+              name: "Driver's License",
+              type: "DRIVERS_LICENSE",
+              regex: "^[A-Z0-9]{6,8}$",
+              maxLength: 8,
+            },
+          ],
+        },
+        {
+          countryCode: "CA",
+          identificationTypes: [
+            {
+              name: "Driver's License",
+              type: "DRIVERS_LICENSE",
+              regex: "^[A-Z0-9]{6,8}$",
+              maxLength: 8,
+            },
+          ],
+        },
+      ];
+
+      when(mockIdentificationService.getIdentificationTypes()).thenResolve(northAmericanCountries);
+
+      const result = await appController.getIdentificationTypes();
+      expect(result.length).toEqual(2);
+      expect(result[0]).toEqual(northAmericanCountries[0]);
+      expect(result[1]).toEqual(northAmericanCountries[1]);
+    });
+
+    it("should return a single country's identification types when filtering by country", async () => {
+      const northAmericanCountries = [
+        {
+          countryCode: "US",
+          identificationTypes: [
+            {
+              name: "Driver's License",
+              type: "DRIVERS_LICENSE",
+              regex: "^[A-Z0-9]{6,8}$",
+              maxLength: 8,
+            },
+          ],
+        },
+        {
+          countryCode: "CA",
+          identificationTypes: [
+            {
+              name: "Driver's License",
+              type: "DRIVERS_LICENSE",
+              regex: "^[A-Z0-9]{6,8}$",
+              maxLength: 8,
+            },
+          ],
+        },
+      ];
+
+      when(mockIdentificationService.getIdentificationTypesForCountry("US")).thenResolve(northAmericanCountries[0]);
+
+      const result = await appController.getIdentificationTypes("US");
+      expect(result.length).toEqual(1);
+      expect(result[0]).toEqual(northAmericanCountries[0]);
+    });
+
+    it("should throw not found error when country doesn't exist", async () => {
+      when(mockIdentificationService.getIdentificationTypesForCountry("ZZ")).thenThrow(new NotFoundException());
+
+      expect(appController.getIdentificationTypes("ZZ")).rejects.toThrow(NotFoundException);
     });
   });
 

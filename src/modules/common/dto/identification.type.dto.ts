@@ -1,15 +1,15 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class IdentificationDTO {
-  @ApiProperty()
-  id: string;
-
+export class IdentificationTypeDTO {
   @ApiProperty()
   type: string;
 
   @ApiProperty()
-  value: string;
+  name: string;
 
   @ApiProperty()
-  countryCode: string;
+  maxLength: number;
+
+  @ApiProperty()
+  regex: string;
 }

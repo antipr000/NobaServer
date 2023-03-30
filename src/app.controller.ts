@@ -41,6 +41,8 @@ import { HealthCheckStatus } from "./core/domain/HealthCheckTypes";
 import { CircleService } from "./modules/psp/circle.service";
 import { ALLOWED_DEPTH, HealthCheckQueryDTO } from "./modules/common/dto/HealthCheckQueryDTO";
 import { WorkflowExecutor } from "./infra/temporal/workflow.executor";
+import { IdentificationService } from "./modules/common/identification.service";
+import { IdentificationTypeCountryDTO } from "./modules/common/dto/identification.type.country.dto";
 
 @Controller("v1")
 @ApiHeaders(getCommonHeaders())
@@ -49,6 +51,7 @@ export class AppController {
     private readonly currencyService: CurrencyService,
     private readonly exchangeRateService: ExchangeRateService,
     private readonly locationService: LocationService,
+    private readonly identificationService: IdentificationService,
     private readonly creditCardService: CreditCardService,
     private readonly configurationsProviderService: ConfigurationProviderService,
     private readonly monoService: MonoService,
@@ -187,6 +190,29 @@ export class AppController {
   @ApiNotFoundResponse({ description: "Country code not found" })
   async getSupportedCountry(@Param("countryCode") countryCode: string): Promise<LocationDTO> {
     return this.locationService.getLocationDetails(countryCode);
+  }
+
+  @Public()
+  @Get("identificationtypes")
+  @ApiOperation({ summary: "Returns a list of identification types" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: "Map of country identification types",
+    type: [IdentificationTypeCountryDTO],
+  })
+  @ApiQuery({ name: "countryCode", type: "string", description: "Country code", required: false })
+  @ApiTags("Assets")
+  async getIdentificationTypes(@Query("countryCode") countryCode?: string): Promise<IdentificationTypeCountryDTO[]> {
+    if (countryCode) {
+      const identificationTypes = await this.identificationService.getIdentificationTypesForCountry(countryCode);
+      if (identificationTypes) {
+        return [identificationTypes];
+      } else {
+        throw new NotFoundException(`Identification types not found for country code ${countryCode}`);
+      }
+    }
+
+    return this.identificationService.getIdentificationTypes();
   }
 
   @Public()
