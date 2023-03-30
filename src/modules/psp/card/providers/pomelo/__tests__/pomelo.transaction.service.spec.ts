@@ -1,9 +1,21 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { POMELO_AFFINITY_GROUP, POMELO_CLIENT_ID, POMELO_CLIENT_SECRET, POMELO_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../../../config/ConfigurationUtils";
+import {
+  POMELO_AFFINITY_GROUP,
+  POMELO_CLIENT_ID,
+  POMELO_CLIENT_SECRET,
+  POMELO_CONFIG_KEY,
+  SERVER_LOG_FILE_PATH,
+} from "../../../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../../../core/utils/WinstonModule";
-import { PomeloTransactionService } from "../pomelo.transaction.service";
-import { PomeloTransactionAuthzDetailStatus, PomeloTransactionAuthzRequest, PomeloTransactionAuthzResponse, PomeloTransactionAuthzSummaryStatus, PomeloTransactionType } from "../dto/pomelo.transaction.service.dto";
+import { PomeloTransactionService } from "../transaction/pomelo.transaction.service";
+import {
+  PomeloTransactionAuthzDetailStatus,
+  PomeloTransactionAuthzRequest,
+  PomeloTransactionAuthzResponse,
+  PomeloTransactionAuthzSummaryStatus,
+  PomeloTransactionType,
+} from "../dto/pomelo.transaction.service.dto";
 import { PomeloCurrency } from "../domain/PomeloTransaction";
 
 const getRawBodyBuffer = (): Buffer => {
@@ -54,12 +66,12 @@ const getRawBodyBuffer = (): Buffer => {
       }]
     }
   }`;
-  return Buffer.from(data, 'utf8');
+  return Buffer.from(data, "utf8");
 };
 const validTimestamp = "1680024224";
 const validSignature = "hmac-sha256 CwWJxPZFqLu2IxGvFxKepAPk6nhaFmJ1xzyH+khLvuo=";
 
-describe("PomeloServiceTests", () => {
+describe("PomeloTransactionServiceTests", () => {
   jest.setTimeout(20000);
 
   let pomeloTransactionService: PomeloTransactionService;
@@ -72,15 +84,13 @@ describe("PomeloServiceTests", () => {
         [POMELO_CLIENT_ID]: "POMELO_CLIENT_ID",
         [POMELO_CLIENT_SECRET]: "POMELO_CLIENT_SECRET",
         [POMELO_AFFINITY_GROUP]: "POMELO_AFFINITY_GROUP",
-      }
+      },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [
-        PomeloTransactionService,
-      ],
+      providers: [PomeloTransactionService],
     }).compile();
 
     pomeloTransactionService = app.get<PomeloTransactionService>(PomeloTransactionService);
@@ -115,9 +125,6 @@ describe("PomeloServiceTests", () => {
         detailedStatus: PomeloTransactionAuthzDetailStatus.OTHER,
         summaryStatus: PomeloTransactionAuthzSummaryStatus.REJECTED,
         message: "",
-        endpoint: "/transactions/authorizations",
-        timestamp: expect.any(String),
-        signature: expect.any(String),
       });
     });
 
@@ -146,9 +153,6 @@ describe("PomeloServiceTests", () => {
           detailedStatus: PomeloTransactionAuthzDetailStatus.OTHER,
           summaryStatus: PomeloTransactionAuthzSummaryStatus.REJECTED,
           message: "",
-          endpoint: "/transactions/authorizations",
-          timestamp: expect.any(String),
-          signature: expect.any(String),
         });
       });
 
@@ -176,9 +180,6 @@ describe("PomeloServiceTests", () => {
           detailedStatus: PomeloTransactionAuthzDetailStatus.OTHER,
           summaryStatus: PomeloTransactionAuthzSummaryStatus.REJECTED,
           message: "",
-          endpoint: "/transactions/authorizations",
-          timestamp: expect.any(String),
-          signature: expect.any(String),
         });
       });
 
@@ -206,9 +207,6 @@ describe("PomeloServiceTests", () => {
           detailedStatus: PomeloTransactionAuthzDetailStatus.OTHER,
           summaryStatus: PomeloTransactionAuthzSummaryStatus.REJECTED,
           message: "",
-          endpoint: "/transactions/authorizations",
-          timestamp: expect.any(String),
-          signature: expect.any(String),
         });
       });
     });
@@ -237,10 +235,18 @@ describe("PomeloServiceTests", () => {
         detailedStatus: PomeloTransactionAuthzDetailStatus.APPROVED,
         summaryStatus: PomeloTransactionAuthzSummaryStatus.APPROVED,
         message: "",
-        endpoint: "/transactions/authorizations",
-        timestamp: expect.any(String),
-        signature: expect.any(String),
       });
+    });
+  });
+
+  describe("signTransactionAuthorizationResponse", () => {
+    it("should sign the request with '/transactions/authorization' endpoint", () => {
+      const receivedSignature = pomeloTransactionService.signTransactionAuthorizationResponse(
+        validTimestamp,
+        getRawBodyBuffer(),
+      );
+
+      expect(receivedSignature).toBe(validSignature);
     });
   });
 });

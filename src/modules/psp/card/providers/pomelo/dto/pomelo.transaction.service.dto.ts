@@ -42,13 +42,7 @@ export type PomeloTransactionAuthzRequest = {
 
 // TODO: "balance" is required for BALANCE_ENQUIRY which is not supported for COL.
 export type PomeloTransactionAuthzResponse = {
-  // response parameters.
   message: string;
   summaryStatus: PomeloTransactionAuthzSummaryStatus;
   detailedStatus: PomeloTransactionAuthzDetailStatus;
-
-  // response validation parameters.
-  signature: string;
-  timestamp: string;
-  endpoint: string;
-}
+};

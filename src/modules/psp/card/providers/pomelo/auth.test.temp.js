@@ -78,7 +78,7 @@ const adjustment = async (req, res) => {
 // checkSignature does all the signature validations that you need to implement
 // to make sure only Pomelo has signed this request and not an attacker. A
 // signature mismatch should abort the http request or return Forbidden
-const checkSignature = async (req) => {
+const checkSignature = async req => {
   // console.log(req.headers);
   // console.log(req.body);
 
@@ -92,9 +92,7 @@ const checkSignature = async (req) => {
   if (signature.startsWith("hmac-sha256")) {
     signature = signature.replace("hmac-sha256 ", "");
   } else {
-    console.log(
-      `Unsupported signature algorithm, expecting hmac-sha256, got ${signature}`
-    );
+    console.log(`Unsupported signature algorithm, expecting hmac-sha256, got ${signature}`);
     return false;
   }
 
@@ -110,11 +108,7 @@ const checkSignature = async (req) => {
   // construct a new hasher and hash timestamp + endpoint + body without any
   // separators nor any decoding
   // console.log("Raw Body: " + rawBody);
-  let hmac = crypto
-    .createHmac("sha256", secret)
-    .update(timestamp)
-    .update(endpoint)
-    .update(rawBody);
+  let hmac = crypto.createHmac("sha256", secret).update(timestamp).update(endpoint).update(rawBody);
 
   let hashResult = hmac.digest("base64"); // calculated signature result
   let hashResultBytes = Buffer.from(hashResult, "base64"); // bytes representation
@@ -125,9 +119,7 @@ const checkSignature = async (req) => {
   signaturesMatch = crypto.timingSafeEqual(hashResultBytes, signatureBytes);
 
   if (!signaturesMatch) {
-    console.log(
-      `Signature mismatch. Received ${signature}, calculated ${hashResult}`
-    );
+    console.log(`Signature mismatch. Received ${signature}, calculated ${hashResult}`);
     return false;
   }
 
@@ -171,17 +163,15 @@ const signResponse = async (body, req, res) => {
 // We do not recommend storing api secrets in your code, specially in plaintext
 // This is here just for example purposes
 var apiSecrets = {
-  "Lp0g+cwb19eEfTn1YIOydEnqPcZOg8YxHctnMe+1cQA=":
-    "uC8fVXzXMyaw1PseV452i6ozQwIIa4olcSpjuvn5E4E=",
-  "5y8NSzLGYSegboKhGT3N8CXjnrv9yDVK=":
-    "pp3NcIQ5byqtgQqmGBKNiUONB5AoLeu3nsET1tIZWKu2p4ubq_mwkWee1YgH99cC",
-  "POMELO_CLIENT_ID": "POMELO_CLIENT_SECRET",
-  "x": "y",
+  "Lp0g+cwb19eEfTn1YIOydEnqPcZOg8YxHctnMe+1cQA=": "uC8fVXzXMyaw1PseV452i6ozQwIIa4olcSpjuvn5E4E=",
+  "5y8NSzLGYSegboKhGT3N8CXjnrv9yDVK=": "pp3NcIQ5byqtgQqmGBKNiUONB5AoLeu3nsET1tIZWKu2p4ubq_mwkWee1YgH99cC",
+  POMELO_CLIENT_ID: "POMELO_CLIENT_SECRET",
+  x: "y",
 };
 
 // getApiSecret returns the api secret for a given api key. We recommend you
 // support multiple key pairs simultaneously and not just one key pair.
-const getApiSecret = (apiKey) => {
+const getApiSecret = apiKey => {
   let apiSecret = apiSecrets[apiKey];
   console.log("RawSecret: ", apiSecret);
   // key = Buffer.from(apiSecret, "base64");
@@ -192,7 +182,7 @@ const getApiSecret = (apiKey) => {
   return key;
 };
 
-const getRawBody = async (req) => {
+const getRawBody = async req => {
   const data = `{
     "transaction": {
       "id": "ctx-55f02942-823c-4f94-8a28-4439dcabf894",
@@ -222,11 +212,11 @@ const getRawBody = async (req) => {
     "amount": {
       "local": {
         "total": 999.9,
-        "currency": "ARS"
+        "currency": "COP"
       },
       "transaction": {
         "total": 9.45,
-        "currency": "EUR"
+        "currency": "COP"
       },
       "settlement": {
         "total": 11.0,
@@ -240,7 +230,7 @@ const getRawBody = async (req) => {
       }]
     }
   }`;
-  const result = Buffer.from(data, 'utf8');
+  const result = Buffer.from(data, "utf8");
   // const x = "Y29uc3QgZGF0YSA9IHsKICAgICJ0cmFuc2FjdGlvbiI6IHsKICAgICAgImlkIjogImN0eC01NWYwMjk0Mi04MjNjLTRmOTQtOGEyOC00NDM5ZGNhYmY4OTQiLAogICAgICAiY291bnRyeV9jb2RlIjogIkVTUCIsCiAgICAgICJ0eXBlIjogIlBVUkNIQVNFIiwKICAgICAgInBvaW50X3R5cGUiOiAiRUNPTU1FUkNFIiwKICAgICAgImVudHJ5X21vZGUiOiAiTUFOVUFMIiwKICAgICAgIm9yaWdpbiI6ICJJTlRFUk5BVElPTkFMIiwKICAgICAgImxvY2FsX2RhdGVfdGltZSI6ICIyMDIzLTAzLTI4VDA5OjAzOjM0IiwKICAgICAgIm9yaWdpbmFsX3RyYW5zYWN0aW9uX2lkIjogbnVsbAogICAgfSwKICAgICJtZXJjaGFudCI6IHsKICAgICAgImlkIjogIjExMTExMTExMTExMTExMSIsCiAgICAgICJtY2MiOiAiNTA0NSIsCiAgICAgICJhZGRyZXNzIjogbnVsbCwKICAgICAgIm5hbWUiOiAiQ29tcHV0ZXIgU29mdHdhcmUiCiAgICB9LAogICAgImNhcmQiOiB7CiAgICAgICJpZCI6ICJjcmQtMTYyOTQ4MzI4NDExNE1HQTlCRiIsCiAgICAgICJwcm9kdWN0X3R5cGUiOiAiUFJFUEFJRCIsCiAgICAgICJwcm92aWRlciI6ICJNQVNURVJDQVJEIiwKICAgICAgImxhc3RfZm91ciI6ICI2NzA4IgogICAgfSwKICAgICJ1c2VyIjogewogICAgICAiaWQiOiAidXNyLTE2MjkyOTM2OTM5MDRETTJVNFQiCiAgICB9LAogICAgImFtb3VudCI6IHsKICAgICAgImxvY2FsIjogewogICAgICAgICJ0b3RhbCI6IDk5OS45LAogICAgICAgICJjdXJyZW5jeSI6ICJBUlMiCiAgICAgIH0sCiAgICAgICJ0cmFuc2FjdGlvbiI6IHsKICAgICAgICAidG90YWwiOiA5LjQ1LAogICAgICAgICJjdXJyZW5jeSI6ICJFVVIiCiAgICAgIH0sCiAgICAgICJzZXR0bGVtZW50IjogewogICAgICAgICJ0b3RhbCI6IDExLjAsCiAgICAgICAgImN1cnJlbmN5IjogIlVTRCIKICAgICAgfSwKICAgICAgImRldGFpbHMiOiBbewogICAgICAgICJ0eXBlIjogIkJBU0UiLAogICAgICAgICJjdXJyZW5jeSI6ICJBUlMiLAogICAgICAgICJhbW91bnQiOiA5OTkuOSwKICAgICAgICAibmFtZSI6ICJCQVNFIgogICAgICB9XQogICAgfQogIH07";
   // const result = Buffer.from(x, "base64")
   console.log(result);
