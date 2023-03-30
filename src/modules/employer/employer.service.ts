@@ -46,7 +46,8 @@ import {
   InvoiceTemplateFields,
 } from "./templates/payroll.invoice.dto";
 import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
-import { uuid } from "uuidv4";
+import { v4 } from "uuid";
+import { Utils } from "../../core/utils/Utils";
 
 @Injectable()
 export class EmployerService {
@@ -344,11 +345,15 @@ export class EmployerService {
     for (const element of templateProcessor.locales) {
       const locale = element;
 
-      const employeeAllocations: InvoiceReceiptEmployeeDisbursement[] = employeeDisbursements.map(allocation => ({
-        employeeName: allocation.employeeName,
-        amount: allocation.amount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
-        creditAmount: allocation.creditAmount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
-      }));
+      let totalCreditAmount = 0;
+      const employeeAllocations: InvoiceReceiptEmployeeDisbursement[] = employeeDisbursements.map(allocation => {
+        totalCreditAmount += Utils.roundToSpecifiedDecimalNumber(allocation.creditAmount, 2);
+        return {
+          employeeName: allocation.employeeName,
+          amount: allocation.amount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
+          creditAmount: allocation.creditAmount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
+        };
+      });
 
       const templateFields: InvoiceReceiptTemplateFields = {
         companyName: companyName,
@@ -357,8 +362,10 @@ export class EmployerService {
         currency: currency,
         allocations: employeeAllocations,
         totalAmount: payroll.totalDebitAmount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
-        totalCreditAmount: payroll.totalCreditAmount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
+        totalCreditAmount: totalCreditAmount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
       };
+
+      console.log(templateFields.totalCreditAmount);
 
       templateProcessor.populateTemplate(locale, templateFields);
     }
@@ -485,7 +492,7 @@ export class EmployerService {
       // We are expecting this scenario
       this.logger.info(`Picking up payroll ${payroll.id} from where it left off in status ${payroll.status}...`);
       // TODO: Add check to ensure workflow is not still running
-      await this.workflowExecutor.executePayrollProcessingWorkflow(payroll.id, `${payroll.id}:${uuid()}`);
+      await this.workflowExecutor.executePayrollProcessingWorkflow(payroll.id, `${payroll.id}:${v4()}`);
       return payroll;
     } else {
       throw new ServiceException({

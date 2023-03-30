@@ -1570,7 +1570,7 @@ describe("EmployerServiceTests", () => {
           employeeID: employee1.id,
           transactionID: "fake-transaction",
           allocationAmount: 100,
-          creditAmount: 5,
+          creditAmount: 15.321,
         },
         {
           id: "fake-disbursement-2",
@@ -1580,10 +1580,13 @@ describe("EmployerServiceTests", () => {
           employeeID: employee2.id,
           transactionID: "fake-transaction",
           allocationAmount: 100,
-          creditAmount: 5,
+          creditAmount: 65.5392,
         },
       ];
 
+      const totalCreditAmount =
+        Utils.roundToSpecifiedDecimalNumber(15.321, 2) + Utils.roundToSpecifiedDecimalNumber(65.5392, 2);
+      console.log(totalCreditAmount);
       const baseTemplateFields: InvoiceReceiptTemplateFields = {
         companyName: employer.name,
         payrollReference: payroll.referenceNumber.toString().padStart(8, "0"),
@@ -1602,10 +1605,9 @@ describe("EmployerServiceTests", () => {
         totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString(), {
           minimumFractionDigits: 2,
         }),
-        totalCreditAmount: payroll.totalCreditAmount.toLocaleString(
-          TemplateProcessModule.TemplateLocale.ENGLISH.toString(),
-          { minimumFractionDigits: 2 },
-        ),
+        totalCreditAmount: totalCreditAmount.toLocaleString(TemplateProcessModule.TemplateLocale.ENGLISH.toString(), {
+          minimumFractionDigits: 2,
+        }),
         allocations: [
           {
             employeeName: `${consumer1.props.firstName} ${consumer1.props.lastName}`,
@@ -1628,10 +1630,9 @@ describe("EmployerServiceTests", () => {
         totalAmount: payroll.totalDebitAmount.toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString(), {
           minimumFractionDigits: 2,
         }),
-        totalCreditAmount: payroll.totalCreditAmount.toLocaleString(
-          TemplateProcessModule.TemplateLocale.SPANISH.toString(),
-          { minimumFractionDigits: 2 },
-        ),
+        totalCreditAmount: totalCreditAmount.toLocaleString(TemplateProcessModule.TemplateLocale.SPANISH.toString(), {
+          minimumFractionDigits: 2,
+        }),
         allocations: [
           {
             employeeName: `${consumer1.props.firstName} ${consumer1.props.lastName}`,
@@ -1645,6 +1646,9 @@ describe("EmployerServiceTests", () => {
           },
         ],
       };
+
+      console.log(englishTemplateFields.totalCreditAmount);
+      console.log(spanishTemplateFields.totalCreditAmount);
 
       when(mockPayrollDisbursementRepo.getAllDisbursementsForPayroll(payroll.id)).thenResolve(payrollDisbursements);
       when(mockEmployeeService.getEmployeeByID(employee1.id)).thenResolve(employee1);
