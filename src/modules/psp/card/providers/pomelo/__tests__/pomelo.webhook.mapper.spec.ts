@@ -624,9 +624,9 @@ describe("PomeloWebhookMapperService", () => {
         },
       };
       const headers = {
-        "X-Endpoint": "ENDPOINT",
-        "X-Timestamp": "999999999",
-        "X-signature": "SIGNATURE",
+        "x-endpoint": "ENDPOINT",
+        "x-timestamp": "999999999",
+        "x-signature": "SIGNATURE",
       };
 
       const response: PomeloTransactionAuthzRequest = pomeloWebhookMapper.convertToPomeloTransactionAuthzRequest(
