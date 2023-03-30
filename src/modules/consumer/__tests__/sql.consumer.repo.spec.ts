@@ -1197,11 +1197,11 @@ describe("ConsumerRepoTests", () => {
     });
   });
 
-  describe("addConfiguration", () => {
+  describe("addConsumerConfiguration", () => {
     it("should add a configuration", async () => {
       const consumerID = await createTestConsumer(prismaService);
 
-      const configuration = await consumerRepo.addConfiguration({
+      const configuration = await consumerRepo.addConsumerConfiguration({
         consumerID,
         name: "test",
         value: "test",
@@ -1213,7 +1213,7 @@ describe("ConsumerRepoTests", () => {
 
     it("should throw error if consumer does not exist", async () => {
       expect(
-        consumerRepo.addConfiguration({
+        consumerRepo.addConsumerConfiguration({
           consumerID: "fake-consumer-id",
           name: "test",
           value: "test",
@@ -1222,17 +1222,17 @@ describe("ConsumerRepoTests", () => {
     });
   });
 
-  describe("updateConfiguration", () => {
+  describe("updateConsumerConfiguration", () => {
     it("should update a configuration", async () => {
       const consumerID = await createTestConsumer(prismaService);
 
-      const configuration = await consumerRepo.addConfiguration({
+      const configuration = await consumerRepo.addConsumerConfiguration({
         consumerID,
         name: "test",
         value: "test",
       });
 
-      const updatedConfiguration = await consumerRepo.updateConfiguration(configuration.id, {
+      const updatedConfiguration = await consumerRepo.updateConsumerConfiguration(configuration.id, {
         value: "updated-value",
       });
 
@@ -1241,9 +1241,9 @@ describe("ConsumerRepoTests", () => {
     });
 
     it("should throw error if configuration does not exist", async () => {
-      expect(consumerRepo.updateConfiguration("fake-id", { value: "updated-value" })).rejects.toThrowRepoException(
-        RepoErrorCode.NOT_FOUND,
-      );
+      expect(
+        consumerRepo.updateConsumerConfiguration("fake-id", { value: "updated-value" }),
+      ).rejects.toThrowRepoException(RepoErrorCode.NOT_FOUND);
     });
   });
 
@@ -1251,13 +1251,13 @@ describe("ConsumerRepoTests", () => {
     it("should get all configurations of Consumer", async () => {
       const consumerID = await createTestConsumer(prismaService);
 
-      const configuration1 = await consumerRepo.addConfiguration({
+      const configuration1 = await consumerRepo.addConsumerConfiguration({
         consumerID,
         name: "test",
         value: "test",
       });
 
-      const configuration2 = await consumerRepo.addConfiguration({
+      const configuration2 = await consumerRepo.addConsumerConfiguration({
         consumerID,
         name: "test2",
         value: "test2",
@@ -1275,21 +1275,21 @@ describe("ConsumerRepoTests", () => {
     });
   });
 
-  describe("deleteConfiguration", () => {
+  describe("deleteConsumerConfiguration", () => {
     it("should delete configuration", async () => {
       const consumerID = await createTestConsumer(prismaService);
 
-      const configuration = await consumerRepo.addConfiguration({
+      const configuration = await consumerRepo.addConsumerConfiguration({
         consumerID,
         name: "test",
         value: "test",
       });
 
-      await consumerRepo.deleteConfiguration(configuration.id);
+      await consumerRepo.deleteConsumerConfiguration(configuration.id);
     });
 
     it("should throw error if configuration does not exist", async () => {
-      expect(consumerRepo.deleteConfiguration("fake-id")).rejects.toThrowRepoException(RepoErrorCode.NOT_FOUND);
+      expect(consumerRepo.deleteConsumerConfiguration("fake-id")).rejects.toThrowRepoException(RepoErrorCode.NOT_FOUND);
     });
   });
 });

@@ -32,14 +32,14 @@ import {
 } from "../domain/Identification";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
 import {
-  Configuration,
-  ConfigurationCreateRequest,
-  ConfigurationUpdateRequest,
-  convertToDomainConfiguration,
-  validateConfiguration,
-  validateCreateConfigurationRequest,
-  validateUpdateConfigurationRequest,
-} from "../domain/Configuration";
+  ConsumerConfiguration,
+  ConsumerConfigurationCreateRequest,
+  ConsumerConfigurationUpdateRequest,
+  convertToDomainConsumerConfiguration,
+  validateConsumerConfiguration,
+  validateCreateConsumerConfigurationRequest,
+  validateUpdateConsumerConfigurationRequest,
+} from "../domain/ConsumerConfiguration";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
@@ -590,9 +590,9 @@ export class SQLConsumerRepo implements IConsumerRepo {
     }
   }
 
-  async addConfiguration(configuration: ConfigurationCreateRequest): Promise<Configuration> {
-    validateCreateConfigurationRequest(configuration);
-    let savedConfiguration: Configuration = null;
+  async addConsumerConfiguration(configuration: ConsumerConfigurationCreateRequest): Promise<ConsumerConfiguration> {
+    validateCreateConsumerConfigurationRequest(configuration);
+    let savedConfiguration: ConsumerConfiguration = null;
 
     try {
       const configurationInput: Prisma.ConsumerConfigurationCreateInput = {
@@ -608,7 +608,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
       const returnedConfiguration: PrismaConfigurationModel = await this.prisma.consumerConfiguration.create({
         data: configurationInput,
       });
-      savedConfiguration = convertToDomainConfiguration(returnedConfiguration);
+      savedConfiguration = convertToDomainConsumerConfiguration(returnedConfiguration);
     } catch (err) {
       if (err.code === "P2025") {
         throw new RepoException({
@@ -623,7 +623,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
     }
 
     try {
-      validateConfiguration(savedConfiguration);
+      validateConsumerConfiguration(savedConfiguration);
       return savedConfiguration;
     } catch (err) {
       throw new RepoException({
@@ -633,8 +633,11 @@ export class SQLConsumerRepo implements IConsumerRepo {
     }
   }
 
-  async updateConfiguration(id: string, configuration: ConfigurationUpdateRequest): Promise<Configuration> {
-    validateUpdateConfigurationRequest(configuration);
+  async updateConsumerConfiguration(
+    id: string,
+    configuration: ConsumerConfigurationUpdateRequest,
+  ): Promise<ConsumerConfiguration> {
+    validateUpdateConsumerConfigurationRequest(configuration);
 
     try {
       const configurationUpdateInput: Prisma.ConsumerConfigurationUpdateInput = {
@@ -648,7 +651,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
         },
       });
 
-      return convertToDomainConfiguration(returnedConfiguration);
+      return convertToDomainConsumerConfiguration(returnedConfiguration);
     } catch (err) {
       if (err.meta && err.meta.cause === "Record to update not found.") {
         throw new RepoException({
@@ -663,20 +666,20 @@ export class SQLConsumerRepo implements IConsumerRepo {
     }
   }
 
-  async getAllConfigurationsForConsumer(consumerID: string): Promise<Configuration[]> {
+  async getAllConfigurationsForConsumer(consumerID: string): Promise<ConsumerConfiguration[]> {
     try {
       const returnedConfiguration: PrismaConfigurationModel[] = await this.prisma.consumerConfiguration.findMany({
         where: {
           consumerID: consumerID,
         },
       });
-      return returnedConfiguration.map(configuration => convertToDomainConfiguration(configuration));
+      return returnedConfiguration.map(configuration => convertToDomainConsumerConfiguration(configuration));
     } catch (err) {
       return [];
     }
   }
 
-  async deleteConfiguration(id: string): Promise<void> {
+  async deleteConsumerConfiguration(id: string): Promise<void> {
     try {
       await this.prisma.consumerConfiguration.delete({ where: { id: id } });
     } catch (e) {
