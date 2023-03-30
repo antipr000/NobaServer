@@ -1,4 +1,5 @@
 import { Result } from "../../../core/logic/Result";
+import { Configuration, ConfigurationCreateRequest, ConfigurationUpdateRequest } from "../domain/Configuration";
 import { Consumer, ConsumerProps } from "../domain/Consumer";
 import { ContactInfo } from "../domain/ContactInfo";
 import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
@@ -33,4 +34,8 @@ export interface IConsumerRepo {
   getIdentificationForConsumer(consumerID: string, id: string): Promise<Identification>;
   updateIdentification(id: string, identification: IdentificationUpdateRequest): Promise<Identification>;
   deleteIdentification(id: string): Promise<void>;
+  addConfiguration(configuration: ConfigurationCreateRequest): Promise<Configuration>;
+  updateConfiguration(id: string, configuration: ConfigurationUpdateRequest): Promise<Configuration>;
+  getAllConfigurationsForConsumer(consumerID: string): Promise<Configuration[]>;
+  deleteConfiguration(id: string): Promise<void>;
 }

@@ -55,6 +55,7 @@ model Consumer {
   pomeloUsers          PomeloUser?
   nobaCards            NobaCard[]
   identifications      Identification[]
+  configurations       Configuration[]
 
   @@index([referredByID])
 }
@@ -86,6 +87,18 @@ model KYC {
   riskLevel                     String?
   consumer                      Consumer                   @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   consumerID                    String                     @unique()
+}
+
+model Configuration {
+  id               String   @id @default(uuid())
+  name             String
+  value            String
+  createdTimestamp DateTime @default(now())
+  updatedTimestamp DateTime @updatedAt
+  consumer         Consumer @relation(fields: [consumerID], references: [id], onDelete: Cascade)
+  consumerID       String
+
+  @@index([consumerID])
 }
 
 model Employer {

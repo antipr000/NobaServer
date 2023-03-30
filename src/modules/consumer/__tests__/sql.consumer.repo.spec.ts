@@ -20,7 +20,7 @@ import { KmsService } from "../../../modules/common/kms.service";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { Gender } from "../domain/ExternalStates";
-import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
+import { RepoErrorCode } from "../../../core/exception/repo.exception";
 import { createTestConsumer } from "../test_utils/test.utils";
 import { getRandomIdentification } from "../test_utils/identification.test.utils";
 
@@ -1194,6 +1194,102 @@ describe("ConsumerRepoTests", () => {
 
       const result = await consumerRepo.isHandleTaken("new_handle");
       expect(result).toBe(false);
+    });
+  });
+
+  describe("addConfiguration", () => {
+    it("should add a configuration", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const configuration = await consumerRepo.addConfiguration({
+        consumerID,
+        name: "test",
+        value: "test",
+      });
+
+      expect(configuration.name).toBe("test");
+      expect(configuration.value).toBe("test");
+    });
+
+    it("should throw error if consumer does not exist", async () => {
+      expect(
+        consumerRepo.addConfiguration({
+          consumerID: "fake-consumer-id",
+          name: "test",
+          value: "test",
+        }),
+      ).rejects.toThrowRepoException(RepoErrorCode.NOT_FOUND);
+    });
+  });
+
+  describe("updateConfiguration", () => {
+    it("should update a configuration", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const configuration = await consumerRepo.addConfiguration({
+        consumerID,
+        name: "test",
+        value: "test",
+      });
+
+      const updatedConfiguration = await consumerRepo.updateConfiguration(configuration.id, {
+        value: "updated-value",
+      });
+
+      expect(updatedConfiguration.value).toBe("updated-value");
+      expect(updatedConfiguration.id).toBe(configuration.id);
+    });
+
+    it("should throw error if configuration does not exist", async () => {
+      expect(consumerRepo.updateConfiguration("fake-id", { value: "updated-value" })).rejects.toThrowRepoException(
+        RepoErrorCode.NOT_FOUND,
+      );
+    });
+  });
+
+  describe("getAllConfigurationsForConsumer", () => {
+    it("should get all configurations of Consumer", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const configuration1 = await consumerRepo.addConfiguration({
+        consumerID,
+        name: "test",
+        value: "test",
+      });
+
+      const configuration2 = await consumerRepo.addConfiguration({
+        consumerID,
+        name: "test2",
+        value: "test2",
+      });
+
+      const result = await consumerRepo.getAllConfigurationsForConsumer(consumerID);
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe(configuration1.id);
+      expect(result[1].id).toBe(configuration2.id);
+    });
+
+    it("should return empty list if consumer does not exist", async () => {
+      const result = await consumerRepo.getAllConfigurationsForConsumer("fake-consumer-id");
+      expect(result).toHaveLength(0);
+    });
+  });
+
+  describe("deleteConfiguration", () => {
+    it("should delete configuration", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const configuration = await consumerRepo.addConfiguration({
+        consumerID,
+        name: "test",
+        value: "test",
+      });
+
+      await consumerRepo.deleteConfiguration(configuration.id);
+    });
+
+    it("should throw error if configuration does not exist", async () => {
+      expect(consumerRepo.deleteConfiguration("fake-id")).rejects.toThrowRepoException(RepoErrorCode.NOT_FOUND);
     });
   });
 });

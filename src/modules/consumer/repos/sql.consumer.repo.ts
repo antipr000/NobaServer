@@ -10,6 +10,7 @@ import {
   Prisma,
   WalletStatus,
   Identification as PrismaIdentificationModel,
+  Configuration as PrismaConfigurationModel,
 } from "@prisma/client";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
 import { ConsumerRepoMapper } from "../mappers/ConsumerRepoMapper";
@@ -30,6 +31,15 @@ import {
   validateUpdateIdentificationRequest,
 } from "../domain/Identification";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
+import {
+  Configuration,
+  ConfigurationCreateRequest,
+  ConfigurationUpdateRequest,
+  convertToDomainConfiguration,
+  validateConfiguration,
+  validateCreateConfigurationRequest,
+  validateUpdateConfigurationRequest,
+} from "../domain/Configuration";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
@@ -576,6 +586,103 @@ export class SQLConsumerRepo implements IConsumerRepo {
       throw new RepoException({
         errorCode: RepoErrorCode.NOT_FOUND,
         message: `Identification with id ${id} not found!`,
+      });
+    }
+  }
+
+  async addConfiguration(configuration: ConfigurationCreateRequest): Promise<Configuration> {
+    validateCreateConfigurationRequest(configuration);
+    let savedConfiguration: Configuration = null;
+
+    try {
+      const configurationInput: Prisma.ConfigurationCreateInput = {
+        consumer: {
+          connect: {
+            id: configuration.consumerID,
+          },
+        },
+        name: configuration.name,
+        value: configuration.value,
+      };
+
+      const returnedConfiguration: PrismaConfigurationModel = await this.prisma.configuration.create({
+        data: configurationInput,
+      });
+      savedConfiguration = convertToDomainConfiguration(returnedConfiguration);
+    } catch (err) {
+      if (err.code === "P2025") {
+        throw new RepoException({
+          errorCode: RepoErrorCode.NOT_FOUND,
+          message: `Failed to store Configuration in database because consumer with id ${configuration.consumerID} was not found`,
+        });
+      }
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: "Error saving Configuration in database",
+      });
+    }
+
+    try {
+      validateConfiguration(savedConfiguration);
+      return savedConfiguration;
+    } catch (err) {
+      throw new RepoException({
+        errorCode: RepoErrorCode.INVALID_DATABASE_RECORD,
+        message: "Error saving Configuration in database",
+      });
+    }
+  }
+
+  async updateConfiguration(id: string, configuration: ConfigurationUpdateRequest): Promise<Configuration> {
+    validateUpdateConfigurationRequest(configuration);
+
+    try {
+      const configurationUpdateInput: Prisma.ConfigurationUpdateInput = {
+        ...(configuration.value && { value: configuration.value }),
+      };
+
+      const returnedConfiguration: PrismaConfigurationModel = await this.prisma.configuration.update({
+        data: configurationUpdateInput,
+        where: {
+          id: id,
+        },
+      });
+
+      return convertToDomainConfiguration(returnedConfiguration);
+    } catch (err) {
+      if (err.meta && err.meta.cause === "Record to update not found.") {
+        throw new RepoException({
+          errorCode: RepoErrorCode.NOT_FOUND,
+          message: `Record to update not found for Configuration with ID: '${id}'`,
+        });
+      }
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: `Error updating the Configuration with ID: '${id}'`,
+      });
+    }
+  }
+
+  async getAllConfigurationsForConsumer(consumerID: string): Promise<Configuration[]> {
+    try {
+      const returnedConfiguration: PrismaConfigurationModel[] = await this.prisma.configuration.findMany({
+        where: {
+          consumerID: consumerID,
+        },
+      });
+      return returnedConfiguration.map(configuration => convertToDomainConfiguration(configuration));
+    } catch (err) {
+      return [];
+    }
+  }
+
+  async deleteConfiguration(id: string): Promise<void> {
+    try {
+      await this.prisma.configuration.delete({ where: { id: id } });
+    } catch (e) {
+      throw new RepoException({
+        errorCode: RepoErrorCode.NOT_FOUND,
+        message: `Configuration with id ${id} not found!`,
       });
     }
   }
