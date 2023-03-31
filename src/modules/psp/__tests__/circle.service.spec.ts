@@ -258,4 +258,23 @@ describe("CircleService", () => {
       await expect(circleService.creditWalletBalance("workflowID", "walletID", 100)).rejects.toThrow(ServiceException);
     });
   });
+
+  describe("getBalance", () => {
+    it("should get balance", async () => {
+      when(circleClient.getWalletBalance("walletID")).thenResolve(200);
+      const balance = await circleService.getBalance("walletID");
+      expect(balance).toEqual({ balance: 200, currency: "USD" });
+    });
+
+    it("should throw an error when walletID is empty", async () => {
+      await expect(circleService.getBalance("")).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw an error when wallet doesn't exist", async () => {
+      when(circleClient.getWalletBalance("walletID")).thenThrow(
+        new ServiceException({ errorCode: ServiceErrorCode.UNKNOWN }),
+      );
+      await expect(circleService.getBalance("walletID")).rejects.toThrowServiceException(ServiceErrorCode.UNKNOWN);
+    });
+  });
 });
