@@ -17,7 +17,7 @@ export class PaymentService {
   async getBalance(bankName: BankName, accountID: string): Promise<BalanceDTO> {
     const balanceProvider: IBalanceProvider = this.bankFactory.getBankImplementation(bankName);
     try {
-      return balanceProvider.getBalance(accountID);
+      return await balanceProvider.getBalance(accountID);
     } catch (e) {
       return { balance: null, currency: null };
     }
