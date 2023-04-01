@@ -121,6 +121,7 @@ export const createPomeloTransaction = async (
           pomeloCardID: pomeloCardID,
         },
       },
+      pomeloIdempotencyKey: uuid(),
       nobaTransactionID: nobaTransactionID,
       pomeloTransactionID: uuid(),
       amountInUSD: 10,
@@ -132,6 +133,7 @@ export const createPomeloTransaction = async (
   return {
     id: savedTransaction.id,
     pomeloTransactionID: savedTransaction.pomeloTransactionID,
+    pomeloIdempotencyKey: savedTransaction.pomeloIdempotencyKey,
     pomeloCardID: savedTransaction.pomeloCardID,
     nobaTransactionID: savedTransaction.nobaTransactionID,
     amountInUSD: savedTransaction.amountInUSD,
@@ -145,6 +147,7 @@ export const createPomeloTransaction = async (
 export const getRandomPomeloTransaction = (pomeloCardID: string, nobaTransactionID: string): PomeloTransaction => {
   return {
     id: uuid(),
+    pomeloIdempotencyKey: uuid(),
     pomeloTransactionID: uuid(),
     pomeloCardID: pomeloCardID,
     nobaTransactionID: nobaTransactionID,

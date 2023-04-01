@@ -211,7 +211,9 @@ describe("Transaction Workflow Controller tests", () => {
       const transaction: Transaction = getRandomTransaction("testConsumerID");
       const payrollDisbursementID = uuid();
 
-      when(mockTransactionService.initiateTransactionForPayrolls(payrollDisbursementID)).thenResolve(transaction);
+      when(mockTransactionService.deprecatedInitiateTransactionForPayrolls(payrollDisbursementID)).thenResolve(
+        transaction,
+      );
       when(transactionWorkflowMapper.toWorkflowTransactionDTO(anything(), anything())).thenResolve(null);
 
       await transactionWorkflowController.createTransaction({ disbursementID: payrollDisbursementID });

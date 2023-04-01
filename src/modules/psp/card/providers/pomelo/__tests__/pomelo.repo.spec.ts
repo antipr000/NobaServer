@@ -575,6 +575,7 @@ describe("SqlPomeloRepoTests", () => {
   describe("createPomeloTransaction", () => {
     it("should throw an error if the 'pomeloTransactionID' is not specified", async () => {
       const request: PomeloTransactionSaveRequest = {
+        pomeloIdempotencyKey: uuid(),
         nobaTransactionID: uuid(),
         pomeloCardID: uuid(),
         amountInUSD: 10,
@@ -593,6 +594,7 @@ describe("SqlPomeloRepoTests", () => {
 
     it("should throw an error if the 'nobaTransactionID' is not specified", async () => {
       const request: PomeloTransactionSaveRequest = {
+        pomeloIdempotencyKey: uuid(),
         pomeloTransactionID: uuid(),
         pomeloCardID: uuid(),
         amountInUSD: 10,
@@ -611,6 +613,7 @@ describe("SqlPomeloRepoTests", () => {
 
     it("should throw an error if the 'pomeloCardID' is not specified", async () => {
       const request: PomeloTransactionSaveRequest = {
+        pomeloIdempotencyKey: uuid(),
         pomeloTransactionID: uuid(),
         nobaTransactionID: uuid(),
         amountInUSD: 10,
@@ -629,6 +632,7 @@ describe("SqlPomeloRepoTests", () => {
 
     it("should throw an error if the 'amountInUSD' is not specified", async () => {
       const request: PomeloTransactionSaveRequest = {
+        pomeloIdempotencyKey: uuid(),
         pomeloTransactionID: uuid(),
         nobaTransactionID: uuid(),
         pomeloCardID: uuid(),
@@ -647,6 +651,7 @@ describe("SqlPomeloRepoTests", () => {
 
     it("should throw an error if the 'amountInLocalCurrency' is not specified", async () => {
       const request: PomeloTransactionSaveRequest = {
+        pomeloIdempotencyKey: uuid(),
         pomeloTransactionID: uuid(),
         nobaTransactionID: uuid(),
         pomeloCardID: uuid(),
@@ -665,6 +670,7 @@ describe("SqlPomeloRepoTests", () => {
 
     it("should throw an error if the 'localCurrency' is not specified", async () => {
       const request: PomeloTransactionSaveRequest = {
+        pomeloIdempotencyKey: uuid(),
         pomeloTransactionID: uuid(),
         nobaTransactionID: uuid(),
         pomeloCardID: uuid(),
@@ -683,6 +689,7 @@ describe("SqlPomeloRepoTests", () => {
 
     it("should throw an error if the 'localCurrency' is invalid", async () => {
       const request: PomeloTransactionSaveRequest = {
+        pomeloIdempotencyKey: uuid(),
         pomeloTransactionID: uuid(),
         nobaTransactionID: uuid(),
         pomeloCardID: uuid(),
@@ -700,8 +707,28 @@ describe("SqlPomeloRepoTests", () => {
       expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
     });
 
+    it("should throw an error if the 'pomeloIdempotencyKey' is not specified", async () => {
+      const request: PomeloTransactionSaveRequest = {
+        pomeloTransactionID: uuid(),
+        nobaTransactionID: uuid(),
+        pomeloCardID: uuid(),
+        amountInUSD: 10,
+        amountInLocalCurrency: 500,
+        localCurrency: PomeloCurrency.COP,
+      } as any;
+      try {
+        await pomeloRepo.createPomeloTransaction(request);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err.message).toEqual(expect.stringContaining("pomeloIdempotencyKey"));
+      }
+
+      expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
+    });
+
     it("should throw an error if the PomeloCard does not exist", async () => {
       const request: PomeloTransactionSaveRequest = {
+        pomeloIdempotencyKey: uuid(),
         pomeloTransactionID: uuid(),
         nobaTransactionID: uuid(),
         pomeloCardID: uuid(),
@@ -726,6 +753,7 @@ describe("SqlPomeloRepoTests", () => {
       const pomeloCard: PomeloCard = await createPomeloCard(consumerID, nobaCard.id, prismaService);
 
       const request: PomeloTransactionSaveRequest = {
+        pomeloIdempotencyKey: uuid(),
         pomeloTransactionID: uuid(),
         nobaTransactionID: uuid(),
         pomeloCardID: pomeloCard.pomeloCardID,
@@ -738,6 +766,7 @@ describe("SqlPomeloRepoTests", () => {
       expect(pomeloTransaction).toEqual({
         id: expect.any(String),
         pomeloCardID: request.pomeloCardID,
+        pomeloIdempotencyKey: request.pomeloIdempotencyKey,
         pomeloTransactionID: request.pomeloTransactionID,
         nobaTransactionID: request.nobaTransactionID,
         amountInUSD: request.amountInUSD,
@@ -750,6 +779,7 @@ describe("SqlPomeloRepoTests", () => {
       expect(allTransactions).toHaveLength(1);
       expect(allTransactions[0]).toStrictEqual({
         id: pomeloTransaction.id,
+        pomeloIdempotencyKey: request.pomeloIdempotencyKey,
         pomeloCardID: request.pomeloCardID,
         pomeloTransactionID: request.pomeloTransactionID,
         nobaTransactionID: request.nobaTransactionID,
@@ -815,198 +845,8 @@ describe("SqlPomeloRepoTests", () => {
     });
   });
 
-  describe("createPomeloTransaction", () => {
-    it("should throw an error if the 'pomeloTransactionID' is not specified", async () => {
-      const request: PomeloTransactionSaveRequest = {
-        nobaTransactionID: uuid(),
-        pomeloCardID: uuid(),
-        amountInUSD: 10,
-        amountInLocalCurrency: 500,
-        localCurrency: PomeloCurrency.COP,
-      } as any;
-      try {
-        await pomeloRepo.createPomeloTransaction(request);
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining("pomeloTransactionID"));
-      }
-
-      expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
-    });
-
-    it("should throw an error if the 'nobaTransactionID' is not specified", async () => {
-      const request: PomeloTransactionSaveRequest = {
-        pomeloTransactionID: uuid(),
-        pomeloCardID: uuid(),
-        amountInUSD: 10,
-        amountInLocalCurrency: 500,
-        localCurrency: PomeloCurrency.COP,
-      } as any;
-      try {
-        await pomeloRepo.createPomeloTransaction(request);
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining("nobaTransactionID"));
-      }
-
-      expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
-    });
-
-    it("should throw an error if the 'pomeloCardID' is not specified", async () => {
-      const request: PomeloTransactionSaveRequest = {
-        pomeloTransactionID: uuid(),
-        nobaTransactionID: uuid(),
-        amountInUSD: 10,
-        amountInLocalCurrency: 500,
-        localCurrency: PomeloCurrency.COP,
-      } as any;
-      try {
-        await pomeloRepo.createPomeloTransaction(request);
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining("pomeloCardID"));
-      }
-
-      expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
-    });
-
-    it("should throw an error if the 'amountInUSD' is not specified", async () => {
-      const request: PomeloTransactionSaveRequest = {
-        pomeloTransactionID: uuid(),
-        nobaTransactionID: uuid(),
-        pomeloCardID: uuid(),
-        amountInLocalCurrency: 500,
-        localCurrency: PomeloCurrency.COP,
-      } as any;
-      try {
-        await pomeloRepo.createPomeloTransaction(request);
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining("amountInUSD"));
-      }
-
-      expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
-    });
-
-    it("should throw an error if the 'amountInLocalCurrency' is not specified", async () => {
-      const request: PomeloTransactionSaveRequest = {
-        pomeloTransactionID: uuid(),
-        nobaTransactionID: uuid(),
-        pomeloCardID: uuid(),
-        amountInUSD: 10,
-        localCurrency: PomeloCurrency.COP,
-      } as any;
-      try {
-        await pomeloRepo.createPomeloTransaction(request);
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining("amountInLocalCurrency"));
-      }
-
-      expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
-    });
-
-    it("should throw an error if the 'localCurrency' is not specified", async () => {
-      const request: PomeloTransactionSaveRequest = {
-        pomeloTransactionID: uuid(),
-        nobaTransactionID: uuid(),
-        pomeloCardID: uuid(),
-        amountInUSD: 10,
-        amountInLocalCurrency: 500,
-      } as any;
-      try {
-        await pomeloRepo.createPomeloTransaction(request);
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining("localCurrency"));
-      }
-
-      expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
-    });
-
-    it("should throw an error if the 'localCurrency' is invalid", async () => {
-      const request: PomeloTransactionSaveRequest = {
-        pomeloTransactionID: uuid(),
-        nobaTransactionID: uuid(),
-        pomeloCardID: uuid(),
-        amountInUSD: 10,
-        amountInLocalCurrency: 500,
-        localCurrency: "INVALID",
-      } as any;
-      try {
-        await pomeloRepo.createPomeloTransaction(request);
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err.message).toEqual(expect.stringContaining("localCurrency"));
-      }
-
-      expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
-    });
-
-    it("should throw an error if the PomeloCard does not exist", async () => {
-      const request: PomeloTransactionSaveRequest = {
-        pomeloTransactionID: uuid(),
-        nobaTransactionID: uuid(),
-        pomeloCardID: uuid(),
-        amountInUSD: 10,
-        amountInLocalCurrency: 500,
-        localCurrency: PomeloCurrency.COP,
-      };
-      try {
-        await pomeloRepo.createPomeloTransaction(request);
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err).toBeInstanceOf(RepoException);
-        expect(err.errorCode).toBe(RepoErrorCode.DATABASE_INTERNAL_ERROR);
-      }
-
-      expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
-    });
-
-    it("should successfully create a PomeloTransaction", async () => {
-      const consumerID: string = await createTestConsumer(prismaService);
-      const nobaCard: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
-      const pomeloCard: PomeloCard = await createPomeloCard(consumerID, nobaCard.id, prismaService);
-
-      const request: PomeloTransactionSaveRequest = {
-        pomeloTransactionID: uuid(),
-        nobaTransactionID: uuid(),
-        pomeloCardID: pomeloCard.pomeloCardID,
-        amountInUSD: 10,
-        amountInLocalCurrency: 500,
-        localCurrency: PomeloCurrency.COP,
-      };
-      const pomeloTransaction: PomeloTransaction = await pomeloRepo.createPomeloTransaction(request);
-
-      expect(pomeloTransaction).toEqual({
-        id: expect.any(String),
-        pomeloCardID: request.pomeloCardID,
-        pomeloTransactionID: request.pomeloTransactionID,
-        nobaTransactionID: request.nobaTransactionID,
-        amountInUSD: request.amountInUSD,
-        amountInLocalCurrency: request.amountInLocalCurrency,
-        localCurrency: request.localCurrency,
-        createdTimestamp: expect.any(Date),
-        updatedTimestamp: expect.any(Date),
-      });
-      const allTransactions = await getAllPomeloTransactionRecords(prismaService);
-      expect(allTransactions).toHaveLength(1);
-      expect(allTransactions[0]).toStrictEqual({
-        id: pomeloTransaction.id,
-        pomeloCardID: request.pomeloCardID,
-        pomeloTransactionID: request.pomeloTransactionID,
-        nobaTransactionID: request.nobaTransactionID,
-        amountInUSD: request.amountInUSD,
-        amountInLocalCurrency: request.amountInLocalCurrency,
-        localCurrency: request.localCurrency,
-        createdTimestamp: pomeloTransaction.createdTimestamp,
-        updatedTimestamp: pomeloTransaction.updatedTimestamp,
-      });
-    });
-  });
-
-  describe("getPomeloTransactionByNobaTransactionID", () => {
-    it("should return null when matching 'nobaTransactionID' is not found", async () => {
+  describe("getPomeloTransactionByPomeloIdempotencyKey", () => {
+    it("should return null when matching 'pomeloIdempotencyKey' is not found", async () => {
       const consumerID = await createTestConsumer(prismaService);
       const nobaCard: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
       const pomeloCard: PomeloCard = await createPomeloCard(consumerID, nobaCard.id, prismaService);
@@ -1017,12 +857,12 @@ describe("SqlPomeloRepoTests", () => {
         prismaService,
       );
 
-      const response = await pomeloRepo.getPomeloTransactionByNobaTransactionID(uuid());
+      const response = await pomeloRepo.getPomeloTransactionByPomeloIdempotencyKey(uuid());
 
       expect(response).toBe(null);
     });
 
-    it("should return PomeloTransaction with the matching 'nobaTransactionID'", async () => {
+    it("should return PomeloTransaction with the matching 'pomeloIdempotencyKey'", async () => {
       const consumerID = await createTestConsumer(prismaService);
       const pomeloUser = await createPomeloUser(consumerID, prismaService);
 
@@ -1052,9 +892,11 @@ describe("SqlPomeloRepoTests", () => {
         prismaService,
       );
 
-      const response = await pomeloRepo.getPomeloTransactionByNobaTransactionID(nobaTransactionID2);
+      const response = await pomeloRepo.getPomeloTransactionByPomeloIdempotencyKey(
+        pomeloTransaction1.pomeloIdempotencyKey,
+      );
 
-      expect(response).toStrictEqual(pomeloTransaction2);
+      expect(response).toStrictEqual(pomeloTransaction1);
     });
   });
 });

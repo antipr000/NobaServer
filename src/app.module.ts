@@ -20,6 +20,7 @@ import { PrivateAuthGuard } from "./modules/auth/private-auth.guard";
 import { NotificationWorkflowModule } from "./modules/notifications/notification.workflow.module";
 import { BubbleModule } from "./modules/bubble/bubble.module";
 import { TemporalModule } from "./infra/temporal/temporal.module";
+import { CardModule } from "./modules/psp/card/card.module";
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { TemporalModule } from "./infra/temporal/temporal.module";
     NotificationWorkflowModule,
     TemporalModule,
     ScheduleModule.forRoot(),
+    CardModule,
   ],
   controllers: [AppController],
   providers: [

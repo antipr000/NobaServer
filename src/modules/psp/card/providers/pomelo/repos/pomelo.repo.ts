@@ -15,4 +15,5 @@ export interface PomeloRepo {
 
   createPomeloTransaction(request: PomeloTransactionSaveRequest): Promise<PomeloTransaction>;
   getPomeloTransactionByNobaTransactionID(nobaTransactionID: string): Promise<PomeloTransaction>;
+  getPomeloTransactionByPomeloIdempotencyKey(pomeloIdempotencyKey: string): Promise<PomeloTransaction>;
 }

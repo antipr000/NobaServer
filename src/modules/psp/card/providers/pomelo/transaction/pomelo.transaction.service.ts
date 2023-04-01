@@ -11,6 +11,13 @@ import {
 } from "../dto/pomelo.transaction.service.dto";
 import { createHmac, timingSafeEqual } from "crypto";
 import { Logger } from "winston";
+import { TransactionService } from "../../../../../../modules/transaction/transaction.service";
+import { PomeloService } from "../pomelo.service";
+import { CircleService } from "../../../../../../modules/psp/circle.service";
+import { PomeloTransaction } from "../domain/PomeloTransaction";
+import { PomeloRepo } from "../repos/pomelo.repo";
+import { POMELO_REPO_PROVIDER } from "../repos/pomelo.repo.module";
+import { uuid } from "uuidv4";
 
 @Injectable()
 export class PomeloTransactionService {
@@ -31,6 +38,10 @@ export class PomeloTransactionService {
   constructor(
     private configService: CustomConfigService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly transactionService: TransactionService,
+    private readonly pomeloService: PomeloService,
+    @Inject(POMELO_REPO_PROVIDER) private readonly pomeloRepo: PomeloRepo,
+    private readonly circleService: CircleService,
   ) {
     // TODO: Check if the ApiKey & ClientSecret are same and we just need to handle encodings :)
     // this.pomeloApiSecret = Buffer.from(pomeloConfigs.clientSecret, "base64");
@@ -56,6 +67,23 @@ export class PomeloTransactionService {
       return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.OTHER);
     }
 
+    // let pomeloTransaction: PomeloTransaction;
+    // try {
+    //   const nobaTransactionID = uuid();
+
+    //   pomeloTransaction = await this.pomeloRepo.createPomeloTransaction({
+    //     pomeloTransactionID: request.pomeloTransactionID,
+    //     amountInLocalCurrency: request.localAmount,
+    //     localCurrency: request.localCurrency,
+    //     amountInUSD: request.settlementAmount,
+    //     nobaTransactionID: nobaTransactionID,
+    //     pomeloCardID: request.pomeloCardID,
+    //     pomeloIdempotencyKey: "",
+    //   });
+    // }
+    // catch (err) {
+    //   const
+    // }
     return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.APPROVED);
   }
 

@@ -5,6 +5,7 @@ import { KeysRequired } from "../../../../../common/domain/Types";
 export class PomeloTransaction {
   id: string;
   pomeloTransactionID: string;
+  pomeloIdempotencyKey: string;
   nobaTransactionID: string;
   pomeloCardID: string;
   amountInUSD: number;
@@ -21,6 +22,7 @@ export enum PomeloCurrency {
 
 export class PomeloTransactionSaveRequest {
   pomeloTransactionID: string;
+  pomeloIdempotencyKey: string;
   nobaTransactionID: string;
   pomeloCardID: string;
   amountInUSD: number;
@@ -31,6 +33,7 @@ export class PomeloTransactionSaveRequest {
 export const validateSavePomeloTransactionRequest = (request: PomeloTransactionSaveRequest) => {
   const pomeloTransactionsJoiValidationKeys: KeysRequired<PomeloTransactionSaveRequest> = {
     pomeloTransactionID: Joi.string().required(),
+    pomeloIdempotencyKey: Joi.string().required(),
     nobaTransactionID: Joi.string().required(),
     pomeloCardID: Joi.string().required(),
     amountInUSD: Joi.number().required(),
@@ -51,6 +54,7 @@ export const validatePomeloTransaction = (pomeloTransaction: PomeloTransaction) 
   const pomeloTransactionsJoiValidationKeys: KeysRequired<PomeloTransaction> = {
     id: Joi.string().required(),
     pomeloTransactionID: Joi.string().required(),
+    pomeloIdempotencyKey: Joi.string().required(),
     nobaTransactionID: Joi.string().required(),
     pomeloCardID: Joi.string().required(),
     amountInUSD: Joi.number().required(),
@@ -76,6 +80,7 @@ export const convertToDomainPomeloTransaction = (
     id: pomeloTransaction.id,
     pomeloCardID: pomeloTransaction.pomeloCardID,
     pomeloTransactionID: pomeloTransaction.pomeloTransactionID,
+    pomeloIdempotencyKey: pomeloTransaction.pomeloIdempotencyKey,
     nobaTransactionID: pomeloTransaction.nobaTransactionID,
     amountInUSD: pomeloTransaction.amountInUSD,
     amountInLocalCurrency: pomeloTransaction.amountInLocalCurrency,

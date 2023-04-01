@@ -22,6 +22,7 @@ import {
 } from "../../../core/exception/CommonAppException";
 import { InputTransactionEvent } from "../domain/TransactionEvent";
 import { FeeType } from "../domain/TransactionFee";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 const getAllTransactionRecords = async (prismaService: PrismaService): Promise<PrismaTransactionModel[]> => {
   return prismaService.transaction.findMany({});
@@ -259,6 +260,74 @@ describe("PostgresTransactionRepoTests", () => {
       expect(returnedTransaction.status).toBe(TransactionStatus.INITIATED);
       expect(allTransactionRecords).toHaveLength(1);
       expect(allTransactionRecords[0].status).toBe(TransactionStatus.INITIATED);
+    });
+
+    const workflowsWhereIDIsNotAllowed = [
+      WorkflowName.WALLET_DEPOSIT,
+      WorkflowName.WALLET_WITHDRAWAL,
+      WorkflowName.WALLET_TRANSFER,
+      WorkflowName.PAYROLL_DEPOSIT,
+      WorkflowName.PAYROLL_PROCESSING,
+    ];
+    it.each(workflowsWhereIDIsNotAllowed)("should throw error if 'id' is provided for '%s'", async workflowName => {
+      const consumerID = uuid();
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCreditTransaction */ true);
+      inputTransaction.id = uuid();
+
+      try {
+        await transactionRepo.createTransaction(inputTransaction);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.errorCode).toBe(ServiceErrorCode.UNABLE_TO_PROCESS);
+        expect(err.message).toEqual(expect.stringContaining("id"));
+      }
+    });
+
+    it("should create a transaction with 'id' for 'CARD_WITHDRAWAL'", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+
+      const inputTransaction: InputTransaction = getRandomTransaction(consumerID, /* isCreditTransaction */ true);
+      inputTransaction.workflowName = WorkflowName.CARD_WITHDRAWAL;
+      inputTransaction.id = uuid();
+
+      const returnedTransaction: Transaction = await transactionRepo.createTransaction(inputTransaction);
+      const allTransactionRecords: PrismaTransactionModel[] = await getAllTransactionRecords(prismaService);
+
+      expect(returnedTransaction).toBeDefined();
+      expect(returnedTransaction.id).toBe(inputTransaction.id);
+      expect(returnedTransaction.transactionRef).toBe(inputTransaction.transactionRef);
+      expect(returnedTransaction.workflowName).toBe(inputTransaction.workflowName);
+      expect(returnedTransaction.creditConsumerID).toBe(inputTransaction.creditConsumerID);
+      expect(returnedTransaction.creditAmount).toBe(inputTransaction.creditAmount);
+      expect(returnedTransaction.creditCurrency).toBe(inputTransaction.creditCurrency);
+      expect(returnedTransaction.debitConsumerID).toBeNull();
+      expect(returnedTransaction.debitAmount).toBeNull();
+      expect(returnedTransaction.debitCurrency).toBeNull();
+      expect(returnedTransaction.exchangeRate).toBe(inputTransaction.exchangeRate);
+      expect(returnedTransaction.memo).toBe(inputTransaction.memo);
+      expect(returnedTransaction.sessionKey).toBe(inputTransaction.sessionKey);
+      expect(returnedTransaction.transactionFees).toHaveLength(1);
+      expect(returnedTransaction.transactionFees[0].type).toBe(FeeType.PROCESSING);
+
+      expect(allTransactionRecords.length).toBe(1);
+      expect(allTransactionRecords[0]).toStrictEqual({
+        id: returnedTransaction.id,
+        transactionRef: returnedTransaction.transactionRef,
+        workflowName: returnedTransaction.workflowName,
+        creditConsumerID: returnedTransaction.creditConsumerID,
+        creditAmount: returnedTransaction.creditAmount,
+        creditCurrency: returnedTransaction.creditCurrency,
+        debitConsumerID: null,
+        debitAmount: null,
+        debitCurrency: null,
+        status: returnedTransaction.status,
+        exchangeRate: returnedTransaction.exchangeRate,
+        memo: returnedTransaction.memo,
+        sessionKey: returnedTransaction.sessionKey,
+        createdTimestamp: returnedTransaction.createdTimestamp,
+        updatedTimestamp: returnedTransaction.updatedTimestamp,
+      });
     });
   });
 

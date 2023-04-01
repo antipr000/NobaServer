@@ -268,6 +268,7 @@ export class SQLPomeloRepo implements PomeloRepo {
             pomeloCardID: request.pomeloCardID,
           },
         },
+        pomeloIdempotencyKey: request.pomeloIdempotencyKey,
         pomeloTransactionID: request.pomeloTransactionID,
         nobaTransactionID: request.nobaTransactionID,
         amountInUSD: request.amountInUSD,
@@ -318,6 +319,29 @@ export class SQLPomeloRepo implements PomeloRepo {
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting the Pomelo Transaction with nobaTransactionID: '${nobaTransactionID}'`,
+      });
+    }
+  }
+
+  async getPomeloTransactionByPomeloIdempotencyKey(pomeloIdempotencyKey: string): Promise<PomeloTransaction> {
+    try {
+      const returnedPomeloTransaction: PrismaPomeloTransactionModel =
+        await this.prismaService.pomeloTransaction.findUnique({
+          where: {
+            pomeloIdempotencyKey: pomeloIdempotencyKey,
+          },
+        });
+
+      if (!returnedPomeloTransaction) {
+        return null;
+      }
+
+      return convertToDomainPomeloTransaction(returnedPomeloTransaction);
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: `Error getting the Pomelo Transaction with pomeloIdempotencyKey: '${pomeloIdempotencyKey}'`,
       });
     }
   }

@@ -7,7 +7,7 @@ export function getMockTransactionServiceWithDefaults(): TransactionService {
   when(mockTransactionService.getTransactionByTransactionRef(anyString(), anyString())).thenReject(
     new Error("Method not implemented"),
   );
-  when(mockTransactionService.initiateTransaction(anything(), anyString(), anyString())).thenReject(
+  when(mockTransactionService.deprecatedInitiateTransaction(anything(), anyString(), anyString())).thenReject(
     new Error("Method not implemented"),
   );
   when(mockTransactionService.getFilteredTransactions(anything())).thenReject(new Error("Method not implemented"));
@@ -24,7 +24,7 @@ export function getMockTransactionServiceWithDefaults(): TransactionService {
     new Error("Method not implemented"),
   );
 
-  when(mockTransactionService.initiateTransactionForPayrolls(anyString())).thenReject(
+  when(mockTransactionService.deprecatedInitiateTransactionForPayrolls(anyString())).thenReject(
     new Error("Method not implemented"),
   );
 

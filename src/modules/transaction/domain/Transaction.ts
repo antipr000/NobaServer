@@ -11,6 +11,7 @@ import {
   transactionFeeJoiValidationKeys,
 } from "./TransactionFee";
 import { WorkflowName as TemporalWorkflowName } from "../../../infra/temporal/workflow";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 export class Transaction {
   id: string;
@@ -48,6 +49,7 @@ export type WorkflowName = TemporalWorkflowName;
 export const WorkflowName = { ...TemporalWorkflowName };
 
 export class InputTransaction {
+  id?: string;
   transactionRef: string;
   workflowName: WorkflowName;
   creditConsumerID?: string;
@@ -80,6 +82,7 @@ export class DebitBankResponse {
 
 export const validateInputTransaction = (transaction: InputTransaction) => {
   const transactionJoiValidationKeys: KeysRequired<InputTransaction> = {
+    id: Joi.string().optional(),
     transactionRef: Joi.string().min(10).required(),
     workflowName: Joi.string()
       .required()
@@ -106,6 +109,13 @@ export const validateInputTransaction = (transaction: InputTransaction) => {
   const hasCreditSide = transaction.creditAmount && transaction.creditCurrency;
   if (!hasDebitSide && !hasCreditSide)
     throw new BadRequestError({ message: "Transaction must have either a debit or credit side." });
+
+  if (transaction.id && transaction.workflowName !== WorkflowName.CARD_WITHDRAWAL) {
+    throw new ServiceException({
+      errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+      message: "'id' is expected only for CARD_WITHDRAWAL transactions",
+    });
+  }
 };
 
 export const validateSavedTransaction = (transaction: Transaction) => {

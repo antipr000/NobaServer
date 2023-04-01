@@ -1,15 +1,15 @@
 import { Body, Controller, Get, HttpStatus, Inject, Param, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiForbiddenResponse, ApiHeaders, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { getCommonHeaders } from "../../core/utils/CommonHeaders";
+import { getCommonHeaders } from "../../../core/utils/CommonHeaders";
 import { Logger } from "winston";
-import { Role } from "../auth/role.enum";
-import { Roles } from "../auth/roles.decorator";
-import { Consumer } from "../consumer/domain/Consumer";
-import { AuthUser } from "../auth/auth.decorator";
-import { CardCreateRequestDTO, CardResponseDTO, WebViewTokenResponseDTO } from "./dto/card.controller.dto";
-import { CardService } from "./card/card.service";
-import { CardMapper } from "./mapper/card.mapper";
+import { Role } from "../../auth/role.enum";
+import { Roles } from "../../auth/roles.decorator";
+import { Consumer } from "../../consumer/domain/Consumer";
+import { AuthUser } from "../../auth/auth.decorator";
+import { CardCreateRequestDTO, CardResponseDTO, WebViewTokenResponseDTO } from "../dto/card.controller.dto";
+import { CardService } from "./card.service";
+import { CardMapper } from "../mapper/card.mapper";
 
 @Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")

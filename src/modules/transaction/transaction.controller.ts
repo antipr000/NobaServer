@@ -101,7 +101,7 @@ export class TransactionController {
   ): Promise<TransactionDTO> {
     this.logger.debug(`uid ${consumer.props.id}, transact input:`, JSON.stringify(requestBody));
 
-    const transaction: Transaction = await this.transactionService.initiateTransaction(
+    const transaction: Transaction = await this.transactionService.deprecatedInitiateTransaction(
       requestBody,
       consumer.props.id,
       sessionKey,
