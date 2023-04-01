@@ -55,8 +55,8 @@ import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.co
 import { PaymentMethod } from "../../consumer/domain/PaymentMethod";
 import { TransactionVerification } from "../domain/TransactionVerification";
 import { WorkflowName } from "../../transaction/domain/Transaction";
-import { CircleService } from "../../psp/circle.service";
-import { getMockCircleServiceWithDefaults } from "../../psp/mocks/mock.circle.service";
+import { CircleService } from "../../psp/circle/circle.service";
+import { getMockCircleServiceWithDefaults } from "../../psp/circle/mocks/mock.circle.service";
 import { HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));

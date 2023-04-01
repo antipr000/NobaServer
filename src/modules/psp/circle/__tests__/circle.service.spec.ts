@@ -154,6 +154,11 @@ describe("CircleService", () => {
       await expect(circleService.debitWalletBalance("workflowID", "walletID", -100)).rejects.toThrowServiceException();
     });
 
+    it("should throw an error when wallet balance is insufficient", async () => {
+      when(circleClient.getWalletBalance("walletID")).thenResolve(50);
+      await expect(circleService.debitWalletBalance("workflowID", "walletID", 100)).rejects.toThrowServiceException();
+    });
+
     it("should throw an error when transfer fails", async () => {
       when(circleClient.getMasterWalletID()).thenResolve("masterWalletID");
       when(circleClient.getWalletBalance("walletID")).thenResolve(200);
@@ -256,6 +261,14 @@ describe("CircleService", () => {
         new ServiceException({ errorCode: ServiceErrorCode.DOES_NOT_EXIST }),
       );
       await expect(circleService.creditWalletBalance("workflowID", "walletID", 100)).rejects.toThrowServiceException();
+    });
+  });
+
+  describe("transferFunds", () => {
+    it("should throw error when source wallet is empty", async () => {
+      await expect(
+        circleService.transferFunds("idempotency-key", "", "destinationWalletID", 100),
+      ).rejects.toThrowServiceException();
     });
   });
 
