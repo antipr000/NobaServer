@@ -11,7 +11,7 @@ import { ServiceErrorCode, ServiceException } from "../../core/exception/service
 import { ConsumerService } from "../consumer/consumer.service";
 import { ConsumerSearchDTO } from "../consumer/dto/consumer.search.dto";
 import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
-import { CircleService } from "../psp/circle.service";
+import { CircleService } from "../psp/circle/circle.service";
 import { EmployeeService } from "../employee/employee.service";
 import { Employee } from "../employee/domain/Employee";
 import { ConsumerEmployeeDetailsDTO, ConsumerInternalDTO } from "../consumer/dto/ConsumerInternalDTO";

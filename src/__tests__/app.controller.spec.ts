@@ -20,15 +20,15 @@ import { ExchangeRateService } from "../modules/common/exchangerate.service";
 import { MonoService } from "../modules/psp/mono/mono.service";
 import { getMockMonoServiceWithDefaults } from "../modules/psp/mono/mocks/mock.mono.service";
 import { VerificationService } from "../modules/verification/verification.service";
-import { CircleService } from "../modules/psp/circle.service";
 import { getMockVerificationServiceWithDefaults } from "../modules/verification/mocks/mock.verification.service";
-import { getMockCircleServiceWithDefaults } from "../modules/psp/mocks/mock.circle.service";
 import { HealthCheckStatus } from "../core/domain/HealthCheckTypes";
 import { ALLOWED_DEPTH } from "../modules/common/dto/HealthCheckQueryDTO";
 import { WorkflowExecutor } from "../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../infra/temporal/mocks/mock.workflow.executor";
 import { IdentificationService } from "../modules/common/identification.service";
 import { getMockIdentificationServiceWithDefaults } from "../modules/common/mocks/mock.identification.service";
+import { getMockCircleServiceWithDefaults } from "../modules/psp/circle/mocks/mock.circle.service";
+import { CircleService } from "../modules/psp/circle/circle.service";
 
 describe("AppController", () => {
   let appController: AppController;

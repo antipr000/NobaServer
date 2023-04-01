@@ -38,7 +38,7 @@ import { MonoService } from "./modules/psp/mono/mono.service";
 import { HealthCheckResponseDTO } from "./modules/common/dto/HealthCheckResponseDTO";
 import { VerificationService } from "./modules/verification/verification.service";
 import { HealthCheckStatus } from "./core/domain/HealthCheckTypes";
-import { CircleService } from "./modules/psp/circle.service";
+import { CircleService } from "./modules/psp/circle/circle.service";
 import { ALLOWED_DEPTH, HealthCheckQueryDTO } from "./modules/common/dto/HealthCheckQueryDTO";
 import { WorkflowExecutor } from "./infra/temporal/workflow.executor";
 import { IdentificationService } from "./modules/common/identification.service";
