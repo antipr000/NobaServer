@@ -1,5 +1,5 @@
-import { Circle } from "../domain/Circle";
-import { Result } from "../../../core/logic/Result";
+import { Circle } from "../../domain/Circle";
+import { Result } from "../../../../core/logic/Result";
 
 export interface ICircleRepo {
   addConsumerCircleWalletID(consumerID: string, circleWalletID: string): Promise<Circle>;

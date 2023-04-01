@@ -1,11 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { instance, when } from "ts-mockito";
-import { CircleController } from "../circle.controller";
+import { Consumer } from "../../../consumer/domain/Consumer";
 import { CircleService } from "../circle.service";
+import { CircleController } from "../circle.controller";
 import { getMockCircleServiceWithDefaults } from "../mocks/mock.circle.service";
-import { Consumer } from "../../../modules/consumer/domain/Consumer";
 
 describe("CircleController", () => {
   let circleService: CircleService;

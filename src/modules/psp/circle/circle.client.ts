@@ -1,18 +1,18 @@
 import { Circle, CircleEnvironments, CreateWalletResponse, TransferErrorCode } from "@circle-fin/circle-sdk";
 import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { CircleConfigs } from "../../config/configtypes/CircleConfigs";
-import { CIRCLE_CONFIG_KEY, NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
-import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { CircleConfigs } from "../../../config/configtypes/CircleConfigs";
+import { CIRCLE_CONFIG_KEY, NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
+import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { Logger } from "winston";
 import { AxiosRequestConfig, AxiosResponse } from "axios";
-import { CircleWithdrawalRequest, CircleWithdrawalResponse, CircleWithdrawalStatusMap } from "./domain/CircleTypes";
+import { CircleWithdrawalRequest, CircleWithdrawalResponse, CircleWithdrawalStatusMap } from "../domain/CircleTypes";
 import { fromString as convertToUUIDv4 } from "uuidv4";
-import { Utils } from "../../core/utils/Utils";
-import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
-import { IClient } from "../../core/domain/IClient";
-import { HealthCheckResponse, HealthCheckStatus } from "../../core/domain/HealthCheckTypes";
-import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
+import { Utils } from "../../../core/utils/Utils";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
+import { IClient } from "../../../core/domain/IClient";
+import { HealthCheckResponse, HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
+import { NobaConfigs } from "../../../config/configtypes/NobaConfigs";
 
 @Injectable()
 export class CircleClient implements IClient {

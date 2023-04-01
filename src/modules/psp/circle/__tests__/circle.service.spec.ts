@@ -1,17 +1,17 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
+import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
+import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { anyString, deepEqual, instance, when } from "ts-mockito";
 import { CircleClient } from "../circle.client";
 import { CircleService } from "../circle.service";
 import { getMockCircleClientWithDefaults } from "../mocks/mock.circle.client";
-import { ICircleRepo } from "../repos/circle.repo";
 import { getMockCircleRepoWithDefaults } from "../mocks/mock.circle.repo";
-import { Result } from "../../../core/logic/Result";
-import { Circle } from "../domain/Circle";
-import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
-import { CircleWithdrawalStatus } from "../domain/CircleTypes";
-import { HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
+import { ICircleRepo } from "../repos/circle.repo";
+import { HealthCheckStatus } from "src/core/domain/HealthCheckTypes";
+import { Circle } from "../../domain/Circle";
+import { ServiceErrorCode, ServiceException } from "../../../../core/exception/service.exception";
+import { Result } from "../../../../core/logic/Result";
+import { CircleWithdrawalStatus } from "../../domain/CircleTypes";
 
 describe("CircleService", () => {
   let circleService: CircleService;
@@ -78,14 +78,14 @@ describe("CircleService", () => {
     });
 
     it("should throw an error when consumerID is empty", async () => {
-      await expect(circleService.getOrCreateWallet("")).rejects.toThrow(ServiceException);
+      await expect(circleService.getOrCreateWallet("")).rejects.toThrowServiceException();
     });
 
     it("should throw an error when linking Circle wallet to consumer", async () => {
       when(circleRepo.getCircleWalletID("consumerID")).thenResolve(Result.fail("Wallet not found"));
       when(circleClient.createWallet(anyString())).thenResolve("walletID");
       when(circleRepo.addConsumerCircleWalletID("consumerID", "walletID")).thenThrow();
-      await expect(circleService.getOrCreateWallet("consumerID")).rejects.toThrow(ServiceException);
+      await expect(circleService.getOrCreateWallet("consumerID")).rejects.toThrowServiceException();
     });
   });
 
@@ -98,7 +98,7 @@ describe("CircleService", () => {
 
     it("should throw an error when consumerID is empty", async () => {
       when(circleClient.getMasterWalletID()).thenResolve("");
-      await expect(circleService.getMasterWalletID()).rejects.toThrow(ServiceException);
+      await expect(circleService.getMasterWalletID()).rejects.toThrowServiceException();
     });
   });
 
@@ -110,7 +110,7 @@ describe("CircleService", () => {
     });
 
     it("should throw an error when walletID is empty", async () => {
-      await expect(circleService.getWalletBalance("")).rejects.toThrow(ServiceException);
+      await expect(circleService.getWalletBalance("")).rejects.toThrowServiceException();
     });
   });
 
@@ -143,15 +143,15 @@ describe("CircleService", () => {
     });
 
     it("should throw an error when walletID is empty", async () => {
-      await expect(circleService.debitWalletBalance("workflowID", "", 100)).rejects.toThrow(ServiceException);
+      await expect(circleService.debitWalletBalance("workflowID", "", 100)).rejects.toThrowServiceException();
     });
 
     it("should throw an error when amount is 0", async () => {
-      await expect(circleService.debitWalletBalance("workflowID", "walletID", 0)).rejects.toThrow(ServiceException);
+      await expect(circleService.debitWalletBalance("workflowID", "walletID", 0)).rejects.toThrowServiceException();
     });
 
     it("should throw an error when amount is negative", async () => {
-      await expect(circleService.debitWalletBalance("workflowID", "walletID", -100)).rejects.toThrow(ServiceException);
+      await expect(circleService.debitWalletBalance("workflowID", "walletID", -100)).rejects.toThrowServiceException();
     });
 
     it("should throw an error when transfer fails", async () => {
@@ -167,7 +167,7 @@ describe("CircleService", () => {
           }),
         ),
       ).thenThrow(new ServiceException({ errorCode: ServiceErrorCode.UNKNOWN }));
-      await expect(circleService.debitWalletBalance("workflowID", "walletID", 100)).rejects.toThrow(ServiceException);
+      await expect(circleService.debitWalletBalance("workflowID", "walletID", 100)).rejects.toThrowServiceException();
     });
 
     it("should throw an error when master wallet id is empty", async () => {
@@ -175,7 +175,7 @@ describe("CircleService", () => {
       when(circleClient.getMasterWalletID()).thenThrow(
         new ServiceException({ errorCode: ServiceErrorCode.DOES_NOT_EXIST }),
       );
-      await expect(circleService.debitWalletBalance("workflowID", "walletID", 100)).rejects.toThrow(ServiceException);
+      await expect(circleService.debitWalletBalance("workflowID", "walletID", 100)).rejects.toThrowServiceException();
     });
   });
 
@@ -208,15 +208,15 @@ describe("CircleService", () => {
     });
 
     it("should throw an error when walletID is empty", async () => {
-      await expect(circleService.creditWalletBalance("workflowID", "", 100)).rejects.toThrow(ServiceException);
+      await expect(circleService.creditWalletBalance("workflowID", "", 100)).rejects.toThrowServiceException();
     });
 
     it("should throw an error when amount is 0", async () => {
-      await expect(circleService.creditWalletBalance("workflowID", "walletID", 0)).rejects.toThrow(ServiceException);
+      await expect(circleService.creditWalletBalance("workflowID", "walletID", 0)).rejects.toThrowServiceException();
     });
 
     it("should throw an error when amount is negative", async () => {
-      await expect(circleService.creditWalletBalance("workflowID", "walletID", -100)).rejects.toThrow(ServiceException);
+      await expect(circleService.creditWalletBalance("workflowID", "walletID", -100)).rejects.toThrowServiceException();
     });
 
     it("should throw an error when transfer fails", async () => {
@@ -232,7 +232,7 @@ describe("CircleService", () => {
           }),
         ),
       ).thenThrow(new ServiceException({ errorCode: ServiceErrorCode.UNKNOWN }));
-      await expect(circleService.creditWalletBalance("workflowID", "walletID", 100)).rejects.toThrow(ServiceException);
+      await expect(circleService.creditWalletBalance("workflowID", "walletID", 100)).rejects.toThrowServiceException();
     });
 
     it("should throw an error when master wallet doesn't have enough funds", async () => {
@@ -248,14 +248,14 @@ describe("CircleService", () => {
           }),
         ),
       ).thenThrow(new ServiceException({ errorCode: ServiceErrorCode.UNKNOWN }));
-      await expect(circleService.creditWalletBalance("workflowID", "walletID", 100)).rejects.toThrow(ServiceException);
+      await expect(circleService.creditWalletBalance("workflowID", "walletID", 100)).rejects.toThrowServiceException();
     });
 
     it("should throw an error when master wallet id is empty", async () => {
       when(circleClient.getMasterWalletID()).thenThrow(
         new ServiceException({ errorCode: ServiceErrorCode.DOES_NOT_EXIST }),
       );
-      await expect(circleService.creditWalletBalance("workflowID", "walletID", 100)).rejects.toThrow(ServiceException);
+      await expect(circleService.creditWalletBalance("workflowID", "walletID", 100)).rejects.toThrowServiceException();
     });
   });
 

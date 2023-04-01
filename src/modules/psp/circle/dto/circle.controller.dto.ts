@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { CircleWithdrawalStatus } from "../domain/CircleTypes";
+import { CircleWithdrawalStatus } from "../../domain/CircleTypes";
 
 export class CircleWalletResponseDTO {
   @ApiProperty()

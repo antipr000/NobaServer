@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { InfraProvidersModule } from "../../../infraproviders/infra.module";
+import { InfraProvidersModule } from "../../../../infraproviders/infra.module";
 import { SQLCircleRepo } from "./sql.circle.repo";
 
 const CircleRepoProvider = {

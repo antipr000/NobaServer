@@ -11,10 +11,10 @@ import { TransactionRepoModule } from "../transaction/repo/transaction.repo.modu
 import { getWinstonModule } from "../../core/utils/WinstonModule";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { CircleClient } from "./circle.client";
+import { CircleClient } from "./circle/circle.client";
 import { CircleController } from "./circle.controller";
 import { CircleService } from "./circle.service";
-import { CircleRepoModule } from "./repos/circle.repo.module";
+import { CircleRepoModule } from "./circle/repos/circle.repo.module";
 import { CircleWorkflowController } from "./circle.workflow.controller";
 import { BankFactoryModule } from "./factory/bank.factory.module";
 import { CardController } from "./card.controller";

@@ -32,8 +32,8 @@ import { NotificationMethod } from "../dto/AddCryptoWalletDTO";
 import { UserEmailUpdateRequest } from "../dto/EmailVerificationDTO";
 import { getMockConsumerRepoWithDefaults } from "../mocks/mock.consumer.repo";
 import { IConsumerRepo } from "../repos/consumer.repo";
-import { getMockCircleClientWithDefaults } from "../../psp/mocks/mock.circle.client";
-import { CircleClient } from "../../psp/circle.client";
+import { getMockCircleClientWithDefaults } from "../../psp/circle/mocks/mock.circle.client";
+import { CircleClient } from "../../psp/circle/circle.client";
 import { OTPService } from "../../../modules/common/otp.service";
 import {
   DocumentVerificationStatus,

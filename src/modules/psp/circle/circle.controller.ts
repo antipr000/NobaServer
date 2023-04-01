@@ -8,7 +8,7 @@ import { Roles } from "../auth/roles.decorator";
 import { Consumer } from "../consumer/domain/Consumer";
 import { CircleService } from "./circle.service";
 import { AuthUser } from "../auth/auth.decorator";
-import { CircleWalletBalanceResponseDTO, CircleWalletResponseDTO } from "./dto/circle.controller.dto";
+import { CircleWalletBalanceResponseDTO, CircleWalletResponseDTO } from "./circle/dto/circle.controller.dto";
 
 @Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")

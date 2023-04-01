@@ -3,8 +3,8 @@ import { MonoModule } from "../../../modules/psp/mono/mono.module";
 import { CommonModule } from "../../../modules/common/common.module";
 import { BankFactory } from "./bank.factory";
 import { CircleService } from "../circle.service";
-import { CircleRepoModule } from "../repos/circle.repo.module";
-import { CircleClient } from "../circle.client";
+import { CircleRepoModule } from "../circle/repos/circle.repo.module";
+import { CircleClient } from "../circle/circle.client";
 
 @Module({
   imports: [MonoModule, CommonModule, CircleRepoModule, MonoModule],
