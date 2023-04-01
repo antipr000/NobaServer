@@ -7,7 +7,7 @@ import { CircleService } from "../circle.service";
 import { getMockCircleClientWithDefaults } from "../mocks/mock.circle.client";
 import { getMockCircleRepoWithDefaults } from "../mocks/mock.circle.repo";
 import { ICircleRepo } from "../repos/circle.repo";
-import { HealthCheckStatus } from "src/core/domain/HealthCheckTypes";
+import { HealthCheckStatus } from "../../../../core/domain/HealthCheckTypes";
 import { Circle } from "../../domain/Circle";
 import { ServiceErrorCode, ServiceException } from "../../../../core/exception/service.exception";
 import { Result } from "../../../../core/logic/Result";

@@ -6,10 +6,10 @@ import { BankFactory } from "../factory/bank.factory";
 import { PaymentService } from "../payment.service";
 import { instance, when } from "ts-mockito";
 import { BankName } from "../domain/BankFactoryTypes";
-import { CircleService } from "../circle.service";
-import { getMockCircleServiceWithDefaults } from "../mocks/mock.circle.service";
 import { MonoService } from "../mono/mono.service";
 import { getMockMonoServiceWithDefaults } from "../mono/mocks/mock.mono.service";
+import { CircleService } from "../circle/circle.service";
+import { getMockCircleServiceWithDefaults } from "../circle/mocks/mock.circle.service";
 
 describe("PaymentService", () => {
   let bankFactory: BankFactory;

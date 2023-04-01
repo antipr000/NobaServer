@@ -1,9 +1,9 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
-import { CircleService } from "../circle.service";
 import { BankName } from "../domain/BankFactoryTypes";
 import { MonoWorkflowService } from "../mono/mono.workflow.service";
 import { IBank } from "./ibank";
+import { CircleService } from "../circle/circle.service";
 
 @Injectable()
 export class BankFactory {

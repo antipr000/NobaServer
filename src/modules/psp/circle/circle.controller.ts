@@ -1,14 +1,14 @@
 import { Controller, Get, HttpStatus, Inject, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiForbiddenResponse, ApiHeaders, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { getCommonHeaders } from "../../core/utils/CommonHeaders";
+import { getCommonHeaders } from "../../../core/utils/CommonHeaders";
 import { Logger } from "winston";
-import { Role } from "../auth/role.enum";
-import { Roles } from "../auth/roles.decorator";
-import { Consumer } from "../consumer/domain/Consumer";
+import { Role } from "../../auth/role.enum";
+import { Roles } from "../../auth/roles.decorator";
+import { Consumer } from "../../consumer/domain/Consumer";
 import { CircleService } from "./circle.service";
-import { AuthUser } from "../auth/auth.decorator";
-import { CircleWalletBalanceResponseDTO, CircleWalletResponseDTO } from "./circle/dto/circle.controller.dto";
+import { AuthUser } from "../../auth/auth.decorator";
+import { CircleWalletBalanceResponseDTO, CircleWalletResponseDTO } from "./../circle/dto/circle.controller.dto";
 
 @Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")

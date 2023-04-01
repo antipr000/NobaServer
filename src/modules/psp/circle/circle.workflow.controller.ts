@@ -9,7 +9,7 @@ import {
   CircleWalletBalanceResponseDTO,
   CircleTransactionDTO,
   CircleWalletResponseDTO,
-} from "./circle/dto/circle.controller.dto";
+} from "./../circle/dto/circle.controller.dto";
 
 @Controller("wf/v1/circle") // This defines the path prefix
 @ApiBearerAuth("JWT-auth")

@@ -1,13 +1,13 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
-import { PrismaService } from "../../../infraproviders/PrismaService";
-import { ICircleRepo } from "../circle/repos/circle.repo";
-import { SQLCircleRepo } from "../circle/repos/sql.circle.repo";
-import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
+import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
+import { SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
+import { PrismaService } from "../../../../infraproviders/PrismaService";
+import { ICircleRepo } from "../../circle/repos/circle.repo";
+import { SQLCircleRepo } from "../../circle/repos/sql.circle.repo";
+import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
+import { Consumer, ConsumerProps } from "../../../../modules/consumer/domain/Consumer";
 import { v4 } from "uuid";
-import { Utils } from "../../../core/utils/Utils";
+import { Utils } from "../../../../core/utils/Utils";
 
 describe("CircleRepoTests", () => {
   jest.setTimeout(20000);
