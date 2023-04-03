@@ -27,6 +27,7 @@ export type PomeloTransactionAuthzRequest = {
   timestamp: string;
   rawSignature: string;
   rawBodyBuffer: Buffer;
+  idempotencyKey: string;
 
   // request parameters.
   pomeloTransactionID: string;

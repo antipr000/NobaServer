@@ -64,6 +64,7 @@ describe("PomeloTransactionServiceTests", () => {
         rawBodyBuffer: Buffer.from("RAW_REQUEST_BODY"),
         timestamp: Date.now().toString(),
         rawSignature: "INPUT_SIGNATURE",
+        idempotencyKey: "IDEMPOTENCY_KEY",
 
         pomeloTransactionID: "POMELO_TRANSACTION_ID",
         transactionType: PomeloTransactionType.PURCHASE,

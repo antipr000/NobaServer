@@ -17,6 +17,16 @@ import {
   PomeloTransactionType,
 } from "../dto/pomelo.transaction.service.dto";
 import { PomeloCurrency } from "../domain/PomeloTransaction";
+import { PomeloRepo } from "../repos/pomelo.repo";
+import { TransactionService } from "../../../../../../modules/transaction/transaction.service";
+import { PomeloService } from "../pomelo.service";
+import { CircleService } from "../../../../../../modules/psp/circle.service";
+import { getMockPomeloRepoWithDefaults } from "../mocks/mock.pomelo.repo";
+import { getMockTransactionServiceWithDefaults } from "../../../../../../modules/transaction/mocks/mock.transaction.service";
+import { getMockPomeloServiceWithDefaults } from "../mocks/mock.pomelo.service";
+import { getMockCircleServiceWithDefaults } from "../../../../../../modules/psp/mocks/mock.circle.service";
+import { POMELO_REPO_PROVIDER } from "../repos/pomelo.repo.module";
+import { instance } from "ts-mockito";
 
 const getRawBodyBuffer = (): Buffer => {
   const data = `{
@@ -75,9 +85,19 @@ describe("PomeloTransactionServiceTests", () => {
   jest.setTimeout(20000);
 
   let pomeloTransactionService: PomeloTransactionService;
+  let mockPomeloRepo: PomeloRepo;
+  let mockTransactionService: TransactionService;
+  let mockPomeloService: PomeloService;
+  let mockCircleService: CircleService;
+
   let app: TestingModule;
 
   beforeEach(async () => {
+    mockPomeloRepo = getMockPomeloRepoWithDefaults();
+    mockTransactionService = getMockTransactionServiceWithDefaults();
+    mockPomeloService = getMockPomeloServiceWithDefaults();
+    mockCircleService = getMockCircleServiceWithDefaults();
+
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
       [POMELO_CONFIG_KEY]: {
@@ -90,7 +110,25 @@ describe("PomeloTransactionServiceTests", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PomeloTransactionService],
+      providers: [
+        {
+          provide: POMELO_REPO_PROVIDER,
+          useFactory: () => instance(mockPomeloRepo),
+        },
+        {
+          provide: TransactionService,
+          useFactory: () => instance(mockTransactionService),
+        },
+        {
+          provide: PomeloService,
+          useFactory: () => instance(mockPomeloService),
+        },
+        {
+          provide: CircleService,
+          useFactory: () => instance(mockCircleService),
+        },
+        PomeloTransactionService,
+      ],
     }).compile();
 
     pomeloTransactionService = app.get<PomeloTransactionService>(PomeloTransactionService);
@@ -107,6 +145,7 @@ describe("PomeloTransactionServiceTests", () => {
         rawBodyBuffer: getRawBodyBuffer(),
         rawSignature: validSignature,
         timestamp: validTimestamp,
+        idempotencyKey: "IDEMPOTENCY_KEY",
 
         localAmount: 50,
         localCurrency: PomeloCurrency.COP,
@@ -135,6 +174,7 @@ describe("PomeloTransactionServiceTests", () => {
           rawBodyBuffer: getRawBodyBuffer(),
           rawSignature: validSignature,
           timestamp: "1680024225",
+          idempotencyKey: "IDEMPOTENCY_KEY",
 
           localAmount: 50,
           localCurrency: PomeloCurrency.COP,
@@ -162,6 +202,7 @@ describe("PomeloTransactionServiceTests", () => {
           rawBodyBuffer: Buffer.from("DUMMY_BODY", "utf8"),
           rawSignature: validSignature,
           timestamp: validTimestamp,
+          idempotencyKey: "IDEMPOTENCY_KEY",
 
           localAmount: 50,
           localCurrency: PomeloCurrency.COP,
@@ -189,6 +230,7 @@ describe("PomeloTransactionServiceTests", () => {
           rawBodyBuffer: getRawBodyBuffer(),
           rawSignature: "INVALID_SIGNATURE",
           timestamp: validTimestamp,
+          idempotencyKey: "IDEMPOTENCY_KEY",
 
           localAmount: 50,
           localCurrency: PomeloCurrency.COP,
@@ -217,6 +259,7 @@ describe("PomeloTransactionServiceTests", () => {
         rawBodyBuffer: getRawBodyBuffer(),
         rawSignature: validSignature,
         timestamp: validTimestamp,
+        idempotencyKey: "IDEMPOTENCY_KEY",
 
         localAmount: 50,
         localCurrency: PomeloCurrency.COP,

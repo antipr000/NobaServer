@@ -64,6 +64,7 @@ describe("PomeloWebhookMapperService", () => {
         "x-endpoint": "ENDPOINT",
         "x-timestamp": "999999999",
         "x-signature": "SIGNATURE",
+        "x-idempotency-key": "IDEMPOTENCY_KEY",
       };
 
       describe("missing/invalid fields 'requestBody'", () => {
@@ -570,6 +571,21 @@ describe("PomeloWebhookMapperService", () => {
             expect(err.message).toEqual(expect.stringContaining("x-signature"));
           }
         });
+
+        it("should throw error when 'x-idempotency-key' field is missing", () => {
+          const requestBody = JSON.parse(JSON.stringify(validMinimalRequestBody));
+          const headers = JSON.parse(JSON.stringify(validMinimalHeaders));
+          delete headers["x-idempotency-key"];
+
+          try {
+            pomeloWebhookMapper.convertToPomeloTransactionAuthzRequest(requestBody, headers);
+            expect(true).toBe(false);
+          } catch (err) {
+            expect(err).toBeInstanceOf(ServiceException);
+            expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
+            expect(err.message).toEqual(expect.stringContaining("x-idempotency-key"));
+          }
+        });
       });
     });
 
@@ -627,6 +643,7 @@ describe("PomeloWebhookMapperService", () => {
         "x-endpoint": "ENDPOINT",
         "x-timestamp": "999999999",
         "x-signature": "SIGNATURE",
+        "x-idempotency-key": "IDEMPOTENCY_KEY",
       };
 
       const response: PomeloTransactionAuthzRequest = pomeloWebhookMapper.convertToPomeloTransactionAuthzRequest(
@@ -639,6 +656,7 @@ describe("PomeloWebhookMapperService", () => {
         timestamp: "999999999",
         rawSignature: "SIGNATURE",
         rawBodyBuffer: null,
+        idempotencyKey: "IDEMPOTENCY_KEY",
 
         pomeloTransactionID: "POMELO_TRANSACTION_ID",
         transactionType: PomeloTransactionType.PURCHASE,

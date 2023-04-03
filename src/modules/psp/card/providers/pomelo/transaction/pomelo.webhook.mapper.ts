@@ -32,12 +32,14 @@ export class PomeloWebhookMapper {
     const endpoint: string = headers["x-endpoint"];
     const timestamp: string = headers["x-timestamp"];
     const signature: string = headers["x-signature"];
+    const idempotencyKey: string = headers["x-idempotency-key"];
 
     const response: PomeloTransactionAuthzRequest = {
       endpoint: endpoint,
       timestamp: timestamp,
       rawSignature: signature,
       rawBodyBuffer: null, // will be the responsibility of the controller layer.
+      idempotencyKey: idempotencyKey,
 
       pomeloTransactionID: requestBody.transaction["id"],
       transactionType: requestBody.transaction["type"] as PomeloTransactionType,
@@ -63,6 +65,7 @@ export class PomeloWebhookMapper {
       "x-endpoint": Joi.string().required(),
       "x-timestamp": Joi.string().required(),
       "x-signature": Joi.string().required(),
+      "x-idempotency-key": Joi.string().required(),
     };
 
     const pomeloTransactionHeadersJoiSchema = Joi.object(transactionAuthzRequestHeadersJoiValidationKeys).options({
