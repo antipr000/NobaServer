@@ -2,6 +2,7 @@ import Handlebars from "handlebars";
 import puppeteer, { Browser } from "puppeteer";
 import { S3Service } from "../s3.service";
 import { Logger } from "winston";
+import fs from "fs";
 
 export enum TemplateFormat {
   PDF = "pdf",
@@ -65,7 +66,7 @@ export class TemplateProcessor {
       args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless"],
       executablePath:
         process.platform === "win32"
-          ? "C:/Program Files/Google/Chrome/Application/chrome.exe"
+          ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
           : "/usr/bin/chromium-browser",
     });
     this.writeTimingLog(`Browser initialized`, Date.now() - start);
@@ -122,11 +123,25 @@ export class TemplateProcessor {
           const pdf = await this.convertToPDF(populatedTemplate, `${this.templateFilename}.${TemplateFormat.PDF}`);
           const start = Date.now();
 
-          this.s3Service.uploadToS3(
-            this.savePath,
-            `${this.saveBaseFilename}_${locale.language}.${TemplateFormat.PDF}`,
+          // this.s3Service.uploadToS3(
+          //   this.savePath,
+          //   `${this.saveBaseFilename}_${locale.language}.${TemplateFormat.PDF}`,
+          //   pdf,
+          // );
+
+          // write to local file
+
+          fs.writeFile(
+            `${__dirname}/${this.saveBaseFilename}_${locale.language}.${TemplateFormat.PDF}`,
             pdf,
+            function (err) {
+              if (err) {
+                return console.log(err);
+              }
+              console.log("The file was saved!");
+            },
           );
+
           this.writeTimingLog(`PDF template for ${locale.language} uploaded`, Date.now() - start);
         }
       }
@@ -141,7 +156,12 @@ export class TemplateProcessor {
     await page.evaluateHandle("document.fonts.ready");
     const pdf = page.pdf({
       format: "A4",
-      margin: { bottom: "50px", top: "50px", left: "50px", right: "50px" },
+      printBackground: true,
+      displayHeaderFooter: true,
+      headerTemplate: `<div></div>`,
+      footerTemplate: `<div style="font-family: system-ui; margin-left: 20px; margin-right: 20px; display:flex; flex-direction: row; font-size: 8px; width: 100%;"><span class="date" style="flex: 1"></span><span>123213292</span><div><span class="pageNumber" style="font-size: 8px; flex: 1"></span>/<span class="totalPages"><div></span>
+      </div>`,
+      margin: { bottom: "80px", top: "80px", left: "50px", right: "50px" },
     });
     this.writeTimingLog("PDF generated", Date.now() - start);
     return pdf;
