@@ -25,6 +25,7 @@ import { StubDashboardClient } from "./dashboard/stub.dashboard.client";
 import { BubbleClient } from "./dashboard/bubble.client";
 import { StubPushClient } from "./push/stub.push.client";
 import { ExpoPushClient } from "./push/expo.push.client";
+import { PushEventHandler } from "./push.event.handler";
 
 // This is made to ensure that the "Sendgrid" quota is not utilised in testing environments.
 export const EmailProvider: Provider = {
@@ -103,6 +104,7 @@ export const PushNotificationProvider: Provider = {
     EmailEventHandler,
     SMSEventHandler,
     DashboardEventHandler,
+    PushEventHandler,
     EmailProvider,
     SMSProvider,
     DashboardProvider,
