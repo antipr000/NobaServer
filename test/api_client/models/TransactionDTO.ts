@@ -14,7 +14,13 @@ export type TransactionDTO = {
   /**
    * The workflow being used to process this transaction
    */
-  workflowName: "WALLET_WITHDRAWAL" | "WALLET_DEPOSIT" | "WALLET_TRANSFER" | "PAYROLL_DEPOSIT" | "PAYROLL_PROCESSING";
+  workflowName:
+    | "WALLET_WITHDRAWAL"
+    | "WALLET_DEPOSIT"
+    | "WALLET_TRANSFER"
+    | "PAYROLL_DEPOSIT"
+    | "PAYROLL_PROCESSING"
+    | "CARD_WITHDRAWAL";
   /**
    * The user whose account is being debited
    */

@@ -14,6 +14,7 @@ export type ConsumerDTO = {
   lastName?: string;
   email: string;
   handle?: string;
+  locale?: string;
   gender?: "Male" | "Female";
   referralCode: string;
   status: "Approved" | "Pending" | "ActionRequired" | "TemporaryHold" | "PermanentHold";

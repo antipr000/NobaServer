@@ -28,6 +28,7 @@ import type { UpdateIdentificationDTO } from "../models/UpdateIdentificationDTO"
 import type { UpdatePaymentMethodDTO } from "../models/UpdatePaymentMethodDTO";
 import type { UserEmailUpdateRequest } from "../models/UserEmailUpdateRequest";
 import type { UserPhoneUpdateRequest } from "../models/UserPhoneUpdateRequest";
+import type { WebViewTokenResponseDTO } from "../models/WebViewTokenResponseDTO";
 
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
@@ -959,6 +960,144 @@ export class ConsumerService {
   }
 
   /**
+   * Create a new card for the consumer
+   * @returns CardResponseDTO
+   * @throws ApiError
+   */
+  public static createCard({
+    xNobaApiKey,
+    requestBody,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    requestBody: CardCreateRequestDTO;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<CardResponseDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/v1/consumers/cards",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
+   * Gets all cards for the consumer
+   * @returns any[]
+   * @throws ApiError
+   */
+  public static getAllCardsForConsumer({
+    xNobaApiKey,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<any[]> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/consumers/cards",
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      errors: {
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
+   * Gets webview token for card
+   * @returns WebViewTokenResponseDTO
+   * @throws ApiError
+   */
+  public static getWebViewToken({
+    xNobaApiKey,
+    id,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    id: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<WebViewTokenResponseDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/consumers/cards/{id}/token",
+      path: {
+        id: id,
+      },
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      errors: {
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
+   * Gets a specific card for the consumer
+   * @returns CardResponseDTO
+   * @throws ApiError
+   */
+  public static getCard({
+    xNobaApiKey,
+    id,
+    xNobaSignature,
+    xNobaTimestamp,
+  }: {
+    xNobaApiKey: string;
+    id: string;
+    xNobaSignature?: string;
+    /**
+     * Timestamp in milliseconds, use: new Date().getTime().toString()
+     */
+    xNobaTimestamp?: string;
+  }): CancelablePromise<CardResponseDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/consumers/cards/{id}",
+      path: {
+        id: id,
+      },
+      headers: {
+        "x-noba-api-key": xNobaApiKey,
+        "x-noba-signature": xNobaSignature,
+        "x-noba-timestamp": xNobaTimestamp,
+      },
+      errors: {
+        403: `Logged-in user is not a Consumer`,
+      },
+    });
+  }
+
+  /**
    * Add circle wallet to current consumer
    * @returns CircleWalletResponseDTO
    * @throws ApiError
@@ -1014,41 +1153,6 @@ export class ConsumerService {
         "x-noba-signature": xNobaSignature,
         "x-noba-timestamp": xNobaTimestamp,
       },
-      errors: {
-        403: `Logged-in user is not a Consumer`,
-      },
-    });
-  }
-
-  /**
-   * Create a new card for the consumer
-   * @returns CardResponseDTO
-   * @throws ApiError
-   */
-  public static createCard({
-    xNobaApiKey,
-    requestBody,
-    xNobaSignature,
-    xNobaTimestamp,
-  }: {
-    xNobaApiKey: string;
-    requestBody: CardCreateRequestDTO;
-    xNobaSignature?: string;
-    /**
-     * Timestamp in milliseconds, use: new Date().getTime().toString()
-     */
-    xNobaTimestamp?: string;
-  }): CancelablePromise<CardResponseDTO> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/v1/consumers/cards",
-      headers: {
-        "x-noba-api-key": xNobaApiKey,
-        "x-noba-signature": xNobaSignature,
-        "x-noba-timestamp": xNobaTimestamp,
-      },
-      body: requestBody,
-      mediaType: "application/json",
       errors: {
         403: `Logged-in user is not a Consumer`,
       },

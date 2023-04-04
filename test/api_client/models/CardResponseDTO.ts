@@ -8,4 +8,5 @@ export type CardResponseDTO = {
   status: "BLOCKED" | "DISABLED" | "ACTIVE";
   type: "VIRTUAL";
   consumerID: string;
+  provider: "POMELO";
 };

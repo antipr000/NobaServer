@@ -11,7 +11,13 @@ export type WorkflowTransactionDTO = {
    * The reference by which the user identifies this unique transaction
    */
   transactionRef: string;
-  workflowName: "WALLET_WITHDRAWAL" | "WALLET_DEPOSIT" | "WALLET_TRANSFER" | "PAYROLL_DEPOSIT" | "PAYROLL_PROCESSING";
+  workflowName:
+    | "WALLET_WITHDRAWAL"
+    | "WALLET_DEPOSIT"
+    | "WALLET_TRANSFER"
+    | "PAYROLL_DEPOSIT"
+    | "PAYROLL_PROCESSING"
+    | "CARD_WITHDRAWAL";
   debitConsumerID?: string;
   creditConsumerID?: string;
   debitCurrency: string;

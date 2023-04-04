@@ -239,4 +239,16 @@ export class WebhooksService {
       mediaType: "application/json",
     });
   }
+
+  /**
+   * Authorize the Pomelo Transaction
+   * @returns any
+   * @throws ApiError
+   */
+  public static authorizeTransactions(): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/webhooks/pomelo/transactions/authorizations",
+    });
+  }
 }

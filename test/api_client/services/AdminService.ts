@@ -342,6 +342,32 @@ export class AdminService {
   }
 
   /**
+   * Get exchange rate between a currency pair
+   * @returns ExchangeRateDTO
+   * @throws ApiError
+   */
+  public static getExchangeRate({
+    numeratorCurrency,
+    denominatorCurrency,
+  }: {
+    numeratorCurrency: string;
+    denominatorCurrency: string;
+  }): CancelablePromise<ExchangeRateDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/v1/admins/exchangerates",
+      query: {
+        numeratorCurrency: numeratorCurrency,
+        denominatorCurrency: denominatorCurrency,
+      },
+      errors: {
+        400: `Invalid request parameters`,
+        404: `Exchange rate not found`,
+      },
+    });
+  }
+
+  /**
    * Gets all transactions for supplied filters
    * @returns TransactionQueryResultDTO
    * @throws ApiError
