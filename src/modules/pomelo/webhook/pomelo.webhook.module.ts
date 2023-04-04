@@ -8,14 +8,12 @@ import { PomeloTransactionWebhookController } from "./pomelo.webhook.controller"
 import { ConsumerModule } from "../../consumer/consumer.module";
 import { PomeloRepoModule } from "../repos/pomelo.repo.module";
 import { TransactionModule } from "../../transaction/transaction.module";
-import { CircleRepoModule } from "../../circle/repos/circle.repo.module";
-import { CircleClient } from "../../circle/public/circle.client";
-import { CircleService } from "../../../modules/circle/public/circle.service";
+import { CirclePublicModule } from "src/modules/circle/public/circle.public.module";
 
 @Module({
-  imports: [PomeloRepoModule, CommonModule, ConsumerModule, TransactionModule, CircleRepoModule],
+  imports: [PomeloRepoModule, CommonModule, ConsumerModule, TransactionModule, CirclePublicModule],
   controllers: [PomeloTransactionWebhookController],
-  providers: [PomeloClient, PomeloService, PomeloWebhookMapper, PomeloTransactionService, CircleService, CircleClient],
+  providers: [PomeloClient, PomeloService, PomeloWebhookMapper, PomeloTransactionService],
   exports: [],
 })
 export class PomeloWebhooksModule {}

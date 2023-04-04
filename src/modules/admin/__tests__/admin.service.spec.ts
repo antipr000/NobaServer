@@ -16,7 +16,6 @@ import { BankName } from "../../../modules/psp/domain/BankFactoryTypes";
 import { EmployeeService } from "../../../modules/employee/employee.service";
 import { ConsumerMapper } from "../../../modules/consumer/mappers/ConsumerMapper";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
-import { CircleService } from "../../../modules/psp/circle.service";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { ConsumerSearchDTO } from "../../../modules/consumer/dto/consumer.search.dto";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
@@ -29,6 +28,7 @@ import { AdminUpdateConsumerRequestDTO } from "../dto/AdminUpdateConsumerRequest
 import { ConsumerInternalDTO } from "../../../modules/consumer/dto/ConsumerInternalDTO";
 import { Gender } from "../../../modules/consumer/domain/ExternalStates";
 import { TransactionService } from "../../../modules/transaction/transaction.service";
+import { CircleService } from "../../../modules/circle/public/circle.service";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);

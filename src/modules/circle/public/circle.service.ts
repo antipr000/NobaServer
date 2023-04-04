@@ -212,7 +212,6 @@ export class CircleService implements IBank {
   }
 
   public async getBalance(accountID: string): Promise<BalanceDTO> {
-    // could possibly rename getWalletBalance to getBalance
     return {
       balance: await this.getWalletBalance(accountID),
       currency: "USD",

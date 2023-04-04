@@ -6,9 +6,10 @@ import { instance } from "ts-mockito";
 import { BankFactory } from "../factory/bank.factory";
 import { MonoWorkflowService } from "../mono/mono.workflow.service";
 import { getMockMonoWorkflowServiceWithDefaults } from "../mono/mocks/mock.mono.workflow.service";
-import { CircleService } from "../circle.service";
 import { getMockCircleServiceWithDefaults } from "../../circle/public/mocks/mock.circle.service";
 import { IBank } from "../factory/ibank";
+import { BankName } from "../domain/BankFactoryTypes";
+import { CircleService } from "../../../modules/circle/public/circle.service";
 
 describe("BankFactory Tests", () => {
   jest.setTimeout(20000);
@@ -48,16 +49,25 @@ describe("BankFactory Tests", () => {
     await app.close();
   });
 
-  // Revisit this and fine the correct way to implement
   describe("getBankImplementationByCurrency", () => {
     it("should return MonoWorkflowService when currency is COP", () => {
-      // const bank = bankFactory.getBankImplementationByCurrency("COP");
-      // const bankService: IBank = monoWorkflowService;
-      // expect(bank).toBeInstanceOf<IBank>(bankService);
+      const bank = bankFactory.getBankImplementationByCurrency("COP");
+      expect(bank).toBe(monoWorkflowService);
     });
     it("should return CircleService when currency is USD", () => {
-      // const bank = bankFactory.getBankImplementationByCurrency("USD");
-      // expect(bank).toBe(circleService);
+      const bank = bankFactory.getBankImplementationByCurrency("USD");
+      expect(bank).toBe(circleService);
+    });
+  });
+
+  describe("getBankImplementation", () => {
+    it("should return MonoWorkflowService when bank is MONO", () => {
+      const bank = bankFactory.getBankImplementation(BankName.MONO);
+      expect(bank).toBe(monoWorkflowService);
+    });
+    it("should return CircleService when bank is CIRCLE", () => {
+      const bank = bankFactory.getBankImplementation(BankName.CIRCLE);
+      expect(bank).toBe(circleService);
     });
   });
 });

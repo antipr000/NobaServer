@@ -2,9 +2,9 @@ import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Result } from "../../../core/logic/Result";
 import { Circle } from "../../psp/domain/Circle";
 import { ICircleRepo } from "./circle.repo";
-import { PrismaService } from "../../../infraproviders/PrismaService";
 import { Prisma } from "@prisma/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { PrismaService } from "../../../infraproviders/PrismaService";
 
 @Injectable()
 export class SQLCircleRepo implements ICircleRepo {
