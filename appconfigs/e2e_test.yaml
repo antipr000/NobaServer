@@ -195,6 +195,7 @@ dependencies:
   emailClient: "STUB"
   smsClient: "STUB"
   dashboardClient: "STUB"
+  pushClient: "STUB"
 
 locationDataFileName: "countries+states.json"
 identificationTypesFileName: "identification-types.json"

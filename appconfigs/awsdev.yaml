@@ -156,6 +156,7 @@ dependencies:
   emailClient: "SENDGRID"
   smsClient: "TWILIO"
   dashboardClient: "BUBBLE"
+  pushClient: "EXPO"
 
 mono:
   bearerToken: ""

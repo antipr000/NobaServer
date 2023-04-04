@@ -183,6 +183,7 @@ dependencies:
   emailClient: "SENDGRID"
   smsClient: "TWILIO"
   dashboardClient: "BUBBLE"
+  pushClient: "EXPO"
 
 locationDataFileName: "countries+states.json"
 identificationTypesFileName: "identification-types.json"

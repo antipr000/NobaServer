@@ -150,6 +150,7 @@ import {
   IDENTIFICATION_TYPES_FILE_PATH,
   NOBA_PROXY_IP,
   NOBA_PROXY_PORT,
+  DEPENDENCY_PUSH_CLIENT,
 } from "./ConfigurationUtils";
 import fs from "fs";
 
@@ -163,7 +164,13 @@ import { CommonConfigs } from "./configtypes/CommonConfigs";
 import { CheckoutConfigs } from "./configtypes/CheckoutConfigs";
 import { EllipticConfigs } from "./configtypes/EllipticConfig";
 import { PlaidConfigs } from "./configtypes/PlaidConfigs";
-import { DashboardClient, DependencyConfigs, EmailClient, SMSClient } from "./configtypes/DependencyConfigs";
+import {
+  DashboardClient,
+  DependencyConfigs,
+  EmailClient,
+  PushNotificationClient,
+  SMSClient,
+} from "./configtypes/DependencyConfigs";
 import { CircleConfigs, isValidCircleEnvironment } from "./configtypes/CircleConfigs";
 import { NobaWorkflowConfig } from "./configtypes/NobaWorkflowConfig";
 import { MonoConfigs } from "./configtypes/MonoConfig";
@@ -595,6 +602,12 @@ async function configureDependencies(
   const allowedDashboardClients = [DashboardClient.STUB, DashboardClient.BUBBLE];
   if (!allowedDashboardClients.includes(dependencyConfigs.dashboardClient)) {
     const errorMessage = `"${DEPENDENCY_DASHBOARD_CLIENT}" should be one of ${allowedDashboardClients}`;
+    throw Error(errorMessage);
+  }
+
+  const allowedPushNotificationClients = [PushNotificationClient.STUB, PushNotificationClient.EXPO];
+  if (!allowedPushNotificationClients.includes(dependencyConfigs.pushClient)) {
+    const errorMessage = `"${DEPENDENCY_PUSH_CLIENT}" should be one of ${allowedPushNotificationClients}`;
     throw Error(errorMessage);
   }
 
