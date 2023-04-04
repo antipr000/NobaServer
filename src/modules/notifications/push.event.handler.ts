@@ -7,6 +7,10 @@ import { PushTemplates } from "./domain/PushTemplates";
 import { SendTransferCompletedEvent } from "./events/SendTransferCompletedEvent";
 import { SendWithdrawalCompletedEvent } from "./events/SendWithdrawalCompletedEvent";
 import { SendTransferReceivedEvent } from "./events/SendTransferReceivedEvent";
+import { SendDepositFailedEvent } from "./events/SendDepositFailedEvent";
+import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
+import { SendTransferFailedEvent } from "./events/SendTransferFailedEvent";
+import { SendPayrollDepositCompletedEvent } from "./events/SendPayrollDepositCompletedEvent";
 
 @Injectable()
 export class PushEventHandler {
@@ -31,6 +35,24 @@ export class PushEventHandler {
     }
   }
 
+  @OnEvent(`push.${NotificationEventType.SEND_DEPOSIT_FAILED_EVENT}`)
+  async sendDepositFailedEvent(payload: SendDepositFailedEvent) {
+    const pushTokens = payload.pushTokens;
+
+    for (const pushToken of pushTokens) {
+      await this.pushClient.sendPushNotification({
+        token: pushToken,
+        templateKey: PushTemplates.getOrDefault(PushTemplates.DEPOSIT_FAILED_PUSH, payload.locale ?? "en"),
+        params: {
+          transactionParams: {
+            amount: payload.params.creditAmount,
+            currency: payload.params.creditCurrency,
+          },
+        },
+      });
+    }
+  }
+
   @OnEvent(`push.${NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT}`)
   async sendWithdrawalCompletedEvent(payload: SendWithdrawalCompletedEvent) {
     const pushTokens = payload.pushTokens;
@@ -39,6 +61,24 @@ export class PushEventHandler {
       await this.pushClient.sendPushNotification({
         token: pushToken,
         templateKey: PushTemplates.getOrDefault(PushTemplates.WITHDRAWAL_COMPLETED_PUSH, payload.locale ?? "en"),
+        params: {
+          transactionParams: {
+            amount: payload.params.debitAmount,
+            currency: payload.params.debitCurrency,
+          },
+        },
+      });
+    }
+  }
+
+  @OnEvent(`push.${NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT}`)
+  async sendWithdrawalFailedEvent(payload: SendWithdrawalFailedEvent) {
+    const pushTokens = payload.pushTokens;
+
+    for (const pushToken of pushTokens) {
+      await this.pushClient.sendPushNotification({
+        token: pushToken,
+        templateKey: PushTemplates.getOrDefault(PushTemplates.WITHDRAWAL_FAILED_PUSH, payload.locale ?? "en"),
         params: {
           transactionParams: {
             amount: payload.params.debitAmount,
@@ -69,6 +109,26 @@ export class PushEventHandler {
     }
   }
 
+  @OnEvent(`push.${NotificationEventType.SEND_TRANSFER_FAILED_EVENT}`)
+  async sendTransferFailedEvent(payload: SendTransferFailedEvent) {
+    const pushTokens = payload.pushTokens;
+
+    for (const pushToken of pushTokens) {
+      await this.pushClient.sendPushNotification({
+        token: pushToken,
+        templateKey: PushTemplates.getOrDefault(PushTemplates.TRANSFER_FAILED_PUSH, payload.locale ?? "en"),
+        params: {
+          transactionParams: {
+            amount: payload.params.debitAmount,
+            currency: payload.params.debitCurrency,
+            receiverHandle: payload.params.creditConsumer_handle,
+          },
+        },
+        transferCounterPartyHandle: payload.params.creditConsumer_handle,
+      });
+    }
+  }
+
   @OnEvent(`push.${NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT}`)
   async sendTransferReceivedEvent(payload: SendTransferReceivedEvent) {
     const pushTokens = payload.pushTokens;
@@ -85,6 +145,27 @@ export class PushEventHandler {
           },
         },
         transferCounterPartyHandle: payload.params.debitConsumer_handle,
+      });
+    }
+  }
+
+  @OnEvent(`push.${NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT}`)
+  async sendPayrollDepositCompletedEvent(payload: SendPayrollDepositCompletedEvent) {
+    const pushTokens = payload.pushTokens;
+
+    for (const pushToken of pushTokens) {
+      await this.pushClient.sendPushNotification({
+        token: pushToken,
+        templateKey: PushTemplates.getOrDefault(PushTemplates.PAYROLL_DEPOSIT_COMPLETED_PUSH, payload.locale ?? "en"),
+        params: {
+          payrollParams: {
+            companyName: payload.params.companyName,
+          },
+          transactionParams: {
+            amount: payload.params.debitAmount,
+            currency: payload.params.debitCurrency,
+          },
+        },
       });
     }
   }

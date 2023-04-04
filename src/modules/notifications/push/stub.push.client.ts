@@ -11,6 +11,6 @@ export class StubPushClient extends PushClient {
   }
 
   async sendPushNotificationInternal(request: PushNotificationPayload): Promise<void> {
-    this.logger.debug(`Faking the push notification sending with following parameters: ${request}`);
+    this.logger.debug(`Faking the push notification sending with following parameters: ${JSON.stringify(request)}`);
   }
 }

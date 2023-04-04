@@ -871,6 +871,7 @@ describe("EmailEventHandler test for languages", () => {
         email: "fake+user@noba.com",
         name: "First",
         handle: "fake-handle",
+        pushTokens: [],
         params: {
           ...getTransactionParams(WorkflowName.WALLET_DEPOSIT),
           reasonDeclined: "Failed",
@@ -912,6 +913,7 @@ describe("EmailEventHandler test for languages", () => {
         email: "fake+user@noba.com",
         name: "First",
         handle: "fake-handle",
+        pushTokens: [],
         params: {
           ...getTransactionParams(WorkflowName.WALLET_DEPOSIT),
           reasonDeclined: "Failed",
@@ -953,6 +955,7 @@ describe("EmailEventHandler test for languages", () => {
         email: "fake+user@noba.com",
         name: "First",
         handle: "fake-handle",
+        pushTokens: [],
         params: {
           ...getTransactionParams(WorkflowName.WALLET_DEPOSIT),
           reasonDeclined: "Failed",
@@ -1317,6 +1320,7 @@ describe("EmailEventHandler test for languages", () => {
         email: "fake+user@noba.com",
         name: "First",
         handle: "fake-handle",
+        pushTokens: [],
         params: {
           ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
           reasonDeclined: "Failed",
@@ -1358,6 +1362,7 @@ describe("EmailEventHandler test for languages", () => {
         email: "fake+user@noba.com",
         name: "First",
         handle: "fake-handle",
+        pushTokens: [],
         params: {
           ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
           reasonDeclined: "Failed",
@@ -1491,6 +1496,7 @@ describe("EmailEventHandler test for languages", () => {
         email: "fake+user@noba.com",
         name: "First",
         handle: "fake-handle",
+        pushTokens: [],
         params: {
           ...getTransactionParams(WorkflowName.WALLET_TRANSFER),
           creditConsumer_firstName: "Justin",
@@ -1535,6 +1541,7 @@ describe("EmailEventHandler test for languages", () => {
         email: "fake+user@noba.com",
         name: "First",
         handle: "fake-handle",
+        pushTokens: [],
         params: {
           ...getTransactionParams(WorkflowName.PAYROLL_DEPOSIT),
           companyName: "Noba",
@@ -1576,6 +1583,7 @@ describe("EmailEventHandler test for languages", () => {
         email: "fake+user@noba.com",
         name: "First",
         handle: "fake-handle",
+        pushTokens: [],
         params: {
           ...getTransactionParams(WorkflowName.PAYROLL_DEPOSIT),
           companyName: "Noba",
@@ -1617,6 +1625,7 @@ describe("EmailEventHandler test for languages", () => {
         email: "fake+user@noba.com",
         name: "First",
         handle: "fake-handle",
+        pushTokens: [],
         params: {
           ...getTransactionParams(WorkflowName.PAYROLL_DEPOSIT),
           companyName: "Noba",

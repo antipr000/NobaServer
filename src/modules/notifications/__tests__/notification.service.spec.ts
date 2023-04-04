@@ -441,6 +441,7 @@ describe("NotificationService", () => {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
+            pushTokens: ["token1", "token2"],
             params: payload.depositFailedParams,
           });
           break;
@@ -472,6 +473,7 @@ describe("NotificationService", () => {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
+            pushTokens: ["token1", "token2"],
             params: payload.withdrawalFailedParams,
           });
           break;
@@ -502,6 +504,7 @@ describe("NotificationService", () => {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
+            pushTokens: ["token1", "token2"],
             params: payload.transferFailedParams,
           });
           break;
@@ -527,6 +530,7 @@ describe("NotificationService", () => {
             name: payload.firstName,
             handle: payload.handle,
             params: payload.payrollDepositCompletedParams,
+            pushTokens: ["token1", "token2"],
             locale: payload.locale,
           });
           break;

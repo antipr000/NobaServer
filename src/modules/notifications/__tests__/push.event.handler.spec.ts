@@ -11,6 +11,10 @@ import { SendDepositCompletedEvent } from "../events/SendDepositCompletedEvent";
 import { SendWithdrawalCompletedEvent } from "../events/SendWithdrawalCompletedEvent";
 import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent";
 import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
+import { SendDepositFailedEvent } from "../events/SendDepositFailedEvent";
+import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
+import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
+import { SendPayrollDepositCompletedEvent } from "../events/SendPayrollDepositCompletedEvent";
 
 describe.each([
   ["en", "en"],
@@ -90,6 +94,49 @@ describe.each([
     ).once();
   });
 
+  it(`should call pushClient with Deposit failed event and ${locale} locale`, async () => {
+    const payload = new SendDepositFailedEvent({
+      email: "fake+user@noba.com",
+      name: "First",
+      handle: "fake-handle",
+      params: getTransactionParams(WorkflowName.WALLET_DEPOSIT),
+      pushTokens: ["push-token-1", "push-token-2"],
+      locale: locale,
+    });
+
+    await eventHandler.sendDepositFailedEvent(payload);
+
+    verify(
+      mockPushClient.sendPushNotification(
+        deepEqual({
+          token: "push-token-1",
+          templateKey: `template_send_deposit_failed_${expectedSuffix}`,
+          params: {
+            transactionParams: {
+              amount: payload.params.creditAmount,
+              currency: payload.params.creditCurrency,
+            },
+          },
+        }),
+      ),
+    ).once();
+
+    verify(
+      mockPushClient.sendPushNotification(
+        deepEqual({
+          token: "push-token-2",
+          templateKey: `template_send_deposit_failed_${expectedSuffix}`,
+          params: {
+            transactionParams: {
+              amount: payload.params.creditAmount,
+              currency: payload.params.creditCurrency,
+            },
+          },
+        }),
+      ),
+    ).once();
+  });
+
   it(`should call PushClient with Withdrawal completed event and ${locale} locale`, async () => {
     const payload = new SendWithdrawalCompletedEvent({
       email: "fake+user@noba.com",
@@ -124,6 +171,51 @@ describe.each([
         deepEqual({
           token: "push-token-2",
           templateKey: `template_send_withdrawal_successful_${expectedSuffix}`,
+          params: {
+            transactionParams: {
+              amount: payload.params.debitAmount,
+              currency: payload.params.debitCurrency,
+            },
+          },
+        }),
+      ),
+    ).once();
+  });
+
+  it(`should call PushClient with Withdrawal failed event and ${locale} locale`, async () => {
+    const payload = new SendWithdrawalFailedEvent({
+      email: "fake+user@noba.com",
+      name: "First",
+      handle: "fake-handle",
+      params: {
+        ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
+      },
+      pushTokens: ["push-token-1", "push-token-2"],
+      locale: locale,
+    });
+
+    await eventHandler.sendWithdrawalFailedEvent(payload);
+
+    verify(
+      mockPushClient.sendPushNotification(
+        deepEqual({
+          token: "push-token-1",
+          templateKey: `template_send_withdrawal_failed_${expectedSuffix}`,
+          params: {
+            transactionParams: {
+              amount: payload.params.debitAmount,
+              currency: payload.params.debitCurrency,
+            },
+          },
+        }),
+      ),
+    ).once();
+
+    verify(
+      mockPushClient.sendPushNotification(
+        deepEqual({
+          token: "push-token-2",
+          templateKey: `template_send_withdrawal_failed_${expectedSuffix}`,
           params: {
             transactionParams: {
               amount: payload.params.debitAmount,
@@ -188,6 +280,59 @@ describe.each([
     ).once();
   });
 
+  it(`should call PushClient with Transfer failed event and ${locale} locale`, async () => {
+    const payload = new SendTransferFailedEvent({
+      email: "fake+user@noba.com",
+      name: "First",
+      handle: "fake-handle",
+      pushTokens: ["push-token-1", "push-token-2"],
+      params: {
+        ...getTransactionParams(WorkflowName.WALLET_TRANSFER),
+        creditConsumer_firstName: "Justin",
+        creditConsumer_lastName: "Ashworth",
+        creditConsumer_handle: "justin",
+        debitConsumer_handle: "gal",
+      },
+      locale: locale,
+    });
+
+    await eventHandler.sendTransferFailedEvent(payload);
+
+    verify(
+      mockPushClient.sendPushNotification(
+        deepEqual({
+          token: "push-token-1",
+          templateKey: `template_send_transfer_failed_${expectedSuffix}`,
+          params: {
+            transactionParams: {
+              amount: payload.params.debitAmount,
+              currency: payload.params.debitCurrency,
+              receiverHandle: payload.params.creditConsumer_handle,
+            },
+          },
+          transferCounterPartyHandle: payload.params.creditConsumer_handle,
+        }),
+      ),
+    ).once();
+
+    verify(
+      mockPushClient.sendPushNotification(
+        deepEqual({
+          token: "push-token-2",
+          templateKey: `template_send_transfer_failed_${expectedSuffix}`,
+          params: {
+            transactionParams: {
+              amount: payload.params.debitAmount,
+              currency: payload.params.debitCurrency,
+              receiverHandle: payload.params.creditConsumer_handle,
+            },
+          },
+          transferCounterPartyHandle: payload.params.creditConsumer_handle,
+        }),
+      ),
+    ).once();
+  });
+
   it(`should call PushClient with Transfer completed event for receiver and ${locale} locale`, async () => {
     const payload = new SendTransferReceivedEvent({
       email: "fake+user@noba.com",
@@ -238,6 +383,58 @@ describe.each([
             },
           },
           transferCounterPartyHandle: payload.params.debitConsumer_handle,
+        }),
+      ),
+    ).once();
+  });
+
+  it(`should call PushClient with Payroll deposit completed event and ${locale} locale`, async () => {
+    const payload = new SendPayrollDepositCompletedEvent({
+      email: "fake+user@noba.com",
+      name: "First",
+      handle: "fake-handle",
+      pushTokens: ["push-token-1", "push-token-2"],
+      params: {
+        ...getTransactionParams(WorkflowName.WALLET_DEPOSIT),
+        companyName: "FakeCompany",
+      },
+      locale: locale,
+    });
+
+    await eventHandler.sendPayrollDepositCompletedEvent(payload);
+
+    verify(
+      mockPushClient.sendPushNotification(
+        deepEqual({
+          token: "push-token-1",
+          templateKey: `template_send_payroll_deposit_completed_${expectedSuffix}`,
+          params: {
+            transactionParams: {
+              amount: payload.params.debitAmount,
+              currency: payload.params.debitCurrency,
+            },
+            payrollParams: {
+              companyName: payload.params.companyName,
+            },
+          },
+        }),
+      ),
+    ).once();
+
+    verify(
+      mockPushClient.sendPushNotification(
+        deepEqual({
+          token: "push-token-2",
+          templateKey: `template_send_payroll_deposit_completed_${expectedSuffix}`,
+          params: {
+            transactionParams: {
+              amount: payload.params.debitAmount,
+              currency: payload.params.debitCurrency,
+            },
+            payrollParams: {
+              companyName: payload.params.companyName,
+            },
+          },
         }),
       ),
     ).once();
