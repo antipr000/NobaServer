@@ -21,7 +21,7 @@ import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { ConsumerSearchDTO } from "../../../modules/consumer/dto/consumer.search.dto";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { getMockConsumerMapperWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.mapper";
-import { getMockCircleServiceWithDefaults } from "../../../modules/psp/mocks/mock.circle.service";
+import { getMockCircleServiceWithDefaults } from "../../circle/public/mocks/mock.circle.service";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 import { Employee } from "../../../modules/employee/domain/Employee";
 import { DocumentVerificationStatus, KYCProvider, KYCStatus } from "@prisma/client";

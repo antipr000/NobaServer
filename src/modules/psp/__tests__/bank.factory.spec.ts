@@ -7,7 +7,7 @@ import { BankFactory } from "../factory/bank.factory";
 import { MonoWorkflowService } from "../mono/mono.workflow.service";
 import { getMockMonoWorkflowServiceWithDefaults } from "../mono/mocks/mock.mono.workflow.service";
 import { CircleService } from "../circle.service";
-import { getMockCircleServiceWithDefaults } from "../mocks/mock.circle.service";
+import { getMockCircleServiceWithDefaults } from "../../circle/public/mocks/mock.circle.service";
 import { IBank } from "../factory/ibank";
 
 describe("BankFactory Tests", () => {

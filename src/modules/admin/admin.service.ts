@@ -11,7 +11,6 @@ import { ServiceErrorCode, ServiceException } from "../../core/exception/service
 import { ConsumerService } from "../consumer/consumer.service";
 import { ConsumerSearchDTO } from "../consumer/dto/consumer.search.dto";
 import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
-import { CircleService } from "../psp/circle.service";
 import { EmployeeService } from "../employee/employee.service";
 import { Employee } from "../employee/domain/Employee";
 import { ConsumerEmployeeDetailsDTO, ConsumerInternalDTO } from "../consumer/dto/ConsumerInternalDTO";
@@ -22,6 +21,7 @@ import { TransactionFilterOptionsDTO } from "../transaction/dto/TransactionFilte
 import { Transaction } from "../transaction/domain/Transaction";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { TransactionEvent } from "../transaction/domain/TransactionEvent";
+import { CircleService } from "../circle/public/circle.service";
 
 @Injectable()
 export class AdminService {

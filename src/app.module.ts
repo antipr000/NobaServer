@@ -21,6 +21,10 @@ import { NotificationWorkflowModule } from "./modules/notifications/notification
 import { BubbleModule } from "./modules/bubble/bubble.module";
 import { TemporalModule } from "./infra/temporal/temporal.module";
 import { CardModule } from "./modules/psp/card/card.module";
+import { PomeloPublicModule } from "./modules/pomelo/public/pomelo.public.module";
+import { PomeloWebhooksModule } from "./modules/pomelo/webhook/pomelo.webhook.module";
+import { CirclePublicModule } from "./modules/circle/public/circle.public.module";
+import { CircleWorkflowModule } from "./modules/circle/workflow/circle.workflow.module";
 
 @Module({
   imports: [
@@ -45,6 +49,12 @@ import { CardModule } from "./modules/psp/card/card.module";
     TemporalModule,
     ScheduleModule.forRoot(),
     CardModule,
+    // Follow the new structure that is being decided upon
+    // https://www.notion.so/onenoba/Code-Structure-15e7b735f00a4dd980d0ebe23d6af18a
+    PomeloPublicModule,
+    PomeloWebhooksModule,
+    CirclePublicModule,
+    CircleWorkflowModule,
   ],
   controllers: [AppController],
   providers: [
@@ -77,6 +87,12 @@ export class AppModule {}
     TransactionWorkflowModule,
     NotificationWorkflowModule,
     ScheduleModule.forRoot(),
+    // Follow the new structure that is being decided upon
+    // https://www.notion.so/onenoba/Code-Structure-15e7b735f00a4dd980d0ebe23d6af18a
+    PomeloPublicModule,
+    PomeloWebhooksModule,
+    CirclePublicModule,
+    CircleWorkflowModule,
   ],
   controllers: [AppController],
   providers: [

@@ -48,9 +48,9 @@ import { ConsumerService } from "../../consumer/consumer.service";
 import { WorkflowName } from "../../transaction/domain/Transaction";
 import { Currency } from "../../transaction/domain/TransactionTypes";
 import { TransactionVerification } from "../domain/TransactionVerification";
-import { CircleService } from "../../psp/circle.service";
 import { Utils } from "../../../core/utils/Utils";
 import { HealthCheckResponse, HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
+import { CircleService } from "../../../modules/circle/public/circle.service";
 
 @Injectable()
 export class Sardine implements IDVProvider {

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
+import { CircleService } from "../../../modules/circle/public/circle.service";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
-import { CircleService } from "../circle.service";
 import { BankName } from "../domain/BankFactoryTypes";
 import { MonoWorkflowService } from "../mono/mono.workflow.service";
 import { IBank } from "./ibank";

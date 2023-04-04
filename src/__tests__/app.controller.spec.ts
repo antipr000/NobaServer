@@ -22,7 +22,7 @@ import { getMockMonoServiceWithDefaults } from "../modules/psp/mono/mocks/mock.m
 import { VerificationService } from "../modules/verification/verification.service";
 import { CircleService } from "../modules/psp/circle.service";
 import { getMockVerificationServiceWithDefaults } from "../modules/verification/mocks/mock.verification.service";
-import { getMockCircleServiceWithDefaults } from "../modules/psp/mocks/mock.circle.service";
+import { getMockCircleServiceWithDefaults } from "../modules/circle/public/mocks/mock.circle.service";
 import { HealthCheckStatus } from "../core/domain/HealthCheckTypes";
 import { ALLOWED_DEPTH } from "../modules/common/dto/HealthCheckQueryDTO";
 import { WorkflowExecutor } from "../infra/temporal/workflow.executor";
