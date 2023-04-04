@@ -25,6 +25,7 @@ export type NotificationPayload = {
   nobaUserID?: string;
   cardNetwork?: string;
   last4Digits?: string;
+  pushTokens?: string[];
   depositCompletedParams?: DepositCompletedNotificationParameters;
   depositInitiatedParams?: DepositInitiatedNotificationParameters;
   depositFailedParams?: DepositFailedNotificationParameters;

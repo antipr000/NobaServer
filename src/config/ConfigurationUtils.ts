@@ -170,6 +170,7 @@ export const DEPENDENCY_CONFIG_KEY = "dependencies";
 export const DEPENDENCY_EMAIL_CLIENT = "emailClient";
 export const DEPENDENCY_SMS_CLIENT = "smsClient";
 export const DEPENDENCY_DASHBOARD_CLIENT = "dashboardClient";
+export const DEPENDENCY_PUSH_CLIENT = "pushClient";
 
 export const CIRCLE_CONFIG_KEY = "circle";
 export const CIRCLE_ENVIRONMENT = "env";

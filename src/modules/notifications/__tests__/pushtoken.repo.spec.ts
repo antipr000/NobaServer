@@ -8,8 +8,6 @@ import { v4 } from "uuid";
 import { Utils } from "../../../core/utils/Utils";
 import { IPushTokenRepo } from "../repos/pushtoken.repo";
 import { SQLPushTokenRepo } from "../repos/sql.pushtoken.repo";
-import { when } from "ts-mockito";
-import { RepoException } from "../../../core/exception/repo.exception";
 
 describe("PushtokenRepoTests", () => {
   jest.setTimeout(20000);
@@ -36,6 +34,35 @@ describe("PushtokenRepoTests", () => {
   afterAll(async () => {
     await prismaService.pushToken.deleteMany();
     app.close();
+  });
+
+  describe("getAllPushTokensForConsumer", () => {
+    it("should get all push tokens for consumer", async () => {
+      const consumer = getRandomUser();
+      const createdConsumer = await createConsumer(prismaService, consumer);
+      await pushTokenRepo.addPushToken(createdConsumer.props.id, "token");
+      await pushTokenRepo.addPushToken(createdConsumer.props.id, "token2");
+
+      const pushTokens = await pushTokenRepo.getAllPushTokensForConsumer(createdConsumer.props.id);
+      expect(pushTokens).toBeDefined();
+      expect(pushTokens.length).toBe(2);
+      expect(pushTokens[0]).toBe("token");
+      expect(pushTokens[1]).toBe("token2");
+    });
+
+    it("should return empty array if no push tokens exist", async () => {
+      const consumer = getRandomUser();
+      const createdConsumer = await createConsumer(prismaService, consumer);
+      const pushTokens = await pushTokenRepo.getAllPushTokensForConsumer(createdConsumer.props.id);
+      expect(pushTokens).toBeDefined();
+      expect(pushTokens.length).toBe(0);
+    });
+
+    it("should return empty array if consumer does not exist", async () => {
+      const pushTokens = await pushTokenRepo.getAllPushTokensForConsumer("123");
+      expect(pushTokens).toBeDefined();
+      expect(pushTokens.length).toBe(0);
+    });
   });
 
   describe("getPushToken", () => {

@@ -7,7 +7,13 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { DEPENDENCY_CONFIG_KEY } from "../../config/ConfigurationUtils";
-import { DashboardClient, DependencyConfigs, EmailClient, SMSClient } from "../../config/configtypes/DependencyConfigs";
+import {
+  DashboardClient,
+  DependencyConfigs,
+  EmailClient,
+  PushNotificationClient,
+  SMSClient,
+} from "../../config/configtypes/DependencyConfigs";
 import { StubEmailClient } from "./emails/stub.email.client";
 import { SendgridEmailClient } from "./emails/sendgrid.email.client";
 import { SMSEventHandler } from "./sms.event.handler";
@@ -17,6 +23,9 @@ import { PushTokenRepoModule } from "./repos/pushtoken.repo.module";
 import { DashboardEventHandler } from "./dashboard.event.handler";
 import { StubDashboardClient } from "./dashboard/stub.dashboard.client";
 import { BubbleClient } from "./dashboard/bubble.client";
+import { StubPushClient } from "./push/stub.push.client";
+import { ExpoPushClient } from "./push/expo.push.client";
+import { PushEventHandler } from "./push.event.handler";
 
 // This is made to ensure that the "Sendgrid" quota is not utilised in testing environments.
 export const EmailProvider: Provider = {
@@ -70,6 +79,23 @@ export const DashboardProvider: Provider = {
   inject: [CustomConfigService, WINSTON_MODULE_PROVIDER],
 };
 
+export const PushNotificationProvider: Provider = {
+  provide: "PushNotificationClient",
+  useFactory: async (customConfigService: CustomConfigService, logger: Logger) => {
+    switch (customConfigService.get<DependencyConfigs>(DEPENDENCY_CONFIG_KEY).pushClient) {
+      case PushNotificationClient.STUB:
+        return new StubPushClient(logger);
+
+      case PushNotificationClient.EXPO:
+        return new ExpoPushClient(logger);
+
+      default:
+        throw Error("Unexpected Push notification client.");
+    }
+  },
+  inject: [CustomConfigService, WINSTON_MODULE_PROVIDER],
+};
+
 @Module({
   imports: [ConfigModule, CommonModule, PushTokenRepoModule],
   controllers: [],
@@ -78,9 +104,11 @@ export const DashboardProvider: Provider = {
     EmailEventHandler,
     SMSEventHandler,
     DashboardEventHandler,
+    PushEventHandler,
     EmailProvider,
     SMSProvider,
     DashboardProvider,
+    PushNotificationProvider,
   ],
   exports: [NotificationService],
 })
