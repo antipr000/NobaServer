@@ -38,7 +38,7 @@ import {
 } from "../../config/ConfigurationUtils";
 import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 import { Employee } from "../employee/domain/Employee";
-import { TemplateProcessor, TemplateFormat, TemplateLocale } from "../common/utils/template.processor";
+import { TemplateProcessor, TemplateFormat, TemplateLocale, FooterData } from "../common/utils/template.processor";
 import {
   InvoiceEmployeeDisbursement,
   InvoiceReceiptEmployeeDisbursement,
@@ -257,6 +257,8 @@ export class EmployerService {
     const companyName = employer.name;
     const currency = payroll.debitCurrency;
 
+    const footerDataMap = new Map<TemplateLocale, FooterData>();
+
     // Populate templates for each locale
     for (const element of templateProcessor.locales) {
       const locale = element;
@@ -276,11 +278,16 @@ export class EmployerService {
         nobaAccountNumber: accountNumber,
       };
 
+      footerDataMap.set(locale, {
+        left: templateFields.payrollDate,
+        center: templateFields.payrollReference,
+        right: null,
+      });
       templateProcessor.populateTemplate(locale, templateFields);
     }
 
     // Upload templates
-    await templateProcessor.uploadPopulatedTemplates();
+    await templateProcessor.uploadPopulatedTemplates(footerDataMap);
 
     // Destroy template context
     await templateProcessor.destroy();
@@ -341,6 +348,8 @@ export class EmployerService {
     const companyName = employer.name;
     const currency = payroll.debitCurrency;
 
+    const footerDataMap = new Map<TemplateLocale, FooterData>();
+
     // Populate templates for each locale
     for (const element of templateProcessor.locales) {
       const locale = element;
@@ -365,11 +374,16 @@ export class EmployerService {
         totalCreditAmount: totalCreditAmount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
       };
 
+      footerDataMap.set(locale, {
+        left: templateFields.payrollDate,
+        center: templateFields.payrollReference,
+        right: null,
+      });
       templateProcessor.populateTemplate(locale, templateFields);
     }
 
     // Upload templates
-    await templateProcessor.uploadPopulatedTemplates();
+    await templateProcessor.uploadPopulatedTemplates(footerDataMap);
 
     // Destroy template context
     await templateProcessor.destroy();

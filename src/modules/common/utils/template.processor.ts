@@ -9,6 +9,12 @@ export enum TemplateFormat {
   HTML = "html",
 }
 
+export interface FooterData {
+  left: string;
+  center: string;
+  right: string;
+}
+
 export class TemplateLocale extends Intl.Locale {
   static readonly ENGLISH = new TemplateLocale("en-US");
   static readonly SPANISH = new TemplateLocale("es-CO");
@@ -101,7 +107,7 @@ export class TemplateProcessor {
     this.writeTimingLog(`Template populated for locale ${locale}`, Date.now() - start);
   }
 
-  public async uploadPopulatedTemplates() {
+  public async uploadPopulatedTemplates(footerData: Map<TemplateLocale, FooterData>) {
     // For each locale and format, save the populated template
     for (const locale of this.locales) {
       const populatedTemplate = this.populatedTemplates.get(locale);
@@ -120,26 +126,17 @@ export class TemplateProcessor {
 
         if (this.formats.has(TemplateFormat.PDF)) {
           if (!this.browser) await this.initialize();
-          const pdf = await this.convertToPDF(populatedTemplate, `${this.templateFilename}.${TemplateFormat.PDF}`);
+          const pdf = await this.convertToPDF(
+            populatedTemplate,
+            `${this.templateFilename}.${TemplateFormat.PDF}`,
+            footerData.get(locale),
+          );
           const start = Date.now();
 
-          // this.s3Service.uploadToS3(
-          //   this.savePath,
-          //   `${this.saveBaseFilename}_${locale.language}.${TemplateFormat.PDF}`,
-          //   pdf,
-          // );
-
-          // write to local file
-
-          fs.writeFile(
-            `${__dirname}/${this.saveBaseFilename}_${locale.language}.${TemplateFormat.PDF}`,
+          this.s3Service.uploadToS3(
+            this.savePath,
+            `${this.saveBaseFilename}_${locale.language}.${TemplateFormat.PDF}`,
             pdf,
-            function (err) {
-              if (err) {
-                return console.log(err);
-              }
-              console.log("The file was saved!");
-            },
           );
 
           this.writeTimingLog(`PDF template for ${locale.language} uploaded`, Date.now() - start);
@@ -148,19 +145,27 @@ export class TemplateProcessor {
     }
   }
 
-  private async convertToPDF(html: string, filename: string): Promise<Buffer> {
+  private async convertToPDF(html: string, filename: string, footerData: FooterData): Promise<Buffer> {
     const start = Date.now();
     const page = await this.browser.newPage();
     await page.emulateMediaType("screen");
     await page.setContent(html);
     await page.evaluateHandle("document.fonts.ready");
+    const pageNumberFooter = `<span class="pageNumber" style=""></span>/<span class="totalPages"></span>`;
     const pdf = page.pdf({
       format: "A4",
       printBackground: true,
       displayHeaderFooter: true,
       headerTemplate: `<div></div>`,
-      footerTemplate: `<div style="font-family: system-ui; margin-left: 20px; margin-right: 20px; display:flex; flex-direction: row; font-size: 8px; width: 100%;"><span class="date" style="flex: 1"></span><span>123213292</span><div><span class="pageNumber" style="font-size: 8px; flex: 1"></span>/<span class="totalPages"><div></span>
-      </div>`,
+      footerTemplate: `
+          <div style="font-family: system-ui; margin-left: 30px; margin-right: 30px; display: flex; font-size: 8px; width: 100%;">
+            <div style="flex: 1; display:flex; justify-content:left;"><span>${footerData.left}</span></div>
+            <div style="flex: 1; display:flex; justify-content:center;"><span>${footerData.center}</span></div>
+            <div style="flex: 1; display:flex; justify-content:right;">${
+              footerData.right ? `<span>${footerData.right}</span>` : pageNumberFooter
+            }</div>
+          </div>
+          `,
       margin: { bottom: "80px", top: "80px", left: "50px", right: "50px" },
     });
     this.writeTimingLog("PDF generated", Date.now() - start);
