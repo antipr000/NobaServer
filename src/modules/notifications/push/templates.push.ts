@@ -28,7 +28,11 @@ export const pushNotificationBodyTemplates = {
 
 export const pushNotificationTitleTemplates = {
   template_send_deposit_successful_en: () => "Deposit completed",
+  template_send_deposit_successful_es: () => "Depósito completado",
   template_send_withdrawal_successful_en: () => "Withdrawal completed",
+  template_send_withdrawal_successful_es: () => "Retiro completado",
   template_send_transfer_successful_sender_en: () => "Transfer completed",
+  template_send_transfer_successful_sender_es: () => "Transferencia completada",
   template_send_transfer_successful_receiver_en: () => "Transfer received",
+  template_send_transfer_successful_receiver_es: () => "Transferencia recibida",
 };
