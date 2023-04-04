@@ -12,7 +12,23 @@ export class SQLPushTokenRepo implements IPushTokenRepo {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
-  constructor() {}
+  async getAllPushTokensForConsumer(consumerID: string): Promise<string[]> {
+    try {
+      const consumerPushTokens = await this.prisma.pushToken.findMany({
+        where: {
+          consumerID: consumerID,
+        },
+      });
+      if (!consumerPushTokens) {
+        return [];
+      }
+
+      return consumerPushTokens.map(tokenData => tokenData.pushToken);
+    } catch (e) {
+      this.logger.error(JSON.stringify(e));
+      return [];
+    }
+  }
 
   async getPushToken(consumerID: string, pushToken: string): Promise<string> {
     try {

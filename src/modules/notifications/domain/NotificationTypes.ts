@@ -38,6 +38,7 @@ export enum NotificationEventHandler {
   WEBHOOK = "webhook",
   SMS = "sms",
   DASHBOARD = "dashboard",
+  PUSH = "push",
 }
 
 export enum NotificationWorkflowTypes {

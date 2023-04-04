@@ -2,7 +2,7 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { NotificationService } from "../notification.service";
-import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
+import { anyString, anything, deepEqual, instance, verify, when } from "ts-mockito";
 import { NotificationEventType } from "../domain/NotificationTypes";
 import { SENDGRID_API_KEY, SENDGRID_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { EventEmitter2 } from "@nestjs/event-emitter";
@@ -321,6 +321,7 @@ describe("NotificationService", () => {
 
     events.forEach(async event => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+      when(pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID)).thenResolve(["token1", "token2"]);
 
       await notificationService.sendNotification(event, payload);
       let data: any;
@@ -421,6 +422,7 @@ describe("NotificationService", () => {
             name: payload.firstName,
             handle: payload.handle,
             params: payload.depositCompletedParams,
+            pushTokens: ["token1", "token2"],
             locale: payload.locale,
           });
           break;
@@ -449,6 +451,7 @@ describe("NotificationService", () => {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
+            pushTokens: ["token1", "token2"],
             params: payload.withdrawalCompletedParams,
           });
           break;
@@ -479,6 +482,7 @@ describe("NotificationService", () => {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
+            pushTokens: ["token1", "token2"],
             params: payload.transferCompletedParams,
           });
           break;
@@ -488,6 +492,7 @@ describe("NotificationService", () => {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
+            pushTokens: ["token1", "token2"],
             params: payload.transferReceivedParams,
           });
           break;

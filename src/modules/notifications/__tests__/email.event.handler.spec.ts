@@ -756,6 +756,7 @@ describe("EmailEventHandler test for languages", () => {
         name: "First",
         handle: "fake-handle",
         params: getTransactionParams(WorkflowName.WALLET_DEPOSIT),
+        pushTokens: [],
         locale: "en",
       });
 
@@ -793,6 +794,7 @@ describe("EmailEventHandler test for languages", () => {
         name: "First",
         handle: "fake-handle",
         params: getTransactionParams(WorkflowName.WALLET_DEPOSIT),
+        pushTokens: [],
         locale: "es_co",
       });
 
@@ -830,6 +832,7 @@ describe("EmailEventHandler test for languages", () => {
         name: "First",
         handle: "fake-handle",
         params: getTransactionParams(WorkflowName.WALLET_DEPOSIT),
+        pushTokens: [],
         locale: "fake-locale",
       });
 
@@ -1115,6 +1118,7 @@ describe("EmailEventHandler test for languages", () => {
         params: {
           ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
         },
+        pushTokens: [],
         locale: "en",
       });
 
@@ -1154,6 +1158,7 @@ describe("EmailEventHandler test for languages", () => {
         params: {
           ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
         },
+        pushTokens: [],
         locale: "es_co",
       });
 
@@ -1193,6 +1198,7 @@ describe("EmailEventHandler test for languages", () => {
         params: {
           ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
         },
+        pushTokens: [],
         locale: "fake-locale",
       });
 
@@ -1402,6 +1408,7 @@ describe("EmailEventHandler test for languages", () => {
           creditConsumer_handle: "justin",
           debitConsumer_handle: "gal",
         },
+        pushTokens: [],
         locale: "en",
       });
 
@@ -1446,6 +1453,7 @@ describe("EmailEventHandler test for languages", () => {
           debitConsumer_firstName: "Gal",
           debitConsumer_lastName: "Ben Chanoch",
         },
+        pushTokens: [],
         locale: "en",
       });
 
