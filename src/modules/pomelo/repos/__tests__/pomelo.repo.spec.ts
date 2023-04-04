@@ -24,7 +24,12 @@ import {
 import { PomeloCard, PomeloCardSaveRequest, PomeloCardUpdateRequest } from "../../domain/PomeloCard";
 import { CardProvider, NobaCard, NobaCardStatus, NobaCardType } from "../../../psp/card/domain/NobaCard";
 import { createNobaCard } from "../../../psp/card/test_utils/util";
-import { PomeloCurrency, PomeloTransaction, PomeloTransactionSaveRequest } from "../../domain/PomeloTransaction";
+import {
+  PomeloCurrency,
+  PomeloTransaction,
+  PomeloTransactionSaveRequest,
+  PomeloTransactionStatus,
+} from "../../domain/PomeloTransaction";
 
 const getAllPomeloUserRecords = async (prismaService: PrismaService): Promise<PrismaPomeloUserModel[]> => {
   return prismaService.pomeloUser.findMany({});
@@ -747,7 +752,7 @@ describe("SqlPomeloRepoTests", () => {
       expect(await getAllPomeloTransactionRecords(prismaService)).toStrictEqual([]);
     });
 
-    it("should successfully create a PomeloTransaction", async () => {
+    it("should successfully create a PomeloTransaction with 'default' PENDING status", async () => {
       const consumerID: string = await createTestConsumer(prismaService);
       const nobaCard: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
       const pomeloCard: PomeloCard = await createPomeloCard(consumerID, nobaCard.id, prismaService);
@@ -772,6 +777,7 @@ describe("SqlPomeloRepoTests", () => {
         amountInUSD: request.amountInUSD,
         amountInLocalCurrency: request.amountInLocalCurrency,
         localCurrency: request.localCurrency,
+        status: PomeloTransactionStatus.PENDING,
         createdTimestamp: expect.any(Date),
         updatedTimestamp: expect.any(Date),
       });
@@ -786,8 +792,69 @@ describe("SqlPomeloRepoTests", () => {
         amountInUSD: request.amountInUSD,
         amountInLocalCurrency: request.amountInLocalCurrency,
         localCurrency: request.localCurrency,
+        status: PomeloTransactionStatus.PENDING,
         createdTimestamp: pomeloTransaction.createdTimestamp,
         updatedTimestamp: pomeloTransaction.updatedTimestamp,
+      });
+    });
+  });
+
+  describe("getPomeloTransactionByPomeloIdempotencyKey", () => {
+    it("should throw NOT_FOUND error if the transaction with sepecified `pomeloTransactionID` is not found", async () => {
+      try {
+        await pomeloRepo.updatePomeloTransactionStatus(uuid(), PomeloTransactionStatus.INSUFFICIENT_FUNDS);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(RepoException);
+        expect(err.errorCode).toBe(RepoErrorCode.NOT_FOUND);
+      }
+    });
+
+    it("should update the status of the specified PomeloTransaction", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const pomeloUser = await createPomeloUser(consumerID, prismaService);
+
+      const nobaCard1: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard1: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUser.pomeloID,
+        nobaCard1.id,
+        prismaService,
+      );
+      const nobaTransactionID1 = uuid();
+      const pomeloTransaction1: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard1.pomeloCardID,
+        nobaTransactionID1,
+        prismaService,
+      );
+
+      const nobaCard2: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard2: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUser.pomeloID,
+        nobaCard2.id,
+        prismaService,
+      );
+      const nobaTransactionID2 = uuid();
+      const pomeloTransaction2: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard2.pomeloCardID,
+        nobaTransactionID2,
+        prismaService,
+      );
+
+      await pomeloRepo.updatePomeloTransactionStatus(
+        pomeloTransaction1.pomeloTransactionID,
+        PomeloTransactionStatus.INSUFFICIENT_FUNDS,
+      );
+
+      const allTransactions = await getAllPomeloTransactionRecords(prismaService);
+      expect(allTransactions).toHaveLength(2);
+      expect(allTransactions).toContainEqual({
+        ...pomeloTransaction1,
+        status: PomeloTransactionStatus.INSUFFICIENT_FUNDS,
+        updatedTimestamp: expect.any(Date),
+      });
+      expect(allTransactions).toContainEqual({
+        ...pomeloTransaction2,
+        status: PomeloTransactionStatus.PENDING,
       });
     });
   });

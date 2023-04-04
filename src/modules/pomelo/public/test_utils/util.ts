@@ -2,7 +2,7 @@ import { PrismaService } from "../../../../infraproviders/PrismaService";
 import { uuid } from "uuidv4";
 import { PomeloCard } from "../../domain/PomeloCard";
 import { PomeloUser } from "../../domain/PomeloUser";
-import { PomeloCurrency, PomeloTransaction } from "../../domain/PomeloTransaction";
+import { PomeloCurrency, PomeloTransaction, PomeloTransactionStatus } from "../../domain/PomeloTransaction";
 
 export const getRandomPomeloUser = (consumerID: string): PomeloUser => {
   return {
@@ -127,6 +127,7 @@ export const createPomeloTransaction = async (
       amountInUSD: 10,
       amountInLocalCurrency: 500,
       localCurrency: PomeloCurrency.COP,
+      status: PomeloTransactionStatus.PENDING,
     },
   });
 
@@ -139,6 +140,7 @@ export const createPomeloTransaction = async (
     amountInUSD: savedTransaction.amountInUSD,
     amountInLocalCurrency: savedTransaction.amountInLocalCurrency,
     localCurrency: savedTransaction.localCurrency as PomeloCurrency,
+    status: savedTransaction.status as PomeloTransactionStatus,
     createdTimestamp: savedTransaction.createdTimestamp,
     updatedTimestamp: savedTransaction.updatedTimestamp,
   };
@@ -154,6 +156,7 @@ export const getRandomPomeloTransaction = (pomeloCardID: string, nobaTransaction
     amountInUSD: 10,
     amountInLocalCurrency: 500,
     localCurrency: PomeloCurrency.COP,
+    status: PomeloTransactionStatus.PENDING,
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };

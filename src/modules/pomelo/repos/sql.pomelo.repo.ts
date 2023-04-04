@@ -30,6 +30,7 @@ import {
   PomeloTransaction,
   validateSavePomeloTransactionRequest,
   validatePomeloTransaction,
+  PomeloTransactionStatus,
 } from "../domain/PomeloTransaction";
 import { CardProvider, convertToDomainNobaCard, validateNobaCard, NobaCard } from "../../psp/card/domain/NobaCard";
 
@@ -274,6 +275,7 @@ export class SQLPomeloRepo implements PomeloRepo {
         amountInUSD: request.amountInUSD,
         amountInLocalCurrency: request.amountInLocalCurrency,
         localCurrency: request.localCurrency,
+        status: PomeloTransactionStatus.PENDING,
       };
 
       const returnedTransaction: PrismaPomeloTransactionModel = await this.prismaService.pomeloTransaction.create({
@@ -296,6 +298,31 @@ export class SQLPomeloRepo implements PomeloRepo {
       throw new RepoException({
         errorCode: RepoErrorCode.INVALID_DATABASE_RECORD,
         message: "Invalid database record",
+      });
+    }
+  }
+
+  async updatePomeloTransactionStatus(pomeloTransactionID: string, status: PomeloTransactionStatus): Promise<void> {
+    try {
+      await this.prismaService.pomeloTransaction.update({
+        data: {
+          status: status,
+        },
+        where: {
+          pomeloTransactionID: pomeloTransactionID,
+        },
+      });
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      if (err.meta && err.meta.cause === "Record to update not found.") {
+        throw new RepoException({
+          errorCode: RepoErrorCode.NOT_FOUND,
+          message: `Transaction with pomeloTransactionID: '${pomeloTransactionID}' not found`,
+        });
+      }
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: `Error updating the Pomelo Transaction status for pomeloTransactionID: '${pomeloTransactionID}'`,
       });
     }
   }

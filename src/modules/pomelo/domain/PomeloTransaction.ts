@@ -11,8 +11,18 @@ export class PomeloTransaction {
   amountInUSD: number;
   amountInLocalCurrency: number;
   localCurrency: PomeloCurrency;
+  status: PomeloTransactionStatus;
   createdTimestamp: Date;
   updatedTimestamp: Date;
+}
+
+export enum PomeloTransactionStatus {
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  INSUFFICIENT_FUNDS = "INSUFFICIENT_FUNDS",
+  INVALID_MERCHANT = "INVALID_MERCHANT",
+  INVALID_AMOUNT = "INVALID_AMOUNT",
+  SYSTEM_ERROR = "SYSTEM_ERROR",
 }
 
 export enum PomeloCurrency {
@@ -62,6 +72,9 @@ export const validatePomeloTransaction = (pomeloTransaction: PomeloTransaction) 
     localCurrency: Joi.string()
       .required()
       .valid(...Object.values(PomeloCurrency)),
+    status: Joi.string()
+      .required()
+      .valid(...Object.values(PomeloTransactionStatus)),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
   };
@@ -85,6 +98,7 @@ export const convertToDomainPomeloTransaction = (
     amountInUSD: pomeloTransaction.amountInUSD,
     amountInLocalCurrency: pomeloTransaction.amountInLocalCurrency,
     localCurrency: pomeloTransaction.localCurrency as PomeloCurrency,
+    status: pomeloTransaction.status as PomeloTransactionStatus,
     createdTimestamp: pomeloTransaction.createdTimestamp,
     updatedTimestamp: pomeloTransaction.updatedTimestamp,
   };
