@@ -7,8 +7,10 @@ export class PushNotificationPayload {
 }
 
 export class PushNotificationParams {
-  amount?: number;
-  currency?: string;
-  senderHandle?: string;
-  receiverHandle?: string;
+  transactionParams: {
+    amount?: number;
+    currency?: string;
+    senderHandle?: string;
+    receiverHandle?: string;
+  };
 }

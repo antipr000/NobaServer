@@ -22,8 +22,10 @@ export class PushEventHandler {
         token: pushToken,
         templateKey: PushTemplates.getOrDefault(PushTemplates.DEPOSIT_COMPLETED_PUSH, payload.locale ?? "en"),
         params: {
-          amount: payload.params.creditAmount,
-          currency: payload.params.creditCurrency,
+          transactionParams: {
+            amount: payload.params.creditAmount,
+            currency: payload.params.creditCurrency,
+          },
         },
       });
     }
@@ -38,8 +40,10 @@ export class PushEventHandler {
         token: pushToken,
         templateKey: PushTemplates.getOrDefault(PushTemplates.WITHDRAWAL_COMPLETED_PUSH, payload.locale ?? "en"),
         params: {
-          amount: payload.params.debitAmount,
-          currency: payload.params.debitCurrency,
+          transactionParams: {
+            amount: payload.params.debitAmount,
+            currency: payload.params.debitCurrency,
+          },
         },
       });
     }
@@ -54,9 +58,11 @@ export class PushEventHandler {
         token: pushToken,
         templateKey: PushTemplates.getOrDefault(PushTemplates.TRANSFER_COMPLETED_PUSH, payload.locale ?? "en"),
         params: {
-          amount: payload.params.debitAmount,
-          currency: payload.params.debitCurrency,
-          receiverHandle: payload.params.creditConsumer_handle,
+          transactionParams: {
+            amount: payload.params.debitAmount,
+            currency: payload.params.debitCurrency,
+            receiverHandle: payload.params.creditConsumer_handle,
+          },
         },
         transferCounterPartyHandle: payload.params.creditConsumer_handle,
       });
@@ -72,9 +78,11 @@ export class PushEventHandler {
         token: pushToken,
         templateKey: PushTemplates.getOrDefault(PushTemplates.TRANSFER_RECEIVED_PUSH, payload.locale ?? "en"),
         params: {
-          amount: payload.params.creditAmount,
-          currency: payload.params.creditCurrency,
-          senderHandle: payload.params.debitConsumer_handle,
+          transactionParams: {
+            amount: payload.params.creditAmount,
+            currency: payload.params.creditCurrency,
+            senderHandle: payload.params.debitConsumer_handle,
+          },
         },
         transferCounterPartyHandle: payload.params.debitConsumer_handle,
       });

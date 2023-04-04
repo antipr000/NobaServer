@@ -12,7 +12,12 @@ import { SendWithdrawalCompletedEvent } from "../events/SendWithdrawalCompletedE
 import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent";
 import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
 
-describe("PushEventHandler Tests", () => {
+describe.each([
+  ["en", "en"],
+  ["es", "es"],
+  ["es_co", "es"],
+  ["hi", "en"],
+])("PushEventHandler Tests", (locale: string, expectedSuffix: string) => {
   let mockPushClient: PushClient;
   let eventHandler: PushEventHandler;
 
@@ -42,14 +47,14 @@ describe("PushEventHandler Tests", () => {
     when(mockPushClient.sendPushNotification(anything())).thenResolve();
   });
 
-  it("should call pushClient with Deposit completed event", async () => {
+  it(`should call pushClient with Deposit completed event and ${locale} locale`, async () => {
     const payload = new SendDepositCompletedEvent({
       email: "fake+user@noba.com",
       name: "First",
       handle: "fake-handle",
       params: getTransactionParams(WorkflowName.WALLET_DEPOSIT),
       pushTokens: ["push-token-1", "push-token-2"],
-      locale: "en",
+      locale: locale,
     });
 
     await eventHandler.sendDepositCompletedEvent(payload);
@@ -58,10 +63,12 @@ describe("PushEventHandler Tests", () => {
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-1",
-          templateKey: "template_send_deposit_successfull_en",
+          templateKey: `template_send_deposit_successful_${expectedSuffix}`,
           params: {
-            amount: payload.params.creditAmount,
-            currency: payload.params.creditCurrency,
+            transactionParams: {
+              amount: payload.params.creditAmount,
+              currency: payload.params.creditCurrency,
+            },
           },
         }),
       ),
@@ -71,17 +78,19 @@ describe("PushEventHandler Tests", () => {
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-2",
-          templateKey: "template_send_deposit_successfull_en",
+          templateKey: `template_send_deposit_successful_${expectedSuffix}`,
           params: {
-            amount: payload.params.creditAmount,
-            currency: payload.params.creditCurrency,
+            transactionParams: {
+              amount: payload.params.creditAmount,
+              currency: payload.params.creditCurrency,
+            },
           },
         }),
       ),
     ).once();
   });
 
-  it("should call PushClient with Withdrawal completed event", async () => {
+  it(`should call PushClient with Withdrawal completed event and ${locale} locale`, async () => {
     const payload = new SendWithdrawalCompletedEvent({
       email: "fake+user@noba.com",
       name: "First",
@@ -90,7 +99,7 @@ describe("PushEventHandler Tests", () => {
         ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
       },
       pushTokens: ["push-token-1", "push-token-2"],
-      locale: "en",
+      locale: locale,
     });
 
     await eventHandler.sendWithdrawalCompletedEvent(payload);
@@ -99,10 +108,12 @@ describe("PushEventHandler Tests", () => {
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-1",
-          templateKey: "template_send_withdrawal_successfull_en",
+          templateKey: `template_send_withdrawal_successful_${expectedSuffix}`,
           params: {
-            amount: payload.params.debitAmount,
-            currency: payload.params.debitCurrency,
+            transactionParams: {
+              amount: payload.params.debitAmount,
+              currency: payload.params.debitCurrency,
+            },
           },
         }),
       ),
@@ -112,17 +123,19 @@ describe("PushEventHandler Tests", () => {
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-2",
-          templateKey: "template_send_withdrawal_successfull_en",
+          templateKey: `template_send_withdrawal_successful_${expectedSuffix}`,
           params: {
-            amount: payload.params.debitAmount,
-            currency: payload.params.debitCurrency,
+            transactionParams: {
+              amount: payload.params.debitAmount,
+              currency: payload.params.debitCurrency,
+            },
           },
         }),
       ),
     ).once();
   });
 
-  it("should call PushClient with Transfer completed event", async () => {
+  it(`should call PushClient with Transfer completed event and ${locale} locale`, async () => {
     const payload = new SendTransferCompletedEvent({
       email: "fake+user@noba.com",
       name: "First",
@@ -135,7 +148,7 @@ describe("PushEventHandler Tests", () => {
         creditConsumer_handle: "justin",
         debitConsumer_handle: "gal",
       },
-      locale: "en",
+      locale: locale,
     });
 
     await eventHandler.sendTransferCompletedEvent(payload);
@@ -144,11 +157,13 @@ describe("PushEventHandler Tests", () => {
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-1",
-          templateKey: "template_send_transfer_successfull_sender_en",
+          templateKey: `template_send_transfer_successful_sender_${expectedSuffix}`,
           params: {
-            amount: payload.params.debitAmount,
-            currency: payload.params.debitCurrency,
-            receiverHandle: payload.params.creditConsumer_handle,
+            transactionParams: {
+              amount: payload.params.debitAmount,
+              currency: payload.params.debitCurrency,
+              receiverHandle: payload.params.creditConsumer_handle,
+            },
           },
           transferCounterPartyHandle: payload.params.creditConsumer_handle,
         }),
@@ -159,11 +174,13 @@ describe("PushEventHandler Tests", () => {
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-2",
-          templateKey: "template_send_transfer_successfull_sender_en",
+          templateKey: `template_send_transfer_successful_sender_${expectedSuffix}`,
           params: {
-            amount: payload.params.debitAmount,
-            currency: payload.params.debitCurrency,
-            receiverHandle: payload.params.creditConsumer_handle,
+            transactionParams: {
+              amount: payload.params.debitAmount,
+              currency: payload.params.debitCurrency,
+              receiverHandle: payload.params.creditConsumer_handle,
+            },
           },
           transferCounterPartyHandle: payload.params.creditConsumer_handle,
         }),
@@ -171,7 +188,7 @@ describe("PushEventHandler Tests", () => {
     ).once();
   });
 
-  it("should call PushClient with Transfer completed event for receiver", async () => {
+  it(`should call PushClient with Transfer completed event for receiver and ${locale} locale`, async () => {
     const payload = new SendTransferReceivedEvent({
       email: "fake+user@noba.com",
       name: "First",
@@ -186,7 +203,7 @@ describe("PushEventHandler Tests", () => {
         debitConsumer_lastName: "Ben Chanoch",
       },
       pushTokens: ["push-token-1", "push-token-2"],
-      locale: "en",
+      locale: locale,
     });
 
     await eventHandler.sendTransferReceivedEvent(payload);
@@ -195,11 +212,13 @@ describe("PushEventHandler Tests", () => {
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-1",
-          templateKey: "template_send_transfer_successfull_receiver_en",
+          templateKey: `template_send_transfer_successful_receiver_${expectedSuffix}`,
           params: {
-            amount: payload.params.creditAmount,
-            currency: payload.params.creditCurrency,
-            senderHandle: payload.params.debitConsumer_handle,
+            transactionParams: {
+              amount: payload.params.creditAmount,
+              currency: payload.params.creditCurrency,
+              senderHandle: payload.params.debitConsumer_handle,
+            },
           },
           transferCounterPartyHandle: payload.params.debitConsumer_handle,
         }),
@@ -210,11 +229,13 @@ describe("PushEventHandler Tests", () => {
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-2",
-          templateKey: "template_send_transfer_successfull_receiver_en",
+          templateKey: `template_send_transfer_successful_receiver_${expectedSuffix}`,
           params: {
-            amount: payload.params.creditAmount,
-            currency: payload.params.creditCurrency,
-            senderHandle: payload.params.debitConsumer_handle,
+            transactionParams: {
+              amount: payload.params.creditAmount,
+              currency: payload.params.creditCurrency,
+              senderHandle: payload.params.debitConsumer_handle,
+            },
           },
           transferCounterPartyHandle: payload.params.debitConsumer_handle,
         }),

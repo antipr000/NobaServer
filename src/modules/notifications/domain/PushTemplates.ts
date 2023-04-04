@@ -14,15 +14,19 @@ export const PushTemplates = {
     return templateObject["en"];
   },
   DEPOSIT_COMPLETED_PUSH: {
-    en: "template_send_deposit_successfull_en",
+    en: "template_send_deposit_successful_en",
+    es: "template_send_deposit_successful_es",
   },
   WITHDRAWAL_COMPLETED_PUSH: {
-    en: "template_send_withdrawal_successfull_en",
+    en: "template_send_withdrawal_successful_en",
+    es: "template_send_withdrawal_successful_es",
   },
   TRANSFER_COMPLETED_PUSH: {
-    en: "template_send_transfer_successfull_sender_en",
+    en: "template_send_transfer_successful_sender_en",
+    es: "template_send_transfer_successful_sender_es",
   },
   TRANSFER_RECEIVED_PUSH: {
-    en: "template_send_transfer_successfull_receiver_en",
+    en: "template_send_transfer_successful_receiver_en",
+    es: "template_send_transfer_successful_receiver_es",
   },
 };
