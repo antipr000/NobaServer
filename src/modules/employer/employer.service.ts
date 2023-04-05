@@ -279,8 +279,8 @@ export class EmployerService {
       };
 
       footerDataMap.set(locale, {
-        left: templateFields.payrollDate,
-        center: templateFields.payrollReference,
+        left: `Payroll ${templateFields.payrollDate}`,
+        center: `Invoice #${templateFields.payrollReference}`,
         right: null,
       });
       templateProcessor.populateTemplate(locale, templateFields);
@@ -375,8 +375,8 @@ export class EmployerService {
       };
 
       footerDataMap.set(locale, {
-        left: templateFields.payrollDate,
-        center: templateFields.payrollReference,
+        left: `Payroll ${templateFields.payrollDate}`,
+        center: `Invoice #${templateFields.payrollReference}`,
         right: null,
       });
       templateProcessor.populateTemplate(locale, templateFields);

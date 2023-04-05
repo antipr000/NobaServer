@@ -128,7 +128,18 @@ describe("TemplateProcessor", () => {
       const populatedTemplate = "firstName-lastName";
       templateProcessor.populatedTemplates.set(TemplateLocale.SPANISH, "firstName-lastName");
       when(s3Service.uploadToS3("savePath", `saveBaseFilename_es.html`, populatedTemplate)).thenResolve();
-      await templateProcessor.uploadPopulatedTemplates();
+      await templateProcessor.uploadPopulatedTemplates(
+        new Map([
+          [
+            TemplateLocale.SPANISH,
+            {
+              center: "center",
+              left: "left",
+              right: "right",
+            },
+          ],
+        ]),
+      );
     });
 
     it("should upload PDF populated templates", async () => {
@@ -136,27 +147,38 @@ describe("TemplateProcessor", () => {
       templateProcessor.addFormat(TemplateFormat.PDF);
       templateProcessor.populatedTemplates.set(TemplateLocale.SPANISH, "pdf-content");
       when(s3Service.uploadToS3("savePath", `saveBaseFilename_es.pdf`, "pdf-content")).thenResolve();
-      await templateProcessor.uploadPopulatedTemplates();
+      await templateProcessor.uploadPopulatedTemplates(
+        new Map([
+          [
+            TemplateLocale.SPANISH,
+            {
+              center: "center",
+              left: "left",
+              right: "right",
+            },
+          ],
+        ]),
+      );
       expect(newPageFn).toHaveBeenCalled();
     });
 
     it("should not upload populated templates if no populated templates", async () => {
       const s3UploadSpy = jest.spyOn(s3Service, "uploadToS3");
-      await templateProcessor.uploadPopulatedTemplates();
+      await templateProcessor.uploadPopulatedTemplates(new Map());
       expect(s3UploadSpy).not.toHaveBeenCalled();
     });
 
     it("should not upload populated templates if no locales", async () => {
       const s3UploadSpy = jest.spyOn(s3Service, "uploadToS3");
       templateProcessor.addFormat(TemplateFormat.HTML);
-      await templateProcessor.uploadPopulatedTemplates();
+      await templateProcessor.uploadPopulatedTemplates(new Map());
       expect(s3UploadSpy).not.toHaveBeenCalled();
     });
 
     it("should not upload populated templates if no formats", async () => {
       const s3UploadSpy = jest.spyOn(s3Service, "uploadToS3");
       templateProcessor.addLocale(TemplateLocale.SPANISH);
-      await templateProcessor.uploadPopulatedTemplates();
+      await templateProcessor.uploadPopulatedTemplates(new Map());
       expect(s3UploadSpy).not.toHaveBeenCalled();
     });
   });

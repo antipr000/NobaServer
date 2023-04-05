@@ -151,7 +151,7 @@ export class TemplateProcessor {
     await page.emulateMediaType("screen");
     await page.setContent(html);
     await page.evaluateHandle("document.fonts.ready");
-    const pageNumberFooter = `<span class="pageNumber" style=""></span>/<span class="totalPages"></span>`;
+    const pageNumberFooter = `Page&nbsp;<span class="pageNumber" style=""></span>/<span class="totalPages"></span>`;
     const pdf = page.pdf({
       format: "A4",
       printBackground: true,
