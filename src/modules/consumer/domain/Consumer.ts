@@ -45,7 +45,7 @@ export const consumerJoiValidationKeys: KeysRequired<ConsumerProps> = {
   displayEmail: Joi.string().email().optional().allow(null),
   referralCode: Joi.string().optional(),
   phone: Joi.string()
-    .pattern(/^\+[0-9]+$/) // allows digits and + sign
+    .pattern(/^\+\d+$/) // allows digits and + sign
     .max(35) // allows for country code and extension with some spaces in between
     .optional()
     .allow(null),
