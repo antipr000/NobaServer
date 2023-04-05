@@ -288,6 +288,32 @@ describe("NotificationService", () => {
       ).once();
     });
 
+    it("should send notification for collection completed event", async () => {
+      const consumerID = uuid();
+      const consumer = getRandomConsumer(consumerID);
+      const transaction = getRandomTransaction(consumerID);
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
+
+      await notificationWorflowService.sendTransactionNotification(
+        NotificationWorkflowTypes.COLLECTION_COMPLETED_EVENT,
+        transaction.id,
+      );
+
+      const transactionNotificationPayload =
+        transactionNotificationMapper.toCollectionCompletedNotificationParameters(transaction);
+
+      const notificationPayload = prepareNotificationPayload(consumer, {
+        collectionCompletedParams: transactionNotificationPayload,
+      });
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT,
+          deepEqual(notificationPayload),
+        ),
+      ).once();
+    });
+
     it("should throw ServiceException when transaction is not found", async () => {
       const transactionID = uuid();
       when(transactionService.getTransactionByTransactionID(transactionID)).thenResolve(null);

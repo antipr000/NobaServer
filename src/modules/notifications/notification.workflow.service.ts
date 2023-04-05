@@ -135,6 +135,7 @@ export class NotificationWorkflowService {
         payload = prepareNotificationPayload(consumer, {
           collectionCompletedParams: transactionPayload,
         });
+        await this.notificationService.sendNotification(NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT, payload);
         break;
       default:
         this.logger.error(
