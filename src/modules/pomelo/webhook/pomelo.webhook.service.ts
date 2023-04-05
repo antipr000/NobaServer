@@ -13,13 +13,21 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { Logger } from "winston";
 import { TransactionService } from "../../transaction/transaction.service";
 import { PomeloService } from "../public/pomelo.service";
-import { PomeloTransaction } from "../domain/PomeloTransaction";
+import { PomeloTransaction, PomeloTransactionStatus } from "../domain/PomeloTransaction";
 import { PomeloRepo } from "../repos/pomelo.repo";
 import { POMELO_REPO_PROVIDER } from "../repos/pomelo.repo.module";
 import { uuid } from "uuidv4";
 import { PomeloCard } from "../domain/PomeloCard";
 import { PomeloUser } from "../domain/PomeloUser";
 import { CircleService } from "../../../modules/circle/public/circle.service";
+import { InitiateTransactionRequest } from "../../../modules/transaction/dto/transaction.service.dto";
+import { WorkflowName } from "../../../infra/temporal/workflow";
+import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
+import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
+import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
+import { Transaction } from "../../../modules/transaction/domain/Transaction";
+import { UpdateWalletBalanceServiceDTO } from "../../../modules/psp/domain/UpdateWalletBalanceServiceDTO";
+import { CircleWithdrawalStatus } from "../../../modules/psp/domain/CircleTypes";
 
 @Injectable()
 export class PomeloTransactionService {
@@ -28,13 +36,22 @@ export class PomeloTransactionService {
     PomeloTransactionAuthzDetailStatus,
     PomeloTransactionAuthzSummaryStatus
   > = {
-    [PomeloTransactionAuthzDetailStatus.APPROVED]: PomeloTransactionAuthzSummaryStatus.APPROVED,
-    [PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS]: PomeloTransactionAuthzSummaryStatus.REJECTED,
-    [PomeloTransactionAuthzDetailStatus.INVALID_AMOUNT]: PomeloTransactionAuthzSummaryStatus.REJECTED,
-    [PomeloTransactionAuthzDetailStatus.INVALID_MERCHANT]: PomeloTransactionAuthzSummaryStatus.REJECTED,
-    [PomeloTransactionAuthzDetailStatus.SYSTEM_ERROR]: PomeloTransactionAuthzSummaryStatus.REJECTED,
-    [PomeloTransactionAuthzDetailStatus.OTHER]: PomeloTransactionAuthzSummaryStatus.REJECTED,
+      [PomeloTransactionAuthzDetailStatus.APPROVED]: PomeloTransactionAuthzSummaryStatus.APPROVED,
+      [PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS]: PomeloTransactionAuthzSummaryStatus.REJECTED,
+      [PomeloTransactionAuthzDetailStatus.INVALID_AMOUNT]: PomeloTransactionAuthzSummaryStatus.REJECTED,
+      [PomeloTransactionAuthzDetailStatus.INVALID_MERCHANT]: PomeloTransactionAuthzSummaryStatus.REJECTED,
+      [PomeloTransactionAuthzDetailStatus.SYSTEM_ERROR]: PomeloTransactionAuthzSummaryStatus.REJECTED,
+      [PomeloTransactionAuthzDetailStatus.OTHER]: PomeloTransactionAuthzSummaryStatus.REJECTED,
+    };
+  private readonly nobaPomeloStatusToPublicDetailStatusMap: Record<PomeloTransactionStatus, PomeloTransactionAuthzDetailStatus> = {
+    [PomeloTransactionStatus.PENDING]: PomeloTransactionAuthzDetailStatus.SYSTEM_ERROR,
+    [PomeloTransactionStatus.APPROVED]: PomeloTransactionAuthzDetailStatus.APPROVED,
+    [PomeloTransactionStatus.INSUFFICIENT_FUNDS]: PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS,
+    [PomeloTransactionStatus.INVALID_AMOUNT]: PomeloTransactionAuthzDetailStatus.INVALID_AMOUNT,
+    [PomeloTransactionStatus.INVALID_MERCHANT]: PomeloTransactionAuthzDetailStatus.INVALID_MERCHANT,
+    [PomeloTransactionStatus.SYSTEM_ERROR]: PomeloTransactionAuthzDetailStatus.SYSTEM_ERROR,
   };
+
   private pomeloApiSecret: Buffer;
 
   constructor(
@@ -42,6 +59,7 @@ export class PomeloTransactionService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly transactionService: TransactionService,
     private readonly pomeloService: PomeloService,
+    private readonly exchangeRateService: ExchangeRateService,
     @Inject(POMELO_REPO_PROVIDER) private readonly pomeloRepo: PomeloRepo,
     private readonly circleService: CircleService,
   ) {
@@ -89,16 +107,51 @@ export class PomeloTransactionService {
       }
     }
 
+    if (pomeloTransaction.status !== PomeloTransactionStatus.PENDING) {
+      const detailAuthzStatus: PomeloTransactionAuthzDetailStatus = this.nobaPomeloStatusToPublicDetailStatusMap[pomeloTransaction.status];
+      return this.prepareAuthorizationResponse(detailAuthzStatus);
+    }
+
     const pomeloCard: PomeloCard = await this.pomeloRepo.getPomeloCardByPomeloCardID(pomeloTransaction.pomeloCardID);
     const pomeloUser: PomeloUser = await this.pomeloRepo.getPomeloUserByPomeloUserID(pomeloCard.pomeloUserID);
     const circleWalletID: string = await this.circleService.getOrCreateWallet(pomeloUser.consumerID);
     const walletBalance: number = await this.circleService.getWalletBalance(circleWalletID);
 
     if (walletBalance < pomeloTransaction.amountInUSD) {
+      this.pomeloRepo.updatePomeloTransactionStatus(pomeloTransaction.pomeloTransactionID, PomeloTransactionStatus.INSUFFICIENT_FUNDS);
       return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS);
     }
 
-    return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.APPROVED);
+    let nobaTransaction: Transaction;
+    try {
+      nobaTransaction = await this.transactionService.getTransactionByTransactionID(pomeloTransaction.nobaTransactionID);
+    }
+    catch (err) {
+      const exchangeRate: ExchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD);
+      const transactionCreateRequest: InitiateTransactionRequest = {
+        type: WorkflowName.CARD_WITHDRAWAL,
+        cardWithdrawalRequest: {
+          debitAmountInUSD: exchangeRate.nobaRate * pomeloTransaction.amountInLocalCurrency,
+          debitConsumerID: pomeloUser.consumerID,
+          exchangeRate: exchangeRate.nobaRate,
+          nobaTransactionID: pomeloTransaction.nobaTransactionID,
+          memo: ""
+        }
+      };
+      nobaTransaction = await this.transactionService.initiateTransaction(transactionCreateRequest);
+    }
+
+    const fundTransferStatus: UpdateWalletBalanceServiceDTO =
+      await this.circleService.debitWalletBalance(nobaTransaction.id, circleWalletID, nobaTransaction.debitAmount);
+    // TODO: Return more granular status from Circle service and return an appropriate error.
+    if (fundTransferStatus.status === CircleWithdrawalStatus.FAILURE) {
+      await this.pomeloRepo.updatePomeloTransactionStatus(pomeloTransaction.pomeloTransactionID, PomeloTransactionStatus.INSUFFICIENT_FUNDS);
+      return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS);
+    }
+    else {
+      await this.pomeloRepo.updatePomeloTransactionStatus(pomeloTransaction.pomeloTransactionID, PomeloTransactionStatus.APPROVED);
+      return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.APPROVED);
+    }
   }
 
   signTransactionAuthorizationResponse(timestamp: string, rawBodyBuffer: Buffer): string {
