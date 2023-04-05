@@ -44,7 +44,7 @@ export class CircleService implements IBank {
     try {
       await this.circleRepo.addConsumerCircleWalletID(consumerID, circleWalletID);
     } catch (err) {
-      this.logger.error(`Could not link Circle wallet to consumer: ${err}`);
+      this.logger.error(`Could not link Circle wallet to consumerID: ${consumerID}. Error:  ${JSON.stringify(err)}`);
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
         message: "Could not link Circle wallet to consumer",

@@ -92,7 +92,7 @@ describe("CircleService", () => {
       when(mockCircleRepo.getCircleWalletID("consumerID")).thenResolve(Result.fail("Wallet not found"));
       when(mockCircleClient.createWallet(anyString())).thenResolve("walletID");
       when(mockCircleRepo.addConsumerCircleWalletID("consumerID", "walletID")).thenThrow();
-      expect(circleService.getOrCreateWallet("consumerID")).rejects.toThrowServiceException();
+      expect(circleService.getOrCreateWallet("consumerID")).rejects.toThrowServiceException(ServiceErrorCode.UNKNOWN);
     });
   });
 
