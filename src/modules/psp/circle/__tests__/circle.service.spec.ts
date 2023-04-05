@@ -87,6 +87,13 @@ describe("CircleService", () => {
       when(mockCircleRepo.addConsumerCircleWalletID("consumerID", "walletID")).thenThrow();
       expect(circleService.getOrCreateWallet("consumerID")).rejects.toThrowServiceException();
     });
+
+    it("should throw service exception when consumer wallet could not be linked", async () => {
+      when(mockCircleRepo.getCircleWalletID("consumerID")).thenResolve(Result.fail("Wallet not found"));
+      when(mockCircleClient.createWallet(anyString())).thenResolve("walletID");
+      when(mockCircleRepo.addConsumerCircleWalletID("consumerID", "walletID")).thenThrow();
+      expect(circleService.getOrCreateWallet("consumerID")).rejects.toThrowServiceException();
+    });
   });
 
   describe("getMasterWalletID", () => {
