@@ -1,15 +1,13 @@
 export class SendCollectionCompletedEvent {
-  public readonly email: string;
-  public readonly firstName?: string;
-  public readonly lastName?: string;
-  public readonly nobaUserID?: string;
+  public readonly debitAmount: number;
+  public readonly debitCurrency: string;
+  public readonly pushTokens: string[];
   public readonly locale?: string;
 
-  constructor({ email, firstName, lastName, nobaUserID, locale }) {
-    this.email = email;
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.nobaUserID = nobaUserID;
+  constructor({ debitAmount, debitCurrency, pushTokens, locale }) {
+    this.debitAmount = debitAmount;
+    this.debitCurrency = debitCurrency;
     this.locale = locale;
+    this.pushTokens = pushTokens;
   }
 }

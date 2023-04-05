@@ -88,7 +88,7 @@ export const preferredNotificationMedium = {
   ],
   [NotificationEventType.SEND_TRANSFER_FAILED_EVENT]: [NotificationEventHandler.EMAIL, NotificationEventHandler.PUSH],
   [NotificationEventType.SEND_COLLECTION_LINK_EVENT]: [NotificationEventHandler.EMAIL],
-  [NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT]: [NotificationEventHandler.EMAIL],
+  [NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT]: [NotificationEventHandler.PUSH],
   [NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT]: [NotificationEventHandler.EMAIL, NotificationEventHandler.PUSH],
   [NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT]: [

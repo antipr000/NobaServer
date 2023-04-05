@@ -15,6 +15,7 @@ import { SendDepositFailedEvent } from "../events/SendDepositFailedEvent";
 import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 import { SendPayrollDepositCompletedEvent } from "../events/SendPayrollDepositCompletedEvent";
+import { SendCollectionCompletedEvent } from "../events/SendCollectionCompletedEvent";
 
 describe.each([
   ["en", "en"],
@@ -433,6 +434,47 @@ describe.each([
             },
             payrollParams: {
               companyName: payload.params.companyName,
+            },
+          },
+        }),
+      ),
+    ).once();
+  });
+
+  it(`should call pushClient with Collection completed event and ${locale} locale`, async () => {
+    const payload = new SendCollectionCompletedEvent({
+      debitAmount: 5000,
+      debitCurrency: "COP",
+      pushTokens: ["push-token-1", "push-token-2"],
+      locale: locale,
+    });
+
+    await eventHandler.sendCollectionCompletedEvent(payload);
+
+    verify(
+      mockPushClient.sendPushNotification(
+        deepEqual({
+          token: "push-token-1",
+          templateKey: `template_send_collection_completed_${expectedSuffix}`,
+          params: {
+            transactionParams: {
+              amount: payload.debitAmount,
+              currency: payload.debitCurrency,
+            },
+          },
+        }),
+      ),
+    ).once();
+
+    verify(
+      mockPushClient.sendPushNotification(
+        deepEqual({
+          token: "push-token-2",
+          templateKey: `template_send_collection_completed_${expectedSuffix}`,
+          params: {
+            transactionParams: {
+              amount: payload.debitAmount,
+              currency: payload.debitCurrency,
             },
           },
         }),

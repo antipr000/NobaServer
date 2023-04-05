@@ -294,10 +294,9 @@ export class NotificationService {
         this.eventEmitter.emitAsync(
           eventName,
           new SendCollectionCompletedEvent({
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
+            debitAmount: payload.collectionCompletedParams.debitAmount,
+            debitCurrency: payload.collectionCompletedParams.debitCurrency,
+            pushTokens: payload.pushTokens,
             locale: payload.locale,
           }),
         );

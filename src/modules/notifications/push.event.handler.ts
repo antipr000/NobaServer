@@ -11,6 +11,7 @@ import { SendDepositFailedEvent } from "./events/SendDepositFailedEvent";
 import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
 import { SendTransferFailedEvent } from "./events/SendTransferFailedEvent";
 import { SendPayrollDepositCompletedEvent } from "./events/SendPayrollDepositCompletedEvent";
+import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
 
 @Injectable()
 export class PushEventHandler {
@@ -164,6 +165,24 @@ export class PushEventHandler {
           transactionParams: {
             amount: payload.params.debitAmount,
             currency: payload.params.debitCurrency,
+          },
+        },
+      });
+    }
+  }
+
+  @OnEvent(`push.${NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT}`)
+  async sendCollectionCompletedEvent(payload: SendCollectionCompletedEvent) {
+    const pushTokens = payload.pushTokens;
+
+    for (const pushToken of pushTokens) {
+      await this.pushClient.sendPushNotification({
+        token: pushToken,
+        templateKey: PushTemplates.getOrDefault(PushTemplates.COLLECTION_COMPLETED_PUSH, payload.locale ?? "en"),
+        params: {
+          transactionParams: {
+            amount: payload.debitAmount,
+            currency: payload.debitCurrency,
           },
         },
       });

@@ -43,10 +43,11 @@ export const pushNotificationBodyTemplates = {
   template_send_transfer_successful_receiver_es: (params: PushNotificationParams) =>
     `Has recibido ${params.transactionParams.amount} ${params.transactionParams.currency} de ${params.transactionParams.senderHandle}`,
 
-  template_send_collection_completed_en: (params: PushNotificationParams) => "Collection from bank account completed",
+  template_send_collection_completed_en: (params: PushNotificationParams) =>
+    `Bank collection of ${params.transactionParams.amount} ${params.transactionParams.currency} has successfully completed`,
 
   template_send_collection_completed_es: (params: PushNotificationParams) =>
-    "Recolección de cuenta bancaria completada",
+    `La recolección bancaria de ${params.transactionParams.amount} ${params.transactionParams.currency} se ha completado correctamente`,
 
   template_send_payroll_deposit_completed_en: (params: PushNotificationParams) =>
     `Payroll deposit of amount ${params.transactionParams.amount} ${params.transactionParams.currency} completed for company ${params.payrollParams.companyName}}`,

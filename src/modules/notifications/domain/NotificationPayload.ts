@@ -1,6 +1,7 @@
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import {
+  CollectionCompletedNotificationParameters,
   DepositCompletedNotificationParameters,
   DepositFailedNotificationParameters,
   DepositInitiatedNotificationParameters,
@@ -36,6 +37,7 @@ export type NotificationPayload = {
   transferReceivedParams?: TransferReceivedNotificationParameters;
   transferFailedParams?: TransferFailedNotificationParameters;
   payrollDepositCompletedParams?: PayrollDepositCompletedNotificationParameters;
+  collectionCompletedParams?: CollectionCompletedNotificationParameters;
   sessionID?: string;
   transactionID?: string;
   paymentToken?: string;

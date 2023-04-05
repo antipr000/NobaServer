@@ -131,7 +131,10 @@ export class NotificationWorkflowService {
         );
         break;
       case NotificationWorkflowTypes.COLLECTION_COMPLETED_EVENT:
-        // No need to send email for now as we are already sending deposit completed email
+        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+        payload = prepareNotificationPayload(consumer, {
+          collectionCompletedParams: transactionPayload,
+        });
         break;
       default:
         this.logger.error(
@@ -220,7 +223,8 @@ export class NotificationWorkflowService {
           transaction,
           employerName,
         );
-
+      case NotificationWorkflowTypes.COLLECTION_COMPLETED_EVENT:
+        return this.transactionNotificationPayloadMapper.toCollectionCompletedNotificationParameters(transaction);
       default:
         return null;
     }
