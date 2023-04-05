@@ -2,7 +2,6 @@ import Handlebars from "handlebars";
 import puppeteer, { Browser } from "puppeteer";
 import { S3Service } from "../s3.service";
 import { Logger } from "winston";
-import fs from "fs";
 
 export enum TemplateFormat {
   PDF = "pdf",
@@ -72,7 +71,7 @@ export class TemplateProcessor {
       args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless"],
       executablePath:
         process.platform === "win32"
-          ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+          ? "C:/Program Files/Google/Chrome/Application/chrome.exe"
           : "/usr/bin/chromium-browser",
     });
     this.writeTimingLog(`Browser initialized`, Date.now() - start);
@@ -151,7 +150,7 @@ export class TemplateProcessor {
     await page.emulateMediaType("screen");
     await page.setContent(html);
     await page.evaluateHandle("document.fonts.ready");
-    const pageNumberFooter = `Page&nbsp;<span class="pageNumber" style=""></span>/<span class="totalPages"></span>`;
+    const pageNumberFooter = `${footerData.right}&nbsp;<span class="pageNumber" style=""></span>/<span class="totalPages"></span>`;
     const pdf = page.pdf({
       format: "A4",
       printBackground: true,
@@ -161,9 +160,7 @@ export class TemplateProcessor {
           <div style="font-family: system-ui; margin-left: 30px; margin-right: 30px; display: flex; font-size: 8px; width: 100%;">
             <div style="flex: 1; display:flex; justify-content:left;"><span>${footerData.left}</span></div>
             <div style="flex: 1; display:flex; justify-content:center;"><span>${footerData.center}</span></div>
-            <div style="flex: 1; display:flex; justify-content:right;">${
-              footerData.right ? `<span>${footerData.right}</span>` : pageNumberFooter
-            }</div>
+            <div style="flex: 1; display:flex; justify-content:right;">${pageNumberFooter}</div>
           </div>
           `,
       margin: { bottom: "80px", top: "80px", left: "50px", right: "50px" },

@@ -278,10 +278,14 @@ export class EmployerService {
         nobaAccountNumber: accountNumber,
       };
 
+      const payrollText = locale === TemplateLocale.ENGLISH ? "Payroll" : "Nómina";
+      const invoiceText = locale === TemplateLocale.ENGLISH ? "Invoice" : "Factura";
+      const pageText = locale === TemplateLocale.ENGLISH ? "Page" : "Página";
+
       footerDataMap.set(locale, {
-        left: `Payroll ${templateFields.payrollDate}`,
-        center: `Invoice #${templateFields.payrollReference}`,
-        right: null,
+        left: `${payrollText} ${templateFields.payrollDate}`,
+        center: `${invoiceText} #${templateFields.payrollReference}`,
+        right: `${pageText}`,
       });
       templateProcessor.populateTemplate(locale, templateFields);
     }
@@ -374,10 +378,14 @@ export class EmployerService {
         totalCreditAmount: totalCreditAmount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
       };
 
+      const payrollText = locale === TemplateLocale.ENGLISH ? "Payroll" : "Nómina";
+      const invoiceText = locale === TemplateLocale.ENGLISH ? "Invoice" : "Factura";
+      const pageText = locale === TemplateLocale.ENGLISH ? "Page" : "Página";
+
       footerDataMap.set(locale, {
-        left: `Payroll ${templateFields.payrollDate}`,
-        center: `Invoice #${templateFields.payrollReference}`,
-        right: null,
+        left: `${payrollText} ${templateFields.payrollDate}`,
+        center: `${invoiceText} #${templateFields.payrollReference}`,
+        right: `${pageText}`,
       });
       templateProcessor.populateTemplate(locale, templateFields);
     }
