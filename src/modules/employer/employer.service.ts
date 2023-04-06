@@ -74,6 +74,19 @@ export class EmployerService {
   @Inject()
   private readonly workflowExecutor: WorkflowExecutor;
 
+  static readonly FOOTER_TRANSLATIONS = {
+    "en-US": {
+      center: "Payroll",
+      left: "Invoice",
+      right: "Page",
+    },
+    "es-CO": {
+      center: "Nómina",
+      left: "Factura",
+      right: "Página",
+    },
+  };
+
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
     @Inject(PAYROLL_REPO_PROVIDER) private readonly payrollRepo: IPayrollRepo,
@@ -246,16 +259,14 @@ export class EmployerService {
 
     templateProcessor.addFormat(TemplateFormat.HTML);
     templateProcessor.addFormat(TemplateFormat.PDF);
-    templateProcessor.addLocale(TemplateLocale.ENGLISH, {
-      center: "Payroll",
-      left: "Invoice",
-      right: "Page",
-    });
-    templateProcessor.addLocale(TemplateLocale.SPANISH, {
-      center: "Nómina",
-      left: "Factura",
-      right: "Página",
-    });
+    templateProcessor.addLocale(
+      TemplateLocale.ENGLISH,
+      EmployerService.FOOTER_TRANSLATIONS[TemplateLocale.ENGLISH.toString()],
+    );
+    templateProcessor.addLocale(
+      TemplateLocale.SPANISH,
+      EmployerService.FOOTER_TRANSLATIONS[TemplateLocale.SPANISH.toString()],
+    );
 
     // Loads templates for each specified locale
     await templateProcessor.loadTemplates();
@@ -268,7 +279,7 @@ export class EmployerService {
     const footerDataMap = new Map<TemplateLocale, FooterData>();
 
     // Populate templates for each locale
-    for (const [locale] of templateProcessor.locales) {
+    for (const [locale] of templateProcessor.locales.entries()) {
       const employeeAllocations: InvoiceEmployeeDisbursement[] = employeeDisbursements.map(allocation => ({
         employeeName: allocation.employeeName,
         amount: allocation.amount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
@@ -343,16 +354,14 @@ export class EmployerService {
 
     templateProcessor.addFormat(TemplateFormat.HTML);
     templateProcessor.addFormat(TemplateFormat.PDF);
-    templateProcessor.addLocale(TemplateLocale.ENGLISH, {
-      center: "Payroll",
-      left: "Invoice",
-      right: "Page",
-    });
-    templateProcessor.addLocale(TemplateLocale.SPANISH, {
-      center: "Nómina",
-      left: "Factura",
-      right: "Página",
-    });
+    templateProcessor.addLocale(
+      TemplateLocale.ENGLISH,
+      EmployerService.FOOTER_TRANSLATIONS[TemplateLocale.ENGLISH.toString()],
+    );
+    templateProcessor.addLocale(
+      TemplateLocale.SPANISH,
+      EmployerService.FOOTER_TRANSLATIONS[TemplateLocale.SPANISH.toString()],
+    );
 
     // Loads templates for each specified locale
     await templateProcessor.loadTemplates();
@@ -365,7 +374,7 @@ export class EmployerService {
     const footerDataMap = new Map<TemplateLocale, FooterData>();
 
     // Populate templates for each locale
-    for (const [locale] of templateProcessor.locales) {
+    for (const [locale] of templateProcessor.locales.entries()) {
       let totalCreditAmount = 0;
       const employeeAllocations: InvoiceReceiptEmployeeDisbursement[] = employeeDisbursements.map(allocation => {
         totalCreditAmount += Utils.roundToSpecifiedDecimalNumber(allocation.creditAmount, 2);

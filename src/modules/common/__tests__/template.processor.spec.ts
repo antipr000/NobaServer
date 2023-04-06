@@ -63,19 +63,24 @@ describe("TemplateProcessor", () => {
     it("should push locales", async () => {
       templateProcessor.addLocale(TemplateLocale.ENGLISH);
       templateProcessor.addLocale(TemplateLocale.SPANISH);
-      expect(templateProcessor.locales).toEqual(new Set([TemplateLocale.ENGLISH, TemplateLocale.SPANISH]));
+      expect(templateProcessor.locales).toEqual(
+        new Map([
+          [TemplateLocale.ENGLISH, undefined],
+          [TemplateLocale.SPANISH, undefined],
+        ]),
+      );
     });
 
     it("should not push duplicate locales", async () => {
       templateProcessor.addLocale(TemplateLocale.ENGLISH);
       templateProcessor.addLocale(TemplateLocale.ENGLISH);
-      expect(templateProcessor.locales).toEqual(new Set([TemplateLocale.ENGLISH]));
+      expect(templateProcessor.locales).toEqual(new Map([[TemplateLocale.ENGLISH, undefined]]));
     });
 
     it("should not null or undefined locales", async () => {
       templateProcessor.addLocale(null);
       templateProcessor.addLocale(undefined);
-      expect(templateProcessor.locales).toEqual(new Set());
+      expect(templateProcessor.locales).toEqual(new Map());
     });
   });
 
@@ -143,7 +148,11 @@ describe("TemplateProcessor", () => {
     });
 
     it("should upload PDF populated templates", async () => {
-      templateProcessor.addLocale(TemplateLocale.SPANISH);
+      templateProcessor.addLocale(TemplateLocale.SPANISH, {
+        left: "left-label",
+        center: "center-label",
+        right: "right-label",
+      });
       templateProcessor.addFormat(TemplateFormat.PDF);
       templateProcessor.populatedTemplates.set(TemplateLocale.SPANISH, "pdf-content");
       when(s3Service.uploadToS3("savePath", `saveBaseFilename_es.pdf`, "pdf-content")).thenResolve();
