@@ -38,12 +38,7 @@ import {
 } from "../../config/ConfigurationUtils";
 import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 import { Employee } from "../employee/domain/Employee";
-import {
-  TemplateProcessor,
-  TemplateFormat,
-  TemplateLocale,
-  FooterDynamicData,
-} from "../common/utils/template.processor";
+import { TemplateProcessor, TemplateFormat, TemplateLocale, FooterData } from "../common/utils/template.processor";
 import {
   InvoiceEmployeeDisbursement,
   InvoiceReceiptEmployeeDisbursement,
@@ -252,14 +247,14 @@ export class EmployerService {
     templateProcessor.addFormat(TemplateFormat.HTML);
     templateProcessor.addFormat(TemplateFormat.PDF);
     templateProcessor.addLocale(TemplateLocale.ENGLISH, {
-      payroll: "Payroll",
-      invoice: "Invoice",
-      page: "Page",
+      center: "Payroll",
+      left: "Invoice",
+      right: "Page",
     });
     templateProcessor.addLocale(TemplateLocale.SPANISH, {
-      payroll: "Nómina",
-      invoice: "Factura",
-      page: "Página",
+      center: "Nómina",
+      left: "Factura",
+      right: "Página",
     });
 
     // Loads templates for each specified locale
@@ -270,7 +265,7 @@ export class EmployerService {
     const companyName = employer.name;
     const currency = payroll.debitCurrency;
 
-    const footerDataMap = new Map<TemplateLocale, FooterDynamicData>();
+    const footerDataMap = new Map<TemplateLocale, FooterData>();
 
     // Populate templates for each locale
     for (const [locale] of templateProcessor.locales) {
@@ -290,8 +285,8 @@ export class EmployerService {
       };
 
       footerDataMap.set(locale, {
-        payrollInvoice: `${templateFields.payrollReference}`,
-        payrollDate: `${templateFields.payrollDate}`,
+        left: `#${templateFields.payrollReference}`,
+        center: `${templateFields.payrollDate}`,
       });
 
       templateProcessor.populateTemplate(locale, templateFields);
@@ -349,14 +344,14 @@ export class EmployerService {
     templateProcessor.addFormat(TemplateFormat.HTML);
     templateProcessor.addFormat(TemplateFormat.PDF);
     templateProcessor.addLocale(TemplateLocale.ENGLISH, {
-      payroll: "Payroll",
-      invoice: "Invoice",
-      page: "Page",
+      center: "Payroll",
+      left: "Invoice",
+      right: "Page",
     });
     templateProcessor.addLocale(TemplateLocale.SPANISH, {
-      payroll: "Nómina",
-      invoice: "Factura",
-      page: "Página",
+      center: "Nómina",
+      left: "Factura",
+      right: "Página",
     });
 
     // Loads templates for each specified locale
@@ -367,7 +362,7 @@ export class EmployerService {
     const companyName = employer.name;
     const currency = payroll.debitCurrency;
 
-    const footerDataMap = new Map<TemplateLocale, FooterDynamicData>();
+    const footerDataMap = new Map<TemplateLocale, FooterData>();
 
     // Populate templates for each locale
     for (const [locale] of templateProcessor.locales) {
@@ -392,8 +387,8 @@ export class EmployerService {
       };
 
       footerDataMap.set(locale, {
-        payrollInvoice: `${templateFields.payrollReference}`,
-        payrollDate: `${templateFields.payrollDate}`,
+        left: `#${templateFields.payrollReference}`,
+        center: `${templateFields.payrollDate}`,
       });
 
       templateProcessor.populateTemplate(locale, templateFields);

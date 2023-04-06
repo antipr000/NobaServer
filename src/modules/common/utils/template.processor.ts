@@ -1,3 +1,4 @@
+import { existsSync } from "fs";
 import Handlebars from "handlebars";
 import puppeteer, { Browser } from "puppeteer";
 import { S3Service } from "../s3.service";
@@ -14,15 +15,15 @@ export interface FooterTemplate {
   right: string;
 }
 
-export interface FooterStaticData {
-  invoice: string;
-  payroll: string;
-  page: string;
+export interface FooterLabels {
+  left: string;
+  center: string;
+  right: string; // Always page
 }
 
-export interface FooterDynamicData {
-  payrollInvoice: string;
-  payrollDate: string;
+export interface FooterData {
+  left: string;
+  center: string;
 }
 
 export class TemplateLocale extends Intl.Locale {
@@ -42,7 +43,7 @@ export class TemplateProcessor {
   readonly savePath: string;
   readonly saveBaseFilename: string;
   formats: Set<TemplateFormat> = new Set();
-  locales: Map<TemplateLocale, FooterStaticData> = new Map();
+  locales: Map<TemplateLocale, FooterLabels> = new Map();
   private browser: Browser;
 
   // Strings indexed by locale
@@ -70,9 +71,9 @@ export class TemplateProcessor {
     this.formats.add(format);
   }
 
-  public addLocale(locale: TemplateLocale, staticTransalationData?: FooterStaticData) {
+  public addLocale(locale: TemplateLocale, footerLabels?: FooterLabels) {
     if (!locale) return;
-    this.locales.set(locale, staticTransalationData);
+    this.locales.set(locale, footerLabels);
   }
 
   private async initialize() {
@@ -80,10 +81,7 @@ export class TemplateProcessor {
     this.browser = await puppeteer.launch({
       headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless"],
-      executablePath:
-        process.platform === "win32"
-          ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
-          : "/usr/bin/chromium-browser",
+      executablePath: this.findChrome(this.chromePaths),
     });
     this.writeTimingLog(`Browser initialized`, Date.now() - start);
   }
@@ -117,7 +115,7 @@ export class TemplateProcessor {
     this.writeTimingLog(`Template populated for locale ${locale}`, Date.now() - start);
   }
 
-  public async uploadPopulatedTemplates(dynamicTranslations: Map<TemplateLocale, FooterDynamicData>) {
+  public async uploadPopulatedTemplates(footerData: Map<TemplateLocale, FooterData>) {
     // For each locale and format, save the populated template
     for (const [locale] of this.locales) {
       const populatedTemplate = this.populatedTemplates.get(locale);
@@ -139,7 +137,7 @@ export class TemplateProcessor {
           const pdf = await this.convertToPDF(
             populatedTemplate,
             `${this.templateFilename}.${TemplateFormat.PDF}`,
-            this.createFooterTemplate(locale, dynamicTranslations),
+            this.createFooterTemplate(locale, footerData),
           );
           const start = Date.now();
 
@@ -155,17 +153,14 @@ export class TemplateProcessor {
     }
   }
 
-  private createFooterTemplate(
-    locale: TemplateLocale,
-    dynamicTranslationData: Map<TemplateLocale, FooterDynamicData>,
-  ): FooterTemplate {
-    const staticTransalations = this.locales.get(locale);
-    const dynamicTranslations = dynamicTranslationData.get(locale);
+  private createFooterTemplate(locale: TemplateLocale, footerData: Map<TemplateLocale, FooterData>): FooterTemplate {
+    const labels = this.locales.get(locale);
+    const localizedFooterData = footerData.get(locale);
 
     return {
-      left: `${staticTransalations.invoice} #${dynamicTranslations.payrollInvoice}`,
-      center: `${staticTransalations.payroll} ${dynamicTranslations.payrollDate}`,
-      right: `${staticTransalations.page}&nbsp;<span class="pageNumber" style=""></span>/<span class="totalPages"></span>`,
+      left: `${labels.left} ${localizedFooterData.left}`,
+      center: `${labels.center} ${localizedFooterData.center}`,
+      right: `${labels.right}&nbsp;<span class="pageNumber" style=""></span>/<span class="totalPages"></span>`,
     };
   }
 
@@ -201,5 +196,19 @@ export class TemplateProcessor {
 
   private writeTimingLog(message: string, duration: number) {
     this.logger.info(`TemplateProcessor: ${message} in ${duration}ms`);
+  }
+
+  private chromePaths: string[] = [
+    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "/usr/bin/chromium-browser",
+  ];
+  private findChrome(files: string[]): string {
+    for (let file of files) {
+      if (existsSync(file)) {
+        return file;
+      }
+    }
+    return null;
   }
 }
