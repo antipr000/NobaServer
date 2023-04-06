@@ -8,10 +8,21 @@ export enum TemplateFormat {
   HTML = "html",
 }
 
-export interface FooterData {
+export interface FooterTemplate {
   left: string;
   center: string;
   right: string;
+}
+
+export interface FooterStaticData {
+  invoice: string;
+  payroll: string;
+  page: string;
+}
+
+export interface FooterDynamicData {
+  payrollInvoice: string;
+  payrollDate: string;
 }
 
 export class TemplateLocale extends Intl.Locale {
@@ -31,7 +42,7 @@ export class TemplateProcessor {
   readonly savePath: string;
   readonly saveBaseFilename: string;
   formats: Set<TemplateFormat> = new Set();
-  locales: Set<TemplateLocale> = new Set();
+  locales: Map<TemplateLocale, FooterStaticData> = new Map();
   private browser: Browser;
 
   // Strings indexed by locale
@@ -59,9 +70,9 @@ export class TemplateProcessor {
     this.formats.add(format);
   }
 
-  public addLocale(locale: TemplateLocale) {
+  public addLocale(locale: TemplateLocale, staticTransalationData?: FooterStaticData) {
     if (!locale) return;
-    this.locales.add(locale);
+    this.locales.set(locale, staticTransalationData);
   }
 
   private async initialize() {
@@ -71,7 +82,7 @@ export class TemplateProcessor {
       args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless"],
       executablePath:
         process.platform === "win32"
-          ? "C:/Program Files/Google/Chrome/Application/chrome.exe"
+          ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
           : "/usr/bin/chromium-browser",
     });
     this.writeTimingLog(`Browser initialized`, Date.now() - start);
@@ -80,7 +91,7 @@ export class TemplateProcessor {
   public async loadTemplates() {
     if (!this.browser) await this.initialize();
     const start = Date.now();
-    for (const locale of this.locales) {
+    for (const [locale] of this.locales) {
       let filename = this.templateFilename;
       if (filename.indexOf("LOCALE") > -1) filename = filename.replace("LOCALE", locale.language);
       const template = await this.s3Service.loadFromS3(this.templatePath, filename);
@@ -106,9 +117,9 @@ export class TemplateProcessor {
     this.writeTimingLog(`Template populated for locale ${locale}`, Date.now() - start);
   }
 
-  public async uploadPopulatedTemplates(footerData: Map<TemplateLocale, FooterData>) {
+  public async uploadPopulatedTemplates(dynamicTranslations: Map<TemplateLocale, FooterDynamicData>) {
     // For each locale and format, save the populated template
-    for (const locale of this.locales) {
+    for (const [locale] of this.locales) {
       const populatedTemplate = this.populatedTemplates.get(locale);
 
       if (populatedTemplate) {
@@ -128,7 +139,7 @@ export class TemplateProcessor {
           const pdf = await this.convertToPDF(
             populatedTemplate,
             `${this.templateFilename}.${TemplateFormat.PDF}`,
-            footerData.get(locale),
+            this.createFooterTemplate(locale, dynamicTranslations),
           );
           const start = Date.now();
 
@@ -144,13 +155,26 @@ export class TemplateProcessor {
     }
   }
 
-  private async convertToPDF(html: string, filename: string, footerData: FooterData): Promise<Buffer> {
+  private createFooterTemplate(
+    locale: TemplateLocale,
+    dynamicTranslationData: Map<TemplateLocale, FooterDynamicData>,
+  ): FooterTemplate {
+    const staticTransalations = this.locales.get(locale);
+    const dynamicTranslations = dynamicTranslationData.get(locale);
+
+    return {
+      left: `${staticTransalations.invoice} #${dynamicTranslations.payrollInvoice}`,
+      center: `${staticTransalations.payroll} ${dynamicTranslations.payrollDate}`,
+      right: `${staticTransalations.page}&nbsp;<span class="pageNumber" style=""></span>/<span class="totalPages"></span>`,
+    };
+  }
+
+  private async convertToPDF(html: string, filename: string, footerData: FooterTemplate): Promise<Buffer> {
     const start = Date.now();
     const page = await this.browser.newPage();
     await page.emulateMediaType("screen");
     await page.setContent(html);
     await page.evaluateHandle("document.fonts.ready");
-    const pageNumberFooter = `${footerData.right}&nbsp;<span class="pageNumber" style=""></span>/<span class="totalPages"></span>`;
     const pdf = page.pdf({
       format: "A4",
       printBackground: true,
@@ -160,7 +184,7 @@ export class TemplateProcessor {
           <div style="font-family: system-ui; margin-left: 30px; margin-right: 30px; display: flex; font-size: 8px; width: 100%;">
             <div style="flex: 1; display:flex; justify-content:left;"><span>${footerData.left}</span></div>
             <div style="flex: 1; display:flex; justify-content:center;"><span>${footerData.center}</span></div>
-            <div style="flex: 1; display:flex; justify-content:right;">${pageNumberFooter}</div>
+            <div style="flex: 1; display:flex; justify-content:right;">${footerData.right}</div>
           </div>
           `,
       margin: { bottom: "80px", top: "80px", left: "50px", right: "50px" },
