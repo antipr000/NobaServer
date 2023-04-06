@@ -174,6 +174,7 @@ describe("PomeloTransactionServiceTests", () => {
           pomeloOriginalTransactionID: null,
           pomeloUserID: "POMELO_USER_ID",
           transactionType: PomeloTransactionType.PURCHASE,
+          merchantName: "MERCHANT_NAME",
         };
 
         const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
@@ -203,6 +204,7 @@ describe("PomeloTransactionServiceTests", () => {
             pomeloOriginalTransactionID: null,
             pomeloUserID: "POMELO_USER_ID",
             transactionType: PomeloTransactionType.PURCHASE,
+            merchantName: "MERCHANT_NAME",
           };
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
@@ -231,6 +233,7 @@ describe("PomeloTransactionServiceTests", () => {
             pomeloOriginalTransactionID: null,
             pomeloUserID: "POMELO_USER_ID",
             transactionType: PomeloTransactionType.PURCHASE,
+            merchantName: "MERCHANT_NAME",
           };
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
@@ -259,6 +262,7 @@ describe("PomeloTransactionServiceTests", () => {
             pomeloOriginalTransactionID: null,
             pomeloUserID: "POMELO_USER_ID",
             transactionType: PomeloTransactionType.PURCHASE,
+            merchantName: "MERCHANT_NAME",
           };
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
@@ -289,6 +293,7 @@ describe("PomeloTransactionServiceTests", () => {
         pomeloOriginalTransactionID: null,
         pomeloUserID: "POMELO_USER_ID",
         transactionType: PomeloTransactionType.PURCHASE,
+        merchantName: "MERCHANT_NAME",
       };
       const pomeloTransaction: PomeloTransaction = {
         id: uuid(),
@@ -387,7 +392,7 @@ describe("PomeloTransactionServiceTests", () => {
             debitConsumerID: "NOBA_CONSUMER_ID",
             exchangeRate: 0.01,
             nobaTransactionID: "NOBA_TRANSACTION_ID",
-            memo: "",
+            memo: "Transfer of 5000 COP to MERCHANT_NAME",
           },
         });
       });
@@ -473,7 +478,7 @@ describe("PomeloTransactionServiceTests", () => {
             debitConsumerID: "NOBA_CONSUMER_ID",
             exchangeRate: 0.01,
             nobaTransactionID: "NOBA_TRANSACTION_ID",
-            memo: "",
+            memo: "Transfer of 5000 COP to MERCHANT_NAME",
           },
         });
       });
@@ -537,7 +542,7 @@ describe("PomeloTransactionServiceTests", () => {
             debitConsumerID: "NOBA_CONSUMER_ID",
             exchangeRate: 0.01,
             nobaTransactionID: "NOBA_TRANSACTION_ID",
-            memo: "",
+            memo: "Transfer of 5000 COP to MERCHANT_NAME",
           },
         });
       });

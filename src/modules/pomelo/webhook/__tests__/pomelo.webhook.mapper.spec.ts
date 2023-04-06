@@ -39,6 +39,9 @@ describe("PomeloWebhookMapperService", () => {
           type: "PURCHASE",
           original_transaction_id: null,
         },
+        merchant: {
+          name: "MERCHANT_NAME",
+        },
         card: {
           id: "POMELO_CARD_ID",
         },
@@ -195,6 +198,39 @@ describe("PomeloWebhookMapperService", () => {
               expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
               expect(err.message).toEqual(expect.stringContaining("user"));
               expect(err.message).toEqual(expect.stringContaining("id"));
+            }
+          });
+        });
+
+        describe("merchant sub-object", () => {
+          it("should throw error when 'merchant' object is missing", () => {
+            const headers = JSON.parse(JSON.stringify(validMinimalHeaders));
+            const requestBody = JSON.parse(JSON.stringify(validMinimalRequestBody));
+            delete requestBody.merchant;
+
+            try {
+              pomeloWebhookMapper.convertToPomeloTransactionAuthzRequest(requestBody, headers);
+              expect(true).toBe(false);
+            } catch (err) {
+              expect(err).toBeInstanceOf(ServiceException);
+              expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
+              expect(err.message).toEqual(expect.stringContaining("merchant"));
+            }
+          });
+
+          it("should throw error when 'merchant' object's 'name' field is missing", () => {
+            const headers = JSON.parse(JSON.stringify(validMinimalHeaders));
+            const requestBody = JSON.parse(JSON.stringify(validMinimalRequestBody));
+            delete requestBody.merchant.name;
+
+            try {
+              pomeloWebhookMapper.convertToPomeloTransactionAuthzRequest(requestBody, headers);
+              expect(true).toBe(false);
+            } catch (err) {
+              expect(err).toBeInstanceOf(ServiceException);
+              expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
+              expect(err.message).toEqual(expect.stringContaining("merchant"));
+              expect(err.message).toEqual(expect.stringContaining("name"));
             }
           });
         });
@@ -660,6 +696,7 @@ describe("PomeloWebhookMapperService", () => {
 
         pomeloTransactionID: "POMELO_TRANSACTION_ID",
         transactionType: PomeloTransactionType.PURCHASE,
+        merchantName: "Noba Technologies",
         pomeloOriginalTransactionID: null,
         pomeloCardID: "POMELO_CARD_ID",
         pomeloUserID: "POMELO_USER_ID",

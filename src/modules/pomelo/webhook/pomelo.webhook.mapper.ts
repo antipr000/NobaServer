@@ -42,6 +42,7 @@ export class PomeloWebhookMapper {
       idempotencyKey: idempotencyKey,
 
       pomeloTransactionID: requestBody.transaction["id"],
+      merchantName: requestBody.merchant["name"],
       transactionType: requestBody.transaction["type"] as PomeloTransactionType,
       pomeloOriginalTransactionID: requestBody.transaction["original_transaction_id"],
       pomeloCardID: requestBody.card.id,
@@ -79,6 +80,7 @@ export class PomeloWebhookMapper {
   private validateTransactionAuthzRequestBody(requestBody: Record<string, any>) {
     const pomeloTransactionAuthRawRequestJoiValidationKeys = {
       transaction: Joi.object(this.transactionAuthzTransactionSubObjectValidationKeys()).required(),
+      merchant: Joi.object(this.transactionAuthzMerchantSubObjectValidationKeys()).required(),
       card: Joi.object(this.transactionAuthzCardSubObjectValidationKeys()).required(),
       user: Joi.object(this.transactionAuthzUserSubObjectValidationKeys()).required(),
       amount: Joi.object(this.transactionAuthzAmountSubObjectValidationKeys()).required(),
@@ -102,6 +104,14 @@ export class PomeloWebhookMapper {
     };
 
     return internalTransactionSubObjectJoiValidationKeys;
+  }
+
+  private transactionAuthzMerchantSubObjectValidationKeys() {
+    const internalMerchantSubObjectJoiValidationKeys = {
+      name: Joi.string().required(),
+    };
+
+    return internalMerchantSubObjectJoiValidationKeys;
   }
 
   private transactionAuthzCardSubObjectValidationKeys() {

@@ -130,7 +130,7 @@ export class PomeloTransactionService {
           debitConsumerID: pomeloUser.consumerID,
           exchangeRate: exchangeRate.nobaRate,
           nobaTransactionID: pomeloTransaction.nobaTransactionID,
-          memo: "",
+          memo: `Transfer of ${request.localAmount} ${request.localCurrency} to ${request.merchantName}`,
         },
       });
 

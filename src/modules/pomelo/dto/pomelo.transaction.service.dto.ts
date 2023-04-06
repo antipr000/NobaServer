@@ -32,6 +32,7 @@ export type PomeloTransactionAuthzRequest = {
   // request parameters.
   pomeloTransactionID: string;
   transactionType: PomeloTransactionType;
+  merchantName: string;
   pomeloOriginalTransactionID: string;
   pomeloCardID: string;
   pomeloUserID: string;
