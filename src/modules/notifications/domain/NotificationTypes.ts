@@ -25,7 +25,6 @@ export enum NotificationEventType {
   SEND_TRANSFER_FAILED_EVENT = "transfer.failed",
   SEND_TRANSFER_RECEIVED_EVENT = "transfer.received",
   SEND_COLLECTION_LINK_EVENT = "collection.link",
-  SEND_COLLECTION_COMPLETED_EVENT = "collection.completed",
   SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT = "payroll.deposit.completed",
   SEND_EMPLOYER_REQUEST_EVENT = "employee.request",
   SEND_REGISTER_NEW_EMPLOYEE_EVENT = "register.employee",
@@ -43,7 +42,6 @@ export enum NotificationEventHandler {
 
 export enum NotificationWorkflowTypes {
   COLLECTION_LINK_EVENT = "collectionLinkEvent",
-  COLLECTION_COMPLETED_EVENT = "collectionCompletedEvent",
   DEPOSIT_COMPLETED_EVENT = "depositCompletedEvent",
   DEPOSIT_FAILED_EVENT = "depositFailedEvent",
   WITHDRAWAL_COMPLETED_EVENT = "withdrawalCompletedEvent",
@@ -88,7 +86,6 @@ export const preferredNotificationMedium = {
   ],
   [NotificationEventType.SEND_TRANSFER_FAILED_EVENT]: [NotificationEventHandler.EMAIL, NotificationEventHandler.PUSH],
   [NotificationEventType.SEND_COLLECTION_LINK_EVENT]: [NotificationEventHandler.EMAIL],
-  [NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT]: [NotificationEventHandler.PUSH],
   [NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT]: [NotificationEventHandler.EMAIL, NotificationEventHandler.PUSH],
   [NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT]: [

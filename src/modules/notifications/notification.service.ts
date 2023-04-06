@@ -30,7 +30,6 @@ import { SendWithdrawalInitiatedEvent } from "./events/SendWithdrawalInitiatedEv
 import { SendTransferCompletedEvent } from "./events/SendTransferCompletedEvent";
 import { SendTransferFailedEvent } from "./events/SendTransferFailedEvent";
 import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
-import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
 import { SendPhoneVerificationCodeEvent } from "./events/SendPhoneVerificationCodeEvent";
 import { SendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
 import { IPushTokenRepo } from "./repos/pushtoken.repo";
@@ -287,17 +286,6 @@ export class NotificationService {
             locale: payload.locale,
             cardNetwork: payload.cardNetwork,
             last4Digits: payload.last4Digits,
-          }),
-        );
-        break;
-      case NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendCollectionCompletedEvent({
-            debitAmount: payload.collectionCompletedParams.debitAmount,
-            debitCurrency: payload.collectionCompletedParams.debitCurrency,
-            pushTokens: payload.pushTokens,
-            locale: payload.locale,
           }),
         );
         break;

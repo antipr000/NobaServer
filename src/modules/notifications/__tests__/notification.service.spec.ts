@@ -20,7 +20,6 @@ import { SendCardAddedEvent } from "../events/SendCardAddedEvent";
 import { SendCardAdditionFailedEvent } from "../events/SendCardAdditionFailedEvent";
 import { SendCardDeletedEvent } from "../events/SendCardDeletedEvent";
 import { SendHardDeclineEvent } from "../events/SendHardDeclineEvent";
-import { SendCollectionCompletedEvent } from "../events/SendCollectionCompletedEvent";
 import { SendDepositCompletedEvent } from "../events/SendDepositCompletedEvent";
 import { SendDepositFailedEvent } from "../events/SendDepositFailedEvent";
 import { SendDepositInitiatedEvent } from "../events/SendDepositInitiatedEvent";
@@ -615,37 +614,6 @@ describe("NotificationService", () => {
   });
 
   describe("Push Events", () => {
-    it("should emit push event for COLLECTION_COMPLETED_EVENT", async () => {
-      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
-
-      const payload: NotificationPayload = {
-        locale: "en",
-        firstName: "Fake",
-        lastName: "User",
-        email: "fake+user@noba.com",
-        nobaUserID: "fake-user-id",
-        collectionCompletedParams: {
-          debitAmount: 1000,
-          debitCurrency: "COP",
-        },
-      };
-
-      when(pushTokenRepo.getAllPushTokensForConsumer("fake-user-id")).thenResolve(["token1"]);
-
-      await notificationService.sendNotification(NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT, payload);
-
-      const data = new SendCollectionCompletedEvent({
-        debitAmount: 1000,
-        debitCurrency: "COP",
-        pushTokens: ["token1"],
-        locale: payload.locale,
-      });
-
-      verify(
-        eventEmitter.emitAsync(`push.${NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT}`, deepEqual(data)),
-      ).once();
-    });
-
     it("should emit push event for DEPOSIT_COMPLETED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
       const payload: NotificationPayload = {

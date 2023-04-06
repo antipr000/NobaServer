@@ -130,13 +130,6 @@ export class NotificationWorkflowService {
           payload,
         );
         break;
-      case NotificationWorkflowTypes.COLLECTION_COMPLETED_EVENT:
-        consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
-        payload = prepareNotificationPayload(consumer, {
-          collectionCompletedParams: transactionPayload,
-        });
-        await this.notificationService.sendNotification(NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT, payload);
-        break;
       default:
         this.logger.error(
           `Failed to send notification from workflow. Reason: ${notificationWorkflowType} is not supported!`,
@@ -224,8 +217,6 @@ export class NotificationWorkflowService {
           transaction,
           employerName,
         );
-      case NotificationWorkflowTypes.COLLECTION_COMPLETED_EVENT:
-        return this.transactionNotificationPayloadMapper.toCollectionCompletedNotificationParameters(transaction);
       default:
         return null;
     }

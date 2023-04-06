@@ -41,10 +41,6 @@ export const PushTemplates = {
     en: "template_send_transfer_successful_receiver_en",
     es: "template_send_transfer_successful_receiver_es",
   },
-  COLLECTION_COMPLETED_PUSH: {
-    en: "template_send_collection_completed_en",
-    es: "template_send_collection_completed_es",
-  },
   PAYROLL_DEPOSIT_COMPLETED_PUSH: {
     en: "template_send_payroll_deposit_completed_en",
     es: "template_send_payroll_deposit_completed_es",

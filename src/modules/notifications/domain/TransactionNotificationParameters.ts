@@ -59,11 +59,6 @@ export interface PayrollDepositCompletedNotificationParameters extends DepositCo
   companyName: string;
 }
 
-export interface CollectionCompletedNotificationParameters {
-  debitAmount: number;
-  debitCurrency: string;
-}
-
 // TODO(jira/CRYPTO-604): Remove hardcoded values and unnecessary fields once templates are ready
 export class TransactionNotificationPayloadMapper {
   toTransactionParams(transaction: Transaction): TransactionParameters {
@@ -171,13 +166,6 @@ export class TransactionNotificationPayloadMapper {
       creditConsumer_handle: creditConsumer.props.handle,
       debitConsumer_handle: debitConsumer.props.handle,
       reasonDeclined: "Something went wrong", // TODO (CRYPTO-698)
-    };
-  }
-
-  toCollectionCompletedNotificationParameters(transaction: Transaction): CollectionCompletedNotificationParameters {
-    return {
-      debitAmount: transaction.debitAmount,
-      debitCurrency: transaction.debitCurrency,
     };
   }
 }
