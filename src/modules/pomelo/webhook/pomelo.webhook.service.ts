@@ -28,6 +28,7 @@ import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { Transaction } from "../../../modules/transaction/domain/Transaction";
 import { UpdateWalletBalanceServiceDTO } from "../../../modules/psp/domain/UpdateWalletBalanceServiceDTO";
 import { CircleWithdrawalStatus } from "../../../modules/psp/domain/CircleTypes";
+import { ServiceErrorCode, ServiceException } from "src/core/exception/service.exception";
 
 @Injectable()
 export class PomeloTransactionService {
@@ -87,48 +88,33 @@ export class PomeloTransactionService {
       return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.OTHER);
     }
 
-    let pomeloTransaction: PomeloTransaction;
     try {
-      const nobaTransactionID = uuid();
-
-      pomeloTransaction = await this.pomeloRepo.createPomeloTransaction({
-        pomeloTransactionID: request.pomeloTransactionID,
-        amountInLocalCurrency: request.localAmount,
-        localCurrency: request.localCurrency,
-        amountInUSD: request.settlementAmount,
-        nobaTransactionID: nobaTransactionID,
-        pomeloCardID: request.pomeloCardID,
-        pomeloIdempotencyKey: request.idempotencyKey,
-      });
-    } catch (err) {
-      pomeloTransaction = await this.pomeloRepo.getPomeloTransactionByPomeloIdempotencyKey(request.idempotencyKey);
-      if (pomeloTransaction === null) {
-        return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.SYSTEM_ERROR);
+      const pomeloTransaction: PomeloTransaction = await this.getOrCreatePomeloTransaction(request);
+      if (pomeloTransaction.status !== PomeloTransactionStatus.PENDING) {
+        const detailAuthzStatus: PomeloTransactionAuthzDetailStatus = this.nobaPomeloStatusToPublicDetailStatusMap[pomeloTransaction.status];
+        return this.prepareAuthorizationResponse(detailAuthzStatus);
       }
-    }
 
-    if (pomeloTransaction.status !== PomeloTransactionStatus.PENDING) {
-      const detailAuthzStatus: PomeloTransactionAuthzDetailStatus = this.nobaPomeloStatusToPublicDetailStatusMap[pomeloTransaction.status];
-      return this.prepareAuthorizationResponse(detailAuthzStatus);
-    }
+      const pomeloCard: PomeloCard = await this.pomeloRepo.getPomeloCardByPomeloCardID(pomeloTransaction.pomeloCardID);
+      if (pomeloCard.pomeloUserID !== request.pomeloUserID) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: `Requested card '${pomeloCard.pomeloCardID}' doesn't belong to the specified pomeloUserID: '${pomeloCard.pomeloUserID}'`
+        });
+      }
 
-    const pomeloCard: PomeloCard = await this.pomeloRepo.getPomeloCardByPomeloCardID(pomeloTransaction.pomeloCardID);
-    const pomeloUser: PomeloUser = await this.pomeloRepo.getPomeloUserByPomeloUserID(pomeloCard.pomeloUserID);
-    const circleWalletID: string = await this.circleService.getOrCreateWallet(pomeloUser.consumerID);
-    const walletBalance: number = await this.circleService.getWalletBalance(circleWalletID);
+      const pomeloUser: PomeloUser = await this.pomeloRepo.getPomeloUserByPomeloUserID(pomeloCard.pomeloUserID);
+      const circleWalletID: string = await this.circleService.getOrCreateWallet(pomeloUser.consumerID);
+      const walletBalanceInUSD: number = await this.circleService.getWalletBalance(circleWalletID);
 
-    if (walletBalance < pomeloTransaction.amountInUSD) {
-      this.pomeloRepo.updatePomeloTransactionStatus(pomeloTransaction.pomeloTransactionID, PomeloTransactionStatus.INSUFFICIENT_FUNDS);
-      return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS);
-    }
-
-    let nobaTransaction: Transaction;
-    try {
-      nobaTransaction = await this.transactionService.getTransactionByTransactionID(pomeloTransaction.nobaTransactionID);
-    }
-    catch (err) {
       const exchangeRate: ExchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD);
-      const transactionCreateRequest: InitiateTransactionRequest = {
+      const amountToDebitInUSD = exchangeRate.nobaRate * pomeloTransaction.amountInLocalCurrency;
+      if (walletBalanceInUSD < amountToDebitInUSD) {
+        await this.pomeloRepo.updatePomeloTransactionStatus(pomeloTransaction.pomeloTransactionID, PomeloTransactionStatus.INSUFFICIENT_FUNDS);
+        return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS);
+      }
+
+      const nobaTransaction: Transaction = await this.getOrCreateCardWithdrawalNobaTransaction({
         type: WorkflowName.CARD_WITHDRAWAL,
         cardWithdrawalRequest: {
           debitAmountInUSD: exchangeRate.nobaRate * pomeloTransaction.amountInLocalCurrency,
@@ -137,20 +123,23 @@ export class PomeloTransactionService {
           nobaTransactionID: pomeloTransaction.nobaTransactionID,
           memo: ""
         }
-      };
-      nobaTransaction = await this.transactionService.initiateTransaction(transactionCreateRequest);
-    }
+      });
 
-    const fundTransferStatus: UpdateWalletBalanceServiceDTO =
-      await this.circleService.debitWalletBalance(nobaTransaction.id, circleWalletID, nobaTransaction.debitAmount);
-    // TODO: Return more granular status from Circle service and return an appropriate error.
-    if (fundTransferStatus.status === CircleWithdrawalStatus.FAILURE) {
-      await this.pomeloRepo.updatePomeloTransactionStatus(pomeloTransaction.pomeloTransactionID, PomeloTransactionStatus.INSUFFICIENT_FUNDS);
-      return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS);
+      const fundTransferStatus: UpdateWalletBalanceServiceDTO =
+        await this.circleService.debitWalletBalance(nobaTransaction.id, circleWalletID, nobaTransaction.debitAmount);
+      // TODO: Return more granular status from Circle service and return an appropriate error.
+      if (fundTransferStatus.status === CircleWithdrawalStatus.FAILURE) {
+        await this.pomeloRepo.updatePomeloTransactionStatus(pomeloTransaction.pomeloTransactionID, PomeloTransactionStatus.INSUFFICIENT_FUNDS);
+        return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS);
+      }
+      else {
+        await this.pomeloRepo.updatePomeloTransactionStatus(pomeloTransaction.pomeloTransactionID, PomeloTransactionStatus.APPROVED);
+        return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.APPROVED);
+      }
     }
-    else {
-      await this.pomeloRepo.updatePomeloTransactionStatus(pomeloTransaction.pomeloTransactionID, PomeloTransactionStatus.APPROVED);
-      return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.APPROVED);
+    catch (err) {
+      this.logger.error(JSON.stringify(err));
+      return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.SYSTEM_ERROR);
     }
   }
 
@@ -198,5 +187,48 @@ export class PomeloTransactionService {
       .digest("base64");
 
     return `hmac-sha256 ${hash}`;
+  }
+
+  private async getOrCreatePomeloTransaction(request: PomeloTransactionAuthzRequest): Promise<PomeloTransaction> {
+    let pomeloTransaction: PomeloTransaction;
+    try {
+      const nobaTransactionID = uuid();
+
+      pomeloTransaction = await this.pomeloRepo.createPomeloTransaction({
+        pomeloTransactionID: request.pomeloTransactionID,
+        amountInLocalCurrency: request.localAmount,
+        localCurrency: request.localCurrency,
+        amountInUSD: request.settlementAmount,
+        nobaTransactionID: nobaTransactionID,
+        pomeloCardID: request.pomeloCardID,
+        pomeloIdempotencyKey: request.idempotencyKey,
+      });
+    } catch (err) {
+      pomeloTransaction = await this.pomeloRepo.getPomeloTransactionByPomeloIdempotencyKey(request.idempotencyKey);
+      if (pomeloTransaction === null) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+          message: "Error while fetching the existing PomeloTransaction",
+        });
+      }
+    }
+
+    return pomeloTransaction;
+  }
+
+  private async getOrCreateCardWithdrawalNobaTransaction(cardWithdrawalRequest: InitiateTransactionRequest): Promise<Transaction> {
+    let nobaTransaction: Transaction;
+    try {
+      nobaTransaction = await this.transactionService.initiateTransaction(cardWithdrawalRequest);
+    }
+    catch (err) {
+      nobaTransaction = await this.transactionService.getTransactionByTransactionID(cardWithdrawalRequest.cardWithdrawalRequest.nobaTransactionID);
+      if (nobaTransaction === null) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+          message: "Error while fetching Noba Transaction after creating it",
+        });
+      }
+    }
   }
 }
