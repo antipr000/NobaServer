@@ -74,7 +74,7 @@ export class PomeloTransactionService {
 
   async authorizeTransaction(request: PomeloTransactionAuthzRequest): Promise<PomeloTransactionAuthzResponse> {
     if (request.endpoint !== this.transactionAuthzEndpoint) {
-      this.logger.info(
+      this.logger.error(
         `'endpoint' mismatch. Received '${request.endpoint}' and expected '${this.transactionAuthzEndpoint}'`,
       );
       return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.OTHER);

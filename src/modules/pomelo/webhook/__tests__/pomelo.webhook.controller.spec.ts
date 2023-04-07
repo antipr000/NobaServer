@@ -75,6 +75,7 @@ describe("PomeloTransactionServiceTests", () => {
         localCurrency: PomeloCurrency.COP,
         settlementAmount: 11,
         settlementCurrency: PomeloCurrency.USD,
+        merchantName: "MERCHANT_NAME",
       };
       when(mockWebhookMapper.convertToPomeloTransactionAuthzRequest(anything(), anything())).thenReturn(parsedRequest);
 
