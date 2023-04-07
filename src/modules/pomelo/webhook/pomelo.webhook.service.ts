@@ -113,10 +113,10 @@ export class PomeloTransactionService {
       const walletBalanceInUSD: number = await this.circleService.getWalletBalance(circleWalletID);
 
       const exchangeRate: ExchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
-        Currency.COP,
         Currency.USD,
+        Currency.COP,
       );
-      const amountToDebitInUSD = exchangeRate.nobaRate * pomeloTransaction.amountInLocalCurrency;
+      const amountToDebitInUSD = pomeloTransaction.amountInLocalCurrency / exchangeRate.nobaRate;
       if (walletBalanceInUSD < amountToDebitInUSD) {
         await this.pomeloRepo.updatePomeloTransactionStatus(
           pomeloTransaction.pomeloTransactionID,
@@ -128,7 +128,7 @@ export class PomeloTransactionService {
       const nobaTransaction: Transaction = await this.getOrCreateCardWithdrawalNobaTransaction({
         type: WorkflowName.CARD_WITHDRAWAL,
         cardWithdrawalRequest: {
-          debitAmountInUSD: exchangeRate.nobaRate * pomeloTransaction.amountInLocalCurrency,
+          debitAmountInUSD: amountToDebitInUSD,
           debitConsumerID: nobaConsumerID,
           exchangeRate: exchangeRate.nobaRate,
           nobaTransactionID: pomeloTransaction.nobaTransactionID,

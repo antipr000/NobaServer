@@ -312,10 +312,10 @@ describe("PomeloTransactionServiceTests", () => {
       const circleWalletID: string = "CIRCLE_WALLET_ID";
       const circleWalletBalance: number = 50;
       const exchangeRate: ExchangeRateDTO = {
-        bankRate: 50,
-        nobaRate: 0.01,
-        denominatorCurrency: Currency.USD,
-        numeratorCurrency: Currency.COP,
+        bankRate: 100,
+        nobaRate: 100,
+        denominatorCurrency: Currency.COP,
+        numeratorCurrency: Currency.USD,
       };
       const transaction: Transaction = {
         id: "NOBA_TRANSACTION_ID",
@@ -345,7 +345,7 @@ describe("PomeloTransactionServiceTests", () => {
         );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
-        when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(exchangeRate);
+        when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
         when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
         when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
           debitWalletResponse,
@@ -377,7 +377,7 @@ describe("PomeloTransactionServiceTests", () => {
           cardWithdrawalRequest: {
             debitAmountInUSD: 50,
             debitConsumerID: "NOBA_CONSUMER_ID",
-            exchangeRate: 0.01,
+            exchangeRate: 100,
             nobaTransactionID: "NOBA_TRANSACTION_ID",
             memo: "Transfer of 5000 COP to MERCHANT_NAME",
           },
@@ -391,7 +391,7 @@ describe("PomeloTransactionServiceTests", () => {
         );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance - 0.01);
-        when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(exchangeRate);
+        when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
         when(
           mockPomeloRepo.updatePomeloTransactionStatus(
             "POMELO_TRANSACTION_ID",
@@ -433,7 +433,7 @@ describe("PomeloTransactionServiceTests", () => {
         );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
-        when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(exchangeRate);
+        when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
         when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
         when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
           debitWalletResponse,
@@ -465,7 +465,7 @@ describe("PomeloTransactionServiceTests", () => {
           cardWithdrawalRequest: {
             debitAmountInUSD: 50,
             debitConsumerID: "NOBA_CONSUMER_ID",
-            exchangeRate: 0.01,
+            exchangeRate: 100,
             nobaTransactionID: "NOBA_TRANSACTION_ID",
             memo: "Transfer of 5000 COP to MERCHANT_NAME",
           },
@@ -497,7 +497,7 @@ describe("PomeloTransactionServiceTests", () => {
         );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
-        when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(exchangeRate);
+        when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
         when(mockTransactionService.initiateTransaction(anything())).thenReject(new Error("Already Exists"));
         when(mockTransactionService.getTransactionByTransactionID("NOBA_TRANSACTION_ID")).thenResolve(transaction);
         when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
@@ -530,7 +530,7 @@ describe("PomeloTransactionServiceTests", () => {
           cardWithdrawalRequest: {
             debitAmountInUSD: 50,
             debitConsumerID: "NOBA_CONSUMER_ID",
-            exchangeRate: 0.01,
+            exchangeRate: 100,
             nobaTransactionID: "NOBA_TRANSACTION_ID",
             memo: "Transfer of 5000 COP to MERCHANT_NAME",
           },
@@ -596,7 +596,7 @@ describe("PomeloTransactionServiceTests", () => {
         );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
-        when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenReject(
+        when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenReject(
           new Error("Internal Error"),
         );
 
@@ -616,7 +616,7 @@ describe("PomeloTransactionServiceTests", () => {
         );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
-        when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(exchangeRate);
+        when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
         when(mockTransactionService.initiateTransaction(anything())).thenReject(new Error("Internal Error"));
         when(mockTransactionService.getTransactionByTransactionID(anyString())).thenReject(new Error("Internal Error"));
 
@@ -636,7 +636,7 @@ describe("PomeloTransactionServiceTests", () => {
         );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
-        when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(exchangeRate);
+        when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
         when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
         when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenReject(
           new Error("Internal Error"),
@@ -658,7 +658,7 @@ describe("PomeloTransactionServiceTests", () => {
         );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
-        when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(exchangeRate);
+        when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
         when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
         when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve({
           ...debitWalletResponse,
