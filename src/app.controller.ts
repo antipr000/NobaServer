@@ -38,11 +38,11 @@ import { MonoService } from "./modules/psp/mono/mono.service";
 import { HealthCheckResponseDTO } from "./modules/common/dto/HealthCheckResponseDTO";
 import { VerificationService } from "./modules/verification/verification.service";
 import { HealthCheckStatus } from "./core/domain/HealthCheckTypes";
-import { CircleService } from "./modules/psp/circle/circle.service";
 import { ALLOWED_DEPTH, HealthCheckQueryDTO } from "./modules/common/dto/HealthCheckQueryDTO";
 import { WorkflowExecutor } from "./infra/temporal/workflow.executor";
 import { IdentificationService } from "./modules/common/identification.service";
 import { IdentificationTypeCountryDTO } from "./modules/common/dto/identification.type.country.dto";
+import { CircleService } from "./modules/circle/public/circle.service";
 
 @Controller("v1")
 @ApiHeaders(getCommonHeaders())

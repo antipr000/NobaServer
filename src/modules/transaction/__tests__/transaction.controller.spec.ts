@@ -648,9 +648,9 @@ describe("Transaction Controller tests", () => {
         debitAmount: 100,
       };
 
-      when(transactionService.initiateTransaction(deepEqual(orderDetails), consumerID, "fake-session")).thenResolve(
-        transaction,
-      );
+      when(
+        transactionService.deprecatedInitiateTransaction(deepEqual(orderDetails), consumerID, "fake-session"),
+      ).thenResolve(transaction);
 
       const response = await transactionController.initiateTransaction("fake-session", orderDetails, consumer);
 
@@ -722,9 +722,9 @@ describe("Transaction Controller tests", () => {
         },
       };
 
-      when(transactionService.initiateTransaction(deepEqual(orderDetails), consumerID, "fake-session")).thenResolve(
-        transaction,
-      );
+      when(
+        transactionService.deprecatedInitiateTransaction(deepEqual(orderDetails), consumerID, "fake-session"),
+      ).thenResolve(transaction);
 
       const response = await transactionController.initiateTransaction("fake-session", orderDetails, consumer);
 

@@ -7,6 +7,4 @@ export type IdentificationDTO = {
   type: string;
   value: string;
   countryCode: string;
-  consumerID: string;
-  createdTimestamp: string;
 };

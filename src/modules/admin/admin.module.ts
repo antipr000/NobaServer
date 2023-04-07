@@ -16,6 +16,7 @@ import {
   TRANSACTION_MAPPING_SERVICE_PROVIDER,
 } from "../transaction/mapper/transaction.mapper.service";
 import { MonoModule } from "../psp/mono/mono.module";
+import { CirclePublicModule } from "../circle/public/circle.public.module";
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { MonoModule } from "../psp/mono/mono.module";
     EmployeeModule,
     EmployerModule,
     MonoModule,
+    CirclePublicModule,
   ],
   controllers: [AdminController],
   providers: [

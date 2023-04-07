@@ -2,13 +2,12 @@ import { Module } from "@nestjs/common";
 import { MonoModule } from "../../../modules/psp/mono/mono.module";
 import { CommonModule } from "../../../modules/common/common.module";
 import { BankFactory } from "./bank.factory";
-import { CircleService } from "../circle/circle.service";
-import { CircleRepoModule } from "../circle/repos/circle.repo.module";
-import { CircleClient } from "../circle/circle.client";
+import { CircleRepoModule } from "../../circle/repos/circle.repo.module";
+import { CirclePublicModule } from "../../../modules/circle/public/circle.public.module";
 
 @Module({
-  imports: [MonoModule, CommonModule, CircleRepoModule, MonoModule],
-  providers: [BankFactory, CircleService, CircleClient],
+  imports: [MonoModule, CommonModule, CircleRepoModule, MonoModule, CirclePublicModule],
+  providers: [BankFactory],
   exports: [BankFactory],
 })
 export class BankFactoryModule {}

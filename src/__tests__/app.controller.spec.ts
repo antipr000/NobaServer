@@ -27,8 +27,8 @@ import { WorkflowExecutor } from "../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../infra/temporal/mocks/mock.workflow.executor";
 import { IdentificationService } from "../modules/common/identification.service";
 import { getMockIdentificationServiceWithDefaults } from "../modules/common/mocks/mock.identification.service";
-import { getMockCircleServiceWithDefaults } from "../modules/psp/circle/mocks/mock.circle.service";
-import { CircleService } from "../modules/psp/circle/circle.service";
+import { CircleService } from "../modules/circle/public/circle.service";
+import { getMockCircleServiceWithDefaults } from "../modules/circle/public/mocks/mock.circle.service";
 
 describe("AppController", () => {
   let appController: AppController;

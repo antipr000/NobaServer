@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { PomeloService } from "./pomelo/pomelo.service";
+import { PomeloService } from "../../../pomelo/public/pomelo.service";
 import { ICardProviderService } from "./card.provider.service";
 import { ServiceErrorCode, ServiceException } from "../../../../core/exception/service.exception";
 import { CardProvider } from "../domain/NobaCard";

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { CardController } from "../card.controller";
+import { CardController } from "../card/card.controller";
 import { CardService } from "../card/card.service";
 import { getMockCardServiceWithDefaults } from "../card/mocks/mock.card.service";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";

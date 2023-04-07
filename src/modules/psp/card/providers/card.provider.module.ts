@@ -1,16 +1,14 @@
 import { Module } from "@nestjs/common";
-import { PomeloRepoModule } from "./pomelo/repos/pomelo.repo.module";
-import { PomeloClient } from "./pomelo/pomelo.client";
-import { PomeloService } from "./pomelo/pomelo.service";
+import { PomeloRepoModule } from "../../../pomelo/repos/pomelo.repo.module";
 import { CommonModule } from "../../../common/common.module";
 import { CardProviderFactory } from "./card.provider.factory";
 import { ConsumerModule } from "../../../../modules/consumer/consumer.module";
-import { PomeloTransactionProcessorModule } from "./pomelo/transaction/pomelo.transaction.module";
+import { PomeloPublicModule } from "../../../../modules/pomelo/public/pomelo.public.module";
 
 @Module({
-  imports: [PomeloRepoModule, CommonModule, ConsumerModule, PomeloTransactionProcessorModule],
+  imports: [PomeloRepoModule, CommonModule, ConsumerModule, PomeloPublicModule],
   controllers: [],
-  providers: [PomeloClient, PomeloService, CardProviderFactory],
+  providers: [CardProviderFactory],
   exports: [CardProviderFactory],
 })
 export class CardProviderModule {}

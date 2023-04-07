@@ -72,6 +72,7 @@ import { KmsService } from "../../../modules/common/kms.service";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { TransactionFilterOptionsDTO } from "../dto/TransactionFilterOptionsDTO";
+import { InitiateTransactionRequest } from "../dto/transaction.service.dto";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -290,7 +291,7 @@ describe("TransactionServiceTests", () => {
     });
   });
 
-  describe("initiateTransaction", () => {
+  describe("deprecatedInitiateTransaction", () => {
     it("should initiate a WALLET_TRANSFER transaction", async () => {
       const consumer = getRandomConsumer("consumerID");
       const consumer2 = getRandomConsumer("consumerID2");
@@ -313,7 +314,7 @@ describe("TransactionServiceTests", () => {
       );
       when(walletTransferImpl.initiateWorkflow(deepEqual(transaction))).thenResolve();
 
-      const returnedTransaction = await transactionService.initiateTransaction(
+      const returnedTransaction = await transactionService.deprecatedInitiateTransaction(
         transactionDTO,
         consumer.props.id,
         transaction.sessionKey,
@@ -421,7 +422,11 @@ describe("TransactionServiceTests", () => {
       ).thenResolve();
 
       expect(async () => {
-        await transactionService.initiateTransaction(transactionDTO, consumer.props.id, transaction.sessionKey);
+        await transactionService.deprecatedInitiateTransaction(
+          transactionDTO,
+          consumer.props.id,
+          transaction.sessionKey,
+        );
       }).rejects.toThrow(ServiceException);
     });
 
@@ -504,7 +509,11 @@ describe("TransactionServiceTests", () => {
       ).thenResolve();
 
       expect(async () => {
-        await transactionService.initiateTransaction(transactionDTO, consumer.props.id, transaction.sessionKey);
+        await transactionService.deprecatedInitiateTransaction(
+          transactionDTO,
+          consumer.props.id,
+          transaction.sessionKey,
+        );
       }).rejects.toThrow(ServiceException);
     });
 
@@ -550,7 +559,7 @@ describe("TransactionServiceTests", () => {
         status: KYCStatus.APPROVED,
       });
 
-      const returnedTransaction = await transactionService.initiateTransaction(
+      const returnedTransaction = await transactionService.deprecatedInitiateTransaction(
         transactionDTO,
         consumer.props.id,
         transaction.sessionKey,
@@ -611,7 +620,7 @@ describe("TransactionServiceTests", () => {
         status: KYCStatus.APPROVED,
       });
 
-      const returnedTransaction = await transactionService.initiateTransaction(
+      const returnedTransaction = await transactionService.deprecatedInitiateTransaction(
         transactionDTO,
         consumer.props.id,
         transaction.sessionKey,
@@ -662,7 +671,7 @@ describe("TransactionServiceTests", () => {
       );
 
       await expect(
-        transactionService.initiateTransaction(transactionDTO, consumer.props.id, transaction.sessionKey),
+        transactionService.deprecatedInitiateTransaction(transactionDTO, consumer.props.id, transaction.sessionKey),
       ).rejects.toThrowError(ServiceException);
 
       // IMPORTANT TO VERIFY THIS CORRECTLY :)
@@ -673,19 +682,19 @@ describe("TransactionServiceTests", () => {
 
     it("should throw ServiceException if consumer is not found", async () => {
       const { transactionDTO } = getRandomTransaction("", "");
-      await expect(transactionService.initiateTransaction(transactionDTO, "", null)).rejects.toThrowError(
+      await expect(transactionService.deprecatedInitiateTransaction(transactionDTO, "", null)).rejects.toThrowError(
         ServiceException,
       );
     });
   });
 
-  describe("initiateTransactionForPayrolls", () => {
+  describe("deprecatedInitiateTransactionForPayrolls", () => {
     it("should throw ServiceException with DOES_NOT_EXIST error if the Disbursement is not found", async () => {
       const payrollDisbursementID = uuid();
       when(employerService.getDisbursement(payrollDisbursementID)).thenResolve(null);
 
       try {
-        await transactionService.initiateTransactionForPayrolls(payrollDisbursementID);
+        await transactionService.deprecatedInitiateTransactionForPayrolls(payrollDisbursementID);
       } catch (ex) {
         expect(ex).toBeInstanceOf(ServiceException);
         expect(ex.errorCode).toBe(ServiceErrorCode.DOES_NOT_EXIST);
@@ -706,7 +715,7 @@ describe("TransactionServiceTests", () => {
       when(employerService.getPayrollByID(payroll.id)).thenResolve(null);
 
       try {
-        await transactionService.initiateTransactionForPayrolls(payrollDisbursement.id);
+        await transactionService.deprecatedInitiateTransactionForPayrolls(payrollDisbursement.id);
       } catch (ex) {
         expect(ex).toBeInstanceOf(ServiceException);
         expect(ex.errorCode).toBe(ServiceErrorCode.UNKNOWN);
@@ -728,7 +737,7 @@ describe("TransactionServiceTests", () => {
       when(employerService.getEmployerByID(employer.id)).thenResolve(null);
 
       try {
-        await transactionService.initiateTransactionForPayrolls(payrollDisbursement.id);
+        await transactionService.deprecatedInitiateTransactionForPayrolls(payrollDisbursement.id);
       } catch (ex) {
         expect(ex).toBeInstanceOf(ServiceException);
         expect(ex.errorCode).toBe(ServiceErrorCode.UNKNOWN);
@@ -751,7 +760,7 @@ describe("TransactionServiceTests", () => {
       when(employeeService.getEmployeeByID(employee.id)).thenResolve(null);
 
       try {
-        await transactionService.initiateTransactionForPayrolls(payrollDisbursement.id);
+        await transactionService.deprecatedInitiateTransactionForPayrolls(payrollDisbursement.id);
       } catch (ex) {
         expect(ex).toBeInstanceOf(ServiceException);
         expect(ex.errorCode).toBe(ServiceErrorCode.UNKNOWN);
@@ -774,7 +783,7 @@ describe("TransactionServiceTests", () => {
       when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
       when(transactionRepo.createTransaction(anything())).thenResolve(null);
 
-      await transactionService.initiateTransactionForPayrolls(payrollDisbursement.id);
+      await transactionService.deprecatedInitiateTransactionForPayrolls(payrollDisbursement.id);
 
       const [propagatedTransactionToSave] = capture(transactionRepo.createTransaction).last();
       expect(propagatedTransactionToSave.memo).toEqual(expect.stringContaining(payroll.payrollDate));
@@ -789,6 +798,112 @@ describe("TransactionServiceTests", () => {
       expect(propagatedTransactionToSave.creditCurrency).toBe(Currency.USD);
       expect(propagatedTransactionToSave.creditConsumerID).toBe(employee.consumerID);
       expect(propagatedTransactionToSave.sessionKey).toBe("PAYROLL");
+    });
+  });
+
+  describe("initiateTransaction", () => {
+    it.each([
+      WorkflowName.PAYROLL_DEPOSIT,
+      WorkflowName.PAYROLL_PROCESSING,
+      WorkflowName.WALLET_DEPOSIT,
+      WorkflowName.WALLET_WITHDRAWAL,
+      WorkflowName.WALLET_TRANSFER,
+    ])("should throw error if 'type' is '%s'", async workflow => {
+      try {
+        await transactionService.initiateTransaction({ type: workflow });
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.errorCode).toBe(ServiceErrorCode.NOT_IMPLEMENTED);
+      }
+    });
+
+    it("should throw error if none of the 'request' sub-object are set", async () => {
+      const request: InitiateTransactionRequest = {
+        type: WorkflowName.CARD_WITHDRAWAL,
+      };
+      try {
+        await transactionService.initiateTransaction(request);
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err.message).toEqual(expect.stringContaining("at least one of"));
+        expect(err.message).toEqual(expect.stringContaining("cardWithdrawalRequest"));
+      }
+    });
+
+    // TODO: This tests should be moved along with the introduction of Inheritance hierarchy.
+    describe("CARD_WITHDRAWAL", () => {
+      describe("validation errors", () => {
+        const validInitiateTransactionRequest: InitiateTransactionRequest = {
+          type: WorkflowName.CARD_WITHDRAWAL,
+          cardWithdrawalRequest: {
+            debitAmountInUSD: 100,
+            debitConsumerID: "DEBIT_CONSUMER_ID",
+            exchangeRate: 1,
+            memo: "MEMO",
+            nobaTransactionID: "NOBA_TRANSACTION_ID",
+          },
+        };
+
+        it.each(["nobaTransactionID", "debitConsumerID", "debitAmountInUSD", "exchangeRate", "memo"])(
+          "should throw error if '%s' is not specified",
+          async field => {
+            const request = JSON.parse(JSON.stringify(validInitiateTransactionRequest));
+            delete request["cardWithdrawalRequest"][field];
+
+            try {
+              await transactionService.initiateTransaction(request);
+              expect(true).toBe(false);
+            } catch (err) {
+              expect(err.message).toEqual(expect.stringContaining("cardWithdrawalRequest"));
+              expect(err.message).toEqual(expect.stringContaining(`${field}`));
+            }
+          },
+        );
+      });
+
+      it("should correctly save the CARD_WITHDRAWAL transaction", async () => {
+        const request: InitiateTransactionRequest = {
+          type: WorkflowName.CARD_WITHDRAWAL,
+          cardWithdrawalRequest: {
+            debitAmountInUSD: 100,
+            debitConsumerID: "DEBIT_CONSUMER_ID",
+            exchangeRate: 1,
+            memo: "MEMO",
+            nobaTransactionID: "NOBA_TRANSACTION_ID",
+          },
+        };
+        const transaction: Transaction = {
+          id: "NOBA_TRANSACTION_ID",
+          transactionRef: "DUMMY_REF",
+          exchangeRate: 1,
+          debitAmount: 100,
+          debitCurrency: Currency.USD,
+          debitConsumerID: "DEBIT_CONSUMER_ID",
+          transactionFees: [],
+          sessionKey: "CARD_WITHDRAWAL",
+          status: TransactionStatus.INITIATED,
+          workflowName: WorkflowName.CARD_WITHDRAWAL,
+        };
+        when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
+
+        const response = await transactionService.initiateTransaction(request);
+
+        expect(response).toStrictEqual(transaction);
+        const [propagatedInputTransactionArg] = capture(transactionRepo.createTransaction).last();
+        expect(propagatedInputTransactionArg).toStrictEqual({
+          id: "NOBA_TRANSACTION_ID",
+          transactionRef: expect.any(String),
+          workflowName: WorkflowName.CARD_WITHDRAWAL,
+          debitAmount: 100,
+          debitCurrency: Currency.USD,
+          debitConsumerID: "DEBIT_CONSUMER_ID",
+          memo: "MEMO",
+          exchangeRate: 1,
+          sessionKey: "CARD_WITHDRAWAL",
+          transactionFees: [],
+        });
+      });
     });
   });
 

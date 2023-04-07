@@ -39,6 +39,11 @@ import { Employee } from "../employee/domain/Employee";
 import { AlertService } from "../common/alerts/alert.service";
 import { AlertKey } from "../common/alerts/alert.dto";
 import { Employer } from "../employer/domain/Employer";
+import {
+  CardWithdrawalTransactionRequest,
+  InitiateTransactionRequest,
+  validateInitiateTransactionRequest,
+} from "./dto/transaction.service.dto";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 import { KmsService } from "../common/kms.service";
 
@@ -83,7 +88,8 @@ export class TransactionService {
     return this.transactionRepo.getFilteredTransactions(filter);
   }
 
-  async initiateTransactionForPayrolls(payrollDisbursementID: string) {
+  // [DEPRECATED]: use `initiateTransction` method instead.
+  async deprecatedInitiateTransactionForPayrolls(payrollDisbursementID: string) {
     const payrollDisbursement: PayrollDisbursement = await this.employerService.getDisbursement(payrollDisbursementID);
     if (!payrollDisbursement) {
       throw new ServiceException({
@@ -134,7 +140,36 @@ export class TransactionService {
     return this.transactionRepo.createTransaction(transaction);
   }
 
-  async initiateTransaction(
+  async initiateTransaction(request: InitiateTransactionRequest): Promise<Transaction> {
+    if (request.type !== WorkflowName.CARD_WITHDRAWAL) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.NOT_IMPLEMENTED,
+        message: "'initiateTransaction' only available for CARD_WITHDRAWAL as of today",
+      });
+    }
+
+    // TODO: Refactor to a 'TransactionExecutor' class after cleaning up iWorkflowImpl
+    validateInitiateTransactionRequest(request);
+    const cardWithdrawalRequest: CardWithdrawalTransactionRequest = request.cardWithdrawalRequest;
+
+    const inputTransaction: InputTransaction = {
+      id: cardWithdrawalRequest.nobaTransactionID,
+      transactionRef: Utils.generateLowercaseUUID(true),
+      workflowName: WorkflowName.CARD_WITHDRAWAL,
+      debitAmount: cardWithdrawalRequest.debitAmountInUSD,
+      debitCurrency: Currency.USD,
+      debitConsumerID: cardWithdrawalRequest.debitConsumerID,
+      memo: cardWithdrawalRequest.memo,
+      exchangeRate: cardWithdrawalRequest.exchangeRate,
+      sessionKey: "CARD_WITHDRAWAL",
+      transactionFees: [],
+    };
+    const transaction: Transaction = await this.transactionRepo.createTransaction(inputTransaction);
+    return transaction;
+  }
+
+  // [DEPRECATED]: use `initiateTransction` method instead.
+  async deprecatedInitiateTransaction(
     transactionDetails: InitiateTransactionDTO,
     initiatingConsumer: string,
     sessionKey: string,

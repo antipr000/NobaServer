@@ -17,6 +17,7 @@ import { MonoModule } from "../psp/mono/mono.module";
 import { BankFactoryModule } from "../psp/factory/bank.factory.module";
 import { EmployerModule } from "../employer/employer.module";
 import { EmployeeModule } from "../employee/employee.module";
+import { CirclePublicModule } from "../circle/public/circle.public.module";
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { EmployeeModule } from "../employee/employee.module";
     MonoModule,
     EmployerModule,
     EmployeeModule,
+    CirclePublicModule,
   ],
   controllers: [TransactionController, TransactionWorkflowController],
   providers: [
@@ -56,6 +58,7 @@ export class TransactionModule {}
     TransactionModule,
     EmployerModule,
     EmployeeModule,
+    CirclePublicModule,
   ],
   providers: [TransactionWorkflowMapper],
   controllers: [TransactionWorkflowController],

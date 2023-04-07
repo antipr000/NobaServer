@@ -117,6 +117,7 @@ export type { UserPhoneUpdateRequest } from "./models/UserPhoneUpdateRequest";
 export type { VerificationDataDTO } from "./models/VerificationDataDTO";
 export type { VerificationResultDTO } from "./models/VerificationResultDTO";
 export type { VerifyOtpRequestDTO } from "./models/VerifyOtpRequestDTO";
+export type { WebViewTokenResponseDTO } from "./models/WebViewTokenResponseDTO";
 export type { WithdrawalDTO } from "./models/WithdrawalDTO";
 export type { WorkflowTransactionDTO } from "./models/WorkflowTransactionDTO";
 

@@ -58,7 +58,7 @@ export class TransactionWorkflowController {
   @ApiNotFoundResponse({ description: "Requested disbursement is not found" })
   @ApiBadRequestResponse({ description: "Failed to create transaction" })
   async createTransaction(@Body() requestBody: CreateTransactionDTO): Promise<WorkflowTransactionDTO> {
-    const transaction: Transaction = await this.transactionService.initiateTransactionForPayrolls(
+    const transaction: Transaction = await this.transactionService.deprecatedInitiateTransactionForPayrolls(
       requestBody.disbursementID,
     );
     return this.transactionWorkflowMapper.toWorkflowTransactionDTO(transaction, []);

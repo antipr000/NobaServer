@@ -16,12 +16,11 @@ import { BankName } from "../../../modules/psp/domain/BankFactoryTypes";
 import { EmployeeService } from "../../../modules/employee/employee.service";
 import { ConsumerMapper } from "../../../modules/consumer/mappers/ConsumerMapper";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
-import { CircleService } from "../../../modules/psp/circle/circle.service";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { ConsumerSearchDTO } from "../../../modules/consumer/dto/consumer.search.dto";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { getMockConsumerMapperWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.mapper";
-import { getMockCircleServiceWithDefaults } from "../../../modules/psp/circle/mocks/mock.circle.service";
+import { getMockCircleServiceWithDefaults } from "../../circle/public/mocks/mock.circle.service";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 import { Employee } from "../../../modules/employee/domain/Employee";
 import { DocumentVerificationStatus, KYCProvider, KYCStatus } from "@prisma/client";
@@ -29,6 +28,7 @@ import { AdminUpdateConsumerRequestDTO } from "../dto/AdminUpdateConsumerRequest
 import { ConsumerInternalDTO } from "../../../modules/consumer/dto/ConsumerInternalDTO";
 import { Gender } from "../../../modules/consumer/domain/ExternalStates";
 import { TransactionService } from "../../../modules/transaction/transaction.service";
+import { CircleService } from "../../../modules/circle/public/circle.service";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);

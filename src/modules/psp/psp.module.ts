@@ -11,14 +11,11 @@ import { TransactionRepoModule } from "../transaction/repo/transaction.repo.modu
 import { getWinstonModule } from "../../core/utils/WinstonModule";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { CircleClient } from "./circle/circle.client";
-import { CircleController } from "./circle/circle.controller";
-import { CircleService } from "./circle/circle.service";
-import { CircleRepoModule } from "./circle/repos/circle.repo.module";
-import { CircleWorkflowController } from "./circle/circle.workflow.controller";
+import { CircleWorkflowController } from "../circle/workflow/circle.workflow.controller";
 import { BankFactoryModule } from "./factory/bank.factory.module";
-import { CardController } from "./card.controller";
+import { CardController } from "./card/card.controller";
 import { CardModule } from "./card/card.module";
+import { CirclePublicModule } from "../circle/public/circle.public.module";
 
 // This is made to ensure that the "webhooks" are correctly registered
 // before the server starts processing the requests.
@@ -38,18 +35,25 @@ export const CheckoutClientProvider: Provider = {
     CommonModule,
     NotificationsModule,
     TransactionRepoModule,
-    CircleRepoModule,
+    CirclePublicModule,
     BankFactoryModule,
     CardModule,
   ],
-  controllers: [PaymentWebhooksController, CircleController, CardController],
-  providers: [CheckoutClientProvider, PlaidClient, PaymentService, CheckoutWebhooksMapper, CircleClient, CircleService],
-  exports: [CheckoutClient, PlaidClient, PaymentService, CircleClient, CircleService],
+  controllers: [PaymentWebhooksController, CardController],
+  providers: [CheckoutClientProvider, PlaidClient, PaymentService, CheckoutWebhooksMapper],
+  exports: [CheckoutClient, PlaidClient, PaymentService],
 })
 export class PspModule {}
 
 @Module({
-  imports: [getWinstonModule(), CommonModule, NotificationsModule, TransactionRepoModule, PspModule],
+  imports: [
+    getWinstonModule(),
+    CommonModule,
+    NotificationsModule,
+    TransactionRepoModule,
+    PspModule,
+    CirclePublicModule,
+  ],
   controllers: [CircleWorkflowController],
 })
 export class PspWorkflowModule {}

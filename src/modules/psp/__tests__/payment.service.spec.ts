@@ -8,8 +8,8 @@ import { instance, when } from "ts-mockito";
 import { BankName } from "../domain/BankFactoryTypes";
 import { MonoService } from "../mono/mono.service";
 import { getMockMonoServiceWithDefaults } from "../mono/mocks/mock.mono.service";
-import { CircleService } from "../circle/circle.service";
-import { getMockCircleServiceWithDefaults } from "../circle/mocks/mock.circle.service";
+import { getMockCircleServiceWithDefaults } from "../../../modules/circle/public/mocks/mock.circle.service";
+import { CircleService } from "../../../modules/circle/public/circle.service";
 
 describe("PaymentService", () => {
   let bankFactory: BankFactory;

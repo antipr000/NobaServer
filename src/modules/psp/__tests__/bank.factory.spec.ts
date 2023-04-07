@@ -6,10 +6,10 @@ import { instance } from "ts-mockito";
 import { BankFactory } from "../factory/bank.factory";
 import { MonoWorkflowService } from "../mono/mono.workflow.service";
 import { getMockMonoWorkflowServiceWithDefaults } from "../mono/mocks/mock.mono.workflow.service";
+import { getMockCircleServiceWithDefaults } from "../../circle/public/mocks/mock.circle.service";
 import { IBank } from "../factory/ibank";
 import { BankName } from "../domain/BankFactoryTypes";
-import { CircleService } from "../circle/circle.service";
-import { getMockCircleServiceWithDefaults } from "../circle/mocks/mock.circle.service";
+import { CircleService } from "../../../modules/circle/public/circle.service";
 
 describe("BankFactory Tests", () => {
   jest.setTimeout(20000);
