@@ -1,15 +1,29 @@
-export class SendDocumentVerificationTechnicalFailureEvent {
-  public readonly email: string;
-  public readonly firstName?: string;
-  public readonly lastName?: string;
-  public readonly nobaUserID?: string;
-  public readonly locale?: string;
+import Joi from "joi";
+import { KeysRequired } from "../../../modules/common/domain/Types";
 
-  constructor({ email, firstName, lastName, nobaUserID, locale }) {
-    this.email = email;
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.nobaUserID = nobaUserID;
-    this.locale = locale;
-  }
+export class SendDocumentVerificationTechnicalFailureEvent {
+  email: string;
+  firstName: string;
+  lastName?: string;
+  nobaUserID: string;
+  locale?: string;
 }
+
+export const validateDocumentVerificationTechnicalFailureEvent = (
+  event: SendDocumentVerificationTechnicalFailureEvent,
+) => {
+  const documentVerificationTechnicalFailureEventJoiValidationKeys: KeysRequired<SendDocumentVerificationTechnicalFailureEvent> =
+    {
+      email: Joi.string().email().required(),
+      firstName: Joi.string().required(),
+      lastName: Joi.string().optional(),
+      nobaUserID: Joi.string().required(),
+      locale: Joi.string().optional(),
+    };
+
+  const documentVerificationTechnicalFailureEventJoiSchema = Joi.object(
+    documentVerificationTechnicalFailureEventJoiValidationKeys,
+  );
+
+  Joi.attempt(event, documentVerificationTechnicalFailureEventJoiSchema);
+};

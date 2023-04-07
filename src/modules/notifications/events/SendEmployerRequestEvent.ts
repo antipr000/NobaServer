@@ -1,13 +1,22 @@
-export class SendEmployerRequestEvent {
-  public readonly email: string;
-  public readonly firstName: string;
-  public readonly lastName: string;
-  public readonly locale?: string;
+import Joi from "joi";
+import { KeysRequired } from "../../../modules/common/domain/Types";
 
-  constructor({ email, firstName, lastName, locale }) {
-    this.email = email;
-    this.locale = locale;
-    this.firstName = firstName;
-    this.lastName = lastName;
-  }
+export class SendEmployerRequestEvent {
+  email: string;
+  firstName: string;
+  lastName?: string;
+  locale?: string;
 }
+
+export const validateSendEmployerRequestEvent = (event: SendEmployerRequestEvent) => {
+  const sendEmployerRequestEventJoiValidationKeys: KeysRequired<SendEmployerRequestEvent> = {
+    email: Joi.string().email().required(),
+    firstName: Joi.string().required(),
+    lastName: Joi.string().optional(),
+    locale: Joi.string().optional(),
+  };
+
+  const sendEmployerRequestEventJoiSchema = Joi.object(sendEmployerRequestEventJoiValidationKeys);
+
+  Joi.attempt(event, sendEmployerRequestEventJoiSchema);
+};

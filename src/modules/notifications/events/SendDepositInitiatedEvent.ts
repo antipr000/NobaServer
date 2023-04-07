@@ -1,17 +1,28 @@
-import { DepositInitiatedNotificationParameters } from "../domain/TransactionNotificationParameters";
+import Joi from "joi";
+import {
+  DepositInitiatedNotificationParameters,
+  TransactionNotificationParamsJoiSchema,
+} from "../domain/TransactionNotificationParameters";
+import { KeysRequired } from "../../../modules/common/domain/Types";
 
 export class SendDepositInitiatedEvent {
-  public readonly email: string;
-  public readonly name: string;
-  public readonly handle: string;
-  public readonly params: DepositInitiatedNotificationParameters;
-  public readonly locale?: string;
-
-  constructor({ email, name, handle, params, locale }) {
-    this.email = email;
-    this.name = name;
-    this.handle = handle;
-    this.params = params;
-    this.locale = locale;
-  }
+  email: string;
+  name: string;
+  handle: string;
+  params: DepositInitiatedNotificationParameters;
+  locale?: string;
 }
+
+export const validateDepositInitiatedEvent = (event: SendDepositInitiatedEvent) => {
+  const depositInitiatedEventJoiValidationKeys: KeysRequired<SendDepositInitiatedEvent> = {
+    email: Joi.string().email().required(),
+    name: Joi.string().required(),
+    handle: Joi.string().required(),
+    params: Joi.object(TransactionNotificationParamsJoiSchema.getDepositInitiatedNotificationParamsSchema()).required(),
+    locale: Joi.string().optional(),
+  };
+
+  const depositInitiatedEventJoiSchema = Joi.object(depositInitiatedEventJoiValidationKeys);
+
+  Joi.attempt(event, depositInitiatedEventJoiSchema);
+};

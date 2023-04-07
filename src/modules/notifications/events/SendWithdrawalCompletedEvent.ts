@@ -1,19 +1,31 @@
-import { WithdrawalCompletedNotificationParameters } from "../domain/TransactionNotificationParameters";
+import {
+  TransactionNotificationParamsJoiSchema,
+  WithdrawalCompletedNotificationParameters,
+} from "../domain/TransactionNotificationParameters";
+import Joi from "joi";
 
 export class SendWithdrawalCompletedEvent {
-  public readonly email: string;
-  public readonly name: string;
-  public readonly handle: string;
-  public readonly params: WithdrawalCompletedNotificationParameters;
-  public readonly pushTokens: string[];
-  public readonly locale?: string;
-
-  constructor({ email, name, handle, params, pushTokens, locale }) {
-    this.email = email;
-    this.name = name;
-    this.handle = handle;
-    this.params = params;
-    this.pushTokens = pushTokens;
-    this.locale = locale;
-  }
+  email: string;
+  name: string;
+  handle: string;
+  params: WithdrawalCompletedNotificationParameters;
+  pushTokens: string[];
+  locale?: string;
 }
+
+export const validateWithdrawalCompletedEvent = (event: SendWithdrawalCompletedEvent) => {
+  const withdrawalCompletedEventJoiValidationKeys = {
+    email: Joi.string().email().required(),
+    name: Joi.string().required(),
+    handle: Joi.string().required(),
+    params: Joi.object(
+      TransactionNotificationParamsJoiSchema.getWithdrawalCompletedNotificationParamsSchema(),
+    ).required(),
+    pushTokens: Joi.array().items(Joi.string()).required().allow([]),
+    locale: Joi.string().optional(),
+  };
+
+  const withdrawalCompletedEventJoiSchema = Joi.object(withdrawalCompletedEventJoiValidationKeys);
+
+  Joi.attempt(event, withdrawalCompletedEventJoiSchema);
+};

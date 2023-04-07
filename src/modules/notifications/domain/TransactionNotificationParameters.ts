@@ -1,6 +1,7 @@
 import { FeeType } from "../../../modules/transaction/domain/TransactionFee";
 import { Transaction, getFee, getTotalFees } from "../../../modules/transaction/domain/Transaction";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
+import Joi from "joi";
 
 export type TransactionParameters = {
   transactionRef: string;
@@ -57,6 +58,93 @@ export interface TransferFailedNotificationParameters extends TransactionParamet
 
 export interface PayrollDepositCompletedNotificationParameters extends DepositCompletedNotificationParameters {
   companyName: string;
+}
+
+export class TransactionNotificationParamsJoiSchema {
+  static getTransactionParamsSchema() {
+    return {
+      transactionRef: Joi.string().required(),
+      createdTimestamp: Joi.string().required(),
+      processingFees: Joi.number().required(),
+      nobaFees: Joi.number().required(),
+      debitAmount: Joi.number().required(),
+      creditAmount: Joi.number().required(),
+      debitCurrency: Joi.string().required(),
+      creditCurrency: Joi.string().required(),
+      totalFees: Joi.number().required(),
+      exchangeRate: Joi.number().optional(),
+    };
+  }
+
+  static getDepositCompletedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
+  }
+
+  static getDepositFailedNotificationParamsSchema() {
+    return {
+      ...this.getTransactionParamsSchema(),
+      reasonDeclined: Joi.string().required(),
+    };
+  }
+
+  static getDepositInitiatedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
+  }
+
+  static getWithdrawalCompletedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
+  }
+
+  static getWithdrawalIntiatedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
+  }
+
+  static getWithdrawalFailedNotificationParamsSchema() {
+    return {
+      ...this.getTransactionParamsSchema(),
+      reasonDeclined: Joi.string().required(),
+    };
+  }
+
+  static getTransferCompletedNotificationParamsSchema() {
+    return {
+      ...this.getTransactionParamsSchema(),
+      creditConsumer_firstName: Joi.string().required(),
+      creditConsumer_lastName: Joi.string().required(),
+      debitConsumer_handle: Joi.string().required(),
+      creditConsumer_handle: Joi.string().required(),
+    };
+  }
+
+  static getTransferReceivedNotificationParamsSchema() {
+    return {
+      ...this.getTransactionParamsSchema(),
+      creditConsumer_firstName: Joi.string().required(),
+      creditConsumer_lastName: Joi.string().required(),
+      debitConsumer_handle: Joi.string().required(),
+      creditConsumer_handle: Joi.string().required(),
+      debitConsumer_firstName: Joi.string().required(),
+      debitConsumer_lastName: Joi.string().required(),
+    };
+  }
+
+  static getTransferFailedNotificationParamsSchema() {
+    return {
+      ...this.getTransactionParamsSchema(),
+      creditConsumer_firstName: Joi.string().required(),
+      creditConsumer_lastName: Joi.string().required(),
+      debitConsumer_handle: Joi.string().required(),
+      creditConsumer_handle: Joi.string().required(),
+      reasonDeclined: Joi.string().required(),
+    };
+  }
+
+  static getPayrollDepositCompletedNotificationParamsSchema() {
+    return {
+      ...this.getTransactionParamsSchema(),
+      companyName: Joi.string().required(),
+    };
+  }
 }
 
 // TODO(jira/CRYPTO-604): Remove hardcoded values and unnecessary fields once templates are ready

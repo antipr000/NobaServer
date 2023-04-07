@@ -1,20 +1,30 @@
+import Joi from "joi";
+import { KeysRequired } from "../../../modules/common/domain/Types";
+
 export class SendWalletUpdateVerificationCodeEvent {
-  public readonly email: string;
-  public readonly phone: string;
-  public readonly otp: string;
-  public readonly name?: string;
-  public readonly nobaUserID?: string;
-  public readonly locale?: string;
-
-  public readonly walletAddress: string;
-
-  constructor({ email, phone, otp, name, nobaUserID, walletAddress, locale }) {
-    this.email = email;
-    this.otp = otp;
-    this.phone = phone;
-    this.name = name;
-    this.nobaUserID = nobaUserID;
-    this.locale = locale;
-    this.walletAddress = walletAddress;
-  }
+  email?: string;
+  phone?: string;
+  otp: string;
+  name: string;
+  nobaUserID: string;
+  locale?: string;
+  walletAddress: string;
 }
+
+export const validateSendWalletUpdateVerificationCodeEvent = (event: SendWalletUpdateVerificationCodeEvent) => {
+  const sendWalletUpdateVerificationCodeEventJoiValidationKeys: KeysRequired<SendWalletUpdateVerificationCodeEvent> = {
+    email: Joi.string().email().optional(),
+    phone: Joi.string().optional(),
+    otp: Joi.string().required(),
+    name: Joi.string().required(),
+    nobaUserID: Joi.string().required(),
+    locale: Joi.string().optional(),
+    walletAddress: Joi.string().required(),
+  };
+
+  const sendWalletUpdateVerificationCodeEventJoiSchema = Joi.object(
+    sendWalletUpdateVerificationCodeEventJoiValidationKeys,
+  );
+
+  Joi.attempt(event, sendWalletUpdateVerificationCodeEventJoiSchema);
+};
