@@ -12,13 +12,10 @@ import {
 import { createHmac, timingSafeEqual } from "crypto";
 import { Logger } from "winston";
 import { TransactionService } from "../../transaction/transaction.service";
-import { PomeloService } from "../public/pomelo.service";
 import { PomeloTransaction, PomeloTransactionStatus } from "../domain/PomeloTransaction";
 import { PomeloRepo } from "../repos/pomelo.repo";
 import { POMELO_REPO_PROVIDER } from "../repos/pomelo.repo.module";
 import { uuid } from "uuidv4";
-import { PomeloCard } from "../domain/PomeloCard";
-import { PomeloUser } from "../domain/PomeloUser";
 import { CircleService } from "../../../modules/circle/public/circle.service";
 import { InitiateTransactionRequest } from "../../../modules/transaction/dto/transaction.service.dto";
 import { WorkflowName } from "../../../infra/temporal/workflow";
@@ -29,6 +26,7 @@ import { Transaction } from "../../../modules/transaction/domain/Transaction";
 import { UpdateWalletBalanceServiceDTO } from "../../../modules/psp/domain/UpdateWalletBalanceServiceDTO";
 import { CircleWithdrawalStatus } from "../../../modules/psp/domain/CircleTypes";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
+import { Utils } from "../../../core/utils/Utils";
 
 @Injectable()
 export class PomeloTransactionService {
@@ -116,7 +114,11 @@ export class PomeloTransactionService {
         Currency.USD,
         Currency.COP,
       );
-      const amountToDebitInUSD = pomeloTransaction.amountInLocalCurrency / exchangeRate.nobaRate;
+
+      const amountToDebitInUSD = Utils.roundTo2DecimalNumber(
+        pomeloTransaction.amountInLocalCurrency / exchangeRate.nobaRate,
+      );
+
       if (walletBalanceInUSD < amountToDebitInUSD) {
         await this.pomeloRepo.updatePomeloTransactionStatus(
           pomeloTransaction.pomeloTransactionID,
