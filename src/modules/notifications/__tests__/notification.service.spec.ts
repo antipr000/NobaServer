@@ -34,7 +34,7 @@ import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent
 import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
 import { SendRegisterNewEmployeeEvent } from "../events/SendRegisterNewEmployeeEvent";
-import { SendUpdateEmployeeAllocationAmontEvent } from "../events/SendUpdateEmployeeAllocationAmountEvent";
+import { SendUpdateEmployeeAllocationAmountEvent } from "../events/SendUpdateEmployeeAllocationAmountEvent";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { SendUpdatePayrollStatusEvent } from "../events/SendUpdatePayrollStatusEvent";
 import { SendPayrollDepositCompletedEvent } from "../events/SendPayrollDepositCompletedEvent";
@@ -578,7 +578,7 @@ describe("NotificationService", () => {
         payload,
       );
 
-      const data = new SendUpdateEmployeeAllocationAmontEvent({
+      const data = new SendUpdateEmployeeAllocationAmountEvent({
         nobaEmployeeID: payload.nobaEmployeeID,
         allocationAmountInPesos: payload.allocationAmountInPesos,
       });

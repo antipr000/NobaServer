@@ -10,7 +10,7 @@ export class SendTransferCompletedEvent {
   name: string;
   handle: string;
   params: TransferCompletedNotificationParameters;
-  pushTokens: string[];
+  pushTokens?: string[];
   locale?: string;
 }
 

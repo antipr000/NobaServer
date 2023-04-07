@@ -9,7 +9,7 @@ export class SendWithdrawalCompletedEvent {
   name: string;
   handle: string;
   params: WithdrawalCompletedNotificationParameters;
-  pushTokens: string[];
+  pushTokens?: string[];
   locale?: string;
 }
 

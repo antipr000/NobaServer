@@ -10,7 +10,7 @@ export class SendTransferReceivedEvent {
   name: string;
   handle: string;
   params: TransferReceivedNotificationParameters;
-  pushTokens: string[];
+  pushTokens?: string[];
   locale?: string;
 }
 

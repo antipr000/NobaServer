@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import { NotificationEventType } from "./domain/NotificationTypes";
 import { SendRegisterNewEmployeeEvent } from "./events/SendRegisterNewEmployeeEvent";
-import { SendUpdateEmployeeAllocationAmontEvent } from "./events/SendUpdateEmployeeAllocationAmountEvent";
+import { SendUpdateEmployeeAllocationAmountEvent } from "./events/SendUpdateEmployeeAllocationAmountEvent";
 import { DashboardClient } from "./dashboard/dashboard.client";
 import { SendUpdatePayrollStatusEvent } from "./events/SendUpdatePayrollStatusEvent";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -34,7 +34,7 @@ export class DashboardEventHandler {
   }
 
   @OnEvent(`dashboard.${NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT}`)
-  public async sendUpdateEmployeeAllocationAmount(payload: SendUpdateEmployeeAllocationAmontEvent) {
+  public async sendUpdateEmployeeAllocationAmount(payload: SendUpdateEmployeeAllocationAmountEvent) {
     try {
       await this.dashboardClient.updateEmployeeAllocationAmount(
         payload.nobaEmployeeID,

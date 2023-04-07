@@ -9,7 +9,7 @@ export class SendTransferFailedEvent {
   email: string;
   name: string;
   handle: string;
-  pushTokens: string[];
+  pushTokens?: string[];
   params: TransferFailedNotificationParameters;
   locale?: string;
 }

@@ -8,7 +8,7 @@ import { DashboardClient } from "../dashboard/dashboard.client";
 import { DashboardEventHandler } from "../dashboard.event.handler";
 import { getMockDashboardClientWithDefaults } from "../mocks/mock.dashboard.client";
 import { SendRegisterNewEmployeeEvent } from "../events/SendRegisterNewEmployeeEvent";
-import { SendUpdateEmployeeAllocationAmontEvent } from "../events/SendUpdateEmployeeAllocationAmountEvent";
+import { SendUpdateEmployeeAllocationAmountEvent } from "../events/SendUpdateEmployeeAllocationAmountEvent";
 import { SendUpdatePayrollStatusEvent } from "../events/SendUpdatePayrollStatusEvent";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 
@@ -74,7 +74,7 @@ describe("DashboardEventHandler", () => {
   });
 
   it("should call updateEmployeeAllocationAmount event", async () => {
-    const payload = new SendUpdateEmployeeAllocationAmontEvent({
+    const payload = new SendUpdateEmployeeAllocationAmountEvent({
       allocationAmountInPesos: 10000,
       nobaEmployeeID: "fake-employee-id",
     });

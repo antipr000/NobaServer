@@ -9,7 +9,7 @@ export class SendWithdrawalFailedEvent {
   name: string;
   handle: string;
   params: WithdrawalFailedNotificationParameters;
-  pushTokens: string[];
+  pushTokens?: string[];
   locale?: string;
 }
 

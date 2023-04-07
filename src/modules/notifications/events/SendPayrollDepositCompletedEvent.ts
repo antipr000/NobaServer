@@ -10,7 +10,7 @@ export class SendPayrollDepositCompletedEvent {
   name: string;
   handle: string;
   params: PayrollDepositCompletedNotificationParameters;
-  pushTokens: string[];
+  pushTokens?: string[];
   locale?: string;
 }
 

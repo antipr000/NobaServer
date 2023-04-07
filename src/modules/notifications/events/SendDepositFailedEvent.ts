@@ -10,7 +10,7 @@ export class SendDepositFailedEvent {
   name: string;
   handle: string;
   params: DepositFailedNotificationParameters;
-  pushTokens: string[];
+  pushTokens?: string[];
   locale?: string;
 }
 

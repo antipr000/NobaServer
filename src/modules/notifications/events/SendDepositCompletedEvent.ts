@@ -10,7 +10,7 @@ export class SendDepositCompletedEvent {
   name: string;
   handle: string;
   params: DepositCompletedNotificationParameters;
-  pushTokens: string[];
+  pushTokens?: string[];
   locale?: string;
 }
 

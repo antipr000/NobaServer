@@ -36,7 +36,7 @@ import { IPushTokenRepo } from "./repos/pushtoken.repo";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { SendTransferReceivedEvent } from "./events/SendTransferReceivedEvent";
 import { SendRegisterNewEmployeeEvent } from "./events/SendRegisterNewEmployeeEvent";
-import { SendUpdateEmployeeAllocationAmontEvent } from "./events/SendUpdateEmployeeAllocationAmountEvent";
+import { SendUpdateEmployeeAllocationAmountEvent } from "./events/SendUpdateEmployeeAllocationAmountEvent";
 import { SendUpdatePayrollStatusEvent } from "./events/SendUpdatePayrollStatusEvent";
 import { SendPayrollDepositCompletedEvent } from "./events/SendPayrollDepositCompletedEvent";
 
@@ -471,7 +471,7 @@ export class NotificationService {
       case NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
-          new SendUpdateEmployeeAllocationAmontEvent({
+          new SendUpdateEmployeeAllocationAmountEvent({
             nobaEmployeeID: payload.nobaEmployeeID,
             allocationAmountInPesos: payload.allocationAmountInPesos,
           }),
