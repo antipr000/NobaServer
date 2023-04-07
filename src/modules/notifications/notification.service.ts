@@ -30,7 +30,6 @@ import { SendWithdrawalInitiatedEvent } from "./events/SendWithdrawalInitiatedEv
 import { SendTransferCompletedEvent } from "./events/SendTransferCompletedEvent";
 import { SendTransferFailedEvent } from "./events/SendTransferFailedEvent";
 import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
-import { SendCollectionCompletedEvent } from "./events/SendCollectionCompletedEvent";
 import { SendPhoneVerificationCodeEvent } from "./events/SendPhoneVerificationCodeEvent";
 import { SendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
 import { IPushTokenRepo } from "./repos/pushtoken.repo";
@@ -75,6 +74,8 @@ export class NotificationService {
       return;
     }
 
+    payload.pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
+
     notificationEvent.notificationEventHandler.forEach(eventHandler => {
       const eventName = `${eventHandler}.${eventType}`;
       this.createEvent(eventName, eventType, payload);
@@ -110,7 +111,7 @@ export class NotificationService {
     });
   }
 
-  private createEvent(eventName: string, eventType: NotificationEventType, payload: NotificationPayload) {
+  private async createEvent(eventName: string, eventType: NotificationEventType, payload: NotificationPayload) {
     switch (eventType) {
       case NotificationEventType.SEND_OTP_EVENT:
         this.eventEmitter.emitAsync(
@@ -288,18 +289,6 @@ export class NotificationService {
           }),
         );
         break;
-      case NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendCollectionCompletedEvent({
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
-            locale: payload.locale,
-          }),
-        );
-        break;
       case NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT:
         this.eventEmitter.emitAsync(
           eventName,
@@ -308,6 +297,7 @@ export class NotificationService {
             name: payload.firstName,
             handle: payload.handle,
             params: payload.depositCompletedParams,
+            pushTokens: payload.pushTokens,
             locale: payload.locale,
           }),
         );
@@ -331,6 +321,7 @@ export class NotificationService {
             email: payload.email,
             name: payload.firstName,
             handle: payload.handle,
+            pushTokens: payload.pushTokens,
             locale: payload.locale,
             params: payload.depositFailedParams,
           }),
@@ -345,6 +336,7 @@ export class NotificationService {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
+            pushTokens: payload.pushTokens,
             params: payload.withdrawalCompletedParams,
           }),
         );
@@ -370,6 +362,7 @@ export class NotificationService {
             email: payload.email,
             name: payload.firstName,
             handle: payload.handle,
+            pushTokens: payload.pushTokens,
             locale: payload.locale,
             params: payload.withdrawalFailedParams,
           }),
@@ -384,6 +377,7 @@ export class NotificationService {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
+            pushTokens: payload.pushTokens,
             params: payload.transferCompletedParams,
           }),
         );
@@ -396,6 +390,7 @@ export class NotificationService {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
+            pushTokens: payload.pushTokens,
             params: payload.transferReceivedParams,
           }),
         );
@@ -408,6 +403,7 @@ export class NotificationService {
             email: payload.email,
             name: payload.firstName,
             handle: payload.handle,
+            pushTokens: payload.pushTokens,
             locale: payload.locale,
             params: payload.transferFailedParams,
           }),
@@ -440,6 +436,7 @@ export class NotificationService {
             email: payload.email,
             name: payload.firstName,
             handle: payload.handle,
+            pushTokens: payload.pushTokens,
             locale: payload.locale,
             params: payload.payrollDepositCompletedParams,
           }),

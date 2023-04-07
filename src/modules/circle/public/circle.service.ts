@@ -42,10 +42,9 @@ export class CircleService implements IBank {
     const circleWalletID: string = await this.circleClient.createWallet(consumerID);
 
     try {
-      // TODO: Should we even handle repo errors here or let them bubble up?
       await this.circleRepo.addConsumerCircleWalletID(consumerID, circleWalletID);
     } catch (err) {
-      // TODO: What if this fails? a wallet was created but not linked to the consumer
+      this.logger.error(`Could not link Circle wallet to consumerID: ${consumerID}. Error:  ${JSON.stringify(err)}`);
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
         message: "Could not link Circle wallet to consumer",

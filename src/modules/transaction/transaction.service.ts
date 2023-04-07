@@ -44,6 +44,8 @@ import {
   InitiateTransactionRequest,
   validateInitiateTransactionRequest,
 } from "./dto/transaction.service.dto";
+import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
+import { KmsService } from "../common/kms.service";
 
 @Injectable()
 export class TransactionService {
@@ -58,6 +60,7 @@ export class TransactionService {
     private readonly employerService: EmployerService,
     private readonly employeeService: EmployeeService,
     private readonly alertService: AlertService,
+    private readonly kmsService: KmsService,
   ) {}
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID?: string): Promise<Transaction> {
@@ -321,7 +324,9 @@ export class TransactionService {
         creditCurrency: transaction.creditCurrency,
         ...(withdrawalDetails && {
           withdrawalDetails: {
-            ...(withdrawalDetails.accountNumber && { accountNumber: withdrawalDetails.accountNumber }),
+            ...(withdrawalDetails.accountNumber && {
+              accountNumber: await this.kmsService.decryptString(withdrawalDetails.accountNumber, KmsKeyType.SSN),
+            }),
             ...(withdrawalDetails.accountType && { accountType: withdrawalDetails.accountType }),
             ...(withdrawalDetails.bankCode && { bankCode: withdrawalDetails.bankCode }),
             ...(withdrawalDetails.documentNumber && { documentNumber: withdrawalDetails.documentNumber }),

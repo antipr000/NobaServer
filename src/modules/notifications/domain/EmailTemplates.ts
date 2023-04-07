@@ -104,9 +104,6 @@ export const EmailTemplates = {
     es: "d-4bf8f1e412034f59aef4c0265e4017c2",
   },
   COLLECTION_LINK_EMAIL: {},
-  COLLECTION_COMPLETED_EMAIL: {
-    en: "d-f085402c06584fe2a843c8e9dff2ed4b", // For now added deposit completed as default. Replace with proper template id once created
-  },
   EMPLOYER_REQUEST_EMAIL: {
     en: "d-db917173c48448fb90dadcb77259f4cc",
   },

@@ -2,7 +2,7 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { NotificationService } from "../notification.service";
-import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
+import { anyString, anything, deepEqual, instance, verify, when } from "ts-mockito";
 import { NotificationEventType } from "../domain/NotificationTypes";
 import { SENDGRID_API_KEY, SENDGRID_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { EventEmitter2 } from "@nestjs/event-emitter";
@@ -20,7 +20,6 @@ import { SendCardAddedEvent } from "../events/SendCardAddedEvent";
 import { SendCardAdditionFailedEvent } from "../events/SendCardAdditionFailedEvent";
 import { SendCardDeletedEvent } from "../events/SendCardDeletedEvent";
 import { SendHardDeclineEvent } from "../events/SendHardDeclineEvent";
-import { SendCollectionCompletedEvent } from "../events/SendCollectionCompletedEvent";
 import { SendDepositCompletedEvent } from "../events/SendDepositCompletedEvent";
 import { SendDepositFailedEvent } from "../events/SendDepositFailedEvent";
 import { SendDepositInitiatedEvent } from "../events/SendDepositInitiatedEvent";
@@ -321,6 +320,7 @@ describe("NotificationService", () => {
 
     events.forEach(async event => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+      when(pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID)).thenResolve(["token1", "token2"]);
 
       await notificationService.sendNotification(event, payload);
       let data: any;
@@ -406,21 +406,13 @@ describe("NotificationService", () => {
             last4Digits: payload.last4Digits,
           });
           break;
-        case NotificationEventType.SEND_COLLECTION_COMPLETED_EVENT:
-          data = new SendCollectionCompletedEvent({
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
-            locale: payload.locale,
-          });
-          break;
         case NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT:
           data = new SendDepositCompletedEvent({
             email: payload.email,
             name: payload.firstName,
             handle: payload.handle,
             params: payload.depositCompletedParams,
+            pushTokens: ["token1", "token2"],
             locale: payload.locale,
           });
           break;
@@ -439,6 +431,7 @@ describe("NotificationService", () => {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
+            pushTokens: ["token1", "token2"],
             params: payload.depositFailedParams,
           });
           break;
@@ -449,6 +442,7 @@ describe("NotificationService", () => {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
+            pushTokens: ["token1", "token2"],
             params: payload.withdrawalCompletedParams,
           });
           break;
@@ -469,6 +463,7 @@ describe("NotificationService", () => {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
+            pushTokens: ["token1", "token2"],
             params: payload.withdrawalFailedParams,
           });
           break;
@@ -479,6 +474,7 @@ describe("NotificationService", () => {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
+            pushTokens: ["token1", "token2"],
             params: payload.transferCompletedParams,
           });
           break;
@@ -488,6 +484,7 @@ describe("NotificationService", () => {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
+            pushTokens: ["token1", "token2"],
             params: payload.transferReceivedParams,
           });
           break;
@@ -497,6 +494,7 @@ describe("NotificationService", () => {
             name: payload.firstName,
             handle: payload.handle,
             locale: payload.locale,
+            pushTokens: ["token1", "token2"],
             params: payload.transferFailedParams,
           });
           break;
@@ -522,6 +520,7 @@ describe("NotificationService", () => {
             name: payload.firstName,
             handle: payload.handle,
             params: payload.payrollDepositCompletedParams,
+            pushTokens: ["token1", "token2"],
             locale: payload.locale,
           });
           break;
@@ -610,6 +609,238 @@ describe("NotificationService", () => {
 
       verify(
         eventEmitter.emitAsync(`dashboard.${NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT}`, deepEqual(data)),
+      ).once();
+    });
+  });
+
+  describe("Push Events", () => {
+    it("should emit push event for DEPOSIT_COMPLETED_EVENT", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+      const payload: NotificationPayload = {
+        locale: "en",
+        firstName: "Fake",
+        lastName: "User",
+        email: "fake+user@noba.com",
+        nobaUserID: "fake-user-id",
+        handle: "fake-user",
+        depositCompletedParams: {} as any,
+      };
+      when(pushTokenRepo.getAllPushTokensForConsumer("fake-user-id")).thenResolve(["token1"]);
+
+      await notificationService.sendNotification(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT, payload);
+
+      const data = new SendDepositCompletedEvent({
+        email: "fake+user@noba.com",
+        name: "Fake",
+        handle: "fake-user",
+        params: {} as any,
+        pushTokens: ["token1"],
+        locale: "en",
+      });
+
+      verify(
+        eventEmitter.emitAsync(`push.${NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT}`, deepEqual(data)),
+      ).once();
+    });
+
+    it("should emit push event for DEPOSIT_FAILED_EVENT", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+      const payload: NotificationPayload = {
+        locale: "en",
+        firstName: "Fake",
+        lastName: "User",
+        email: "fake+user@noba.com",
+        nobaUserID: "fake-user-id",
+        handle: "fake-user",
+        depositFailedParams: {} as any,
+      };
+      when(pushTokenRepo.getAllPushTokensForConsumer("fake-user-id")).thenResolve(["token1"]);
+
+      await notificationService.sendNotification(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT, payload);
+
+      const data = new SendDepositFailedEvent({
+        email: "fake+user@noba.com",
+        name: "Fake",
+        handle: "fake-user",
+        params: {} as any,
+        pushTokens: ["token1"],
+        locale: "en",
+      });
+
+      verify(eventEmitter.emitAsync(`push.${NotificationEventType.SEND_DEPOSIT_FAILED_EVENT}`, deepEqual(data))).once();
+    });
+
+    it("should emit push event for WITHDRAWAL_COMPLETED_EVENT", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+      const payload: NotificationPayload = {
+        locale: "en",
+        firstName: "Fake",
+        lastName: "User",
+        email: "fake+user@noba.com",
+        nobaUserID: "fake-user-id",
+        handle: "fake-user",
+        withdrawalCompletedParams: {} as any,
+      };
+      when(pushTokenRepo.getAllPushTokensForConsumer("fake-user-id")).thenResolve(["token1"]);
+
+      await notificationService.sendNotification(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT, payload);
+
+      const data = new SendWithdrawalCompletedEvent({
+        email: "fake+user@noba.com",
+        name: "Fake",
+        handle: "fake-user",
+        params: {} as any,
+        pushTokens: ["token1"],
+        locale: "en",
+      });
+
+      verify(
+        eventEmitter.emitAsync(`push.${NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT}`, deepEqual(data)),
+      ).once();
+    });
+
+    it("should emit push event for WITHDRAWAL_FAILED_EVENT", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+      const payload: NotificationPayload = {
+        locale: "en",
+        firstName: "Fake",
+        lastName: "User",
+        email: "fake+user@noba.com",
+        nobaUserID: "fake-user-id",
+        handle: "fake-user",
+        withdrawalFailedParams: {} as any,
+      };
+      when(pushTokenRepo.getAllPushTokensForConsumer("fake-user-id")).thenResolve(["token1"]);
+
+      await notificationService.sendNotification(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT, payload);
+
+      const data = new SendWithdrawalFailedEvent({
+        email: "fake+user@noba.com",
+        name: "Fake",
+        handle: "fake-user",
+        params: {} as any,
+        pushTokens: ["token1"],
+        locale: "en",
+      });
+
+      verify(
+        eventEmitter.emitAsync(`push.${NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT}`, deepEqual(data)),
+      ).once();
+    });
+
+    it("should emit push event for TRANSFER_COMPLETED_EVENT", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+      const payload: NotificationPayload = {
+        locale: "en",
+        firstName: "Fake",
+        lastName: "User",
+        email: "fake+user@noba.com",
+        nobaUserID: "fake-user-id",
+        handle: "fake-user",
+        transferCompletedParams: {} as any,
+      };
+      when(pushTokenRepo.getAllPushTokensForConsumer("fake-user-id")).thenResolve(["token1"]);
+
+      await notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT, payload);
+
+      const data = new SendTransferCompletedEvent({
+        email: "fake+user@noba.com",
+        name: "Fake",
+        handle: "fake-user",
+        params: {} as any,
+        pushTokens: ["token1"],
+        locale: "en",
+      });
+
+      verify(
+        eventEmitter.emitAsync(`push.${NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT}`, deepEqual(data)),
+      ).once();
+    });
+
+    it("should emit push event for TRANSFER_FAILED_EVENT", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+      const payload: NotificationPayload = {
+        locale: "en",
+        firstName: "Fake",
+        lastName: "User",
+        email: "fake+user@noba.com",
+        nobaUserID: "fake-user-id",
+        handle: "fake-user",
+        transferFailedParams: {} as any,
+      };
+      when(pushTokenRepo.getAllPushTokensForConsumer("fake-user-id")).thenResolve(["token1"]);
+
+      await notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_FAILED_EVENT, payload);
+
+      const data = new SendTransferFailedEvent({
+        email: "fake+user@noba.com",
+        name: "Fake",
+        handle: "fake-user",
+        params: {} as any,
+        pushTokens: ["token1"],
+        locale: "en",
+      });
+
+      verify(
+        eventEmitter.emitAsync(`push.${NotificationEventType.SEND_TRANSFER_FAILED_EVENT}`, deepEqual(data)),
+      ).once();
+    });
+
+    it("should emit push event for TRANSFER_RECEIVED_EVENT", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+      const payload: NotificationPayload = {
+        locale: "en",
+        firstName: "Fake",
+        lastName: "User",
+        email: "fake+user@noba.com",
+        nobaUserID: "fake-user-id",
+        handle: "fake-user",
+        transferReceivedParams: {} as any,
+      };
+      when(pushTokenRepo.getAllPushTokensForConsumer("fake-user-id")).thenResolve(["token1"]);
+
+      await notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT, payload);
+
+      const data = new SendTransferReceivedEvent({
+        email: "fake+user@noba.com",
+        name: "Fake",
+        handle: "fake-user",
+        params: {} as any,
+        pushTokens: ["token1"],
+        locale: "en",
+      });
+
+      verify(
+        eventEmitter.emitAsync(`push.${NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT}`, deepEqual(data)),
+      ).once();
+    });
+
+    it("should emit push event for PAYROLL_DEPOSIT_COMPLETED_EVENT", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+      const payload: NotificationPayload = {
+        locale: "en",
+        firstName: "Fake",
+        lastName: "User",
+        email: "fake+user@noba.com",
+        nobaUserID: "fake-user-id",
+        handle: "fake-user",
+        payrollDepositCompletedParams: {} as any,
+      };
+      when(pushTokenRepo.getAllPushTokensForConsumer("fake-user-id")).thenResolve(["token1"]);
+
+      await notificationService.sendNotification(NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT, payload);
+
+      const data = new SendPayrollDepositCompletedEvent({
+        email: "fake+user@noba.com",
+        name: "Fake",
+        handle: "fake-user",
+        params: {} as any,
+        pushTokens: ["token1"],
+        locale: "en",
+      });
+
+      verify(
+        eventEmitter.emitAsync(`push.${NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT}`, deepEqual(data)),
       ).once();
     });
   });

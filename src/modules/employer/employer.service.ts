@@ -38,7 +38,7 @@ import {
 } from "../../config/ConfigurationUtils";
 import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
 import { Employee } from "../employee/domain/Employee";
-import { TemplateProcessor, TemplateFormat, TemplateLocale } from "../common/utils/template.processor";
+import { TemplateProcessor, TemplateFormat, TemplateLocale, FooterData } from "../common/utils/template.processor";
 import {
   InvoiceEmployeeDisbursement,
   InvoiceReceiptEmployeeDisbursement,
@@ -73,6 +73,19 @@ export class EmployerService {
 
   @Inject()
   private readonly workflowExecutor: WorkflowExecutor;
+
+  static readonly FOOTER_TRANSLATIONS = {
+    "en-US": {
+      center: "Payroll",
+      left: "Invoice",
+      right: "Page",
+    },
+    "es-CO": {
+      center: "Nómina",
+      left: "Factura",
+      right: "Página",
+    },
+  };
 
   constructor(
     @Inject(EMPLOYER_REPO_PROVIDER) private readonly employerRepo: IEmployerRepo,
@@ -246,8 +259,14 @@ export class EmployerService {
 
     templateProcessor.addFormat(TemplateFormat.HTML);
     templateProcessor.addFormat(TemplateFormat.PDF);
-    templateProcessor.addLocale(TemplateLocale.ENGLISH);
-    templateProcessor.addLocale(TemplateLocale.SPANISH); // Should be configured on employer record
+    templateProcessor.addLocale(
+      TemplateLocale.ENGLISH,
+      EmployerService.FOOTER_TRANSLATIONS[TemplateLocale.ENGLISH.toString()],
+    );
+    templateProcessor.addLocale(
+      TemplateLocale.SPANISH,
+      EmployerService.FOOTER_TRANSLATIONS[TemplateLocale.SPANISH.toString()],
+    );
 
     // Loads templates for each specified locale
     await templateProcessor.loadTemplates();
@@ -257,10 +276,10 @@ export class EmployerService {
     const companyName = employer.name;
     const currency = payroll.debitCurrency;
 
-    // Populate templates for each locale
-    for (const element of templateProcessor.locales) {
-      const locale = element;
+    const footerDataMap = new Map<TemplateLocale, FooterData>();
 
+    // Populate templates for each locale
+    for (const [locale] of templateProcessor.locales.entries()) {
       const employeeAllocations: InvoiceEmployeeDisbursement[] = employeeDisbursements.map(allocation => ({
         employeeName: allocation.employeeName,
         amount: allocation.amount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
@@ -276,11 +295,16 @@ export class EmployerService {
         nobaAccountNumber: accountNumber,
       };
 
+      footerDataMap.set(locale, {
+        left: `#${templateFields.payrollReference}`,
+        center: `${templateFields.payrollDate}`,
+      });
+
       templateProcessor.populateTemplate(locale, templateFields);
     }
 
     // Upload templates
-    await templateProcessor.uploadPopulatedTemplates();
+    await templateProcessor.uploadPopulatedTemplates(footerDataMap);
 
     // Destroy template context
     await templateProcessor.destroy();
@@ -330,8 +354,14 @@ export class EmployerService {
 
     templateProcessor.addFormat(TemplateFormat.HTML);
     templateProcessor.addFormat(TemplateFormat.PDF);
-    templateProcessor.addLocale(TemplateLocale.ENGLISH);
-    templateProcessor.addLocale(TemplateLocale.SPANISH); // Should be configured on employer record
+    templateProcessor.addLocale(
+      TemplateLocale.ENGLISH,
+      EmployerService.FOOTER_TRANSLATIONS[TemplateLocale.ENGLISH.toString()],
+    );
+    templateProcessor.addLocale(
+      TemplateLocale.SPANISH,
+      EmployerService.FOOTER_TRANSLATIONS[TemplateLocale.SPANISH.toString()],
+    );
 
     // Loads templates for each specified locale
     await templateProcessor.loadTemplates();
@@ -341,10 +371,10 @@ export class EmployerService {
     const companyName = employer.name;
     const currency = payroll.debitCurrency;
 
-    // Populate templates for each locale
-    for (const element of templateProcessor.locales) {
-      const locale = element;
+    const footerDataMap = new Map<TemplateLocale, FooterData>();
 
+    // Populate templates for each locale
+    for (const [locale] of templateProcessor.locales.entries()) {
       let totalCreditAmount = 0;
       const employeeAllocations: InvoiceReceiptEmployeeDisbursement[] = employeeDisbursements.map(allocation => {
         totalCreditAmount += Utils.roundToSpecifiedDecimalNumber(allocation.creditAmount, 2);
@@ -365,11 +395,16 @@ export class EmployerService {
         totalCreditAmount: totalCreditAmount.toLocaleString(locale.toString(), { minimumFractionDigits: 2 }),
       };
 
+      footerDataMap.set(locale, {
+        left: `#${templateFields.payrollReference}`,
+        center: `${templateFields.payrollDate}`,
+      });
+
       templateProcessor.populateTemplate(locale, templateFields);
     }
 
     // Upload templates
-    await templateProcessor.uploadPopulatedTemplates();
+    await templateProcessor.uploadPopulatedTemplates(footerDataMap);
 
     // Destroy template context
     await templateProcessor.destroy();

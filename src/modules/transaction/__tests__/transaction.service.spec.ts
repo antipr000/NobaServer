@@ -13,7 +13,7 @@ import {
 import { ITransactionRepo } from "../repo/transaction.repo";
 import { getMockTransactionRepoWithDefaults } from "../mocks/mock.sql.transaction.repo";
 import { TRANSACTION_REPO_PROVIDER, WITHDRAWAL_DETAILS_REPO_PROVIDER } from "../repo/transaction.repo.module";
-import { anything, capture, deepEqual, instance, when } from "ts-mockito";
+import { anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { TransactionService } from "../transaction.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
@@ -68,6 +68,10 @@ import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/m
 import { KYCStatus } from "@prisma/client";
 import { getRandomEmployer } from "../../../modules/employer/test_utils/employer.test.utils";
 import { Employer } from "../../../modules/employer/domain/Employer";
+import { KmsService } from "../../../modules/common/kms.service";
+import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
+import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
+import { TransactionFilterOptionsDTO } from "../dto/TransactionFilterOptionsDTO";
 import { InitiateTransactionRequest } from "../dto/transaction.service.dto";
 
 describe("TransactionServiceTests", () => {
@@ -89,6 +93,7 @@ describe("TransactionServiceTests", () => {
   let employeeService: EmployeeService;
   let employerService: EmployerService;
   let alertService: AlertService;
+  let kmsService: KmsService;
 
   beforeEach(async () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
@@ -105,6 +110,7 @@ describe("TransactionServiceTests", () => {
     employeeService = getMockEmployeeServiceWithDefaults();
     employerService = getMockEmployerServiceWithDefaults();
     alertService = getMockAlertServiceWithDefaults();
+    kmsService = getMockKMSServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -160,6 +166,10 @@ describe("TransactionServiceTests", () => {
         {
           provide: AlertService,
           useFactory: () => instance(alertService),
+        },
+        {
+          provide: KmsService,
+          useFactory: () => instance(kmsService),
         },
         TransactionService,
       ],
@@ -233,6 +243,43 @@ describe("TransactionServiceTests", () => {
 
       const returnedTransaction = await transactionService.getTransactionByTransactionID(transaction.id);
       expect(returnedTransaction).toEqual(transaction);
+    });
+
+    it("should return 'null' if the transaction is not found", async () => {
+      const { transaction } = getRandomTransaction("consumerID", "consumerID2");
+      when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(null);
+
+      const returnedTransaction = await transactionService.getTransactionByTransactionID(transaction.id);
+      expect(returnedTransaction).toBeNull();
+    });
+  });
+
+  describe("getFilteredTransactions", () => {
+    it("should return the transaction if the transactionID matches", async () => {
+      const { transaction } = getRandomTransaction("consumerID", "consumerID2");
+      const filter: TransactionFilterOptionsDTO = {
+        consumerID: "consumerID",
+        creditCurrency: "USD",
+        debitCurrency: "COP",
+        endDate: "2030-12-31",
+        startDate: "2022-01-01",
+        pageLimit: 10,
+        pageOffset: 0,
+        transactionStatus: TransactionStatus.COMPLETED,
+      };
+
+      const result = {
+        items: [transaction],
+        totalItems: 1,
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+      };
+
+      when(transactionRepo.getFilteredTransactions(filter)).thenResolve(result);
+
+      const returnedResult = await transactionService.getFilteredTransactions(filter);
+      expect(returnedResult).toStrictEqual(result);
     });
 
     it("should return 'null' if the transaction is not found", async () => {
@@ -519,7 +566,69 @@ describe("TransactionServiceTests", () => {
       );
 
       expect(returnedTransaction).toEqual(transaction);
+      verify(kmsService.decryptString(transactionDTO.withdrawalData.accountNumber, KmsKeyType.SSN)).once();
+      const [propagatedTransactionToSave] = capture(transactionRepo.createTransaction).last();
+      expect(propagatedTransactionToSave).toEqual({
+        transactionRef: transaction.transactionRef,
+        workflowName: "WALLET_WITHDRAWAL",
+        debitConsumerID: "consumerID",
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        debitCurrency: "USD",
+        creditCurrency: "COP",
+        exchangeRate: 1,
+        sessionKey: transaction.sessionKey,
+        memo: transaction.memo,
+        transactionFees: [
+          {
+            amount: 1,
+            currency: "USD",
+            type: "PROCESSING",
+          },
+        ],
+      });
+    });
 
+    it("should handle gracefully if no withdrawal details are present", async () => {
+      const consumer = getRandomConsumer("consumerID");
+      const { transaction, transactionDTO, inputTransaction } = getRandomTransaction(
+        consumer.props.id,
+        undefined,
+        WorkflowName.WALLET_WITHDRAWAL,
+      );
+      transactionDTO.withdrawalData = undefined;
+      jest.spyOn(Utils, "generateLowercaseUUID").mockImplementationOnce(() => {
+        return transaction.transactionRef;
+      });
+
+      when(consumerService.getActiveConsumer(consumer.props.id)).thenResolve(consumer);
+      when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
+      when(workflowFactory.getWorkflowImplementation(WorkflowName.WALLET_WITHDRAWAL)).thenReturn(
+        instance(walletWithdrawalImpl),
+      );
+
+      when(walletWithdrawalImpl.preprocessTransactionParams(deepEqual(transactionDTO), consumer.props.id)).thenResolve(
+        inputTransaction,
+      );
+      when(walletWithdrawalImpl.initiateWorkflow(deepEqual(transaction))).thenResolve();
+
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+
+      when(
+        verificationService.transactionVerification(transaction.sessionKey, consumer, deepEqual(anything())),
+      ).thenResolve({
+        status: KYCStatus.APPROVED,
+      });
+
+      const returnedTransaction = await transactionService.deprecatedInitiateTransaction(
+        transactionDTO,
+        consumer.props.id,
+        transaction.sessionKey,
+      );
+
+      expect(returnedTransaction).toEqual(transaction);
+      verify(kmsService.decryptString(anything(), anything())).never();
+      verify(withdrawalDetailsRepo.addWithdrawalDetails(anything())).never();
       const [propagatedTransactionToSave] = capture(transactionRepo.createTransaction).last();
       expect(propagatedTransactionToSave).toEqual({
         transactionRef: transaction.transactionRef,

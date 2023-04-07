@@ -676,7 +676,11 @@ describe("ConsumerService", () => {
           id: consumer.props.id,
           gender: "unknown",
         }),
-      ).rejects.toThrow(ServiceException);
+      ).rejects.toThrowServiceException();
+    });
+
+    it("should throw error if whitespace exists in phone number", async () => {
+      expect(() => Consumer.createConsumer({ id: "mock-consumer-1", phone: "123 456 7890" })).toThrowError();
     });
   });
 

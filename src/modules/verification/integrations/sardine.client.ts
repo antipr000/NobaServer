@@ -339,6 +339,7 @@ export class Sardine implements IDVProvider {
             ...(transaction.withdrawalDetails?.accountType && {
               accountType: this.convertAccountTypeToSardine(transaction.withdrawalDetails.accountType),
             }),
+            balanceCurrencyCode: transaction.creditCurrency,
             classification: "personal", // Currently the case for all withdrawals but this may change
             transferType: "ACH", // Currently the case for all withdrawals but this may change
           },

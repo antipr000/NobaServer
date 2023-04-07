@@ -183,6 +183,7 @@ dependencies:
   emailClient: "SENDGRID"
   smsClient: "TWILIO"
   dashboardClient: "BUBBLE"
+  pushClient: "EXPO"
 
 locationDataFileName: "countries+states.json"
 identificationTypesFileName: "identification-types.json"
@@ -191,7 +192,7 @@ assetsBucketName: "prod-noba-assets"
 generatedDataBucketName: "noba-generated-data"
 supportedCryptoFileBucketPath: "assets/data/cryptocurrency_tokens.csv"
 sanctionedCryptoWalletsFileBucketPath: "assets/data/sanctioned_wallets.csv"
-templatesFolderBucketPath: "assets/templates"
+templatesFolderBucketPath: "assets/templates/lowers"
 invoicesFolderBucketPath: "lowers/invoices"
 
 # Never intended to set this in the partner env but with the decoupling of onramp, adding it here anyway.

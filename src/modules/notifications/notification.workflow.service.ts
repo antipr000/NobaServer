@@ -130,9 +130,6 @@ export class NotificationWorkflowService {
           payload,
         );
         break;
-      case NotificationWorkflowTypes.COLLECTION_COMPLETED_EVENT:
-        // No need to send email for now as we are already sending deposit completed email
-        break;
       default:
         this.logger.error(
           `Failed to send notification from workflow. Reason: ${notificationWorkflowType} is not supported!`,
@@ -220,7 +217,6 @@ export class NotificationWorkflowService {
           transaction,
           employerName,
         );
-
       default:
         return null;
     }

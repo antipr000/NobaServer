@@ -1408,8 +1408,14 @@ describe("EmployerServiceTests", () => {
       expect(constructorSpy).toHaveBeenCalledTimes(1);
       expect(addFormatSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateFormat.HTML);
       expect(addFormatSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateFormat.PDF);
-      expect(addLocaleSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateLocale.ENGLISH);
-      expect(addLocaleSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateLocale.SPANISH);
+      expect(addLocaleSpy).toHaveBeenCalledWith(
+        TemplateProcessModule.TemplateLocale.ENGLISH,
+        EmployerService.FOOTER_TRANSLATIONS[TemplateProcessModule.TemplateLocale.ENGLISH.toString()],
+      );
+      expect(addLocaleSpy).toHaveBeenCalledWith(
+        TemplateProcessModule.TemplateLocale.SPANISH,
+        EmployerService.FOOTER_TRANSLATIONS[TemplateProcessModule.TemplateLocale.SPANISH.toString()],
+      );
     });
   });
 
@@ -1681,8 +1687,14 @@ describe("EmployerServiceTests", () => {
       expect(constructorSpy).toHaveBeenCalledTimes(1);
       expect(addFormatSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateFormat.HTML);
       expect(addFormatSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateFormat.PDF);
-      expect(addLocaleSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateLocale.ENGLISH);
-      expect(addLocaleSpy).toHaveBeenCalledWith(TemplateProcessModule.TemplateLocale.SPANISH);
+      expect(addLocaleSpy).toHaveBeenCalledWith(
+        TemplateProcessModule.TemplateLocale.ENGLISH,
+        EmployerService.FOOTER_TRANSLATIONS[TemplateProcessModule.TemplateLocale.ENGLISH.toString()],
+      );
+      expect(addLocaleSpy).toHaveBeenCalledWith(
+        TemplateProcessModule.TemplateLocale.SPANISH,
+        EmployerService.FOOTER_TRANSLATIONS[TemplateProcessModule.TemplateLocale.SPANISH.toString()],
+      );
     });
   });
 });

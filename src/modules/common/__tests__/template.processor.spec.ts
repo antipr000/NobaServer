@@ -63,19 +63,24 @@ describe("TemplateProcessor", () => {
     it("should push locales", async () => {
       templateProcessor.addLocale(TemplateLocale.ENGLISH);
       templateProcessor.addLocale(TemplateLocale.SPANISH);
-      expect(templateProcessor.locales).toEqual(new Set([TemplateLocale.ENGLISH, TemplateLocale.SPANISH]));
+      expect(templateProcessor.locales).toEqual(
+        new Map([
+          [TemplateLocale.ENGLISH, undefined],
+          [TemplateLocale.SPANISH, undefined],
+        ]),
+      );
     });
 
     it("should not push duplicate locales", async () => {
       templateProcessor.addLocale(TemplateLocale.ENGLISH);
       templateProcessor.addLocale(TemplateLocale.ENGLISH);
-      expect(templateProcessor.locales).toEqual(new Set([TemplateLocale.ENGLISH]));
+      expect(templateProcessor.locales).toEqual(new Map([[TemplateLocale.ENGLISH, undefined]]));
     });
 
     it("should not null or undefined locales", async () => {
       templateProcessor.addLocale(null);
       templateProcessor.addLocale(undefined);
-      expect(templateProcessor.locales).toEqual(new Set());
+      expect(templateProcessor.locales).toEqual(new Map());
     });
   });
 
@@ -128,35 +133,61 @@ describe("TemplateProcessor", () => {
       const populatedTemplate = "firstName-lastName";
       templateProcessor.populatedTemplates.set(TemplateLocale.SPANISH, "firstName-lastName");
       when(s3Service.uploadToS3("savePath", `saveBaseFilename_es.html`, populatedTemplate)).thenResolve();
-      await templateProcessor.uploadPopulatedTemplates();
+      await templateProcessor.uploadPopulatedTemplates(
+        new Map([
+          [
+            TemplateLocale.SPANISH,
+            {
+              center: "center",
+              left: "left",
+              right: "right",
+            },
+          ],
+        ]),
+      );
     });
 
     it("should upload PDF populated templates", async () => {
-      templateProcessor.addLocale(TemplateLocale.SPANISH);
+      templateProcessor.addLocale(TemplateLocale.SPANISH, {
+        left: "left-label",
+        center: "center-label",
+        right: "right-label",
+      });
       templateProcessor.addFormat(TemplateFormat.PDF);
       templateProcessor.populatedTemplates.set(TemplateLocale.SPANISH, "pdf-content");
       when(s3Service.uploadToS3("savePath", `saveBaseFilename_es.pdf`, "pdf-content")).thenResolve();
-      await templateProcessor.uploadPopulatedTemplates();
+      await templateProcessor.uploadPopulatedTemplates(
+        new Map([
+          [
+            TemplateLocale.SPANISH,
+            {
+              center: "center",
+              left: "left",
+              right: "right",
+            },
+          ],
+        ]),
+      );
       expect(newPageFn).toHaveBeenCalled();
     });
 
     it("should not upload populated templates if no populated templates", async () => {
       const s3UploadSpy = jest.spyOn(s3Service, "uploadToS3");
-      await templateProcessor.uploadPopulatedTemplates();
+      await templateProcessor.uploadPopulatedTemplates(new Map());
       expect(s3UploadSpy).not.toHaveBeenCalled();
     });
 
     it("should not upload populated templates if no locales", async () => {
       const s3UploadSpy = jest.spyOn(s3Service, "uploadToS3");
       templateProcessor.addFormat(TemplateFormat.HTML);
-      await templateProcessor.uploadPopulatedTemplates();
+      await templateProcessor.uploadPopulatedTemplates(new Map());
       expect(s3UploadSpy).not.toHaveBeenCalled();
     });
 
     it("should not upload populated templates if no formats", async () => {
       const s3UploadSpy = jest.spyOn(s3Service, "uploadToS3");
       templateProcessor.addLocale(TemplateLocale.SPANISH);
-      await templateProcessor.uploadPopulatedTemplates();
+      await templateProcessor.uploadPopulatedTemplates(new Map());
       expect(s3UploadSpy).not.toHaveBeenCalled();
     });
   });
