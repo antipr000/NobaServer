@@ -384,6 +384,58 @@ describe("PomeloTransactionServiceTests", () => {
         });
       });
 
+      it("should appove the transaction and deduct the amount rounded to 2 decimal places", async () => {
+        when(mockPomeloRepo.createPomeloTransaction(anything())).thenResolve({
+          ...pomeloTransaction,
+          amountInLocalCurrency: 4924.9,
+        });
+        when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenResolve(
+          nobaConsumerID,
+        );
+        when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
+        when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
+        when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
+        when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
+        when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
+          debitWalletResponse,
+        );
+        when(
+          mockPomeloRepo.updatePomeloTransactionStatus("POMELO_TRANSACTION_ID", PomeloTransactionStatus.APPROVED),
+        ).thenResolve();
+
+        const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction({
+          ...request,
+          localAmount: 4924.9,
+        });
+
+        expect(response).toStrictEqual({
+          detailedStatus: PomeloTransactionAuthzDetailStatus.APPROVED,
+          summaryStatus: PomeloTransactionAuthzSummaryStatus.APPROVED,
+          message: "",
+        });
+        const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
+        expect(createPomeloTransactionRequestParams).toStrictEqual({
+          pomeloTransactionID: "POMELO_TRANSACTION_ID",
+          amountInLocalCurrency: 4924.9,
+          localCurrency: "COP",
+          amountInUSD: 50,
+          nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
+          pomeloCardID: "POMELO_CARD_ID",
+          pomeloIdempotencyKey: "POMELO_IDEMPOTENCY_KEY",
+        });
+        const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
+        expect(createNobaTransactionRequestParams).toStrictEqual({
+          type: WorkflowName.CARD_WITHDRAWAL,
+          cardWithdrawalRequest: {
+            debitAmountInUSD: 49.25,
+            debitConsumerID: "NOBA_CONSUMER_ID",
+            exchangeRate: 100,
+            nobaTransactionID: "NOBA_TRANSACTION_ID",
+            memo: "Transfer of 4924.9 COP to MERCHANT_NAME",
+          },
+        });
+      });
+
       it("should reject the transaction with a INSUFFICIENT_FUNDS response if wallet doesn't have enough balance", async () => {
         when(mockPomeloRepo.createPomeloTransaction(anything())).thenResolve(pomeloTransaction);
         when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenResolve(
