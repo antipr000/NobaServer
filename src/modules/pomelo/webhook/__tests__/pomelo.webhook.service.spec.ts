@@ -308,21 +308,7 @@ describe("PomeloTransactionServiceTests", () => {
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
       };
-      const pomeloCard: PomeloCard = {
-        id: uuid(),
-        nobaCardID: "NOBA_CARD_ID",
-        pomeloCardID: "POMELO_CARD_ID",
-        pomeloUserID: "POMELO_USER_ID",
-        createdTimestamp: new Date(),
-        updatedTimestamp: new Date(),
-      };
-      const pomeloUser: PomeloUser = {
-        id: uuid(),
-        consumerID: "NOBA_CONSUMER_ID",
-        pomeloID: "POMELO_USER_ID",
-        createdTimestamp: new Date(),
-        updatedTimestamp: new Date(),
-      };
+      const nobaConsumerID = "NOBA_CONSUMER_ID";
       const circleWalletID: string = "CIRCLE_WALLET_ID";
       const circleWalletBalance: number = 50;
       const exchangeRate: ExchangeRateDTO = {
@@ -354,8 +340,9 @@ describe("PomeloTransactionServiceTests", () => {
 
       it("should appove the transaction with a valid response signature", async () => {
         when(mockPomeloRepo.createPomeloTransaction(anything())).thenResolve(pomeloTransaction);
-        when(mockPomeloRepo.getPomeloCardByPomeloCardID("POMELO_CARD_ID")).thenResolve(pomeloCard);
-        when(mockPomeloRepo.getPomeloUserByPomeloUserID("POMELO_USER_ID")).thenResolve(pomeloUser);
+        when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenResolve(
+          nobaConsumerID,
+        );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
         when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(exchangeRate);
@@ -399,8 +386,9 @@ describe("PomeloTransactionServiceTests", () => {
 
       it("should reject the transaction with a INSUFFICIENT_FUNDS response if wallet doesn't have enough balance", async () => {
         when(mockPomeloRepo.createPomeloTransaction(anything())).thenResolve(pomeloTransaction);
-        when(mockPomeloRepo.getPomeloCardByPomeloCardID("POMELO_CARD_ID")).thenResolve(pomeloCard);
-        when(mockPomeloRepo.getPomeloUserByPomeloUserID("POMELO_USER_ID")).thenResolve(pomeloUser);
+        when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenResolve(
+          nobaConsumerID,
+        );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance - 0.01);
         when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(exchangeRate);
@@ -440,8 +428,9 @@ describe("PomeloTransactionServiceTests", () => {
         when(mockPomeloRepo.getPomeloTransactionByPomeloIdempotencyKey("POMELO_IDEMPOTENCY_KEY")).thenResolve(
           pomeloTransaction,
         );
-        when(mockPomeloRepo.getPomeloCardByPomeloCardID("POMELO_CARD_ID")).thenResolve(pomeloCard);
-        when(mockPomeloRepo.getPomeloUserByPomeloUserID("POMELO_USER_ID")).thenResolve(pomeloUser);
+        when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenResolve(
+          nobaConsumerID,
+        );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
         when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(exchangeRate);
@@ -503,8 +492,9 @@ describe("PomeloTransactionServiceTests", () => {
 
       it("shouldn't recreate NobaTransaction if it already exists", async () => {
         when(mockPomeloRepo.createPomeloTransaction(anything())).thenResolve(pomeloTransaction);
-        when(mockPomeloRepo.getPomeloCardByPomeloCardID("POMELO_CARD_ID")).thenResolve(pomeloCard);
-        when(mockPomeloRepo.getPomeloUserByPomeloUserID("POMELO_USER_ID")).thenResolve(pomeloUser);
+        when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenResolve(
+          nobaConsumerID,
+        );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
         when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(exchangeRate);
@@ -562,13 +552,32 @@ describe("PomeloTransactionServiceTests", () => {
         });
       });
 
+      it("should map unexpected failure in fetching nobaConsumerID to SYSTEM_ERROR", async () => {
+        when(mockPomeloRepo.createPomeloTransaction(anything())).thenReject(new Error("Already exists"));
+        when(mockPomeloRepo.getPomeloTransactionByPomeloIdempotencyKey("POMELO_IDEMPOTENCY_KEY")).thenResolve(
+          pomeloTransaction,
+        );
+        when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenReject(
+          new Error("Internal error"),
+        );
+
+        const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
+
+        expect(response).toStrictEqual({
+          detailedStatus: PomeloTransactionAuthzDetailStatus.SYSTEM_ERROR,
+          summaryStatus: PomeloTransactionAuthzSummaryStatus.REJECTED,
+          message: "",
+        });
+      });
+
       it("should map unexpected failure in fetching circle wallet to SYSTEM_ERROR", async () => {
         when(mockPomeloRepo.createPomeloTransaction(anything())).thenReject(new Error("Already exists"));
         when(mockPomeloRepo.getPomeloTransactionByPomeloIdempotencyKey("POMELO_IDEMPOTENCY_KEY")).thenResolve(
           pomeloTransaction,
         );
-        when(mockPomeloRepo.getPomeloCardByPomeloCardID("POMELO_CARD_ID")).thenResolve(pomeloCard);
-        when(mockPomeloRepo.getPomeloUserByPomeloUserID("POMELO_USER_ID")).thenResolve(pomeloUser);
+        when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenResolve(
+          nobaConsumerID,
+        );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenReject(new Error("Internal error"));
 
         const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
@@ -582,8 +591,9 @@ describe("PomeloTransactionServiceTests", () => {
 
       it("should map unexpected failure in fetching exchange rates to SYSTEM_ERROR", async () => {
         when(mockPomeloRepo.createPomeloTransaction(anything())).thenResolve(pomeloTransaction);
-        when(mockPomeloRepo.getPomeloCardByPomeloCardID("POMELO_CARD_ID")).thenResolve(pomeloCard);
-        when(mockPomeloRepo.getPomeloUserByPomeloUserID("POMELO_USER_ID")).thenResolve(pomeloUser);
+        when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenResolve(
+          nobaConsumerID,
+        );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
         when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenReject(
@@ -601,8 +611,9 @@ describe("PomeloTransactionServiceTests", () => {
 
       it("should map unexpected failure in creating Noba Transaction to SYSTEM_ERROR", async () => {
         when(mockPomeloRepo.createPomeloTransaction(anything())).thenResolve(pomeloTransaction);
-        when(mockPomeloRepo.getPomeloCardByPomeloCardID("POMELO_CARD_ID")).thenResolve(pomeloCard);
-        when(mockPomeloRepo.getPomeloUserByPomeloUserID("POMELO_USER_ID")).thenResolve(pomeloUser);
+        when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenResolve(
+          nobaConsumerID,
+        );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
         when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(exchangeRate);
@@ -620,8 +631,9 @@ describe("PomeloTransactionServiceTests", () => {
 
       it("should map unexpected failure in debiting Circle wallet to SYSTEM_ERROR", async () => {
         when(mockPomeloRepo.createPomeloTransaction(anything())).thenResolve(pomeloTransaction);
-        when(mockPomeloRepo.getPomeloCardByPomeloCardID("POMELO_CARD_ID")).thenResolve(pomeloCard);
-        when(mockPomeloRepo.getPomeloUserByPomeloUserID("POMELO_USER_ID")).thenResolve(pomeloUser);
+        when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenResolve(
+          nobaConsumerID,
+        );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
         when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(exchangeRate);
@@ -641,8 +653,9 @@ describe("PomeloTransactionServiceTests", () => {
 
       it("should reject the transaction with INSUFFICIENT_FUNDS if Circle returns failure", async () => {
         when(mockPomeloRepo.createPomeloTransaction(anything())).thenResolve(pomeloTransaction);
-        when(mockPomeloRepo.getPomeloCardByPomeloCardID("POMELO_CARD_ID")).thenResolve(pomeloCard);
-        when(mockPomeloRepo.getPomeloUserByPomeloUserID("POMELO_USER_ID")).thenResolve(pomeloUser);
+        when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenResolve(
+          nobaConsumerID,
+        );
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
         when(mockExchangeRateService.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve(exchangeRate);

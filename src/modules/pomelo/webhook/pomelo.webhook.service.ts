@@ -98,16 +98,18 @@ export class PomeloTransactionService {
         return this.prepareAuthorizationResponse(detailAuthzStatus);
       }
 
-      const pomeloCard: PomeloCard = await this.pomeloRepo.getPomeloCardByPomeloCardID(pomeloTransaction.pomeloCardID);
-      if (pomeloCard.pomeloUserID !== request.pomeloUserID) {
+      const nobaConsumerID = await this.pomeloRepo.getNobaConsumerIDHoldingPomeloCard(
+        pomeloTransaction.pomeloCardID,
+        request.pomeloUserID,
+      );
+      if (!nobaConsumerID) {
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-          message: `Requested card '${pomeloCard.pomeloCardID}' doesn't belong to the specified pomeloUserID: '${pomeloCard.pomeloUserID}'`,
+          message: `Requested card '${pomeloTransaction.pomeloCardID}' doesn't belong to the specified pomeloUserID: '${request.pomeloUserID}'`,
         });
       }
 
-      const pomeloUser: PomeloUser = await this.pomeloRepo.getPomeloUserByPomeloUserID(pomeloCard.pomeloUserID);
-      const circleWalletID: string = await this.circleService.getOrCreateWallet(pomeloUser.consumerID);
+      const circleWalletID: string = await this.circleService.getOrCreateWallet(nobaConsumerID);
       const walletBalanceInUSD: number = await this.circleService.getWalletBalance(circleWalletID);
 
       const exchangeRate: ExchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
@@ -127,7 +129,7 @@ export class PomeloTransactionService {
         type: WorkflowName.CARD_WITHDRAWAL,
         cardWithdrawalRequest: {
           debitAmountInUSD: exchangeRate.nobaRate * pomeloTransaction.amountInLocalCurrency,
-          debitConsumerID: pomeloUser.consumerID,
+          debitConsumerID: nobaConsumerID,
           exchangeRate: exchangeRate.nobaRate,
           nobaTransactionID: pomeloTransaction.nobaTransactionID,
           memo: `Transfer of ${request.localAmount} ${request.localCurrency} to ${request.merchantName}`,

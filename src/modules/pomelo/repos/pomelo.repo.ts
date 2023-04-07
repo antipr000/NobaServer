@@ -12,6 +12,7 @@ export interface PomeloRepo {
   updatePomeloCard(request: PomeloCardUpdateRequest): Promise<NobaCard>;
   getPomeloCardByPomeloCardID(pomeloCardID: string): Promise<PomeloCard>;
   getPomeloCardByNobaCardID(nobaCardID: string): Promise<PomeloCard>;
+  getNobaConsumerIDHoldingPomeloCard(pomeloCardID: string, pomeloUserID: string): Promise<string>;
 
   createPomeloTransaction(request: PomeloTransactionSaveRequest): Promise<PomeloTransaction>;
   updatePomeloTransactionStatus(pomeloTransactionID: string, status: PomeloTransactionStatus): Promise<void>;

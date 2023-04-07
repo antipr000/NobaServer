@@ -255,6 +255,38 @@ export class SQLPomeloRepo implements PomeloRepo {
     }
   }
 
+  async getNobaConsumerIDHoldingPomeloCard(pomeloCardID: string, pomeloUserID: string): Promise<string> {
+    try {
+      const queryResult = await this.prismaService.pomeloCard.findUnique({
+        where: {
+          pomeloUserID_pomeloCardID: {
+            pomeloCardID: pomeloCardID,
+            pomeloUserID: pomeloUserID,
+          },
+        },
+        select: {
+          pomeloUser: {
+            select: {
+              consumerID: true,
+            },
+          },
+        },
+      });
+
+      if (!queryResult) {
+        return null;
+      }
+
+      return queryResult.pomeloUser.consumerID;
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: `Error getting the Noba consumerID for (pomeloCardID, pomeloUserID): '(${pomeloCardID}, ${pomeloUserID})'`,
+      });
+    }
+  }
+
   async createPomeloTransaction(request: PomeloTransactionSaveRequest): Promise<PomeloTransaction> {
     validateSavePomeloTransactionRequest(request);
 
