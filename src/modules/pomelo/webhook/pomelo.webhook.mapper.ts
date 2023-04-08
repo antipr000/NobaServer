@@ -44,7 +44,6 @@ export class PomeloWebhookMapper {
       pomeloTransactionID: requestBody.transaction["id"],
       merchantName: requestBody.merchant["name"],
       transactionType: requestBody.transaction["type"] as PomeloTransactionType,
-      pomeloOriginalTransactionID: requestBody.transaction["original_transaction_id"],
       pomeloCardID: requestBody.card.id,
       pomeloUserID: requestBody.user.id,
       localAmount: requestBody.amount.local.total,

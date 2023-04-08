@@ -33,7 +33,6 @@ export type PomeloTransactionAuthzRequest = {
   pomeloTransactionID: string;
   transactionType: PomeloTransactionType;
   merchantName: string;
-  pomeloOriginalTransactionID: string;
   pomeloCardID: string;
   pomeloUserID: string;
   localCurrency: PomeloCurrency;

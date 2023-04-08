@@ -68,7 +68,6 @@ describe("PomeloTransactionServiceTests", () => {
 
         pomeloTransactionID: "POMELO_TRANSACTION_ID",
         transactionType: PomeloTransactionType.PURCHASE,
-        pomeloOriginalTransactionID: null,
         pomeloCardID: "POMELO_CARD_ID",
         pomeloUserID: "POMELO_USER_ID",
         localAmount: 1111,
@@ -134,7 +133,7 @@ describe("PomeloTransactionServiceTests", () => {
       expect(responseHeaders).toStrictEqual({
         "X-Endpoint": "/transactions/authorizations",
         "X-Timestamp": expect.any(String),
-        "X-signature": "OUTPUT_SIGNATURE",
+        "X-Signature": "OUTPUT_SIGNATURE",
       });
 
       const [inputBodyToCoversionRequest, inputHeaderToConversionRequest] = capture(

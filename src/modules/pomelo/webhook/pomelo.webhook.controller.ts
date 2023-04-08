@@ -47,7 +47,7 @@ export class PomeloTransactionWebhookController {
       .set({
         "X-Endpoint": "/transactions/authorizations",
         "X-Timestamp": responseTimestamp,
-        "X-signature": this.pomeloTransactionService.signTransactionAuthorizationResponse(
+        "X-Signature": this.pomeloTransactionService.signTransactionAuthorizationResponse(
           responseTimestamp,
           Buffer.from(JSON.stringify(result)),
         ),

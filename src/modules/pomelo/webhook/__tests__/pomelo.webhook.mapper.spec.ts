@@ -37,7 +37,6 @@ describe("PomeloWebhookMapperService", () => {
         transaction: {
           id: "POMELO_TRANSACTION_ID",
           type: "PURCHASE",
-          original_transaction_id: null,
         },
         merchant: {
           name: "MERCHANT_NAME",
@@ -697,7 +696,6 @@ describe("PomeloWebhookMapperService", () => {
         pomeloTransactionID: "POMELO_TRANSACTION_ID",
         transactionType: PomeloTransactionType.PURCHASE,
         merchantName: "Noba Technologies",
-        pomeloOriginalTransactionID: null,
         pomeloCardID: "POMELO_CARD_ID",
         pomeloUserID: "POMELO_USER_ID",
         localAmount: 1111,
