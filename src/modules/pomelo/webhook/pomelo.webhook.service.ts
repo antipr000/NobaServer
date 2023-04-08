@@ -251,6 +251,7 @@ export class PomeloTransactionService {
 
       pomeloTransaction = await this.pomeloRepo.createPomeloTransaction({
         pomeloTransactionID: request.pomeloTransactionID,
+        parentPomeloTransactionID: null,
         amountInLocalCurrency: request.localAmount,
         localCurrency: request.localCurrency,
         amountInUSD: request.settlementAmount,

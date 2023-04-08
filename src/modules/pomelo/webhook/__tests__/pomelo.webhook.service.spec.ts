@@ -293,6 +293,7 @@ describe("PomeloTransactionServiceTests", () => {
       const pomeloTransaction: PomeloTransaction = {
         id: uuid(),
         pomeloTransactionID: "POMELO_TRANSACTION_ID",
+        parentPomeloTransactionID: null,
         amountInLocalCurrency: 5000,
         localCurrency: PomeloCurrency.COP,
         amountInUSD: 50,
@@ -359,6 +360,7 @@ describe("PomeloTransactionServiceTests", () => {
         const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
+          parentPomeloTransactionID: null,
           amountInLocalCurrency: 5000,
           localCurrency: "COP",
           amountInUSD: 50,
@@ -411,6 +413,7 @@ describe("PomeloTransactionServiceTests", () => {
         const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
+          parentPomeloTransactionID: null,
           amountInLocalCurrency: 4924.9,
           localCurrency: "COP",
           amountInUSD: 50,
@@ -456,6 +459,7 @@ describe("PomeloTransactionServiceTests", () => {
         const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
+          parentPomeloTransactionID: null,
           amountInLocalCurrency: 5000,
           localCurrency: "COP",
           amountInUSD: 50,
@@ -499,6 +503,7 @@ describe("PomeloTransactionServiceTests", () => {
         const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
+          parentPomeloTransactionID: null,
           amountInLocalCurrency: 5000,
           localCurrency: "COP",
           amountInUSD: 50,
@@ -564,6 +569,7 @@ describe("PomeloTransactionServiceTests", () => {
         const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
+          parentPomeloTransactionID: null,
           amountInLocalCurrency: 5000,
           localCurrency: "COP",
           amountInUSD: 50,
