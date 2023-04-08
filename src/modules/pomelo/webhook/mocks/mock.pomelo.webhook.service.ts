@@ -8,6 +8,10 @@ export function getMockPomeloTransactionServiceWithDefaults(): PomeloTransaction
   when(mockPomeloTransactionService.signTransactionAuthorizationResponse(anyString(), anything())).thenReject(
     new Error("Not implemented"),
   );
+  when(mockPomeloTransactionService.adjustTransaction(anything())).thenReject(new Error("Not implemented"));
+  when(mockPomeloTransactionService.signTransactionAdjustmentResponse(anyString(), anything(), anyString())).thenReject(
+    new Error("Not implemented"),
+  );
 
   return mockPomeloTransactionService;
 }

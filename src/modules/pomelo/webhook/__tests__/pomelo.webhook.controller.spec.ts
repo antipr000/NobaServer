@@ -9,6 +9,8 @@ import { anyString, anything, capture, deepEqual, instance, when } from "ts-mock
 import { getMockPomeloWebhookMapperWithDefaults } from "../mocks/mock.pomelo.webhook.mapper";
 import { getMockPomeloTransactionServiceWithDefaults } from "../mocks/mock.pomelo.webhook.service";
 import {
+  PomeloAdjustmentType,
+  PomeloTransactionAdjustmentRequest,
   PomeloTransactionAuthzDetailStatus,
   PomeloTransactionAuthzRequest,
   PomeloTransactionAuthzResponse,
@@ -161,6 +163,126 @@ describe("PomeloTransactionServiceTests", () => {
           }),
         ),
       );
+    });
+  });
+
+  describe("adjustTransactions", () => {
+    it("should properly map the input request, output response and attach signature to response", async () => {
+      const parsedRequest: PomeloTransactionAdjustmentRequest = {
+        endpoint: "ENDPOINT",
+        rawBodyBuffer: Buffer.from("RAW_REQUEST_BODY"),
+        timestamp: Date.now().toString(),
+        rawSignature: "INPUT_SIGNATURE",
+        idempotencyKey: "IDEMPOTENCY_KEY",
+
+        pomeloTransactionID: "POMELO_TRANSACTION_ID",
+        pomeloOriginalTransactionID: "POMELO_ORIGINAL_TRANSACTION_ID",
+        adjustmentType: PomeloAdjustmentType.CREDIT,
+        transactionType: PomeloTransactionType.PURCHASE,
+        pomeloCardID: "POMELO_CARD_ID",
+        pomeloUserID: "POMELO_USER_ID",
+        localAmount: 1111,
+        localCurrency: PomeloCurrency.COP,
+        settlementAmount: 11,
+        settlementCurrency: PomeloCurrency.USD,
+        merchantName: "MERCHANT_NAME",
+      };
+      when(
+        mockWebhookMapper.convertToPomeloTransactionAdjustmentRequest(
+          anything(),
+          anything(),
+          PomeloAdjustmentType.CREDIT,
+        ),
+      ).thenReturn(parsedRequest);
+
+      const serviceResponse: PomeloTransactionAuthzResponse = {
+        summaryStatus: PomeloTransactionAuthzSummaryStatus.REJECTED,
+        detailedStatus: PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS,
+        message: "MESSAGE",
+      };
+      when(mockPomeloTransactionService.adjustTransaction(anything())).thenResolve(serviceResponse);
+      when(
+        mockPomeloTransactionService.signTransactionAdjustmentResponse(
+          anyString(),
+          anything(),
+          PomeloAdjustmentType.CREDIT,
+        ),
+      ).thenReturn("OUTPUT_SIGNATURE");
+
+      // *******************************************************
+      // Mocking "RawBodyRequest<ExpressRequest>" structure
+      //
+      let jsonResult = {};
+      let responseHeaders = {};
+      const response = {
+        set: headers => {
+          responseHeaders = {
+            ...responseHeaders,
+            ...headers,
+          };
+
+          return {
+            json: result => {
+              jsonResult = {
+                ...jsonResult,
+                ...result,
+              };
+            },
+          };
+        },
+      };
+      // *******************************************************
+
+      const expressRawRequest = {
+        rawBody: Buffer.from("RAW_REQUEST"),
+      };
+      const requestBody = {
+        field1: "value1",
+        field2: "value2",
+      };
+      const headers = {
+        header1: "value1",
+        header2: "value2",
+      };
+      await webhookController.adjustTransactions(expressRawRequest as any, response, requestBody, headers, "credit");
+
+      expect(jsonResult).toStrictEqual({
+        status: PomeloTransactionAuthzSummaryStatus.REJECTED,
+        message: "MESSAGE",
+        status_detail: PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS,
+      });
+      expect(responseHeaders).toStrictEqual({
+        "X-Endpoint": "/transactions/adjustments/credit",
+        "X-Timestamp": expect.any(String),
+        "X-Signature": "OUTPUT_SIGNATURE",
+      });
+
+      const [inputBodyToCoversionRequest, inputHeaderToConversionRequest, inputAdjustmentTypeToConverstionRequest] =
+        capture(mockWebhookMapper.convertToPomeloTransactionAdjustmentRequest).last();
+      expect(inputBodyToCoversionRequest).toStrictEqual(requestBody);
+      expect(inputHeaderToConversionRequest).toStrictEqual(headers);
+      expect(inputAdjustmentTypeToConverstionRequest).toBe("credit");
+
+      const [inputArgToAuthorizeTransaction] = capture(mockPomeloTransactionService.adjustTransaction).last();
+      expect(inputArgToAuthorizeTransaction).toStrictEqual({
+        ...parsedRequest,
+        rawBodyBuffer: expressRawRequest.rawBody,
+      });
+
+      const [inputTimestampToSignResponse, inputBufferBodyToSignResponse, inputAdjustmentTypeToSignResponse] = capture(
+        mockPomeloTransactionService.signTransactionAdjustmentResponse,
+      ).last();
+      expect(inputTimestampToSignResponse).toBe(responseHeaders["X-Timestamp"]);
+      expect(inputBufferBodyToSignResponse).toStrictEqual(
+        Buffer.from(
+          JSON.stringify({
+            status: PomeloTransactionAuthzSummaryStatus.REJECTED,
+            message: "MESSAGE",
+            status_detail: PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS,
+          }),
+        ),
+      );
+      expect(inputAdjustmentTypeToSignResponse).toBe("credit");
     });
   });
 });

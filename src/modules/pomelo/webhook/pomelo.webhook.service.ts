@@ -8,6 +8,9 @@ import {
   PomeloTransactionAuthzDetailStatus,
   PomeloTransactionAuthzSummaryStatus,
   PomeloTransactionAuthzRequest,
+  PomeloTransactionAdjustmentRequest,
+  PomeloTransactionAdjustmentResponse,
+  PomeloAdjustmentType,
 } from "../dto/pomelo.transaction.service.dto";
 import { createHmac, timingSafeEqual } from "crypto";
 import { Logger } from "winston";
@@ -31,6 +34,7 @@ import { Utils } from "../../../core/utils/Utils";
 @Injectable()
 export class PomeloTransactionService {
   private readonly transactionAuthzEndpoint = "/transactions/authorizations";
+  private readonly transactionAdjustmentEndpointPrefix = "/transactions/adjustments";
   private readonly detailStatusToSummaryStatusMap: Record<
     PomeloTransactionAuthzDetailStatus,
     PomeloTransactionAuthzSummaryStatus
@@ -165,6 +169,37 @@ export class PomeloTransactionService {
 
   signTransactionAuthorizationResponse(timestamp: string, rawBodyBuffer: Buffer): string {
     return this.computeSignature(timestamp, this.transactionAuthzEndpoint, rawBodyBuffer);
+  }
+
+  async adjustTransaction(request: PomeloTransactionAdjustmentRequest): Promise<PomeloTransactionAuthzResponse> {
+    const expectedAdjustmentEndpoint = `${this.transactionAdjustmentEndpointPrefix}/${request.adjustmentType}`;
+    if (request.endpoint !== expectedAdjustmentEndpoint) {
+      this.logger.error(
+        `'endpoint' mismatch. Received '${request.endpoint}' and expected '${expectedAdjustmentEndpoint}'`,
+      );
+      return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.OTHER);
+    }
+
+    const expectedSignature = this.computeSignature(
+      request.timestamp,
+      expectedAdjustmentEndpoint,
+      request.rawBodyBuffer,
+    );
+    // TODO: Check if it is cryptographically safe to return a "valid" response
+    if (!this.verifySignature(request.rawSignature, expectedSignature)) {
+      return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.OTHER);
+    }
+
+    return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.APPROVED);
+  }
+
+  signTransactionAdjustmentResponse(
+    timestamp: string,
+    rawBodyBuffer: Buffer,
+    adjustmentType: PomeloAdjustmentType,
+  ): string {
+    const adjustmentEndpoint = `${this.transactionAdjustmentEndpointPrefix}/${adjustmentType}`;
+    return this.computeSignature(timestamp, adjustmentEndpoint, rawBodyBuffer);
   }
 
   private prepareAuthorizationResponse(
