@@ -2,6 +2,7 @@ import { FeeType } from "../../../modules/transaction/domain/TransactionFee";
 import { Transaction, getFee, getTotalFees } from "../../../modules/transaction/domain/Transaction";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import Joi from "joi";
+import { KeysRequired } from "../../../modules/common/domain/Types";
 
 export type TransactionParameters = {
   transactionRef: string;
@@ -61,7 +62,7 @@ export interface PayrollDepositCompletedNotificationParameters extends DepositCo
 }
 
 export class TransactionNotificationParamsJoiSchema {
-  static getTransactionParamsSchema() {
+  static getTransactionParamsSchema(): KeysRequired<TransactionParameters> {
     return {
       transactionRef: Joi.string().required(),
       createdTimestamp: Joi.string().required(),

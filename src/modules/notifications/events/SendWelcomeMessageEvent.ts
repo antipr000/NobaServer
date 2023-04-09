@@ -1,13 +1,8 @@
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
+import { BaseEvent } from "./BaseEvent";
 
-export class SendWelcomeMessageEvent {
-  email: string;
-  firstName: string;
-  lastName?: string;
-  nobaUserID: string;
-  locale?: string;
-}
+export class SendWelcomeMessageEvent extends BaseEvent {}
 
 export const validateSendWelcomeMessageEvent = (event: SendWelcomeMessageEvent) => {
   const sendWelcomeMessageEventJoiValidationKeys: KeysRequired<SendWelcomeMessageEvent> = {
@@ -16,6 +11,8 @@ export const validateSendWelcomeMessageEvent = (event: SendWelcomeMessageEvent) 
     lastName: Joi.string().optional(),
     nobaUserID: Joi.string().required(),
     locale: Joi.string().optional(),
+    phone: Joi.string().optional(),
+    handle: Joi.string().optional(),
   };
 
   const sendWelcomeMessageEventJoiSchema = Joi.object(sendWelcomeMessageEventJoiValidationKeys);

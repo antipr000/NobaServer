@@ -1,13 +1,8 @@
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
+import { BaseEvent } from "./BaseEvent";
 
-export class SendDocumentVerificationTechnicalFailureEvent {
-  email: string;
-  firstName: string;
-  lastName?: string;
-  nobaUserID: string;
-  locale?: string;
-}
+export class SendDocumentVerificationTechnicalFailureEvent extends BaseEvent {}
 
 export const validateDocumentVerificationTechnicalFailureEvent = (
   event: SendDocumentVerificationTechnicalFailureEvent,
@@ -19,6 +14,8 @@ export const validateDocumentVerificationTechnicalFailureEvent = (
       lastName: Joi.string().optional(),
       nobaUserID: Joi.string().required(),
       locale: Joi.string().optional(),
+      phone: Joi.string().optional(),
+      handle: Joi.string().optional(),
     };
 
   const documentVerificationTechnicalFailureEventJoiSchema = Joi.object(

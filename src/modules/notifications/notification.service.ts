@@ -8,37 +8,63 @@ import {
   NotificationEventType,
   preferredNotificationMedium,
 } from "./domain/NotificationTypes";
-import { SendCardAddedEvent } from "./events/SendCardAddedEvent";
-import { SendCardAdditionFailedEvent } from "./events/SendCardAdditionFailedEvent";
-import { SendCardDeletedEvent } from "./events/SendCardDeletedEvent";
-import { SendDocumentVerificationPendingEvent } from "./events/SendDocumentVerificationPendingEvent";
-import { SendDocumentVerificationRejectedEvent } from "./events/SendDocumentVerificationRejectedEvent";
-import { SendDocumentVerificationTechnicalFailureEvent } from "./events/SendDocumentVerificationTechnicalFailureEvent";
-import { SendHardDeclineEvent } from "./events/SendHardDeclineEvent";
-import { SendKycApprovedNonUSEvent } from "./events/SendKycApprovedNonUSEvent";
-import { SendKycApprovedUSEvent } from "./events/SendKycApprovedUSEvent";
-import { SendKycDeniedEvent } from "./events/SendKycDeniedEvent";
-import { SendKycPendingOrFlaggedEvent } from "./events/SendKycPendingOrFlaggedEvent";
-import { SendOtpEvent } from "./events/SendOtpEvent";
-import { SendWalletUpdateVerificationCodeEvent } from "./events/SendWalletUpdateVerificationCodeEvent";
-import { SendWelcomeMessageEvent } from "./events/SendWelcomeMessageEvent";
-import { SendDepositCompletedEvent } from "./events/SendDepositCompletedEvent";
-import { SendDepositInitiatedEvent } from "./events/SendDepositInitiatedEvent";
-import { SendDepositFailedEvent } from "./events/SendDepositFailedEvent";
-import { SendWithdrawalCompletedEvent } from "./events/SendWithdrawalCompletedEvent";
-import { SendWithdrawalInitiatedEvent } from "./events/SendWithdrawalInitiatedEvent";
-import { SendTransferCompletedEvent } from "./events/SendTransferCompletedEvent";
-import { SendTransferFailedEvent } from "./events/SendTransferFailedEvent";
-import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
-import { SendPhoneVerificationCodeEvent } from "./events/SendPhoneVerificationCodeEvent";
-import { SendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
+import {
+  SendDocumentVerificationPendingEvent,
+  validateDocumentVerificationPendingEvent,
+} from "./events/SendDocumentVerificationPendingEvent";
+import {
+  SendDocumentVerificationRejectedEvent,
+  validateDocumentVerificationRejectedEvent,
+} from "./events/SendDocumentVerificationRejectedEvent";
+import {
+  SendDocumentVerificationTechnicalFailureEvent,
+  validateDocumentVerificationTechnicalFailureEvent,
+} from "./events/SendDocumentVerificationTechnicalFailureEvent";
+import { SendKycApprovedNonUSEvent, validateSendKycApprovedNonUSEvent } from "./events/SendKycApprovedNonUSEvent";
+import { SendKycApprovedUSEvent, validateSendKycApprovedUSEvent } from "./events/SendKycApprovedUSEvent";
+import { SendKycDeniedEvent, validateSendKycDeniedEvent } from "./events/SendKycDeniedEvent";
+import {
+  SendKycPendingOrFlaggedEvent,
+  validateSendKycPendingOrFlaggedEvent,
+} from "./events/SendKycPendingOrFlaggedEvent";
+import {
+  SendWalletUpdateVerificationCodeEvent,
+  validateSendWalletUpdateVerificationCodeEvent,
+} from "./events/SendWalletUpdateVerificationCodeEvent";
+import { SendWelcomeMessageEvent, validateSendWelcomeMessageEvent } from "./events/SendWelcomeMessageEvent";
+import { SendDepositCompletedEvent, validateDepositCompletedEvent } from "./events/SendDepositCompletedEvent";
+import { SendDepositInitiatedEvent, validateDepositInitiatedEvent } from "./events/SendDepositInitiatedEvent";
+import { SendDepositFailedEvent, validateDepositFailedEvent } from "./events/SendDepositFailedEvent";
+import { SendWithdrawalCompletedEvent, validateWithdrawalCompletedEvent } from "./events/SendWithdrawalCompletedEvent";
+import { SendWithdrawalInitiatedEvent, validateWithdrawalInitiatedEvent } from "./events/SendWithdrawalInitiatedEvent";
+import { SendTransferCompletedEvent, validateTransferCompletedEvent } from "./events/SendTransferCompletedEvent";
+import { SendTransferFailedEvent, validateTransferFailedEvent } from "./events/SendTransferFailedEvent";
+import { SendWithdrawalFailedEvent, validateWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
+import { SendEmployerRequestEvent, validateSendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
 import { IPushTokenRepo } from "./repos/pushtoken.repo";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
-import { SendTransferReceivedEvent } from "./events/SendTransferReceivedEvent";
-import { SendRegisterNewEmployeeEvent } from "./events/SendRegisterNewEmployeeEvent";
-import { SendUpdateEmployeeAllocationAmountEvent } from "./events/SendUpdateEmployeeAllocationAmountEvent";
-import { SendUpdatePayrollStatusEvent } from "./events/SendUpdatePayrollStatusEvent";
-import { SendPayrollDepositCompletedEvent } from "./events/SendPayrollDepositCompletedEvent";
+import { SendTransferReceivedEvent, validateTransferReceivedEvent } from "./events/SendTransferReceivedEvent";
+import {
+  SendRegisterNewEmployeeEvent,
+  validateSendRegisterNewEmployeeEvent,
+} from "./events/SendRegisterNewEmployeeEvent";
+import {
+  SendUpdateEmployeeAllocationAmountEvent,
+  validateSendUpdateEmployeeAllocationAmountEvent,
+} from "./events/SendUpdateEmployeeAllocationAmountEvent";
+import {
+  SendUpdatePayrollStatusEvent,
+  validateSendUpdatePayrollStatusEvent,
+} from "./events/SendUpdatePayrollStatusEvent";
+import {
+  SendPayrollDepositCompletedEvent,
+  validatePayrollDepositCompletedEvent,
+} from "./events/SendPayrollDepositCompletedEvent";
+import { SendOtpEvent, validateSendOtpEvent } from "./events/SendOtpEvent";
+import {
+  SendPhoneVerificationCodeEvent,
+  validateSendPhoneVerificationCodeEvent,
+} from "./events/SendPhoneVerificationCodeEvent";
 
 @Injectable()
 export class NotificationService {
@@ -60,6 +86,10 @@ export class NotificationService {
     if (notificationMedium.indexOf(NotificationEventHandler.SMS) > -1 && !payload.phone) {
       notificationMedium = notificationMedium.filter(medium => medium !== NotificationEventHandler.SMS);
     }
+
+    if (notificationMedium.indexOf(NotificationEventHandler.PUSH) > -1 && !payload.nobaUserID) {
+      notificationMedium = notificationMedium.filter(medium => medium !== NotificationEventHandler.PUSH);
+    }
     return notificationMedium;
   }
 
@@ -73,8 +103,6 @@ export class NotificationService {
       this.logger.error(`Failed to send notification for event type ${eventType} as no notification medium was found`);
       return;
     }
-
-    payload.pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
 
     notificationEvent.notificationEventHandler.forEach(eventHandler => {
       const eventName = `${eventHandler}.${eventType}`;
@@ -112,379 +140,160 @@ export class NotificationService {
   }
 
   private async createEvent(eventName: string, eventType: NotificationEventType, payload: NotificationPayload) {
+    let pushTokens = [];
     switch (eventType) {
       case NotificationEventType.SEND_OTP_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendOtpEvent({
-            email: payload.email,
-            phone: payload.phone,
-            otp: payload.otp,
-            name: payload.firstName,
-            handle: payload.handle,
-            locale: payload.locale,
-          }),
-        );
+        validateSendOtpEvent(payload as SendOtpEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendWalletUpdateVerificationCodeEvent({
-            email: payload.email,
-            phone: payload.phone,
-            otp: payload.otp,
-            name: payload.firstName,
-            nobaUserID: payload.nobaUserID,
-            locale: payload.locale,
-            walletAddress: payload.walletAddress,
-          }),
-        );
+        validateSendWalletUpdateVerificationCodeEvent(payload as SendWalletUpdateVerificationCodeEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendPhoneVerificationCodeEvent({
-            phone: payload.phone,
-            otp: payload.otp,
-            handle: payload.handle,
-            name: payload.firstName,
-            locale: payload.locale,
-          }),
-        );
+        validateSendPhoneVerificationCodeEvent(payload as SendPhoneVerificationCodeEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_WELCOME_MESSAGE_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendWelcomeMessageEvent({
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
-            locale: payload.locale,
-          }),
-        );
+        validateSendWelcomeMessageEvent(payload as SendWelcomeMessageEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_KYC_APPROVED_US_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendKycApprovedUSEvent({
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
-            locale: payload.locale,
-          }),
-        );
+        validateSendKycApprovedUSEvent(payload as SendKycApprovedUSEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendKycApprovedNonUSEvent({
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
-            locale: payload.locale,
-          }),
-        );
+        validateSendKycApprovedNonUSEvent(payload as SendKycApprovedNonUSEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_KYC_DENIED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendKycDeniedEvent({
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            locale: payload.locale,
-            nobaUserID: payload.nobaUserID,
-          }),
-        );
+        validateSendKycDeniedEvent(payload as SendKycDeniedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendKycPendingOrFlaggedEvent({
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            locale: payload.locale,
-            nobaUserID: payload.nobaUserID,
-          }),
-        );
+        validateSendKycPendingOrFlaggedEvent(payload as SendKycPendingOrFlaggedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendDocumentVerificationPendingEvent({
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            locale: payload.locale,
-            nobaUserID: payload.nobaUserID,
-          }),
-        );
+        validateDocumentVerificationPendingEvent(payload as SendDocumentVerificationPendingEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendDocumentVerificationRejectedEvent({
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            locale: payload.locale,
-            nobaUserID: payload.nobaUserID,
-          }),
-        );
+        validateDocumentVerificationRejectedEvent(payload as SendDocumentVerificationRejectedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendDocumentVerificationTechnicalFailureEvent({
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
-            locale: payload.locale,
-          }),
-        );
-        break;
-      case NotificationEventType.SEND_CARD_ADDED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendCardAddedEvent({
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
-            locale: payload.locale,
-            cardNetwork: payload.cardNetwork,
-            last4Digits: payload.last4Digits,
-          }),
-        );
-        break;
-      case NotificationEventType.SEND_CARD_ADDITION_FAILED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendCardAdditionFailedEvent({
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
-            locale: payload.locale,
-            last4Digits: payload.last4Digits,
-          }),
-        );
-        break;
-      case NotificationEventType.SEND_CARD_DELETED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendCardDeletedEvent({
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
-            locale: payload.locale,
-            cardNetwork: payload.cardNetwork,
-            last4Digits: payload.last4Digits,
-          }),
-        );
+        validateDocumentVerificationTechnicalFailureEvent(payload as SendDocumentVerificationTechnicalFailureEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendDepositCompletedEvent({
-            email: payload.email,
-            name: payload.firstName,
-            handle: payload.handle,
-            params: payload.depositCompletedParams,
-            pushTokens: payload.pushTokens,
-            locale: payload.locale,
-          }),
-        );
+        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
+        const depositCompletedPayload = payload as SendDepositCompletedEvent;
+
+        depositCompletedPayload.pushTokens = pushTokens;
+
+        validateDepositCompletedEvent(depositCompletedPayload);
+
+        this.eventEmitter.emitAsync(eventName, depositCompletedPayload);
         break;
       case NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendDepositInitiatedEvent({
-            email: payload.email,
-            name: payload.firstName,
-            handle: payload.handle,
-            locale: payload.locale,
-            params: payload.depositInitiatedParams,
-          }),
-        );
+        validateDepositInitiatedEvent(payload as SendDepositInitiatedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_DEPOSIT_FAILED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendDepositFailedEvent({
-            email: payload.email,
-            name: payload.firstName,
-            handle: payload.handle,
-            pushTokens: payload.pushTokens,
-            locale: payload.locale,
-            params: payload.depositFailedParams,
-          }),
-        );
+        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
+        const depositFailedPayload = payload as SendDepositFailedEvent;
+
+        depositFailedPayload.pushTokens = pushTokens;
+
+        validateDepositFailedEvent(depositFailedPayload);
+
+        this.eventEmitter.emitAsync(eventName, depositFailedPayload);
         break;
 
       case NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendWithdrawalCompletedEvent({
-            email: payload.email,
-            name: payload.firstName,
-            handle: payload.handle,
-            locale: payload.locale,
-            pushTokens: payload.pushTokens,
-            params: payload.withdrawalCompletedParams,
-          }),
-        );
+        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
+        const withdrawalCompletedPayload = payload as SendWithdrawalCompletedEvent;
+
+        withdrawalCompletedPayload.pushTokens = pushTokens;
+
+        validateWithdrawalCompletedEvent(withdrawalCompletedPayload);
+
+        this.eventEmitter.emitAsync(eventName, withdrawalCompletedPayload);
         break;
 
       case NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendWithdrawalInitiatedEvent({
-            email: payload.email,
-            name: payload.firstName,
-            handle: payload.handle,
-            locale: payload.locale,
-            params: payload.withdrawalInitiatedParams,
-          }),
-        );
+        validateWithdrawalInitiatedEvent(payload as SendWithdrawalInitiatedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
 
       case NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendWithdrawalFailedEvent({
-            email: payload.email,
-            name: payload.firstName,
-            handle: payload.handle,
-            pushTokens: payload.pushTokens,
-            locale: payload.locale,
-            params: payload.withdrawalFailedParams,
-          }),
-        );
+        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
+        const withdrawalFailedPayload = payload as SendWithdrawalFailedEvent;
+
+        withdrawalFailedPayload.pushTokens = pushTokens;
+        validateWithdrawalFailedEvent(withdrawalFailedPayload);
+
+        this.eventEmitter.emitAsync(eventName, withdrawalFailedPayload);
         break;
 
       case NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendTransferCompletedEvent({
-            email: payload.email,
-            name: payload.firstName,
-            handle: payload.handle,
-            locale: payload.locale,
-            pushTokens: payload.pushTokens,
-            params: payload.transferCompletedParams,
-          }),
-        );
+        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
+        const transferCompletedPayload = payload as SendTransferCompletedEvent;
+
+        transferCompletedPayload.pushTokens = pushTokens;
+
+        validateTransferCompletedEvent(transferCompletedPayload);
+
+        this.eventEmitter.emitAsync(eventName, transferCompletedPayload);
         break;
       case NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendTransferReceivedEvent({
-            email: payload.email,
-            name: payload.firstName,
-            handle: payload.handle,
-            locale: payload.locale,
-            pushTokens: payload.pushTokens,
-            params: payload.transferReceivedParams,
-          }),
-        );
+        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
+        const transferReceivedPayload = payload as SendTransferReceivedEvent;
+
+        transferReceivedPayload.pushTokens = pushTokens;
+
+        validateTransferReceivedEvent(transferReceivedPayload);
+        this.eventEmitter.emitAsync(eventName, transferReceivedPayload);
         break;
 
       case NotificationEventType.SEND_TRANSFER_FAILED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendTransferFailedEvent({
-            email: payload.email,
-            name: payload.firstName,
-            handle: payload.handle,
-            pushTokens: payload.pushTokens,
-            locale: payload.locale,
-            params: payload.transferFailedParams,
-          }),
-        );
-        break;
+        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
+        const transferFailedPayload = payload as SendTransferFailedEvent;
 
-      case NotificationEventType.SEND_HARD_DECLINE_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendHardDeclineEvent({
-            email: payload.email,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            nobaUserID: payload.nobaUserID,
-            locale: payload.locale,
-            sessionID: payload.sessionID,
-            transactionID: payload.transactionID,
-            paymentToken: payload.paymentToken,
-            processor: payload.processor,
-            responseCode: payload.responseCode,
-            responseSummary: payload.responseSummary,
-          }),
-        );
+        transferFailedPayload.pushTokens = pushTokens;
+
+        validateTransferFailedEvent(transferFailedPayload);
+
+        this.eventEmitter.emitAsync(eventName, transferFailedPayload);
         break;
 
       case NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendPayrollDepositCompletedEvent({
-            email: payload.email,
-            name: payload.firstName,
-            handle: payload.handle,
-            pushTokens: payload.pushTokens,
-            locale: payload.locale,
-            params: payload.payrollDepositCompletedParams,
-          }),
-        );
+        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
+        const payrollDepositCompletedPayload = payload as SendPayrollDepositCompletedEvent;
+
+        payrollDepositCompletedPayload.pushTokens = pushTokens;
+
+        validatePayrollDepositCompletedEvent(payrollDepositCompletedPayload);
+
+        this.eventEmitter.emitAsync(eventName, payrollDepositCompletedPayload);
         break;
 
       case NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendEmployerRequestEvent({
-            email: payload.email,
-            locale: payload.locale,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-          }),
-        );
+        validateSendEmployerRequestEvent(payload as SendEmployerRequestEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendRegisterNewEmployeeEvent({
-            email: payload.email,
-            phone: payload.phone,
-            firstName: payload.firstName,
-            lastName: payload.lastName,
-            employerReferralID: payload.employerReferralID,
-            allocationAmountInPesos: payload.allocationAmountInPesos,
-            nobaEmployeeID: payload.nobaEmployeeID,
-          }),
-        );
+        validateSendRegisterNewEmployeeEvent(payload as SendRegisterNewEmployeeEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendUpdateEmployeeAllocationAmountEvent({
-            nobaEmployeeID: payload.nobaEmployeeID,
-            allocationAmountInPesos: payload.allocationAmountInPesos,
-          }),
-        );
+        validateSendUpdateEmployeeAllocationAmountEvent(payload as SendUpdateEmployeeAllocationAmountEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT:
-        this.eventEmitter.emitAsync(
-          eventName,
-          new SendUpdatePayrollStatusEvent({
-            nobaPayrollID: payload.nobaPayrollID,
-            payrollStatus: payload.payrollStatus,
-          }),
-        );
+        validateSendUpdatePayrollStatusEvent(payload as SendUpdatePayrollStatusEvent);
+        this.eventEmitter.emitAsync(eventName, payload as SendUpdatePayrollStatusEvent);
         break;
       default:
         this.logger.error(`Unknown Notification event type: ${eventType}`);

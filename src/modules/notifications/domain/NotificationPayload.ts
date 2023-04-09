@@ -63,27 +63,29 @@ export class NotificationPayloadMapper {
   static toDepositCompletedEvent(consumer: Consumer, transaction: Transaction): SendDepositCompletedEvent {
     return {
       email: consumer.props.email,
-      name: consumer.props.firstName,
+      firstName: consumer.props.firstName,
       handle: consumer.props.handle,
       params: TransactionNotificationPayloadMapper.toDepositCompletedNotificationParameters(transaction),
       locale: consumer.props.locale,
+      nobaUserID: consumer.props.id,
     };
   }
 
   static toDepositFailedEvent(consumer: Consumer, transaction: Transaction): SendDepositFailedEvent {
     return {
       email: consumer.props.email,
-      name: consumer.props.firstName,
+      firstName: consumer.props.firstName,
       handle: consumer.props.handle,
       params: TransactionNotificationPayloadMapper.toDepositFailedNotificationParameters(transaction),
       locale: consumer.props.locale,
+      nobaUserID: consumer.props.id,
     };
   }
 
   static toDepositInitiatedEvent(consumer: Consumer, transaction: Transaction): SendDepositInitiatedEvent {
     return {
       email: consumer.props.email,
-      name: consumer.props.firstName,
+      firstName: consumer.props.firstName,
       handle: consumer.props.handle,
       params: TransactionNotificationPayloadMapper.toDepositInitiatedNotificationParameters(transaction),
       locale: consumer.props.locale,
@@ -199,13 +201,14 @@ export class NotificationPayloadMapper {
   ): SendPayrollDepositCompletedEvent {
     return {
       email: consumer.props.email,
-      name: consumer.props.firstName,
+      firstName: consumer.props.firstName,
       handle: consumer.props.handle,
       params: TransactionNotificationPayloadMapper.toPayrollDepositCompletedNotificationParameters(
         transaction,
         companyName,
       ),
       locale: consumer.props.locale,
+      nobaUserID: consumer.props.id,
     };
   }
 
@@ -229,7 +232,7 @@ export class NotificationPayloadMapper {
   ): SendTransferCompletedEvent {
     return {
       email: debitConsumer.props.email,
-      name: debitConsumer.props.firstName,
+      firstName: debitConsumer.props.firstName,
       handle: debitConsumer.props.handle,
       params: TransactionNotificationPayloadMapper.toTransferCompletedNotificationParameters(
         transaction,
@@ -237,6 +240,7 @@ export class NotificationPayloadMapper {
         creditConsumer,
       ),
       ...(debitConsumer.props.locale && { locale: debitConsumer.props.locale }),
+      nobaUserID: debitConsumer.props.id,
     };
   }
 
@@ -247,7 +251,7 @@ export class NotificationPayloadMapper {
   ): SendTransferFailedEvent {
     return {
       email: debitConsumer.props.email,
-      name: debitConsumer.props.firstName,
+      firstName: debitConsumer.props.firstName,
       handle: debitConsumer.props.handle,
       params: TransactionNotificationPayloadMapper.toTransferFailedNotificationParameters(
         transaction,
@@ -255,6 +259,7 @@ export class NotificationPayloadMapper {
         creditConsumer,
       ),
       ...(debitConsumer.props.locale && { locale: debitConsumer.props.locale }),
+      nobaUserID: debitConsumer.props.id,
     };
   }
 
@@ -265,7 +270,7 @@ export class NotificationPayloadMapper {
   ): SendTransferReceivedEvent {
     return {
       email: creditConsumer.props.email,
-      name: creditConsumer.props.firstName,
+      firstName: creditConsumer.props.firstName,
       handle: creditConsumer.props.handle,
       params: TransactionNotificationPayloadMapper.toTransferReceivedNotificationParameters(
         transaction,
@@ -273,6 +278,7 @@ export class NotificationPayloadMapper {
         creditConsumer,
       ),
       ...(creditConsumer.props.locale && { locale: creditConsumer.props.locale }),
+      nobaUserID: creditConsumer.props.id,
     };
   }
 
@@ -302,7 +308,7 @@ export class NotificationPayloadMapper {
       ...(consumer.props.email && { email: consumer.props.email }),
       ...(consumer.props.phone && { phone: consumer.props.phone }),
       otp: otp,
-      name: consumer.props.firstName,
+      firstName: consumer.props.firstName,
       nobaUserID: consumer.props.id,
       ...(consumer.props.locale && { locale: consumer.props.locale }),
       walletAddress: walletAddress,
@@ -322,27 +328,29 @@ export class NotificationPayloadMapper {
   static toWithdrawalCompletedEvent(consumer: Consumer, transaction: Transaction): SendWithdrawalCompletedEvent {
     return {
       email: consumer.props.email,
-      name: consumer.props.firstName,
+      firstName: consumer.props.firstName,
       handle: consumer.props.handle,
       params: TransactionNotificationPayloadMapper.toWithdrawalCompletedNotificationParameters(transaction),
       ...(consumer.props.locale && { locale: consumer.props.locale }),
+      nobaUserID: consumer.props.id,
     };
   }
 
   static toWithdrawalFailedEvent(consumer: Consumer, transaction: Transaction): SendWithdrawalFailedEvent {
     return {
       email: consumer.props.email,
-      name: consumer.props.firstName,
+      firstName: consumer.props.firstName,
       handle: consumer.props.handle,
       params: TransactionNotificationPayloadMapper.toWithdrawalFailedNotificationParameters(transaction),
       ...(consumer.props.locale && { locale: consumer.props.locale }),
+      nobaUserID: consumer.props.id,
     };
   }
 
   static toWithdrawalInitiatedEvent(consumer: Consumer, transaction: Transaction): SendWithdrawalInitiatedEvent {
     return {
       email: consumer.props.email,
-      name: consumer.props.firstName,
+      firstName: consumer.props.firstName,
       handle: consumer.props.handle,
       params: TransactionNotificationPayloadMapper.toWithdrawalInitiatedNotificationParameters(transaction),
       ...(consumer.props.locale && { locale: consumer.props.locale }),

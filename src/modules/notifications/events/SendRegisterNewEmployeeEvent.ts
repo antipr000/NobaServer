@@ -1,15 +1,11 @@
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
+import { BaseEvent } from "./BaseEvent";
 
-export class SendRegisterNewEmployeeEvent {
-  firstName: string;
-  lastName?: string;
-  email: string;
-  phone: string;
+export class SendRegisterNewEmployeeEvent extends BaseEvent {
   employerReferralID: string;
   allocationAmountInPesos: number;
   nobaEmployeeID: string;
-  locale?: string;
 }
 
 export const validateSendRegisterNewEmployeeEvent = (event: SendRegisterNewEmployeeEvent) => {
@@ -22,6 +18,8 @@ export const validateSendRegisterNewEmployeeEvent = (event: SendRegisterNewEmplo
     allocationAmountInPesos: Joi.number().required(),
     nobaEmployeeID: Joi.string().required(),
     locale: Joi.string().optional(),
+    handle: Joi.string().optional(),
+    nobaUserID: Joi.string().optional(),
   };
 
   const sendRegisterNewEmployeeEventJoiSchema = Joi.object(sendRegisterNewEmployeeEventJoiValidationKeys);

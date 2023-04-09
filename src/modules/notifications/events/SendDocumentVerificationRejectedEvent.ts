@@ -1,13 +1,8 @@
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
+import { BaseEvent } from "./BaseEvent";
 
-export class SendDocumentVerificationRejectedEvent {
-  email: string;
-  firstName: string;
-  lastName?: string;
-  nobaUserID: string;
-  locale?: string;
-}
+export class SendDocumentVerificationRejectedEvent extends BaseEvent {}
 
 export const validateDocumentVerificationRejectedEvent = (event: SendDocumentVerificationRejectedEvent) => {
   const documentVerificationRejectedEventJoiValidationKeys: KeysRequired<SendDocumentVerificationRejectedEvent> = {
@@ -16,6 +11,8 @@ export const validateDocumentVerificationRejectedEvent = (event: SendDocumentVer
     lastName: Joi.string().optional(),
     nobaUserID: Joi.string().required(),
     locale: Joi.string().optional(),
+    phone: Joi.string().optional(),
+    handle: Joi.string().optional(),
   };
 
   const documentVerificationRejectedEventJoiSchema = Joi.object(documentVerificationRejectedEventJoiValidationKeys);

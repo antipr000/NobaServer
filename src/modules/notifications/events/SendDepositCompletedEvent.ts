@@ -4,23 +4,23 @@ import {
   TransactionNotificationParamsJoiSchema,
 } from "../domain/TransactionNotificationParameters";
 import { KeysRequired } from "../../../modules/common/domain/Types";
+import { BaseEvent } from "./BaseEvent";
 
-export class SendDepositCompletedEvent {
-  email: string;
-  name: string;
-  handle: string;
+export class SendDepositCompletedEvent extends BaseEvent {
   params: DepositCompletedNotificationParameters;
   pushTokens?: string[];
-  locale?: string;
 }
 
 export const validateDepositCompletedEvent = (event: SendDepositCompletedEvent) => {
   const depositCompletedEventJoiValidationKeys: KeysRequired<SendDepositCompletedEvent> = {
     email: Joi.string().email().required(),
-    name: Joi.string().required(),
+    firstName: Joi.string().required(),
+    lastName: Joi.string().optional(),
+    nobaUserID: Joi.string().required(),
+    phone: Joi.string().optional(),
     handle: Joi.string().required(),
     params: Joi.object(TransactionNotificationParamsJoiSchema.getDepositCompletedNotificationParamsSchema()).required(),
-    pushTokens: Joi.array().items(Joi.string()).required().allow([]),
+    pushTokens: Joi.array().items(Joi.string()).required(),
     locale: Joi.string().optional(),
   };
 

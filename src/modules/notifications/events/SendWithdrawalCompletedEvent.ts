@@ -3,26 +3,27 @@ import {
   WithdrawalCompletedNotificationParameters,
 } from "../domain/TransactionNotificationParameters";
 import Joi from "joi";
+import { BaseEvent } from "./BaseEvent";
+import { KeysRequired } from "../../../modules/common/domain/Types";
 
-export class SendWithdrawalCompletedEvent {
-  email: string;
-  name: string;
-  handle: string;
+export class SendWithdrawalCompletedEvent extends BaseEvent {
   params: WithdrawalCompletedNotificationParameters;
   pushTokens?: string[];
-  locale?: string;
 }
 
 export const validateWithdrawalCompletedEvent = (event: SendWithdrawalCompletedEvent) => {
-  const withdrawalCompletedEventJoiValidationKeys = {
+  const withdrawalCompletedEventJoiValidationKeys: KeysRequired<SendWithdrawalCompletedEvent> = {
     email: Joi.string().email().required(),
-    name: Joi.string().required(),
+    firstName: Joi.string().required(),
+    lastName: Joi.string().optional(),
     handle: Joi.string().required(),
     params: Joi.object(
       TransactionNotificationParamsJoiSchema.getWithdrawalCompletedNotificationParamsSchema(),
     ).required(),
-    pushTokens: Joi.array().items(Joi.string()).required().allow([]),
+    pushTokens: Joi.array().items(Joi.string()).required(),
     locale: Joi.string().optional(),
+    phone: Joi.string().optional(),
+    nobaUserID: Joi.string().required(),
   };
 
   const withdrawalCompletedEventJoiSchema = Joi.object(withdrawalCompletedEventJoiValidationKeys);

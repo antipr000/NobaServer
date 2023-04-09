@@ -1,13 +1,8 @@
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
+import { BaseEvent } from "./BaseEvent";
 
-export class SendKycApprovedNonUSEvent {
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  nobaUserID: string;
-  locale?: string;
-}
+export class SendKycApprovedNonUSEvent extends BaseEvent {}
 
 export const validateSendKycApprovedNonUSEvent = (event: SendKycApprovedNonUSEvent) => {
   const sendKycApprovedNonUSEventJoiValidationKeys: KeysRequired<SendKycApprovedNonUSEvent> = {
@@ -16,6 +11,8 @@ export const validateSendKycApprovedNonUSEvent = (event: SendKycApprovedNonUSEve
     lastName: Joi.string().optional(),
     nobaUserID: Joi.string().required(),
     locale: Joi.string().optional(),
+    phone: Joi.string().optional(),
+    handle: Joi.string().optional(),
   };
 
   const sendKycApprovedNonUSEventJoiSchema = Joi.object(sendKycApprovedNonUSEventJoiValidationKeys);

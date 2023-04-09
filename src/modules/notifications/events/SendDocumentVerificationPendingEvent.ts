@@ -1,13 +1,8 @@
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
+import { BaseEvent } from "./BaseEvent";
 
-export class SendDocumentVerificationPendingEvent {
-  email: string;
-  firstName: string;
-  lastName?: string;
-  nobaUserID: string;
-  locale?: string;
-}
+export class SendDocumentVerificationPendingEvent extends BaseEvent {}
 
 export const validateDocumentVerificationPendingEvent = (event: SendDocumentVerificationPendingEvent) => {
   const documentVerificationPendingEventJoiValidationKeys: KeysRequired<SendDocumentVerificationPendingEvent> = {
@@ -16,6 +11,8 @@ export const validateDocumentVerificationPendingEvent = (event: SendDocumentVeri
     lastName: Joi.string().optional(),
     nobaUserID: Joi.string().required(),
     locale: Joi.string().optional(),
+    phone: Joi.string().optional(),
+    handle: Joi.string().optional(),
   };
 
   const documentVerificationPendingEventJoiSchema = Joi.object(documentVerificationPendingEventJoiValidationKeys);
