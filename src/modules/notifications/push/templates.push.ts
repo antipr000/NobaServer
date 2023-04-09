@@ -43,17 +43,11 @@ export const pushNotificationBodyTemplates = {
   template_send_transfer_successful_receiver_es: (params: PushNotificationParams) =>
     `Has recibido ${params.transactionParams.amount} ${params.transactionParams.currency} de ${params.transactionParams.senderHandle}`,
 
-  template_send_collection_completed_en: (params: PushNotificationParams) =>
-    `Bank collection of ${params.transactionParams.amount} ${params.transactionParams.currency} has successfully completed`,
-
-  template_send_collection_completed_es: (params: PushNotificationParams) =>
-    `La recolección bancaria de ${params.transactionParams.amount} ${params.transactionParams.currency} se ha completado correctamente`,
-
   template_send_payroll_deposit_completed_en: (params: PushNotificationParams) =>
-    `Payroll deposit of amount ${params.transactionParams.amount} ${params.transactionParams.currency} completed for company ${params.payrollParams.companyName}}`,
+    `Payroll deposit of amount ${params.transactionParams.amount} ${params.transactionParams.currency} completed for company ${params.payrollParams.companyName}`,
 
   template_send_payroll_deposit_completed_es: (params: PushNotificationParams) =>
-    `Depósito de nómina de importe ${params.transactionParams.amount} ${params.transactionParams.currency} completado para la empresa ${params.payrollParams.companyName}}`,
+    `Depósito de nómina de importe ${params.transactionParams.amount} ${params.transactionParams.currency} completado para la empresa ${params.payrollParams.companyName}`,
 };
 
 export const pushNotificationTitleTemplates = {
@@ -71,8 +65,6 @@ export const pushNotificationTitleTemplates = {
   template_send_transfer_failed_es: () => "Transferencia fallida",
   template_send_transfer_successful_receiver_en: () => "Transfer received",
   template_send_transfer_successful_receiver_es: () => "Transferencia recibida",
-  template_send_collection_completed_en: () => "Collection completed",
-  template_send_collection_completed_es: () => "Recolección completada",
   template_send_payroll_deposit_completed_en: () => "Payroll deposit completed",
   template_send_payroll_deposit_completed_es: () => "Depósito de nómina completado",
 };
