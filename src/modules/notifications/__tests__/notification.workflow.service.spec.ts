@@ -16,13 +16,13 @@ import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { NotificationEventType, NotificationWorkflowTypes } from "../domain/NotificationTypes";
 import { TransactionNotificationPayloadMapper } from "../domain/TransactionNotificationParameters";
-import { prepareNotificationPayload } from "../domain/NotificationPayload";
 import { ServiceException } from "../../../core/exception/service.exception";
 import { FeeType } from "../../../modules/transaction/domain/TransactionFee";
 import { EmployerService } from "../../../modules/employer/employer.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { Employer } from "../../../modules/employer/domain/Employer";
+import { NotificationPayloadMapper } from "../domain/NotificationPayload";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -86,12 +86,7 @@ describe("NotificationService", () => {
         transaction.id,
       );
 
-      const transactionNotificationPayload =
-        transactionNotificationMapper.toDepositCompletedNotificationParameters(transaction);
-
-      const notificationPayload = prepareNotificationPayload(consumer, {
-        depositCompletedParams: transactionNotificationPayload,
-      });
+      const notificationPayload = NotificationPayloadMapper.toDepositCompletedEvent(consumer, transaction);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
@@ -112,12 +107,7 @@ describe("NotificationService", () => {
         transaction.id,
       );
 
-      const transactionNotificationPayload =
-        transactionNotificationMapper.toDepositFailedNotificationParameters(transaction);
-
-      const notificationPayload = prepareNotificationPayload(consumer, {
-        depositFailedParams: transactionNotificationPayload,
-      });
+      const notificationPayload = NotificationPayloadMapper.toDepositFailedEvent(consumer, transaction);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_DEPOSIT_FAILED_EVENT,
@@ -138,12 +128,7 @@ describe("NotificationService", () => {
         transaction.id,
       );
 
-      const transactionNotificationPayload =
-        transactionNotificationMapper.toWithdrawalCompletedNotificationParameters(transaction);
-
-      const notificationPayload = prepareNotificationPayload(consumer, {
-        withdrawalCompletedParams: transactionNotificationPayload,
-      });
+      const notificationPayload = NotificationPayloadMapper.toWithdrawalCompletedEvent(consumer, transaction);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
@@ -164,12 +149,7 @@ describe("NotificationService", () => {
         transaction.id,
       );
 
-      const transactionNotificationPayload =
-        transactionNotificationMapper.toWithdrawalFailedNotificationParameters(transaction);
-
-      const notificationPayload = prepareNotificationPayload(consumer, {
-        withdrawalFailedParams: transactionNotificationPayload,
-      });
+      const notificationPayload = NotificationPayloadMapper.toWithdrawalFailedEvent(consumer, transaction);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT,
@@ -193,25 +173,12 @@ describe("NotificationService", () => {
         transaction.id,
       );
 
-      const transactionNotificationPayload = transactionNotificationMapper.toTransferCompletedNotificationParameters(
-        transaction,
+      const notificationPayload = NotificationPayloadMapper.toTransferCompletedEvent(consumer, consumer2, transaction);
+      const creditSideNotificationPayload = NotificationPayloadMapper.toTransferReceivedEvent(
         consumer,
         consumer2,
-      );
-
-      const transferReceivedPayload = transactionNotificationMapper.toTransferReceivedNotificationParameters(
         transaction,
-        consumer,
-        consumer2,
       );
-
-      const notificationPayload = prepareNotificationPayload(consumer, {
-        transferCompletedParams: transactionNotificationPayload,
-      });
-
-      const creditSideNotificationPayload = prepareNotificationPayload(consumer2, {
-        transferReceivedParams: transferReceivedPayload,
-      });
 
       verify(
         notificationService.sendNotification(
@@ -243,15 +210,7 @@ describe("NotificationService", () => {
         transaction.id,
       );
 
-      const transactionNotificationPayload = transactionNotificationMapper.toTransferFailedNotificationParameters(
-        transaction,
-        consumer,
-        consumer2,
-      );
-
-      const notificationPayload = prepareNotificationPayload(consumer, {
-        transferFailedParams: transactionNotificationPayload,
-      });
+      const notificationPayload = NotificationPayloadMapper.toTransferFailedEvent(consumer, consumer2, transaction);
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_TRANSFER_FAILED_EVENT,
@@ -273,13 +232,11 @@ describe("NotificationService", () => {
         NotificationWorkflowTypes.PAYROLL_DEPOSIT_COMPLETED_EVENT,
         transaction.id,
       );
-
-      const transactionNotificationPayload =
-        transactionNotificationMapper.toPayrollDepositCompletedNotificationParameters(transaction, employer.name);
-
-      const notificationPayload = prepareNotificationPayload(consumer, {
-        payrollDepositCompletedParams: transactionNotificationPayload,
-      });
+      const notificationPayload = NotificationPayloadMapper.toPayrollDepositCompletedEvent(
+        consumer,
+        transaction,
+        employer.name,
+      );
       verify(
         notificationService.sendNotification(
           NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
@@ -339,7 +296,6 @@ describe("NotificationService", () => {
         notificationService.sendNotification(
           NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT,
           deepEqual({
-            locale: "en",
             nobaPayrollID: payrollID,
             payrollStatus,
           }),
