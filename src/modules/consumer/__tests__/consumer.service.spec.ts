@@ -1931,7 +1931,7 @@ describe("ConsumerService", () => {
       consumer.props.isDisabled = true;
 
       when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
-      when(mockConsumerRepo.getConsumer(consumer.props.id, false)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id, false)).thenResolve(null);
       when(notificationService.sendNotification(anyString(), anything())).thenResolve();
       expect(
         consumerService.registerWithAnEmployer(employer.id, consumer.props.id, 100),
