@@ -47,7 +47,7 @@ describe("DashboardEventHandler", () => {
   });
 
   it("should call registerNewEmployee event", async () => {
-    const payload = new SendRegisterNewEmployeeEvent({
+    const payload: SendRegisterNewEmployeeEvent = {
       firstName: "Fake",
       lastName: "User",
       email: "fake+user@noba.com",
@@ -55,7 +55,7 @@ describe("DashboardEventHandler", () => {
       employerReferralID: "fake-referral-id",
       allocationAmountInPesos: 10000,
       nobaEmployeeID: "fake-employee-id",
-    });
+    };
 
     when(dashboardClient.registerNewEmployee(anything())).thenResolve();
 
@@ -74,10 +74,10 @@ describe("DashboardEventHandler", () => {
   });
 
   it("should call updateEmployeeAllocationAmount event", async () => {
-    const payload = new SendUpdateEmployeeAllocationAmountEvent({
+    const payload: SendUpdateEmployeeAllocationAmountEvent = {
       allocationAmountInPesos: 10000,
       nobaEmployeeID: "fake-employee-id",
-    });
+    };
 
     when(dashboardClient.updateEmployeeAllocationAmount(anything(), anything())).thenResolve();
 
@@ -89,10 +89,10 @@ describe("DashboardEventHandler", () => {
   });
 
   it("should call updatePayrollStatus event", async () => {
-    const payload = new SendUpdatePayrollStatusEvent({
+    const payload: SendUpdatePayrollStatusEvent = {
       nobaPayrollID: "fake-payroll-id",
       payrollStatus: PayrollStatus.COMPLETED,
-    });
+    };
 
     when(dashboardClient.updatePayrollStatus(anything(), anything())).thenResolve();
 
