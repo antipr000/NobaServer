@@ -89,7 +89,7 @@ describe("ConsumerRepoTests", () => {
     it("should fail to create a duplicate consumer by email", async () => {
       const consumer = getRandomUser();
       const result = await consumerRepo.createConsumer(consumer);
-      const savedResult = await consumerRepo.getConsumer(result.props.id);
+      const savedResult = await consumerRepo.getConsumer(result.props.id, false);
       expect(savedResult.props.id).toBe(result.props.id);
       expect(savedResult.props.email).toBe(consumer.props.email);
       expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(BadRequestError);
@@ -98,7 +98,7 @@ describe("ConsumerRepoTests", () => {
     it("should fail to create a duplicate consumer by phone", async () => {
       const consumer = getRandomUser();
       const result = await consumerRepo.createConsumer(consumer);
-      const savedResult = await consumerRepo.getConsumer(result.props.id);
+      const savedResult = await consumerRepo.getConsumer(result.props.id, false);
       expect(savedResult.props.id).toBe(result.props.id);
       expect(savedResult.props.phone).toBe(consumer.props.phone);
 
@@ -110,7 +110,7 @@ describe("ConsumerRepoTests", () => {
     it("should fail to create a duplicate consumer by referral code", async () => {
       const consumer = getRandomUser();
       const result = await consumerRepo.createConsumer(consumer);
-      const savedResult = await consumerRepo.getConsumer(result.props.id);
+      const savedResult = await consumerRepo.getConsumer(result.props.id, false);
       expect(savedResult.props.id).toBe(result.props.id);
       expect(savedResult.props.referralCode).toBe(consumer.props.referralCode);
       expect(async () => await consumerRepo.createConsumer(consumer)).rejects.toThrow(BadRequestError);
@@ -119,7 +119,7 @@ describe("ConsumerRepoTests", () => {
     it("should fail to create a duplicate consumer by phone even with different spacing", async () => {
       const consumer = getRandomUser();
       const result = await consumerRepo.createConsumer(consumer);
-      const savedResult = await consumerRepo.getConsumer(result.props.id);
+      const savedResult = await consumerRepo.getConsumer(result.props.id, false);
       expect(savedResult.props.id).toBe(result.props.id);
       expect(savedResult.props.phone).toBe(consumer.props.phone);
       const phone = consumer.props.phone;
@@ -131,7 +131,7 @@ describe("ConsumerRepoTests", () => {
     it("should not automatically generate a handle", async () => {
       const consumer = getRandomUser();
       const result = await consumerRepo.createConsumer(consumer);
-      const savedResult = await consumerRepo.getConsumer(result.props.id);
+      const savedResult = await consumerRepo.getConsumer(result.props.id, false);
       expect(savedResult.props.id).toBe(result.props.id);
       expect(savedResult.props.phone).toBe(consumer.props.phone);
       const phone = consumer.props.phone;
@@ -144,11 +144,11 @@ describe("ConsumerRepoTests", () => {
   describe("getConsumer", () => {
     it("should get a consumer", async () => {
       const consumer = getRandomUser();
-      const res = await consumerRepo.getConsumer(consumer.props.id);
+      const res = await consumerRepo.getConsumer(consumer.props.id, false);
       expect(res).toBeNull();
 
       const result = await consumerRepo.createConsumer(consumer);
-      const savedResult = await consumerRepo.getConsumer(result.props.id);
+      const savedResult = await consumerRepo.getConsumer(result.props.id, false);
       expect(savedResult.props.id).toBe(result.props.id);
       expect(savedResult.props.email).toBe(consumer.props.email);
     });
@@ -157,7 +157,24 @@ describe("ConsumerRepoTests", () => {
       jest.spyOn(prismaService.consumer, "findUnique").mockImplementation(() => {
         throw new Error("Error");
       });
-      const savedResult = await consumerRepo.getConsumer("any-id");
+      const savedResult = await consumerRepo.getConsumer("any-id", false);
+      expect(savedResult).toBeNull();
+    });
+
+    it("should get a disabled consumer when showDisabled true", async () => {
+      const consumer = getRandomUser();
+      consumer.props.isDisabled = true;
+      const result = await consumerRepo.createConsumer(consumer);
+      const savedResult = await consumerRepo.getConsumer(result.props.id, true);
+      expect(savedResult.props.id).toBe(result.props.id);
+      expect(savedResult.props.email).toBe(consumer.props.email);
+    });
+
+    it("should not find a disabled consumer when showDisabled false", async () => {
+      const consumer = getRandomUser();
+      consumer.props.isDisabled = true;
+      const result = await consumerRepo.createConsumer(consumer);
+      const savedResult = await consumerRepo.getConsumer(result.props.id, false);
       expect(savedResult).toBeNull();
     });
   });
@@ -711,13 +728,13 @@ describe("ConsumerRepoTests", () => {
       consumer.props.phone = null;
       const savedConsumer = await consumerRepo.createConsumer(consumer);
 
-      const result = await consumerRepo.getConsumer(savedConsumer.props.id);
+      const result = await consumerRepo.getConsumer(savedConsumer.props.id, false);
       expect(result.props.phone).toBeNull();
 
       const phone = getRandomPhoneNumber();
       const result1 = await consumerRepo.updateConsumer(consumer.props.id, { phone: phone });
       expect(result1.props.phone).toBe(phone);
-      const result2 = await consumerRepo.getConsumer(consumer.props.id);
+      const result2 = await consumerRepo.getConsumer(consumer.props.id, false);
       expect(result2.props.phone).toBe(phone);
     });
 
@@ -884,7 +901,7 @@ describe("ConsumerRepoTests", () => {
 
       await consumerRepo.updateConsumer(consumer.props.id, updateRequest);
 
-      const updatedConsumer = await consumerRepo.getConsumer(consumer.props.id);
+      const updatedConsumer = await consumerRepo.getConsumer(consumer.props.id, false);
       expect(updatedConsumer.props.socialSecurityNumber).toBe("encrypted-ssn");
       verify(kmsService.encryptString("000000002", KmsKeyType.SSN)).once();
     });
