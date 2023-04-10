@@ -1916,12 +1916,26 @@ describe("ConsumerService", () => {
       const employee = getRandomEmployee(consumer.props.id, employer.id);
 
       when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
-      when(mockConsumerRepo.getConsumer(consumer.props.id, true)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id, false)).thenResolve(consumer);
       when(notificationService.sendNotification(anyString(), anything())).thenResolve();
 
       const response = await consumerService.registerWithAnEmployer(employer.id, consumer.props.id, 100);
 
       expect(response).toEqual(employee);
+    });
+
+    it("should not register a disabled Employee", async () => {
+      const consumer = getRandomConsumer();
+      const employer = getRandomEmployer();
+      const employee = getRandomEmployee(consumer.props.id, employer.id);
+      consumer.props.isDisabled = true;
+
+      when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
+      when(mockConsumerRepo.getConsumer(consumer.props.id, false)).thenResolve(consumer);
+      when(notificationService.sendNotification(anyString(), anything())).thenResolve();
+      expect(
+        consumerService.registerWithAnEmployer(employer.id, consumer.props.id, 100),
+      ).rejects.toThrowServiceException();
     });
   });
 

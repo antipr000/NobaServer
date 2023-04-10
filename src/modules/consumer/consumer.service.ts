@@ -661,7 +661,14 @@ export class ConsumerService {
     );
 
     // TODO: Design a way to post to Bubble efficiently without blocking end users.
-    const consumer: Consumer = await this.consumerRepo.getConsumer(consumerID, true); // should we show disabled consumers here?
+    const consumer: Consumer = await this.consumerRepo.getConsumer(consumerID, false);
+    if (!consumer) {
+      throw new ServiceException({
+        message: `Consumer not found: ${consumerID}`,
+        errorCode: ServiceErrorCode.UNKNOWN,
+      });
+    }
+
     if (employee.allocationCurrency !== EmployeeAllocationCurrency.COP) {
       throw new ServiceException({
         message: "Only COP is supported as 'allocationCurrency'",
