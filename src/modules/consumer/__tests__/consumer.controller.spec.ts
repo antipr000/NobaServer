@@ -254,6 +254,40 @@ describe("ConsumerController", () => {
       });
     });
 
+    it("should update consumer isDisabled", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        firstName: "Mock",
+        lastName: "Consumer",
+        dateOfBirth: "1998-01-01",
+        email: "fake@fake.com",
+        referralCode: "mock-referral-code",
+        isDisabled: false,
+      });
+
+      const requestData: UpdateConsumerRequestDTO = {
+        isDisabled: true,
+      };
+
+      when(
+        consumerService.updateConsumer(
+          deepEqual({
+            id: consumer.props.id,
+            isDisabled: requestData.isDisabled,
+          }),
+        ),
+      ).thenResolve(
+        Consumer.createConsumer({
+          ...consumer.props,
+          isDisabled: requestData.isDisabled,
+        }),
+      );
+      when(consumerService.getAllConsumerWallets(consumer.props.id)).thenResolve([]);
+      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([]);
+
+      await consumerController.updateConsumer(consumer, requestData);
+    });
+
     it("should fail to update unknown gender", async () => {
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",

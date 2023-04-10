@@ -150,6 +150,7 @@ export class ConsumerController {
         }),
         ...(requestBody.dateOfBirth && { dateOfBirth: requestBody.dateOfBirth }),
         ...(requestBody.handle && { handle: requestBody.handle }),
+        ...(requestBody.isDisabled && { isDisabled: requestBody.isDisabled }),
         ...(referredByID && { referredByID: referredByID }),
       };
       const res = await this.consumerService.updateConsumer(consumerProps);

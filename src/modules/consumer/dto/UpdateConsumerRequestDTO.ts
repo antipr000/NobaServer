@@ -44,5 +44,8 @@ export class UpdateConsumerRequestDTO {
   address?: UpdateAddressDTO;
 
   @ApiPropertyOptional()
+  isDisabled?: boolean;
+
+  @ApiPropertyOptional()
   referredByCode?: string;
 }
