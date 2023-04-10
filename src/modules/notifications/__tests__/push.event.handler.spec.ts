@@ -15,6 +15,7 @@ import { SendDepositFailedEvent } from "../events/SendDepositFailedEvent";
 import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 import { SendPayrollDepositCompletedEvent } from "../events/SendPayrollDepositCompletedEvent";
+import { PushNotificationType } from "../domain/PushNotificationTypes";
 
 describe.each([
   ["en", "en"],
@@ -68,6 +69,8 @@ describe.each([
         deepEqual({
           token: "push-token-1",
           templateKey: `template_send_deposit_successful_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.creditAmount,
@@ -83,6 +86,8 @@ describe.each([
         deepEqual({
           token: "push-token-2",
           templateKey: `template_send_deposit_successful_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.creditAmount,
@@ -111,6 +116,8 @@ describe.each([
         deepEqual({
           token: "push-token-1",
           templateKey: `template_send_deposit_failed_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.creditAmount,
@@ -126,6 +133,8 @@ describe.each([
         deepEqual({
           token: "push-token-2",
           templateKey: `template_send_deposit_failed_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.creditAmount,
@@ -156,6 +165,8 @@ describe.each([
         deepEqual({
           token: "push-token-1",
           templateKey: `template_send_withdrawal_successful_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.debitAmount,
@@ -171,6 +182,8 @@ describe.each([
         deepEqual({
           token: "push-token-2",
           templateKey: `template_send_withdrawal_successful_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.debitAmount,
@@ -201,6 +214,8 @@ describe.each([
         deepEqual({
           token: "push-token-1",
           templateKey: `template_send_withdrawal_failed_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.debitAmount,
@@ -216,6 +231,8 @@ describe.each([
         deepEqual({
           token: "push-token-2",
           templateKey: `template_send_withdrawal_failed_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.debitAmount,
@@ -250,6 +267,8 @@ describe.each([
         deepEqual({
           token: "push-token-1",
           templateKey: `template_send_transfer_successful_sender_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.debitAmount,
@@ -267,6 +286,8 @@ describe.each([
         deepEqual({
           token: "push-token-2",
           templateKey: `template_send_transfer_successful_sender_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.debitAmount,
@@ -303,6 +324,8 @@ describe.each([
         deepEqual({
           token: "push-token-1",
           templateKey: `template_send_transfer_failed_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.debitAmount,
@@ -320,6 +343,8 @@ describe.each([
         deepEqual({
           token: "push-token-2",
           templateKey: `template_send_transfer_failed_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.debitAmount,
@@ -358,6 +383,8 @@ describe.each([
         deepEqual({
           token: "push-token-1",
           templateKey: `template_send_transfer_successful_receiver_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.creditAmount,
@@ -375,6 +402,8 @@ describe.each([
         deepEqual({
           token: "push-token-2",
           templateKey: `template_send_transfer_successful_receiver_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.creditAmount,
@@ -408,6 +437,8 @@ describe.each([
         deepEqual({
           token: "push-token-1",
           templateKey: `template_send_payroll_deposit_completed_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.debitAmount,
@@ -426,6 +457,8 @@ describe.each([
         deepEqual({
           token: "push-token-2",
           templateKey: `template_send_payroll_deposit_completed_${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
           params: {
             transactionParams: {
               amount: payload.params.debitAmount,

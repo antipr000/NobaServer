@@ -23,8 +23,9 @@ export class ExpoPushClient extends PushClient {
       body: body,
       sound: "default",
       data: {
-        ...(request.targetScreen && { targetScreen: request.targetScreen }),
+        ...(request.notificationType && { notificationType: request.notificationType }),
         ...(request.transferCounterPartyHandle && { transferCounterPartyHandle: request.transferCounterPartyHandle }),
+        ...(request.transactionRef && { transactionRef: request.transactionRef }),
       },
     };
 

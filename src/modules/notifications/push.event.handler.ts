@@ -11,6 +11,7 @@ import { SendDepositFailedEvent } from "./events/SendDepositFailedEvent";
 import { SendWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
 import { SendTransferFailedEvent } from "./events/SendTransferFailedEvent";
 import { SendPayrollDepositCompletedEvent } from "./events/SendPayrollDepositCompletedEvent";
+import { PushNotificationType } from "./domain/PushNotificationTypes";
 
 @Injectable()
 export class PushEventHandler {
@@ -25,6 +26,8 @@ export class PushEventHandler {
       await this.pushClient.sendPushNotification({
         token: pushToken,
         templateKey: PushTemplates.getOrDefault(PushTemplates.DEPOSIT_COMPLETED_PUSH, payload.locale ?? "en"),
+        notificationType: PushNotificationType.TRANSACTION_UPDATE,
+        transactionRef: payload.params.transactionRef,
         params: {
           transactionParams: {
             amount: payload.params.creditAmount,
@@ -43,6 +46,8 @@ export class PushEventHandler {
       await this.pushClient.sendPushNotification({
         token: pushToken,
         templateKey: PushTemplates.getOrDefault(PushTemplates.DEPOSIT_FAILED_PUSH, payload.locale ?? "en"),
+        notificationType: PushNotificationType.TRANSACTION_UPDATE,
+        transactionRef: payload.params.transactionRef,
         params: {
           transactionParams: {
             amount: payload.params.creditAmount,
@@ -61,6 +66,8 @@ export class PushEventHandler {
       await this.pushClient.sendPushNotification({
         token: pushToken,
         templateKey: PushTemplates.getOrDefault(PushTemplates.WITHDRAWAL_COMPLETED_PUSH, payload.locale ?? "en"),
+        notificationType: PushNotificationType.TRANSACTION_UPDATE,
+        transactionRef: payload.params.transactionRef,
         params: {
           transactionParams: {
             amount: payload.params.debitAmount,
@@ -79,6 +86,8 @@ export class PushEventHandler {
       await this.pushClient.sendPushNotification({
         token: pushToken,
         templateKey: PushTemplates.getOrDefault(PushTemplates.WITHDRAWAL_FAILED_PUSH, payload.locale ?? "en"),
+        notificationType: PushNotificationType.TRANSACTION_UPDATE,
+        transactionRef: payload.params.transactionRef,
         params: {
           transactionParams: {
             amount: payload.params.debitAmount,
@@ -97,6 +106,8 @@ export class PushEventHandler {
       await this.pushClient.sendPushNotification({
         token: pushToken,
         templateKey: PushTemplates.getOrDefault(PushTemplates.TRANSFER_COMPLETED_PUSH, payload.locale ?? "en"),
+        notificationType: PushNotificationType.TRANSACTION_UPDATE,
+        transactionRef: payload.params.transactionRef,
         params: {
           transactionParams: {
             amount: payload.params.debitAmount,
@@ -117,6 +128,8 @@ export class PushEventHandler {
       await this.pushClient.sendPushNotification({
         token: pushToken,
         templateKey: PushTemplates.getOrDefault(PushTemplates.TRANSFER_FAILED_PUSH, payload.locale ?? "en"),
+        notificationType: PushNotificationType.TRANSACTION_UPDATE,
+        transactionRef: payload.params.transactionRef,
         params: {
           transactionParams: {
             amount: payload.params.debitAmount,
@@ -137,6 +150,8 @@ export class PushEventHandler {
       await this.pushClient.sendPushNotification({
         token: pushToken,
         templateKey: PushTemplates.getOrDefault(PushTemplates.TRANSFER_RECEIVED_PUSH, payload.locale ?? "en"),
+        notificationType: PushNotificationType.TRANSACTION_UPDATE,
+        transactionRef: payload.params.transactionRef,
         params: {
           transactionParams: {
             amount: payload.params.creditAmount,
@@ -157,6 +172,8 @@ export class PushEventHandler {
       await this.pushClient.sendPushNotification({
         token: pushToken,
         templateKey: PushTemplates.getOrDefault(PushTemplates.PAYROLL_DEPOSIT_COMPLETED_PUSH, payload.locale ?? "en"),
+        notificationType: PushNotificationType.TRANSACTION_UPDATE,
+        transactionRef: payload.params.transactionRef,
         params: {
           payrollParams: {
             companyName: payload.params.companyName,
