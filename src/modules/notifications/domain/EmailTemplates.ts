@@ -48,18 +48,6 @@ export const EmailTemplates = {
   DOC_VERIFICATION_FAILED_TECH_EMAIL: {
     en: "d-b523c0e37772460bbd60e14af2fa50a0",
   },
-  CARD_ADDED_EMAIL: {
-    en: "d-8bb9892cbbc1405aa9f833229c9db2e2",
-  },
-  CARD_ADDITION_FAILED_EMAIL: {
-    en: "d-cb1c929f24734c9099f7ba90e08f53ee",
-  },
-  CARD_DELETED_EMAIL: {
-    en: "d-b0e06a32f6674552979243a2542409b4",
-  },
-  NOBA_INTERNAL_HARD_DECLINE: {
-    en: "d-ce84b831db6842e5a3eb47730e837618",
-  },
   WALLET_UPDATE_OTP: {
     en: "d-ac14193dfd58407fb2fc5594ad6e2108",
   },

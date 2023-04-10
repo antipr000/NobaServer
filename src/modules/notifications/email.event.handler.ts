@@ -16,10 +16,6 @@ import { SendKycPendingOrFlaggedEvent } from "./events/SendKycPendingOrFlaggedEv
 import { SendDocumentVerificationPendingEvent } from "./events/SendDocumentVerificationPendingEvent";
 import { SendDocumentVerificationRejectedEvent } from "./events/SendDocumentVerificationRejectedEvent";
 import { SendDocumentVerificationTechnicalFailureEvent } from "./events/SendDocumentVerificationTechnicalFailureEvent";
-import { SendCardAddedEvent } from "./events/SendCardAddedEvent";
-import { SendCardAdditionFailedEvent } from "./events/SendCardAdditionFailedEvent";
-import { SendCardDeletedEvent } from "./events/SendCardDeletedEvent";
-import { SendHardDeclineEvent } from "./events/SendHardDeclineEvent";
 import { EmailClient } from "./emails/email.client";
 import { SendDepositCompletedEvent } from "./events/SendDepositCompletedEvent";
 import { SendWithdrawalCompletedEvent } from "./events/SendWithdrawalCompletedEvent";
@@ -56,7 +52,7 @@ export class EmailEventHandler {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.getOrDefault(EmailTemplates.OTP_EMAIL, payload.locale ?? "en"), //this is template id for sending otp without any context, see sendgrid dashboard
       dynamicTemplateData: {
-        firstName: payload.name ?? "",
+        firstName: payload.firstName ?? "",
         one_time_password: payload.otp,
       },
     };
@@ -71,7 +67,7 @@ export class EmailEventHandler {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.getOrDefault(EmailTemplates.WALLET_UPDATE_OTP, payload.locale ?? "en"),
       dynamicTemplateData: {
-        user: payload.name ?? "",
+        user: payload.firstName ?? "",
         user_email: payload.email,
         one_time_password: payload.otp,
         wallet_address: payload.walletAddress,
@@ -203,59 +199,6 @@ export class EmailEventHandler {
     await this.emailClient.sendEmail(msg);
   }
 
-  @OnEvent(`email.${NotificationEventType.SEND_CARD_ADDED_EVENT}`)
-  public async sendCardAddedEmail(payload: SendCardAddedEvent) {
-    const msg = {
-      to: payload.email,
-      from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.CARD_ADDED_EMAIL, payload.locale ?? "en"),
-      dynamicTemplateData: {
-        user_email: payload.email,
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        card_network: payload.cardNetwork,
-        last_four: payload.last4Digits,
-        support_url: SUPPORT_URL,
-      },
-    };
-
-    await this.emailClient.sendEmail(msg);
-  }
-
-  @OnEvent(`email.${NotificationEventType.SEND_CARD_ADDITION_FAILED_EVENT}`)
-  public async sendCardAdditionFailedEmail(payload: SendCardAdditionFailedEvent) {
-    const msg = {
-      to: payload.email,
-      from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.CARD_ADDITION_FAILED_EMAIL, payload.locale ?? "en"),
-      dynamicTemplateData: {
-        user_email: payload.email,
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        last_four: payload.last4Digits,
-        support_url: SUPPORT_URL,
-      },
-    };
-
-    await this.emailClient.sendEmail(msg);
-  }
-
-  @OnEvent(`email.${NotificationEventType.SEND_CARD_DELETED_EVENT}`)
-  public async sendCardDeletedEmail(payload: SendCardDeletedEvent) {
-    const msg = {
-      to: payload.email,
-      from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.CARD_DELETED_EMAIL, payload.locale ?? "en"),
-      dynamicTemplateData: {
-        user_email: payload.email,
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        card_network: payload.cardNetwork,
-        last_four: payload.last4Digits,
-        support_url: SUPPORT_URL,
-      },
-    };
-
-    await this.emailClient.sendEmail(msg);
-  }
-
   @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT}`)
   public async sendDepositCompletedEmail(payload: SendDepositCompletedEvent) {
     const subtotal =
@@ -266,7 +209,7 @@ export class EmailEventHandler {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.getOrDefault(EmailTemplates.DEPOSIT_SUCCESSFUL_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
-        firstName: payload.name,
+        firstName: payload.firstName,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
         debitCurrency: processCurrency(payload.params.debitCurrency),
         creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
@@ -294,7 +237,7 @@ export class EmailEventHandler {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.getOrDefault(EmailTemplates.DEPOSIT_INITIATED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
-        firstName: payload.name,
+        firstName: payload.firstName,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
         debitCurrency: processCurrency(payload.params.debitCurrency),
         creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
@@ -322,7 +265,7 @@ export class EmailEventHandler {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.getOrDefault(EmailTemplates.DEPOSIT_FAILED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
-        firstName: payload.name,
+        firstName: payload.firstName,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
         debitCurrency: processCurrency(payload.params.debitCurrency),
         creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
@@ -351,7 +294,7 @@ export class EmailEventHandler {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.getOrDefault(EmailTemplates.WITHDRAWAL_SUCCESSFUL_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
-        firstName: payload.name,
+        firstName: payload.firstName,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
         debitCurrency: processCurrency(payload.params.debitCurrency),
         creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
@@ -379,7 +322,7 @@ export class EmailEventHandler {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.getOrDefault(EmailTemplates.WITHDRAWAL_INITIATED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
-        firstName: payload.name,
+        firstName: payload.firstName,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
         debitCurrency: processCurrency(payload.params.debitCurrency),
         creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
@@ -407,7 +350,7 @@ export class EmailEventHandler {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.getOrDefault(EmailTemplates.WITHDRAWAL_FAILED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
-        firstName: payload.name,
+        firstName: payload.firstName,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
         debitCurrency: processCurrency(payload.params.debitCurrency),
         creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
@@ -437,7 +380,7 @@ export class EmailEventHandler {
         creditConsumer_lastName: payload.params.creditConsumer_lastName,
         debitConsumer_handle: payload.params.debitConsumer_handle,
         creditConsumer_handle: payload.params.creditConsumer_handle,
-        firstName: payload.name,
+        firstName: payload.firstName,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
         debitCurrency: processCurrency(payload.params.debitCurrency),
         creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
@@ -465,7 +408,7 @@ export class EmailEventHandler {
         debitConsumer_lastName: payload.params.debitConsumer_lastName,
         debitConsumer_handle: payload.params.debitConsumer_handle,
         creditConsumer_handle: payload.params.creditConsumer_handle,
-        firstName: payload.name,
+        firstName: payload.firstName,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
         debitCurrency: processCurrency(payload.params.debitCurrency),
         creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
@@ -491,7 +434,7 @@ export class EmailEventHandler {
         creditConsumer_lastName: payload.params.creditConsumer_lastName,
         debitConsumer_handle: payload.params.debitConsumer_handle,
         creditConsumer_handle: payload.params.creditConsumer_handle,
-        firstName: payload.name,
+        firstName: payload.firstName,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
         debitCurrency: processCurrency(payload.params.debitCurrency),
         creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
@@ -517,7 +460,7 @@ export class EmailEventHandler {
       from: SENDER_EMAIL,
       templateId: EmailTemplates.getOrDefault(EmailTemplates.PAYROLL_DEPOSIT_COMPLETED_EMAIL, payload.locale ?? "en"),
       dynamicTemplateData: {
-        firstName: payload.name,
+        firstName: payload.firstName,
         companyName: payload.params.companyName,
         transactionRef: payload.params.transactionRef,
         handle: payload.handle,
@@ -530,28 +473,6 @@ export class EmailEventHandler {
         subtotal: Utils.roundTo2DecimalString(subtotal),
         processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
         nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
-      },
-    };
-
-    await this.emailClient.sendEmail(msg);
-  }
-
-  @OnEvent(`email.${NotificationEventType.SEND_HARD_DECLINE_EVENT}`)
-  public async sendHardDeclineEmail(payload: SendHardDeclineEvent) {
-    const msg = {
-      to: NOBA_COMPLIANCE_EMAIL,
-      from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.NOBA_INTERNAL_HARD_DECLINE, payload.locale ?? "en"),
-      dynamicTemplateData: {
-        user_email: payload.email,
-        username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
-        session_id: payload.sessionID,
-        transaction_id: payload.transactionID,
-        payment_token: payload.paymentToken,
-        processor: payload.processor,
-        timestamp: new Date().toLocaleString(),
-        response_code: payload.responseCode,
-        summary: payload.responseSummary,
       },
     };
 
