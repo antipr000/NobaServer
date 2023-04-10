@@ -8,6 +8,8 @@ jobs:
   e2e_test:
     runs-on: ubuntu-latest
     name: Run Integration Tests
+    timeout-minutes: 5
+    
     services:
       # Label used to access the service container
       postgres:

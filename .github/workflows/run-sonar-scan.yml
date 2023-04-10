@@ -6,6 +6,8 @@ jobs:
   sonarcloud-scan:
     name: SonarCloud Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
     steps:
       - name: Restore repos tests environment from cache
         id: restore-environment-repos

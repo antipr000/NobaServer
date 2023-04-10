@@ -6,6 +6,8 @@ on:
 jobs:
   linters:
     runs-on: ubuntu-latest
+    timeout-minutes: 2
+    
     steps:
       - name: Restore environment from cache
         id: restore-environment
