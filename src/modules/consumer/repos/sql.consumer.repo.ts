@@ -55,10 +55,10 @@ export class SQLConsumerRepo implements IConsumerRepo {
     this.mapper = new ConsumerRepoMapper();
   }
 
-  async getConsumer(consumerID: string): Promise<Consumer> {
+  async getConsumer(consumerID: string, showDisabled: boolean): Promise<Consumer> {
     try {
-      const consumerProps = await this.prisma.consumer.findUnique({
-        where: { id: consumerID },
+      const consumerProps = await this.prisma.consumer.findFirst({
+        where: { id: consumerID, isDisabled: showDisabled },
         include: { address: true, verificationData: true },
       });
       if (!consumerProps) return null;

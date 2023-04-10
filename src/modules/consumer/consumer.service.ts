@@ -75,8 +75,8 @@ export class ConsumerService {
     this.qrCodePrefix = this.configService.get("QR_CODE_PREFIX");
   }
 
-  async getConsumer(consumerID: string): Promise<Consumer> {
-    return this.consumerRepo.getConsumer(consumerID);
+  async getConsumer(consumerID: string, showDisabled = false): Promise<Consumer> {
+    return this.consumerRepo.getConsumer(consumerID, showDisabled);
   }
 
   async getConsumerHandle(consumerID: string): Promise<string> {
@@ -378,7 +378,7 @@ export class ConsumerService {
   async findConsumers(filter: ConsumerSearchDTO): Promise<Consumer[]> {
     // If consumerID is populated, it is unique and this is all we want to search for
     if (filter.consumerID) {
-      const consumer = await this.consumerRepo.getConsumer(filter.consumerID);
+      const consumer = await this.consumerRepo.getConsumer(filter.consumerID, true);
       if (!consumer) {
         return [];
       }
@@ -419,7 +419,7 @@ export class ConsumerService {
         });
       }
     } else {
-      consumer = await this.consumerRepo.getConsumer(consumerIDOrHandle);
+      consumer = await this.consumerRepo.getConsumer(consumerIDOrHandle, false);
       if (!consumer) {
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -661,7 +661,7 @@ export class ConsumerService {
     );
 
     // TODO: Design a way to post to Bubble efficiently without blocking end users.
-    const consumer: Consumer = await this.consumerRepo.getConsumer(consumerID);
+    const consumer: Consumer = await this.consumerRepo.getConsumer(consumerID, true); // should we show disabled consumers here?
     if (employee.allocationCurrency !== EmployeeAllocationCurrency.COP) {
       throw new ServiceException({
         message: "Only COP is supported as 'allocationCurrency'",

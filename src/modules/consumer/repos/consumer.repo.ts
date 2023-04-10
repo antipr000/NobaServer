@@ -12,7 +12,7 @@ import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
 import { FindConsumerByStructuredFieldsDTO } from "../dto/consumer.search.dto";
 
 export interface IConsumerRepo {
-  getConsumer(consumerID: string): Promise<Consumer>;
+  getConsumer(consumerID: string, showDisabled: boolean): Promise<Consumer>;
   getConsumerByHandle(handle: string): Promise<Consumer>;
   createConsumer(consumer: Consumer): Promise<Consumer>;
   exists(emailOrPhone: string): Promise<boolean>;
