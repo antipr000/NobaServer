@@ -8,14 +8,13 @@ import { getMockPushClientWithDefaults } from "../mocks/mock.push.client";
 import { WorkflowName } from "../../../modules/transaction/domain/Transaction";
 import { TransactionParameters } from "../domain/TransactionNotificationParameters";
 import { SendDepositCompletedEvent } from "../events/SendDepositCompletedEvent";
-import { SendWithdrawalCompletedEvent } from "../events/SendWithdrawalCompletedEvent";
 import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent";
 import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
 import { SendDepositFailedEvent } from "../events/SendDepositFailedEvent";
-import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 import { SendPayrollDepositCompletedEvent } from "../events/SendPayrollDepositCompletedEvent";
 import { PushNotificationType } from "../domain/PushNotificationTypes";
+import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 
 describe.each([
   ["en", "en"],
@@ -53,14 +52,14 @@ describe.each([
   });
 
   it(`should call pushClient with Deposit completed event and ${locale} locale`, async () => {
-    const payload = new SendDepositCompletedEvent({
+    const payload: SendDepositCompletedEvent = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
       params: getTransactionParams(WorkflowName.WALLET_DEPOSIT),
       pushTokens: ["push-token-1", "push-token-2"],
       locale: locale,
-    });
+    };
 
     await eventHandler.sendDepositCompletedEvent(payload);
 
@@ -100,14 +99,17 @@ describe.each([
   });
 
   it(`should call pushClient with Deposit failed event and ${locale} locale`, async () => {
-    const payload = new SendDepositFailedEvent({
+    const payload: SendDepositFailedEvent = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
-      params: getTransactionParams(WorkflowName.WALLET_DEPOSIT),
+      params: {
+        ...getTransactionParams(WorkflowName.WALLET_DEPOSIT),
+        reasonDeclined: "reason-declined",
+      },
       pushTokens: ["push-token-1", "push-token-2"],
       locale: locale,
-    });
+    };
 
     await eventHandler.sendDepositFailedEvent(payload);
 
@@ -147,16 +149,16 @@ describe.each([
   });
 
   it(`should call PushClient with Withdrawal completed event and ${locale} locale`, async () => {
-    const payload = new SendWithdrawalCompletedEvent({
+    const payload = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
       params: {
         ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
       },
       pushTokens: ["push-token-1", "push-token-2"],
       locale: locale,
-    });
+    };
 
     await eventHandler.sendWithdrawalCompletedEvent(payload);
 
@@ -196,16 +198,17 @@ describe.each([
   });
 
   it(`should call PushClient with Withdrawal failed event and ${locale} locale`, async () => {
-    const payload = new SendWithdrawalFailedEvent({
+    const payload: SendWithdrawalFailedEvent = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
       params: {
         ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
+        reasonDeclined: "reason-declined",
       },
       pushTokens: ["push-token-1", "push-token-2"],
       locale: locale,
-    });
+    };
 
     await eventHandler.sendWithdrawalFailedEvent(payload);
 
@@ -245,9 +248,9 @@ describe.each([
   });
 
   it(`should call PushClient with Transfer completed event and ${locale} locale`, async () => {
-    const payload = new SendTransferCompletedEvent({
+    const payload: SendTransferCompletedEvent = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
       pushTokens: ["push-token-1", "push-token-2"],
       params: {
@@ -258,7 +261,7 @@ describe.each([
         debitConsumer_handle: "gal",
       },
       locale: locale,
-    });
+    };
 
     await eventHandler.sendTransferCompletedEvent(payload);
 
@@ -302,9 +305,9 @@ describe.each([
   });
 
   it(`should call PushClient with Transfer failed event and ${locale} locale`, async () => {
-    const payload = new SendTransferFailedEvent({
+    const payload: SendTransferFailedEvent = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
       pushTokens: ["push-token-1", "push-token-2"],
       params: {
@@ -313,9 +316,10 @@ describe.each([
         creditConsumer_lastName: "Ashworth",
         creditConsumer_handle: "justin",
         debitConsumer_handle: "gal",
+        reasonDeclined: "reason-declined",
       },
       locale: locale,
-    });
+    };
 
     await eventHandler.sendTransferFailedEvent(payload);
 
@@ -359,9 +363,9 @@ describe.each([
   });
 
   it(`should call PushClient with Transfer completed event for receiver and ${locale} locale`, async () => {
-    const payload = new SendTransferReceivedEvent({
+    const payload: SendTransferReceivedEvent = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
       params: {
         ...getTransactionParams(WorkflowName.WALLET_TRANSFER),
@@ -374,7 +378,7 @@ describe.each([
       },
       pushTokens: ["push-token-1", "push-token-2"],
       locale: locale,
-    });
+    };
 
     await eventHandler.sendTransferReceivedEvent(payload);
 
@@ -418,9 +422,9 @@ describe.each([
   });
 
   it(`should call PushClient with Payroll deposit completed event and ${locale} locale`, async () => {
-    const payload = new SendPayrollDepositCompletedEvent({
+    const payload: SendPayrollDepositCompletedEvent = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
       pushTokens: ["push-token-1", "push-token-2"],
       params: {
@@ -428,7 +432,7 @@ describe.each([
         companyName: "FakeCompany",
       },
       locale: locale,
-    });
+    };
 
     await eventHandler.sendPayrollDepositCompletedEvent(payload);
 
