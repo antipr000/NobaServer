@@ -8,7 +8,6 @@ import { KeysRequired } from "../../../modules/common/domain/Types";
 
 export class SendWithdrawalCompletedEvent extends BaseEvent {
   params: WithdrawalCompletedNotificationParameters;
-  pushTokens?: string[];
 }
 
 export const validateWithdrawalCompletedEvent = (event: SendWithdrawalCompletedEvent) => {
@@ -20,7 +19,6 @@ export const validateWithdrawalCompletedEvent = (event: SendWithdrawalCompletedE
     params: Joi.object(
       TransactionNotificationParamsJoiSchema.getWithdrawalCompletedNotificationParamsSchema(),
     ).required(),
-    pushTokens: Joi.array().items(Joi.string()).required(),
     locale: Joi.string().optional(),
     phone: Joi.string().optional(),
     nobaUserID: Joi.string().required(),

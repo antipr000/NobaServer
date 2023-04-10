@@ -19,9 +19,6 @@ import { SendDepositInitiatedEvent } from "../events/SendDepositInitiatedEvent";
 import { SendWithdrawalCompletedEvent } from "../events/SendWithdrawalCompletedEvent";
 import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 import { SendWithdrawalInitiatedEvent } from "../events/SendWithdrawalInitiatedEvent";
-import { IPushTokenRepo } from "../repos/pushtoken.repo";
-import { getMockPushTokenRepoWithDefaults } from "../mocks/mock.pushtoken.repo";
-import { ServiceException } from "../../../core/exception/service.exception";
 import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent";
 import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
@@ -31,12 +28,10 @@ import { SendPayrollDepositCompletedEvent } from "../events/SendPayrollDepositCo
 describe("NotificationService", () => {
   let notificationService: NotificationService;
   let eventEmitter: EventEmitter2;
-  let pushTokenRepo: IPushTokenRepo;
   jest.setTimeout(30000);
 
   beforeEach(async () => {
     eventEmitter = getMockEventEmitterWithDefaults();
-    pushTokenRepo = getMockPushTokenRepoWithDefaults();
 
     process.env = {
       ...process.env,
@@ -59,47 +54,10 @@ describe("NotificationService", () => {
           provide: EventEmitter2,
           useFactory: () => instance(eventEmitter),
         },
-        {
-          provide: "PushTokenRepo",
-          useFactory: () => instance(pushTokenRepo),
-        },
       ],
     }).compile();
 
     notificationService = app.get<NotificationService>(NotificationService);
-  });
-
-  describe("subscribeToPushNotifications", () => {
-    it("should subscribe to push notifications", async () => {
-      when(pushTokenRepo.getPushToken("test-consumer-id", "test-push-token")).thenResolve(undefined);
-      when(pushTokenRepo.addPushToken("test-consumer-id", "test-push-token")).thenResolve("push-token-id");
-      expect(notificationService.subscribeToPushNotifications("test-consumer-id", "test-push-token")).resolves.toBe(
-        "push-token-id",
-      );
-    });
-
-    it("should not subscribe to push notifications if already subscribed", async () => {
-      when(pushTokenRepo.getPushToken("test-consumer-id", "test-push-token")).thenResolve("push-token-id");
-      expect(notificationService.subscribeToPushNotifications("test-consumer-id", "test-push-token")).resolves.toBe(
-        "push-token-id",
-      );
-    });
-  });
-
-  describe("unsubscribeFromPushNotifications", () => {
-    it("should unsubscribe to push notifications", async () => {
-      when(pushTokenRepo.deletePushToken("test-consumer-id", "test-push-token")).thenResolve("deleted-push-token-id");
-      expect(notificationService.unsubscribeFromPushNotifications("test-consumer-id", "test-push-token")).resolves.toBe(
-        "deleted-push-token-id",
-      );
-    });
-
-    it("should not unsubscribe to push notifications if not subscribed", async () => {
-      when(pushTokenRepo.deletePushToken("test-consumer-id", "test-push-token")).thenResolve(undefined);
-      expect(
-        notificationService.unsubscribeFromPushNotifications("test-consumer-id", "test-push-token"),
-      ).rejects.toThrow(ServiceException);
-    });
   });
 
   it("should create email event for otp event when phone is missing", async () => {
@@ -230,54 +188,18 @@ describe("NotificationService", () => {
     [NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT, {}],
     [NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT, {}],
     [NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT, {}],
-    [
-      NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
-      {
-        pushTokens: ["token1", "token2"],
-      },
-    ],
-    [
-      NotificationEventType.SEND_DEPOSIT_FAILED_EVENT,
-      {
-        pushTokens: ["token1", "token2"],
-      },
-    ],
+    [NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT, {}],
+    [NotificationEventType.SEND_DEPOSIT_FAILED_EVENT, {}],
     [NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT, {}],
-    [
-      NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
-      {
-        pushTokens: ["token1", "token2"],
-      },
-    ],
-    [
-      NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT,
-      {
-        pushTokens: ["token1", "token2"],
-      },
-    ],
+    [NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT, {}],
+    [NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT, {}],
     [NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT, {}],
-    [
-      NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
-      {
-        pushTokens: ["token1", "token2"],
-      },
-    ],
-    [
-      NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT,
-      {
-        pushTokens: ["token1", "token2"],
-      },
-    ],
-    [
-      NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
-      {
-        pushTokens: ["token1", "token2"],
-      },
-    ],
+    [NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT, {}],
+    [NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT, {}],
+    [NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT, {}],
   ])("Email event tests", (event, options) => {
     it(`should emit Email event for '${event}'`, async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
-      when(pushTokenRepo.getAllPushTokensForConsumer("fake-id-1234")).thenResolve(["token1", "token2"]);
 
       const payload: NotificationPayload = getNotificationPayload(event);
 
@@ -364,7 +286,6 @@ describe("NotificationService", () => {
     it("should emit push event for DEPOSIT_COMPLETED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
       const payload: NotificationPayload = getNotificationPayload(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT);
-      when(pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID)).thenResolve(["token1"]);
 
       await notificationService.sendNotification(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT, payload);
 
@@ -373,7 +294,6 @@ describe("NotificationService", () => {
           `push.${NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT}`,
           deepEqual({
             ...payload,
-            pushTokens: ["token1"],
           }),
         ),
       ).once();
@@ -382,7 +302,6 @@ describe("NotificationService", () => {
     it("should emit push event for DEPOSIT_FAILED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
       const payload: NotificationPayload = getNotificationPayload(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT);
-      when(pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID)).thenResolve(["token1"]);
 
       await notificationService.sendNotification(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT, payload);
 
@@ -391,7 +310,6 @@ describe("NotificationService", () => {
           `push.${NotificationEventType.SEND_DEPOSIT_FAILED_EVENT}`,
           deepEqual({
             ...payload,
-            pushTokens: ["token1"],
           }),
         ),
       ).once();
@@ -402,7 +320,6 @@ describe("NotificationService", () => {
       const payload: NotificationPayload = getNotificationPayload(
         NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
       );
-      when(pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID)).thenResolve(["token1"]);
 
       await notificationService.sendNotification(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT, payload);
       verify(
@@ -410,7 +327,6 @@ describe("NotificationService", () => {
           `push.${NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT}`,
           deepEqual({
             ...payload,
-            pushTokens: ["token1"],
           }),
         ),
       ).once();
@@ -419,7 +335,6 @@ describe("NotificationService", () => {
     it("should emit push event for WITHDRAWAL_FAILED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
       const payload: NotificationPayload = getNotificationPayload(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT);
-      when(pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID)).thenResolve(["token1"]);
 
       await notificationService.sendNotification(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT, payload);
 
@@ -428,7 +343,6 @@ describe("NotificationService", () => {
           `push.${NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT}`,
           deepEqual({
             ...payload,
-            pushTokens: ["token1"],
           }),
         ),
       ).once();
@@ -437,7 +351,6 @@ describe("NotificationService", () => {
     it("should emit push event for TRANSFER_COMPLETED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
       const payload: NotificationPayload = getNotificationPayload(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT);
-      when(pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID)).thenResolve(["token1"]);
 
       await notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT, payload);
 
@@ -446,7 +359,6 @@ describe("NotificationService", () => {
           `push.${NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT}`,
           deepEqual({
             ...payload,
-            pushTokens: ["token1"],
           }),
         ),
       ).once();
@@ -455,7 +367,6 @@ describe("NotificationService", () => {
     it("should emit push event for TRANSFER_FAILED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
       const payload: NotificationPayload = getNotificationPayload(NotificationEventType.SEND_TRANSFER_FAILED_EVENT);
-      when(pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID)).thenResolve(["token1"]);
 
       await notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_FAILED_EVENT, payload);
 
@@ -464,7 +375,6 @@ describe("NotificationService", () => {
           `push.${NotificationEventType.SEND_TRANSFER_FAILED_EVENT}`,
           deepEqual({
             ...payload,
-            pushTokens: ["token1"],
           }),
         ),
       ).once();
@@ -473,7 +383,6 @@ describe("NotificationService", () => {
     it("should emit push event for TRANSFER_RECEIVED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
       const payload: NotificationPayload = getNotificationPayload(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT);
-      when(pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID)).thenResolve(["token1"]);
 
       await notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT, payload);
 
@@ -482,7 +391,6 @@ describe("NotificationService", () => {
           `push.${NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT}`,
           deepEqual({
             ...payload,
-            pushTokens: ["token1"],
           }),
         ),
       ).once();
@@ -493,7 +401,6 @@ describe("NotificationService", () => {
       const payload: NotificationPayload = getNotificationPayload(
         NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
       );
-      when(pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID)).thenResolve(["token1"]);
 
       await notificationService.sendNotification(NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT, payload);
 
@@ -502,7 +409,6 @@ describe("NotificationService", () => {
           `push.${NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT}`,
           deepEqual({
             ...payload,
-            pushTokens: ["token1"],
           }),
         ),
       ).once();
@@ -673,7 +579,6 @@ function getNotificationPayload(event: NotificationEventType): NotificationPaylo
         firstName: "Fake",
         handle: "fake-1234",
         locale: "en",
-        pushTokens: ["token1", "token2"],
         params: {
           transactionRef: "transaction-123",
           createdTimestamp: "2020-01-01T00:00:00.000Z",

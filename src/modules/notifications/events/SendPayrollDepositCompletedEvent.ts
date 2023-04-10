@@ -8,7 +8,6 @@ import { BaseEvent } from "./BaseEvent";
 
 export class SendPayrollDepositCompletedEvent extends BaseEvent {
   params: PayrollDepositCompletedNotificationParameters;
-  pushTokens?: string[];
 }
 
 export const validatePayrollDepositCompletedEvent = (event: SendPayrollDepositCompletedEvent) => {
@@ -20,7 +19,6 @@ export const validatePayrollDepositCompletedEvent = (event: SendPayrollDepositCo
     params: Joi.object(
       TransactionNotificationParamsJoiSchema.getPayrollDepositCompletedNotificationParamsSchema(),
     ).required(),
-    pushTokens: Joi.array().items(Joi.string()).required(),
     locale: Joi.string().optional(),
     phone: Joi.string().optional(),
     nobaUserID: Joi.string().required(),

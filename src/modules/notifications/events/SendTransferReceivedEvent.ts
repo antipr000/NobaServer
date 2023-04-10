@@ -8,7 +8,6 @@ import { BaseEvent } from "./BaseEvent";
 
 export class SendTransferReceivedEvent extends BaseEvent {
   params: TransferReceivedNotificationParameters;
-  pushTokens?: string[];
 }
 
 export const validateTransferReceivedEvent = (event: SendTransferReceivedEvent) => {
@@ -18,7 +17,6 @@ export const validateTransferReceivedEvent = (event: SendTransferReceivedEvent) 
     lastName: Joi.string().optional(),
     handle: Joi.string().required(),
     params: Joi.object(TransactionNotificationParamsJoiSchema.getTransferReceivedNotificationParamsSchema()).required(),
-    pushTokens: Joi.array().items(Joi.string()).required(),
     locale: Joi.string().optional(),
     phone: Joi.string().optional(),
     nobaUserID: Joi.string().optional(),

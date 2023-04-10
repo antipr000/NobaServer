@@ -36,6 +36,8 @@ import { Identification } from "./domain/Identification";
 import { CreateIdentificationDTO } from "./dto/create.identification.dto";
 import { UpdateIdentificationDTO } from "./dto/update.identification.dto";
 import { IdentificationService } from "../common/identification.service";
+import { PushTokenService } from "../notifications/push.token.service";
+import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
 
 @Injectable()
 export class ConsumerService {
@@ -47,6 +49,9 @@ export class ConsumerService {
 
   @Inject()
   private readonly notificationService: NotificationService;
+
+  @Inject()
+  private readonly pushTokenService: PushTokenService;
 
   @Inject()
   private readonly kmsService: KmsService;
@@ -452,11 +457,11 @@ export class ConsumerService {
   }
 
   async subscribeToPushNotifications(consumerID: string, pushToken: string): Promise<string> {
-    return this.notificationService.subscribeToPushNotifications(consumerID, pushToken);
+    return this.pushTokenService.subscribeToPushNotifications(consumerID, pushToken);
   }
 
   async unsubscribeFromPushNotifications(consumerID: string, pushToken: string): Promise<string> {
-    return this.notificationService.unsubscribeFromPushNotifications(consumerID, pushToken);
+    return this.pushTokenService.unsubscribeFromPushNotifications(consumerID, pushToken);
   }
 
   async getBase64EncodedQRCode(url: string): Promise<string> {
@@ -736,7 +741,10 @@ export class ConsumerService {
       allocationAmount: allocationAmountInPesos,
     });
     // TODO: Design a way to post to Bubble efficiently without blocking end users.
-    await this.notificationService.updateEmployeeAllocationInBubble(employee.id, result.allocationAmount);
+    await this.notificationService.sendNotification(
+      NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
+      NotificationPayloadMapper.toUpdateEmployeeAllocationAmountEvent(employee.id, result.allocationAmount),
+    );
 
     return result;
   }

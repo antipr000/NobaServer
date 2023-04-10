@@ -64,6 +64,8 @@ import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/moc
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { IdentificationService } from "../../../modules/common/identification.service";
 import { getMockIdentificationServiceWithDefaults } from "../../../modules/common/mocks/mock.identification.service";
+import { PushTokenService } from "../../../modules/notifications/push.token.service";
+import { getMockPushTokenServiceWithDefaults } from "../../../modules/notifications/mocks/mock.pushtoken.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -119,6 +121,7 @@ describe("ConsumerService", () => {
   let bubbleService: BubbleService;
   let mockKMSService: KmsService;
   let mockIdentificationService: IdentificationService;
+  let mockPushTokenService: PushTokenService;
 
   jest.setTimeout(30000);
 
@@ -137,6 +140,7 @@ describe("ConsumerService", () => {
     bubbleService = getMockBubbleServiceWithDefaults();
     mockKMSService = getMockKMSServiceWithDefaults();
     mockIdentificationService = getMockIdentificationServiceWithDefaults();
+    mockPushTokenService = getMockPushTokenServiceWithDefaults();
 
     const ConsumerRepoProvider = {
       provide: "ConsumerRepo",
@@ -824,14 +828,14 @@ describe("ConsumerService", () => {
 
   describe("subscribeToPushNotifications", () => {
     it("should subscribe to push notifications", async () => {
-      when(notificationService.subscribeToPushNotifications("consumer-id", "push-token")).thenResolve("push-token-id");
+      when(mockPushTokenService.subscribeToPushNotifications("consumer-id", "push-token")).thenResolve("push-token-id");
       expect(await consumerService.subscribeToPushNotifications("consumer-id", "push-token")).toBe("push-token-id");
     });
   });
 
   describe("unsubscribeToPushNotifications", () => {
     it("should unsubscribe to push notifications", async () => {
-      when(notificationService.unsubscribeFromPushNotifications("consumer-id", "push-token")).thenResolve(
+      when(mockPushTokenService.unsubscribeFromPushNotifications("consumer-id", "push-token")).thenResolve(
         "push-token-id",
       );
       expect(await consumerService.unsubscribeFromPushNotifications("consumer-id", "push-token")).toBe("push-token-id");
@@ -2057,7 +2061,12 @@ describe("ConsumerService", () => {
           }),
         ),
       ).thenResolve(employee);
-      when(notificationService.updateEmployeeAllocationInBubble(employee.id, 1256)).thenResolve();
+      when(
+        notificationService.sendNotification(NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT, {
+          nobaEmployeeID: employee.id,
+          allocationAmountInPesos: 1256,
+        }),
+      ).thenResolve();
 
       const response = await consumerService.updateEmployerAllocationAmount(employer.id, "consumerID", 1256);
 

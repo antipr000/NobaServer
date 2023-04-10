@@ -2,8 +2,6 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { Logger } from "winston";
-import { Consumer } from "../consumer/domain/Consumer";
-import { Employee, EmployeeAllocationCurrency } from "../employee/domain/Employee";
 import { EmployeeService } from "../employee/employee.service";
 import {
   PayrollWithDisbursements,
@@ -18,6 +16,7 @@ import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
 import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
+import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
 
 @Injectable()
 export class BubbleService {
@@ -68,7 +67,10 @@ export class BubbleService {
       );
 
       const employeeUpdatePromises: Promise<void>[] = updatedEmployees.map(async employee =>
-        this.notificationService.updateEmployeeAllocationInBubble(employee.id, employee.allocationAmount),
+        this.notificationService.sendNotification(
+          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
+          NotificationPayloadMapper.toUpdateEmployeeAllocationAmountEvent(employee.id, employee.allocationAmount),
+        ),
       );
 
       await Promise.all(employeeUpdatePromises);
@@ -90,7 +92,10 @@ export class BubbleService {
 
     // If the salary update triggered a change to the allocation percent, update Bubble
     if (updatedEmployee?.allocationAmount !== employee.allocationAmount) {
-      await this.notificationService.updateEmployeeAllocationInBubble(employeeID, updatedEmployee.allocationAmount);
+      await this.notificationService.sendNotification(
+        NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
+        NotificationPayloadMapper.toUpdateEmployeeAllocationAmountEvent(employeeID, updatedEmployee.allocationAmount),
+      );
     }
   }
 

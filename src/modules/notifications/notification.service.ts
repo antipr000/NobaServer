@@ -41,8 +41,6 @@ import { SendTransferCompletedEvent, validateTransferCompletedEvent } from "./ev
 import { SendTransferFailedEvent, validateTransferFailedEvent } from "./events/SendTransferFailedEvent";
 import { SendWithdrawalFailedEvent, validateWithdrawalFailedEvent } from "./events/SendWithdrawalFailedEvent";
 import { SendEmployerRequestEvent, validateSendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
-import { IPushTokenRepo } from "./repos/pushtoken.repo";
-import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { SendTransferReceivedEvent, validateTransferReceivedEvent } from "./events/SendTransferReceivedEvent";
 import {
   SendRegisterNewEmployeeEvent,
@@ -70,9 +68,6 @@ import {
 export class NotificationService {
   @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger;
   constructor(private readonly eventEmitter: EventEmitter2) {}
-
-  @Inject("PushTokenRepo")
-  private readonly pushTokenRepo: IPushTokenRepo;
 
   private getNotificationMedium(
     eventType: NotificationEventType,
@@ -110,37 +105,8 @@ export class NotificationService {
     });
   }
 
-  async subscribeToPushNotifications(consumerID: string, pushToken: string): Promise<string> {
-    const existingPushTokenID = await this.pushTokenRepo.getPushToken(consumerID, pushToken);
-    if (!existingPushTokenID) {
-      return this.pushTokenRepo.addPushToken(consumerID, pushToken);
-    }
-
-    return existingPushTokenID;
-  }
-
-  async unsubscribeFromPushNotifications(consumerID: string, pushToken: string): Promise<string> {
-    const deletedPushTokenID = await this.pushTokenRepo.deletePushToken(consumerID, pushToken);
-    if (!deletedPushTokenID) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-        message: "Failed to delete push token",
-      });
-    }
-
-    return deletedPushTokenID;
-  }
-
-  async updateEmployeeAllocationInBubble(nobaEmployeeID: string, allocationAmount: number): Promise<void> {
-    await this.sendNotification(NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT, {
-      locale: "en",
-      nobaEmployeeID,
-      allocationAmountInPesos: allocationAmount,
-    });
-  }
-
   private async createEvent(eventName: string, eventType: NotificationEventType, payload: NotificationPayload) {
-    let pushTokens = [];
+    const pushTokens = [];
     switch (eventType) {
       case NotificationEventType.SEND_OTP_EVENT:
         validateSendOtpEvent(payload as SendOtpEvent);
@@ -187,39 +153,21 @@ export class NotificationService {
         this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT:
-        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
-        const depositCompletedPayload = payload as SendDepositCompletedEvent;
-
-        depositCompletedPayload.pushTokens = pushTokens;
-
-        validateDepositCompletedEvent(depositCompletedPayload);
-
-        this.eventEmitter.emitAsync(eventName, depositCompletedPayload);
+        validateDepositCompletedEvent(payload as SendDepositCompletedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT:
         validateDepositInitiatedEvent(payload as SendDepositInitiatedEvent);
         this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_DEPOSIT_FAILED_EVENT:
-        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
-        const depositFailedPayload = payload as SendDepositFailedEvent;
-
-        depositFailedPayload.pushTokens = pushTokens;
-
-        validateDepositFailedEvent(depositFailedPayload);
-
-        this.eventEmitter.emitAsync(eventName, depositFailedPayload);
+        validateDepositFailedEvent(payload as SendDepositFailedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
 
       case NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT:
-        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
-        const withdrawalCompletedPayload = payload as SendWithdrawalCompletedEvent;
-
-        withdrawalCompletedPayload.pushTokens = pushTokens;
-
-        validateWithdrawalCompletedEvent(withdrawalCompletedPayload);
-
-        this.eventEmitter.emitAsync(eventName, withdrawalCompletedPayload);
+        validateWithdrawalCompletedEvent(payload as SendWithdrawalCompletedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
 
       case NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT:
@@ -228,55 +176,27 @@ export class NotificationService {
         break;
 
       case NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT:
-        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
-        const withdrawalFailedPayload = payload as SendWithdrawalFailedEvent;
-
-        withdrawalFailedPayload.pushTokens = pushTokens;
-        validateWithdrawalFailedEvent(withdrawalFailedPayload);
-
-        this.eventEmitter.emitAsync(eventName, withdrawalFailedPayload);
+        validateWithdrawalFailedEvent(payload as SendWithdrawalFailedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
 
       case NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT:
-        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
-        const transferCompletedPayload = payload as SendTransferCompletedEvent;
-
-        transferCompletedPayload.pushTokens = pushTokens;
-
-        validateTransferCompletedEvent(transferCompletedPayload);
-
-        this.eventEmitter.emitAsync(eventName, transferCompletedPayload);
+        validateTransferCompletedEvent(payload as SendTransferCompletedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT:
-        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
-        const transferReceivedPayload = payload as SendTransferReceivedEvent;
-
-        transferReceivedPayload.pushTokens = pushTokens;
-
-        validateTransferReceivedEvent(transferReceivedPayload);
-        this.eventEmitter.emitAsync(eventName, transferReceivedPayload);
+        validateTransferReceivedEvent(payload as SendTransferReceivedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
 
       case NotificationEventType.SEND_TRANSFER_FAILED_EVENT:
-        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
-        const transferFailedPayload = payload as SendTransferFailedEvent;
-
-        transferFailedPayload.pushTokens = pushTokens;
-
-        validateTransferFailedEvent(transferFailedPayload);
-
-        this.eventEmitter.emitAsync(eventName, transferFailedPayload);
+        validateTransferFailedEvent(payload as SendTransferFailedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
 
       case NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT:
-        pushTokens = await this.pushTokenRepo.getAllPushTokensForConsumer(payload.nobaUserID);
-        const payrollDepositCompletedPayload = payload as SendPayrollDepositCompletedEvent;
-
-        payrollDepositCompletedPayload.pushTokens = pushTokens;
-
-        validatePayrollDepositCompletedEvent(payrollDepositCompletedPayload);
-
-        this.eventEmitter.emitAsync(eventName, payrollDepositCompletedPayload);
+        validatePayrollDepositCompletedEvent(payload as SendPayrollDepositCompletedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
         break;
 
       case NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT:
