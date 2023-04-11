@@ -317,10 +317,7 @@ export class NotificationPayloadMapper {
   static toWelcomeMessageEvent(consumer: Consumer): SendWelcomeMessageEvent {
     return {
       email: consumer.props.email,
-      firstName: consumer.props.firstName,
-      lastName: consumer.props.lastName,
       ...(consumer.props.locale && { locale: consumer.props.locale }),
-      nobaUserID: consumer.props.id,
     };
   }
 

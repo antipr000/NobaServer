@@ -12,7 +12,13 @@
 import { setUpEnvironmentVariablesToLoadTheSourceCode } from "../setup";
 const port: number = setUpEnvironmentVariablesToLoadTheSourceCode();
 
-import { computeSignature, loginAndGetResponse, setAccessTokenForTheNextRequests, TEST_API_KEY } from "../common";
+import {
+  computeSignature,
+  loginAndGetResponse,
+  patchConsumer,
+  setAccessTokenForTheNextRequests,
+  TEST_API_KEY,
+} from "../common";
 import { ResponseStatus } from "../api_client/core/request";
 import {
   CaseNotificationWebhookRequestDTO,
@@ -227,6 +233,13 @@ describe("Verification", () => {
       expect(getConsumerResponse.__status).toBe(200);
       expect(getConsumerResponse.documentVerificationData.documentVerificationStatus).toBe("NotRequired"); // Initially it is set to NotRequired by default
 
+      await patchConsumer({
+        email: getConsumerResponse.email,
+        firstName: "Test",
+        lastName: "User",
+        locale: "en",
+      });
+
       const requestBody: DocumentVerificationWebhookRequestDTO = {
         id: "fake-verification-id",
         type: "fake-type",
@@ -373,6 +386,9 @@ describe("Verification", () => {
           regionCode: "CA",
           postalCode: "02747",
         },
+        firstName: "Test",
+        lastName: "User",
+        locale: "en",
       };
 
       signature = computeSignature(TEST_TIMESTAMP, "PATCH", "/v1/consumers", JSON.stringify(updateConsumerRequestBody));
