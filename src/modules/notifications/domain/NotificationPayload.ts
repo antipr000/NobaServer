@@ -30,13 +30,12 @@ import { TransactionNotificationPayloadMapper } from "./TransactionNotificationP
 import { Employee } from "../../../modules/employee/domain/Employee";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { Utils } from "../../../core/utils/Utils";
+import { BaseEvent } from "../events/BaseEvent";
 
 export type NotificationPayload =
   | SendDepositCompletedEvent
   | SendDepositFailedEvent
   | SendDepositInitiatedEvent
-  | SendDepositCompletedEvent
-  | SendDepositFailedEvent
   | SendPayrollDepositCompletedEvent
   | SendDocumentVerificationPendingEvent
   | SendDocumentVerificationRejectedEvent
@@ -61,6 +60,15 @@ export type NotificationPayload =
   | SendWithdrawalInitiatedEvent;
 
 export class NotificationPayloadMapper {
+  private static getBaseParams(consumer: Consumer): BaseEvent {
+    return {
+      email: consumer.props.email,
+      firstName: consumer.props.firstName,
+      ...(consumer.props.lastName && { lastName: consumer.props.lastName }),
+      nobaUserID: consumer.props.id,
+      ...(consumer.props.locale && { locale: consumer.props.locale }),
+    };
+  }
   static toDepositCompletedEvent(consumer: Consumer, transaction: Transaction): SendDepositCompletedEvent {
     return {
       email: consumer.props.email,
@@ -94,35 +102,17 @@ export class NotificationPayloadMapper {
   }
 
   static toDocumentVerificationPendingEvent(consumer: Consumer): SendDocumentVerificationPendingEvent {
-    return {
-      email: consumer.props.email,
-      firstName: consumer.props.firstName,
-      lastName: consumer.props.lastName,
-      nobaUserID: consumer.props.id,
-      locale: consumer.props.locale,
-    };
+    return this.getBaseParams(consumer);
   }
 
   static toDocumentVerificationRejectedEvent(consumer: Consumer): SendDocumentVerificationRejectedEvent {
-    return {
-      email: consumer.props.email,
-      firstName: consumer.props.firstName,
-      lastName: consumer.props.lastName,
-      nobaUserID: consumer.props.id,
-      locale: consumer.props.locale,
-    };
+    return this.getBaseParams(consumer);
   }
 
   static toDocumentVerificationTechnicalFailureEvent(
     consumer: Consumer,
   ): SendDocumentVerificationTechnicalFailureEvent {
-    return {
-      email: consumer.props.email,
-      firstName: consumer.props.firstName,
-      lastName: consumer.props.lastName,
-      nobaUserID: consumer.props.id,
-      locale: consumer.props.locale,
-    };
+    return this.getBaseParams(consumer);
   }
 
   static toEmployerRequestEvent(email: string, firstName: string, lastName: string): SendEmployerRequestEvent {
@@ -135,43 +125,19 @@ export class NotificationPayloadMapper {
   }
 
   static toKycApprovedNonUSEvent(consumer: Consumer): SendKycApprovedNonUSEvent {
-    return {
-      email: consumer.props.email,
-      firstName: consumer.props.firstName,
-      lastName: consumer.props.lastName,
-      nobaUserID: consumer.props.id,
-      locale: consumer.props.locale,
-    };
+    return this.getBaseParams(consumer);
   }
 
   static toKycApprovedUSEvent(consumer: Consumer): SendKycApprovedUSEvent {
-    return {
-      email: consumer.props.email,
-      firstName: consumer.props.firstName,
-      lastName: consumer.props.lastName,
-      nobaUserID: consumer.props.id,
-      locale: consumer.props.locale,
-    };
+    return this.getBaseParams(consumer);
   }
 
   static toKycDeniedEvent(consumer: Consumer): SendKycDeniedEvent {
-    return {
-      email: consumer.props.email,
-      firstName: consumer.props.firstName,
-      lastName: consumer.props.lastName,
-      nobaUserID: consumer.props.id,
-      locale: consumer.props.locale,
-    };
+    return this.getBaseParams(consumer);
   }
 
   static toKycPendingOrFlaggedEvent(consumer: Consumer): SendKycPendingOrFlaggedEvent {
-    return {
-      email: consumer.props.email,
-      firstName: consumer.props.firstName,
-      lastName: consumer.props.lastName,
-      nobaUserID: consumer.props.id,
-      locale: consumer.props.locale,
-    };
+    return this.getBaseParams(consumer);
   }
 
   static toOtpEvent(otp: string, emailOrPhone: string, consumer?: Consumer): SendOtpEvent {

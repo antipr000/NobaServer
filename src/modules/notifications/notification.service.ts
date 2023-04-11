@@ -106,7 +106,6 @@ export class NotificationService {
   }
 
   private async createEvent(eventName: string, eventType: NotificationEventType, payload: NotificationPayload) {
-    const pushTokens = [];
     switch (eventType) {
       case NotificationEventType.SEND_OTP_EVENT:
         validateSendOtpEvent(payload as SendOtpEvent);
