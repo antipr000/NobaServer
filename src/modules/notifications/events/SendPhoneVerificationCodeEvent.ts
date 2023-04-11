@@ -10,9 +10,9 @@ export const validateSendPhoneVerificationCodeEvent = (event: SendPhoneVerificat
   const sendPhoneVerificationCodeEventJoiValidationKeys: KeysRequired<SendPhoneVerificationCodeEvent> = {
     phone: Joi.string().required(),
     otp: Joi.string().required(),
-    firstName: Joi.string().required(),
+    firstName: Joi.string().optional(),
     lastName: Joi.string().optional(),
-    handle: Joi.string().required(),
+    handle: Joi.string().optional(),
     locale: Joi.string().optional(),
     nobaUserID: Joi.string().optional(),
     email: Joi.string().email().optional(),
