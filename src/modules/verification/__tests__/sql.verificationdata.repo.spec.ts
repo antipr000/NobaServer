@@ -102,7 +102,7 @@ describe("VerificationRepoTests", () => {
 
     it("should get session key from user and transaction ID filters", async () => {
       getVerificationData("15"); // Generate some noise data
-      const verificationData = getVerificationData("7", { userID: "user-id-1", transactionId: "transaction-id-1" });
+      const verificationData = getVerificationData("7", { consumerID: "user-id-1", transactionId: "transaction-id-1" });
       getVerificationData("16"); // Generate some noise data
 
       await verificationRepo.saveVerificationData(verificationData);
@@ -123,11 +123,11 @@ describe("VerificationRepoTests", () => {
 
 const getVerificationData = (
   id: string,
-  options: { userID?: string; transactionId?: string } = {},
+  options: { consumerID?: string; transactionId?: string } = {},
 ): VerificationData => {
   const props: VerificationDataProps = {
     id: mkid(id),
-    consumerID: options.userID || DEFAULT_USER_ID,
+    consumerID: options.consumerID || DEFAULT_USER_ID,
     transactionID: options.transactionId || DEFAULT_TRANSACTION_ID + "_" + uuid(),
   };
   const verificationData = VerificationData.createVerificationData(props);
