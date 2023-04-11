@@ -195,7 +195,7 @@ describe("ConsumerRepoTests", () => {
       consumer.props.isDisabled = true;
       const result = await consumerRepo.createConsumer(consumer);
       const savedResult = await consumerRepo.adminGetConsumer(result.props.id);
-      expect(savedResult).toBeNull();
+      expect(savedResult.props.id).toBe(result.props.id);
     });
   });
 
