@@ -161,11 +161,40 @@ describe("ConsumerRepoTests", () => {
       expect(savedResult).toBeNull();
     });
 
-    it("should not find a disabled consumer when showDisabled false", async () => {
+    it("should not find a disabled consumer", async () => {
       const consumer = getRandomUser();
       consumer.props.isDisabled = true;
       const result = await consumerRepo.createConsumer(consumer);
       const savedResult = await consumerRepo.getConsumer(result.props.id);
+      expect(savedResult).toBeNull();
+    });
+  });
+
+  describe("adminGetConsumer", () => {
+    it("should get a consumer", async () => {
+      const consumer = getRandomUser();
+      const res = await consumerRepo.adminGetConsumer(consumer.props.id);
+      expect(res).toBeNull();
+
+      const result = await consumerRepo.createConsumer(consumer);
+      const savedResult = await consumerRepo.adminGetConsumer(result.props.id);
+      expect(savedResult.props.id).toBe(result.props.id);
+      expect(savedResult.props.email).toBe(consumer.props.email);
+    });
+
+    it("should return null if an exception is thrown", async () => {
+      jest.spyOn(prismaService.consumer, "findUnique").mockImplementation(() => {
+        throw new Error("Error");
+      });
+      const savedResult = await consumerRepo.adminGetConsumer("any-id");
+      expect(savedResult).toBeNull();
+    });
+
+    it("should find a disabled consumer", async () => {
+      const consumer = getRandomUser();
+      consumer.props.isDisabled = true;
+      const result = await consumerRepo.createConsumer(consumer);
+      const savedResult = await consumerRepo.adminGetConsumer(result.props.id);
       expect(savedResult).toBeNull();
     });
   });
@@ -506,7 +535,7 @@ describe("ConsumerRepoTests", () => {
     });
   });
 
-  describe("getConsumerByStructuredFields", () => {
+  describe("adminGetConsumerByStructuredFields", () => {
     it("get all consumers by exact or partial handle", async () => {
       const consumer = getRandomUser();
 
