@@ -1022,7 +1022,6 @@ describe("PomeloTransactionServiceTests", () => {
             nobaConsumerID,
           );
           when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
-          when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
           when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
           when(mockTransactionService.initiateTransaction(anything())).thenResolve(creditTransaction);
           when(mockCircleService.creditWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
@@ -1121,7 +1120,7 @@ describe("PomeloTransactionServiceTests", () => {
         });
       });
 
-      describe("Error scenarios (all CREDIT)", () => {
+      describe("Error scenarios (all DEBIT)", () => {
         it("should appove the transaction and deduct the amount rounded to 2 decimal places", async () => {
           when(mockPomeloRepo.createPomeloTransaction(anything())).thenResolve({
             ...pomeloTransaction,
@@ -1133,8 +1132,8 @@ describe("PomeloTransactionServiceTests", () => {
           when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
           when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
           when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
-          when(mockTransactionService.initiateTransaction(anything())).thenResolve(creditTransaction);
-          when(mockCircleService.creditWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 49.25)).thenResolve(
+          when(mockTransactionService.initiateTransaction(anything())).thenResolve(debitTransaction);
+          when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 49.25)).thenResolve(
             debitOrCreditWalletResponse,
           );
           when(
@@ -1142,7 +1141,7 @@ describe("PomeloTransactionServiceTests", () => {
           ).thenResolve();
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction({
-            ...creditRequest,
+            ...debitRequest,
             localAmount: 4924.9,
           });
 
@@ -1168,7 +1167,7 @@ describe("PomeloTransactionServiceTests", () => {
             cardReversalRequest: {
               amountInUSD: 49.25,
               consumerID: "NOBA_CONSUMER_ID",
-              type: "CREDIT",
+              type: "DEBIT",
               exchangeRate: 100,
               nobaTransactionID: "NOBA_TRANSACTION_ID",
               memo: "Transfer of 4924.9 COP to MERCHANT_NAME",
@@ -1192,7 +1191,7 @@ describe("PomeloTransactionServiceTests", () => {
           ).thenResolve();
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(
-            creditRequest,
+            debitRequest,
           );
 
           expect(response).toStrictEqual({
@@ -1229,8 +1228,8 @@ describe("PomeloTransactionServiceTests", () => {
           when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
           when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
           when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
-          when(mockTransactionService.initiateTransaction(anything())).thenResolve(creditTransaction);
-          when(mockCircleService.creditWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
+          when(mockTransactionService.initiateTransaction(anything())).thenResolve(debitTransaction);
+          when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
             debitOrCreditWalletResponse,
           );
           when(
@@ -1238,7 +1237,7 @@ describe("PomeloTransactionServiceTests", () => {
           ).thenResolve();
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(
-            creditRequest,
+            debitRequest,
           );
 
           expect(response).toStrictEqual({
@@ -1263,7 +1262,7 @@ describe("PomeloTransactionServiceTests", () => {
             cardReversalRequest: {
               amountInUSD: 50,
               consumerID: "NOBA_CONSUMER_ID",
-              type: "CREDIT",
+              type: "DEBIT",
               exchangeRate: 100,
               nobaTransactionID: "NOBA_TRANSACTION_ID",
               memo: "Transfer of 5000 COP to MERCHANT_NAME",
@@ -1281,7 +1280,7 @@ describe("PomeloTransactionServiceTests", () => {
           );
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(
-            creditRequest,
+            debitRequest,
           );
 
           expect(response).toStrictEqual({
@@ -1303,7 +1302,7 @@ describe("PomeloTransactionServiceTests", () => {
           when(mockTransactionService.getTransactionByTransactionID("NOBA_TRANSACTION_ID")).thenResolve(
             creditTransaction,
           );
-          when(mockCircleService.creditWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
+          when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
             debitOrCreditWalletResponse,
           );
           when(
@@ -1311,7 +1310,7 @@ describe("PomeloTransactionServiceTests", () => {
           ).thenResolve();
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(
-            creditRequest,
+            debitRequest,
           );
 
           expect(response).toStrictEqual({
@@ -1336,7 +1335,7 @@ describe("PomeloTransactionServiceTests", () => {
             cardReversalRequest: {
               amountInUSD: 50,
               consumerID: "NOBA_CONSUMER_ID",
-              type: "CREDIT",
+              type: "DEBIT",
               exchangeRate: 100,
               nobaTransactionID: "NOBA_TRANSACTION_ID",
               memo: "Transfer of 5000 COP to MERCHANT_NAME",
@@ -1351,7 +1350,7 @@ describe("PomeloTransactionServiceTests", () => {
           );
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(
-            creditRequest,
+            debitRequest,
           );
 
           expect(response).toStrictEqual({
@@ -1371,7 +1370,7 @@ describe("PomeloTransactionServiceTests", () => {
           );
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(
-            creditRequest,
+            debitRequest,
           );
 
           expect(response).toStrictEqual({
@@ -1392,7 +1391,7 @@ describe("PomeloTransactionServiceTests", () => {
           when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenReject(new Error("Internal error"));
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(
-            creditRequest,
+            debitRequest,
           );
 
           expect(response).toStrictEqual({
@@ -1414,7 +1413,7 @@ describe("PomeloTransactionServiceTests", () => {
           );
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(
-            creditRequest,
+            debitRequest,
           );
 
           expect(response).toStrictEqual({
@@ -1438,7 +1437,7 @@ describe("PomeloTransactionServiceTests", () => {
           );
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(
-            creditRequest,
+            debitRequest,
           );
 
           expect(response).toStrictEqual({
@@ -1456,13 +1455,13 @@ describe("PomeloTransactionServiceTests", () => {
           when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
           when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
           when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
-          when(mockTransactionService.initiateTransaction(anything())).thenResolve(creditTransaction);
-          when(mockCircleService.creditWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenReject(
+          when(mockTransactionService.initiateTransaction(anything())).thenResolve(debitTransaction);
+          when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenReject(
             new Error("Internal Error"),
           );
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(
-            creditRequest,
+            debitRequest,
           );
 
           expect(response).toStrictEqual({
@@ -1480,8 +1479,8 @@ describe("PomeloTransactionServiceTests", () => {
           when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
           when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
           when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
-          when(mockTransactionService.initiateTransaction(anything())).thenResolve(creditTransaction);
-          when(mockCircleService.creditWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve({
+          when(mockTransactionService.initiateTransaction(anything())).thenResolve(debitTransaction);
+          when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve({
             ...debitOrCreditWalletResponse,
             status: CircleWithdrawalStatus.FAILURE,
           });
@@ -1493,7 +1492,7 @@ describe("PomeloTransactionServiceTests", () => {
           ).thenResolve();
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(
-            creditRequest,
+            debitRequest,
           );
 
           expect(response).toStrictEqual({

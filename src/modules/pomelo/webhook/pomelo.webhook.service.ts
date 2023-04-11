@@ -217,17 +217,24 @@ export class PomeloTransactionService {
         request.pomeloUserID,
       );
       const circleWalletID: string = await this.circleService.getOrCreateWallet(nobaConsumerID);
-      const walletBalanceInUSD: number = await this.circleService.getWalletBalance(circleWalletID);
       const { amountInUSD, exchangeRate } = await this.getCOPEquivalentUSDAmountToDeduct(
         pomeloTransaction.amountInLocalCurrency,
       );
 
-      if (walletBalanceInUSD < amountInUSD) {
-        await this.pomeloRepo.updatePomeloTransactionStatus(
-          pomeloTransaction.pomeloTransactionID,
-          PomeloTransactionStatus.INSUFFICIENT_FUNDS,
-        );
-        return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS);
+      switch (request.adjustmentType) {
+        case PomeloAdjustmentType.CREDIT:
+          break;
+
+        case PomeloAdjustmentType.DEBIT:
+          const walletBalanceInUSD: number = await this.circleService.getWalletBalance(circleWalletID);
+          if (walletBalanceInUSD < amountInUSD) {
+            await this.pomeloRepo.updatePomeloTransactionStatus(
+              pomeloTransaction.pomeloTransactionID,
+              PomeloTransactionStatus.INSUFFICIENT_FUNDS,
+            );
+            return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS);
+          }
+          break;
       }
 
       const nobaTransaction: Transaction = await this.getOrCreateCardWithdrawalNobaTransaction(
