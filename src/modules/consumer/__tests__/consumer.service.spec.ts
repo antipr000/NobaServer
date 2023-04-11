@@ -258,13 +258,13 @@ describe("ConsumerService", () => {
         email: email,
       });
 
-      when(mockConsumerRepo.getConsumer(consumerID, false)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumerID)).thenResolve(consumer);
       const response = await consumerService.getConsumer(consumerID);
       expect(response).toStrictEqual(consumer);
     });
 
     it("should not find the consumer if it doesn't exist", async () => {
-      when(mockConsumerRepo.getConsumer("missing-consumer", false)).thenThrow(new NotFoundException());
+      when(mockConsumerRepo.getConsumer("missing-consumer")).thenThrow(new NotFoundException());
 
       expect(async () => {
         await consumerService.getConsumer("missing-consumer");
@@ -316,13 +316,13 @@ describe("ConsumerService", () => {
       const consumerID = "mock-consumer-1";
       const consumer = getKYCdConsumer(consumerID, email, null);
 
-      when(mockConsumerRepo.getConsumer(consumerID, false)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumerID)).thenResolve(consumer);
       const response = await consumerService.getActiveConsumer(consumerID);
       expect(response).toStrictEqual(consumer);
     });
 
     it("should not find the consumer by ID if it doesn't exist", async () => {
-      when(mockConsumerRepo.getConsumer("missing-consumer-id", false)).thenResolve(null);
+      when(mockConsumerRepo.getConsumer("missing-consumer-id")).thenResolve(null);
 
       expect(async () => {
         await consumerService.getActiveConsumer("missing-consumer-id");
@@ -415,7 +415,7 @@ describe("ConsumerService", () => {
         handle: handle,
       });
 
-      when(mockConsumerRepo.getConsumer(consumerID, false)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumerID)).thenResolve(consumer);
 
       const response = await consumerService.getConsumerHandle(consumerID);
 
@@ -424,7 +424,7 @@ describe("ConsumerService", () => {
 
     it("should return null if consumer id is not found", async () => {
       const consumerID = "mock-consumer-1";
-      when(mockConsumerRepo.getConsumer(consumerID, false)).thenResolve(null);
+      when(mockConsumerRepo.getConsumer(consumerID)).thenResolve(null);
 
       const response = await consumerService.getConsumerHandle(consumerID);
       expect(response).toBeNull();
@@ -449,7 +449,7 @@ describe("ConsumerService", () => {
         gender: Gender.FEMALE,
       });
 
-      when(mockConsumerRepo.getConsumer(consumer.props.id, false)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(
         mockConsumerRepo.updateConsumer(
           consumer.props.id,
@@ -493,7 +493,7 @@ describe("ConsumerService", () => {
         locale: locale,
       });
 
-      when(mockConsumerRepo.getConsumer(consumer.props.id, false)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(
         mockConsumerRepo.updateConsumer(
           consumer.props.id,
@@ -532,7 +532,7 @@ describe("ConsumerService", () => {
         lastName: lastName,
       });
 
-      when(mockConsumerRepo.getConsumer(consumer.props.id, false)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(
         mockConsumerRepo.updateConsumer(
           consumer.props.id,
@@ -576,7 +576,7 @@ describe("ConsumerService", () => {
         handle: "<PLACEHOLDER_AS_HANDLE_IS_RANDOM>",
       });
 
-      when(mockConsumerRepo.getConsumer(consumer.props.id, false)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(
         mockConsumerRepo.updateConsumer(
           consumer.props.id,
@@ -627,7 +627,7 @@ describe("ConsumerService", () => {
         handle: "<PLACEHOLDER_AS_HANDLE_IS_RANDOM>",
       });
       when(mockConsumerRepo.isHandleTaken(anyString())).thenResolve(true);
-      when(mockConsumerRepo.getConsumer(consumer.props.id, false)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(
         mockConsumerRepo.updateConsumer(
           consumer.props.id,
@@ -651,7 +651,7 @@ describe("ConsumerService", () => {
     it("should throw error if user does not exist", async () => {
       const consumerId = "fake-consumer-1";
 
-      when(mockConsumerRepo.getConsumer(consumerId, false)).thenReject(new NotFoundException("Not Found"));
+      when(mockConsumerRepo.getConsumer(consumerId)).thenReject(new NotFoundException("Not Found"));
 
       try {
         await consumerService.updateConsumer({
@@ -669,7 +669,7 @@ describe("ConsumerService", () => {
         email: "fake@mock.com",
       });
 
-      when(mockConsumerRepo.getConsumer(consumer.props.id, false)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
 
       expect(
         consumerService.updateConsumer({
@@ -1251,7 +1251,7 @@ describe("ConsumerService", () => {
         true,
       );
       when(mockConsumerRepo.isHandleTaken(anyString())).thenResolve(false);
-      when(mockConsumerRepo.getConsumer(consumer.props.id, false)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(mockConsumerRepo.updateConsumer(anyString(), anything())).thenResolve(expectedUpdatedConsumer);
 
       const updateConsumerResponse = await consumerService.updateConsumerPhone(consumer, phoneUpdateRequest);
@@ -1523,18 +1523,18 @@ describe("ConsumerService", () => {
     it("should find consumers by specific ID", async () => {
       const consumer = getRandomConsumer();
 
-      when(mockConsumerRepo.getConsumer(consumer.props.id, true)).thenResolve(consumer);
-      const structuredFieldSearchSpy = jest.spyOn(mockConsumerRepo, "findConsumersByStructuredFields");
+      when(mockConsumerRepo.adminGetConsumer(consumer.props.id)).thenResolve(consumer);
+      const structuredFieldSearchSpy = jest.spyOn(mockConsumerRepo, "adminFindConsumersByStructuredFields");
 
-      const consumers = await consumerService.findConsumers({ consumerID: consumer.props.id });
+      const consumers = await consumerService.adminFindConsumers({ consumerID: consumer.props.id });
       expect(consumers).toEqual([consumer]);
       expect(structuredFieldSearchSpy).not.toHaveBeenCalled();
     });
 
     it("should return empty array if no consumers found by specific ID", async () => {
-      when(mockConsumerRepo.getConsumer("1234567890", true)).thenResolve(undefined);
+      when(mockConsumerRepo.adminGetConsumer("1234567890")).thenResolve(undefined);
 
-      const consumers = await consumerService.findConsumers({ consumerID: "1234567890" });
+      const consumers = await consumerService.adminFindConsumers({ consumerID: "1234567890" });
       expect(consumers).toEqual([]);
     });
 
@@ -1585,7 +1585,7 @@ describe("ConsumerService", () => {
       ).thenResolve(Result.ok<Array<Consumer>>([consumer]));
       const idSearchSpy = jest.spyOn(mockConsumerRepo, "getConsumer");
 
-      const consumers = await consumerService.findConsumers({
+      const consumers = await consumerService.adminFindConsumers({
         name: "Rosie Noba",
         email: consumer.props.email,
         phone: consumer.props.phone,
