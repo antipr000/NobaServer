@@ -25,6 +25,7 @@ import { SeverityLevel } from "../../core/exception/base.exception";
 import { HealthCheckResponse } from "../../core/domain/HealthCheckTypes";
 import { AlertKey } from "../common/alerts/alert.dto";
 import { AlertService } from "../../modules/common/alerts/alert.service";
+import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
 
 @Injectable()
 export class VerificationService {
@@ -76,30 +77,15 @@ export class VerificationService {
 
     if (status === KYCStatus.APPROVED) {
       await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
-      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, {
-        locale: updatedConsumer.props.locale,
-        firstName: updatedConsumer.props.firstName,
-        lastName: updatedConsumer.props.lastName,
-        nobaUserID: updatedConsumer.props.id,
-        email: updatedConsumer.props.displayEmail,
-      });
+      const payload = NotificationPayloadMapper.toKycApprovedUSEvent(updatedConsumer);
+      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, payload);
     } else if (status === KYCStatus.REJECTED) {
       await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
-      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_DENIED_EVENT, {
-        locale: updatedConsumer.props.locale,
-        firstName: updatedConsumer.props.firstName,
-        lastName: updatedConsumer.props.lastName,
-        nobaUserID: updatedConsumer.props.id,
-        email: updatedConsumer.props.displayEmail,
-      });
+      const payload = NotificationPayloadMapper.toKycDeniedEvent(updatedConsumer);
+      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_DENIED_EVENT, payload);
     } else {
-      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT, {
-        locale: updatedConsumer.props.locale,
-        firstName: updatedConsumer.props.firstName,
-        lastName: updatedConsumer.props.lastName,
-        nobaUserID: updatedConsumer.props.id,
-        email: updatedConsumer.props.displayEmail,
-      });
+      const payload = NotificationPayloadMapper.toKycPendingOrFlaggedEvent(updatedConsumer);
+      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT, payload);
     }
     return status;
   }
@@ -159,21 +145,11 @@ export class VerificationService {
       await this.idvProvider.postConsumerFeedback(requestBody.data.case.sessionKey, consumerID, result.status);
 
       if (result.status === KYCStatus.APPROVED) {
-        await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, {
-          locale: consumer.props.locale,
-          firstName: consumer.props.firstName,
-          lastName: consumer.props.lastName,
-          nobaUserID: consumer.props.id,
-          email: consumer.props.displayEmail,
-        });
+        const payload = NotificationPayloadMapper.toKycApprovedUSEvent(consumer);
+        await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, payload);
       } else if (result.status === KYCStatus.REJECTED) {
-        await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_DENIED_EVENT, {
-          locale: consumer.props.locale,
-          firstName: consumer.props.firstName,
-          lastName: consumer.props.lastName,
-          nobaUserID: consumer.props.id,
-          email: consumer.props.displayEmail,
-        });
+        const payload = NotificationPayloadMapper.toKycDeniedEvent(consumer);
+        await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_DENIED_EVENT, payload);
       }
     }
   }
@@ -198,26 +174,19 @@ export class VerificationService {
         },
       };
     } catch (e) {
+      const payload = NotificationPayloadMapper.toDocumentVerificationTechnicalFailureEvent(consumer);
       await this.notificationService.sendNotification(
         NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT,
-        {
-          locale: consumer.props.locale,
-          firstName: consumer.props.firstName,
-          lastName: consumer.props.lastName,
-          nobaUserID: consumer.props.id,
-          email: consumer.props.displayEmail,
-        },
+        payload,
       );
       throw e;
     }
     const updatedConsumer = await this.consumerService.updateConsumer(newConsumerData);
-    await this.notificationService.sendNotification(NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT, {
-      locale: updatedConsumer.props.locale,
-      firstName: updatedConsumer.props.firstName,
-      lastName: updatedConsumer.props.lastName,
-      nobaUserID: consumer.props.id,
-      email: updatedConsumer.props.displayEmail,
-    });
+    const payload = NotificationPayloadMapper.toDocumentVerificationPendingEvent(updatedConsumer);
+    await this.notificationService.sendNotification(
+      NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
+      payload,
+    );
     return id;
   }
 
@@ -238,26 +207,19 @@ export class VerificationService {
       result.status === DocumentVerificationStatus.APPROVED ||
       result.status === DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
     ) {
-      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, {
-        locale: consumer.props.locale,
-        firstName: consumer.props.firstName,
-        lastName: consumer.props.lastName,
-        nobaUserID: consumer.props.id,
-        email: consumer.props.displayEmail,
-      });
+      const payload = NotificationPayloadMapper.toKycApprovedUSEvent(consumer);
+      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, payload);
     } else if (
       result.status === DocumentVerificationStatus.REJECTED ||
       result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE ||
       result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_POOR_QUALITY ||
       result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_REQUIRES_RECAPTURE
     ) {
-      await this.notificationService.sendNotification(NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT, {
-        locale: consumer.props.locale,
-        firstName: consumer.props.firstName,
-        lastName: consumer.props.lastName,
-        nobaUserID: consumer.props.id,
-        email: consumer.props.displayEmail,
-      });
+      const payload = NotificationPayloadMapper.toDocumentVerificationRejectedEvent(consumer);
+      await this.notificationService.sendNotification(
+        NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
+        payload,
+      );
     }
 
     return result.status;
@@ -308,13 +270,8 @@ export class VerificationService {
       result.status === DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
     ) {
       await this.idvProvider.postDocumentFeedback(documentVerificationResult.data.case.sessionKey, result);
-      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, {
-        locale: consumer.props.locale,
-        firstName: consumer.props.firstName,
-        lastName: consumer.props.lastName,
-        nobaUserID: consumer.props.id,
-        email: consumer.props.displayEmail,
-      });
+      const payload = NotificationPayloadMapper.toKycApprovedUSEvent(consumer);
+      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, payload);
     } else if (
       result.status === DocumentVerificationStatus.REJECTED ||
       result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE ||
@@ -322,13 +279,11 @@ export class VerificationService {
       result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_REQUIRES_RECAPTURE
     ) {
       await this.idvProvider.postDocumentFeedback(documentVerificationResult.data.case.sessionKey, result);
-      await this.notificationService.sendNotification(NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT, {
-        locale: consumer.props.locale,
-        firstName: consumer.props.firstName,
-        lastName: consumer.props.lastName,
-        nobaUserID: consumer.props.id,
-        email: consumer.props.displayEmail,
-      });
+      const payload = NotificationPayloadMapper.toDocumentVerificationRejectedEvent(consumer);
+      await this.notificationService.sendNotification(
+        NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
+        payload,
+      );
     }
     return result;
   }
