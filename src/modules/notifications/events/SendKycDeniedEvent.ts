@@ -15,7 +15,10 @@ export const validateSendKycDeniedEvent = (event: SendKycDeniedEvent) => {
     handle: Joi.string().optional(),
   };
 
-  const sendKycDeniedEventJoiSchema = Joi.object(sendKycDeniedEventJoiValidationKeys);
+  const sendKycDeniedEventJoiSchema = Joi.object(sendKycDeniedEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, sendKycDeniedEventJoiSchema);
 };

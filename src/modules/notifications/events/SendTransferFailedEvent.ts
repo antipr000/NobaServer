@@ -22,7 +22,10 @@ export const validateTransferFailedEvent = (event: SendTransferFailedEvent) => {
     nobaUserID: Joi.string().optional(),
   };
 
-  const transferFailedEventJoiSchema = Joi.object(transferFailedEventJoiValidationKeys);
+  const transferFailedEventJoiSchema = Joi.object(transferFailedEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, transferFailedEventJoiSchema);
 };

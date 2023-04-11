@@ -24,7 +24,10 @@ export const validateWithdrawalInitiatedEvent = (event: SendWithdrawalInitiatedE
     nobaUserID: Joi.string().optional(),
   };
 
-  const withdrawalInitiatedEventJoiSchema = Joi.object(withdrawalInitiatedEventJoiValidationKeys);
+  const withdrawalInitiatedEventJoiSchema = Joi.object(withdrawalInitiatedEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, withdrawalInitiatedEventJoiSchema);
 };

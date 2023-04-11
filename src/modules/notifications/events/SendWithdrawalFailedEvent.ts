@@ -22,7 +22,10 @@ export const validateWithdrawalFailedEvent = (event: SendWithdrawalFailedEvent) 
     nobaUserID: Joi.string().required(),
   };
 
-  const withdrawalFailedEventJoiSchema = Joi.object(withdrawalFailedEventJoiValidationKeys);
+  const withdrawalFailedEventJoiSchema = Joi.object(withdrawalFailedEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, withdrawalFailedEventJoiSchema);
 };

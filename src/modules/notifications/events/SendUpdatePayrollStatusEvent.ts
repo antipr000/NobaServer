@@ -13,7 +13,10 @@ export const validateSendUpdatePayrollStatusEvent = (event: SendUpdatePayrollSta
     payrollStatus: Joi.string().required(),
   };
 
-  const sendUpdatePayrollStatusEventJoiSchema = Joi.object(sendUpdatePayrollStatusEventJoiValidationKeys);
+  const sendUpdatePayrollStatusEventJoiSchema = Joi.object(sendUpdatePayrollStatusEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, sendUpdatePayrollStatusEventJoiSchema);
 };

@@ -22,7 +22,10 @@ export const validateDepositFailedEvent = (event: SendDepositFailedEvent) => {
     locale: Joi.string().optional(),
   };
 
-  const depositFailedEventJoiSchema = Joi.object(depositFailedEventJoiValidationKeys);
+  const depositFailedEventJoiSchema = Joi.object(depositFailedEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, depositFailedEventJoiSchema);
 };

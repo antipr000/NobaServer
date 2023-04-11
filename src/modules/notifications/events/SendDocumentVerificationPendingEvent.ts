@@ -15,7 +15,12 @@ export const validateDocumentVerificationPendingEvent = (event: SendDocumentVeri
     handle: Joi.string().optional(),
   };
 
-  const documentVerificationPendingEventJoiSchema = Joi.object(documentVerificationPendingEventJoiValidationKeys);
+  const documentVerificationPendingEventJoiSchema = Joi.object(
+    documentVerificationPendingEventJoiValidationKeys,
+  ).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, documentVerificationPendingEventJoiSchema);
 };

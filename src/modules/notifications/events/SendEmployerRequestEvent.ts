@@ -15,7 +15,10 @@ export const validateSendEmployerRequestEvent = (event: SendEmployerRequestEvent
     nobaUserID: Joi.string().optional(),
   };
 
-  const sendEmployerRequestEventJoiSchema = Joi.object(sendEmployerRequestEventJoiValidationKeys);
+  const sendEmployerRequestEventJoiSchema = Joi.object(sendEmployerRequestEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, sendEmployerRequestEventJoiSchema);
 };

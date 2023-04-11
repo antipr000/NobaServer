@@ -24,7 +24,10 @@ export const validatePayrollDepositCompletedEvent = (event: SendPayrollDepositCo
     nobaUserID: Joi.string().required(),
   };
 
-  const payrollDepositCompletedEventJoiSchema = Joi.object(payrollDepositCompletedEventJoiValidationKeys);
+  const payrollDepositCompletedEventJoiSchema = Joi.object(payrollDepositCompletedEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, payrollDepositCompletedEventJoiSchema);
 };

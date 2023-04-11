@@ -15,7 +15,10 @@ export const validateSendKycPendingOrFlaggedEvent = (event: SendKycPendingOrFlag
     handle: Joi.string().optional(),
   };
 
-  const sendKycPendingOrFlaggedEventJoiSchema = Joi.object(sendKycPendingOrFlaggedEventJoiValidationKeys);
+  const sendKycPendingOrFlaggedEventJoiSchema = Joi.object(sendKycPendingOrFlaggedEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, sendKycPendingOrFlaggedEventJoiSchema);
 };

@@ -22,7 +22,10 @@ export const validateSendWalletUpdateVerificationCodeEvent = (event: SendWalletU
 
   const sendWalletUpdateVerificationCodeEventJoiSchema = Joi.object(
     sendWalletUpdateVerificationCodeEventJoiValidationKeys,
-  );
+  ).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, sendWalletUpdateVerificationCodeEventJoiSchema);
 };

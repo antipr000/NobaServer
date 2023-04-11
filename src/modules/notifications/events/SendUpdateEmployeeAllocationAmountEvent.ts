@@ -14,7 +14,10 @@ export const validateSendUpdateEmployeeAllocationAmountEvent = (event: SendUpdat
 
   const sendUpdateEmployeeAllocationAmountEventJoiSchema = Joi.object(
     sendUpdateEmployeeAllocationAmountEventJoiValidationKeys,
-  );
+  ).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, sendUpdateEmployeeAllocationAmountEventJoiSchema);
 };

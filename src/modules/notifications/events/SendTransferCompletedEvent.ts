@@ -24,7 +24,10 @@ export const validateTransferCompletedEvent = (event: SendTransferCompletedEvent
     nobaUserID: Joi.string().optional(),
   };
 
-  const transferCompletedEventJoiSchema = Joi.object(transferCompletedEventJoiValidationKeys);
+  const transferCompletedEventJoiSchema = Joi.object(transferCompletedEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, transferCompletedEventJoiSchema);
 };

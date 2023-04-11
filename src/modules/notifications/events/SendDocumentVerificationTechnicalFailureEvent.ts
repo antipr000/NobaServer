@@ -20,7 +20,10 @@ export const validateDocumentVerificationTechnicalFailureEvent = (
 
   const documentVerificationTechnicalFailureEventJoiSchema = Joi.object(
     documentVerificationTechnicalFailureEventJoiValidationKeys,
-  );
+  ).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, documentVerificationTechnicalFailureEventJoiSchema);
 };

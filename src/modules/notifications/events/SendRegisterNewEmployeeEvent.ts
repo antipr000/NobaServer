@@ -22,7 +22,10 @@ export const validateSendRegisterNewEmployeeEvent = (event: SendRegisterNewEmplo
     nobaUserID: Joi.string().optional(),
   };
 
-  const sendRegisterNewEmployeeEventJoiSchema = Joi.object(sendRegisterNewEmployeeEventJoiValidationKeys);
+  const sendRegisterNewEmployeeEventJoiSchema = Joi.object(sendRegisterNewEmployeeEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, sendRegisterNewEmployeeEventJoiSchema);
 };

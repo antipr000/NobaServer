@@ -15,7 +15,12 @@ export const validateDocumentVerificationRejectedEvent = (event: SendDocumentVer
     handle: Joi.string().optional(),
   };
 
-  const documentVerificationRejectedEventJoiSchema = Joi.object(documentVerificationRejectedEventJoiValidationKeys);
+  const documentVerificationRejectedEventJoiSchema = Joi.object(
+    documentVerificationRejectedEventJoiValidationKeys,
+  ).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, documentVerificationRejectedEventJoiSchema);
 };

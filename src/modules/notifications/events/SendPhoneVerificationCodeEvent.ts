@@ -18,7 +18,10 @@ export const validateSendPhoneVerificationCodeEvent = (event: SendPhoneVerificat
     email: Joi.string().email().optional(),
   };
 
-  const sendPhoneVerificationCodeEventJoiSchema = Joi.object(sendPhoneVerificationCodeEventJoiValidationKeys);
+  const sendPhoneVerificationCodeEventJoiSchema = Joi.object(sendPhoneVerificationCodeEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, sendPhoneVerificationCodeEventJoiSchema);
 };

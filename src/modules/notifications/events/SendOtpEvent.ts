@@ -18,7 +18,10 @@ export const validateSendOtpEvent = (event: SendOtpEvent) => {
     nobaUserID: Joi.string().optional(),
   };
 
-  const sendOtpEventJoiSchema = Joi.object(sendOtpEventJoiValidationKeys);
+  const sendOtpEventJoiSchema = Joi.object(sendOtpEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
 
   Joi.attempt(event, sendOtpEventJoiSchema);
 };
