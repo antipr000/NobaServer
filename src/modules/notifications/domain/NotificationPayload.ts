@@ -29,6 +29,7 @@ import { Transaction } from "../../../modules/transaction/domain/Transaction";
 import { TransactionNotificationPayloadMapper } from "./TransactionNotificationParameters";
 import { Employee } from "../../../modules/employee/domain/Employee";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
+import { Utils } from "../../../core/utils/Utils";
 
 export type NotificationPayload =
   | SendDepositCompletedEvent
@@ -124,12 +125,12 @@ export class NotificationPayloadMapper {
     };
   }
 
-  static toEmployerRequestEvent(consumer: Consumer): SendEmployerRequestEvent {
+  static toEmployerRequestEvent(email: string, firstName: string, lastName: string): SendEmployerRequestEvent {
     return {
-      email: consumer.props.email,
-      firstName: consumer.props.firstName,
-      lastName: consumer.props.lastName,
-      locale: consumer.props.locale,
+      email: email,
+      firstName: firstName,
+      lastName: lastName,
+      locale: "en", // This will always be en as it goes to Kelsi
     };
   }
 
@@ -173,24 +174,22 @@ export class NotificationPayloadMapper {
     };
   }
 
-  static toOtpEvent(consumer: Consumer, otp: string, email?: string, phone?: string): SendOtpEvent {
+  static toOtpEvent(otp: string, emailOrPhone: string, consumer?: Consumer): SendOtpEvent {
+    const isEmail = Utils.isEmail(emailOrPhone);
+    const locale = isEmail || !emailOrPhone.startsWith("+57") ? "en" : "es_co";
     return {
-      ...(email && { email: email }),
-      ...(phone && { phone: phone }),
+      ...(isEmail ? { email: emailOrPhone } : { phone: emailOrPhone }),
       otp: otp,
-      ...(consumer.props.firstName && { name: consumer.props.firstName }),
-      ...(consumer.props.handle && { handle: consumer.props.handle }),
-      locale: consumer.props.locale,
+      locale: consumer && consumer.props.locale ? consumer.props.locale : locale,
     };
   }
 
-  static toPhoneVerificationCodeEvent(consumer: Consumer, otp: string, phone: string): SendPhoneVerificationCodeEvent {
+  static toPhoneVerificationCodeEvent(otp: string, phone: string, consumer?: Consumer): SendPhoneVerificationCodeEvent {
+    const locale = phone.startsWith("+57") ? "es_co" : "en";
     return {
       phone: phone,
       otp: otp,
-      ...(consumer.props.firstName && { name: consumer.props.firstName }),
-      ...(consumer.props.handle && { handle: consumer.props.handle }),
-      locale: consumer.props.locale,
+      locale: consumer && consumer.props.locale ? consumer.props.locale : locale,
     };
   }
 

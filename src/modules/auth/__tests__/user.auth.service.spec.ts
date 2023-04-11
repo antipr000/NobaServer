@@ -281,7 +281,7 @@ describe("UserAuthService", () => {
           mockNotificationService.sendNotification(
             NotificationEventType.SEND_OTP_EVENT,
             deepEqual({
-              locale: "en_us",
+              locale: "en",
               email,
               otp,
             }),
@@ -300,7 +300,7 @@ describe("UserAuthService", () => {
           mockNotificationService.sendNotification(
             NotificationEventType.SEND_OTP_EVENT,
             deepEqual({
-              locale: "en_us",
+              locale: "en",
               phone,
               otp,
             }),

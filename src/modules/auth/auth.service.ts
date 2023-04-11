@@ -12,6 +12,7 @@ import { ITokenRepo } from "./repo/token.repo";
 import { Token } from "./domain/Token";
 import { VerificationService } from "../verification/verification.service";
 import { IdentityType } from "./domain/IdentityType";
+import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
 
 @Injectable()
 export abstract class AuthService {
@@ -108,12 +109,8 @@ export abstract class AuthService {
   }
 
   async sendOtp(emailOrPhone: string, otp: string): Promise<void> {
-    const isEmail = Utils.isEmail(emailOrPhone);
-    await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, {
-      locale: isEmail || !emailOrPhone.startsWith("+57") ? "en_us" : "es_co", // TODO: CRYPTO-894
-      ...(isEmail ? { email: emailOrPhone } : { phone: emailOrPhone }),
-      otp: otp,
-    });
+    const payload = NotificationPayloadMapper.toOtpEvent(otp, emailOrPhone);
+    await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, payload);
   }
 
   generateOTP(email?: string): number {

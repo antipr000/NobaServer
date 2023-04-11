@@ -83,15 +83,16 @@ const getRandomEmployer = (): Employer => {
   return employer;
 };
 
-const getRandomEmployee = (consumerID: string, employerID: string): Employee => {
+const getRandomEmployee = (consumerID: string, employer: Employer): Employee => {
   const employee: Employee = {
     id: uuid(),
-    employerID: employerID,
+    employerID: employer.id,
     consumerID: consumerID,
     allocationAmount: Math.floor(Math.random() * 1000000),
     allocationCurrency: EmployeeAllocationCurrency.COP,
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    employer: employer,
   };
 
   return employee;
@@ -214,6 +215,10 @@ describe("ConsumerService", () => {
           provide: IdentificationService,
           useFactory: () => instance(mockIdentificationService),
         },
+        {
+          provide: PushTokenService,
+          useFactory: () => instance(mockPushTokenService),
+        },
       ],
     }).compile();
 
@@ -241,7 +246,6 @@ describe("ConsumerService", () => {
         notificationService.sendNotification(
           NotificationEventType.SEND_WELCOME_MESSAGE_EVENT,
           deepEqual({
-            locale: consumer.props.locale,
             email: email,
             firstName: undefined,
             lastName: undefined,
@@ -1115,6 +1119,7 @@ describe("ConsumerService", () => {
         lastName: "Name",
         email: email,
         displayEmail: email,
+        locale: "en",
       });
 
       const wallet = CryptoWallet.createCryptoWallet({
@@ -1229,7 +1234,7 @@ describe("ConsumerService", () => {
         notificationService.sendNotification(
           NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT,
           deepEqual({
-            locale: "en_us",
+            locale: "en",
             phone: phone,
             otp: "111111",
           }),
@@ -1941,11 +1946,15 @@ describe("ConsumerService", () => {
     it("should register an Employee by ID successfully", async () => {
       const consumer = getRandomConsumer();
       const employer = getRandomEmployer();
-      const employee = getRandomEmployee(consumer.props.id, employer.id);
+      const employee = getRandomEmployee(consumer.props.id, employer);
 
       when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
       when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(notificationService.sendNotification(anyString(), anything())).thenResolve();
+      when(employeeService.getEmployeeByID(employee.id, true)).thenResolve({
+        ...employee,
+        employer: employer,
+      });
 
       const response = await consumerService.registerWithAnEmployer(employer.id, consumer.props.id, 100);
 
@@ -1971,7 +1980,7 @@ describe("ConsumerService", () => {
     it("should return a list of linked Employers", async () => {
       const consumer = getRandomConsumer();
       const employer = getRandomEmployer();
-      const employee = getRandomEmployee(consumer.props.id, employer.id);
+      const employee = getRandomEmployee(consumer.props.id, employer);
 
       when(employeeService.getEmployeesForConsumerID(consumer.props.id)).thenResolve([employee]);
 
@@ -2049,7 +2058,7 @@ describe("ConsumerService", () => {
 
     it("should update the allocation amount for an Employer", async () => {
       const employer = getRandomEmployer();
-      const employee = getRandomEmployee("consumerID", employer.id);
+      const employee = getRandomEmployee("consumerID", employer);
       employee.allocationAmount = 1256;
 
       when(employeeService.getEmployeeByConsumerAndEmployerID("consumerID", employer.id)).thenResolve(employee);
