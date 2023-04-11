@@ -247,9 +247,6 @@ describe("ConsumerService", () => {
           NotificationEventType.SEND_WELCOME_MESSAGE_EVENT,
           deepEqual({
             email: email,
-            firstName: undefined,
-            lastName: undefined,
-            nobaUserID: consumer.props.id,
           }),
         ),
       ).once();
@@ -1692,9 +1689,6 @@ describe("ConsumerService", () => {
         notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
           locale: consumer.props.locale,
           email: email,
-          firstName: consumer.props.firstName,
-          lastName: consumer.props.lastName,
-          nobaUserID: consumer.props.firstName,
         }),
       ).thenResolve();
 
@@ -1715,9 +1709,6 @@ describe("ConsumerService", () => {
       expect(notificationUserArgs).toStrictEqual({
         locale: consumer.props.locale,
         email: email.toLowerCase(),
-        firstName: consumer.props.firstName,
-        lastName: consumer.props.lastName,
-        nobaUserID: consumer.props.id,
       });
 
       //update consumer again, this time notification shouldn't be sent
