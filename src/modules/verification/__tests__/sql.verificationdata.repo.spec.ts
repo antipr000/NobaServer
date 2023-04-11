@@ -10,7 +10,7 @@ import { PrismaService } from "../../../infraproviders/PrismaService";
 import { uuid } from "uuidv4";
 
 const VERIFICATION_ID_PREFIX = "verification_id_prefix";
-const DEFAULT_USER_ID = "user_id";
+const DEFAULT_CONSUMER_ID = "consumer_id";
 const DEFAULT_TRANSACTION_ID = "transaction_id";
 
 const mkid = (id: string): string => {
@@ -60,7 +60,7 @@ describe("VerificationRepoTests", () => {
       const verificationData = getVerificationData("1");
       const savedVerificationData = await verificationRepo.saveVerificationData(verificationData);
       expect(savedVerificationData.props.id).toBe(mkid("1"));
-      expect(savedVerificationData.props.consumerID).toBe(DEFAULT_USER_ID);
+      expect(savedVerificationData.props.consumerID).toBe(DEFAULT_CONSUMER_ID);
     });
   });
 
@@ -86,7 +86,7 @@ describe("VerificationRepoTests", () => {
         VerificationData.createVerificationData({ ...savedVerificationData.props, transactionID: mkid("tid") }),
       );
       expect(updatedVerificationData.props.id).toBe(mkid("4"));
-      expect(updatedVerificationData.props.consumerID).toBe(DEFAULT_USER_ID);
+      expect(updatedVerificationData.props.consumerID).toBe(DEFAULT_CONSUMER_ID);
       expect(updatedVerificationData.props.transactionID).toBe(mkid("tid"));
     });
   });
@@ -127,7 +127,7 @@ const getVerificationData = (
 ): VerificationData => {
   const props: VerificationDataProps = {
     id: mkid(id),
-    consumerID: options.consumerID || DEFAULT_USER_ID,
+    consumerID: options.consumerID || DEFAULT_CONSUMER_ID,
     transactionID: options.transactionId || DEFAULT_TRANSACTION_ID + "_" + uuid(),
   };
   const verificationData = VerificationData.createVerificationData(props);
