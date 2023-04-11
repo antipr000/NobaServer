@@ -442,7 +442,7 @@ describe("AdminService", () => {
         },
       };
 
-      when(consumerService.findConsumers(filterCriteria)).thenResolve([consumer1, consumer2]);
+      when(consumerService.adminFindConsumers(filterCriteria)).thenResolve([consumer1, consumer2]);
       when(consumerMapper.toConsumerInternalDTO(consumer1)).thenReturn({ ...consumer1.props, gender: Gender.MALE });
       when(consumerMapper.toConsumerInternalDTO(consumer2)).thenReturn({ ...consumer2.props, gender: Gender.FEMALE });
       when(circleService.getOrCreateWallet(consumer1.props.id)).thenResolve("wallet-id-1");

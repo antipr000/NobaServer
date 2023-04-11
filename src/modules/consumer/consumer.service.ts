@@ -75,8 +75,12 @@ export class ConsumerService {
     this.qrCodePrefix = this.configService.get("QR_CODE_PREFIX");
   }
 
-  async getConsumer(consumerID: string, showDisabled = false): Promise<Consumer> {
-    return this.consumerRepo.getConsumer(consumerID, showDisabled);
+  async getConsumer(consumerID: string): Promise<Consumer> {
+    return this.consumerRepo.getConsumer(consumerID);
+  }
+
+  async adminGetConsumer(consumerID: string): Promise<Consumer> {
+    return this.consumerRepo.adminGetConsumer(consumerID);
   }
 
   async getConsumerHandle(consumerID: string): Promise<string> {
@@ -180,7 +184,7 @@ export class ConsumerService {
     return this.removeAllUnsupportedHandleCharacters(handle);
   }
 
-  async updateConsumer(updateConsumerProps: Partial<ConsumerProps>): Promise<Consumer> {
+  async updateConsumer(updateConsumerProps: Partial<ConsumerProps>, isAdmin = false): Promise<Consumer> {
     const consumer = await this.getConsumer(updateConsumerProps.id);
     // If we don't have a handle, but we do have a first name, then we can generate a handle.
     // Else if the handle is being set NOW, we need to validate it.
@@ -375,16 +379,16 @@ export class ConsumerService {
     return consumerResult;
   }
 
-  async findConsumers(filter: ConsumerSearchDTO): Promise<Consumer[]> {
+  async adminFindConsumers(filter: ConsumerSearchDTO): Promise<Consumer[]> {
     // If consumerID is populated, it is unique and this is all we want to search for
     if (filter.consumerID) {
-      const consumer = await this.consumerRepo.getConsumer(filter.consumerID, true);
+      const consumer = await this.consumerRepo.adminGetConsumer(filter.consumerID);
       if (!consumer) {
         return [];
       }
       return [consumer];
     } else {
-      const result = await this.consumerRepo.findConsumersByStructuredFields({
+      const result = await this.consumerRepo.adminFindConsumersByStructuredFields({
         ...(filter.name && { name: filter.name }),
         ...(filter.email && { email: filter.email }),
         ...(filter.phone && { phone: filter.phone }),
@@ -419,7 +423,7 @@ export class ConsumerService {
         });
       }
     } else {
-      consumer = await this.consumerRepo.getConsumer(consumerIDOrHandle, false);
+      consumer = await this.consumerRepo.getConsumer(consumerIDOrHandle);
       if (!consumer) {
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -661,7 +665,7 @@ export class ConsumerService {
     );
 
     // TODO: Design a way to post to Bubble efficiently without blocking end users.
-    const consumer: Consumer = await this.consumerRepo.getConsumer(consumerID, false);
+    const consumer: Consumer = await this.consumerRepo.getConsumer(consumerID);
     if (!consumer) {
       throw new ServiceException({
         message: `Consumer not found: ${consumerID}`,

@@ -55,10 +55,23 @@ export class SQLConsumerRepo implements IConsumerRepo {
     this.mapper = new ConsumerRepoMapper();
   }
 
-  async getConsumer(consumerID: string, showDisabled: boolean): Promise<Consumer> {
+  async getConsumer(consumerID: string): Promise<Consumer> {
     try {
       const consumerProps = await this.prisma.consumer.findFirst({
-        where: { id: consumerID, isDisabled: showDisabled },
+        where: { id: consumerID, isDisabled: false },
+        include: { address: true, verificationData: true },
+      });
+      if (!consumerProps) return null;
+      return Consumer.createConsumer(consumerProps);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async adminGetConsumer(consumerID: string): Promise<Consumer> {
+    try {
+      const consumerProps = await this.prisma.consumer.findFirst({
+        where: { id: consumerID },
         include: { address: true, verificationData: true },
       });
       if (!consumerProps) return null;
@@ -295,7 +308,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
     return consumerProps.id;
   }
 
-  async findConsumersByStructuredFields(filter: FindConsumerByStructuredFieldsDTO): Promise<Result<Consumer[]>> {
+  async adminFindConsumersByStructuredFields(filter: FindConsumerByStructuredFieldsDTO): Promise<Result<Consumer[]>> {
     // Clean up search parameters
     const handle = filter.handle && filter.handle.startsWith("$") ? filter.handle.substring(1).trim() : filter.handle;
 

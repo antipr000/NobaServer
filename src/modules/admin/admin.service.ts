@@ -137,7 +137,7 @@ export class AdminService {
   }
 
   async findConsumersFullDetails(filter: ConsumerSearchDTO): Promise<ConsumerInternalDTO[]> {
-    const consumers = await this.consumerService.findConsumers(filter);
+    const consumers = await this.consumerService.adminFindConsumers(filter);
     return Promise.all(consumers.map(async consumer => this.decorateConsumer(consumer)));
   }
 
@@ -247,8 +247,9 @@ export class AdminService {
         },
       }),
     };
-    await this.consumerService.updateConsumer(updateConsumerPayload);
-    const updatedConsumer = await this.consumerService.getConsumer(consumerID);
+    // admin find consumers
+    const updatedConsumer = await this.consumerService.updateConsumer(updateConsumerPayload, true); // just use this  // isAdmin optional boolean
+    // getEnabledConsumer repo method branch
     return this.decorateConsumer(updatedConsumer);
   }
 

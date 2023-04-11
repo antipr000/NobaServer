@@ -1543,12 +1543,12 @@ describe("ConsumerService", () => {
       consumer.props.firstName = "Rosie";
       consumer.props.lastName = "Noba";
 
-      when(mockConsumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Rosie Noba" }))).thenResolve(
+      when(mockConsumerRepo.adminFindConsumersByStructuredFields(deepEqual({ name: "Rosie Noba" }))).thenResolve(
         Result.ok<Array<Consumer>>([consumer]),
       );
       const idSearchSpy = jest.spyOn(mockConsumerRepo, "getConsumer");
 
-      const consumers = await consumerService.findConsumers({ name: "Rosie Noba" });
+      const consumers = await consumerService.adminFindConsumers({ name: "Rosie Noba" });
       expect(consumers).toEqual([consumer]);
       expect(idSearchSpy).not.toHaveBeenCalled();
     });
@@ -1573,7 +1573,7 @@ describe("ConsumerService", () => {
       });
 
       when(
-        mockConsumerRepo.findConsumersByStructuredFields(
+        mockConsumerRepo.adminFindConsumersByStructuredFields(
           deepEqual({
             name: `${consumer.props.firstName} ${consumer.props.lastName}`,
             email: consumer.props.email,
@@ -1597,20 +1597,20 @@ describe("ConsumerService", () => {
     });
 
     it("should return empty array if no consumers found", async () => {
-      when(mockConsumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
+      when(mockConsumerRepo.adminFindConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
         Result.ok([]),
       );
 
-      const consumers = await consumerService.findConsumers({ name: "Blah Blah" });
+      const consumers = await consumerService.adminFindConsumers({ name: "Blah Blah" });
       expect(consumers).toEqual([]);
     });
 
     it("should throw ServiceException if findConsumers fails", async () => {
-      when(mockConsumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
+      when(mockConsumerRepo.adminFindConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
         Result.fail("Prisma failed!"),
       );
 
-      expect(consumerService.findConsumers({ name: "Blah Blah" })).rejects.toThrow(ServiceException);
+      expect(consumerService.adminFindConsumers({ name: "Blah Blah" })).rejects.toThrow(ServiceException);
     });
   });
 
@@ -1653,7 +1653,7 @@ describe("ConsumerService", () => {
         true,
       );
       when(mockConsumerRepo.isHandleTaken(anyString())).thenResolve(false);
-      when(mockConsumerRepo.getConsumer(consumer.props.id, false)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(mockConsumerRepo.updateConsumer(anyString(), anything())).thenResolve(expectedUpdatedConsumer);
       when(
         notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
@@ -1916,7 +1916,7 @@ describe("ConsumerService", () => {
       const employee = getRandomEmployee(consumer.props.id, employer.id);
 
       when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
-      when(mockConsumerRepo.getConsumer(consumer.props.id, false)).thenResolve(consumer);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(notificationService.sendNotification(anyString(), anything())).thenResolve();
 
       const response = await consumerService.registerWithAnEmployer(employer.id, consumer.props.id, 100);
@@ -1931,7 +1931,7 @@ describe("ConsumerService", () => {
       consumer.props.isDisabled = true;
 
       when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
-      when(mockConsumerRepo.getConsumer(consumer.props.id, false)).thenResolve(null);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(null);
       when(notificationService.sendNotification(anyString(), anything())).thenResolve();
       expect(
         consumerService.registerWithAnEmployer(employer.id, consumer.props.id, 100),
