@@ -60,7 +60,7 @@ describe("VerificationRepoTests", () => {
       const verificationData = getVerificationData("1");
       const savedVerificationData = await verificationRepo.saveVerificationData(verificationData);
       expect(savedVerificationData.props.id).toBe(mkid("1"));
-      expect(savedVerificationData.props.userID).toBe(DEFAULT_USER_ID);
+      expect(savedVerificationData.props.consumerID).toBe(DEFAULT_USER_ID);
     });
   });
 
@@ -86,7 +86,7 @@ describe("VerificationRepoTests", () => {
         VerificationData.createVerificationData({ ...savedVerificationData.props, transactionID: mkid("tid") }),
       );
       expect(updatedVerificationData.props.id).toBe(mkid("4"));
-      expect(updatedVerificationData.props.userID).toBe(DEFAULT_USER_ID);
+      expect(updatedVerificationData.props.consumerID).toBe(DEFAULT_USER_ID);
       expect(updatedVerificationData.props.transactionID).toBe(mkid("tid"));
     });
   });
@@ -106,14 +106,14 @@ describe("VerificationRepoTests", () => {
       getVerificationData("16"); // Generate some noise data
 
       await verificationRepo.saveVerificationData(verificationData);
-      const sessionKey1 = await verificationRepo.getSessionKeyFromFilters({ userID: "user-id-1" });
+      const sessionKey1 = await verificationRepo.getSessionKeyFromFilters({ consumerID: "user-id-1" });
       expect(sessionKey1).toBe(mkid("7"));
 
       const sessionKey2 = await verificationRepo.getSessionKeyFromFilters({ transactionID: "transaction-id-1" });
       expect(sessionKey2).toBe(mkid("7"));
 
       const sessionKey3 = await verificationRepo.getSessionKeyFromFilters({
-        userID: "user-id-1",
+        consumerID: "user-id-1",
         transactionID: "transaction-id-1",
       });
       expect(sessionKey3).toBe(mkid("7"));
@@ -127,7 +127,7 @@ const getVerificationData = (
 ): VerificationData => {
   const props: VerificationDataProps = {
     id: mkid(id),
-    userID: options.userID || DEFAULT_USER_ID,
+    consumerID: options.userID || DEFAULT_USER_ID,
     transactionID: options.transactionId || DEFAULT_TRANSACTION_ID + "_" + uuid(),
   };
   const verificationData = VerificationData.createVerificationData(props);
