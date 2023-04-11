@@ -247,9 +247,7 @@ export class AdminService {
         },
       }),
     };
-    // admin find consumers
-    const updatedConsumer = await this.consumerService.updateConsumer(updateConsumerPayload, true); // just use this  // isAdmin optional boolean
-    // getEnabledConsumer repo method branch
+    const updatedConsumer = await this.consumerService.updateConsumer(updateConsumerPayload, true);
     return this.decorateConsumer(updatedConsumer);
   }
 

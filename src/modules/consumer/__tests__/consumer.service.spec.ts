@@ -272,6 +272,30 @@ describe("ConsumerService", () => {
     });
   });
 
+  describe("adminGetConsumer", () => {
+    it("should find the consumer", async () => {
+      const email = "mock-user@noba.com";
+
+      const consumerID = "mock-consumer-1";
+      const consumer = Consumer.createConsumer({
+        id: consumerID,
+        email: email,
+      });
+
+      when(mockConsumerRepo.adminGetConsumer(consumerID)).thenResolve(consumer);
+      const response = await consumerService.adminGetConsumer(consumerID);
+      expect(response).toStrictEqual(consumer);
+    });
+
+    it("should not find the consumer if it doesn't exist", async () => {
+      when(mockConsumerRepo.adminGetConsumer("missing-consumer")).thenThrow(new NotFoundException());
+
+      expect(async () => {
+        await consumerService.adminGetConsumer("missing-consumer");
+      }).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe("getActiveConsumer", () => {
     const getKYCdConsumer = (id: string, email: string, handle: string): Consumer => {
       return Consumer.createConsumer({

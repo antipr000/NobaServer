@@ -548,7 +548,7 @@ describe("AdminService", () => {
       };
 
       when(consumerService.getConsumer(consumer1.props.id)).thenResolve(consumer1);
-      when(consumerService.updateConsumer(anything())).thenResolve(updatedConsumer1);
+      when(consumerService.updateConsumer(anything(), true)).thenResolve(updatedConsumer1);
 
       when(consumerMapper.toConsumerInternalDTO(anything())).thenReturn(consumerInternalDTO);
       when(circleService.getOrCreateWallet(consumer1.props.id)).thenResolve("wallet-id-1");
@@ -670,7 +670,7 @@ describe("AdminService", () => {
       };
 
       when(consumerService.getConsumer(consumer1.props.id)).thenResolve(consumer1);
-      when(consumerService.updateConsumer(anything())).thenResolve(updatedConsumer1);
+      when(consumerService.updateConsumer(anything(), true)).thenResolve(updatedConsumer1);
 
       when(consumerMapper.toConsumerInternalDTO(anything())).thenReturn(consumerInternalDTO);
       when(circleService.getOrCreateWallet(consumer1.props.id)).thenResolve("wallet-id-1");
