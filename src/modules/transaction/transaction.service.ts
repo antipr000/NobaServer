@@ -40,6 +40,8 @@ import { AlertService } from "../common/alerts/alert.service";
 import { AlertKey } from "../common/alerts/alert.dto";
 import { Employer } from "../employer/domain/Employer";
 import {
+  CardReversalTransactionRequest,
+  CardReversalTransactionType,
   CardWithdrawalTransactionRequest,
   InitiateTransactionRequest,
   validateInitiateTransactionRequest,
@@ -141,7 +143,7 @@ export class TransactionService {
   }
 
   async initiateTransaction(request: InitiateTransactionRequest): Promise<Transaction> {
-    if (request.type !== WorkflowName.CARD_WITHDRAWAL) {
+    if (request.type !== WorkflowName.CARD_WITHDRAWAL && request.type !== WorkflowName.CARD_REVERSAL) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.NOT_IMPLEMENTED,
         message: "'initiateTransaction' only available for CARD_WITHDRAWAL as of today",
@@ -150,20 +152,18 @@ export class TransactionService {
 
     // TODO: Refactor to a 'TransactionExecutor' class after cleaning up iWorkflowImpl
     validateInitiateTransactionRequest(request);
-    const cardWithdrawalRequest: CardWithdrawalTransactionRequest = request.cardWithdrawalRequest;
 
-    const inputTransaction: InputTransaction = {
-      id: cardWithdrawalRequest.nobaTransactionID,
-      transactionRef: Utils.generateLowercaseUUID(true),
-      workflowName: WorkflowName.CARD_WITHDRAWAL,
-      debitAmount: cardWithdrawalRequest.debitAmountInUSD,
-      debitCurrency: Currency.USD,
-      debitConsumerID: cardWithdrawalRequest.debitConsumerID,
-      memo: cardWithdrawalRequest.memo,
-      exchangeRate: cardWithdrawalRequest.exchangeRate,
-      sessionKey: "CARD_WITHDRAWAL",
-      transactionFees: [],
-    };
+    let inputTransaction: InputTransaction;
+    switch (request.type) {
+      case WorkflowName.CARD_WITHDRAWAL:
+        inputTransaction = this.createInputTransactionForCardWithdrawalRequest(request.cardWithdrawalRequest);
+        break;
+
+      case WorkflowName.CARD_REVERSAL:
+        inputTransaction = this.createInputTransactionForCardReversalRequest(request.cardReversalRequest);
+        break;
+    }
+
     const transaction: Transaction = await this.transactionRepo.createTransaction(inputTransaction);
     return transaction;
   }
@@ -302,6 +302,55 @@ export class TransactionService {
     };
 
     return await this.transactionRepo.updateTransactionByTransactionID(transactionID, transactionUpdate);
+  }
+
+  private createInputTransactionForCardWithdrawalRequest(
+    cardWithdrawalRequest: CardWithdrawalTransactionRequest,
+  ): InputTransaction {
+    return {
+      id: cardWithdrawalRequest.nobaTransactionID,
+      transactionRef: Utils.generateLowercaseUUID(true),
+      workflowName: WorkflowName.CARD_WITHDRAWAL,
+      debitAmount: cardWithdrawalRequest.debitAmountInUSD,
+      debitCurrency: Currency.USD,
+      debitConsumerID: cardWithdrawalRequest.debitConsumerID,
+      memo: cardWithdrawalRequest.memo,
+      exchangeRate: cardWithdrawalRequest.exchangeRate,
+      sessionKey: "CARD_WITHDRAWAL",
+      transactionFees: [],
+    };
+  }
+
+  private createInputTransactionForCardReversalRequest(
+    cardReversalRequest: CardReversalTransactionRequest,
+  ): InputTransaction {
+    if (cardReversalRequest.type === CardReversalTransactionType.CREDIT) {
+      return {
+        id: cardReversalRequest.nobaTransactionID,
+        transactionRef: Utils.generateLowercaseUUID(true),
+        workflowName: WorkflowName.CARD_REVERSAL,
+        creditAmount: cardReversalRequest.amountInUSD,
+        creditCurrency: Currency.USD,
+        creditConsumerID: cardReversalRequest.consumerID,
+        memo: cardReversalRequest.memo,
+        exchangeRate: cardReversalRequest.exchangeRate,
+        sessionKey: "CARD_REVERSAL",
+        transactionFees: [],
+      };
+    } else {
+      return {
+        id: cardReversalRequest.nobaTransactionID,
+        transactionRef: Utils.generateLowercaseUUID(true),
+        workflowName: WorkflowName.CARD_REVERSAL,
+        debitAmount: cardReversalRequest.amountInUSD,
+        debitCurrency: Currency.USD,
+        debitConsumerID: cardReversalRequest.consumerID,
+        memo: cardReversalRequest.memo,
+        exchangeRate: cardReversalRequest.exchangeRate,
+        sessionKey: "CARD_REVERSAL",
+        transactionFees: [],
+      };
+    }
   }
 
   private async validateForSanctions(

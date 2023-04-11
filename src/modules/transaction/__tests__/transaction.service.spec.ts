@@ -72,7 +72,7 @@ import { KmsService } from "../../../modules/common/kms.service";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { TransactionFilterOptionsDTO } from "../dto/TransactionFilterOptionsDTO";
-import { InitiateTransactionRequest } from "../dto/transaction.service.dto";
+import { CardReversalTransactionType, InitiateTransactionRequest } from "../dto/transaction.service.dto";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -902,6 +902,132 @@ describe("TransactionServiceTests", () => {
           exchangeRate: 1,
           sessionKey: "CARD_WITHDRAWAL",
           transactionFees: [],
+        });
+      });
+    });
+
+    describe("CARD_REVERSAL", () => {
+      const validCardReversalCreditRequest: InitiateTransactionRequest = {
+        type: WorkflowName.CARD_REVERSAL,
+        cardReversalRequest: {
+          type: CardReversalTransactionType.CREDIT,
+          amountInUSD: 100,
+          consumerID: "CREDIT_CONSUMER_ID",
+          exchangeRate: 1,
+          memo: "MEMO",
+          nobaTransactionID: "NOBA_TRANSACTION_ID",
+        },
+      };
+      const validCardReversalDebitRequest: InitiateTransactionRequest = {
+        type: WorkflowName.CARD_REVERSAL,
+        cardReversalRequest: {
+          type: CardReversalTransactionType.DEBIT,
+          amountInUSD: 100,
+          consumerID: "DEBIT_CONSUMER_ID",
+          exchangeRate: 1,
+          memo: "MEMO",
+          nobaTransactionID: "NOBA_TRANSACTION_ID",
+        },
+      };
+
+      describe("validation errors", () => {
+        it.each(["type", "nobaTransactionID", "consumerID", "amountInUSD", "exchangeRate", "memo"])(
+          "should throw error if '%s' is not specified",
+          async field => {
+            const request = JSON.parse(JSON.stringify(validCardReversalCreditRequest));
+            delete request["cardReversalRequest"][field];
+
+            try {
+              await transactionService.initiateTransaction(request);
+              expect(true).toBe(false);
+            } catch (err) {
+              expect(err.message).toEqual(expect.stringContaining("cardReversalRequest"));
+              expect(err.message).toEqual(expect.stringContaining(`${field}`));
+            }
+          },
+        );
+
+        it("should throw error if 'type' field is invalid", async () => {
+          const request = JSON.parse(JSON.stringify(validCardReversalCreditRequest));
+          request["cardReversalRequest"]["type"] = "INVALID";
+
+          try {
+            await transactionService.initiateTransaction(request);
+            expect(true).toBe(false);
+          } catch (err) {
+            expect(err.message).toEqual(expect.stringContaining("cardReversalRequest"));
+            expect(err.message).toEqual(expect.stringContaining("type"));
+          }
+        });
+      });
+
+      describe("success scenarios", () => {
+        it("should correctly save the CARD_REVERSAL 'credit' transaction", async () => {
+          const request: InitiateTransactionRequest = JSON.parse(JSON.stringify(validCardReversalCreditRequest));
+          const transaction: Transaction = {
+            id: "NOBA_TRANSACTION_ID",
+            transactionRef: "DUMMY_REF",
+            exchangeRate: 1,
+            creditAmount: 100,
+            creditCurrency: Currency.USD,
+            creditConsumerID: "CREDIT_CONSUMER_ID",
+            transactionFees: [],
+            sessionKey: "CARD_REVERSAL",
+            status: TransactionStatus.INITIATED,
+            workflowName: WorkflowName.CARD_REVERSAL,
+          };
+          when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
+
+          const response = await transactionService.initiateTransaction(request);
+
+          expect(response).toStrictEqual(transaction);
+          const [propagatedInputTransactionArg] = capture(transactionRepo.createTransaction).last();
+          expect(propagatedInputTransactionArg).toStrictEqual({
+            id: "NOBA_TRANSACTION_ID",
+            transactionRef: expect.any(String),
+            workflowName: WorkflowName.CARD_REVERSAL,
+            creditAmount: 100,
+            creditCurrency: Currency.USD,
+            creditConsumerID: "CREDIT_CONSUMER_ID",
+            memo: "MEMO",
+            exchangeRate: 1,
+            sessionKey: "CARD_REVERSAL",
+            transactionFees: [],
+          });
+        });
+
+        it("should correctly save the CARD_REVERSAL 'debit' transaction", async () => {
+          const request: InitiateTransactionRequest = JSON.parse(JSON.stringify(validCardReversalDebitRequest));
+          const transaction: Transaction = {
+            id: "NOBA_TRANSACTION_ID",
+            transactionRef: "DUMMY_REF",
+            exchangeRate: 1,
+            debitAmount: 100,
+            debitCurrency: Currency.USD,
+            debitConsumerID: "DEBIT_CONSUMER_ID",
+            transactionFees: [],
+            sessionKey: "CARD_REVERSAL",
+            status: TransactionStatus.INITIATED,
+            workflowName: WorkflowName.CARD_REVERSAL,
+          };
+          when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
+
+          const response = await transactionService.initiateTransaction(request);
+
+          expect(response).toStrictEqual(transaction);
+          const [propagatedInputTransactionArg] = capture(transactionRepo.createTransaction).last();
+          expect(propagatedInputTransactionArg).toStrictEqual({
+            id: "NOBA_TRANSACTION_ID",
+            transactionRef: expect.any(String),
+            workflowName: WorkflowName.CARD_REVERSAL,
+            debitAmount: 100,
+            debitCurrency: Currency.USD,
+            debitConsumerID: "DEBIT_CONSUMER_ID",
+            memo: "MEMO",
+            exchangeRate: 1,
+            sessionKey: "CARD_REVERSAL",
+            transactionFees: [],
+          });
         });
       });
     });

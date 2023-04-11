@@ -308,6 +308,13 @@ export class SQLPomeloRepo implements PomeloRepo {
         amountInLocalCurrency: request.amountInLocalCurrency,
         localCurrency: request.localCurrency,
         status: PomeloTransactionStatus.PENDING,
+        ...(request.parentPomeloTransactionID && {
+          parentPomeloTransaction: {
+            connect: {
+              pomeloTransactionID: request.parentPomeloTransactionID,
+            },
+          },
+        }),
       };
 
       const returnedTransaction: PrismaPomeloTransactionModel = await this.prismaService.pomeloTransaction.create({

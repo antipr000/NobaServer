@@ -112,6 +112,7 @@ export const createPomeloCardWithPredefinedPomeloUser = async (
 export const createPomeloTransaction = async (
   pomeloCardID: string,
   nobaTransactionID: string,
+  parentPomeloTransactionID: string,
   prismaService: PrismaService,
 ): Promise<PomeloTransaction> => {
   const savedTransaction = await prismaService.pomeloTransaction.create({
@@ -128,12 +129,20 @@ export const createPomeloTransaction = async (
       amountInLocalCurrency: 500,
       localCurrency: PomeloCurrency.COP,
       status: PomeloTransactionStatus.PENDING,
+      ...(parentPomeloTransactionID && {
+        parentPomeloTransaction: {
+          connect: {
+            pomeloTransactionID: parentPomeloTransactionID,
+          },
+        },
+      }),
     },
   });
 
   return {
     id: savedTransaction.id,
     pomeloTransactionID: savedTransaction.pomeloTransactionID,
+    parentPomeloTransactionID: savedTransaction.parentPomeloTransactionID,
     pomeloIdempotencyKey: savedTransaction.pomeloIdempotencyKey,
     pomeloCardID: savedTransaction.pomeloCardID,
     nobaTransactionID: savedTransaction.nobaTransactionID,
@@ -151,6 +160,7 @@ export const getRandomPomeloTransaction = (pomeloCardID: string, nobaTransaction
     id: uuid(),
     pomeloIdempotencyKey: uuid(),
     pomeloTransactionID: uuid(),
+    parentPomeloTransactionID: null,
     pomeloCardID: pomeloCardID,
     nobaTransactionID: nobaTransactionID,
     amountInUSD: 10,

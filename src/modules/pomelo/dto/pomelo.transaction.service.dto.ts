@@ -19,6 +19,15 @@ export enum PomeloTransactionType {
   WITHDRAWAL = "WITHDRAWAL",
   EXTRACASH = "EXTRACASH",
   BALANCE_INQUIRY = "BALANCE_INQUIRY",
+
+  REFUND = "REFUND",
+  PAYMENT = "PAYMENT",
+  REVERSAL_PURCHASE = "REVERSAL_PURCHASE",
+  REVERSAL_WITHDRAWAL = "REVERSAL_WITHDRAWAL",
+  REVERSAL_EXTRACASH = "REVERSAL_EXTRACASH",
+
+  REVERSAL_REFUND = "REVERSAL_REFUND",
+  REVERSAL_PAYMENT = "REVERSAL_PAYMENT",
 }
 
 export type PomeloTransactionAuthzRequest = {
@@ -33,7 +42,34 @@ export type PomeloTransactionAuthzRequest = {
   pomeloTransactionID: string;
   transactionType: PomeloTransactionType;
   merchantName: string;
+  pomeloCardID: string;
+  pomeloUserID: string;
+  localCurrency: PomeloCurrency;
+  localAmount: number;
+  settlementCurrency: PomeloCurrency;
+  settlementAmount: number;
+};
+
+// The small letter values are to map with how Pomelo sends us. This avoids extra translation layer.
+export enum PomeloAdjustmentType {
+  DEBIT = "debit",
+  CREDIT = "credit",
+}
+
+export type PomeloTransactionAdjustmentRequest = {
+  // request validation parameters.
+  endpoint: string;
+  timestamp: string;
+  rawSignature: string;
+  rawBodyBuffer: Buffer;
+  idempotencyKey: string;
+
+  // request parameters.
+  adjustmentType: PomeloAdjustmentType;
+  pomeloTransactionID: string;
   pomeloOriginalTransactionID: string;
+  transactionType: PomeloTransactionType;
+  merchantName: string;
   pomeloCardID: string;
   pomeloUserID: string;
   localCurrency: PomeloCurrency;
@@ -48,3 +84,5 @@ export type PomeloTransactionAuthzResponse = {
   summaryStatus: PomeloTransactionAuthzSummaryStatus;
   detailedStatus: PomeloTransactionAuthzDetailStatus;
 };
+
+export type PomeloTransactionAdjustmentResponse = PomeloTransactionAuthzResponse;
