@@ -119,9 +119,15 @@ describe("Verification", () => {
     })) as ConsumerDTO & ResponseStatus;
     expect(updateConsumerResponse.__status).toBe(200);
 
-    const sessionKey = "test-session-key";
+    let signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/verify/session", JSON.stringify({}));
+    const getSessionKeyResponse = (await VerificationService.createSession({
+      xNobaApiKey: TEST_API_KEY,
+      xNobaSignature: signature,
+      xNobaTimestamp: TEST_TIMESTAMP,
+    })) as SessionResponseDTO & ResponseStatus;
+    const sessionKey = getSessionKeyResponse.sessionToken;
 
-    let signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/verify/consumer", JSON.stringify({}));
+    signature = computeSignature(TEST_TIMESTAMP, "POST", "/v1/verify/consumer", JSON.stringify({}));
 
     const getVerifyConsumerInformationResponse = (await VerificationService.verifyConsumer({
       xNobaApiKey: TEST_API_KEY,
