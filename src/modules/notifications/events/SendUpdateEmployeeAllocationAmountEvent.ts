@@ -1,15 +1,23 @@
-export class SendUpdateEmployeeAllocationAmontEvent {
-  public readonly nobaEmployeeID: string;
-  public readonly allocationAmountInPesos: number;
+import Joi from "joi";
+import { BaseEvent } from "./BaseEvent";
 
-  constructor({
-    nobaEmployeeID,
-    allocationAmountInPesos,
-  }: {
-    nobaEmployeeID: string;
-    allocationAmountInPesos: number;
-  }) {
-    this.nobaEmployeeID = nobaEmployeeID;
-    this.allocationAmountInPesos = allocationAmountInPesos;
-  }
+export class SendUpdateEmployeeAllocationAmountEvent extends BaseEvent {
+  nobaEmployeeID: string;
+  allocationAmountInPesos: number;
 }
+
+export const validateSendUpdateEmployeeAllocationAmountEvent = (event: SendUpdateEmployeeAllocationAmountEvent) => {
+  const sendUpdateEmployeeAllocationAmountEventJoiValidationKeys = {
+    nobaEmployeeID: Joi.string().required(),
+    allocationAmountInPesos: Joi.number().required(),
+  };
+
+  const sendUpdateEmployeeAllocationAmountEventJoiSchema = Joi.object(
+    sendUpdateEmployeeAllocationAmountEventJoiValidationKeys,
+  ).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
+
+  Joi.attempt(event, sendUpdateEmployeeAllocationAmountEventJoiSchema);
+};

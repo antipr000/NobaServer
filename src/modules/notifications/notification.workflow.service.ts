@@ -6,9 +6,8 @@ import { NotificationService } from "./notification.service";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { NotificationPayload, prepareNotificationPayload } from "./domain/NotificationPayload";
+import { NotificationPayload, NotificationPayloadMapper } from "./domain/NotificationPayload";
 import { TransactionNotificationPayloadMapper } from "./domain/TransactionNotificationParameters";
-import { Transaction } from "../transaction/domain/Transaction";
 import { Consumer } from "../consumer/domain/Consumer";
 import { PayrollStatus } from "../employer/domain/Payroll";
 import { EmployerService } from "../employer/employer.service";
@@ -59,72 +58,48 @@ export class NotificationWorkflowService {
     }
 
     let consumer: Consumer;
+    let creditConsumer: Consumer;
     let payload: NotificationPayload;
 
-    const transactionPayload = await this.generateTransactionPayload(transaction, notificationWorkflowType);
     switch (notificationWorkflowType) {
       case NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT:
         consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
-        payload = prepareNotificationPayload(consumer, {
-          depositCompletedParams: transactionPayload,
-        });
+        payload = NotificationPayloadMapper.toDepositCompletedEvent(consumer, transaction);
         await this.notificationService.sendNotification(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.DEPOSIT_FAILED_EVENT:
         consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
-        payload = prepareNotificationPayload(consumer, {
-          depositFailedParams: transactionPayload,
-        });
+        payload = NotificationPayloadMapper.toDepositFailedEvent(consumer, transaction);
         await this.notificationService.sendNotification(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.WITHDRAWAL_COMPLETED_EVENT:
         consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
-        payload = prepareNotificationPayload(consumer, {
-          withdrawalCompletedParams: transactionPayload,
-        });
+        payload = NotificationPayloadMapper.toWithdrawalCompletedEvent(consumer, transaction);
         await this.notificationService.sendNotification(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.WITHDRAWAL_FAILED_EVENT:
         consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
-        payload = prepareNotificationPayload(consumer, {
-          withdrawalFailedParams: transactionPayload,
-        });
+        payload = NotificationPayloadMapper.toWithdrawalFailedEvent(consumer, transaction);
         await this.notificationService.sendNotification(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.TRANSFER_COMPLETED_EVENT:
         consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
-        payload = prepareNotificationPayload(consumer, {
-          transferCompletedParams: transactionPayload,
-        });
+        creditConsumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
+        payload = NotificationPayloadMapper.toTransferCompletedEvent(consumer, creditConsumer, transaction);
         await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT, payload);
-        const creditConsumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
-        const transferReceivedPayload =
-          this.transactionNotificationPayloadMapper.toTransferReceivedNotificationParameters(
-            transaction,
-            consumer,
-            creditConsumer,
-          );
-        payload = prepareNotificationPayload(creditConsumer, {
-          transferReceivedParams: transferReceivedPayload,
-        });
+        payload = NotificationPayloadMapper.toTransferReceivedEvent(consumer, creditConsumer, transaction);
         await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.TRANSFER_FAILED_EVENT:
         consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
-        payload = prepareNotificationPayload(consumer, {
-          transferFailedParams: transactionPayload,
-        });
+        creditConsumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
+        payload = NotificationPayloadMapper.toTransferFailedEvent(consumer, creditConsumer, transaction);
         await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_FAILED_EVENT, payload);
         break;
       case NotificationWorkflowTypes.PAYROLL_DEPOSIT_COMPLETED_EVENT:
         consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
         const employer = await this.employerService.getEmployerForTransactionID(transactionID);
-        payload = prepareNotificationPayload(consumer, {
-          payrollDepositCompletedParams: {
-            ...transactionPayload,
-            companyName: employer.name,
-          },
-        });
+        payload = NotificationPayloadMapper.toPayrollDepositCompletedEvent(consumer, transaction, employer.name);
         await this.notificationService.sendNotification(
           NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
           payload,
@@ -168,57 +143,8 @@ export class NotificationWorkflowService {
       });
     }
 
-    await this.notificationService.sendNotification(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT, {
-      locale: "en",
-      nobaPayrollID: payrollID,
-      payrollStatus: status,
-    });
-  }
+    const payload = NotificationPayloadMapper.toUpdatePayrollStatusEvent(payroll.id, status);
 
-  private async generateTransactionPayload(
-    transaction: Transaction,
-    notificationType: NotificationWorkflowTypes,
-  ): Promise<any> {
-    switch (notificationType) {
-      case NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT:
-        return this.transactionNotificationPayloadMapper.toDepositCompletedNotificationParameters(transaction);
-      case NotificationWorkflowTypes.DEPOSIT_FAILED_EVENT:
-        return this.transactionNotificationPayloadMapper.toDepositFailedNotificationParameters(transaction);
-      case NotificationWorkflowTypes.WITHDRAWAL_COMPLETED_EVENT:
-        return this.transactionNotificationPayloadMapper.toWithdrawalCompletedNotificationParameters(transaction);
-      case NotificationWorkflowTypes.WITHDRAWAL_FAILED_EVENT:
-        return this.transactionNotificationPayloadMapper.toWithdrawalFailedNotificationParameters(transaction);
-      case NotificationWorkflowTypes.TRANSFER_COMPLETED_EVENT:
-        const creditConsumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
-        const debitConsumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
-        return this.transactionNotificationPayloadMapper.toTransferCompletedNotificationParameters(
-          transaction,
-          debitConsumer,
-          creditConsumer,
-        );
-      case NotificationWorkflowTypes.TRANSFER_FAILED_EVENT:
-        const creditConsumerFailed = await this.consumerService.getConsumer(transaction.creditConsumerID);
-        const debitConsumerFailed = await this.consumerService.getConsumer(transaction.debitConsumerID);
-        return this.transactionNotificationPayloadMapper.toTransferFailedNotificationParameters(
-          transaction,
-          creditConsumerFailed,
-          debitConsumerFailed,
-        );
-      case NotificationWorkflowTypes.PAYROLL_DEPOSIT_COMPLETED_EVENT:
-        const employer = await this.employerService.getEmployerForTransactionID(transaction.id);
-        let employerName = "";
-        if (!employer) {
-          this.logger.warn(`Unable to find employer for transaction ${transaction.id}`);
-        } else {
-          employerName = employer.name;
-        }
-
-        return this.transactionNotificationPayloadMapper.toPayrollDepositCompletedNotificationParameters(
-          transaction,
-          employerName,
-        );
-      default:
-        return null;
-    }
+    await this.notificationService.sendNotification(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT, payload);
   }
 }

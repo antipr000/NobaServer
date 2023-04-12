@@ -1,15 +1,17 @@
-export class SendWelcomeMessageEvent {
-  public readonly email: string;
-  public readonly firstName?: string;
-  public readonly lastName?: string;
-  public readonly nobaUserID?: string;
-  public readonly locale?: string;
+import Joi from "joi";
+import { BaseEvent } from "./BaseEvent";
 
-  constructor({ email, firstName, lastName, nobaUserID, locale }) {
-    this.email = email;
-    this.firstName = firstName;
-    this.lastName = lastName;
-    this.nobaUserID = nobaUserID;
-    this.locale = locale;
-  }
-}
+export class SendWelcomeMessageEvent extends BaseEvent {}
+
+export const validateSendWelcomeMessageEvent = (event: SendWelcomeMessageEvent) => {
+  const sendWelcomeMessageEventJoiValidationKeys = {
+    email: Joi.string().email().required(),
+  };
+
+  const sendWelcomeMessageEventJoiSchema = Joi.object(sendWelcomeMessageEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
+
+  Joi.attempt(event, sendWelcomeMessageEventJoiSchema);
+};

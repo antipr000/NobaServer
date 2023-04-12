@@ -1,6 +1,8 @@
 import { FeeType } from "../../../modules/transaction/domain/TransactionFee";
 import { Transaction, getFee, getTotalFees } from "../../../modules/transaction/domain/Transaction";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
+import Joi from "joi";
+import { KeysRequired } from "../../../modules/common/domain/Types";
 
 export type TransactionParameters = {
   transactionRef: string;
@@ -59,9 +61,96 @@ export interface PayrollDepositCompletedNotificationParameters extends DepositCo
   companyName: string;
 }
 
+export class TransactionNotificationParamsJoiSchema {
+  static getTransactionParamsSchema(): KeysRequired<TransactionParameters> {
+    return {
+      transactionRef: Joi.string().required(),
+      createdTimestamp: Joi.string().required(),
+      processingFees: Joi.number().required(),
+      nobaFees: Joi.number().required(),
+      debitAmount: Joi.number().required(),
+      creditAmount: Joi.number().required(),
+      debitCurrency: Joi.string().required(),
+      creditCurrency: Joi.string().required(),
+      totalFees: Joi.number().required(),
+      exchangeRate: Joi.number().optional(),
+    };
+  }
+
+  static getDepositCompletedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
+  }
+
+  static getDepositFailedNotificationParamsSchema() {
+    return {
+      ...this.getTransactionParamsSchema(),
+      reasonDeclined: Joi.string().required(),
+    };
+  }
+
+  static getDepositInitiatedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
+  }
+
+  static getWithdrawalCompletedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
+  }
+
+  static getWithdrawalIntiatedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
+  }
+
+  static getWithdrawalFailedNotificationParamsSchema() {
+    return {
+      ...this.getTransactionParamsSchema(),
+      reasonDeclined: Joi.string().required(),
+    };
+  }
+
+  static getTransferCompletedNotificationParamsSchema() {
+    return {
+      ...this.getTransactionParamsSchema(),
+      creditConsumer_firstName: Joi.string().required(),
+      creditConsumer_lastName: Joi.string().required(),
+      debitConsumer_handle: Joi.string().required(),
+      creditConsumer_handle: Joi.string().required(),
+    };
+  }
+
+  static getTransferReceivedNotificationParamsSchema() {
+    return {
+      ...this.getTransactionParamsSchema(),
+      creditConsumer_firstName: Joi.string().required(),
+      creditConsumer_lastName: Joi.string().required(),
+      debitConsumer_handle: Joi.string().required(),
+      creditConsumer_handle: Joi.string().required(),
+      debitConsumer_firstName: Joi.string().required(),
+      debitConsumer_lastName: Joi.string().required(),
+    };
+  }
+
+  static getTransferFailedNotificationParamsSchema() {
+    return {
+      ...this.getTransactionParamsSchema(),
+      creditConsumer_firstName: Joi.string().required(),
+      creditConsumer_lastName: Joi.string().required(),
+      debitConsumer_handle: Joi.string().required(),
+      creditConsumer_handle: Joi.string().required(),
+      reasonDeclined: Joi.string().required(),
+    };
+  }
+
+  static getPayrollDepositCompletedNotificationParamsSchema() {
+    return {
+      ...this.getTransactionParamsSchema(),
+      companyName: Joi.string().required(),
+    };
+  }
+}
+
 // TODO(jira/CRYPTO-604): Remove hardcoded values and unnecessary fields once templates are ready
 export class TransactionNotificationPayloadMapper {
-  toTransactionParams(transaction: Transaction): TransactionParameters {
+  static toTransactionParams(transaction: Transaction): TransactionParameters {
     const processingFee = getFee(transaction, FeeType.PROCESSING);
     const nobaFee = getFee(transaction, FeeType.NOBA);
     return {
@@ -78,15 +167,15 @@ export class TransactionNotificationPayloadMapper {
     };
   }
 
-  toDepositInitiatedNotificationParameters(transaction: Transaction): DepositInitiatedNotificationParameters {
+  static toDepositInitiatedNotificationParameters(transaction: Transaction): DepositInitiatedNotificationParameters {
     return this.toTransactionParams(transaction);
   }
 
-  toDepositCompletedNotificationParameters(transaction: Transaction): DepositCompletedNotificationParameters {
+  static toDepositCompletedNotificationParameters(transaction: Transaction): DepositCompletedNotificationParameters {
     return this.toTransactionParams(transaction);
   }
 
-  toDepositFailedNotificationParameters(transaction: Transaction): DepositFailedNotificationParameters {
+  static toDepositFailedNotificationParameters(transaction: Transaction): DepositFailedNotificationParameters {
     const transactionParams = this.toTransactionParams(transaction);
     return {
       ...transactionParams,
@@ -94,15 +183,19 @@ export class TransactionNotificationPayloadMapper {
     };
   }
 
-  toWithdrawalInitiatedNotificationParameters(transaction: Transaction): WithdrawalIntiatedNotificationParameters {
+  static toWithdrawalInitiatedNotificationParameters(
+    transaction: Transaction,
+  ): WithdrawalIntiatedNotificationParameters {
     return this.toTransactionParams(transaction);
   }
 
-  toWithdrawalCompletedNotificationParameters(transaction: Transaction): WithdrawalCompletedNotificationParameters {
+  static toWithdrawalCompletedNotificationParameters(
+    transaction: Transaction,
+  ): WithdrawalCompletedNotificationParameters {
     return this.toTransactionParams(transaction);
   }
 
-  toPayrollDepositCompletedNotificationParameters(
+  static toPayrollDepositCompletedNotificationParameters(
     transaction: Transaction,
     companyName: string,
   ): PayrollDepositCompletedNotificationParameters {
@@ -113,7 +206,7 @@ export class TransactionNotificationPayloadMapper {
     };
   }
 
-  toWithdrawalFailedNotificationParameters(transaction: Transaction): WithdrawalFailedNotificationParameters {
+  static toWithdrawalFailedNotificationParameters(transaction: Transaction): WithdrawalFailedNotificationParameters {
     const transactionParams = this.toTransactionParams(transaction);
     return {
       ...transactionParams,
@@ -121,7 +214,7 @@ export class TransactionNotificationPayloadMapper {
     };
   }
 
-  toTransferCompletedNotificationParameters(
+  static toTransferCompletedNotificationParameters(
     transaction: Transaction,
     debitConsumer: Consumer,
     creditConsumer: Consumer,
@@ -136,7 +229,7 @@ export class TransactionNotificationPayloadMapper {
     };
   }
 
-  toTransferReceivedNotificationParameters(
+  static toTransferReceivedNotificationParameters(
     transaction: Transaction,
     debitConsumer: Consumer,
     creditConsumer: Consumer,
@@ -153,7 +246,7 @@ export class TransactionNotificationPayloadMapper {
     };
   }
 
-  toTransferFailedNotificationParameters(
+  static toTransferFailedNotificationParameters(
     transaction: Transaction,
     debitConsumer: Consumer,
     creditConsumer: Consumer,

@@ -64,6 +64,8 @@ import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/moc
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { IdentificationService } from "../../../modules/common/identification.service";
 import { getMockIdentificationServiceWithDefaults } from "../../../modules/common/mocks/mock.identification.service";
+import { PushTokenService } from "../../../modules/notifications/push.token.service";
+import { getMockPushTokenServiceWithDefaults } from "../../../modules/notifications/mocks/mock.pushtoken.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -81,15 +83,16 @@ const getRandomEmployer = (): Employer => {
   return employer;
 };
 
-const getRandomEmployee = (consumerID: string, employerID: string): Employee => {
+const getRandomEmployee = (consumerID: string, employer: Employer): Employee => {
   const employee: Employee = {
     id: uuid(),
-    employerID: employerID,
+    employerID: employer.id,
     consumerID: consumerID,
     allocationAmount: Math.floor(Math.random() * 1000000),
     allocationCurrency: EmployeeAllocationCurrency.COP,
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    employer: employer,
   };
 
   return employee;
@@ -119,6 +122,7 @@ describe("ConsumerService", () => {
   let bubbleService: BubbleService;
   let mockKMSService: KmsService;
   let mockIdentificationService: IdentificationService;
+  let mockPushTokenService: PushTokenService;
 
   jest.setTimeout(30000);
 
@@ -137,6 +141,7 @@ describe("ConsumerService", () => {
     bubbleService = getMockBubbleServiceWithDefaults();
     mockKMSService = getMockKMSServiceWithDefaults();
     mockIdentificationService = getMockIdentificationServiceWithDefaults();
+    mockPushTokenService = getMockPushTokenServiceWithDefaults();
 
     const ConsumerRepoProvider = {
       provide: "ConsumerRepo",
@@ -210,6 +215,10 @@ describe("ConsumerService", () => {
           provide: IdentificationService,
           useFactory: () => instance(mockIdentificationService),
         },
+        {
+          provide: PushTokenService,
+          useFactory: () => instance(mockPushTokenService),
+        },
       ],
     }).compile();
 
@@ -237,11 +246,7 @@ describe("ConsumerService", () => {
         notificationService.sendNotification(
           NotificationEventType.SEND_WELCOME_MESSAGE_EVENT,
           deepEqual({
-            locale: consumer.props.locale,
             email: email,
-            firstName: undefined,
-            lastName: undefined,
-            nobaUserID: consumer.props.id,
           }),
         ),
       ).once();
@@ -824,14 +829,14 @@ describe("ConsumerService", () => {
 
   describe("subscribeToPushNotifications", () => {
     it("should subscribe to push notifications", async () => {
-      when(notificationService.subscribeToPushNotifications("consumer-id", "push-token")).thenResolve("push-token-id");
+      when(mockPushTokenService.subscribeToPushNotifications("consumer-id", "push-token")).thenResolve("push-token-id");
       expect(await consumerService.subscribeToPushNotifications("consumer-id", "push-token")).toBe("push-token-id");
     });
   });
 
   describe("unsubscribeToPushNotifications", () => {
     it("should unsubscribe to push notifications", async () => {
-      when(notificationService.unsubscribeFromPushNotifications("consumer-id", "push-token")).thenResolve(
+      when(mockPushTokenService.unsubscribeFromPushNotifications("consumer-id", "push-token")).thenResolve(
         "push-token-id",
       );
       expect(await consumerService.unsubscribeFromPushNotifications("consumer-id", "push-token")).toBe("push-token-id");
@@ -1111,6 +1116,7 @@ describe("ConsumerService", () => {
         lastName: "Name",
         email: email,
         displayEmail: email,
+        locale: "en",
       });
 
       const wallet = CryptoWallet.createCryptoWallet({
@@ -1225,7 +1231,7 @@ describe("ConsumerService", () => {
         notificationService.sendNotification(
           NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT,
           deepEqual({
-            locale: "en_us",
+            locale: "en",
             phone: phone,
             otp: "111111",
           }),
@@ -1683,9 +1689,6 @@ describe("ConsumerService", () => {
         notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
           locale: consumer.props.locale,
           email: email,
-          firstName: consumer.props.firstName,
-          lastName: consumer.props.lastName,
-          nobaUserID: consumer.props.firstName,
         }),
       ).thenResolve();
 
@@ -1706,9 +1709,6 @@ describe("ConsumerService", () => {
       expect(notificationUserArgs).toStrictEqual({
         locale: consumer.props.locale,
         email: email.toLowerCase(),
-        firstName: consumer.props.firstName,
-        lastName: consumer.props.lastName,
-        nobaUserID: consumer.props.id,
       });
 
       //update consumer again, this time notification shouldn't be sent
@@ -1937,11 +1937,15 @@ describe("ConsumerService", () => {
     it("should register an Employee by ID successfully", async () => {
       const consumer = getRandomConsumer();
       const employer = getRandomEmployer();
-      const employee = getRandomEmployee(consumer.props.id, employer.id);
+      const employee = getRandomEmployee(consumer.props.id, employer);
 
       when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
       when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(notificationService.sendNotification(anyString(), anything())).thenResolve();
+      when(employeeService.getEmployeeByID(employee.id, true)).thenResolve({
+        ...employee,
+        employer: employer,
+      });
 
       const response = await consumerService.registerWithAnEmployer(employer.id, consumer.props.id, 100);
 
@@ -1951,7 +1955,7 @@ describe("ConsumerService", () => {
     it("should not register a disabled Employee", async () => {
       const consumer = getRandomConsumer();
       const employer = getRandomEmployer();
-      const employee = getRandomEmployee(consumer.props.id, employer.id);
+      const employee = getRandomEmployee(consumer.props.id, employer);
       consumer.props.isDisabled = true;
 
       when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
@@ -1967,7 +1971,7 @@ describe("ConsumerService", () => {
     it("should return a list of linked Employers", async () => {
       const consumer = getRandomConsumer();
       const employer = getRandomEmployer();
-      const employee = getRandomEmployee(consumer.props.id, employer.id);
+      const employee = getRandomEmployee(consumer.props.id, employer);
 
       when(employeeService.getEmployeesForConsumerID(consumer.props.id)).thenResolve([employee]);
 
@@ -2045,7 +2049,7 @@ describe("ConsumerService", () => {
 
     it("should update the allocation amount for an Employer", async () => {
       const employer = getRandomEmployer();
-      const employee = getRandomEmployee("consumerID", employer.id);
+      const employee = getRandomEmployee("consumerID", employer);
       employee.allocationAmount = 1256;
 
       when(employeeService.getEmployeeByConsumerAndEmployerID("consumerID", employer.id)).thenResolve(employee);
@@ -2057,7 +2061,12 @@ describe("ConsumerService", () => {
           }),
         ),
       ).thenResolve(employee);
-      when(notificationService.updateEmployeeAllocationInBubble(employee.id, 1256)).thenResolve();
+      when(
+        notificationService.sendNotification(NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT, {
+          nobaEmployeeID: employee.id,
+          allocationAmountInPesos: 1256,
+        }),
+      ).thenResolve();
 
       const response = await consumerService.updateEmployerAllocationAmount(employer.id, "consumerID", 1256);
 

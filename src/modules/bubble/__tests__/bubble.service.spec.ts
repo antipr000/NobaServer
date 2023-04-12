@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { anyNumber, anyString, anything, capture, instance, verify, when } from "ts-mockito";
+import { anyNumber, anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { uuid } from "uuidv4";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { Employer } from "../../../modules/employer/domain/Employer";
@@ -21,6 +21,7 @@ import { NotificationService } from "../../../modules/notifications/notification
 import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
+import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -329,14 +330,34 @@ describe("BubbleServiceTests", () => {
       });
 
       verify(
-        notificationService.updateEmployeeAllocationInBubble(updatedEmployee1.id, updatedEmployee1.allocationAmount),
+        notificationService.sendNotification(
+          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
+          deepEqual({
+            nobaEmployeeID: updatedEmployee1.id,
+            allocationAmountInPesos: updatedEmployee1.allocationAmount,
+          }),
+        ),
       ).once();
 
       verify(
-        notificationService.updateEmployeeAllocationInBubble(updatedEmployee3.id, updatedEmployee3.allocationAmount),
+        notificationService.sendNotification(
+          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
+          deepEqual({
+            nobaEmployeeID: updatedEmployee3.id,
+            allocationAmountInPesos: updatedEmployee3.allocationAmount,
+          }),
+        ),
       ).once();
 
-      verify(notificationService.updateEmployeeAllocationInBubble(employee2.id, employee2.allocationAmount)).never();
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
+          deepEqual({
+            nobaEmployeeID: employee2.id,
+            allocationAmountInPesos: employee2.allocationAmount,
+          }),
+        ),
+      ).never();
     });
 
     it("should update the 'payrollDays' of employer in Noba", async () => {

@@ -1,19 +1,33 @@
-import { TransferCompletedNotificationParameters } from "../domain/TransactionNotificationParameters";
+import {
+  TransactionNotificationParamsJoiSchema,
+  TransferCompletedNotificationParameters,
+} from "../domain/TransactionNotificationParameters";
+import Joi from "joi";
+import { KeysRequired } from "../../../modules/common/domain/Types";
+import { BaseEvent } from "./BaseEvent";
 
-export class SendTransferCompletedEvent {
-  public readonly email: string;
-  public readonly name: string;
-  public readonly handle: string;
-  public readonly params: TransferCompletedNotificationParameters;
-  public readonly pushTokens: string[];
-  public readonly locale?: string;
-
-  constructor({ email, name, handle, params, pushTokens, locale }) {
-    this.email = email;
-    this.name = name;
-    this.handle = handle;
-    this.params = params;
-    this.locale = locale;
-    this.pushTokens = pushTokens;
-  }
+export class SendTransferCompletedEvent extends BaseEvent {
+  params: TransferCompletedNotificationParameters;
 }
+
+export const validateTransferCompletedEvent = (event: SendTransferCompletedEvent) => {
+  const transferCompletedEventJoiValidationKeys: KeysRequired<SendTransferCompletedEvent> = {
+    email: Joi.string().email().required(),
+    firstName: Joi.string().optional(),
+    lastName: Joi.string().optional(),
+    handle: Joi.string().required(),
+    params: Joi.object(
+      TransactionNotificationParamsJoiSchema.getTransferCompletedNotificationParamsSchema(),
+    ).required(),
+    locale: Joi.string().optional(),
+    phone: Joi.string().optional(),
+    nobaUserID: Joi.string().optional(),
+  };
+
+  const transferCompletedEventJoiSchema = Joi.object(transferCompletedEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
+
+  Joi.attempt(event, transferCompletedEventJoiSchema);
+};

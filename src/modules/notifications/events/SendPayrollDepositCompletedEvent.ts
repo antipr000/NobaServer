@@ -1,19 +1,33 @@
-import { PayrollDepositCompletedNotificationParameters } from "../domain/TransactionNotificationParameters";
+import {
+  PayrollDepositCompletedNotificationParameters,
+  TransactionNotificationParamsJoiSchema,
+} from "../domain/TransactionNotificationParameters";
+import Joi from "joi";
+import { KeysRequired } from "../../../modules/common/domain/Types";
+import { BaseEvent } from "./BaseEvent";
 
-export class SendPayrollDepositCompletedEvent {
-  public readonly email: string;
-  public readonly name: string;
-  public readonly handle: string;
-  public readonly params: PayrollDepositCompletedNotificationParameters;
-  public readonly pushTokens: string[];
-  public readonly locale?: string;
-
-  constructor({ email, name, handle, params, pushTokens, locale }) {
-    this.email = email;
-    this.name = name;
-    this.handle = handle;
-    this.params = params;
-    this.pushTokens = pushTokens;
-    this.locale = locale;
-  }
+export class SendPayrollDepositCompletedEvent extends BaseEvent {
+  params: PayrollDepositCompletedNotificationParameters;
 }
+
+export const validatePayrollDepositCompletedEvent = (event: SendPayrollDepositCompletedEvent) => {
+  const payrollDepositCompletedEventJoiValidationKeys: KeysRequired<SendPayrollDepositCompletedEvent> = {
+    email: Joi.string().email().required(),
+    firstName: Joi.string().required(),
+    lastName: Joi.string().optional(),
+    handle: Joi.string().required(),
+    params: Joi.object(
+      TransactionNotificationParamsJoiSchema.getPayrollDepositCompletedNotificationParamsSchema(),
+    ).required(),
+    locale: Joi.string().optional(),
+    phone: Joi.string().optional(),
+    nobaUserID: Joi.string().required(),
+  };
+
+  const payrollDepositCompletedEventJoiSchema = Joi.object(payrollDepositCompletedEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
+
+  Joi.attempt(event, payrollDepositCompletedEventJoiSchema);
+};

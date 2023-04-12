@@ -8,14 +8,16 @@ import { getMockPushClientWithDefaults } from "../mocks/mock.push.client";
 import { WorkflowName } from "../../../modules/transaction/domain/Transaction";
 import { TransactionParameters } from "../domain/TransactionNotificationParameters";
 import { SendDepositCompletedEvent } from "../events/SendDepositCompletedEvent";
-import { SendWithdrawalCompletedEvent } from "../events/SendWithdrawalCompletedEvent";
 import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent";
 import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
 import { SendDepositFailedEvent } from "../events/SendDepositFailedEvent";
-import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 import { SendPayrollDepositCompletedEvent } from "../events/SendPayrollDepositCompletedEvent";
 import { PushNotificationType } from "../domain/PushNotificationTypes";
+import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
+import { PushTokenService } from "../push.token.service";
+import { getMockPushTokenServiceWithDefaults } from "../mocks/mock.pushtoken.service";
+import { SendWithdrawalCompletedEvent } from "../events/SendWithdrawalCompletedEvent";
 
 describe.each([
   ["en", "en"],
@@ -25,11 +27,13 @@ describe.each([
 ])("PushEventHandler Tests", (locale: string, expectedSuffix: string) => {
   let mockPushClient: PushClient;
   let eventHandler: PushEventHandler;
+  let mockPushTokenService: PushTokenService;
 
   jest.setTimeout(30000);
 
   beforeEach(async () => {
     mockPushClient = getMockPushClientWithDefaults();
+    mockPushTokenService = getMockPushTokenServiceWithDefaults();
 
     process.env = {
       ...process.env,
@@ -44,6 +48,10 @@ describe.each([
           provide: "PushNotificationClient",
           useFactory: () => instance(mockPushClient),
         },
+        {
+          provide: PushTokenService,
+          useFactory: () => instance(mockPushTokenService),
+        },
         PushEventHandler,
       ],
     }).compile();
@@ -53,14 +61,18 @@ describe.each([
   });
 
   it(`should call pushClient with Deposit completed event and ${locale} locale`, async () => {
-    const payload = new SendDepositCompletedEvent({
+    const payload: SendDepositCompletedEvent = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
       params: getTransactionParams(WorkflowName.WALLET_DEPOSIT),
-      pushTokens: ["push-token-1", "push-token-2"],
       locale: locale,
-    });
+    };
+
+    when(mockPushTokenService.getPushTokensForConsumer(payload.nobaUserID)).thenResolve([
+      "push-token-1",
+      "push-token-2",
+    ]);
 
     await eventHandler.sendDepositCompletedEvent(payload);
 
@@ -100,14 +112,21 @@ describe.each([
   });
 
   it(`should call pushClient with Deposit failed event and ${locale} locale`, async () => {
-    const payload = new SendDepositFailedEvent({
+    const payload: SendDepositFailedEvent = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
-      params: getTransactionParams(WorkflowName.WALLET_DEPOSIT),
-      pushTokens: ["push-token-1", "push-token-2"],
+      params: {
+        ...getTransactionParams(WorkflowName.WALLET_DEPOSIT),
+        reasonDeclined: "reason-declined",
+      },
       locale: locale,
-    });
+    };
+
+    when(mockPushTokenService.getPushTokensForConsumer(payload.nobaUserID)).thenResolve([
+      "push-token-1",
+      "push-token-2",
+    ]);
 
     await eventHandler.sendDepositFailedEvent(payload);
 
@@ -147,16 +166,20 @@ describe.each([
   });
 
   it(`should call PushClient with Withdrawal completed event and ${locale} locale`, async () => {
-    const payload = new SendWithdrawalCompletedEvent({
+    const payload: SendWithdrawalCompletedEvent = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
       params: {
         ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
       },
-      pushTokens: ["push-token-1", "push-token-2"],
       locale: locale,
-    });
+    };
+
+    when(mockPushTokenService.getPushTokensForConsumer(payload.nobaUserID)).thenResolve([
+      "push-token-1",
+      "push-token-2",
+    ]);
 
     await eventHandler.sendWithdrawalCompletedEvent(payload);
 
@@ -196,16 +219,21 @@ describe.each([
   });
 
   it(`should call PushClient with Withdrawal failed event and ${locale} locale`, async () => {
-    const payload = new SendWithdrawalFailedEvent({
+    const payload: SendWithdrawalFailedEvent = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
       params: {
         ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
+        reasonDeclined: "reason-declined",
       },
-      pushTokens: ["push-token-1", "push-token-2"],
       locale: locale,
-    });
+    };
+
+    when(mockPushTokenService.getPushTokensForConsumer(payload.nobaUserID)).thenResolve([
+      "push-token-1",
+      "push-token-2",
+    ]);
 
     await eventHandler.sendWithdrawalFailedEvent(payload);
 
@@ -245,11 +273,10 @@ describe.each([
   });
 
   it(`should call PushClient with Transfer completed event and ${locale} locale`, async () => {
-    const payload = new SendTransferCompletedEvent({
+    const payload: SendTransferCompletedEvent = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
-      pushTokens: ["push-token-1", "push-token-2"],
       params: {
         ...getTransactionParams(WorkflowName.WALLET_TRANSFER),
         creditConsumer_firstName: "Justin",
@@ -258,7 +285,12 @@ describe.each([
         debitConsumer_handle: "gal",
       },
       locale: locale,
-    });
+    };
+
+    when(mockPushTokenService.getPushTokensForConsumer(payload.nobaUserID)).thenResolve([
+      "push-token-1",
+      "push-token-2",
+    ]);
 
     await eventHandler.sendTransferCompletedEvent(payload);
 
@@ -302,20 +334,25 @@ describe.each([
   });
 
   it(`should call PushClient with Transfer failed event and ${locale} locale`, async () => {
-    const payload = new SendTransferFailedEvent({
+    const payload: SendTransferFailedEvent = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
-      pushTokens: ["push-token-1", "push-token-2"],
       params: {
         ...getTransactionParams(WorkflowName.WALLET_TRANSFER),
         creditConsumer_firstName: "Justin",
         creditConsumer_lastName: "Ashworth",
         creditConsumer_handle: "justin",
         debitConsumer_handle: "gal",
+        reasonDeclined: "reason-declined",
       },
       locale: locale,
-    });
+    };
+
+    when(mockPushTokenService.getPushTokensForConsumer(payload.nobaUserID)).thenResolve([
+      "push-token-1",
+      "push-token-2",
+    ]);
 
     await eventHandler.sendTransferFailedEvent(payload);
 
@@ -359,9 +396,9 @@ describe.each([
   });
 
   it(`should call PushClient with Transfer completed event for receiver and ${locale} locale`, async () => {
-    const payload = new SendTransferReceivedEvent({
+    const payload: SendTransferReceivedEvent = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
       params: {
         ...getTransactionParams(WorkflowName.WALLET_TRANSFER),
@@ -372,9 +409,13 @@ describe.each([
         debitConsumer_firstName: "Gal",
         debitConsumer_lastName: "Ben Chanoch",
       },
-      pushTokens: ["push-token-1", "push-token-2"],
       locale: locale,
-    });
+    };
+
+    when(mockPushTokenService.getPushTokensForConsumer(payload.nobaUserID)).thenResolve([
+      "push-token-1",
+      "push-token-2",
+    ]);
 
     await eventHandler.sendTransferReceivedEvent(payload);
 
@@ -418,17 +459,21 @@ describe.each([
   });
 
   it(`should call PushClient with Payroll deposit completed event and ${locale} locale`, async () => {
-    const payload = new SendPayrollDepositCompletedEvent({
+    const payload: SendPayrollDepositCompletedEvent = {
       email: "fake+user@noba.com",
-      name: "First",
+      firstName: "First",
       handle: "fake-handle",
-      pushTokens: ["push-token-1", "push-token-2"],
       params: {
         ...getTransactionParams(WorkflowName.WALLET_DEPOSIT),
         companyName: "FakeCompany",
       },
       locale: locale,
-    });
+    };
+
+    when(mockPushTokenService.getPushTokensForConsumer(payload.nobaUserID)).thenResolve([
+      "push-token-1",
+      "push-token-2",
+    ]);
 
     await eventHandler.sendPayrollDepositCompletedEvent(payload);
 

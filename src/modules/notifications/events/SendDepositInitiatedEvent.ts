@@ -1,17 +1,31 @@
-import { DepositInitiatedNotificationParameters } from "../domain/TransactionNotificationParameters";
+import Joi from "joi";
+import {
+  DepositInitiatedNotificationParameters,
+  TransactionNotificationParamsJoiSchema,
+} from "../domain/TransactionNotificationParameters";
+import { KeysRequired } from "../../../modules/common/domain/Types";
+import { BaseEvent } from "./BaseEvent";
 
-export class SendDepositInitiatedEvent {
-  public readonly email: string;
-  public readonly name: string;
-  public readonly handle: string;
-  public readonly params: DepositInitiatedNotificationParameters;
-  public readonly locale?: string;
-
-  constructor({ email, name, handle, params, locale }) {
-    this.email = email;
-    this.name = name;
-    this.handle = handle;
-    this.params = params;
-    this.locale = locale;
-  }
+export class SendDepositInitiatedEvent extends BaseEvent {
+  params: DepositInitiatedNotificationParameters;
 }
+
+export const validateDepositInitiatedEvent = (event: SendDepositInitiatedEvent) => {
+  const depositInitiatedEventJoiValidationKeys: KeysRequired<SendDepositInitiatedEvent> = {
+    email: Joi.string().email().required(),
+    firstName: Joi.string().optional(),
+    lastName: Joi.string().optional(),
+    nobaUserID: Joi.string().optional(),
+    phone: Joi.string().optional(),
+    handle: Joi.string().required(),
+    params: Joi.object(TransactionNotificationParamsJoiSchema.getDepositInitiatedNotificationParamsSchema()).required(),
+    locale: Joi.string().optional(),
+  };
+
+  const depositInitiatedEventJoiSchema = Joi.object(depositInitiatedEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
+
+  Joi.attempt(event, depositInitiatedEventJoiSchema);
+};

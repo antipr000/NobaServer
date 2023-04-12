@@ -1,15 +1,27 @@
-export class SendPhoneVerificationCodeEvent {
-  public readonly phone: string;
-  public readonly otp: string;
-  public readonly name: string;
-  public readonly handle: string;
-  public readonly locale?: string;
+import Joi from "joi";
+import { KeysRequired } from "../../../modules/common/domain/Types";
+import { BaseEvent } from "./BaseEvent";
 
-  constructor({ phone, otp, name, handle, locale }) {
-    this.phone = phone;
-    this.otp = otp;
-    this.name = name;
-    this.handle = handle;
-    this.locale = locale;
-  }
+export class SendPhoneVerificationCodeEvent extends BaseEvent {
+  otp: string;
 }
+
+export const validateSendPhoneVerificationCodeEvent = (event: SendPhoneVerificationCodeEvent) => {
+  const sendPhoneVerificationCodeEventJoiValidationKeys: KeysRequired<SendPhoneVerificationCodeEvent> = {
+    phone: Joi.string().required(),
+    otp: Joi.string().required(),
+    firstName: Joi.string().optional(),
+    lastName: Joi.string().optional(),
+    handle: Joi.string().optional(),
+    locale: Joi.string().optional(),
+    nobaUserID: Joi.string().optional(),
+    email: Joi.string().email().optional(),
+  };
+
+  const sendPhoneVerificationCodeEventJoiSchema = Joi.object(sendPhoneVerificationCodeEventJoiValidationKeys).options({
+    allowUnknown: true,
+    stripUnknown: true,
+  });
+
+  Joi.attempt(event, sendPhoneVerificationCodeEventJoiSchema);
+};

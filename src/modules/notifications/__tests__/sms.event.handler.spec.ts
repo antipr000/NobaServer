@@ -9,6 +9,7 @@ import { getMockCurrencyServiceWithDefaults } from "../../common/mocks/mock.curr
 import { SMSClient } from "../sms/sms.client";
 import { getMockSMSClientWithDefaults } from "../mocks/mock.sms.client";
 import { SMSEventHandler } from "../sms.event.handler";
+import { SendPhoneVerificationCodeEvent } from "../events/SendPhoneVerificationCodeEvent";
 
 describe("SMSEventHandler", () => {
   let currencyService: CurrencyService;
@@ -47,14 +48,14 @@ describe("SMSEventHandler", () => {
   });
 
   it("should call smsClient for SendOtp event", async () => {
-    const payload = new SendOtpEvent({
+    const payload: SendOtpEvent = {
       email: "fake+user@noba.com",
       phone: "+1234567890",
       locale: "en",
       otp: "123456",
-      name: "Fake",
+      firstName: "Fake",
       handle: "fake-handle",
-    });
+    };
 
     await eventHandler.sendLoginSMS(payload);
 
@@ -65,14 +66,14 @@ describe("SMSEventHandler", () => {
   });
 
   it("should call smsClient for SendOtp event with spanish template", async () => {
-    const payload = new SendOtpEvent({
+    const payload: SendOtpEvent = {
       email: "fake+user@noba.com",
       phone: "+1234567890",
       locale: "es",
       otp: "123456",
-      name: "Fake",
+      firstName: "Fake",
       handle: "fake-handle",
-    });
+    };
 
     await eventHandler.sendLoginSMS(payload);
 
@@ -83,14 +84,14 @@ describe("SMSEventHandler", () => {
   });
 
   it("should call smsClient for SendOtp event with en template when template for locale is not available", async () => {
-    const payload = new SendOtpEvent({
+    const payload: SendOtpEvent = {
       email: "fake+user@noba.com",
       phone: "+1234567890",
       locale: "ru",
       otp: "123456",
-      name: "Fake",
+      firstName: "Fake",
       handle: "fake-handle",
-    });
+    };
 
     await eventHandler.sendLoginSMS(payload);
 
@@ -101,17 +102,17 @@ describe("SMSEventHandler", () => {
   });
 
   it("should call smsClient with SendWalletUpdateVerificationCode event", async () => {
-    const payload = new SendWalletUpdateVerificationCodeEvent({
+    const payload: SendWalletUpdateVerificationCodeEvent = {
       email: "fake+user@noba.com",
       phone: "+1234567890",
       locale: "en",
       otp: "123456",
-      name: "Fake",
+      firstName: "Fake",
 
       walletAddress: "fake-wallet",
 
       nobaUserID: "fake-noba-user-id",
-    });
+    };
 
     await eventHandler.sendWalletUpdateVerificationCodeSMS(payload);
 
@@ -122,14 +123,14 @@ describe("SMSEventHandler", () => {
   });
 
   it("should call smsClient with SendPhoneVerificationCode event", async () => {
-    const payload = new SendOtpEvent({
+    const payload: SendPhoneVerificationCodeEvent = {
       email: undefined,
       phone: "+1234567890",
       locale: "en",
       otp: "123456",
-      name: "Fake",
+      firstName: "Fake",
       handle: "fake-handle",
-    });
+    };
 
     await eventHandler.sendPhoneVerificationSMS(payload);
     const [recipientPhoneNumber, templateKey, body] = capture(smsClient.sendSMS).last();

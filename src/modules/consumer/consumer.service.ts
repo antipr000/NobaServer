@@ -36,6 +36,8 @@ import { Identification } from "./domain/Identification";
 import { CreateIdentificationDTO } from "./dto/create.identification.dto";
 import { UpdateIdentificationDTO } from "./dto/update.identification.dto";
 import { IdentificationService } from "../common/identification.service";
+import { PushTokenService } from "../notifications/push.token.service";
+import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
 
 @Injectable()
 export class ConsumerService {
@@ -47,6 +49,9 @@ export class ConsumerService {
 
   @Inject()
   private readonly notificationService: NotificationService;
+
+  @Inject()
+  private readonly pushTokenService: PushTokenService;
 
   @Inject()
   private readonly kmsService: KmsService;
@@ -162,13 +167,8 @@ export class ConsumerService {
 
       const result = await this.consumerRepo.createConsumer(newConsumer);
       if (isEmail) {
-        await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
-          email: emailOrPhone,
-          locale: result.props.locale,
-          firstName: result.props.firstName,
-          lastName: result.props.lastName,
-          nobaUserID: result.props.id,
-        });
+        const payload = NotificationPayloadMapper.toWelcomeMessageEvent(result);
+        await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, payload);
       }
       return result;
     }
@@ -239,11 +239,8 @@ export class ConsumerService {
   async sendOtpToPhone(consumerID: string, phone: string) {
     const otp = this.generateOTP();
     await this.otpService.saveOTP(phone, consumerIdentityIdentifier, otp);
-    await this.notificationService.sendNotification(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT, {
-      locale: phone?.startsWith("+57") ? "es_co" : "en_us", // TODO: CRYPTO-894
-      phone,
-      otp: otp.toString(),
-    });
+    const payload = NotificationPayloadMapper.toPhoneVerificationCodeEvent(otp.toString(), phone);
+    await this.notificationService.sendNotification(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT, payload);
   }
 
   async updateConsumerPhone(consumer: Consumer, reqData: UserPhoneUpdateRequest): Promise<Consumer> {
@@ -277,12 +274,8 @@ export class ConsumerService {
 
     await this.otpService.saveOTP(email, consumerIdentityIdentifier, otp);
 
-    await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, {
-      locale: consumer.props.locale,
-      email: email,
-      otp: otp.toString(),
-      firstName: consumer.props.firstName ?? undefined,
-    });
+    const payload = NotificationPayloadMapper.toOtpEvent(otp.toString(), email, consumer);
+    await this.notificationService.sendNotification(NotificationEventType.SEND_OTP_EVENT, payload);
   }
 
   async updateConsumerEmail(consumer: Consumer, reqData: UserEmailUpdateRequest): Promise<Consumer> {
@@ -314,13 +307,8 @@ export class ConsumerService {
     if (!consumer.props.email) {
       //email being added for the first time
       this.logger.info(`User email updated for first time sending welcome note, userId: ${consumer.props.id}`);
-      await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, {
-        locale: consumer.props.locale,
-        email: updatedConsumer.props.email,
-        firstName: updatedConsumer.props.firstName,
-        lastName: updatedConsumer.props.lastName,
-        nobaUserID: updatedConsumer.props.id,
-      });
+      const payload = NotificationPayloadMapper.toWelcomeMessageEvent(updatedConsumer);
+      await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, payload);
     }
 
     return updatedConsumer;
@@ -452,11 +440,11 @@ export class ConsumerService {
   }
 
   async subscribeToPushNotifications(consumerID: string, pushToken: string): Promise<string> {
-    return this.notificationService.subscribeToPushNotifications(consumerID, pushToken);
+    return this.pushTokenService.subscribeToPushNotifications(consumerID, pushToken);
   }
 
   async unsubscribeFromPushNotifications(consumerID: string, pushToken: string): Promise<string> {
-    return this.notificationService.unsubscribeFromPushNotifications(consumerID, pushToken);
+    return this.pushTokenService.unsubscribeFromPushNotifications(consumerID, pushToken);
   }
 
   async getBase64EncodedQRCode(url: string): Promise<string> {
@@ -537,28 +525,28 @@ export class ConsumerService {
 
     await this.otpService.saveOTP(otpReference, consumerIdentityIdentifier, otp);
     if (notificationMethod == NotificationMethod.EMAIL) {
+      const payload = NotificationPayloadMapper.toWalletUpdateVerificationCodeEvent(
+        consumer,
+        otp.toString(),
+        walletAddress,
+      );
+      payload.email = consumer.props.email;
+      delete payload.phone;
       await this.notificationService.sendNotification(
         NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
-        {
-          locale: consumer.props.locale,
-          email: consumer.props.displayEmail,
-          otp: otp.toString(),
-          walletAddress: walletAddress,
-          firstName: consumer.props.firstName,
-          nobaUserID: consumer.props.id,
-        },
+        payload,
       );
     } else if (notificationMethod == NotificationMethod.PHONE) {
+      const payload = NotificationPayloadMapper.toWalletUpdateVerificationCodeEvent(
+        consumer,
+        otp.toString(),
+        walletAddress,
+      );
+      payload.phone = consumer.props.phone;
+      delete payload.email;
       await this.notificationService.sendNotification(
         NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
-        {
-          locale: consumer.props.locale,
-          phone: consumer.props.phone,
-          otp: otp.toString(),
-          walletAddress: walletAddress,
-          firstName: consumer.props.firstName,
-          nobaUserID: consumer.props.id,
-        },
+        payload,
       );
     }
   }
@@ -658,11 +646,7 @@ export class ConsumerService {
     consumerID: string,
     allocationAmountInPesos: number,
   ): Promise<Employee> {
-    const employee: Employee = await this.employeeService.createEmployee(
-      allocationAmountInPesos,
-      employerID,
-      consumerID,
-    );
+    let employee: Employee = await this.employeeService.createEmployee(allocationAmountInPesos, employerID, consumerID);
 
     // TODO: Design a way to post to Bubble efficiently without blocking end users.
     const consumer: Consumer = await this.consumerRepo.getConsumer(consumerID);
@@ -680,16 +664,9 @@ export class ConsumerService {
       });
     }
 
-    await this.notificationService.sendNotification(NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT, {
-      locale: consumer.props.locale,
-      email: consumer.props.email,
-      firstName: consumer.props.firstName,
-      lastName: consumer.props.lastName,
-      phone: consumer.props.phone,
-      employerReferralID: employerID,
-      nobaEmployeeID: employee.id,
-      allocationAmountInPesos: employee.allocationAmount,
-    });
+    employee = await this.employeeService.getEmployeeByID(employee.id, true);
+    const payload = NotificationPayloadMapper.toRegisterNewEmployeeEvent(consumer, employee);
+    await this.notificationService.sendNotification(NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT, payload);
 
     return employee;
   }
@@ -736,7 +713,10 @@ export class ConsumerService {
       allocationAmount: allocationAmountInPesos,
     });
     // TODO: Design a way to post to Bubble efficiently without blocking end users.
-    await this.notificationService.updateEmployeeAllocationInBubble(employee.id, result.allocationAmount);
+    await this.notificationService.sendNotification(
+      NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
+      NotificationPayloadMapper.toUpdateEmployeeAllocationAmountEvent(employee.id, result.allocationAmount),
+    );
 
     return result;
   }
@@ -756,12 +736,9 @@ export class ConsumerService {
       });
     }
 
-    await this.notificationService.sendNotification(NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT, {
-      email: email,
-      locale: locale,
-      firstName: firstName,
-      lastName: lastName,
-    });
+    const payload = NotificationPayloadMapper.toEmployerRequestEvent(email, firstName, lastName);
+
+    await this.notificationService.sendNotification(NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT, payload);
   }
 
   async addIdentification(consumerID: string, identification: CreateIdentificationDTO): Promise<Identification> {
