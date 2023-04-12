@@ -20,7 +20,8 @@ export type TransactionDTO = {
     | "WALLET_TRANSFER"
     | "PAYROLL_DEPOSIT"
     | "PAYROLL_PROCESSING"
-    | "CARD_WITHDRAWAL";
+    | "CARD_WITHDRAWAL"
+    | "CARD_REVERSAL";
   /**
    * The user whose account is being debited
    */

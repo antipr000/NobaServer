@@ -13,7 +13,8 @@ export type InitiateTransactionDTO = {
     | "WALLET_TRANSFER"
     | "PAYROLL_DEPOSIT"
     | "PAYROLL_PROCESSING"
-    | "CARD_WITHDRAWAL";
+    | "CARD_WITHDRAWAL"
+    | "CARD_REVERSAL";
   debitCurrency?: "USD" | "COP";
   debitAmount?: number;
   creditCurrency?: "USD" | "COP";

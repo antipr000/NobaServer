@@ -12,5 +12,6 @@ export type UpdateConsumerRequestDTO = {
   gender?: "Male" | "Female";
   handle?: string;
   address?: UpdateAddressDTO;
+  isDisabled?: boolean;
   referredByCode?: string;
 };

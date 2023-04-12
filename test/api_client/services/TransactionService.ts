@@ -158,7 +158,8 @@ export class TransactionService {
       | "WALLET_TRANSFER"
       | "PAYROLL_DEPOSIT"
       | "PAYROLL_PROCESSING"
-      | "CARD_WITHDRAWAL";
+      | "CARD_WITHDRAWAL"
+      | "CARD_REVERSAL";
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()

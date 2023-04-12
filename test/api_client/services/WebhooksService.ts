@@ -251,4 +251,19 @@ export class WebhooksService {
       url: "/webhooks/pomelo/transactions/authorizations",
     });
   }
+
+  /**
+   * Authorize the Pomelo Transaction
+   * @returns any
+   * @throws ApiError
+   */
+  public static adjustTransactions({ type }: { type: string }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/webhooks/pomelo/transactions/adjustments/{type}",
+      path: {
+        type: type,
+      },
+    });
+  }
 }
