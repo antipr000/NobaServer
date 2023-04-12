@@ -2,7 +2,7 @@
 copilot:summary
 
 ## Super useful poem
-copilot: poem
+copilot:poem
 
 ## Walkthrough
 copilot:walkthrough
