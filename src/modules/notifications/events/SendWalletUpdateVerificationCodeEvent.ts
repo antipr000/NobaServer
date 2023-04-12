@@ -12,7 +12,7 @@ export const validateSendWalletUpdateVerificationCodeEvent = (event: SendWalletU
     email: Joi.string().email().optional(),
     phone: Joi.string().optional(),
     otp: Joi.string().required(),
-    firstName: Joi.string().required(),
+    firstName: Joi.string().optional(),
     lastName: Joi.string().optional(),
     nobaUserID: Joi.string().required(),
     locale: Joi.string().optional(),

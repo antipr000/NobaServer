@@ -7,7 +7,7 @@ export class SendDocumentVerificationPendingEvent extends BaseEvent {}
 export const validateDocumentVerificationPendingEvent = (event: SendDocumentVerificationPendingEvent) => {
   const documentVerificationPendingEventJoiValidationKeys: KeysRequired<SendDocumentVerificationPendingEvent> = {
     email: Joi.string().email().required(),
-    firstName: Joi.string().required(),
+    firstName: Joi.string().optional(),
     lastName: Joi.string().optional(),
     nobaUserID: Joi.string().required(),
     locale: Joi.string().optional(),

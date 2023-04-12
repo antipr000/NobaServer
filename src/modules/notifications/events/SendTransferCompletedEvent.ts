@@ -13,7 +13,7 @@ export class SendTransferCompletedEvent extends BaseEvent {
 export const validateTransferCompletedEvent = (event: SendTransferCompletedEvent) => {
   const transferCompletedEventJoiValidationKeys: KeysRequired<SendTransferCompletedEvent> = {
     email: Joi.string().email().required(),
-    firstName: Joi.string().required(),
+    firstName: Joi.string().optional(),
     lastName: Joi.string().optional(),
     handle: Joi.string().required(),
     params: Joi.object(

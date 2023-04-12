@@ -13,7 +13,7 @@ export class SendDepositFailedEvent extends BaseEvent {
 export const validateDepositFailedEvent = (event: SendDepositFailedEvent) => {
   const depositFailedEventJoiValidationKeys: KeysRequired<SendDepositFailedEvent> = {
     email: Joi.string().email().required(),
-    firstName: Joi.string().required(),
+    firstName: Joi.string().optional(),
     lastName: Joi.string().optional(),
     nobaUserID: Joi.string().required(),
     phone: Joi.string().optional(),

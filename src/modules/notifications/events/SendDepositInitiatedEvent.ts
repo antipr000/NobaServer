@@ -13,7 +13,7 @@ export class SendDepositInitiatedEvent extends BaseEvent {
 export const validateDepositInitiatedEvent = (event: SendDepositInitiatedEvent) => {
   const depositInitiatedEventJoiValidationKeys: KeysRequired<SendDepositInitiatedEvent> = {
     email: Joi.string().email().required(),
-    firstName: Joi.string().required(),
+    firstName: Joi.string().optional(),
     lastName: Joi.string().optional(),
     nobaUserID: Joi.string().optional(),
     phone: Joi.string().optional(),

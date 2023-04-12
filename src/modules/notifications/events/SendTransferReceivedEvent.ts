@@ -13,7 +13,7 @@ export class SendTransferReceivedEvent extends BaseEvent {
 export const validateTransferReceivedEvent = (event: SendTransferReceivedEvent) => {
   const transferReceivedEventJoiValidationKeys: KeysRequired<SendTransferReceivedEvent> = {
     email: Joi.string().email().required(),
-    firstName: Joi.string().required(),
+    firstName: Joi.string().optional(),
     lastName: Joi.string().optional(),
     handle: Joi.string().required(),
     params: Joi.object(TransactionNotificationParamsJoiSchema.getTransferReceivedNotificationParamsSchema()).required(),

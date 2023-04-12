@@ -7,7 +7,7 @@ export class SendDocumentVerificationRejectedEvent extends BaseEvent {}
 export const validateDocumentVerificationRejectedEvent = (event: SendDocumentVerificationRejectedEvent) => {
   const documentVerificationRejectedEventJoiValidationKeys: KeysRequired<SendDocumentVerificationRejectedEvent> = {
     email: Joi.string().email().required(),
-    firstName: Joi.string().required(),
+    firstName: Joi.string().optional(),
     lastName: Joi.string().optional(),
     nobaUserID: Joi.string().required(),
     locale: Joi.string().optional(),

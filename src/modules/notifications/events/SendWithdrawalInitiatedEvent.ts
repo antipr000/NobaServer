@@ -13,7 +13,7 @@ export class SendWithdrawalInitiatedEvent extends BaseEvent {
 export const validateWithdrawalInitiatedEvent = (event: SendWithdrawalInitiatedEvent) => {
   const withdrawalInitiatedEventJoiValidationKeys: KeysRequired<SendWithdrawalInitiatedEvent> = {
     email: Joi.string().email().required(),
-    firstName: Joi.string().required(),
+    firstName: Joi.string().optional(),
     lastName: Joi.string().optional(),
     handle: Joi.string().required(),
     params: Joi.object(

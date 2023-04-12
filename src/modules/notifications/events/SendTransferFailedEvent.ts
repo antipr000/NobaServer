@@ -13,7 +13,7 @@ export class SendTransferFailedEvent extends BaseEvent {
 export const validateTransferFailedEvent = (event: SendTransferFailedEvent) => {
   const transferFailedEventJoiValidationKeys: KeysRequired<SendTransferFailedEvent> = {
     email: Joi.string().email().required(),
-    firstName: Joi.string().required(),
+    firstName: Joi.string().optional(),
     lastName: Joi.string().optional(),
     handle: Joi.string().required(),
     params: Joi.object(TransactionNotificationParamsJoiSchema.getTransferFailedNotificationParamsSchema()).required(),
