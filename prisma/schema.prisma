@@ -343,13 +343,14 @@ model Mono {
 }
 
 model PomeloUser {
-  id               String       @id @default(uuid())
-  consumerID       String       @unique()
-  consumer         Consumer     @relation(fields: [consumerID], references: [id], onDelete: Cascade)
-  pomeloID         String       @unique()
-  createdTimestamp DateTime?    @default(now())
-  updatedTimestamp DateTime?    @updatedAt
-  pomeloCard       PomeloCard[]
+  id                String              @id @default(uuid())
+  consumerID        String              @unique()
+  consumer          Consumer            @relation(fields: [consumerID], references: [id], onDelete: Cascade)
+  pomeloID          String              @unique()
+  createdTimestamp  DateTime?           @default(now())
+  updatedTimestamp  DateTime?           @updatedAt
+  pomeloCard        PomeloCard[]
+  PomeloTransaction PomeloTransaction[]
 }
 
 model NobaCard {
@@ -390,9 +391,19 @@ model PomeloTransaction {
   status                    String
   pomeloCardID              String
   pomeloCard                PomeloCard          @relation(fields: [pomeloCardID], references: [pomeloCardID], onDelete: Cascade)
+  pomeloUserID              String
+  pomeloUser                PomeloUser          @relation(fields: [pomeloUserID], references: [pomeloID], onDelete: Cascade)
   amountInUSD               Float
   amountInLocalCurrency     Float
   localCurrency             String
+  settlementAmount          Float
+  settlementCurrency        String
+  pomeloTransactionType     String
+  pointType                 String
+  entryMode                 String
+  countryCode               String
+  origin                    String
+  source                    String
   createdTimestamp          DateTime?           @default(now())
   updatedTimestamp          DateTime?           @updatedAt
 }

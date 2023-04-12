@@ -1,4 +1,11 @@
-import { PomeloCurrency } from "../domain/PomeloTransaction";
+import {
+  PomeloCurrency,
+  PomeloEntryMode,
+  PomeloOrigin,
+  PomeloPointType,
+  PomeloSource,
+  PomeloTransactionType,
+} from "../domain/PomeloTransaction";
 
 export enum PomeloTransactionAuthzDetailStatus {
   APPROVED = "APPROVED",
@@ -12,22 +19,6 @@ export enum PomeloTransactionAuthzDetailStatus {
 export enum PomeloTransactionAuthzSummaryStatus {
   APPROVED = "APPROVED",
   REJECTED = "REJECTED",
-}
-
-export enum PomeloTransactionType {
-  PURCHASE = "PURCHASE",
-  WITHDRAWAL = "WITHDRAWAL",
-  EXTRACASH = "EXTRACASH",
-  BALANCE_INQUIRY = "BALANCE_INQUIRY",
-
-  REFUND = "REFUND",
-  PAYMENT = "PAYMENT",
-  REVERSAL_PURCHASE = "REVERSAL_PURCHASE",
-  REVERSAL_WITHDRAWAL = "REVERSAL_WITHDRAWAL",
-  REVERSAL_EXTRACASH = "REVERSAL_EXTRACASH",
-
-  REVERSAL_REFUND = "REVERSAL_REFUND",
-  REVERSAL_PAYMENT = "REVERSAL_PAYMENT",
 }
 
 export type PomeloTransactionAuthzRequest = {
@@ -48,6 +39,11 @@ export type PomeloTransactionAuthzRequest = {
   localAmount: number;
   settlementCurrency: PomeloCurrency;
   settlementAmount: number;
+  pointType: PomeloPointType;
+  entryMode: PomeloEntryMode;
+  countryCode: string;
+  origin: PomeloOrigin;
+  source: PomeloSource;
 };
 
 // The small letter values are to map with how Pomelo sends us. This avoids extra translation layer.
@@ -76,6 +72,11 @@ export type PomeloTransactionAdjustmentRequest = {
   localAmount: number;
   settlementCurrency: PomeloCurrency;
   settlementAmount: number;
+  pointType: PomeloPointType;
+  entryMode: PomeloEntryMode;
+  countryCode: string;
+  origin: PomeloOrigin;
+  source: PomeloSource;
 };
 
 // TODO: "balance" is required for BALANCE_ENQUIRY which is not supported for COL.

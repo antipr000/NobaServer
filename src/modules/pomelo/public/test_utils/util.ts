@@ -2,7 +2,16 @@ import { PrismaService } from "../../../../infraproviders/PrismaService";
 import { uuid } from "uuidv4";
 import { PomeloCard } from "../../domain/PomeloCard";
 import { PomeloUser } from "../../domain/PomeloUser";
-import { PomeloCurrency, PomeloTransaction, PomeloTransactionStatus } from "../../domain/PomeloTransaction";
+import {
+  PomeloCurrency,
+  PomeloEntryMode,
+  PomeloOrigin,
+  PomeloPointType,
+  PomeloSource,
+  PomeloTransaction,
+  PomeloTransactionStatus,
+  PomeloTransactionType,
+} from "../../domain/PomeloTransaction";
 
 export const getRandomPomeloUser = (consumerID: string): PomeloUser => {
   return {
@@ -46,7 +55,7 @@ export const getRandomPomeloCard = (nobaCardID: string): PomeloCard => {
   };
 };
 
-export const createPomeloCard = async (
+export const createPomeloCardWithPomeloUser = async (
   consumerID: string,
   nobaCardID: string,
   prismaService: PrismaService,
@@ -111,6 +120,7 @@ export const createPomeloCardWithPredefinedPomeloUser = async (
 
 export const createPomeloTransaction = async (
   pomeloCardID: string,
+  pomeloUserID: string,
   nobaTransactionID: string,
   parentPomeloTransactionID: string,
   prismaService: PrismaService,
@@ -122,12 +132,25 @@ export const createPomeloTransaction = async (
           pomeloCardID: pomeloCardID,
         },
       },
+      pomeloUser: {
+        connect: {
+          pomeloID: pomeloUserID,
+        },
+      },
       pomeloIdempotencyKey: uuid(),
       nobaTransactionID: nobaTransactionID,
       pomeloTransactionID: uuid(),
       amountInUSD: 10,
       amountInLocalCurrency: 500,
       localCurrency: PomeloCurrency.COP,
+      settlementAmount: 10,
+      settlementCurrency: PomeloCurrency.USD,
+      pomeloTransactionType: PomeloTransactionType.PURCHASE,
+      pointType: PomeloPointType.ECOMMERCE,
+      entryMode: PomeloEntryMode.CONTACTLESS,
+      countryCode: "COL",
+      origin: PomeloOrigin.DOMESTIC,
+      source: PomeloSource.CLEARING,
       status: PomeloTransactionStatus.PENDING,
       ...(parentPomeloTransactionID && {
         parentPomeloTransaction: {
@@ -145,27 +168,49 @@ export const createPomeloTransaction = async (
     parentPomeloTransactionID: savedTransaction.parentPomeloTransactionID,
     pomeloIdempotencyKey: savedTransaction.pomeloIdempotencyKey,
     pomeloCardID: savedTransaction.pomeloCardID,
+    pomeloUserID: savedTransaction.pomeloUserID,
     nobaTransactionID: savedTransaction.nobaTransactionID,
     amountInUSD: savedTransaction.amountInUSD,
     amountInLocalCurrency: savedTransaction.amountInLocalCurrency,
     localCurrency: savedTransaction.localCurrency as PomeloCurrency,
+    settlementAmount: savedTransaction.settlementAmount,
+    settlementCurrency: savedTransaction.settlementCurrency as PomeloCurrency,
+    pomeloTransactionType: savedTransaction.pomeloTransactionType as PomeloTransactionType,
+    pointType: savedTransaction.pointType as PomeloPointType,
+    entryMode: savedTransaction.entryMode as PomeloEntryMode,
+    countryCode: savedTransaction.countryCode,
+    origin: savedTransaction.origin as PomeloOrigin,
+    source: savedTransaction.source as PomeloSource,
     status: savedTransaction.status as PomeloTransactionStatus,
     createdTimestamp: savedTransaction.createdTimestamp,
     updatedTimestamp: savedTransaction.updatedTimestamp,
   };
 };
 
-export const getRandomPomeloTransaction = (pomeloCardID: string, nobaTransactionID: string): PomeloTransaction => {
+export const getRandomPomeloTransaction = (
+  pomeloCardID: string,
+  pomeloUserID: string,
+  nobaTransactionID: string,
+): PomeloTransaction => {
   return {
     id: uuid(),
     pomeloIdempotencyKey: uuid(),
     pomeloTransactionID: uuid(),
     parentPomeloTransactionID: null,
     pomeloCardID: pomeloCardID,
+    pomeloUserID: pomeloUserID,
     nobaTransactionID: nobaTransactionID,
     amountInUSD: 10,
     amountInLocalCurrency: 500,
     localCurrency: PomeloCurrency.COP,
+    settlementAmount: 10,
+    settlementCurrency: PomeloCurrency.USD,
+    pomeloTransactionType: PomeloTransactionType.PURCHASE,
+    pointType: PomeloPointType.ECOMMERCE,
+    entryMode: PomeloEntryMode.CONTACTLESS,
+    countryCode: "COL",
+    origin: PomeloOrigin.DOMESTIC,
+    source: PomeloSource.CLEARING,
     status: PomeloTransactionStatus.PENDING,
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),

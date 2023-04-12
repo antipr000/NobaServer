@@ -301,12 +301,25 @@ export class SQLPomeloRepo implements PomeloRepo {
             pomeloCardID: request.pomeloCardID,
           },
         },
+        pomeloUser: {
+          connect: {
+            pomeloID: request.pomeloUserID,
+          },
+        },
         pomeloIdempotencyKey: request.pomeloIdempotencyKey,
         pomeloTransactionID: request.pomeloTransactionID,
         nobaTransactionID: request.nobaTransactionID,
         amountInUSD: request.amountInUSD,
         amountInLocalCurrency: request.amountInLocalCurrency,
         localCurrency: request.localCurrency,
+        settlementAmount: request.settlementAmount,
+        settlementCurrency: request.settlementCurrency,
+        pomeloTransactionType: request.pomeloTransactionType,
+        pointType: request.pointType,
+        entryMode: request.entryMode,
+        countryCode: request.countryCode,
+        origin: request.origin,
+        source: request.source,
         status: PomeloTransactionStatus.PENDING,
         ...(request.parentPomeloTransactionID && {
           parentPomeloTransaction: {

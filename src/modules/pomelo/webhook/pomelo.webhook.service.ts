@@ -108,6 +108,15 @@ export class PomeloTransactionService {
         nobaTransactionID: uuid(),
         pomeloCardID: request.pomeloCardID,
         pomeloIdempotencyKey: request.idempotencyKey,
+        countryCode: request.countryCode,
+        entryMode: request.entryMode,
+        origin: request.origin,
+        pointType: request.pointType,
+        pomeloTransactionType: request.transactionType,
+        pomeloUserID: request.pomeloUserID,
+        settlementAmount: request.settlementAmount,
+        settlementCurrency: request.settlementCurrency,
+        source: request.source,
       });
       if (pomeloTransaction.status !== PomeloTransactionStatus.PENDING) {
         const detailAuthzStatus: PomeloTransactionAuthzDetailStatus =
@@ -205,6 +214,15 @@ export class PomeloTransactionService {
         nobaTransactionID: uuid(),
         pomeloCardID: request.pomeloCardID,
         pomeloIdempotencyKey: request.idempotencyKey,
+        countryCode: request.countryCode,
+        entryMode: request.entryMode,
+        origin: request.origin,
+        pointType: request.pointType,
+        pomeloTransactionType: request.transactionType,
+        pomeloUserID: request.pomeloUserID,
+        settlementAmount: request.settlementAmount,
+        settlementCurrency: request.settlementCurrency,
+        source: request.source,
       });
       if (pomeloTransaction.status !== PomeloTransactionStatus.PENDING) {
         const detailAuthzStatus: PomeloTransactionAuthzDetailStatus =

@@ -15,9 +15,8 @@ import {
   PomeloTransactionAuthzRequest,
   PomeloTransactionAuthzResponse,
   PomeloTransactionAuthzSummaryStatus,
-  PomeloTransactionType,
 } from "../../dto/pomelo.transaction.service.dto";
-import { PomeloCurrency } from "../../domain/PomeloTransaction";
+import { PomeloCurrency, PomeloTransactionType } from "../../domain/PomeloTransaction";
 
 describe("PomeloTransactionServiceTests", () => {
   jest.setTimeout(20000);

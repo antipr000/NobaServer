@@ -16,9 +16,17 @@ import {
   PomeloTransactionAuthzRequest,
   PomeloTransactionAuthzResponse,
   PomeloTransactionAuthzSummaryStatus,
-  PomeloTransactionType,
 } from "../../dto/pomelo.transaction.service.dto";
-import { PomeloCurrency, PomeloTransaction, PomeloTransactionStatus } from "../../domain/PomeloTransaction";
+import {
+  PomeloCurrency,
+  PomeloEntryMode,
+  PomeloOrigin,
+  PomeloPointType,
+  PomeloSource,
+  PomeloTransaction,
+  PomeloTransactionStatus,
+  PomeloTransactionType,
+} from "../../domain/PomeloTransaction";
 import { PomeloRepo } from "../../repos/pomelo.repo";
 import { TransactionService } from "../../../transaction/transaction.service";
 import { PomeloService } from "../../public/pomelo.service";
@@ -30,8 +38,6 @@ import { POMELO_REPO_PROVIDER } from "../../repos/pomelo.repo.module";
 import { anyString, anything, capture, instance, when } from "ts-mockito";
 import { CircleService } from "../../../../modules/circle/public/circle.service";
 import { uuid } from "uuidv4";
-import { PomeloCard } from "../../domain/PomeloCard";
-import { PomeloUser } from "../../domain/PomeloUser";
 import { ExchangeRateDTO } from "../../../../modules/common/dto/ExchangeRateDTO";
 import { Currency } from "../../../../modules/transaction/domain/TransactionTypes";
 import { Transaction, TransactionStatus } from "../../../../modules/transaction/domain/Transaction";
@@ -230,6 +236,11 @@ describe("PomeloTransactionServiceTests", () => {
           pomeloUserID: "POMELO_USER_ID",
           transactionType: PomeloTransactionType.PURCHASE,
           merchantName: "MERCHANT_NAME",
+          countryCode: "COL",
+          entryMode: PomeloEntryMode.MANUAL,
+          pointType: PomeloPointType.ECOMMERCE,
+          origin: PomeloOrigin.INTERNATIONAL,
+          source: PomeloSource.ONLINE,
         };
 
         const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
@@ -242,12 +253,14 @@ describe("PomeloTransactionServiceTests", () => {
       });
 
       describe("should reject with OTHER status if 'signature' mismatched", () => {
-        it("should return REJECTED if 'timestamp' differs by a few milliseconds", async () => {
-          const request: PomeloTransactionAuthzRequest = {
+        let validRequest: PomeloTransactionAuthzRequest;
+
+        beforeEach(() => {
+          validRequest = {
             endpoint: "/transactions/authorizations",
             rawBodyBuffer: getRawTransactionAuthzBodyBuffer(),
             rawSignature: transactionAuthzValidSignature,
-            timestamp: "1680024225",
+            timestamp: transactionAuthzValidTimestamp,
             idempotencyKey: "IDEMPOTENCY_KEY",
 
             localAmount: 50,
@@ -259,7 +272,17 @@ describe("PomeloTransactionServiceTests", () => {
             pomeloUserID: "POMELO_USER_ID",
             transactionType: PomeloTransactionType.PURCHASE,
             merchantName: "MERCHANT_NAME",
+            countryCode: "COL",
+            entryMode: PomeloEntryMode.MANUAL,
+            pointType: PomeloPointType.ECOMMERCE,
+            origin: PomeloOrigin.INTERNATIONAL,
+            source: PomeloSource.ONLINE,
           };
+        });
+
+        it("should return REJECTED if 'timestamp' differs by a few milliseconds", async () => {
+          let request: PomeloTransactionAuthzRequest = validRequest;
+          request.timestamp = "1680024225";
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
 
@@ -271,23 +294,8 @@ describe("PomeloTransactionServiceTests", () => {
         });
 
         it("should return REJECTED if 'rawBodyBuffer' is not valid", async () => {
-          const request: PomeloTransactionAuthzRequest = {
-            endpoint: "/transactions/authorizations",
-            rawBodyBuffer: Buffer.from("DUMMY_BODY", "utf8"),
-            rawSignature: transactionAuthzValidSignature,
-            timestamp: transactionAuthzValidTimestamp,
-            idempotencyKey: "IDEMPOTENCY_KEY",
-
-            localAmount: 50,
-            localCurrency: PomeloCurrency.COP,
-            settlementAmount: 50,
-            settlementCurrency: PomeloCurrency.COP,
-            pomeloCardID: "POMELO_CARD_ID",
-            pomeloTransactionID: "POMELO_TRANSACTION_ID",
-            pomeloUserID: "POMELO_USER_ID",
-            transactionType: PomeloTransactionType.PURCHASE,
-            merchantName: "MERCHANT_NAME",
-          };
+          let request: PomeloTransactionAuthzRequest = validRequest;
+          request.rawBodyBuffer = Buffer.from("DUMMY_BODY", "utf8");
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
 
@@ -299,23 +307,8 @@ describe("PomeloTransactionServiceTests", () => {
         });
 
         it("should return REJECTED if 'signature' is not valid", async () => {
-          const request: PomeloTransactionAuthzRequest = {
-            endpoint: "/transactions/authorizations",
-            rawBodyBuffer: getRawTransactionAuthzBodyBuffer(),
-            rawSignature: "INVALID_SIGNATURE",
-            timestamp: transactionAuthzValidTimestamp,
-            idempotencyKey: "IDEMPOTENCY_KEY",
-
-            localAmount: 50,
-            localCurrency: PomeloCurrency.COP,
-            settlementAmount: 50,
-            settlementCurrency: PomeloCurrency.COP,
-            pomeloCardID: "POMELO_CARD_ID",
-            pomeloTransactionID: "POMELO_TRANSACTION_ID",
-            pomeloUserID: "POMELO_USER_ID",
-            transactionType: PomeloTransactionType.PURCHASE,
-            merchantName: "MERCHANT_NAME",
-          };
+          let request: PomeloTransactionAuthzRequest = validRequest;
+          request.rawSignature = "INVALID_SIGNATURE";
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
 
@@ -345,6 +338,11 @@ describe("PomeloTransactionServiceTests", () => {
         pomeloUserID: "POMELO_USER_ID",
         transactionType: PomeloTransactionType.PURCHASE,
         merchantName: "MERCHANT_NAME",
+        countryCode: "COL",
+        entryMode: PomeloEntryMode.MANUAL,
+        pointType: PomeloPointType.ECOMMERCE,
+        origin: PomeloOrigin.INTERNATIONAL,
+        source: PomeloSource.ONLINE,
       };
       const pomeloTransaction: PomeloTransaction = {
         id: uuid(),
@@ -357,6 +355,15 @@ describe("PomeloTransactionServiceTests", () => {
         pomeloCardID: "POMELO_CARD_ID",
         pomeloIdempotencyKey: "IDEMPOTENCY_KEY",
         status: PomeloTransactionStatus.PENDING,
+        pomeloTransactionType: PomeloTransactionType.PURCHASE,
+        pomeloUserID: "POMELO_USER_ID",
+        settlementAmount: 50,
+        settlementCurrency: PomeloCurrency.USD,
+        countryCode: "COL",
+        entryMode: PomeloEntryMode.MANUAL,
+        pointType: PomeloPointType.ECOMMERCE,
+        origin: PomeloOrigin.INTERNATIONAL,
+        source: PomeloSource.ONLINE,
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
       };
@@ -423,6 +430,15 @@ describe("PomeloTransactionServiceTests", () => {
           nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
           pomeloCardID: "POMELO_CARD_ID",
           pomeloIdempotencyKey: "POMELO_IDEMPOTENCY_KEY",
+          countryCode: "COL",
+          entryMode: PomeloEntryMode.MANUAL,
+          origin: PomeloOrigin.INTERNATIONAL,
+          pointType: PomeloPointType.ECOMMERCE,
+          pomeloTransactionType: PomeloTransactionType.PURCHASE,
+          pomeloUserID: "POMELO_USER_ID",
+          settlementAmount: 50,
+          settlementCurrency: PomeloCurrency.USD,
+          source: PomeloSource.ONLINE,
         });
         const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
         expect(createNobaTransactionRequestParams).toStrictEqual({
@@ -476,6 +492,15 @@ describe("PomeloTransactionServiceTests", () => {
           nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
           pomeloCardID: "POMELO_CARD_ID",
           pomeloIdempotencyKey: "POMELO_IDEMPOTENCY_KEY",
+          countryCode: "COL",
+          entryMode: PomeloEntryMode.MANUAL,
+          origin: PomeloOrigin.INTERNATIONAL,
+          pointType: PomeloPointType.ECOMMERCE,
+          pomeloTransactionType: PomeloTransactionType.PURCHASE,
+          pomeloUserID: "POMELO_USER_ID",
+          settlementAmount: 50,
+          settlementCurrency: PomeloCurrency.USD,
+          source: PomeloSource.ONLINE,
         });
         const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
         expect(createNobaTransactionRequestParams).toStrictEqual({
@@ -512,6 +537,7 @@ describe("PomeloTransactionServiceTests", () => {
           summaryStatus: PomeloTransactionAuthzSummaryStatus.REJECTED,
           message: "",
         });
+
         const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
@@ -522,7 +548,17 @@ describe("PomeloTransactionServiceTests", () => {
           nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
           pomeloCardID: "POMELO_CARD_ID",
           pomeloIdempotencyKey: "POMELO_IDEMPOTENCY_KEY",
+          countryCode: "COL",
+          entryMode: PomeloEntryMode.MANUAL,
+          origin: PomeloOrigin.INTERNATIONAL,
+          pointType: PomeloPointType.ECOMMERCE,
+          pomeloTransactionType: PomeloTransactionType.PURCHASE,
+          pomeloUserID: "POMELO_USER_ID",
+          settlementAmount: 50,
+          settlementCurrency: PomeloCurrency.USD,
+          source: PomeloSource.ONLINE,
         });
+
         const [pomeloTransactionIDParamInUpdateRequest, pomeloTransactionStatusInUpdateRequest] = capture(
           mockPomeloRepo.updatePomeloTransactionStatus,
         ).last();
@@ -556,6 +592,7 @@ describe("PomeloTransactionServiceTests", () => {
           summaryStatus: PomeloTransactionAuthzSummaryStatus.APPROVED,
           message: "",
         });
+
         const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
@@ -566,7 +603,17 @@ describe("PomeloTransactionServiceTests", () => {
           nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
           pomeloCardID: "POMELO_CARD_ID",
           pomeloIdempotencyKey: "POMELO_IDEMPOTENCY_KEY",
+          countryCode: "COL",
+          entryMode: PomeloEntryMode.MANUAL,
+          origin: PomeloOrigin.INTERNATIONAL,
+          pointType: PomeloPointType.ECOMMERCE,
+          pomeloTransactionType: PomeloTransactionType.PURCHASE,
+          pomeloUserID: "POMELO_USER_ID",
+          settlementAmount: 50,
+          settlementCurrency: PomeloCurrency.USD,
+          source: PomeloSource.ONLINE,
         });
+
         const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
         expect(createNobaTransactionRequestParams).toStrictEqual({
           type: WorkflowName.CARD_WITHDRAWAL,
@@ -622,6 +669,7 @@ describe("PomeloTransactionServiceTests", () => {
           summaryStatus: PomeloTransactionAuthzSummaryStatus.APPROVED,
           message: "",
         });
+
         const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
@@ -632,7 +680,17 @@ describe("PomeloTransactionServiceTests", () => {
           nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
           pomeloCardID: "POMELO_CARD_ID",
           pomeloIdempotencyKey: "POMELO_IDEMPOTENCY_KEY",
+          countryCode: "COL",
+          entryMode: PomeloEntryMode.MANUAL,
+          origin: PomeloOrigin.INTERNATIONAL,
+          pointType: PomeloPointType.ECOMMERCE,
+          pomeloTransactionType: PomeloTransactionType.PURCHASE,
+          pomeloUserID: "POMELO_USER_ID",
+          settlementAmount: 50,
+          settlementCurrency: PomeloCurrency.USD,
+          source: PomeloSource.ONLINE,
         });
+
         const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
         expect(createNobaTransactionRequestParams).toStrictEqual({
           type: WorkflowName.CARD_WITHDRAWAL,
@@ -812,6 +870,11 @@ describe("PomeloTransactionServiceTests", () => {
           pomeloUserID: "POMELO_USER_ID",
           transactionType: PomeloTransactionType.PURCHASE,
           merchantName: "MERCHANT_NAME",
+          countryCode: "COL",
+          entryMode: PomeloEntryMode.MANUAL,
+          pointType: PomeloPointType.ECOMMERCE,
+          origin: PomeloOrigin.INTERNATIONAL,
+          source: PomeloSource.ONLINE,
         };
 
         const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(request);
@@ -824,71 +887,13 @@ describe("PomeloTransactionServiceTests", () => {
       });
 
       describe("should reject with OTHER status if 'signature' mismatched", () => {
-        it("should return REJECTED if 'timestamp' differs by a few milliseconds", async () => {
-          const request: PomeloTransactionAdjustmentRequest = {
+        let validRequest: PomeloTransactionAdjustmentRequest;
+
+        beforeEach(() => {
+          validRequest = {
             endpoint: "/transactions/adjustments/credit",
             rawBodyBuffer: getRawTransactionAdjustmentBodyBuffer(),
             rawSignature: transactionAdjustmentCreditValidSignature,
-            timestamp: "1681145220",
-            idempotencyKey: "IDEMPOTENCY_KEY",
-
-            adjustmentType: PomeloAdjustmentType.CREDIT,
-            pomeloOriginalTransactionID: "POMELO_ORIGINAL_TRANSACTION_ID",
-            localAmount: 50,
-            localCurrency: PomeloCurrency.COP,
-            settlementAmount: 50,
-            settlementCurrency: PomeloCurrency.COP,
-            pomeloCardID: "POMELO_CARD_ID",
-            pomeloTransactionID: "POMELO_TRANSACTION_ID",
-            pomeloUserID: "POMELO_USER_ID",
-            transactionType: PomeloTransactionType.PURCHASE,
-            merchantName: "MERCHANT_NAME",
-          };
-
-          const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(request);
-
-          expect(response).toStrictEqual({
-            detailedStatus: PomeloTransactionAuthzDetailStatus.OTHER,
-            summaryStatus: PomeloTransactionAuthzSummaryStatus.REJECTED,
-            message: "",
-          });
-        });
-
-        it("should return REJECTED if 'rawBodyBuffer' is not valid", async () => {
-          const request: PomeloTransactionAdjustmentRequest = {
-            rawBodyBuffer: Buffer.from("DUMMY_BODY", "utf8"),
-            endpoint: "/transactions/adjustments/credit",
-            rawSignature: transactionAdjustmentCreditValidSignature,
-            timestamp: "1681145220",
-            idempotencyKey: "IDEMPOTENCY_KEY",
-
-            adjustmentType: PomeloAdjustmentType.CREDIT,
-            pomeloOriginalTransactionID: "POMELO_ORIGINAL_TRANSACTION_ID",
-            localAmount: 50,
-            localCurrency: PomeloCurrency.COP,
-            settlementAmount: 50,
-            settlementCurrency: PomeloCurrency.COP,
-            pomeloCardID: "POMELO_CARD_ID",
-            pomeloTransactionID: "POMELO_TRANSACTION_ID",
-            pomeloUserID: "POMELO_USER_ID",
-            transactionType: PomeloTransactionType.PURCHASE,
-            merchantName: "MERCHANT_NAME",
-          };
-
-          const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(request);
-
-          expect(response).toStrictEqual({
-            detailedStatus: PomeloTransactionAuthzDetailStatus.OTHER,
-            summaryStatus: PomeloTransactionAuthzSummaryStatus.REJECTED,
-            message: "",
-          });
-        });
-
-        it("should return REJECTED if 'signature' is not valid", async () => {
-          const request: PomeloTransactionAdjustmentRequest = {
-            endpoint: "/transactions/adjustments/credit",
-            rawBodyBuffer: getRawTransactionAdjustmentBodyBuffer(),
-            rawSignature: "INVALID_SIGNATURE",
             timestamp: transactionAdjustmentValidTimestamp,
             idempotencyKey: "IDEMPOTENCY_KEY",
 
@@ -903,7 +908,43 @@ describe("PomeloTransactionServiceTests", () => {
             pomeloUserID: "POMELO_USER_ID",
             transactionType: PomeloTransactionType.PURCHASE,
             merchantName: "MERCHANT_NAME",
+            countryCode: "COL",
+            entryMode: PomeloEntryMode.MANUAL,
+            pointType: PomeloPointType.ECOMMERCE,
+            origin: PomeloOrigin.INTERNATIONAL,
+            source: PomeloSource.ONLINE,
           };
+        });
+
+        it("should return REJECTED if 'timestamp' differs by a few milliseconds", async () => {
+          let request: PomeloTransactionAdjustmentRequest = validRequest;
+          request.timestamp = "1681145220";
+
+          const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(request);
+
+          expect(response).toStrictEqual({
+            detailedStatus: PomeloTransactionAuthzDetailStatus.OTHER,
+            summaryStatus: PomeloTransactionAuthzSummaryStatus.REJECTED,
+            message: "",
+          });
+        });
+
+        it("should return REJECTED if 'rawBodyBuffer' is not valid", async () => {
+          let request: PomeloTransactionAdjustmentRequest = validRequest;
+          request.rawBodyBuffer = Buffer.from("DUMMY_BODY", "utf8");
+
+          const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(request);
+
+          expect(response).toStrictEqual({
+            detailedStatus: PomeloTransactionAuthzDetailStatus.OTHER,
+            summaryStatus: PomeloTransactionAuthzSummaryStatus.REJECTED,
+            message: "",
+          });
+        });
+
+        it("should return REJECTED if 'signature' is not valid", async () => {
+          let request: PomeloTransactionAdjustmentRequest = validRequest;
+          request.rawSignature = "INVALID_SIGNATURE";
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(request);
 
@@ -939,6 +980,11 @@ describe("PomeloTransactionServiceTests", () => {
         pomeloUserID: "POMELO_USER_ID",
         transactionType: PomeloTransactionType.PAYMENT,
         merchantName: "MERCHANT_NAME",
+        countryCode: "COL",
+        entryMode: PomeloEntryMode.MANUAL,
+        pointType: PomeloPointType.ECOMMERCE,
+        origin: PomeloOrigin.INTERNATIONAL,
+        source: PomeloSource.ONLINE,
       };
       const debitRequest: PomeloTransactionAdjustmentRequest = {
         endpoint: "/transactions/adjustments/debit",
@@ -958,6 +1004,11 @@ describe("PomeloTransactionServiceTests", () => {
         pomeloUserID: "POMELO_USER_ID",
         transactionType: PomeloTransactionType.REVERSAL_PAYMENT,
         merchantName: "MERCHANT_NAME",
+        countryCode: "COL",
+        entryMode: PomeloEntryMode.MANUAL,
+        pointType: PomeloPointType.ECOMMERCE,
+        origin: PomeloOrigin.INTERNATIONAL,
+        source: PomeloSource.ONLINE,
       };
       const pomeloTransaction: PomeloTransaction = {
         id: uuid(),
@@ -968,8 +1019,17 @@ describe("PomeloTransactionServiceTests", () => {
         amountInUSD: 50,
         nobaTransactionID: "NOBA_TRANSACTION_ID", // Not the one sent in request.
         pomeloCardID: "POMELO_CARD_ID",
+        pomeloUserID: "POMELO_USER_ID",
+        pomeloTransactionType: PomeloTransactionType.REVERSAL_PAYMENT,
+        settlementAmount: 50,
+        settlementCurrency: PomeloCurrency.USD,
         pomeloIdempotencyKey: "IDEMPOTENCY_KEY",
         status: PomeloTransactionStatus.PENDING,
+        countryCode: "COL",
+        entryMode: PomeloEntryMode.MANUAL,
+        pointType: PomeloPointType.ECOMMERCE,
+        origin: PomeloOrigin.INTERNATIONAL,
+        source: PomeloSource.ONLINE,
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
       };
@@ -1051,6 +1111,15 @@ describe("PomeloTransactionServiceTests", () => {
             nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
             pomeloCardID: "POMELO_CARD_ID",
             pomeloIdempotencyKey: "POMELO_IDEMPOTENCY_KEY",
+            countryCode: "COL",
+            entryMode: PomeloEntryMode.MANUAL,
+            origin: PomeloOrigin.INTERNATIONAL,
+            pointType: PomeloPointType.ECOMMERCE,
+            pomeloTransactionType: PomeloTransactionType.PAYMENT,
+            pomeloUserID: "POMELO_USER_ID",
+            settlementAmount: 50,
+            settlementCurrency: PomeloCurrency.USD,
+            source: PomeloSource.ONLINE,
           });
           const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
           expect(createNobaTransactionRequestParams).toStrictEqual({
@@ -1104,6 +1173,15 @@ describe("PomeloTransactionServiceTests", () => {
             nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
             pomeloCardID: "POMELO_CARD_ID",
             pomeloIdempotencyKey: "POMELO_IDEMPOTENCY_KEY",
+            countryCode: "COL",
+            entryMode: PomeloEntryMode.MANUAL,
+            origin: PomeloOrigin.INTERNATIONAL,
+            pointType: PomeloPointType.ECOMMERCE,
+            pomeloTransactionType: PomeloTransactionType.REVERSAL_PAYMENT,
+            pomeloUserID: "POMELO_USER_ID",
+            settlementAmount: 50,
+            settlementCurrency: PomeloCurrency.USD,
+            source: PomeloSource.ONLINE,
           });
           const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
           expect(createNobaTransactionRequestParams).toStrictEqual({
@@ -1160,6 +1238,15 @@ describe("PomeloTransactionServiceTests", () => {
             nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
             pomeloCardID: "POMELO_CARD_ID",
             pomeloIdempotencyKey: "POMELO_IDEMPOTENCY_KEY",
+            countryCode: "COL",
+            entryMode: PomeloEntryMode.MANUAL,
+            origin: PomeloOrigin.INTERNATIONAL,
+            pointType: PomeloPointType.ECOMMERCE,
+            pomeloTransactionType: PomeloTransactionType.REVERSAL_PAYMENT,
+            pomeloUserID: "POMELO_USER_ID",
+            settlementAmount: 50,
+            settlementCurrency: PomeloCurrency.USD,
+            source: PomeloSource.ONLINE,
           });
           const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
           expect(createNobaTransactionRequestParams).toStrictEqual({
@@ -1199,6 +1286,7 @@ describe("PomeloTransactionServiceTests", () => {
             summaryStatus: PomeloTransactionAuthzSummaryStatus.REJECTED,
             message: "",
           });
+
           const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
@@ -1209,7 +1297,17 @@ describe("PomeloTransactionServiceTests", () => {
             nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
             pomeloCardID: "POMELO_CARD_ID",
             pomeloIdempotencyKey: "POMELO_IDEMPOTENCY_KEY",
+            countryCode: "COL",
+            entryMode: PomeloEntryMode.MANUAL,
+            origin: PomeloOrigin.INTERNATIONAL,
+            pointType: PomeloPointType.ECOMMERCE,
+            pomeloTransactionType: PomeloTransactionType.REVERSAL_PAYMENT,
+            pomeloUserID: "POMELO_USER_ID",
+            settlementAmount: 50,
+            settlementCurrency: PomeloCurrency.USD,
+            source: PomeloSource.ONLINE,
           });
+
           const [pomeloTransactionIDParamInUpdateRequest, pomeloTransactionStatusInUpdateRequest] = capture(
             mockPomeloRepo.updatePomeloTransactionStatus,
           ).last();
@@ -1245,6 +1343,7 @@ describe("PomeloTransactionServiceTests", () => {
             summaryStatus: PomeloTransactionAuthzSummaryStatus.APPROVED,
             message: "",
           });
+
           const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
@@ -1255,7 +1354,17 @@ describe("PomeloTransactionServiceTests", () => {
             nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
             pomeloCardID: "POMELO_CARD_ID",
             pomeloIdempotencyKey: "POMELO_IDEMPOTENCY_KEY",
+            countryCode: "COL",
+            entryMode: PomeloEntryMode.MANUAL,
+            origin: PomeloOrigin.INTERNATIONAL,
+            pointType: PomeloPointType.ECOMMERCE,
+            pomeloTransactionType: PomeloTransactionType.REVERSAL_PAYMENT,
+            pomeloUserID: "POMELO_USER_ID",
+            settlementAmount: 50,
+            settlementCurrency: PomeloCurrency.USD,
+            source: PomeloSource.ONLINE,
           });
+
           const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
           expect(createNobaTransactionRequestParams).toStrictEqual({
             type: WorkflowName.CARD_REVERSAL,
@@ -1318,6 +1427,7 @@ describe("PomeloTransactionServiceTests", () => {
             summaryStatus: PomeloTransactionAuthzSummaryStatus.APPROVED,
             message: "",
           });
+
           const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
@@ -1328,7 +1438,17 @@ describe("PomeloTransactionServiceTests", () => {
             nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
             pomeloCardID: "POMELO_CARD_ID",
             pomeloIdempotencyKey: "POMELO_IDEMPOTENCY_KEY",
+            countryCode: "COL",
+            entryMode: PomeloEntryMode.MANUAL,
+            origin: PomeloOrigin.INTERNATIONAL,
+            pointType: PomeloPointType.ECOMMERCE,
+            pomeloTransactionType: PomeloTransactionType.REVERSAL_PAYMENT,
+            pomeloUserID: "POMELO_USER_ID",
+            settlementAmount: 50,
+            settlementCurrency: PomeloCurrency.USD,
+            source: PomeloSource.ONLINE,
           });
+
           const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
           expect(createNobaTransactionRequestParams).toStrictEqual({
             type: WorkflowName.CARD_REVERSAL,

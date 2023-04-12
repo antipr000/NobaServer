@@ -3,12 +3,18 @@ import { SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
 import { ServiceErrorCode, ServiceException } from "../../../../core/exception/service.exception";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
-import { PomeloCurrency } from "../../domain/PomeloTransaction";
+import {
+  PomeloCurrency,
+  PomeloEntryMode,
+  PomeloOrigin,
+  PomeloPointType,
+  PomeloSource,
+  PomeloTransactionType,
+} from "../../domain/PomeloTransaction";
 import {
   PomeloAdjustmentType,
   PomeloTransactionAdjustmentRequest,
   PomeloTransactionAuthzRequest,
-  PomeloTransactionType,
 } from "../../dto/pomelo.transaction.service.dto";
 import { PomeloWebhookMapper } from "../pomelo.webhook.mapper";
 
@@ -42,6 +48,11 @@ describe("PomeloWebhookMapperService", () => {
         transaction: {
           id: "POMELO_TRANSACTION_ID",
           type: "PURCHASE",
+          point_type: "POS",
+          entry_mode: "MANUAL",
+          country_code: "COL",
+          origin: "DOMESTIC",
+          source: "ONLINE",
         },
         merchant: {
           name: "MERCHANT_NAME",
@@ -91,37 +102,25 @@ describe("PomeloWebhookMapperService", () => {
             }
           });
 
-          it("should throw error when 'transaction' object's 'id' field is missing", () => {
-            const headers = JSON.parse(JSON.stringify(validMinimalHeaders));
-            const requestBody = JSON.parse(JSON.stringify(validMinimalRequestBody));
-            delete requestBody.transaction.id;
+          const errorOnMissingFields = ["id", "type", "country_code", "entry_mode", "point_type", "origin", "source"];
+          it.each(errorOnMissingFields)(
+            "should throw error when 'transaction' object's '%s' field is missing",
+            field => {
+              const headers = JSON.parse(JSON.stringify(validMinimalHeaders));
+              const requestBody = JSON.parse(JSON.stringify(validMinimalRequestBody));
+              delete requestBody.transaction[field];
 
-            try {
-              pomeloWebhookMapper.convertToPomeloTransactionAuthzRequest(requestBody, headers);
-              expect(true).toBe(false);
-            } catch (err) {
-              expect(err).toBeInstanceOf(ServiceException);
-              expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
-              expect(err.message).toEqual(expect.stringContaining("transaction"));
-              expect(err.message).toEqual(expect.stringContaining("id"));
-            }
-          });
-
-          it("should throw error when 'transaction' object's 'type' field is missing", () => {
-            const headers = JSON.parse(JSON.stringify(validMinimalHeaders));
-            const requestBody = JSON.parse(JSON.stringify(validMinimalRequestBody));
-            delete requestBody.transaction.type;
-
-            try {
-              pomeloWebhookMapper.convertToPomeloTransactionAuthzRequest(requestBody, headers);
-              expect(true).toBe(false);
-            } catch (err) {
-              expect(err).toBeInstanceOf(ServiceException);
-              expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
-              expect(err.message).toEqual(expect.stringContaining("transaction"));
-              expect(err.message).toEqual(expect.stringContaining("type"));
-            }
-          });
+              try {
+                pomeloWebhookMapper.convertToPomeloTransactionAuthzRequest(requestBody, headers);
+                expect(true).toBe(false);
+              } catch (err) {
+                expect(err).toBeInstanceOf(ServiceException);
+                expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
+                expect(err.message).toEqual(expect.stringContaining("transaction"));
+                expect(err.message).toEqual(expect.stringContaining(`${field}`));
+              }
+            },
+          );
 
           const invalidTypeFields = [
             PomeloTransactionType.REVERSAL_REFUND,
@@ -148,6 +147,26 @@ describe("PomeloWebhookMapperService", () => {
                 expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
                 expect(err.message).toEqual(expect.stringContaining("transaction"));
                 expect(err.message).toEqual(expect.stringContaining("type"));
+              }
+            },
+          );
+
+          const enumFieldsToTestForInvalidValues = ["entry_mode", "point_type", "origin", "source"];
+          it.each(enumFieldsToTestForInvalidValues)(
+            "should throw error when 'transaction' object's '%s' field has INVALID value",
+            field => {
+              const headers = JSON.parse(JSON.stringify(validMinimalHeaders));
+              const requestBody = JSON.parse(JSON.stringify(validMinimalRequestBody));
+              requestBody.transaction[field] = "INVALID_VALUE";
+
+              try {
+                pomeloWebhookMapper.convertToPomeloTransactionAuthzRequest(requestBody, headers);
+                expect(true).toBe(false);
+              } catch (err) {
+                expect(err).toBeInstanceOf(ServiceException);
+                expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
+                expect(err.message).toEqual(expect.stringContaining("transaction"));
+                expect(err.message).toEqual(expect.stringContaining(`${field}`));
               }
             },
           );
@@ -651,6 +670,7 @@ describe("PomeloWebhookMapperService", () => {
           point_type: "ECOMMERCE",
           entry_mode: "MANUAL",
           origin: "INTERNATIONAL",
+          source: "ONLINE",
           local_date_time: "2019-08-24T14:15:22",
           original_transaction_id: null,
         },
@@ -720,6 +740,11 @@ describe("PomeloWebhookMapperService", () => {
         localCurrency: PomeloCurrency.COP,
         settlementAmount: 11,
         settlementCurrency: PomeloCurrency.USD,
+        countryCode: "ESP",
+        entryMode: PomeloEntryMode.MANUAL,
+        pointType: PomeloPointType.ECOMMERCE,
+        origin: PomeloOrigin.INTERNATIONAL,
+        source: PomeloSource.ONLINE,
       });
     });
   });
@@ -732,6 +757,11 @@ describe("PomeloWebhookMapperService", () => {
           id: "POMELO_TRANSACTION_ID",
           type: "REVERSAL_WITHDRAWAL",
           original_transaction_id: "ORIGINAL_TRANSACTION_ID",
+          point_type: "POS",
+          entry_mode: "MANUAL",
+          country_code: "COL",
+          origin: "DOMESTIC",
+          source: "ONLINE",
         },
         merchant: {
           name: "MERCHANT_NAME",
@@ -782,39 +812,56 @@ describe("PomeloWebhookMapperService", () => {
             }
           });
 
-          it("should throw error when 'transaction' object's 'id' field is missing", () => {
-            const headers = JSON.parse(JSON.stringify(validMinimalHeaders));
-            const requestBody = JSON.parse(JSON.stringify(validMinimalRequestBody));
-            delete requestBody.transaction.id;
-            const adjustmentType = validAdjustmentType;
+          const errorOnMissingFields = [
+            "id",
+            "type",
+            "original_transaction_id",
+            "country_code",
+            "entry_mode",
+            "point_type",
+            "origin",
+            "source",
+          ];
+          it.each(errorOnMissingFields)(
+            "should throw error when 'transaction' object's '%s' field is missing",
+            field => {
+              const headers = JSON.parse(JSON.stringify(validMinimalHeaders));
+              const requestBody = JSON.parse(JSON.stringify(validMinimalRequestBody));
+              delete requestBody.transaction[field];
+              const adjustmentType = validAdjustmentType;
 
-            try {
-              pomeloWebhookMapper.convertToPomeloTransactionAdjustmentRequest(requestBody, headers, adjustmentType);
-              expect(true).toBe(false);
-            } catch (err) {
-              expect(err).toBeInstanceOf(ServiceException);
-              expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
-              expect(err.message).toEqual(expect.stringContaining("transaction"));
-              expect(err.message).toEqual(expect.stringContaining("id"));
-            }
-          });
+              try {
+                pomeloWebhookMapper.convertToPomeloTransactionAdjustmentRequest(requestBody, headers, adjustmentType);
+                expect(true).toBe(false);
+              } catch (err) {
+                expect(err).toBeInstanceOf(ServiceException);
+                expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
+                expect(err.message).toEqual(expect.stringContaining("transaction"));
+                expect(err.message).toEqual(expect.stringContaining(`${field}`));
+              }
+            },
+          );
 
-          it("should throw error when 'transaction' object's 'type' field is missing", () => {
-            const headers = JSON.parse(JSON.stringify(validMinimalHeaders));
-            const requestBody = JSON.parse(JSON.stringify(validMinimalRequestBody));
-            delete requestBody.transaction.type;
-            const adjustmentType = validAdjustmentType;
+          const enumFieldsToTestForInvalidValues = ["entry_mode", "point_type", "origin", "source"];
+          it.each(enumFieldsToTestForInvalidValues)(
+            "should throw error when 'transaction' object's '%s' field has INVALID value",
+            field => {
+              const headers = JSON.parse(JSON.stringify(validMinimalHeaders));
+              const requestBody = JSON.parse(JSON.stringify(validMinimalRequestBody));
+              requestBody.transaction[field] = "INVALID_VALUE";
+              const adjustmentType = validAdjustmentType;
 
-            try {
-              pomeloWebhookMapper.convertToPomeloTransactionAdjustmentRequest(requestBody, headers, adjustmentType);
-              expect(true).toBe(false);
-            } catch (err) {
-              expect(err).toBeInstanceOf(ServiceException);
-              expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
-              expect(err.message).toEqual(expect.stringContaining("transaction"));
-              expect(err.message).toEqual(expect.stringContaining("type"));
-            }
-          });
+              try {
+                pomeloWebhookMapper.convertToPomeloTransactionAdjustmentRequest(requestBody, headers, adjustmentType);
+                expect(true).toBe(false);
+              } catch (err) {
+                expect(err).toBeInstanceOf(ServiceException);
+                expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
+                expect(err.message).toEqual(expect.stringContaining("transaction"));
+                expect(err.message).toEqual(expect.stringContaining(`${field}`));
+              }
+            },
+          );
 
           const invalidTypeFieldsForCredit = [
             PomeloTransactionType.PURCHASE,
@@ -871,23 +918,6 @@ describe("PomeloWebhookMapperService", () => {
               }
             },
           );
-
-          it("should throw error when 'transaction' original_transaction_id's 'id' field is missing", () => {
-            const headers = JSON.parse(JSON.stringify(validMinimalHeaders));
-            const requestBody = JSON.parse(JSON.stringify(validMinimalRequestBody));
-            delete requestBody.transaction.original_transaction_id;
-            const adjustmentType = validAdjustmentType;
-
-            try {
-              pomeloWebhookMapper.convertToPomeloTransactionAdjustmentRequest(requestBody, headers, adjustmentType);
-              expect(true).toBe(false);
-            } catch (err) {
-              expect(err).toBeInstanceOf(ServiceException);
-              expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
-              expect(err.message).toEqual(expect.stringContaining("transaction"));
-              expect(err.message).toEqual(expect.stringContaining("original_transaction_id"));
-            }
-          });
         });
 
         describe("card sub-object", () => {
@@ -1449,6 +1479,7 @@ describe("PomeloWebhookMapperService", () => {
           point_type: "ECOMMERCE",
           entry_mode: "MANUAL",
           origin: "INTERNATIONAL",
+          source: "ONLINE",
           local_date_time: "2019-08-24T14:15:22",
           original_transaction_id: "POMELO_ORIGINAL_TRANSACTION_ID",
         },
@@ -1522,6 +1553,11 @@ describe("PomeloWebhookMapperService", () => {
         localCurrency: PomeloCurrency.COP,
         settlementAmount: 11,
         settlementCurrency: PomeloCurrency.USD,
+        countryCode: "ESP",
+        entryMode: PomeloEntryMode.MANUAL,
+        pointType: PomeloPointType.ECOMMERCE,
+        origin: PomeloOrigin.INTERNATIONAL,
+        source: PomeloSource.ONLINE,
       });
     });
   });

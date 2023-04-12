@@ -3,12 +3,18 @@ import Joi from "joi";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { Logger } from "winston";
-import { PomeloCurrency } from "../domain/PomeloTransaction";
+import {
+  PomeloCurrency,
+  PomeloEntryMode,
+  PomeloOrigin,
+  PomeloPointType,
+  PomeloSource,
+  PomeloTransactionType,
+} from "../domain/PomeloTransaction";
 import {
   PomeloAdjustmentType,
   PomeloTransactionAdjustmentRequest,
   PomeloTransactionAuthzRequest,
-  PomeloTransactionType,
 } from "../dto/pomelo.transaction.service.dto";
 
 @Injectable()
@@ -38,6 +44,11 @@ export class PomeloWebhookMapper {
       rawBodyBuffer: null, // will be the responsibility of the controller layer.
 
       pomeloTransactionID: requestBody.transaction["id"],
+      countryCode: requestBody.transaction["country_code"],
+      entryMode: requestBody.transaction["entry_mode"],
+      pointType: requestBody.transaction["point_type"],
+      origin: requestBody.transaction["origin"],
+      source: requestBody.transaction["source"],
       merchantName: requestBody.merchant["name"],
       transactionType: requestBody.transaction["type"] as PomeloTransactionType,
       pomeloCardID: requestBody.card.id,
@@ -82,6 +93,11 @@ export class PomeloWebhookMapper {
 
       pomeloTransactionID: requestBody.transaction["id"],
       pomeloOriginalTransactionID: requestBody.transaction["original_transaction_id"],
+      countryCode: requestBody.transaction["country_code"],
+      entryMode: requestBody.transaction["entry_mode"],
+      pointType: requestBody.transaction["point_type"],
+      origin: requestBody.transaction["origin"],
+      source: requestBody.transaction["source"],
       adjustmentType: adjustmentType as PomeloAdjustmentType,
       merchantName: requestBody.merchant["name"],
       transactionType: requestBody.transaction["type"] as PomeloTransactionType,
@@ -164,6 +180,19 @@ export class PomeloWebhookMapper {
             // PomeloTransactionType.BALANCE_INQUIRY,  // Not valid for Columbia.
           ],
         ),
+      point_type: Joi.string()
+        .required()
+        .valid(...Object.values(PomeloPointType)),
+      entry_mode: Joi.string()
+        .required()
+        .valid(...Object.values(PomeloEntryMode)),
+      country_code: Joi.string().required(),
+      origin: Joi.string()
+        .required()
+        .valid(...Object.values(PomeloOrigin)),
+      source: Joi.string()
+        .required()
+        .valid(...Object.values(PomeloSource)),
     };
 
     return internalTransactionSubObjectJoiValidationKeys;
@@ -193,6 +222,19 @@ export class PomeloWebhookMapper {
         .required()
         .valid(...validTransactionTypes[adjustmentType]),
       original_transaction_id: Joi.string().required(),
+      point_type: Joi.string()
+        .required()
+        .valid(...Object.values(PomeloPointType)),
+      entry_mode: Joi.string()
+        .required()
+        .valid(...Object.values(PomeloEntryMode)),
+      country_code: Joi.string().required(),
+      origin: Joi.string()
+        .required()
+        .valid(...Object.values(PomeloOrigin)),
+      source: Joi.string()
+        .required()
+        .valid(...Object.values(PomeloSource)),
     };
 
     return internalTransactionSubObjectJoiValidationKeys;
