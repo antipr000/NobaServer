@@ -1955,7 +1955,7 @@ describe("ConsumerService", () => {
     it("should not register a disabled Employee", async () => {
       const consumer = getRandomConsumer();
       const employer = getRandomEmployer();
-      const employee = getRandomEmployee(consumer.props.id, employer.id);
+      const employee = getRandomEmployee(consumer.props.id, employer);
       consumer.props.isDisabled = true;
 
       when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
