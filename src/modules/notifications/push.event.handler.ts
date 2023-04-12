@@ -45,149 +45,168 @@ export class PushEventHandler {
   @OnEvent(`push.${NotificationEventType.SEND_DEPOSIT_FAILED_EVENT}`)
   async sendDepositFailedEvent(payload: SendDepositFailedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
-
-    for (const pushToken of pushTokens) {
-      await this.pushClient.sendPushNotification({
-        token: pushToken,
-        templateKey: PushTemplates.getOrDefault(PushTemplates.DEPOSIT_FAILED_PUSH, payload.locale ?? "en"),
-        notificationType: PushNotificationType.TRANSACTION_UPDATE,
-        transactionRef: payload.params.transactionRef,
-        params: {
-          transactionParams: {
-            amount: payload.params.creditAmount,
-            currency: payload.params.creditCurrency,
+    const promises = pushTokens.map(
+      async pushToken =>
+        await this.pushClient.sendPushNotification({
+          token: pushToken,
+          templateKey: PushTemplates.getOrDefault(PushTemplates.DEPOSIT_FAILED_PUSH, payload.locale ?? "en"),
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
+          params: {
+            transactionParams: {
+              amount: payload.params.creditAmount,
+              currency: payload.params.creditCurrency,
+            },
           },
-        },
-      });
-    }
+        }),
+    );
+
+    await Promise.all(promises);
   }
 
   @OnEvent(`push.${NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT}`)
   async sendWithdrawalCompletedEvent(payload: SendWithdrawalCompletedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
-
-    for (const pushToken of pushTokens) {
-      await this.pushClient.sendPushNotification({
-        token: pushToken,
-        templateKey: PushTemplates.getOrDefault(PushTemplates.WITHDRAWAL_COMPLETED_PUSH, payload.locale ?? "en"),
-        notificationType: PushNotificationType.TRANSACTION_UPDATE,
-        transactionRef: payload.params.transactionRef,
-        params: {
-          transactionParams: {
-            amount: payload.params.debitAmount,
-            currency: payload.params.debitCurrency,
+    const promises = pushTokens.map(
+      async pushToken =>
+        await this.pushClient.sendPushNotification({
+          token: pushToken,
+          templateKey: PushTemplates.getOrDefault(PushTemplates.WITHDRAWAL_COMPLETED_PUSH, payload.locale ?? "en"),
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
+          params: {
+            transactionParams: {
+              amount: payload.params.debitAmount,
+              currency: payload.params.debitCurrency,
+            },
           },
-        },
-      });
-    }
+        }),
+    );
+
+    await Promise.all(promises);
   }
 
   @OnEvent(`push.${NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT}`)
   async sendWithdrawalFailedEvent(payload: SendWithdrawalFailedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
 
-    for (const pushToken of pushTokens) {
-      await this.pushClient.sendPushNotification({
-        token: pushToken,
-        templateKey: PushTemplates.getOrDefault(PushTemplates.WITHDRAWAL_FAILED_PUSH, payload.locale ?? "en"),
-        notificationType: PushNotificationType.TRANSACTION_UPDATE,
-        transactionRef: payload.params.transactionRef,
-        params: {
-          transactionParams: {
-            amount: payload.params.debitAmount,
-            currency: payload.params.debitCurrency,
+    const promises = pushTokens.map(
+      async pushToken =>
+        await this.pushClient.sendPushNotification({
+          token: pushToken,
+          templateKey: PushTemplates.getOrDefault(PushTemplates.WITHDRAWAL_FAILED_PUSH, payload.locale ?? "en"),
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
+          params: {
+            transactionParams: {
+              amount: payload.params.debitAmount,
+              currency: payload.params.debitCurrency,
+            },
           },
-        },
-      });
-    }
+        }),
+    );
+
+    await Promise.all(promises);
   }
 
   @OnEvent(`push.${NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT}`)
   async sendTransferCompletedEvent(payload: SendTransferCompletedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
 
-    for (const pushToken of pushTokens) {
-      await this.pushClient.sendPushNotification({
-        token: pushToken,
-        templateKey: PushTemplates.getOrDefault(PushTemplates.TRANSFER_COMPLETED_PUSH, payload.locale ?? "en"),
-        notificationType: PushNotificationType.TRANSACTION_UPDATE,
-        transactionRef: payload.params.transactionRef,
-        params: {
-          transactionParams: {
-            amount: payload.params.debitAmount,
-            currency: payload.params.debitCurrency,
-            receiverHandle: payload.params.creditConsumer_handle,
+    const promises = pushTokens.map(
+      async pushToken =>
+        await this.pushClient.sendPushNotification({
+          token: pushToken,
+          templateKey: PushTemplates.getOrDefault(PushTemplates.TRANSFER_COMPLETED_PUSH, payload.locale ?? "en"),
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
+          params: {
+            transactionParams: {
+              amount: payload.params.debitAmount,
+              currency: payload.params.debitCurrency,
+              receiverHandle: payload.params.creditConsumer_handle,
+            },
           },
-        },
-        transferCounterPartyHandle: payload.params.creditConsumer_handle,
-      });
-    }
+          transferCounterPartyHandle: payload.params.creditConsumer_handle,
+        }),
+    );
+
+    await Promise.all(promises);
   }
 
   @OnEvent(`push.${NotificationEventType.SEND_TRANSFER_FAILED_EVENT}`)
   async sendTransferFailedEvent(payload: SendTransferFailedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
 
-    for (const pushToken of pushTokens) {
-      await this.pushClient.sendPushNotification({
-        token: pushToken,
-        templateKey: PushTemplates.getOrDefault(PushTemplates.TRANSFER_FAILED_PUSH, payload.locale ?? "en"),
-        notificationType: PushNotificationType.TRANSACTION_UPDATE,
-        transactionRef: payload.params.transactionRef,
-        params: {
-          transactionParams: {
-            amount: payload.params.debitAmount,
-            currency: payload.params.debitCurrency,
-            receiverHandle: payload.params.creditConsumer_handle,
+    const promises = pushTokens.map(
+      async pushToken =>
+        await this.pushClient.sendPushNotification({
+          token: pushToken,
+          templateKey: PushTemplates.getOrDefault(PushTemplates.TRANSFER_FAILED_PUSH, payload.locale ?? "en"),
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
+          params: {
+            transactionParams: {
+              amount: payload.params.debitAmount,
+              currency: payload.params.debitCurrency,
+              receiverHandle: payload.params.creditConsumer_handle,
+            },
           },
-        },
-        transferCounterPartyHandle: payload.params.creditConsumer_handle,
-      });
-    }
+          transferCounterPartyHandle: payload.params.creditConsumer_handle,
+        }),
+    );
+
+    await Promise.all(promises);
   }
 
   @OnEvent(`push.${NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT}`)
   async sendTransferReceivedEvent(payload: SendTransferReceivedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
 
-    for (const pushToken of pushTokens) {
-      await this.pushClient.sendPushNotification({
-        token: pushToken,
-        templateKey: PushTemplates.getOrDefault(PushTemplates.TRANSFER_RECEIVED_PUSH, payload.locale ?? "en"),
-        notificationType: PushNotificationType.TRANSACTION_UPDATE,
-        transactionRef: payload.params.transactionRef,
-        params: {
-          transactionParams: {
-            amount: payload.params.creditAmount,
-            currency: payload.params.creditCurrency,
-            senderHandle: payload.params.debitConsumer_handle,
+    const promises = pushTokens.map(
+      async pushToken =>
+        await this.pushClient.sendPushNotification({
+          token: pushToken,
+          templateKey: PushTemplates.getOrDefault(PushTemplates.TRANSFER_RECEIVED_PUSH, payload.locale ?? "en"),
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
+          params: {
+            transactionParams: {
+              amount: payload.params.creditAmount,
+              currency: payload.params.creditCurrency,
+              senderHandle: payload.params.debitConsumer_handle,
+            },
           },
-        },
-        transferCounterPartyHandle: payload.params.debitConsumer_handle,
-      });
-    }
+          transferCounterPartyHandle: payload.params.debitConsumer_handle,
+        }),
+    );
+
+    await Promise.all(promises);
   }
 
   @OnEvent(`push.${NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT}`)
   async sendPayrollDepositCompletedEvent(payload: SendPayrollDepositCompletedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
 
-    for (const pushToken of pushTokens) {
-      await this.pushClient.sendPushNotification({
-        token: pushToken,
-        templateKey: PushTemplates.getOrDefault(PushTemplates.PAYROLL_DEPOSIT_COMPLETED_PUSH, payload.locale ?? "en"),
-        notificationType: PushNotificationType.TRANSACTION_UPDATE,
-        transactionRef: payload.params.transactionRef,
-        params: {
-          payrollParams: {
-            companyName: payload.params.companyName,
+    const promises = pushTokens.map(
+      async pushToken =>
+        await this.pushClient.sendPushNotification({
+          token: pushToken,
+          templateKey: PushTemplates.getOrDefault(PushTemplates.PAYROLL_DEPOSIT_COMPLETED_PUSH, payload.locale ?? "en"),
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
+          params: {
+            payrollParams: {
+              companyName: payload.params.companyName,
+            },
+            transactionParams: {
+              amount: payload.params.debitAmount,
+              currency: payload.params.debitCurrency,
+            },
           },
-          transactionParams: {
-            amount: payload.params.debitAmount,
-            currency: payload.params.debitCurrency,
-          },
-        },
-      });
-    }
+        }),
+    );
+
+    await Promise.all(promises);
   }
 }
