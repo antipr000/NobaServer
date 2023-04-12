@@ -79,7 +79,7 @@ export class PomeloService implements ICardProviderService {
         identification_type: identification.type,
         identification_value: identification.value,
         birthdate: consumer.props.dateOfBirth,
-        gender: consumer.props.gender,
+        gender: consumer.props.gender ?? "X", // Pomelo has said that X is a valid value if we do not want to ask for gender
         email: consumer.props.email,
         phone: phoneWithoutExtension,
         operation_country: locationDetails.alpha3ISOCode,
