@@ -16,7 +16,14 @@ import {
   PomeloTransactionAuthzResponse,
   PomeloTransactionAuthzSummaryStatus,
 } from "../../dto/pomelo.transaction.service.dto";
-import { PomeloCurrency, PomeloTransactionType } from "../../domain/PomeloTransaction";
+import {
+  PomeloCurrency,
+  PomeloEntryMode,
+  PomeloOrigin,
+  PomeloPointType,
+  PomeloSource,
+  PomeloTransactionType,
+} from "../../domain/PomeloTransaction";
 
 describe("PomeloTransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -76,6 +83,11 @@ describe("PomeloTransactionServiceTests", () => {
         settlementAmount: 11,
         settlementCurrency: PomeloCurrency.USD,
         merchantName: "MERCHANT_NAME",
+        countryCode: "COL",
+        entryMode: PomeloEntryMode.MANUAL,
+        pointType: PomeloPointType.ECOMMERCE,
+        origin: PomeloOrigin.INTERNATIONAL,
+        source: PomeloSource.ONLINE,
       };
       when(mockWebhookMapper.convertToPomeloTransactionAuthzRequest(anything(), anything())).thenReturn(parsedRequest);
 
@@ -185,6 +197,11 @@ describe("PomeloTransactionServiceTests", () => {
         settlementAmount: 11,
         settlementCurrency: PomeloCurrency.USD,
         merchantName: "MERCHANT_NAME",
+        countryCode: "COL",
+        entryMode: PomeloEntryMode.MANUAL,
+        pointType: PomeloPointType.ECOMMERCE,
+        origin: PomeloOrigin.INTERNATIONAL,
+        source: PomeloSource.ONLINE,
       };
       when(
         mockWebhookMapper.convertToPomeloTransactionAdjustmentRequest(
