@@ -429,12 +429,11 @@ model Admin {
 
 model Verification {
   id               String    @id @default(uuid())
-  userID           String?
-  transactionID    String?   @unique()
+  consumerID       String?
   createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
 
-  @@index([userID])
+  @@unique([id, consumerID])
 }
 
 model CreditCardBIN {
