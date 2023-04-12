@@ -10,8 +10,10 @@ export class ClientCreateUserRequest {
   email: string;
   phone: string;
   operation_country: string;
+  nationality: string;
   legal_address: {
     street_name: string;
+    street_number: string;
     zip_code: string;
     city: string;
     region: string;
@@ -31,6 +33,7 @@ export class ClientUpdateUserRequest {
   identification_value?: string;
   legal_address?: {
     street_name: string;
+    street_number: string;
     zip_code: string;
     city: string;
     region: string;
@@ -52,6 +55,7 @@ export enum ClientCardStatusReason {
 export class ClientCreateCardRequest {
   user_id: string;
   card_type: NobaCardType;
+  affinity_group_id: string;
   address?: {
     street_name: string;
     street_number: string;
