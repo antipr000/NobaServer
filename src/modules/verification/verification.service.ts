@@ -112,6 +112,14 @@ export class VerificationService {
       consumerInformation,
       kycFlow,
     );
+
+    await this.verificationDataRepo.updateVerificationData(
+      VerificationData.createVerificationData({
+        id: sessionKey,
+        consumerID: consumer.props.id,
+      }),
+    );
+
     const verifiedConsumerData: ConsumerProps = {
       ...consumer.props,
       address: consumerInformation.address,
@@ -324,16 +332,6 @@ export class VerificationService {
     await this.consumerService.updateConsumer(newConsumerData);
 
     return result;
-  }
-
-  async provideTransactionFeedback(
-    errorCode: string,
-    errorDescription: string,
-    transactionRef: string,
-    processor: string,
-  ): Promise<void> {
-    const sessionKey = await this.verificationDataRepo.getSessionKeyFromFilters({ transactionID: transactionRef });
-    await this.idvProvider.postTransactionFeedback(sessionKey, errorCode, errorDescription, transactionRef, processor);
   }
 
   async getDeviceVerificationResult(sessionKey: string): Promise<SardineDeviceInformationResponse> {

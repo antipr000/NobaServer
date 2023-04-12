@@ -13,8 +13,7 @@ export class SQLVerificationDataRepo implements IVerificationDataRepo {
       const verificationDataProps = await this.prismaService.verification.create({
         data: {
           id: verificationData.props.id,
-          userID: verificationData.props.consumerID,
-          transactionID: verificationData.props.transactionID,
+          consumerID: verificationData.props.consumerID,
         },
       });
       return VerificationData.createVerificationData(verificationDataProps);
@@ -37,8 +36,7 @@ export class SQLVerificationDataRepo implements IVerificationDataRepo {
       const result = await this.prismaService.verification.update({
         where: { id: verificationData.props.id },
         data: {
-          userID: verificationData.props.consumerID,
-          transactionID: verificationData.props.transactionID,
+          consumerID: verificationData.props.consumerID,
         },
       });
 
@@ -49,13 +47,12 @@ export class SQLVerificationDataRepo implements IVerificationDataRepo {
   }
 
   async getSessionKeyFromFilters(filters: Partial<VerificationDataProps>): Promise<string> {
-    if (!filters.transactionID && !filters.consumerID) throw new BadRequestException("No filters provided");
+    if (!filters.consumerID) throw new BadRequestException("No filters provided");
 
     try {
       const verificationDataProps = await this.prismaService.verification.findFirstOrThrow({
         where: {
-          ...(filters.transactionID && { transactionID: filters.transactionID }),
-          ...(filters.consumerID && { userID: filters.consumerID }),
+          ...(filters.consumerID && { consumerID: filters.consumerID }),
         },
       });
       return verificationDataProps.id;

@@ -789,11 +789,6 @@ describe("VerificationService", () => {
         },
       };
 
-      const verificationData = VerificationData.createVerificationData({
-        id: sessionKey,
-        transactionID: transactionInformation.transactionRef,
-      });
-
       when(
         idvProvider.transactionVerification(sessionKey, deepEqual(consumer), deepEqual(transactionInformation)),
       ).thenResolve(transactionVerificationResult);
@@ -801,8 +796,6 @@ describe("VerificationService", () => {
       when(consumerService.updateConsumer(deepEqual(newConsumerData))).thenResolve(
         Consumer.createConsumer(newConsumerData),
       );
-
-      when(verificationRepo.updateVerificationData(deepEqual(verificationData))).thenResolve(verificationData);
 
       const result = await verificationService.transactionVerification(sessionKey, consumer, transactionInformation);
 
@@ -835,25 +828,6 @@ describe("VerificationService", () => {
       expect(
         async () => await verificationService.transactionVerification(sessionKey, consumer, transactionInformation),
       ).rejects.toThrow(ServiceException);
-    });
-  });
-
-  describe("provideTransactionFeedback", () => {
-    it("should post transaction feedback with appropriate parameters", async () => {
-      const errorCode = "fake-error";
-      const errorDescription = "Fake Error";
-      const transactionID = "fake-transaction";
-      const sessionKey = "fake-session";
-      const processor = "checkout";
-
-      when(verificationRepo.getSessionKeyFromFilters(deepEqual({ transactionID: transactionID }))).thenResolve(
-        sessionKey,
-      );
-
-      await verificationService.provideTransactionFeedback(errorCode, errorDescription, transactionID, processor);
-      verify(
-        idvProvider.postTransactionFeedback(sessionKey, errorCode, errorDescription, transactionID, processor),
-      ).once();
     });
   });
 

@@ -7,7 +7,6 @@ import { Verification as VerificationModel } from "@prisma/client";
 
 export class VerificationDataProps implements Partial<VerificationModel> {
   id: string;
-  transactionID?: string | null;
   consumerID?: string;
   createdTimestamp?: Date;
   updatedTimestamp?: Date;
@@ -17,7 +16,6 @@ export const verificationDataValidationKeys: KeysRequired<VerificationDataProps>
   ...basePropsJoiSchemaKeys,
   id: Joi.string().min(10).required(),
   consumerID: Joi.string().optional().allow(null),
-  transactionID: Joi.string().optional().allow(null),
 };
 
 export const verificationDataJoiSchema = Joi.object(verificationDataValidationKeys).options({
