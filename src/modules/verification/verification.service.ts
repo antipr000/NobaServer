@@ -58,6 +58,7 @@ export class VerificationService {
     }
 
     const verifiedConsumerData = await this.verifyConsumerInformationInternal(consumer, sessionKey, [KYCFlow.LOGIN]);
+
     const status = verifiedConsumerData.verificationData.kycCheckStatus;
     if (status === KYCStatus.REJECTED) {
       await this.consumerService.updateConsumer(verifiedConsumerData);
@@ -321,13 +322,6 @@ export class VerificationService {
     };
 
     await this.consumerService.updateConsumer(newConsumerData);
-    await this.verificationDataRepo.updateVerificationData(
-      VerificationData.createVerificationData({
-        id: sessionKey,
-        consumerID: consumer.props.id,
-        transactionID: transactionVerification.transactionRef,
-      }),
-    );
 
     return result;
   }
