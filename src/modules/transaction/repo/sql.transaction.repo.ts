@@ -17,10 +17,12 @@ import {
   convertToDomainTransaction,
   InputTransaction,
   Transaction,
+  TransactionStatus,
   UpdateTransaction,
   validateInputTransaction,
   validateSavedTransaction,
   validateUpdateTransaction,
+  WorkflowName,
 } from "../domain/Transaction";
 import { ITransactionRepo } from "./transaction.repo";
 import { TransactionFilterOptionsDTO } from "../dto/TransactionFilterOptionsDTO";
@@ -171,10 +173,21 @@ export class SQLTransactionRepo implements ITransactionRepo {
         ...(transactionFilterOptions.consumerID && {
           OR: [
             {
-              creditConsumerID: transactionFilterOptions.consumerID,
+              debitConsumerID: transactionFilterOptions.consumerID,
             },
             {
-              debitConsumerID: transactionFilterOptions.consumerID,
+              AND: [
+                // This is to exclude WALLET_TRANSFER transactions for the receiver that are not COMPLETED
+                { creditConsumerID: transactionFilterOptions.consumerID },
+                {
+                  NOT: {
+                    AND: [
+                      { workflowName: WorkflowName.WALLET_TRANSFER },
+                      { status: { not: TransactionStatus.COMPLETED } },
+                    ],
+                  },
+                },
+              ],
             },
           ],
         }),
