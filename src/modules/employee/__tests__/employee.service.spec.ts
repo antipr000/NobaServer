@@ -337,7 +337,11 @@ describe("EmployeeServiceTests", () => {
       employee2.allocationAmount = 400;
       employee3.allocationAmount = 600;
 
-      when(employeeRepo.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2, employee3]);
+      when(employeeRepo.getEmployeesForEmployerWithConsumer(employer.id)).thenResolve([
+        employee1,
+        employee2,
+        employee3,
+      ]);
       when(employeeRepo.updateEmployee(anything(), anything())).thenResolve();
 
       await employeeService.updateAllocationAmountsForNewMaxAllocationPercent(employer.id, 10);
@@ -380,7 +384,11 @@ describe("EmployeeServiceTests", () => {
       employee2.allocationAmount = 400;
       employee3.allocationAmount = 200; // this employee is not exceeding the new max allocation percent
 
-      when(employeeRepo.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2, employee3]);
+      when(employeeRepo.getEmployeesForEmployerWithConsumer(employer.id)).thenResolve([
+        employee1,
+        employee2,
+        employee3,
+      ]);
       when(employeeRepo.updateEmployee(anything(), anything())).thenResolve();
 
       await employeeService.updateAllocationAmountsForNewMaxAllocationPercent(employer.id, 10);
