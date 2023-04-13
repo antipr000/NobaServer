@@ -395,4 +395,26 @@ describe("SqlEmployeeRepoTests", () => {
       expect(fetchedEmployeesForEmployerID1).toEqual(expect.arrayContaining([createdEmployee1, createdEmployee2]));
     });
   });
+
+  describe("getEmployeesForEmployerWithConsumer", () => {
+    it("should return all employees for the specified employerID 'only'", async () => {
+      const consumerID1: string = await createTestConsumer(prismaService);
+      const consumerID2: string = await createTestConsumer(prismaService);
+      const consumerID3: string = await createTestConsumer(prismaService);
+      const employerID1: string = await createTestEmployerAndStoreInDB(prismaService);
+      const employerID2: string = await createTestEmployerAndStoreInDB(prismaService);
+
+      const employee1: EmployeeCreateRequest = getRandomEmployee(employerID1, consumerID1);
+      const createdEmployee1: Employee = await employeeRepo.createEmployee(employee1);
+      const employee2: EmployeeCreateRequest = getRandomEmployee(employerID1, consumerID2);
+      const createdEmployee2: Employee = await employeeRepo.createEmployee(employee2);
+      const employee3: EmployeeCreateRequest = getRandomEmployee(employerID2, consumerID3);
+      await employeeRepo.createEmployee(employee3);
+
+      const fetchedEmployeesForEmployerID1: Employee[] = await employeeRepo.getEmployeesForEmployer(employerID1);
+
+      expect(fetchedEmployeesForEmployerID1.length).toEqual(2);
+      expect(fetchedEmployeesForEmployerID1).toEqual(expect.arrayContaining([createdEmployee1, createdEmployee2]));
+    });
+  });
 });

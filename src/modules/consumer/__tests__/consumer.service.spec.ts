@@ -66,6 +66,7 @@ import { IdentificationService } from "../../../modules/common/identification.se
 import { getMockIdentificationServiceWithDefaults } from "../../../modules/common/mocks/mock.identification.service";
 import { PushTokenService } from "../../../modules/notifications/push.token.service";
 import { getMockPushTokenServiceWithDefaults } from "../../../modules/notifications/mocks/mock.pushtoken.service";
+import { KYC } from "../domain/KYC";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -2337,6 +2338,57 @@ describe("ConsumerService", () => {
       expect(
         consumerService.deleteIdentification(consumer.props.id, identification.id),
       ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
+    });
+  });
+
+  describe("isActiveConsumer", () => {
+    it("should return false if consumer is not active", async () => {
+      const consumer = getRandomConsumer();
+      expect(consumerService.isActiveConsumer(consumer)).toBe(false);
+    });
+
+    it.each([
+      [KYCStatus.PENDING, DocumentVerificationStatus.PENDING],
+      [KYCStatus.REJECTED, DocumentVerificationStatus.REJECTED],
+      [KYCStatus.APPROVED, DocumentVerificationStatus.REJECTED],
+      [KYCStatus.REJECTED, DocumentVerificationStatus.APPROVED],
+      [KYCStatus.PENDING, DocumentVerificationStatus.REJECTED],
+      [KYCStatus.REJECTED, DocumentVerificationStatus.PENDING],
+      [KYCStatus.PENDING, DocumentVerificationStatus.APPROVED],
+    ])(
+      "should return false if consumer is active but KYC is %s and document verification is %s",
+      async (kycCheckStatus, documentVerificationStatus) => {
+        const consumer = getRandomConsumer();
+        consumer.props.verificationData = {
+          kycCheckStatus,
+          documentVerificationStatus,
+          provider: "SARDINE",
+        };
+        expect(consumerService.isActiveConsumer(consumer)).toBe(false);
+      },
+    );
+
+    it.each([
+      [KYCStatus.APPROVED, DocumentVerificationStatus.APPROVED],
+      [KYCStatus.APPROVED, DocumentVerificationStatus.LIVE_PHOTO_VERIFIED],
+      [KYCStatus.APPROVED, DocumentVerificationStatus.NOT_REQUIRED],
+    ])(
+      "should return true if consumer is active and KYC is %s and document verification is %s",
+      async (kycCheckStatus, documentVerificationStatus) => {
+        const consumer = getRandomConsumer();
+        consumer.props.verificationData = {
+          kycCheckStatus,
+          documentVerificationStatus,
+          provider: "SARDINE",
+        };
+        expect(consumerService.isActiveConsumer(consumer)).toBe(true);
+      },
+    );
+
+    it.each(["isLocked", "isDisabled"])("should return false if consumer is active but %s is true", async field => {
+      const consumer = getRandomConsumer();
+      consumer.props[field] = true;
+      expect(consumerService.isActiveConsumer(consumer)).toBe(false);
     });
   });
 });
