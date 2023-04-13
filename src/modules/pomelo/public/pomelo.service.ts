@@ -13,6 +13,9 @@ import { ConsumerService } from "../../consumer/consumer.service";
 import { countryToSupportedIdentificationTypes } from "../domain/PomeloConstants";
 import CryptoJS from "crypto-js";
 import { WebViewTokenResponseDTO } from "../../psp/dto/card.controller.dto";
+import { PomeloConfigs } from "../../../config/configtypes/PomeloConfigs";
+import { CustomConfigService } from "../../../core/utils/AppConfigModule";
+import { POMELO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 
 @Injectable()
 export class PomeloService implements ICardProviderService {
@@ -27,6 +30,12 @@ export class PomeloService implements ICardProviderService {
 
   @Inject()
   private readonly locationService: LocationService;
+
+  private readonly pomeloConfigs: PomeloConfigs;
+
+  constructor(configService: CustomConfigService) {
+    this.pomeloConfigs = configService.get<PomeloConfigs>(POMELO_CONFIG_KEY);
+  }
 
   public async createCard(consumer: Consumer, type: NobaCardType): Promise<NobaCard> {
     let pomeloUser = await this.pomeloRepo.getPomeloUserByConsumerID(consumer.props.id);
@@ -73,19 +82,20 @@ export class PomeloService implements ICardProviderService {
         });
       }
 
-      // TODO: Fill identificatioon_type and identification_value
       const createUserRequest: ClientCreateUserRequest = {
         name: consumer.props.firstName,
         surname: consumer.props.lastName,
         identification_type: identification.type,
         identification_value: identification.value,
         birthdate: consumer.props.dateOfBirth,
-        gender: consumer.props.gender,
+        gender: consumer.props.gender ?? "X", // Pomelo has said that X is a valid value if we do not want to ask for gender
         email: consumer.props.email,
         phone: phoneWithoutExtension,
         operation_country: locationDetails.alpha3ISOCode,
+        nationality: locationDetails.alpha3ISOCode,
         legal_address: {
           street_name: consumer.props.address.streetLine1,
+          street_number: " ", // Pomelo has told us this is OK to do
           ...(consumer.props.address.streetLine2 && { additional_info: consumer.props.address.streetLine2 }),
           zip_code: consumer.props.address.postalCode,
           city: consumer.props.address.city,
@@ -94,7 +104,16 @@ export class PomeloService implements ICardProviderService {
         },
       };
 
-      const pomeloClientUser = await this.pomeloClient.createUser(consumer.props.id, createUserRequest);
+      let pomeloClientUser;
+      try {
+        pomeloClientUser = await this.pomeloClient.createUser(consumer.props.id, createUserRequest);
+      } catch (e) {
+        if (e instanceof ServiceException && e.errorCode === ServiceErrorCode.ALREADY_EXISTS) {
+          pomeloClientUser = await this.pomeloClient.getUserByEmail(consumer.props.email);
+        } else {
+          throw e;
+        }
+      }
 
       pomeloUser = await this.pomeloRepo.createPomeloUser({
         consumerID: consumer.props.id,
@@ -107,6 +126,7 @@ export class PomeloService implements ICardProviderService {
     const pomeloClientCard = await this.pomeloClient.createCard(idempotencyKey, {
       user_id: pomeloUser.pomeloID,
       card_type: type,
+      affinity_group_id: this.pomeloConfigs.affinityGroup,
     });
 
     const pomeloCardCreateRequest: PomeloCardSaveRequest = {

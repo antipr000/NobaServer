@@ -50,6 +50,8 @@ export const getRandomActiveConsumer = (phoneExtension: string, countryCode: str
     lastName: "Consumer",
     email: email,
     displayEmail: email,
+    dateOfBirth: "1990-01-01",
+    gender: "Male",
     phone: `+${phoneExtension}1234567890`,
     handle: `${uuid().slice(5)}${Date.now().valueOf()}`,
     referralCode: Utils.getAlphaNanoID(15),
