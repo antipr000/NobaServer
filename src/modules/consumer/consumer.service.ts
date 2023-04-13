@@ -917,6 +917,21 @@ export class ConsumerService {
     throw new Error("Method not implemented");
   }
 
+  isActiveConsumer(consumer: Consumer): boolean {
+    if (
+      consumer.props.isLocked ||
+      consumer.props.isDisabled ||
+      consumer.props.verificationData == null ||
+      consumer.props.verificationData.kycCheckStatus !== KYCStatus.APPROVED ||
+      (consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.APPROVED &&
+        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.NOT_REQUIRED &&
+        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.LIVE_PHOTO_VERIFIED)
+    ) {
+      return false;
+    }
+    return true;
+  }
+
   private normalizePhoneNumber(digits: string, countryCode: string): string {
     if (digits && digits[0] === "+") {
       return digits;
@@ -939,20 +954,5 @@ export class ConsumerService {
     while (result.length < 3) result += "-";
 
     return result.substring(0, 16);
-  }
-
-  private isActiveConsumer(consumer: Consumer): boolean {
-    if (
-      consumer.props.isLocked ||
-      consumer.props.isDisabled ||
-      consumer.props.verificationData == null ||
-      consumer.props.verificationData.kycCheckStatus !== KYCStatus.APPROVED ||
-      (consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.APPROVED &&
-        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.NOT_REQUIRED &&
-        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.LIVE_PHOTO_VERIFIED)
-    ) {
-      return false;
-    }
-    return true;
   }
 }

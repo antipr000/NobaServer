@@ -221,4 +221,29 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
       });
     }
   }
+
+  async getEmployeesForEmployerWithConsumer(employerID: string, fetchEmployerDetails?: boolean): Promise<Employee[]> {
+    try {
+      const employees: EmployeeModelType[] = await this.prismaService.employee.findMany({
+        where: {
+          employerID: employerID,
+        },
+        include: {
+          employer: fetchEmployerDetails ?? false,
+          consumer: true,
+        },
+      });
+
+      if (!employees) {
+        return [];
+      }
+
+      return employees.map(convertToDomainEmployee);
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new DatabaseInternalErrorException({
+        message: `Error retrieving employess for employer with ID: '${employerID}'`,
+      });
+    }
+  }
 }
