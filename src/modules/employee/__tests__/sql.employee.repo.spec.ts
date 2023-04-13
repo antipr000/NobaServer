@@ -394,10 +394,25 @@ describe("SqlEmployeeRepoTests", () => {
       expect(fetchedEmployeesForEmployerID1.length).toEqual(2);
       expect(fetchedEmployeesForEmployerID1).toEqual(expect.arrayContaining([createdEmployee1, createdEmployee2]));
     });
+
+    it("should return empty array if there is no Employee with the specified employerID", async () => {
+      const employerID: string = await createTestEmployerAndStoreInDB(prismaService);
+      expect(await employeeRepo.getEmployeesForEmployer(employerID)).toEqual([]);
+    });
+
+    it("should throw error if findMany fails", async () => {
+      const employerID: string = await createTestEmployerAndStoreInDB(prismaService);
+
+      jest.spyOn(prismaService.employee, "findMany").mockImplementationOnce(() => {
+        throw new Error("Test error");
+      });
+
+      await expect(employeeRepo.getEmployeesForEmployer(employerID)).rejects.toThrowRepoException();
+    });
   });
 
   describe("getEmployeesForEmployerWithConsumer", () => {
-    it("should return all employees for the specified employerID 'only'", async () => {
+    it("should return all employees for the specified employerID with the consumer", async () => {
       const consumerID1: string = await createTestConsumer(prismaService);
       const consumerID2: string = await createTestConsumer(prismaService);
       const consumerID3: string = await createTestConsumer(prismaService);
@@ -417,6 +432,23 @@ describe("SqlEmployeeRepoTests", () => {
 
       expect(fetchedEmployeesForEmployerID1.length).toEqual(2);
       expect(fetchedEmployeesForEmployerID1).toEqual(expect.arrayContaining([createdEmployee1, createdEmployee2]));
+      expect(fetchedEmployeesForEmployerID1[0].consumer).not.toBeNull();
+      expect(fetchedEmployeesForEmployerID1[1].consumer).not.toBeNull();
+    });
+
+    it("should return empty array if there is no Employee with the specified employerID", async () => {
+      const employerID: string = await createTestEmployerAndStoreInDB(prismaService);
+      expect(await employeeRepo.getEmployeesForEmployerWithConsumer(employerID)).toEqual([]);
+    });
+
+    it("should throw error if findMany fails", async () => {
+      const employerID: string = await createTestEmployerAndStoreInDB(prismaService);
+
+      jest.spyOn(prismaService.employee, "findMany").mockImplementationOnce(() => {
+        throw new Error("Test error");
+      });
+
+      await expect(employeeRepo.getEmployeesForEmployerWithConsumer(employerID)).rejects.toThrowRepoException();
     });
   });
 });
