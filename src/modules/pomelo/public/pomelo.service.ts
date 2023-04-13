@@ -104,8 +104,6 @@ export class PomeloService implements ICardProviderService {
         },
       };
 
-      console.log("Here", createUserRequest);
-
       let pomeloClientUser;
       try {
         pomeloClientUser = await this.pomeloClient.createUser(consumer.props.id, createUserRequest);
