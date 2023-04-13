@@ -13,6 +13,9 @@ import { ConsumerService } from "../../consumer/consumer.service";
 import { countryToSupportedIdentificationTypes } from "../domain/PomeloConstants";
 import CryptoJS from "crypto-js";
 import { WebViewTokenResponseDTO } from "../../psp/dto/card.controller.dto";
+import { PomeloConfigs } from "../../../config/configtypes/PomeloConfigs";
+import { CustomConfigService } from "../../../core/utils/AppConfigModule";
+import { POMELO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 
 @Injectable()
 export class PomeloService implements ICardProviderService {
@@ -27,6 +30,12 @@ export class PomeloService implements ICardProviderService {
 
   @Inject()
   private readonly locationService: LocationService;
+
+  private readonly pomeloConfigs: PomeloConfigs;
+
+  constructor(configService: CustomConfigService) {
+    this.pomeloConfigs = configService.get<PomeloConfigs>(POMELO_CONFIG_KEY);
+  }
 
   public async createCard(consumer: Consumer, type: NobaCardType): Promise<NobaCard> {
     let pomeloUser = await this.pomeloRepo.getPomeloUserByConsumerID(consumer.props.id);
@@ -117,7 +126,7 @@ export class PomeloService implements ICardProviderService {
     const pomeloClientCard = await this.pomeloClient.createCard(idempotencyKey, {
       user_id: pomeloUser.pomeloID,
       card_type: type,
-      affinity_group_id: "afg-2IB3A8TeAYjfogaa1E3Mv88nBkq", // TODO(CRYPTO-969) Move to config
+      affinity_group_id: this.pomeloConfigs.affinityGroup,
     });
 
     const pomeloCardCreateRequest: PomeloCardSaveRequest = {
