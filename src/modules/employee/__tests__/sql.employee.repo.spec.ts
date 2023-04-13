@@ -411,7 +411,9 @@ describe("SqlEmployeeRepoTests", () => {
       const employee3: EmployeeCreateRequest = getRandomEmployee(employerID2, consumerID3);
       await employeeRepo.createEmployee(employee3);
 
-      const fetchedEmployeesForEmployerID1: Employee[] = await employeeRepo.getEmployeesForEmployer(employerID1);
+      const fetchedEmployeesForEmployerID1: Employee[] = await employeeRepo.getEmployeesForEmployerWithConsumer(
+        employerID1,
+      );
 
       expect(fetchedEmployeesForEmployerID1.length).toEqual(2);
       expect(fetchedEmployeesForEmployerID1).toEqual(expect.arrayContaining([createdEmployee1, createdEmployee2]));
