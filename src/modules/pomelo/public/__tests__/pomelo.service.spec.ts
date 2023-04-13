@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
+import { POMELO_AFFINITY_GROUP, POMELO_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { PomeloRepo } from "../../repos/pomelo.repo";
@@ -37,6 +37,9 @@ describe("PomeloServiceTests", () => {
   beforeEach(async () => {
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
+      [POMELO_CONFIG_KEY]: {
+        [POMELO_AFFINITY_GROUP]: "fake-ag",
+      },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
@@ -173,8 +176,10 @@ describe("PomeloServiceTests", () => {
             email: consumer.props.email,
             phone: consumer.props.phone.replace("+57", ""),
             operation_country: locationDetails.alpha3ISOCode,
+            nationality: locationDetails.alpha3ISOCode,
             legal_address: {
               street_name: consumer.props.address.streetLine1,
+              street_number: " ",
               additional_info: consumer.props.address.streetLine2,
               zip_code: consumer.props.address.postalCode,
               city: consumer.props.address.city,
@@ -191,6 +196,7 @@ describe("PomeloServiceTests", () => {
           deepEqual({
             user_id: pomeloUser.pomeloID,
             card_type: NobaCardType.VIRTUAL,
+            affinity_group_id: "fake-ag",
           }),
         ),
       ).once();
@@ -294,6 +300,7 @@ describe("PomeloServiceTests", () => {
           deepEqual({
             user_id: pomeloUser.pomeloID,
             card_type: NobaCardType.VIRTUAL,
+            affinity_group_id: "fake-ag",
           }),
         ),
       ).once();
