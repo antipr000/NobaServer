@@ -1,0 +1,4 @@
+{
+  "INSUFFICIENT_FUNDS": "Insufficient Funds for account {0}",
+  "BANK_TRANSFER_COMPLETED": "Consumer Bank transfer is successfully completed"
+}
