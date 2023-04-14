@@ -449,8 +449,17 @@ describe("SqlEmployeeRepoTests", () => {
       });
 
       const allConsumers = await getAllConsumerRecords(prismaService);
-      expect(allConsumers).toContainEqual(fetchedEmployeesForEmployerID1[0].consumer.props);
-      expect(allConsumers).toContainEqual(fetchedEmployeesForEmployerID1[1].consumer.props);
+      const consumer1 = allConsumers.find(value => value.id === consumerID1);
+      expect(fetchedEmployeesForEmployerID1[0].consumer.props).toStrictEqual({
+        ...consumer1,
+        verificationData: expect.any(Object),
+      });
+
+      const consumer2 = allConsumers.find(value => value.id === consumerID2);
+      expect(fetchedEmployeesForEmployerID1[1].consumer.props).toStrictEqual({
+        ...consumer2,
+        verificationData: expect.any(Object),
+      });
     });
 
     it("should return empty array if there is no Employee with the specified employerID", async () => {
