@@ -111,5 +111,6 @@ export const convertToDomainEmployee = (
     updatedTimestamp: employee.updatedTimestamp,
     ...(employee.salary && { salary: employee.salary }),
     ...(employee.employer && { employer: convertToDomainEmployer(employee.employer) }),
+    ...(employee.consumer && { consumer: Consumer.createConsumer(employee.consumer) }),
   };
 };
