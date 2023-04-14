@@ -1161,4 +1161,70 @@ describe("SqlPomeloRepoTests", () => {
       expect(response).toStrictEqual(pomeloTransaction1);
     });
   });
+
+  describe("getPomeloTransactionByPomeloTransactionID", () => {
+    it("should return null when matching 'pomeloTransactionID' is not found", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const pomeloUser = await createPomeloUser(consumerID, prismaService);
+      const nobaCard: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUser.pomeloID,
+        nobaCard.id,
+        prismaService,
+      );
+      const nobaTransactionID = uuid();
+      const pomeloTransaction: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard.pomeloCardID,
+        pomeloUser.pomeloID,
+        nobaTransactionID,
+        null,
+        prismaService,
+      );
+
+      const response = await pomeloRepo.getPomeloTransactionByPomeloTransactionID(uuid());
+
+      expect(response).toBe(null);
+    });
+
+    it("should return PomeloTransaction with the matching 'pomeloTransactionID'", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const pomeloUser = await createPomeloUser(consumerID, prismaService);
+
+      const nobaCard1: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard1: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUser.pomeloID,
+        nobaCard1.id,
+        prismaService,
+      );
+      const nobaTransactionID1 = uuid();
+      const pomeloTransaction1: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard1.pomeloCardID,
+        pomeloUser.pomeloID,
+        nobaTransactionID1,
+        null,
+        prismaService,
+      );
+
+      const nobaCard2: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard2: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUser.pomeloID,
+        nobaCard2.id,
+        prismaService,
+      );
+      const nobaTransactionID2 = uuid();
+      const pomeloTransaction2: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard2.pomeloCardID,
+        pomeloUser.pomeloID,
+        nobaTransactionID2,
+        null,
+        prismaService,
+      );
+
+      const response = await pomeloRepo.getPomeloTransactionByPomeloTransactionID(
+        pomeloTransaction2.pomeloTransactionID,
+      );
+
+      expect(response).toStrictEqual(pomeloTransaction2);
+    });
+  });
 });

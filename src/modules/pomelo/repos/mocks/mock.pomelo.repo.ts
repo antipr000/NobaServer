@@ -21,6 +21,7 @@ export function getMockPomeloRepoWithDefaults(): PomeloRepo {
   when(pomeloRepo.getPomeloTransactionByNobaTransactionID(anyString())).thenReject(new Error("Not implemented"));
   when(pomeloRepo.getPomeloTransactionByPomeloIdempotencyKey(anyString())).thenReject(new Error("Not implemented"));
   when(pomeloRepo.updatePomeloTransactionStatus(anyString(), anyString())).thenReject(new Error("Not implemented"));
+  when(pomeloRepo.getPomeloTransactionByPomeloTransactionID(anyString())).thenReject(new Error("Not implemented"));
 
   return pomeloRepo;
 }
