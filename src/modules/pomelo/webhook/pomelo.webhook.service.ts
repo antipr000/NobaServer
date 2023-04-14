@@ -205,6 +205,7 @@ export class PomeloTransactionService {
     }
 
     try {
+      // const parentPomeloTransaction: PomeloTransaction = await this
       const pomeloTransaction: PomeloTransaction = await this.getOrCreatePomeloTransaction({
         pomeloTransactionID: request.pomeloTransactionID,
         parentPomeloTransactionID: request.pomeloOriginalTransactionID,
