@@ -26,6 +26,7 @@ export class UserAuthService extends AuthService {
   protected async isUserSignedUp(emailOrPhone: string): Promise<boolean> {
     const consumer = await this.consumerService.findConsumerByEmailOrPhone(emailOrPhone);
     if (consumer.isSuccess) {
+      // TODO(jira/CRYPTO-979): Differentiate between disabled and not signed up
       const consumerData = consumer.getValue();
       return !consumerData.props.isDisabled;
     } else {
