@@ -1,4 +1,4 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { ForbiddenException, Inject, Injectable } from "@nestjs/common";
 import { ConsumerService } from "../consumer/consumer.service";
 import { AuthService } from "./auth.service";
 import { consumerIdentityIdentifier } from "./domain/IdentityType";
@@ -17,6 +17,9 @@ export class UserAuthService extends AuthService {
 
   protected async getUserId(emailOrPhone: string): Promise<string> {
     const consumer: Consumer = await this.consumerService.getOrCreateConsumerConditionally(emailOrPhone);
+    if (consumer.props.isLocked || consumer.props.isDisabled) {
+      throw new ForbiddenException("User is locked or disabled!");
+    }
     return consumer.props.id;
   }
 

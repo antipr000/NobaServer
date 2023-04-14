@@ -13,13 +13,12 @@ import { FindConsumerByStructuredFieldsDTO } from "../dto/consumer.search.dto";
 
 export interface IConsumerRepo {
   getConsumer(consumerID: string): Promise<Consumer>;
-  adminGetConsumer(consumerID: string): Promise<Consumer>;
   getConsumerByHandle(handle: string): Promise<Consumer>;
   createConsumer(consumer: Consumer): Promise<Consumer>;
   exists(emailOrPhone: string): Promise<boolean>;
   findConsumersByPublicInfo(publicInfoSearch: string, limit: number): Promise<Result<Consumer[]>>;
   findConsumerByContactInfo(contactInfo: ContactInfo): Promise<Result<Consumer>>;
-  adminFindConsumersByStructuredFields(filter: FindConsumerByStructuredFieldsDTO): Promise<Result<Consumer[]>>;
+  findConsumersByStructuredFields(filter: FindConsumerByStructuredFieldsDTO): Promise<Result<Consumer[]>>;
   getConsumerByEmail(email: string): Promise<Result<Consumer>>;
   getConsumerByPhone(phone: string): Promise<Result<Consumer>>;
   getConsumerIDByHandle(handle: string): Promise<string>;

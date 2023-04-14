@@ -7,6 +7,8 @@ export const AuthUser = createParamDecorator((data: unknown, ctx: ExecutionConte
   const user = request.user?.entity;
   if (!(user instanceof Consumer)) {
     throw new ForbiddenException();
+  } else if (user.props.isLocked || user.props.isDisabled) {
+    throw new ForbiddenException("User is locked or disabled!");
   }
   return user;
 });

@@ -66,7 +66,6 @@ import { IdentificationService } from "../../../modules/common/identification.se
 import { getMockIdentificationServiceWithDefaults } from "../../../modules/common/mocks/mock.identification.service";
 import { PushTokenService } from "../../../modules/notifications/push.token.service";
 import { getMockPushTokenServiceWithDefaults } from "../../../modules/notifications/mocks/mock.pushtoken.service";
-import { KYC } from "../domain/KYC";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -274,30 +273,6 @@ describe("ConsumerService", () => {
 
       expect(async () => {
         await consumerService.getConsumer("missing-consumer");
-      }).rejects.toThrow(NotFoundException);
-    });
-  });
-
-  describe("adminGetConsumer", () => {
-    it("should find the consumer", async () => {
-      const email = "mock-user@noba.com";
-
-      const consumerID = "mock-consumer-1";
-      const consumer = Consumer.createConsumer({
-        id: consumerID,
-        email: email,
-      });
-
-      when(mockConsumerRepo.adminGetConsumer(consumerID)).thenResolve(consumer);
-      const response = await consumerService.adminGetConsumer(consumerID);
-      expect(response).toStrictEqual(consumer);
-    });
-
-    it("should not find the consumer if it doesn't exist", async () => {
-      when(mockConsumerRepo.adminGetConsumer("missing-consumer")).thenThrow(new NotFoundException());
-
-      expect(async () => {
-        await consumerService.adminGetConsumer("missing-consumer");
       }).rejects.toThrow(NotFoundException);
     });
   });
@@ -1554,8 +1529,8 @@ describe("ConsumerService", () => {
     it("should find consumers by specific ID", async () => {
       const consumer = getRandomConsumer();
 
-      when(mockConsumerRepo.adminGetConsumer(consumer.props.id)).thenResolve(consumer);
-      const structuredFieldSearchSpy = jest.spyOn(mockConsumerRepo, "adminFindConsumersByStructuredFields");
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      const structuredFieldSearchSpy = jest.spyOn(mockConsumerRepo, "findConsumersByStructuredFields");
 
       const consumers = await consumerService.adminFindConsumers({ consumerID: consumer.props.id });
       expect(consumers).toEqual([consumer]);
@@ -1563,7 +1538,7 @@ describe("ConsumerService", () => {
     });
 
     it("should return empty array if no consumers found by specific ID", async () => {
-      when(mockConsumerRepo.adminGetConsumer("1234567890")).thenResolve(undefined);
+      when(mockConsumerRepo.getConsumer("1234567890")).thenResolve(undefined);
 
       const consumers = await consumerService.adminFindConsumers({ consumerID: "1234567890" });
       expect(consumers).toEqual([]);
@@ -1574,7 +1549,7 @@ describe("ConsumerService", () => {
       consumer.props.firstName = "Rosie";
       consumer.props.lastName = "Noba";
 
-      when(mockConsumerRepo.adminFindConsumersByStructuredFields(deepEqual({ name: "Rosie Noba" }))).thenResolve(
+      when(mockConsumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Rosie Noba" }))).thenResolve(
         Result.ok<Array<Consumer>>([consumer]),
       );
       const idSearchSpy = jest.spyOn(mockConsumerRepo, "getConsumer");
@@ -1604,7 +1579,7 @@ describe("ConsumerService", () => {
       });
 
       when(
-        mockConsumerRepo.adminFindConsumersByStructuredFields(
+        mockConsumerRepo.findConsumersByStructuredFields(
           deepEqual({
             name: `${consumer.props.firstName} ${consumer.props.lastName}`,
             email: consumer.props.email,
@@ -1628,7 +1603,7 @@ describe("ConsumerService", () => {
     });
 
     it("should return empty array if no consumers found", async () => {
-      when(mockConsumerRepo.adminFindConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
+      when(mockConsumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
         Result.ok([]),
       );
 
@@ -1637,7 +1612,7 @@ describe("ConsumerService", () => {
     });
 
     it("should throw ServiceException if findConsumers fails", async () => {
-      when(mockConsumerRepo.adminFindConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
+      when(mockConsumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
         Result.fail("Prisma failed!"),
       );
 
