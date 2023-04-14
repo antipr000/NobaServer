@@ -221,6 +221,26 @@ describe("UserAuthService", () => {
         );
       });
 
+      it("should return Consumer.id if Consumer is locked", async () => {
+        const EXISTING_USER_EMAIL = "rosie@noba.com";
+        const CORRECT_OTP = 123456;
+
+        const consumer = Consumer.createConsumer({
+          id: "mock-consumer-1",
+          email: EXISTING_USER_EMAIL,
+          isLocked: true,
+        });
+
+        when(mockConsumerService.getOrCreateConsumerConditionally(EXISTING_USER_EMAIL)).thenResolve(consumer);
+
+        when(mockOTPService.checkIfOTPIsValidAndCleanup(EXISTING_USER_EMAIL, identityType, CORRECT_OTP)).thenResolve(
+          true,
+        );
+
+        const receivedConsumerID = await userAuthService.validateAndGetUserId(EXISTING_USER_EMAIL, CORRECT_OTP);
+        expect(receivedConsumerID).toEqual(consumer.props.id);
+      });
+
       it("should return Consumer.id for correct Consumer", async () => {
         const EXISTING_USER_EMAIL = "rosie@noba.com";
         const CORRECT_OTP = 123456;
@@ -264,6 +284,18 @@ describe("UserAuthService", () => {
         const result = await userAuthService.verifyUserExistence(EXISTING_USER_EMAIL);
 
         expect(result).toBe(true);
+      });
+
+      it("should return false for disabled users", async () => {
+        const EXISTING_USER_EMAIL = "user@noba.com";
+
+        when(mockConsumerService.findConsumerByEmailOrPhone(EXISTING_USER_EMAIL)).thenResolve(
+          Result.ok(Consumer.createConsumer({ email: EXISTING_USER_EMAIL, isDisabled: true })),
+        );
+
+        const result = await userAuthService.verifyUserExistence(EXISTING_USER_EMAIL);
+
+        expect(result).toBe(false);
       });
     });
 

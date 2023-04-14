@@ -17,15 +17,19 @@ export class UserAuthService extends AuthService {
 
   protected async getUserId(emailOrPhone: string): Promise<string> {
     const consumer: Consumer = await this.consumerService.getOrCreateConsumerConditionally(emailOrPhone);
-    if (consumer.props.isLocked || consumer.props.isDisabled) {
-      throw new ForbiddenException("User is locked or disabled!");
+    if (consumer.props.isDisabled) {
+      throw new ForbiddenException("User account is deactivated!");
     }
     return consumer.props.id;
   }
 
   protected async isUserSignedUp(emailOrPhone: string): Promise<boolean> {
     const consumer = await this.consumerService.findConsumerByEmailOrPhone(emailOrPhone);
-
-    return consumer.isSuccess;
+    if (consumer.isSuccess) {
+      const consumerData = consumer.getValue();
+      return !consumerData.props.isDisabled;
+    } else {
+      return false;
+    }
   }
 }
