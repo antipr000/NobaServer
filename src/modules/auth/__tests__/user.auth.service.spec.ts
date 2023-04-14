@@ -3,7 +3,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { anyString, anything, deepEqual, instance, verify, when } from "ts-mockito";
-import { UnauthorizedException } from "@nestjs/common";
+import { ForbiddenException, UnauthorizedException } from "@nestjs/common";
 import { consumerIdentityIdentifier } from "../domain/IdentityType";
 import { STATIC_DEV_OTP } from "../../../config/ConfigurationUtils";
 import { NotificationService } from "../../notifications/notification.service";
@@ -201,6 +201,24 @@ describe("UserAuthService", () => {
         } catch (err) {
           expect(err).toBeInstanceOf(UnauthorizedException);
         }
+      });
+
+      it("should throw ForbiddenException if user is disabled", async () => {
+        const DISABLED_USER_EMAIL = "abcd@noba.com";
+        const OTP = 123456;
+
+        const consumer = Consumer.createConsumer({
+          id: "mock-consumer-1",
+          email: DISABLED_USER_EMAIL,
+          isDisabled: true,
+        });
+
+        when(mockConsumerService.getOrCreateConsumerConditionally(DISABLED_USER_EMAIL)).thenResolve(consumer);
+        when(mockOTPService.checkIfOTPIsValidAndCleanup(DISABLED_USER_EMAIL, identityType, OTP)).thenResolve(true);
+
+        await expect(userAuthService.validateAndGetUserId(DISABLED_USER_EMAIL, OTP)).rejects.toThrow(
+          ForbiddenException,
+        );
       });
 
       it("should return Consumer.id for correct Consumer", async () => {
