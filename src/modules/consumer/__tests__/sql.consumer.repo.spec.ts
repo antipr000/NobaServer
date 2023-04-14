@@ -898,6 +898,27 @@ describe("ConsumerRepoTests", () => {
       expect(updatedConsumer.props.socialSecurityNumber).toBe("encrypted-ssn");
       verify(kmsService.encryptString("000000002", KmsKeyType.SSN)).once();
     });
+
+    it("should update isDisabled and isLocked for consumer if set to false", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+
+      const updateRequest: Partial<ConsumerProps> = {
+        isDisabled: false,
+        isLocked: false,
+      };
+
+      const updatedConsumerRecord = await consumerRepo.updateConsumer(consumer.props.id, updateRequest);
+
+      const consumerRecord = (await getAllConsumerRecords(prismaService)).filter(record => {
+        return record.id === consumer.props.id;
+      })[0];
+
+      expect(updatedConsumerRecord.props.isDisabled).toBe(false);
+      expect(updatedConsumerRecord.props.isLocked).toBe(false);
+      expect(consumerRecord.isDisabled).toBe(false);
+      expect(consumerRecord.isLocked).toBe(false);
+    });
   });
 
   describe("addCryptoWallet", () => {
