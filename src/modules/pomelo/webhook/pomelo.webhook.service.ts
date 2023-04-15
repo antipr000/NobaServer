@@ -205,7 +205,6 @@ export class PomeloTransactionService {
     }
 
     try {
-      // const parentPomeloTransaction: PomeloTransaction = await this
       const pomeloTransaction: PomeloTransaction = await this.getOrCreatePomeloTransaction({
         pomeloTransactionID: request.pomeloTransactionID,
         parentPomeloTransactionID: request.pomeloOriginalTransactionID,
@@ -236,9 +235,14 @@ export class PomeloTransactionService {
         request.pomeloUserID,
       );
       const circleWalletID: string = await this.circleService.getOrCreateWallet(nobaConsumerID);
-      const { amountInUSD, exchangeRate } = await this.getCOPEquivalentUSDAmountToDeduct(
-        pomeloTransaction.amountInLocalCurrency,
+      const parentNobaTransaction: Transaction = await this.getParentNobaTransaction(
+        request.pomeloOriginalTransactionID,
       );
+      const exchangeRate: number = parentNobaTransaction.exchangeRate;
+      const amountInUSD =
+        parentNobaTransaction.workflowName === WorkflowName.CARD_WITHDRAWAL
+          ? parentNobaTransaction.debitAmount
+          : parentNobaTransaction.debitAmount || parentNobaTransaction.creditAmount;
 
       switch (request.adjustmentType) {
         case PomeloAdjustmentType.CREDIT:
@@ -421,7 +425,30 @@ export class PomeloTransactionService {
     );
     return {
       amountInUSD: Utils.roundTo2DecimalNumber(copAmount / exchangeRate.nobaRate),
-      exchangeRate: exchangeRate.nobaRate,
+      exchangeRate: 1 / exchangeRate.nobaRate,
     };
+  }
+
+  private async getParentNobaTransaction(parentPomeloTransactionID: string): Promise<Transaction> {
+    const parentPomeloTransaction: PomeloTransaction = await this.pomeloRepo.getPomeloTransactionByPomeloTransactionID(
+      parentPomeloTransactionID,
+    );
+    if (!parentPomeloTransaction) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Parent PomeloTransaction with ID '${parentPomeloTransactionID}' is not found`,
+      });
+    }
+    const parentNobaTransaction: Transaction = await this.transactionService.getTransactionByTransactionID(
+      parentPomeloTransaction.nobaTransactionID,
+    );
+    if (!parentPomeloTransaction) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Parent PomeloTransaction with ID '${parentPomeloTransactionID}' is not found`,
+      });
+    }
+
+    return parentNobaTransaction;
   }
 }
