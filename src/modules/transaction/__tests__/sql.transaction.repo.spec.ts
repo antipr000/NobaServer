@@ -60,6 +60,32 @@ const getRandomTransaction = (consumerID: string, isCreditTransaction = false): 
   return transaction;
 };
 
+const getRandomTransferTransaction = (consumerID: string, consumerID2: string): InputTransaction => {
+  const transaction: InputTransaction = {
+    transactionRef: uuid(),
+    exchangeRate: 1,
+    memo: "New transaction",
+    sessionKey: uuid(),
+    workflowName: WorkflowName.WALLET_TRANSFER,
+    transactionFees: [
+      {
+        amount: 10,
+        currency: "USD",
+        type: FeeType.PROCESSING,
+      },
+    ],
+  };
+
+  transaction.creditAmount = 100;
+  transaction.creditCurrency = "USD";
+  transaction.creditConsumerID = consumerID2;
+  transaction.debitAmount = 100;
+  transaction.debitCurrency = "USD";
+  transaction.debitConsumerID = consumerID;
+
+  return transaction;
+};
+
 describe("PostgresTransactionRepoTests", () => {
   jest.setTimeout(20000);
 
@@ -745,6 +771,64 @@ describe("PostgresTransactionRepoTests", () => {
       expect(result.items[0].transactionRef).toBe(transaction2.transactionRef);
       expect(result.items[1].transactionRef).toBe(transaction3.transactionRef);
       expect(result.items[2].transactionRef).toBe(transaction1.transactionRef);
+    });
+
+    it("should return all transactions for all consumers", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const consumerID2 = await createTestConsumer(prismaService);
+
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID));
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID, true));
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID2));
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID));
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID));
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID2));
+      const randomTransaction = await transactionRepo.createTransaction(getRandomTransaction(consumerID, true));
+
+      const result1 = await transactionRepo.getFilteredTransactions({
+        pageLimit: 3,
+        pageOffset: 1,
+      });
+
+      expect(result1.items.length).toBe(3);
+      expect(result1.items).toContainEqual(randomTransaction);
+      expect(result1.totalItems).toBe(7);
+    });
+
+    it("should filter out incomplete transfers for the receiving consumer", async () => {
+      const consumerID1 = await createTestConsumer(prismaService);
+      const consumerID2 = await createTestConsumer(prismaService);
+
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID1)); // Visible to consumerID1
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID1, true)); // Visible to consumerID1
+      await transactionRepo.createTransaction(getRandomTransferTransaction(consumerID2, consumerID1)); // Visible to consumerID2
+      const transfer1 = await transactionRepo.createTransaction(getRandomTransferTransaction(consumerID1, consumerID2)); // Visible to consumerID1 only because it's in processing
+      await transactionRepo.updateTransactionByTransactionID(transfer1.id, { status: TransactionStatus.PROCESSING });
+      await transactionRepo.createTransaction(getRandomTransaction(consumerID1)); // Visible to consumerID1
+      const transfer2 = await transactionRepo.createTransaction(getRandomTransferTransaction(consumerID1, consumerID2)); // Visible to consumerID1 and consumerID2 because it's COMPLETED
+      await transactionRepo.updateTransactionByTransactionID(transfer2.id, { status: TransactionStatus.COMPLETED });
+      const transfer3 = await transactionRepo.createTransaction(getRandomTransferTransaction(consumerID1, consumerID2)); // Visible to consumerID1 only because it's FAILED
+      await transactionRepo.updateTransactionByTransactionID(transfer3.id, { status: TransactionStatus.FAILED });
+
+      // This should return all transactions except the incomplete transfers TO this consumer
+      const consumerID1Transactions = await transactionRepo.getFilteredTransactions({
+        consumerID: consumerID1,
+      });
+
+      expect(consumerID1Transactions.items.length).toBe(6);
+
+      const consumerID2Transactions = await transactionRepo.getFilteredTransactions({
+        consumerID: consumerID2,
+      });
+
+      expect(consumerID2Transactions.items.length).toBe(2);
+
+      // Flip transfer1 to COMPLETED and check that it's now visible to consumerID2
+      await transactionRepo.updateTransactionByTransactionID(transfer1.id, { status: TransactionStatus.COMPLETED });
+      const consumerID2TransactionsUpdated = await transactionRepo.getFilteredTransactions({
+        consumerID: consumerID2,
+      });
+      expect(consumerID2TransactionsUpdated.items.length).toBe(3);
     });
   });
 

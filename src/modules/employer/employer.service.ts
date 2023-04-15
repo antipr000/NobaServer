@@ -117,7 +117,10 @@ export class EmployerService {
       });
     }
 
-    return this.employeeService.getEmployeesForEmployer(employerID);
+    const employees = await this.employeeService.getEmployeesForEmployer(employerID);
+    return employees.filter(employee => {
+      return this.consumerService.isActiveConsumer(employee.consumer);
+    });
   }
 
   async createEmployer(request: CreateEmployerRequestDTO): Promise<Employer> {

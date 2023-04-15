@@ -105,7 +105,7 @@ export class EmployeeService {
       });
     }
 
-    return this.employeeRepo.getEmployeesForEmployer(employerID);
+    return await this.employeeRepo.getEmployeesForEmployerWithConsumer(employerID);
   }
 
   async updateAllocationAmountsForNewMaxAllocationPercent(

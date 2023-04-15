@@ -19,6 +19,7 @@ import {
 } from "../domain/Employee";
 import { IEmployeeRepo } from "./employee.repo";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
+import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
 
 type EmployeeModelType = EmployeePrismaModel & {
   employer?: EmployerPrismaModel;
@@ -216,8 +217,39 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
       return employees.map(convertToDomainEmployee);
     } catch (err) {
       this.logger.error(JSON.stringify(err));
-      throw new DatabaseInternalErrorException({
-        message: `Error retrieving employess for employer with ID: '${employerID}'`,
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: `Error retrieving employees for employer with ID: '${employerID}'`,
+      });
+    }
+  }
+
+  async getEmployeesForEmployerWithConsumer(employerID: string, fetchEmployerDetails?: boolean): Promise<Employee[]> {
+    try {
+      const employees: EmployeeModelType[] = await this.prismaService.employee.findMany({
+        where: {
+          employerID: employerID,
+        },
+        include: {
+          employer: fetchEmployerDetails ?? false,
+          consumer: {
+            include: {
+              verificationData: true,
+            },
+          },
+        },
+      });
+
+      if (!employees) {
+        return [];
+      }
+
+      return employees.map(convertToDomainEmployee);
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: `Error retrieving employees for employer with ID: '${employerID}'`,
       });
     }
   }

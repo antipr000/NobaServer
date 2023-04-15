@@ -3,7 +3,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { anyString, anything, deepEqual, instance, verify, when } from "ts-mockito";
-import { UnauthorizedException } from "@nestjs/common";
+import { ForbiddenException, UnauthorizedException } from "@nestjs/common";
 import { consumerIdentityIdentifier } from "../domain/IdentityType";
 import { STATIC_DEV_OTP } from "../../../config/ConfigurationUtils";
 import { NotificationService } from "../../notifications/notification.service";
@@ -203,6 +203,44 @@ describe("UserAuthService", () => {
         }
       });
 
+      it("should throw ForbiddenException if user is disabled", async () => {
+        const DISABLED_USER_EMAIL = "abcd@noba.com";
+        const OTP = 123456;
+
+        const consumer = Consumer.createConsumer({
+          id: "mock-consumer-1",
+          email: DISABLED_USER_EMAIL,
+          isDisabled: true,
+        });
+
+        when(mockConsumerService.getOrCreateConsumerConditionally(DISABLED_USER_EMAIL)).thenResolve(consumer);
+        when(mockOTPService.checkIfOTPIsValidAndCleanup(DISABLED_USER_EMAIL, identityType, OTP)).thenResolve(true);
+
+        await expect(userAuthService.validateAndGetUserId(DISABLED_USER_EMAIL, OTP)).rejects.toThrow(
+          ForbiddenException,
+        );
+      });
+
+      it("should return Consumer.id if Consumer is locked", async () => {
+        const EXISTING_USER_EMAIL = "rosie@noba.com";
+        const CORRECT_OTP = 123456;
+
+        const consumer = Consumer.createConsumer({
+          id: "mock-consumer-1",
+          email: EXISTING_USER_EMAIL,
+          isLocked: true,
+        });
+
+        when(mockConsumerService.getOrCreateConsumerConditionally(EXISTING_USER_EMAIL)).thenResolve(consumer);
+
+        when(mockOTPService.checkIfOTPIsValidAndCleanup(EXISTING_USER_EMAIL, identityType, CORRECT_OTP)).thenResolve(
+          true,
+        );
+
+        const receivedConsumerID = await userAuthService.validateAndGetUserId(EXISTING_USER_EMAIL, CORRECT_OTP);
+        expect(receivedConsumerID).toEqual(consumer.props.id);
+      });
+
       it("should return Consumer.id for correct Consumer", async () => {
         const EXISTING_USER_EMAIL = "rosie@noba.com";
         const CORRECT_OTP = 123456;
@@ -246,6 +284,18 @@ describe("UserAuthService", () => {
         const result = await userAuthService.verifyUserExistence(EXISTING_USER_EMAIL);
 
         expect(result).toBe(true);
+      });
+
+      it("should return false for disabled users", async () => {
+        const EXISTING_USER_EMAIL = "user@noba.com";
+
+        when(mockConsumerService.findConsumerByEmailOrPhone(EXISTING_USER_EMAIL)).thenResolve(
+          Result.ok(Consumer.createConsumer({ email: EXISTING_USER_EMAIL, isDisabled: true })),
+        );
+
+        const result = await userAuthService.verifyUserExistence(EXISTING_USER_EMAIL);
+
+        expect(result).toBe(false);
       });
     });
 

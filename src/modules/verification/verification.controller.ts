@@ -14,7 +14,6 @@ import {
   ForbiddenException,
   HttpCode,
   NotFoundException,
-  BadRequestException,
 } from "@nestjs/common";
 import { FileFieldsInterceptor } from "@nestjs/platform-express";
 import {
@@ -49,7 +48,6 @@ import { DocumentVerificationResultDTO } from "./dto/DocumentVerificationResultD
 import { DocumentVerificationWebhookRequestDTO } from "./dto/DocumentVerificationWebhookRequestDTO";
 import { CaseNotificationWebhookRequestDTO } from "./dto/CaseNotificationWebhookRequestDTO";
 import { WebhookHeadersDTO } from "./dto/WebhookHeadersDTO";
-import { AuthenticatedUser } from "../auth/domain/AuthenticatedUser";
 import { IDVerificationURLResponseDTO, IDVerificationURLRequestLocale } from "./dto/IDVerificationRequestURLDTO";
 import { AuthUser } from "../auth/auth.decorator";
 import { SessionResponseDTO } from "./dto/SessionResponseDTO";
@@ -141,11 +139,8 @@ export class VerificationController {
     @Query("sessionKey") sessionKey: string,
     @UploadedFiles() files: DocumentsFileUploadRequestDTO,
     @Body() requestData: DocVerificationRequestDTO,
-    @Request() request,
+    @AuthUser() consumer: Consumer,
   ): Promise<DocumentVerificationResponseDTO> {
-    const user: AuthenticatedUser = request.user;
-    if (!(user.entity instanceof Consumer)) throw new BadRequestException("This method is only allowed for consumers");
-    const consumer: Consumer = user.entity;
     const result = await this.verificationService.verifyDocument(consumer.props.id, sessionKey, {
       userID: consumer.props.id,
       documentType: requestData.documentType,
@@ -170,11 +165,8 @@ export class VerificationController {
   @ApiNotFoundResponse({ description: "Document verification request not found" })
   async getDocumentVerificationResult(
     @Param("id") id: string,
-    @Request() request,
+    @AuthUser() consumer: Consumer,
   ): Promise<DocumentVerificationResultDTO> {
-    const user: AuthenticatedUser = request.user;
-    if (!(user.entity instanceof Consumer)) throw new BadRequestException("This method is only allowed for consumers");
-    const consumer: Consumer = user.entity;
     if (id !== consumer.props.verificationData.documentCheckReference) {
       throw new NotFoundException("No verification record is found for the user with the given id");
     }
@@ -200,17 +192,13 @@ export class VerificationController {
   @ApiQuery({ name: "requestPOA", type: "boolean", description: "Request proof of address" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getIdentityDocumentVerificationURL(
-    @Request() request,
+    @AuthUser() consumer: Consumer,
     @Query("sessionKey") sessionKey: string,
     @Query("locale") locale: IDVerificationURLRequestLocale,
     @Query("requestBack") idBack = "false",
     @Query("requestSelfie") selfie = "false",
     @Query("requestPOA") poa = "false",
   ): Promise<IDVerificationURLResponseDTO> {
-    const user: AuthenticatedUser = request.user;
-    if (!(user.entity instanceof Consumer)) throw new BadRequestException("This method is only allowed for consumers");
-    const consumer: Consumer = user.entity;
-
     const result = await this.verificationService.getDocumentVerificationURL(
       sessionKey,
       consumer.props.id,

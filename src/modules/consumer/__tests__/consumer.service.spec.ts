@@ -277,30 +277,6 @@ describe("ConsumerService", () => {
     });
   });
 
-  describe("adminGetConsumer", () => {
-    it("should find the consumer", async () => {
-      const email = "mock-user@noba.com";
-
-      const consumerID = "mock-consumer-1";
-      const consumer = Consumer.createConsumer({
-        id: consumerID,
-        email: email,
-      });
-
-      when(mockConsumerRepo.adminGetConsumer(consumerID)).thenResolve(consumer);
-      const response = await consumerService.adminGetConsumer(consumerID);
-      expect(response).toStrictEqual(consumer);
-    });
-
-    it("should not find the consumer if it doesn't exist", async () => {
-      when(mockConsumerRepo.adminGetConsumer("missing-consumer")).thenThrow(new NotFoundException());
-
-      expect(async () => {
-        await consumerService.adminGetConsumer("missing-consumer");
-      }).rejects.toThrow(NotFoundException);
-    });
-  });
-
   describe("getActiveConsumer", () => {
     const getKYCdConsumer = (id: string, email: string, handle: string): Consumer => {
       return Consumer.createConsumer({
@@ -1553,8 +1529,8 @@ describe("ConsumerService", () => {
     it("should find consumers by specific ID", async () => {
       const consumer = getRandomConsumer();
 
-      when(mockConsumerRepo.adminGetConsumer(consumer.props.id)).thenResolve(consumer);
-      const structuredFieldSearchSpy = jest.spyOn(mockConsumerRepo, "adminFindConsumersByStructuredFields");
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      const structuredFieldSearchSpy = jest.spyOn(mockConsumerRepo, "findConsumersByStructuredFields");
 
       const consumers = await consumerService.adminFindConsumers({ consumerID: consumer.props.id });
       expect(consumers).toEqual([consumer]);
@@ -1562,7 +1538,7 @@ describe("ConsumerService", () => {
     });
 
     it("should return empty array if no consumers found by specific ID", async () => {
-      when(mockConsumerRepo.adminGetConsumer("1234567890")).thenResolve(undefined);
+      when(mockConsumerRepo.getConsumer("1234567890")).thenResolve(undefined);
 
       const consumers = await consumerService.adminFindConsumers({ consumerID: "1234567890" });
       expect(consumers).toEqual([]);
@@ -1573,7 +1549,7 @@ describe("ConsumerService", () => {
       consumer.props.firstName = "Rosie";
       consumer.props.lastName = "Noba";
 
-      when(mockConsumerRepo.adminFindConsumersByStructuredFields(deepEqual({ name: "Rosie Noba" }))).thenResolve(
+      when(mockConsumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Rosie Noba" }))).thenResolve(
         Result.ok<Array<Consumer>>([consumer]),
       );
       const idSearchSpy = jest.spyOn(mockConsumerRepo, "getConsumer");
@@ -1603,7 +1579,7 @@ describe("ConsumerService", () => {
       });
 
       when(
-        mockConsumerRepo.adminFindConsumersByStructuredFields(
+        mockConsumerRepo.findConsumersByStructuredFields(
           deepEqual({
             name: `${consumer.props.firstName} ${consumer.props.lastName}`,
             email: consumer.props.email,
@@ -1627,7 +1603,7 @@ describe("ConsumerService", () => {
     });
 
     it("should return empty array if no consumers found", async () => {
-      when(mockConsumerRepo.adminFindConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
+      when(mockConsumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
         Result.ok([]),
       );
 
@@ -1636,7 +1612,7 @@ describe("ConsumerService", () => {
     });
 
     it("should throw ServiceException if findConsumers fails", async () => {
-      when(mockConsumerRepo.adminFindConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
+      when(mockConsumerRepo.findConsumersByStructuredFields(deepEqual({ name: "Blah Blah" }))).thenResolve(
         Result.fail("Prisma failed!"),
       );
 
@@ -2337,6 +2313,57 @@ describe("ConsumerService", () => {
       expect(
         consumerService.deleteIdentification(consumer.props.id, identification.id),
       ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
+    });
+  });
+
+  describe("isActiveConsumer", () => {
+    it("should return false if consumer is not active", async () => {
+      const consumer = getRandomConsumer();
+      expect(consumerService.isActiveConsumer(consumer)).toBe(false);
+    });
+
+    it.each([
+      [KYCStatus.PENDING, DocumentVerificationStatus.PENDING],
+      [KYCStatus.REJECTED, DocumentVerificationStatus.REJECTED],
+      [KYCStatus.APPROVED, DocumentVerificationStatus.REJECTED],
+      [KYCStatus.REJECTED, DocumentVerificationStatus.APPROVED],
+      [KYCStatus.PENDING, DocumentVerificationStatus.REJECTED],
+      [KYCStatus.REJECTED, DocumentVerificationStatus.PENDING],
+      [KYCStatus.PENDING, DocumentVerificationStatus.APPROVED],
+    ])(
+      "should return false if consumer is active but KYC is %s and document verification is %s",
+      async (kycCheckStatus, documentVerificationStatus) => {
+        const consumer = getRandomConsumer();
+        consumer.props.verificationData = {
+          kycCheckStatus,
+          documentVerificationStatus,
+          provider: "SARDINE",
+        };
+        expect(consumerService.isActiveConsumer(consumer)).toBe(false);
+      },
+    );
+
+    it.each([
+      [KYCStatus.APPROVED, DocumentVerificationStatus.APPROVED],
+      [KYCStatus.APPROVED, DocumentVerificationStatus.LIVE_PHOTO_VERIFIED],
+      [KYCStatus.APPROVED, DocumentVerificationStatus.NOT_REQUIRED],
+    ])(
+      "should return true if consumer is active and KYC is %s and document verification is %s",
+      async (kycCheckStatus, documentVerificationStatus) => {
+        const consumer = getRandomConsumer();
+        consumer.props.verificationData = {
+          kycCheckStatus,
+          documentVerificationStatus,
+          provider: "SARDINE",
+        };
+        expect(consumerService.isActiveConsumer(consumer)).toBe(true);
+      },
+    );
+
+    it.each(["isLocked", "isDisabled"])("should return false if consumer is active but %s is true", async field => {
+      const consumer = getRandomConsumer();
+      consumer.props[field] = true;
+      expect(consumerService.isActiveConsumer(consumer)).toBe(false);
     });
   });
 });

@@ -1,5 +1,5 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { deepEqual, instance, when } from "ts-mockito";
+import { instance, when } from "ts-mockito";
 import { VerificationController } from "../verification.controller";
 import { VerificationService } from "../verification.service";
 import { getMockVerificationServiceWithDefaults } from "../mocks/mock.verification.service";
@@ -8,8 +8,7 @@ import { ConsumerInformation } from "../domain/ConsumerInformation";
 import { Consumer } from "../../consumer/domain/Consumer";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { BadRequestException, NotFoundException } from "@nestjs/common";
-import { AuthenticatedUser } from "../../../modules/auth/domain/AuthenticatedUser";
+import { NotFoundException } from "@nestjs/common";
 import { IDVerificationURLRequestLocale, IDVerificationURLResponseDTO } from "../dto/IDVerificationRequestURLDTO";
 import { DocumentVerificationState } from "../../../modules/consumer/domain/ExternalStates";
 import { DocumentVerificationStatus, KYCProvider, KYCStatus } from "@prisma/client";
@@ -172,9 +171,7 @@ describe("VerificationController", () => {
       );
 
       try {
-        await verificationController.getDocumentVerificationResult("fake-transaction-2", {
-          user: { entity: consumer } as AuthenticatedUser,
-        });
+        await verificationController.getDocumentVerificationResult("fake-transaction-2", consumer);
         expect(true).toBe(false);
       } catch (e) {
         console.log(e);
@@ -204,9 +201,7 @@ describe("VerificationController", () => {
         DocumentVerificationStatus.APPROVED,
       );
 
-      const result = await verificationController.getDocumentVerificationResult("fake-transaction-2", {
-        user: { entity: consumer } as AuthenticatedUser,
-      });
+      const result = await verificationController.getDocumentVerificationResult("fake-transaction-2", consumer);
       expect(result.status).toBe(DocumentVerificationState.VERIFIED);
     });
   });
@@ -257,9 +252,7 @@ describe("VerificationController", () => {
       };
 
       const result = await verificationController.getIdentityDocumentVerificationURL(
-        {
-          user: { entity: consumer } as AuthenticatedUser,
-        },
+        consumer,
         "session-id",
         IDVerificationURLRequestLocale.EN_US,
         "true",
@@ -314,32 +307,11 @@ describe("VerificationController", () => {
       };
 
       const result = await verificationController.getIdentityDocumentVerificationURL(
-        {
-          user: { entity: consumer } as AuthenticatedUser,
-        },
+        consumer,
         "session-id",
         IDVerificationURLRequestLocale.EN_US,
       );
       expect(result).toStrictEqual(expectedResult);
-    });
-
-    it("should get the URL for redirect to identity verification", async () => {
-      const url = "http://id-verification-url";
-
-      try {
-        await verificationController.getIdentityDocumentVerificationURL(
-          {
-            user: { entity: undefined } as AuthenticatedUser,
-          },
-          "session-id",
-          IDVerificationURLRequestLocale.EN_US,
-          "true",
-          "true",
-          "true",
-        );
-      } catch (e) {
-        expect(e).toBeInstanceOf(BadRequestException);
-      }
     });
   });
 });

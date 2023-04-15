@@ -84,10 +84,6 @@ export class ConsumerService {
     return this.consumerRepo.getConsumer(consumerID);
   }
 
-  async adminGetConsumer(consumerID: string): Promise<Consumer> {
-    return this.consumerRepo.adminGetConsumer(consumerID);
-  }
-
   async getConsumerHandle(consumerID: string): Promise<string> {
     const consumer = await this.getConsumer(consumerID);
     if (!consumer) return null;
@@ -370,13 +366,13 @@ export class ConsumerService {
   async adminFindConsumers(filter: ConsumerSearchDTO): Promise<Consumer[]> {
     // If consumerID is populated, it is unique and this is all we want to search for
     if (filter.consumerID) {
-      const consumer = await this.consumerRepo.adminGetConsumer(filter.consumerID);
+      const consumer = await this.consumerRepo.getConsumer(filter.consumerID);
       if (!consumer) {
         return [];
       }
       return [consumer];
     } else {
-      const result = await this.consumerRepo.adminFindConsumersByStructuredFields({
+      const result = await this.consumerRepo.findConsumersByStructuredFields({
         ...(filter.name && { name: filter.name }),
         ...(filter.email && { email: filter.email }),
         ...(filter.phone && { phone: filter.phone }),
@@ -917,6 +913,21 @@ export class ConsumerService {
     throw new Error("Method not implemented");
   }
 
+  isActiveConsumer(consumer: Consumer): boolean {
+    if (
+      consumer.props.isLocked ||
+      consumer.props.isDisabled ||
+      consumer.props.verificationData == null ||
+      consumer.props.verificationData.kycCheckStatus !== KYCStatus.APPROVED ||
+      (consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.APPROVED &&
+        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.NOT_REQUIRED &&
+        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.LIVE_PHOTO_VERIFIED)
+    ) {
+      return false;
+    }
+    return true;
+  }
+
   private normalizePhoneNumber(digits: string, countryCode: string): string {
     if (digits && digits[0] === "+") {
       return digits;
@@ -939,20 +950,5 @@ export class ConsumerService {
     while (result.length < 3) result += "-";
 
     return result.substring(0, 16);
-  }
-
-  private isActiveConsumer(consumer: Consumer): boolean {
-    if (
-      consumer.props.isLocked ||
-      consumer.props.isDisabled ||
-      consumer.props.verificationData == null ||
-      consumer.props.verificationData.kycCheckStatus !== KYCStatus.APPROVED ||
-      (consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.APPROVED &&
-        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.NOT_REQUIRED &&
-        consumer.props.verificationData.documentVerificationStatus !== DocumentVerificationStatus.LIVE_PHOTO_VERIFIED)
-    ) {
-      return false;
-    }
-    return true;
   }
 }

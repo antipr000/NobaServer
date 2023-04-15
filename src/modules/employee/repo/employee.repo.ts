@@ -11,4 +11,5 @@ export interface IEmployeeRepo {
     fetchEmployerDetails?: boolean,
   ): Promise<Employee>;
   getEmployeesForEmployer(employerID: string, fetchEmployerDetails?: boolean): Promise<Employee[]>;
+  getEmployeesForEmployerWithConsumer(employerID: string): Promise<Employee[]>;
 }

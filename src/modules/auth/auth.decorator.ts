@@ -7,6 +7,8 @@ export const AuthUser = createParamDecorator((data: unknown, ctx: ExecutionConte
   const user = request.user?.entity;
   if (!(user instanceof Consumer)) {
     throw new ForbiddenException();
+  } else if (user.props.isDisabled) {
+    throw new ForbiddenException("User account is deactivated!");
   }
   return user;
 });
