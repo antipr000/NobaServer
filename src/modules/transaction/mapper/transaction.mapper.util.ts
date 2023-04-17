@@ -2,6 +2,9 @@ import { TransactionEvent } from "../domain/TransactionEvent";
 import { TransactionFee } from "../domain/TransactionFee";
 import { TransactionFeeDTO } from "../dto/TransactionDTO";
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+import { I18n } from "i18n";
 
 export const toTransactionFeesDTO = (transactionFees: TransactionFee): TransactionFeeDTO => {
   return {
@@ -12,6 +15,7 @@ export const toTransactionFeesDTO = (transactionFees: TransactionFee): Transacti
 };
 
 export const toTransactionEventDTO = (transactionEvent: TransactionEvent): TransactionEventDTO => {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
   return {
     timestamp: transactionEvent.timestamp,
     internal: transactionEvent.internal,
