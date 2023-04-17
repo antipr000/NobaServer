@@ -63,6 +63,7 @@ import {
   SendPhoneVerificationCodeEvent,
   validateSendPhoneVerificationCodeEvent,
 } from "./events/SendPhoneVerificationCodeEvent";
+import { LatestNotificationResponse } from "./dto/LatestNotificationResponseDTO";
 
 @Injectable()
 export class NotificationService {
@@ -218,5 +219,29 @@ export class NotificationService {
         this.logger.error(`Unknown Notification event type: ${eventType}`);
         break;
     }
+  }
+
+  async getPreviousNotifications(medium: NotificationEventHandler): Promise<LatestNotificationResponse> {
+    const response = await this.eventEmitter.emitAsync(`${medium}.get`);
+    switch (medium) {
+      case NotificationEventHandler.EMAIL:
+        return {
+          emailData: response,
+        };
+      case NotificationEventHandler.SMS:
+        return {
+          smsData: response,
+        };
+      case NotificationEventHandler.PUSH:
+        return {
+          pushData: response,
+        };
+    }
+  }
+
+  async clearPreviousNotifications(): Promise<void> {
+    await this.eventEmitter.emitAsync(`${NotificationEventHandler.EMAIL}.clear`);
+    await this.eventEmitter.emitAsync(`${NotificationEventHandler.SMS}.clear`);
+    await this.eventEmitter.emitAsync(`${NotificationEventHandler.PUSH}.clear`);
   }
 }

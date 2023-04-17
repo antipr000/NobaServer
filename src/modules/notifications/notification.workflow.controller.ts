@@ -1,11 +1,13 @@
-import { Body, Controller, HttpStatus, Inject, Param, Post } from "@nestjs/common";
+import { Body, Controller, Delete, ForbiddenException, Get, HttpStatus, Inject, Param, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NotificationWorkflowService } from "./notification.workflow.service";
-import { NotificationWorkflowTypes } from "./domain/NotificationTypes";
+import { NotificationEventHandler, NotificationWorkflowTypes } from "./domain/NotificationTypes";
 import { SendNotificationRequestDTO } from "./dto/SendNotificationRequestDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
+import { LatestNotificationResponse } from "./dto/LatestNotificationResponseDTO";
+import { isE2ETestEnvironment } from "../../config/ConfigurationUtils";
 
 @Controller("wf/v1/notification")
 @ApiBearerAuth("JWT-auth")
@@ -35,6 +37,29 @@ export class NotificationWorkflowController {
         requestBody.payrollStatus,
       );
     }
+    return {};
+  }
+
+  @Get("/test/:eventHandler")
+  @ApiOperation({ summary: "Get previous notifications in test environment" })
+  @ApiResponse({ status: HttpStatus.OK, type: LatestNotificationResponse })
+  async getPreviousNotifications(@Param("eventHandler") eventHandler: string): Promise<LatestNotificationResponse> {
+    if (!isE2ETestEnvironment()) {
+      throw new ForbiddenException("This endpoint is only available in test environment");
+    }
+
+    return this.notificationWorkflowService.getPreviousNotifications(eventHandler as NotificationEventHandler);
+  }
+
+  @Delete("/test")
+  @ApiOperation({ summary: "Clear previous notifications in test environment" })
+  @ApiResponse({ status: HttpStatus.OK, type: BlankResponseDTO })
+  async clearPreviousNotifications(): Promise<BlankResponseDTO> {
+    if (!isE2ETestEnvironment()) {
+      throw new ForbiddenException("This endpoint is only available in test environment");
+    }
+
+    await this.notificationWorkflowService.clearPreviousNotifications();
     return {};
   }
 }

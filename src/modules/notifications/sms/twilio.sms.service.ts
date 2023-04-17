@@ -7,6 +7,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { TemplatePayload, smsTemplates } from "./templates.sms";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { SMSData } from "../dto/LatestNotificationResponseDTO";
 
 @Injectable()
 export class TwilioSMSClient extends SMSClient {
@@ -26,5 +27,12 @@ export class TwilioSMSClient extends SMSClient {
       to: recipientPhoneNumber,
       body: smsTemplates[templateKey](templatePayload),
     });
+  }
+
+  getPreviousSMS(): SMSData[] {
+    throw new Error("Method is not valid here!");
+  }
+  clearPreviousSMS(): void {
+    throw new Error("Method is not valid here!");
   }
 }

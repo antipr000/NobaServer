@@ -1,5 +1,6 @@
 import { Logger } from "winston";
 import { EmailRequest } from "../domain/EmailTypes";
+import { EmailData } from "../dto/LatestNotificationResponseDTO";
 
 export abstract class EmailClient {
   abstract sendEmailInternal(request: EmailRequest): Promise<void>;
@@ -14,4 +15,8 @@ export abstract class EmailClient {
       this.logger.error(`Failed to send email. Reason: ${e.message}`);
     }
   }
+
+  abstract getPreviousEmails(): EmailData[];
+
+  abstract clearPreviousEmails(): void;
 }

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common";
-import { NotificationEventType, NotificationWorkflowTypes } from "./domain/NotificationTypes";
+import { NotificationEventHandler, NotificationEventType, NotificationWorkflowTypes } from "./domain/NotificationTypes";
 import { ConsumerService } from "../consumer/consumer.service";
 import { TransactionService } from "../transaction/transaction.service";
 import { NotificationService } from "./notification.service";
@@ -11,6 +11,7 @@ import { TransactionNotificationPayloadMapper } from "./domain/TransactionNotifi
 import { Consumer } from "../consumer/domain/Consumer";
 import { PayrollStatus } from "../employer/domain/Payroll";
 import { EmployerService } from "../employer/employer.service";
+import { LatestNotificationResponse } from "./dto/LatestNotificationResponseDTO";
 
 @Injectable()
 export class NotificationWorkflowService {
@@ -146,5 +147,13 @@ export class NotificationWorkflowService {
     const payload = NotificationPayloadMapper.toUpdatePayrollStatusEvent(payroll.id, status);
 
     await this.notificationService.sendNotification(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT, payload);
+  }
+
+  async getPreviousNotifications(handler: NotificationEventHandler): Promise<LatestNotificationResponse> {
+    return await this.notificationService.getPreviousNotifications(handler);
+  }
+
+  async clearPreviousNotifications(): Promise<void> {
+    await this.notificationService.clearPreviousNotifications();
   }
 }

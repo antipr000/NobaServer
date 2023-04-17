@@ -209,4 +209,15 @@ export class PushEventHandler {
 
     await Promise.all(promises);
   }
+
+  @OnEvent("push.get")
+  public async getPreviousNotifications() {
+    const notifications = this.pushClient.getPreviousPushNotifications();
+    return notifications;
+  }
+
+  @OnEvent("push.clear")
+  public async clearPreviousNotifications() {
+    this.pushClient.clearPreviousPushNotifications();
+  }
 }

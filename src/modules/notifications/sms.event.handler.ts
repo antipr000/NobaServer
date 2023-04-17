@@ -43,4 +43,15 @@ export class SMSEventHandler {
       },
     );
   }
+
+  @OnEvent("sms.get")
+  public async getPreviousNotifications() {
+    const notifications = this.smsClient.getPreviousSMS();
+    return notifications;
+  }
+
+  @OnEvent("sms.clear")
+  public async clearPreviousNotifications() {
+    this.smsClient.clearPreviousSMS();
+  }
 }

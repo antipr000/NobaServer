@@ -4,6 +4,7 @@ import { PushClient } from "./push.client";
 import { Expo, ExpoPushMessage } from "expo-server-sdk";
 import { Logger } from "winston";
 import { pushNotificationBodyTemplates, pushNotificationTitleTemplates } from "./templates.push";
+import { PushData } from "../dto/LatestNotificationResponseDTO";
 
 export class ExpoPushClient extends PushClient {
   private readonly expo: Expo;
@@ -38,5 +39,12 @@ export class ExpoPushClient extends PushClient {
         this.logger.error(`Failed to send push notification. Reason: ${e.message}`);
       }
     }
+  }
+
+  getPreviousPushNotifications(): PushData[] {
+    throw new Error("Method not valid here!");
+  }
+  clearPreviousPushNotifications(): void {
+    throw new Error("Method not valid here!");
   }
 }

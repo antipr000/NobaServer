@@ -494,4 +494,15 @@ export class EmailEventHandler {
 
     await this.emailClient.sendEmail(msg);
   }
+
+  @OnEvent("email.get")
+  public async getPreviousNotifications() {
+    const emails = this.emailClient.getPreviousEmails();
+    return emails;
+  }
+
+  @OnEvent("email.clear")
+  public async clearPreviousNotifications() {
+    this.emailClient.clearPreviousEmails();
+  }
 }
