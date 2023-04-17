@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { ExchangeRate as PrismaExchangeRateModel } from "@prisma/client";
-import { KeysRequired } from "./Types";
+import { KeysRequired } from "../../../modules/common/domain/Types";
 
 export class ExchangeRate {
   id?: string;

@@ -1,11 +1,12 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { IExchangeRateRepo } from "./repo/exchangerate.repo";
-import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
 import { InputExchangeRate } from "./domain/ExchangeRate";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
-import { AlertKey } from "./alerts/alert.dto";
-import { AlertService } from "../../modules/common/alerts/alert.service";
+import { AlertKey } from "../common/alerts/alert.dto";
+import { AlertService } from "../common/alerts/alert.service";
+import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
+import { IExchangeRateClient } from "./clients/exchangerate.client";
 
 @Injectable()
 export class ExchangeRateService {
@@ -17,6 +18,9 @@ export class ExchangeRateService {
 
   @Inject()
   private readonly alertService: AlertService;
+
+  @Inject()
+  private readonly exchangeRateClient: IExchangeRateClient;
 
   async createExchangeRate(exchangeRateDTO: ExchangeRateDTO): Promise<ExchangeRateDTO> {
     // If nobaRate is not provided, use bankRate
@@ -57,6 +61,8 @@ export class ExchangeRateService {
       });
     }
   }
+
+  async createExchangeRateFromProvider(): Promise<ExchangeRateDTO> {}
 
   // 1 numeratorCurrency = X denominatorCurrency
   async getExchangeRateForCurrencyPair(
