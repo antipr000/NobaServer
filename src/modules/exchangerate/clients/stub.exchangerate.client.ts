@@ -9,6 +9,13 @@ export class StubExchangeRateClient implements IExchangeRateClient {
   }
 
   async getExchangeRate(numeratorCurrency: string, denominatorCurrency: string): Promise<number> {
-    return Promise.resolve(4000);
+    if (numeratorCurrency === "USD" && denominatorCurrency === "COP") {
+      return Promise.resolve(4000);
+    }
+    if (numeratorCurrency === "COP" && denominatorCurrency === "USD") {
+      return Promise.resolve(1 / 4000);
+    }
+
+    throw new Error("Unsupported currency pair");
   }
 }
