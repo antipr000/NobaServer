@@ -6,6 +6,11 @@ export enum ExchangeRateName {
   STUB = "STUB",
 }
 
+export type ExchangeRatePair = {
+  numeratorCurrency: string;
+  denominatorCurrency: string;
+};
+
 export class ExchangeRate {
   id?: string;
   createdTimestamp?: Date;

@@ -8,7 +8,7 @@ export class StubExchangeRateClient implements IExchangeRateClient {
     throw new Error("Method not implemented.");
   }
 
-  getExchangeRate(): Promise<number> {
+  async getExchangeRate(numeratorCurrency: string, denominatorCurrency: string): Promise<number> {
     return Promise.resolve(4000);
   }
 }

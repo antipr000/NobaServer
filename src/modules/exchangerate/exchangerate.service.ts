@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { IExchangeRateRepo } from "./repo/exchangerate.repo";
-import { InputExchangeRate } from "./domain/ExchangeRate";
+import { ExchangeRatePair, InputExchangeRate } from "./domain/ExchangeRate";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { AlertKey } from "../common/alerts/alert.dto";
@@ -10,6 +10,17 @@ import { ExchangeRateClientFactory } from "./factory/exchangerate.factory";
 
 @Injectable()
 export class ExchangeRateService {
+  private readonly exchangeRatePairs: ExchangeRatePair[] = [
+    {
+      numeratorCurrency: "USD",
+      denominatorCurrency: "COP",
+    },
+    {
+      numeratorCurrency: "COP",
+      denominatorCurrency: "USD",
+    },
+  ];
+
   @Inject("ExchangeRateRepo")
   private readonly exchangeRateRepo: IExchangeRateRepo;
 
@@ -63,16 +74,24 @@ export class ExchangeRateService {
   }
 
   async createExchangeRateFromProvider(): Promise<ExchangeRateDTO> {
-    const exchangeRateClient = this.exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("USD", "COP");
-    const exchangeRate = await exchangeRateClient.getExchangeRate("USD", "COP");
+    for (const exchangeRatePair of this.exchangeRatePairs) {
+      const exchangeRateClient = this.exchangeRateClientFactory.getExchangeRateClientByCurrencyPair(
+        exchangeRatePair.numeratorCurrency,
+        exchangeRatePair.denominatorCurrency,
+      );
+      const exchangeRate = await exchangeRateClient.getExchangeRate(
+        exchangeRatePair.numeratorCurrency,
+        exchangeRatePair.denominatorCurrency,
+      );
 
-    return this.createExchangeRate({
-      numeratorCurrency: "USD",
-      denominatorCurrency: "COP",
-      bankRate: 0,
-      nobaRate: 0,
-      expirationTimestamp: new Date(),
-    });
+      return this.createExchangeRate({
+        numeratorCurrency: exchangeRatePair.numeratorCurrency,
+        denominatorCurrency: exchangeRatePair.denominatorCurrency,
+        bankRate: exchangeRate,
+        nobaRate: null,
+        expirationTimestamp: null,
+      });
+    }
   }
 
   // 1 numeratorCurrency = X denominatorCurrency
