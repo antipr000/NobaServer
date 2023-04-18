@@ -13,6 +13,7 @@ import { SendTransferFailedEvent } from "./events/SendTransferFailedEvent";
 import { SendPayrollDepositCompletedEvent } from "./events/SendPayrollDepositCompletedEvent";
 import { PushNotificationType } from "./domain/PushNotificationTypes";
 import { PushTokenService } from "./push.token.service";
+import { StubPushClient } from "./push/stub.push.client";
 
 @Injectable()
 export class PushEventHandler {
@@ -212,12 +213,16 @@ export class PushEventHandler {
 
   @OnEvent("push.get")
   public async getPreviousNotifications() {
-    const notifications = this.pushClient.getPreviousPushNotifications();
-    return notifications;
+    if (this.pushClient instanceof StubPushClient) {
+      const notifications = this.pushClient.getPreviousPushNotifications();
+      return notifications;
+    }
   }
 
   @OnEvent("push.clear")
   public async clearPreviousNotifications() {
-    this.pushClient.clearPreviousPushNotifications();
+    if (this.pushClient instanceof StubPushClient) {
+      this.pushClient.clearPreviousPushNotifications();
+    }
   }
 }

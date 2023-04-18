@@ -30,6 +30,7 @@ export class StubSMSClient extends SMSClient {
   getPreviousSMS(): SMSData[] {
     return this.smsData;
   }
+
   clearPreviousSMS(): void {
     this.smsData = [];
   }

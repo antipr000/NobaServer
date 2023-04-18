@@ -221,22 +221,16 @@ export class NotificationService {
     }
   }
 
-  async getPreviousNotifications(medium: NotificationEventHandler): Promise<LatestNotificationResponse> {
-    const response = await this.eventEmitter.emitAsync(`${medium}.get`);
-    switch (medium) {
-      case NotificationEventHandler.EMAIL:
-        return {
-          emailData: response,
-        };
-      case NotificationEventHandler.SMS:
-        return {
-          smsData: response,
-        };
-      case NotificationEventHandler.PUSH:
-        return {
-          pushData: response,
-        };
-    }
+  async getPreviousNotifications(): Promise<LatestNotificationResponse> {
+    const smsData = await this.eventEmitter.emitAsync(`${NotificationEventHandler.SMS}.get`);
+    const emailData = await this.eventEmitter.emitAsync(`${NotificationEventHandler.EMAIL}.get`);
+    const pushData = await this.eventEmitter.emitAsync(`${NotificationEventHandler.PUSH}.get`);
+
+    return {
+      smsData,
+      emailData,
+      pushData,
+    };
   }
 
   async clearPreviousNotifications(): Promise<void> {

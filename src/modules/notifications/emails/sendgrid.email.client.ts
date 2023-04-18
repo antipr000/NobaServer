@@ -7,7 +7,6 @@ import { Logger } from "winston";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { EmailClient } from "./email.client";
 import { EmailRequest } from "../domain/EmailTypes";
-import { EmailData } from "../dto/LatestNotificationResponseDTO";
 
 @Injectable()
 export class SendgridEmailClient extends EmailClient {
@@ -26,12 +25,5 @@ export class SendgridEmailClient extends EmailClient {
     } else {
       await sgMail.send(request);
     }
-  }
-
-  getPreviousEmails(): EmailData[] {
-    throw new Error("Method is not valid here!");
-  }
-  clearPreviousEmails(): void {
-    throw new Error("Method is not valid here!");
   }
 }

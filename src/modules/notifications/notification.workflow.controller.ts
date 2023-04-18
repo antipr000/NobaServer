@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagg
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NotificationWorkflowService } from "./notification.workflow.service";
-import { NotificationEventHandler, NotificationWorkflowTypes } from "./domain/NotificationTypes";
+import { NotificationWorkflowTypes } from "./domain/NotificationTypes";
 import { SendNotificationRequestDTO } from "./dto/SendNotificationRequestDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { LatestNotificationResponse } from "./dto/LatestNotificationResponseDTO";
@@ -40,15 +40,15 @@ export class NotificationWorkflowController {
     return {};
   }
 
-  @Get("/test/:eventHandler")
+  @Get("/test")
   @ApiOperation({ summary: "Get previous notifications in test environment" })
   @ApiResponse({ status: HttpStatus.OK, type: LatestNotificationResponse })
-  async getPreviousNotifications(@Param("eventHandler") eventHandler: string): Promise<LatestNotificationResponse> {
+  async getPreviousNotifications(): Promise<LatestNotificationResponse> {
     if (!isE2ETestEnvironment()) {
       throw new ForbiddenException("This endpoint is only available in test environment");
     }
 
-    return this.notificationWorkflowService.getPreviousNotifications(eventHandler as NotificationEventHandler);
+    return this.notificationWorkflowService.getPreviousNotifications();
   }
 
   @Delete("/test")

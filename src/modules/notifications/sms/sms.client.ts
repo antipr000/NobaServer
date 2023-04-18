@@ -1,6 +1,5 @@
 import { Logger } from "winston";
 import { TemplatePayload } from "./templates.sms";
-import { SMSData } from "../dto/LatestNotificationResponseDTO";
 
 export abstract class SMSClient {
   constructor(protected readonly logger: Logger) {}
@@ -19,8 +18,4 @@ export abstract class SMSClient {
       this.logger.error(`Failed to send SMS. Reason: ${e.message}`);
     }
   }
-
-  abstract getPreviousSMS(): SMSData[];
-
-  abstract clearPreviousSMS(): void;
 }

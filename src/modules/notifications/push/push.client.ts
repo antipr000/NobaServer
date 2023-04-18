@@ -1,6 +1,5 @@
 import { Logger } from "winston";
 import { PushNotificationPayload } from "../domain/PushNotificationTypes";
-import { PushData } from "../dto/LatestNotificationResponseDTO";
 
 export abstract class PushClient {
   constructor(protected readonly logger: Logger) {}
@@ -15,8 +14,4 @@ export abstract class PushClient {
       this.logger.error(`Failed to send push notification. Reason: ${e.message}`);
     }
   }
-
-  abstract getPreviousPushNotifications(): PushData[];
-
-  abstract clearPreviousPushNotifications(): void;
 }
