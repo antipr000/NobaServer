@@ -226,10 +226,12 @@ export class NotificationService {
     const emailData = await this.eventEmitter.emitAsync(`${NotificationEventHandler.EMAIL}.get`);
     const pushData = await this.eventEmitter.emitAsync(`${NotificationEventHandler.PUSH}.get`);
 
+    console.log(smsData);
+
     return {
-      smsData,
-      emailData,
-      pushData,
+      smsData: smsData[0],
+      emailData: emailData[0],
+      pushData: pushData[0],
     };
   }
 
