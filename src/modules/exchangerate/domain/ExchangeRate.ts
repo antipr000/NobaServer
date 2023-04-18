@@ -2,6 +2,10 @@ import Joi from "joi";
 import { ExchangeRate as PrismaExchangeRateModel } from "@prisma/client";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 
+export enum ExchangeRateName {
+  STUB = "STUB",
+}
+
 export class ExchangeRate {
   id?: string;
   createdTimestamp?: Date;

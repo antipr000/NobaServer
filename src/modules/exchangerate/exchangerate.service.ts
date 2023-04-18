@@ -6,7 +6,7 @@ import { ServiceErrorCode, ServiceException } from "../../core/exception/service
 import { AlertKey } from "../common/alerts/alert.dto";
 import { AlertService } from "../common/alerts/alert.service";
 import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
-import { IExchangeRateClient } from "./clients/exchangerate.client";
+import { ExchangeRateClientFactory } from "./factory/exchangerate.factory";
 
 @Injectable()
 export class ExchangeRateService {
@@ -20,7 +20,7 @@ export class ExchangeRateService {
   private readonly alertService: AlertService;
 
   @Inject()
-  private readonly exchangeRateClient: IExchangeRateClient;
+  private readonly exchangeRateClientFactory: ExchangeRateClientFactory;
 
   async createExchangeRate(exchangeRateDTO: ExchangeRateDTO): Promise<ExchangeRateDTO> {
     // If nobaRate is not provided, use bankRate
@@ -62,7 +62,18 @@ export class ExchangeRateService {
     }
   }
 
-  async createExchangeRateFromProvider(): Promise<ExchangeRateDTO> {}
+  async createExchangeRateFromProvider(): Promise<ExchangeRateDTO> {
+    const exchangeRateClient = this.exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("USD", "COP");
+    const exchangeRate = await exchangeRateClient.getExchangeRate("USD", "COP");
+
+    return this.createExchangeRate({
+      numeratorCurrency: "USD",
+      denominatorCurrency: "COP",
+      bankRate: 0,
+      nobaRate: 0,
+      expirationTimestamp: new Date(),
+    });
+  }
 
   // 1 numeratorCurrency = X denominatorCurrency
   async getExchangeRateForCurrencyPair(

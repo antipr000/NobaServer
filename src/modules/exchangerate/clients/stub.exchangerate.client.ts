@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { HealthCheckResponse } from "src/core/domain/HealthCheckTypes";
-import { IClient } from "src/core/domain/IClient";
+import { HealthCheckResponse } from "../../../core/domain/HealthCheckTypes";
+import { IExchangeRateClient } from "./exchangerate.client";
 
 @Injectable()
-export class StubExchangeRateClient implements IClient {
+export class StubExchangeRateClient implements IExchangeRateClient {
   getHealth(): Promise<HealthCheckResponse> {
     throw new Error("Method not implemented.");
   }
