@@ -1522,6 +1522,75 @@ describe("PomeloTransactionServiceTests", () => {
           });
         });
 
+        it("shouldn't recreate PomeloTransaction if it already exists", async () => {
+          when(mockPomeloRepo.getPomeloTransactionByPomeloTransactionID("PARENT_POMELO_TRANSACTION_ID")).thenResolve(
+            parentPomeloTransaction,
+          );
+          when(mockTransactionService.getTransactionByTransactionID("PARENT_NOBA_TRANSACTION_ID")).thenResolve(
+            parentDebitTransaction,
+          );
+          when(mockPomeloRepo.createPomeloTransaction(anything())).thenReject(new Error("Already exists"));
+          when(mockPomeloRepo.getPomeloTransactionByPomeloIdempotencyKey("POMELO_IDEMPOTENCY_KEY")).thenResolve(
+            pomeloTransaction,
+          );
+          when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenResolve(
+            nobaConsumerID,
+          );
+          when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
+          when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
+          when(mockTransactionService.initiateTransaction(anything())).thenResolve(debitTransaction);
+          when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
+            debitOrCreditWalletResponse,
+          );
+          when(
+            mockPomeloRepo.updatePomeloTransactionStatus("POMELO_TRANSACTION_ID", PomeloTransactionStatus.APPROVED),
+          ).thenResolve();
+
+          const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(
+            debitRequest,
+          );
+
+          expect(response).toStrictEqual({
+            detailedStatus: PomeloTransactionAuthzDetailStatus.APPROVED,
+            summaryStatus: PomeloTransactionAuthzSummaryStatus.APPROVED,
+            message: "",
+          });
+
+          const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
+          expect(createPomeloTransactionRequestParams).toStrictEqual({
+            pomeloTransactionID: "POMELO_TRANSACTION_ID",
+            parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
+            amountInLocalCurrency: 5000,
+            localCurrency: "COP",
+            amountInUSD: 50,
+            nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
+            pomeloCardID: "POMELO_CARD_ID",
+            pomeloIdempotencyKey: "POMELO_IDEMPOTENCY_KEY",
+            countryCode: "COL",
+            entryMode: PomeloEntryMode.MANUAL,
+            origin: PomeloOrigin.INTERNATIONAL,
+            pointType: PomeloPointType.ECOMMERCE,
+            pomeloTransactionType: PomeloTransactionType.REVERSAL_PAYMENT,
+            pomeloUserID: "POMELO_USER_ID",
+            settlementAmount: 50,
+            settlementCurrency: PomeloCurrency.USD,
+            source: PomeloSource.ONLINE,
+          });
+
+          const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
+          expect(createNobaTransactionRequestParams).toStrictEqual({
+            type: WorkflowName.CARD_REVERSAL,
+            cardReversalRequest: {
+              amountInUSD: 50,
+              consumerID: "NOBA_CONSUMER_ID",
+              type: "DEBIT",
+              exchangeRate: 0.01,
+              nobaTransactionID: "NOBA_TRANSACTION_ID",
+              memo: "Transfer of 5000 COP to MERCHANT_NAME",
+            },
+          });
+        });
+
         it("shouldn't try re-executing actions if the status in PomeloTransaction is not PENDING", async () => {
           const localPomeloTransaction: PomeloTransaction = JSON.parse(JSON.stringify(pomeloTransaction));
           localPomeloTransaction.status = PomeloTransactionStatus.INSUFFICIENT_FUNDS;
