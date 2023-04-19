@@ -3,7 +3,7 @@ import { Logger } from "winston";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PushClient } from "./push.client";
 import { PushNotificationPayload } from "../domain/PushNotificationTypes";
-import { PushData } from "../dto/LatestNotificationResponseDTO";
+import { PushData } from "../dto/latestnotification.response.dto";
 
 @Injectable()
 export class StubPushClient extends PushClient {

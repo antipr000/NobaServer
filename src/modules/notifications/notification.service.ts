@@ -63,7 +63,7 @@ import {
   SendPhoneVerificationCodeEvent,
   validateSendPhoneVerificationCodeEvent,
 } from "./events/SendPhoneVerificationCodeEvent";
-import { LatestNotificationResponse } from "./dto/LatestNotificationResponseDTO";
+import { LatestNotificationResponse } from "./dto/latestnotification.response.dto";
 
 @Injectable()
 export class NotificationService {

@@ -3,7 +3,7 @@ import { Logger } from "winston";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { EmailClient } from "./email.client";
 import { EmailRequest } from "../domain/EmailTypes";
-import { EmailData } from "../dto/LatestNotificationResponseDTO";
+import { EmailData } from "../dto/latestnotification.response.dto";
 
 @Injectable()
 export class StubEmailClient extends EmailClient {

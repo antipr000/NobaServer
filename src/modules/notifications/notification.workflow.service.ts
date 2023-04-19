@@ -11,7 +11,7 @@ import { TransactionNotificationPayloadMapper } from "./domain/TransactionNotifi
 import { Consumer } from "../consumer/domain/Consumer";
 import { PayrollStatus } from "../employer/domain/Payroll";
 import { EmployerService } from "../employer/employer.service";
-import { LatestNotificationResponse } from "./dto/LatestNotificationResponseDTO";
+import { LatestNotificationResponse } from "./dto/latestnotification.response.dto";
 
 @Injectable()
 export class NotificationWorkflowService {

@@ -3,7 +3,7 @@ import { Logger } from "winston";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { SMSClient } from "./sms.client";
 import { TemplatePayload } from "./templates.sms";
-import { SMSData } from "../dto/LatestNotificationResponseDTO";
+import { SMSData } from "../dto/latestnotification.response.dto";
 
 @Injectable()
 export class StubSMSClient extends SMSClient {

@@ -6,7 +6,7 @@ import { NotificationWorkflowService } from "./notification.workflow.service";
 import { NotificationWorkflowTypes } from "./domain/NotificationTypes";
 import { SendNotificationRequestDTO } from "./dto/SendNotificationRequestDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
-import { LatestNotificationResponse } from "./dto/LatestNotificationResponseDTO";
+import { LatestNotificationResponse } from "./dto/latestnotification.response.dto";
 import { isE2ETestEnvironment } from "../../config/ConfigurationUtils";
 
 @Controller("wf/v1/notification")
