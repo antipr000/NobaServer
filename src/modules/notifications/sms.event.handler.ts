@@ -44,7 +44,7 @@ export class SMSEventHandler {
       },
     );
   }
-
+  // BEGIN-NOSCAN
   @OnEvent("sms.get")
   public async getPreviousNotifications() {
     if (this.smsClient instanceof StubSMSClient) {
@@ -59,4 +59,5 @@ export class SMSEventHandler {
       this.smsClient.clearPreviousSMS();
     }
   }
+  // END-NOSCAN
 }

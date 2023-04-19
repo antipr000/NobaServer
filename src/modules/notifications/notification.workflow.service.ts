@@ -149,6 +149,7 @@ export class NotificationWorkflowService {
     await this.notificationService.sendNotification(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT, payload);
   }
 
+  // BEGIN-NOSCAN
   async getPreviousNotifications(): Promise<LatestNotificationResponse> {
     return await this.notificationService.getPreviousNotifications();
   }
@@ -156,4 +157,5 @@ export class NotificationWorkflowService {
   async clearPreviousNotifications(): Promise<void> {
     await this.notificationService.clearPreviousNotifications();
   }
+  // END-NOSCAN
 }

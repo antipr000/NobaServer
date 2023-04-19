@@ -40,6 +40,7 @@ export class NotificationWorkflowController {
     return {};
   }
 
+  // BEGIN-NOSCAN
   @Get("/test")
   @ApiOperation({ summary: "Get previous notifications in test environment" })
   @ApiResponse({ status: HttpStatus.OK, type: LatestNotificationResponse })
@@ -62,4 +63,5 @@ export class NotificationWorkflowController {
     await this.notificationWorkflowService.clearPreviousNotifications();
     return {};
   }
+  // END-NOSCAN
 }
