@@ -15,8 +15,6 @@ import { ConfigurationProviderService } from "../modules/common/configuration.pr
 import { getMockConfigurationProviderServiceWithDefaults } from "../modules/common/mocks/mock.configuration.provider.service";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { BINValidity, CardType, CreditCardDTO } from "../modules/common/dto/CreditCardDTO";
-import { getMockExchangeRateServiceWithDefaults } from "../modules/common/mocks/mock.exchangerate.service";
-import { ExchangeRateService } from "../modules/common/exchangerate.service";
 import { MonoService } from "../modules/psp/mono/mono.service";
 import { getMockMonoServiceWithDefaults } from "../modules/psp/mono/mocks/mock.mono.service";
 import { VerificationService } from "../modules/verification/verification.service";
@@ -29,6 +27,8 @@ import { IdentificationService } from "../modules/common/identification.service"
 import { getMockIdentificationServiceWithDefaults } from "../modules/common/mocks/mock.identification.service";
 import { CircleService } from "../modules/circle/public/circle.service";
 import { getMockCircleServiceWithDefaults } from "../modules/circle/public/mocks/mock.circle.service";
+import { ExchangeRateService } from "../modules/exchangerate/exchangerate.service";
+import { getMockExchangeRateServiceWithDefaults } from "../modules/exchangerate/mocks/mock.exchangerate.service";
 
 describe("AppController", () => {
   let appController: AppController;
