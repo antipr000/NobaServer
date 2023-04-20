@@ -13,7 +13,7 @@ export class StubExchangeRateClient implements IExchangeRateClient {
       return Promise.resolve(4000);
     }
     if (numeratorCurrency === "COP" && denominatorCurrency === "USD") {
-      return Promise.resolve(1 / 4000);
+      return Promise.resolve(0.00025);
     }
 
     throw new Error("Unsupported currency pair");

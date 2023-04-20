@@ -145,6 +145,11 @@ circle:
   masterWalletID: "1001404309"
   awsSecretNameForMasterWalletID: ""
 
+exchangeratesio:
+  apiKey: ""
+  awsSecretNameForApiKey: "TEST_EXCHANGERATES_API_KEY"
+  baseUrl: "https://api.apilayer.com/exchangerates_data"
+
 pomelo:
   clientID: "5y8NSzLGYSegboKhGT3N8CXjnrv9yDVK"
   awsSecretNameForClientID: ""

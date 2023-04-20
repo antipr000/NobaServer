@@ -1,0 +1,11 @@
+import {
+  EXCHANGERATEIO_API_KEY,
+  EXCHANGERATEIO_AWS_SECRET_KEY_FOR_API_KEY,
+  EXCHANGERATEIO_BASE_URL,
+} from "../ConfigurationUtils";
+
+export interface ExchangeRateIOConfigs {
+  [EXCHANGERATEIO_API_KEY]: string;
+  [EXCHANGERATEIO_AWS_SECRET_KEY_FOR_API_KEY]: string;
+  [EXCHANGERATEIO_BASE_URL]: string;
+}
