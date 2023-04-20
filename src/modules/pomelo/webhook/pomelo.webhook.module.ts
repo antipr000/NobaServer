@@ -9,9 +9,10 @@ import { ConsumerModule } from "../../consumer/consumer.module";
 import { PomeloRepoModule } from "../repos/pomelo.repo.module";
 import { TransactionModule } from "../../transaction/transaction.module";
 import { CirclePublicModule } from "../../../modules/circle/public/circle.public.module";
+import { ExchangeRateModule } from "../../../modules/exchangerate/exchangerate.module";
 
 @Module({
-  imports: [PomeloRepoModule, CommonModule, ConsumerModule, TransactionModule, CirclePublicModule],
+  imports: [PomeloRepoModule, CommonModule, ConsumerModule, TransactionModule, CirclePublicModule, ExchangeRateModule],
   controllers: [PomeloTransactionWebhookController],
   providers: [PomeloClient, PomeloService, PomeloWebhookMapper, PomeloTransactionService],
   exports: [],

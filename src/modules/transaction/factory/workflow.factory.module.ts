@@ -8,9 +8,10 @@ import { WalletWithdrawalImpl } from "./wallet.withdrawal.impl";
 import { WalletTransferImpl } from "./wallet.transfer.impl";
 import { CommonModule } from "../../../modules/common/common.module";
 import { PayrollDepositImpl } from "./payroll.deposit.impl";
+import { ExchangeRateModule } from "../../exchangerate/exchangerate.module";
 
 @Module({
-  imports: [PspModule, TemporalModule, MonoModule, CommonModule],
+  imports: [PspModule, TemporalModule, MonoModule, CommonModule, ExchangeRateModule],
   providers: [WorkflowFactory, WalletDepositImpl, WalletWithdrawalImpl, WalletTransferImpl, PayrollDepositImpl],
   exports: [WorkflowFactory],
 })

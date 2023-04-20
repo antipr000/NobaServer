@@ -190,7 +190,7 @@ export const POMELO_AUTH_BASE_URL = "authBaseUrl";
 export const POMELO_AUDIENCE = "audience";
 export const POMELO_API_BASE_URL = "apiBaseUrl";
 
-export const EXCHANGERATEIO_CONFIG_KEY = "apilayer";
+export const EXCHANGERATEIO_CONFIG_KEY = "exchangerateio";
 export const EXCHANGERATEIO_API_KEY = "apiKey";
 export const EXCHANGERATEIO_AWS_SECRET_KEY_FOR_API_KEY = "awsSecretNameForApiKey";
 export const EXCHANGERATEIO_BASE_URL = "baseURL";

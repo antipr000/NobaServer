@@ -24,14 +24,14 @@ import {
   InitiateTransactionRequest,
 } from "../../../modules/transaction/dto/transaction.service.dto";
 import { WorkflowName } from "../../../infra/temporal/workflow";
-import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
 import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
-import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { Transaction } from "../../../modules/transaction/domain/Transaction";
 import { UpdateWalletBalanceServiceDTO } from "../../../modules/psp/domain/UpdateWalletBalanceServiceDTO";
 import { CircleWithdrawalStatus } from "../../../modules/psp/domain/CircleTypes";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { Utils } from "../../../core/utils/Utils";
+import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
+import { ExchangeRateDTO } from "../../../modules/exchangerate/dto/ExchangeRateDTO";
 
 @Injectable()
 export class PomeloTransactionService {

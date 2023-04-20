@@ -25,6 +25,7 @@ import { PomeloPublicModule } from "./modules/pomelo/public/pomelo.public.module
 import { PomeloWebhooksModule } from "./modules/pomelo/webhook/pomelo.webhook.module";
 import { CirclePublicModule } from "./modules/circle/public/circle.public.module";
 import { CircleWorkflowModule } from "./modules/circle/workflow/circle.workflow.module";
+import { ExchangeRateModule } from "./modules/exchangerate/exchangerate.module";
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { CircleWorkflowModule } from "./modules/circle/workflow/circle.workflow.
     PomeloWebhooksModule,
     CirclePublicModule,
     CircleWorkflowModule,
+    ExchangeRateModule,
   ],
   controllers: [AppController],
   providers: [

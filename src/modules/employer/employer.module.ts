@@ -11,6 +11,7 @@ import { EmployerWorkflowController } from "./employer.workflow.controller";
 import { ConsumerModule } from "../consumer/consumer.module";
 import { PayrollWorkflowController } from "./payroll.workflow.controller";
 import { TemporalModule } from "../../infra/temporal/temporal.module";
+import { ExchangeRateModule } from "../exchangerate/exchangerate.module";
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { TemporalModule } from "../../infra/temporal/temporal.module";
     PayrollRepoModule,
     ConsumerModule,
     TemporalModule,
+    ExchangeRateModule,
   ],
   controllers: [EmployerController, EmployerWorkflowController, PayrollWorkflowController],
   providers: [EmployerService, S3Service],

@@ -25,7 +25,6 @@ import {
 } from "./dto/payroll.workflow.controller.dto";
 import { PayrollDisbursement } from "./domain/PayrollDisbursement";
 import { PayrollUpdateRequest, PayrollStatus } from "./domain/Payroll";
-import { ExchangeRateService } from "../common/exchangerate.service";
 import { Currency } from "../transaction/domain/TransactionTypes";
 import { isValidDateString } from "../../core/utils/DateUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
@@ -48,6 +47,7 @@ import {
 import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
 import { v4 } from "uuid";
 import { Utils } from "../../core/utils/Utils";
+import { ExchangeRateService } from "../exchangerate/exchangerate.service";
 
 @Injectable()
 export class EmployerService {

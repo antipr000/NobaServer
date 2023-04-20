@@ -34,6 +34,7 @@ export async function getAppConfigModule() {
 @Injectable()
 export class CustomConfigService extends ConfigService {
   constructor(configs) {
+    console.log(configs);
     super(configs);
   }
 }

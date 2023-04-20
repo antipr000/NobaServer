@@ -1,5 +1,5 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { HealthCheckResponse } from "../../../core/domain/HealthCheckTypes";
+import { HttpStatus, Inject, Injectable } from "@nestjs/common";
+import { HealthCheckResponse, HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
 import { IExchangeRateClient } from "./exchangerate.client";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -23,8 +23,18 @@ export class ExchangeRateIOExchangeRateClient implements IExchangeRateClient {
     };
   }
 
-  getHealth(): Promise<HealthCheckResponse> {
-    throw new Error("Method not implemented.");
+  async getHealth(): Promise<HealthCheckResponse> {
+    const response = await axios.get(`${this.BASE_URL}/symbols`, this.axiosConfig);
+
+    if (response.status === HttpStatus.OK && response.data.success) {
+      return {
+        status: HealthCheckStatus.OK,
+      };
+    }
+
+    return {
+      status: HealthCheckStatus.UNAVAILABLE,
+    };
   }
 
   async getExchangeRate(numeratorCurrency: string, denominatorCurrency: string): Promise<number> {

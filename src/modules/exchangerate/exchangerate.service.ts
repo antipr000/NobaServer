@@ -91,7 +91,7 @@ export class ExchangeRateService {
         denominatorCurrency: exchangeRatePair.denominatorCurrency,
         bankRate: exchangeRate,
         nobaRate: null,
-        expirationTimestamp: null,
+        expirationTimestamp: new Date(Date.now() + 25 * 60 * 60 * 1000),
       });
     }
   }

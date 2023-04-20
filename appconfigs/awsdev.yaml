@@ -117,7 +117,7 @@ elliptic:
   awsSecretNameForSecretKey: "TEST_ELLIPTIC_SECRET"
   apiKey: ""
   secretKey: ""
-  baseUrl: "https://aml-api.elliptic.co"
+  baseURL: "https://aml-api.elliptic.co"
 
 configuration:
   lowAmountThreshold: 0.25
@@ -142,10 +142,10 @@ circle:
   masterWalletID: ""
   awsSecretNameForMasterWalletID: "TEST_CIRCLE_MASTER_WALLET_ID"
 
-exchangeratesio:
+exchangerateio:
   apiKey: ""
   awsSecretNameForApiKey: "TEST_EXCHANGERATES_API_KEY"
-  baseUrl: "https://api.apilayer.com/exchangerates_data"
+  baseURL: "https://api.apilayer.com/exchangerates_data"
 
 nobaWorkflow:
   taskQueue: "NOBA_TASK_QUEUE"

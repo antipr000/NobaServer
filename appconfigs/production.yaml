@@ -149,10 +149,10 @@ circle:
   masterWalletID: ""
   awsSecretNameForMasterWalletID: "PROD_CIRCLE_MASTER_WALLET_ID"
 
-exchangeratesio:
+exchangerateio:
   apiKey: ""
   awsSecretNameForApiKey: "PROD_EXCHANGERATES_API_KEY"
-  baseUrl: "https://api.apilayer.com/exchangerates_data"
+  baseURL: "https://api.apilayer.com/exchangerates_data"
 
 nobaWorkflow:
   taskQueue: "NOBA_TASK_QUEUE"
