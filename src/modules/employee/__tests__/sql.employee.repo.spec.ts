@@ -1,5 +1,9 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { Employee as PrismaEmployeeModel, Employer as PrismaEmployerModel } from "@prisma/client";
+import {
+  Employee as PrismaEmployeeModel,
+  Employer as PrismaEmployerModel,
+  Consumer as PrismaConsumerModel,
+} from "@prisma/client";
 import { DatabaseInternalErrorException, NotFoundError } from "../../../core/exception/CommonAppException";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
@@ -25,6 +29,10 @@ const getAllEmployeeRecords = async (
       employer: fetchEmployerDetails ?? false,
     },
   });
+};
+
+const getAllConsumerRecords = async (prismaService: PrismaService): Promise<PrismaConsumerModel[]> => {
+  return prismaService.consumer.findMany({});
 };
 
 const getRandomEmployee = (employerID: string, consumerID: string): EmployeeCreateRequest => {
@@ -431,9 +439,27 @@ describe("SqlEmployeeRepoTests", () => {
       );
 
       expect(fetchedEmployeesForEmployerID1.length).toEqual(2);
-      expect(fetchedEmployeesForEmployerID1).toEqual(expect.arrayContaining([createdEmployee1, createdEmployee2]));
-      expect(fetchedEmployeesForEmployerID1[0].consumer).not.toBeNull();
-      expect(fetchedEmployeesForEmployerID1[1].consumer).not.toBeNull();
+      expect(fetchedEmployeesForEmployerID1).toContainEqual({
+        ...createdEmployee1,
+        consumer: expect.any(Object),
+      });
+      expect(fetchedEmployeesForEmployerID1).toContainEqual({
+        ...createdEmployee2,
+        consumer: expect.any(Object),
+      });
+
+      const allConsumers = await getAllConsumerRecords(prismaService);
+      const consumer1 = allConsumers.find(value => value.id === consumerID1);
+      expect(fetchedEmployeesForEmployerID1[0].consumer.props).toStrictEqual({
+        ...consumer1,
+        verificationData: expect.any(Object),
+      });
+
+      const consumer2 = allConsumers.find(value => value.id === consumerID2);
+      expect(fetchedEmployeesForEmployerID1[1].consumer.props).toStrictEqual({
+        ...consumer2,
+        verificationData: expect.any(Object),
+      });
     });
 
     it("should return empty array if there is no Employee with the specified employerID", async () => {

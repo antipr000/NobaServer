@@ -84,10 +84,6 @@ export class ConsumerService {
     return this.consumerRepo.getConsumer(consumerID);
   }
 
-  async adminGetConsumer(consumerID: string): Promise<Consumer> {
-    return this.consumerRepo.adminGetConsumer(consumerID);
-  }
-
   async getConsumerHandle(consumerID: string): Promise<string> {
     const consumer = await this.getConsumer(consumerID);
     if (!consumer) return null;
@@ -370,13 +366,13 @@ export class ConsumerService {
   async adminFindConsumers(filter: ConsumerSearchDTO): Promise<Consumer[]> {
     // If consumerID is populated, it is unique and this is all we want to search for
     if (filter.consumerID) {
-      const consumer = await this.consumerRepo.adminGetConsumer(filter.consumerID);
+      const consumer = await this.consumerRepo.getConsumer(filter.consumerID);
       if (!consumer) {
         return [];
       }
       return [consumer];
     } else {
-      const result = await this.consumerRepo.adminFindConsumersByStructuredFields({
+      const result = await this.consumerRepo.findConsumersByStructuredFields({
         ...(filter.name && { name: filter.name }),
         ...(filter.email && { email: filter.email }),
         ...(filter.phone && { phone: filter.phone }),

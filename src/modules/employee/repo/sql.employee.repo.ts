@@ -232,7 +232,11 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
         },
         include: {
           employer: fetchEmployerDetails ?? false,
-          consumer: true,
+          consumer: {
+            include: {
+              verificationData: true,
+            },
+          },
         },
       });
 

@@ -8,14 +8,11 @@ export function getMockConsumerRepoWithDefaults(): IConsumerRepo {
   when(mockConsumerRepo.createConsumer(anything())).thenReject(new Error("Method not implemented"));
   when(mockConsumerRepo.exists(anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerRepo.getConsumer(anyString())).thenReject(new Error("Method not implemented"));
-  when(mockConsumerRepo.adminGetConsumer(anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerRepo.findConsumersByPublicInfo(anyString(), anything())).thenReject(
     new Error("Method not implemented"),
   );
   when(mockConsumerRepo.findConsumerByContactInfo(anything())).thenReject(new Error("Method not implemented"));
-  when(mockConsumerRepo.adminFindConsumersByStructuredFields(anything())).thenReject(
-    new Error("Method not implemented"),
-  );
+  when(mockConsumerRepo.findConsumersByStructuredFields(anything())).thenReject(new Error("Method not implemented"));
   when(mockConsumerRepo.getConsumerByEmail(anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerRepo.getConsumerByPhone(anyString())).thenReject(new Error("Method not implemented"));
   when(mockConsumerRepo.getConsumerIDByHandle(anyString())).thenReject(new Error("Method not implemented"));

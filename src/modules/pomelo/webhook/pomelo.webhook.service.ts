@@ -442,10 +442,10 @@ export class PomeloTransactionService {
     const parentNobaTransaction: Transaction = await this.transactionService.getTransactionByTransactionID(
       parentPomeloTransaction.nobaTransactionID,
     );
-    if (!parentPomeloTransaction) {
+    if (!parentNobaTransaction) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-        message: `Parent PomeloTransaction with ID '${parentPomeloTransactionID}' is not found`,
+        message: `Parent NobaTransaction with ID '${parentPomeloTransaction.nobaTransactionID}' is not found`,
       });
     }
 

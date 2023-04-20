@@ -161,40 +161,11 @@ describe("ConsumerRepoTests", () => {
       expect(savedResult).toBeNull();
     });
 
-    it("should not find a disabled consumer", async () => {
-      const consumer = getRandomUser();
-      consumer.props.isDisabled = true;
-      const result = await consumerRepo.createConsumer(consumer);
-      const savedResult = await consumerRepo.getConsumer(result.props.id);
-      expect(savedResult).toBeNull();
-    });
-  });
-
-  describe("adminGetConsumer", () => {
-    it("should get a consumer", async () => {
-      const consumer = getRandomUser();
-      const res = await consumerRepo.adminGetConsumer(consumer.props.id);
-      expect(res).toBeNull();
-
-      const result = await consumerRepo.createConsumer(consumer);
-      const savedResult = await consumerRepo.adminGetConsumer(result.props.id);
-      expect(savedResult.props.id).toBe(result.props.id);
-      expect(savedResult.props.email).toBe(consumer.props.email);
-    });
-
-    it("should return null if an exception is thrown", async () => {
-      jest.spyOn(prismaService.consumer, "findUnique").mockImplementation(() => {
-        throw new Error("Error");
-      });
-      const savedResult = await consumerRepo.adminGetConsumer("any-id");
-      expect(savedResult).toBeNull();
-    });
-
     it("should find a disabled consumer", async () => {
       const consumer = getRandomUser();
       consumer.props.isDisabled = true;
       const result = await consumerRepo.createConsumer(consumer);
-      const savedResult = await consumerRepo.adminGetConsumer(result.props.id);
+      const savedResult = await consumerRepo.getConsumer(result.props.id);
       expect(savedResult.props.id).toBe(result.props.id);
     });
   });
@@ -539,7 +510,7 @@ describe("ConsumerRepoTests", () => {
     it("get all consumers by exact or partial handle", async () => {
       const consumer = getRandomUser();
 
-      const missingConsumerResult = await consumerRepo.adminFindConsumersByStructuredFields({ handle: "my-handle" });
+      const missingConsumerResult = await consumerRepo.findConsumersByStructuredFields({ handle: "my-handle" });
       expect(missingConsumerResult.isSuccess).toBe(true);
       expect(missingConsumerResult.getValue().length).toBe(0);
 
@@ -549,19 +520,19 @@ describe("ConsumerRepoTests", () => {
       await consumerRepo.createConsumer(getRandomUser());
       await consumerRepo.createConsumer(getRandomUser());
 
-      const consumerResult = await consumerRepo.adminFindConsumersByStructuredFields({ handle: consumer.props.handle });
+      const consumerResult = await consumerRepo.findConsumersByStructuredFields({ handle: consumer.props.handle });
       expect(consumerResult.isSuccess).toBe(true);
       expect(consumerResult.getValue().length).toBe(1);
       expect(consumerResult.getValue()[0].props.id).toEqual(consumer.props.id);
 
-      const consumerResultPartial = await consumerRepo.adminFindConsumersByStructuredFields({
+      const consumerResultPartial = await consumerRepo.findConsumersByStructuredFields({
         email: consumer.props.email.substring(5, 10),
       });
       expect(consumerResultPartial.isSuccess).toBe(true);
       expect(consumerResultPartial.getValue().length).toBe(1);
       expect(consumerResultPartial.getValue()[0].props.id).toEqual(consumer.props.id);
 
-      const consumerResultAllDomain = await consumerRepo.adminFindConsumersByStructuredFields({
+      const consumerResultAllDomain = await consumerRepo.findConsumersByStructuredFields({
         handle: `$${consumer.props.handle}`,
       });
       expect(consumerResultAllDomain.isSuccess).toBe(true);
@@ -572,7 +543,7 @@ describe("ConsumerRepoTests", () => {
     it("get all consumers by exact or partial Email", async () => {
       const consumer = getRandomUser();
 
-      const missingConsumerResult = await consumerRepo.adminFindConsumersByStructuredFields({
+      const missingConsumerResult = await consumerRepo.findConsumersByStructuredFields({
         email: "nobody@noba.com",
       });
       expect(missingConsumerResult.isSuccess).toBe(true);
@@ -584,19 +555,19 @@ describe("ConsumerRepoTests", () => {
       await consumerRepo.createConsumer(getRandomUser());
       await consumerRepo.createConsumer(getRandomUser());
 
-      const consumerResult = await consumerRepo.adminFindConsumersByStructuredFields({ email: consumer.props.email });
+      const consumerResult = await consumerRepo.findConsumersByStructuredFields({ email: consumer.props.email });
       expect(consumerResult.isSuccess).toBe(true);
       expect(consumerResult.getValue().length).toBe(1);
       expect(consumerResult.getValue()[0].props.id).toEqual(consumer.props.id);
 
-      const consumerResultPartial = await consumerRepo.adminFindConsumersByStructuredFields({
+      const consumerResultPartial = await consumerRepo.findConsumersByStructuredFields({
         email: consumer.props.email.substring(0, 10),
       });
       expect(consumerResultPartial.isSuccess).toBe(true);
       expect(consumerResultPartial.getValue().length).toBe(1);
       expect(consumerResultPartial.getValue()[0].props.id).toEqual(consumer.props.id);
 
-      const consumerResultAllDomain = await consumerRepo.adminFindConsumersByStructuredFields({
+      const consumerResultAllDomain = await consumerRepo.findConsumersByStructuredFields({
         email: "@noba.com",
       });
       expect(consumerResultAllDomain.isSuccess).toBe(true);
@@ -605,7 +576,7 @@ describe("ConsumerRepoTests", () => {
     it("get all consumers by phone or partial phone", async () => {
       const consumer = getRandomUser();
 
-      const missingConsumerResult = await consumerRepo.adminFindConsumersByStructuredFields({ phone: "1234567890" });
+      const missingConsumerResult = await consumerRepo.findConsumersByStructuredFields({ phone: "1234567890" });
       expect(missingConsumerResult.isSuccess).toBe(true);
       expect(missingConsumerResult.getValue().length).toBe(0);
 
@@ -616,12 +587,12 @@ describe("ConsumerRepoTests", () => {
       await consumerRepo.createConsumer(getRandomUser());
       await consumerRepo.createConsumer(getRandomUser());
 
-      const consumerResult = await consumerRepo.adminFindConsumersByStructuredFields({ phone: consumer.props.phone });
+      const consumerResult = await consumerRepo.findConsumersByStructuredFields({ phone: consumer.props.phone });
       expect(consumerResult.isSuccess).toBe(true);
       expect(consumerResult.getValue().length).toBe(1);
       expect(consumerResult.getValue()[0].props.id).toEqual(consumer.props.id);
 
-      const consumerResultPartial = await consumerRepo.adminFindConsumersByStructuredFields({
+      const consumerResultPartial = await consumerRepo.findConsumersByStructuredFields({
         phone: consumer.props.phone.substring(2, 8),
       });
       expect(consumerResultPartial.isSuccess).toBe(true);
@@ -637,30 +608,30 @@ describe("ConsumerRepoTests", () => {
       const nobaRosie = await consumerRepo.createConsumer(getRandomUser("Noba", "Rosie"));
       await consumerRepo.createConsumer(getRandomUser("John", "Doe"));
 
-      const missingConsumerResult = await consumerRepo.adminFindConsumersByStructuredFields({ name: "Blah Blah" });
+      const missingConsumerResult = await consumerRepo.findConsumersByStructuredFields({ name: "Blah Blah" });
       expect(missingConsumerResult.isSuccess).toBe(true);
       expect(missingConsumerResult.getValue().length).toBe(0);
 
-      const consumerResult = await consumerRepo.adminFindConsumersByStructuredFields({ name: "Rosie Noba" });
+      const consumerResult = await consumerRepo.findConsumersByStructuredFields({ name: "Rosie Noba" });
       expect(consumerResult.isSuccess).toBe(true);
       expect(consumerResult.getValue().length).toBe(1);
       expect(consumerResult.getValue()[0].props.id).toEqual(rosieNoba.props.id);
 
-      const firstNameResult = await consumerRepo.adminFindConsumersByStructuredFields({ name: "Rosie" });
+      const firstNameResult = await consumerRepo.findConsumersByStructuredFields({ name: "Rosie" });
       expect(firstNameResult.isSuccess).toBe(true);
       expect(firstNameResult.getValue().length).toBe(3);
       expect(firstNameResult.getValue()[0].props.id).toEqual(rosieNoba.props.id);
       expect(firstNameResult.getValue()[1].props.id).toEqual(nobaRosie.props.id);
       expect(firstNameResult.getValue()[2].props.id).toEqual(rosieRuff.props.id);
 
-      const lastNameResult = await consumerRepo.adminFindConsumersByStructuredFields({ name: "Noba" });
+      const lastNameResult = await consumerRepo.findConsumersByStructuredFields({ name: "Noba" });
       expect(lastNameResult.isSuccess).toBe(true);
       expect(lastNameResult.getValue().length).toBe(3);
       expect(lastNameResult.getValue()[0].props.id).toEqual(rosieNoba.props.id);
       expect(lastNameResult.getValue()[1].props.id).toEqual(rosalieNoba.props.id);
       expect(lastNameResult.getValue()[2].props.id).toEqual(nobaRosie.props.id);
 
-      const partialNameResult = await consumerRepo.adminFindConsumersByStructuredFields({ name: "Ro No" });
+      const partialNameResult = await consumerRepo.findConsumersByStructuredFields({ name: "Ro No" });
       expect(partialNameResult.isSuccess).toBe(true);
       expect(partialNameResult.getValue().length).toBe(2);
       expect(partialNameResult.getValue()[0].props.id).toEqual(rosieNoba.props.id);
@@ -679,13 +650,13 @@ describe("ConsumerRepoTests", () => {
         await consumerRepo.createConsumer(consumer2);
       }
 
-      const consumerResult = await consumerRepo.adminFindConsumersByStructuredFields({ kycStatus: KYCStatus.APPROVED });
+      const consumerResult = await consumerRepo.findConsumersByStructuredFields({ kycStatus: KYCStatus.APPROVED });
       expect(consumerResult.isSuccess).toBe(true);
       expect(consumerResult.getValue().length).toBe(2);
       expect(consumerResult.getValue()[0].props.firstName).toEqual("APPROVED-1");
       expect(consumerResult.getValue()[1].props.firstName).toEqual("APPROVED-2");
 
-      const consumerResultPending = await consumerRepo.adminFindConsumersByStructuredFields({
+      const consumerResultPending = await consumerRepo.findConsumersByStructuredFields({
         kycStatus: KYCStatus.PENDING,
       });
       expect(consumerResultPending.isSuccess).toBe(true);
@@ -702,7 +673,7 @@ describe("ConsumerRepoTests", () => {
       rosieNoba1.props.handle = "roside-noba";
       await consumerRepo.createConsumer(rosieNoba1);
 
-      const consumerResult = await consumerRepo.adminFindConsumersByStructuredFields({
+      const consumerResult = await consumerRepo.findConsumersByStructuredFields({
         phone: rosieNoba1.props.phone,
         email: rosieNoba1.props.email,
         handle: rosieNoba1.props.handle,
@@ -717,7 +688,7 @@ describe("ConsumerRepoTests", () => {
       const rosieNoba2 = await consumerRepo.createConsumer(getRandomUser("Rosie", "Noba"));
       await consumerRepo.createConsumer(getRandomUser("John", "Doe"));
 
-      const consumerResult2 = await consumerRepo.adminFindConsumersByStructuredFields({
+      const consumerResult2 = await consumerRepo.findConsumersByStructuredFields({
         name: `${rosieNoba2.props.firstName} ${rosieNoba2.props.lastName}`,
       });
 
@@ -735,7 +706,7 @@ describe("ConsumerRepoTests", () => {
         throw new Error("Error");
       });
 
-      const consumerResult = await consumerRepo.adminFindConsumersByStructuredFields({
+      const consumerResult = await consumerRepo.findConsumersByStructuredFields({
         name: "Test name",
       });
 
@@ -926,6 +897,27 @@ describe("ConsumerRepoTests", () => {
       const updatedConsumer = await consumerRepo.getConsumer(consumer.props.id);
       expect(updatedConsumer.props.socialSecurityNumber).toBe("encrypted-ssn");
       verify(kmsService.encryptString("000000002", KmsKeyType.SSN)).once();
+    });
+
+    it("should update isDisabled and isLocked for consumer if set to false", async () => {
+      const consumer = getRandomUser();
+      await consumerRepo.createConsumer(consumer);
+
+      const updateRequest: Partial<ConsumerProps> = {
+        isDisabled: false,
+        isLocked: false,
+      };
+
+      const updatedConsumerRecord = await consumerRepo.updateConsumer(consumer.props.id, updateRequest);
+
+      const consumerRecord = (await getAllConsumerRecords(prismaService)).filter(record => {
+        return record.id === consumer.props.id;
+      })[0];
+
+      expect(updatedConsumerRecord.props.isDisabled).toBe(false);
+      expect(updatedConsumerRecord.props.isLocked).toBe(false);
+      expect(consumerRecord.isDisabled).toBe(false);
+      expect(consumerRecord.isLocked).toBe(false);
     });
   });
 
