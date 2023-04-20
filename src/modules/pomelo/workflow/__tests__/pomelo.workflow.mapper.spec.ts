@@ -56,7 +56,7 @@ describe("PomeloWorkflowMapperTests", () => {
         nobaTransactionID: "NOBA_TRANSACTION_ID",
         pomeloTransactionType: PomeloTransactionType.PAYMENT,
         amountInUSD: 1,
-        amountInLocalCurrency: 2,
+        localAmount: 2,
         localCurrency: PomeloCurrency.COP,
         settlementAmount: 3,
         settlementCurrency: PomeloCurrency.USD,

@@ -394,16 +394,20 @@ model PomeloTransaction {
   pomeloUserID              String
   pomeloUser                PomeloUser          @relation(fields: [pomeloUserID], references: [pomeloID], onDelete: Cascade)
   amountInUSD               Float
-  amountInLocalCurrency     Float
+  localAmount               Float
   localCurrency             String
   settlementAmount          Float
   settlementCurrency        String
+  transactionAmount         Float
+  transactionCurrency       String
   pomeloTransactionType     String
   pointType                 String
   entryMode                 String
   countryCode               String
   origin                    String
   source                    String
+  merchantName              String
+  merchantMCC               String
   createdTimestamp          DateTime?           @default(now())
   updatedTimestamp          DateTime?           @updatedAt
 }

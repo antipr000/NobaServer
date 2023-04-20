@@ -50,6 +50,7 @@ export class PomeloWebhookMapper {
       origin: requestBody.transaction["origin"],
       source: requestBody.transaction["source"],
       merchantName: requestBody.merchant["name"],
+      merchantMCC: requestBody.merchant["mcc"],
       transactionType: requestBody.transaction["type"] as PomeloTransactionType,
       pomeloCardID: requestBody.card.id,
       pomeloUserID: requestBody.user.id,
@@ -57,6 +58,8 @@ export class PomeloWebhookMapper {
       localCurrency: requestBody.amount.local.currency as PomeloCurrency,
       settlementAmount: requestBody.amount.settlement.total,
       settlementCurrency: requestBody.amount.settlement.currency as PomeloCurrency,
+      transactionAmount: requestBody.amount.transaction.total,
+      transactionCurrency: requestBody.amount.transaction.currency as PomeloCurrency,
     };
 
     this.logger.info(
@@ -100,6 +103,7 @@ export class PomeloWebhookMapper {
       source: requestBody.transaction["source"],
       adjustmentType: adjustmentType as PomeloAdjustmentType,
       merchantName: requestBody.merchant["name"],
+      merchantMCC: requestBody.merchant["mcc"],
       transactionType: requestBody.transaction["type"] as PomeloTransactionType,
       pomeloCardID: requestBody.card.id,
       pomeloUserID: requestBody.user.id,
@@ -107,6 +111,8 @@ export class PomeloWebhookMapper {
       localCurrency: requestBody.amount.local.currency as PomeloCurrency,
       settlementAmount: requestBody.amount.settlement.total,
       settlementCurrency: requestBody.amount.settlement.currency as PomeloCurrency,
+      transactionAmount: requestBody.amount.transaction.total,
+      transactionCurrency: requestBody.amount.transaction.currency as PomeloCurrency,
     };
 
     this.logger.info(
@@ -243,6 +249,7 @@ export class PomeloWebhookMapper {
   private pomeloMerchantSubObjectValidationKeys() {
     const internalMerchantSubObjectJoiValidationKeys = {
       name: Joi.string().required(),
+      mcc: Joi.string().required(),
     };
 
     return internalMerchantSubObjectJoiValidationKeys;

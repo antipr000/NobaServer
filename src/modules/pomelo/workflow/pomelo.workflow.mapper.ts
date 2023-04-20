@@ -15,7 +15,7 @@ export class PomeloWorkflowMapper {
       nobaTransactionID: pomeloTransaction.nobaTransactionID,
       pomeloTransactionType: pomeloTransaction.pomeloTransactionType,
       amountInUSD: pomeloTransaction.amountInUSD,
-      amountInLocalCurrency: pomeloTransaction.amountInLocalCurrency,
+      amountInLocalCurrency: pomeloTransaction.localAmount,
       localCurrency: pomeloTransaction.localCurrency,
       settlementAmount: pomeloTransaction.settlementAmount,
       settlementCurrency: pomeloTransaction.settlementCurrency,

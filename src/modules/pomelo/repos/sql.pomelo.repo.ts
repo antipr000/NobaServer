@@ -310,10 +310,12 @@ export class SQLPomeloRepo implements PomeloRepo {
         pomeloTransactionID: request.pomeloTransactionID,
         nobaTransactionID: request.nobaTransactionID,
         amountInUSD: request.amountInUSD,
-        amountInLocalCurrency: request.amountInLocalCurrency,
+        localAmount: request.localAmount,
         localCurrency: request.localCurrency,
         settlementAmount: request.settlementAmount,
         settlementCurrency: request.settlementCurrency,
+        transactionAmount: request.transactionAmount,
+        transactionCurrency: request.transactionCurrency,
         pomeloTransactionType: request.pomeloTransactionType,
         pointType: request.pointType,
         entryMode: request.entryMode,
@@ -321,6 +323,8 @@ export class SQLPomeloRepo implements PomeloRepo {
         origin: request.origin,
         source: request.source,
         status: PomeloTransactionStatus.PENDING,
+        merchantName: request.merchantName,
+        merchantMCC: request.merchantMCC,
         ...(request.parentPomeloTransactionID && {
           parentPomeloTransaction: {
             connect: {
