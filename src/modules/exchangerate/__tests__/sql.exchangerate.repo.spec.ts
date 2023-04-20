@@ -3,7 +3,6 @@ import { PrismaService } from "../../../infraproviders/PrismaService";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { ExchangeRate, InputExchangeRate } from "../domain/ExchangeRate";
-import { getMockExchangeRateRepoWithDefaults } from "../mocks/mock.exchangerate.repo";
 import { IExchangeRateRepo } from "../repo/exchangerate.repo";
 import { SQLExchangeRateRepo } from "../repo/sql.exchangerate.repo";
 import {
@@ -11,6 +10,7 @@ import {
   DatabaseInternalErrorException,
 } from "../../../core/exception/CommonAppException";
 import * as ExchangeRateFunctionsForMocking from "../domain/ExchangeRate";
+import { getMockExchangeRateRepoWithDefaults } from "../mocks/mock.exchangerate.repo";
 
 describe("SQLExchangeRateRepo", () => {
   let exchangeRateRepo: IExchangeRateRepo;

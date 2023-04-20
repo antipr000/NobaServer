@@ -8,11 +8,11 @@ import { ExchangeRateService } from "../exchangerate.service";
 import { IExchangeRateRepo } from "../repo/exchangerate.repo";
 import { ServiceException } from "../../../core/exception/service.exception";
 import { AppEnvironment, NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
-import { getMockExchangeRateRepoWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.repo";
+import { getMockExchangeRateRepoWithDefaults } from "../mocks/mock.exchangerate.repo";
 import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
 import { AlertService } from "../../../modules/common/alerts/alert.service";
-import { ExchangeRateFactoryModule } from "../factory/exchangerate.factory.module";
 import { ExchangeRateClientFactory } from "../factory/exchangerate.factory";
+import { getMockExchangeRateClientFactoryWithDefaults } from "../mocks/mock.exchangerate.factory";
 
 describe("ExchangeRateService", () => {
   let exchangeRateService: ExchangeRateService;
@@ -49,7 +49,7 @@ describe("ExchangeRateService", () => {
         },
         {
           provide: ExchangeRateClientFactory,
-          useFactory: () => instance(bankFactory),
+          useFactory: () => instance(exchangeRateClientFactory),
         },
         ExchangeRateService,
       ],
