@@ -11,6 +11,7 @@ import { TransactionNotificationPayloadMapper } from "./domain/TransactionNotifi
 import { Consumer } from "../consumer/domain/Consumer";
 import { PayrollStatus } from "../employer/domain/Payroll";
 import { EmployerService } from "../employer/employer.service";
+import { LatestNotificationResponse } from "./dto/latestnotification.response.dto";
 
 @Injectable()
 export class NotificationWorkflowService {
@@ -147,4 +148,14 @@ export class NotificationWorkflowService {
 
     await this.notificationService.sendNotification(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT, payload);
   }
+
+  // BEGIN-NOSCAN
+  async getPreviousNotifications(): Promise<LatestNotificationResponse> {
+    return await this.notificationService.getPreviousNotifications();
+  }
+
+  async clearPreviousNotifications(): Promise<void> {
+    await this.notificationService.clearPreviousNotifications();
+  }
+  // END-NOSCAN
 }

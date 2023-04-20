@@ -26,6 +26,7 @@ import { PomeloWebhooksModule } from "./modules/pomelo/webhook/pomelo.webhook.mo
 import { CirclePublicModule } from "./modules/circle/public/circle.public.module";
 import { CircleWorkflowModule } from "./modules/circle/workflow/circle.workflow.module";
 import { ExchangeRateModule } from "./modules/exchangerate/exchangerate.module";
+import { PomeloWorkflowModule } from "./modules/pomelo/workflow/pomelo.workflow.module";
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { ExchangeRateModule } from "./modules/exchangerate/exchangerate.module";
     // https://www.notion.so/onenoba/Code-Structure-15e7b735f00a4dd980d0ebe23d6af18a
     PomeloPublicModule,
     PomeloWebhooksModule,
+    PomeloWorkflowModule,
     CirclePublicModule,
     CircleWorkflowModule,
     ExchangeRateModule,
@@ -93,6 +95,7 @@ export class AppModule {}
     // https://www.notion.so/onenoba/Code-Structure-15e7b735f00a4dd980d0ebe23d6af18a
     PomeloPublicModule,
     PomeloWebhooksModule,
+    PomeloWorkflowModule,
     CirclePublicModule,
     CircleWorkflowModule,
   ],

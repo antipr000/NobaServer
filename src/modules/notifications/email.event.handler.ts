@@ -28,6 +28,7 @@ import { SendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
 import { SendTransferFailedEvent } from "./events/SendTransferFailedEvent";
 import { SendTransferReceivedEvent } from "./events/SendTransferReceivedEvent";
 import { SendPayrollDepositCompletedEvent } from "./events/SendPayrollDepositCompletedEvent";
+import { StubEmailClient } from "./emails/stub.email.client";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -494,4 +495,21 @@ export class EmailEventHandler {
 
     await this.emailClient.sendEmail(msg);
   }
+
+  // BEGIN-NOSCAN
+  @OnEvent("email.get")
+  public async getPreviousNotifications() {
+    if (this.emailClient instanceof StubEmailClient) {
+      const emails = this.emailClient.getPreviousEmails();
+      return emails;
+    }
+  }
+
+  @OnEvent("email.clear")
+  public async clearPreviousNotifications() {
+    if (this.emailClient instanceof StubEmailClient) {
+      this.emailClient.clearPreviousEmails();
+    }
+  }
+  // END-NOSCAN
 }

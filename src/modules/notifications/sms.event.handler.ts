@@ -5,6 +5,7 @@ import { SendOtpEvent } from "./events/SendOtpEvent";
 import { SendWalletUpdateVerificationCodeEvent } from "./events/SendWalletUpdateVerificationCodeEvent";
 import { SMSClient } from "./sms/sms.client";
 import { SMSTemplate } from "./domain/SMSTemplates";
+import { StubSMSClient } from "./sms/stub.sms.client";
 
 @Injectable()
 export class SMSEventHandler {
@@ -43,4 +44,20 @@ export class SMSEventHandler {
       },
     );
   }
+  // BEGIN-NOSCAN
+  @OnEvent("sms.get")
+  public async getPreviousNotifications() {
+    if (this.smsClient instanceof StubSMSClient) {
+      const notifications = this.smsClient.getPreviousSMS();
+      return notifications;
+    }
+  }
+
+  @OnEvent("sms.clear")
+  public async clearPreviousNotifications() {
+    if (this.smsClient instanceof StubSMSClient) {
+      this.smsClient.clearPreviousSMS();
+    }
+  }
+  // END-NOSCAN
 }

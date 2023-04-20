@@ -13,6 +13,7 @@ import { SendTransferFailedEvent } from "./events/SendTransferFailedEvent";
 import { SendPayrollDepositCompletedEvent } from "./events/SendPayrollDepositCompletedEvent";
 import { PushNotificationType } from "./domain/PushNotificationTypes";
 import { PushTokenService } from "./push.token.service";
+import { StubPushClient } from "./push/stub.push.client";
 
 @Injectable()
 export class PushEventHandler {
@@ -209,4 +210,20 @@ export class PushEventHandler {
 
     await Promise.all(promises);
   }
+  // BEGIN-NOSCAN
+  @OnEvent("push.get")
+  public async getPreviousNotifications() {
+    if (this.pushClient instanceof StubPushClient) {
+      const notifications = this.pushClient.getPreviousPushNotifications();
+      return notifications;
+    }
+  }
+
+  @OnEvent("push.clear")
+  public async clearPreviousNotifications() {
+    if (this.pushClient instanceof StubPushClient) {
+      this.pushClient.clearPreviousPushNotifications();
+    }
+  }
+  // END-NOSCAN
 }
