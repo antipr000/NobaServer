@@ -172,8 +172,8 @@ export class SQLEventRepo implements EventRepo {
     validateEventTemplateUpdateRequest(updateRequest);
     try {
       const eventTemplateUpdateInput: Prisma.EventTemplateUpdateInput = {
-        ...(updateRequest.templateBody && { templateBody: updateRequest.templateBody }),
-        ...(updateRequest.externalKey && { externalKey: updateRequest.externalKey }),
+        ...(updateRequest.templateBody && { templateBody: updateRequest.templateBody, externalKey: null }),
+        ...(updateRequest.externalKey && { externalKey: updateRequest.externalKey, templateBody: null }),
         ...(updateRequest.type && { type: updateRequest.type }),
         ...(updateRequest.locale && { locale: updateRequest.locale }),
       };

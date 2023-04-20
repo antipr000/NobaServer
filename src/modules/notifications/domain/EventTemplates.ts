@@ -33,7 +33,9 @@ export const validateEventTemplateCreateRequest = (eventTemplate: EventTemplateC
   const eventTemplateJoiValidationKeys: KeysRequired<EventTemplateCreateRequest> = {
     templateBody: Joi.string().optional(),
     externalKey: Joi.string().optional(),
-    type: Joi.string().allow(Object.values(EventTypes)).required(),
+    type: Joi.string()
+      .valid(...Object.values(EventTypes))
+      .required(),
     locale: Joi.string().required(),
     eventID: Joi.string().required(),
   };
@@ -49,7 +51,9 @@ export const validateEventTemplateUpdateRequest = (eventTemplate: EventTemplateU
   const eventTemplateJoiValidationKeys: KeysRequired<EventTemplateUpdateRequest> = {
     templateBody: Joi.string().optional(),
     externalKey: Joi.string().optional(),
-    type: Joi.string().allow(Object.values(EventTypes)).required(),
+    type: Joi.string()
+      .valid(...Object.values(EventTypes))
+      .required(),
     locale: Joi.string().required(),
   };
 
@@ -63,7 +67,9 @@ export const validateEventTemplateUpdateRequest = (eventTemplate: EventTemplateU
 export const eventTemplateJoiValidationKeys: KeysRequired<EventTemplateUpdateRequest> = {
   templateBody: Joi.string().optional(),
   externalKey: Joi.string().optional(),
-  type: Joi.string().allow(Object.values(EventTypes)).required(),
+  type: Joi.string()
+    .valid(...Object.values(EventTypes))
+    .required(),
   locale: Joi.string().required(),
 };
 
@@ -74,7 +80,7 @@ export const validateEventTemplate = (eventTemplate: EventTemplate) => {
     updatedTimestamp: Joi.date().required(),
     templateBody: Joi.string().optional(),
     externalKey: Joi.string().optional(),
-    type: Joi.string().allow(Object.values(EventTypes)).required(),
+    type: Joi.string().valid(Object.values(EventTypes)).required(),
     locale: Joi.string().required(),
     eventID: Joi.string().required(),
   };

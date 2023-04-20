@@ -520,6 +520,8 @@ model EventTemplate {
   locale           String
   eventID          String
   event            Event     @relation(fields: [eventID], references: [id], onDelete: Cascade)
+
+  @@index([eventID])
 }
 
 enum IdentityType {

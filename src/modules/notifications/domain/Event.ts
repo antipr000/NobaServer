@@ -30,7 +30,8 @@ export const validateEventCreateRequest = (event: EventCreateRequest) => {
   const eventJoiValidationKeys: KeysRequired<EventCreateRequest> = {
     name: Joi.string().required(),
     handlers: Joi.array()
-      .items(Joi.string().allow(Object.values(EventTypes)))
+      .items(Joi.string().valid(...Object.values(EventTypes)))
+      .min(1)
       .required(),
   };
 
@@ -44,7 +45,8 @@ export const validateEventCreateRequest = (event: EventCreateRequest) => {
 export const validateEventUpdateRequest = (event: EventUpdateRequest) => {
   const eventJoiValidationKeys: KeysRequired<EventUpdateRequest> = {
     handlers: Joi.array()
-      .items(Joi.string().allow(Object.values(EventTypes)))
+      .items(Joi.string().valid(...Object.values(EventTypes)))
+      .min(1)
       .required(),
   };
 
@@ -62,7 +64,8 @@ export const validateEvent = (event: Event) => {
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
     handlers: Joi.array()
-      .items(Joi.string().allow(Object.values(EventTypes)))
+      .items(Joi.string().valid(...Object.values(EventTypes)))
+      .min(1)
       .required(),
     templates: Joi.array().items(Joi.object(eventTemplateJoiValidationKeys)).required(),
   };
