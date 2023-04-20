@@ -17,13 +17,13 @@ import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { Utils } from "../../../core/utils/Utils";
-import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
-import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 import { ServiceException } from "../../../core/exception/service.exception";
 import { WalletWithdrawalImpl } from "../factory/wallet.withdrawal.impl";
 import { AccountType, DocumentType } from "../domain/WithdrawalDetails";
 import { FeeType } from "../domain/TransactionFee";
 import { ProcessedTransactionDTO } from "../dto/ProcessedTransactionDTO";
+import { getMockExchangeRateServiceWithDefaults } from "../../../modules/exchangerate/mocks/mock.exchangerate.service";
+import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
 
 describe("WalletWithdrawalImpl Tests", () => {
   jest.setTimeout(20000);

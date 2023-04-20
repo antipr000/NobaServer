@@ -21,8 +21,6 @@ import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { Utils } from "../../../core/utils/Utils";
-import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
-import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 import { MonoService } from "../../../modules/psp/mono/mono.service";
 import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
 import { WalletDepositImpl } from "../factory/wallet.deposit.impl";
@@ -31,6 +29,8 @@ import { MonoCurrency, MonoTransactionType } from "../../../modules/psp/domain/M
 import { TransactionFlags } from "../domain/TransactionFlags";
 import { FeeType } from "../domain/TransactionFee";
 import { ProcessedTransactionDTO } from "../dto/ProcessedTransactionDTO";
+import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
+import { getMockExchangeRateServiceWithDefaults } from "../../../modules/exchangerate/mocks/mock.exchangerate.service";
 
 describe("WalletDepositImpl Tests", () => {
   jest.setTimeout(20000);
