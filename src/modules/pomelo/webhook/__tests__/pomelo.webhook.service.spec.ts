@@ -43,8 +43,8 @@ import { Transaction, TransactionStatus } from "../../../../modules/transaction/
 import { WorkflowName } from "../../../../infra/temporal/workflow";
 import { UpdateWalletBalanceServiceDTO } from "../../../../modules/psp/domain/UpdateWalletBalanceServiceDTO";
 import { CircleWithdrawalStatus } from "../../../../modules/psp/domain/CircleTypes";
-import { ExchangeRateService } from "src/modules/exchangerate/exchangerate.service";
-import { getMockExchangeRateServiceWithDefaults } from "src/modules/exchangerate/mocks/mock.exchangerate.service";
+import { ExchangeRateService } from "../../../../modules/exchangerate/exchangerate.service";
+import { getMockExchangeRateServiceWithDefaults } from "../../../../modules/exchangerate/mocks/mock.exchangerate.service";
 import { ExchangeRateDTO } from "../../../../modules/exchangerate/dto/ExchangeRateDTO";
 
 const getRawTransactionAuthzBodyBuffer = (): Buffer => {
