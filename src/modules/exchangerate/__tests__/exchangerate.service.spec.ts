@@ -5,17 +5,20 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { ExchangeRate, InputExchangeRate } from "../domain/ExchangeRate";
 import { ExchangeRateDTO } from "../dto/ExchangeRateDTO";
 import { ExchangeRateService } from "../exchangerate.service";
-import { getMockExchangeRateRepoWithDefaults } from "../mocks/mock.exchangerate.repo";
 import { IExchangeRateRepo } from "../repo/exchangerate.repo";
 import { ServiceException } from "../../../core/exception/service.exception";
-import { AlertService } from "../alerts/alert.service";
-import { getMockAlertServiceWithDefaults } from "../mocks/mock.alert.service";
 import { AppEnvironment, NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
+import { getMockExchangeRateRepoWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.repo";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { ExchangeRateFactoryModule } from "../factory/exchangerate.factory.module";
+import { ExchangeRateClientFactory } from "../factory/exchangerate.factory";
 
 describe("ExchangeRateService", () => {
   let exchangeRateService: ExchangeRateService;
   let exchangeRateRepo: IExchangeRateRepo;
   let alertService: AlertService;
+  let exchangeRateClientFactory: ExchangeRateClientFactory;
   let app: TestingModule;
 
   jest.setTimeout(30000);
@@ -23,6 +26,7 @@ describe("ExchangeRateService", () => {
   beforeEach(async () => {
     exchangeRateRepo = getMockExchangeRateRepoWithDefaults();
     alertService = getMockAlertServiceWithDefaults();
+    exchangeRateClientFactory = getMockExchangeRateClientFactoryWithDefaults();
 
     app = await Test.createTestingModule({
       imports: [
@@ -42,6 +46,10 @@ describe("ExchangeRateService", () => {
         {
           provide: AlertService,
           useFactory: () => instance(alertService),
+        },
+        {
+          provide: ExchangeRateClientFactory,
+          useFactory: () => instance(bankFactory),
         },
         ExchangeRateService,
       ],

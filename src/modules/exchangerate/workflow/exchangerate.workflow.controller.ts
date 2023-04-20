@@ -13,14 +13,14 @@ export class ExchangeRateWorkflowController {
     private readonly exchangeRateService: ExchangeRateService,
   ) {}
 
-  @Post("/") // offer control of exchange rate api provider?
-  @ApiOperation({ summary: "Creates a new exchange rate entry" })
+  @Post("/")
+  @ApiOperation({ summary: "Update exchange rate entries" })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: ExchangeRateDTO,
+    type: [ExchangeRateDTO],
   })
   @ApiForbiddenResponse({ description: "User forbidden from adding new exchange rate" })
-  async createExchangeRate(): Promise<ExchangeRateDTO> {
+  async createExchangeRate(): Promise<ExchangeRateDTO[]> {
     return this.exchangeRateService.createExchangeRateFromProvider();
   }
 }

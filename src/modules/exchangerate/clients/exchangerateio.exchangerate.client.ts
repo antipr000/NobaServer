@@ -39,7 +39,7 @@ export class ExchangeRateIOExchangeRateClient implements IExchangeRateClient {
 
   async getExchangeRate(numeratorCurrency: string, denominatorCurrency: string): Promise<number> {
     const response = await axios.get(
-      `${this.BASE_URL}/latest?symbols=${numeratorCurrency}&base=${denominatorCurrency}`,
+      `${this.BASE_URL}/latest?symbols=${denominatorCurrency}&base=${numeratorCurrency}`,
       this.axiosConfig,
     );
 

@@ -4,6 +4,7 @@ import { KeysRequired } from "../../../modules/common/domain/Types";
 
 export enum ExchangeRateName {
   STUB = "STUB",
+  EXCHANGERATEIO = "EXCHANGERATEIO",
 }
 
 export type ExchangeRatePair = {

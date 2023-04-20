@@ -73,8 +73,13 @@ export class ExchangeRateService {
     }
   }
 
-  async createExchangeRateFromProvider(): Promise<ExchangeRateDTO> {
+  async createExchangeRateFromProvider(): Promise<ExchangeRateDTO[]> {
+    const exchangeRates: Promise<ExchangeRateDTO>[] = [];
+
     for (const exchangeRatePair of this.exchangeRatePairs) {
+      console.log(
+        `Getting exchange rate for ${exchangeRatePair.numeratorCurrency} - ${exchangeRatePair.denominatorCurrency}`,
+      );
       const exchangeRateClient = this.exchangeRateClientFactory.getExchangeRateClientByCurrencyPair(
         exchangeRatePair.numeratorCurrency,
         exchangeRatePair.denominatorCurrency,
@@ -85,15 +90,18 @@ export class ExchangeRateService {
         exchangeRatePair.numeratorCurrency,
         exchangeRatePair.denominatorCurrency,
       );
-
-      return this.createExchangeRate({
-        numeratorCurrency: exchangeRatePair.numeratorCurrency,
-        denominatorCurrency: exchangeRatePair.denominatorCurrency,
-        bankRate: exchangeRate,
-        nobaRate: null,
-        expirationTimestamp: new Date(Date.now() + 25 * 60 * 60 * 1000),
-      });
+      exchangeRates.push(
+        this.createExchangeRate({
+          numeratorCurrency: exchangeRatePair.numeratorCurrency,
+          denominatorCurrency: exchangeRatePair.denominatorCurrency,
+          bankRate: exchangeRate,
+          nobaRate: null,
+          expirationTimestamp: new Date(Date.now() + 25 * 60 * 60 * 1000),
+        }),
+      );
     }
+
+    return Promise.all(exchangeRates);
   }
 
   // 1 numeratorCurrency = X denominatorCurrency

@@ -143,8 +143,8 @@ circle:
   awsSecretNameForMasterWalletID: ""
 
 exchangerateio:
-  apiKey: ""
-  awsSecretNameForApiKey: "TEST_EXCHANGERATES_API_KEY"
+  apiKey: "EE58hpB8fAtUD2q5HOHXYKuS9V3jIfCS"
+  awsSecretNameForApiKey: ""
   baseURL: "https://api.apilayer.com/exchangerates_data"
 
 nobaWorkflow:
