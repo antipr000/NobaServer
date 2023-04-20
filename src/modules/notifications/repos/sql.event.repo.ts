@@ -18,10 +18,9 @@ import {
 } from "../domain/EventTemplates";
 import { EventRepo } from "./event.repo";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { Prisma } from "@prisma/client";
+import { Prisma, EventTemplate as PrismaEventTemplateModel } from "@prisma/client";
 import { Logger } from "winston";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
-import { EventTemplate as PrismaEventTemplateModel } from "@prisma/client";
 
 export class SQLEventRepo implements EventRepo {
   constructor(
