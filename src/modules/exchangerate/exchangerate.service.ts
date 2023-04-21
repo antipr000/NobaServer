@@ -10,16 +10,7 @@ import { ExchangeRateClientFactory } from "./factory/exchangerate.factory";
 
 @Injectable()
 export class ExchangeRateService {
-  private readonly exchangeRatePairs: ExchangeRatePair[] = [
-    {
-      numeratorCurrency: "USD",
-      denominatorCurrency: "COP",
-    },
-    {
-      numeratorCurrency: "COP",
-      denominatorCurrency: "USD",
-    },
-  ];
+  private readonly exchangeRatePairs: ExchangeRatePair[];
 
   @Inject("ExchangeRateRepo")
   private readonly exchangeRateRepo: IExchangeRateRepo;
@@ -32,6 +23,19 @@ export class ExchangeRateService {
 
   @Inject()
   private readonly exchangeRateClientFactory: ExchangeRateClientFactory;
+
+  constructor(exchangeRatePairs: ExchangeRatePair[]) {
+    this.exchangeRatePairs = exchangeRatePairs ?? [
+      {
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+      },
+      {
+        numeratorCurrency: "COP",
+        denominatorCurrency: "USD",
+      },
+    ];
+  }
 
   async createExchangeRate(exchangeRateDTO: ExchangeRateDTO): Promise<ExchangeRateDTO> {
     // If nobaRate is not provided, use bankRate

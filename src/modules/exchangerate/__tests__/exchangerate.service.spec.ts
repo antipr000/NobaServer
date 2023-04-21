@@ -309,4 +309,39 @@ describe("ExchangeRateService", () => {
       expect(returnExchangeRate).toBe(null);
     });
   });
+
+  describe("createExchangeRateFromProvider", () => {
+    it("Should create an exchange rate with no error", async () => {
+      const createdTimestamp = new Date();
+      const updatedTimestamp = new Date();
+      const id = "exchange-rate-1";
+
+      const exchangeRate: ExchangeRate = {
+        id: id,
+        createdTimestamp: createdTimestamp,
+        updatedTimestamp: updatedTimestamp,
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 5000,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(createdTimestamp.getTime() + 25 * 60 * 60 * 1000), // 25 hours from now
+      };
+
+      const exchangeRateDTO = {
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 5000,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(createdTimestamp.getTime() + 25 * 60 * 60 * 1000), // 25 hours from now
+      };
+
+      when(exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "COP", deepEqual(new Date()))).thenResolve(null);
+      when(exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(null);
+      when(exchangeRateRepo.createExchangeRate(deepEqual(exchangeRateDTO))).thenResolve(exchangeRate);
+
+      const returnExchangeRate = await exchangeRateService.createExchangeRateFromProvider();
+
+      expect(returnExchangeRate).toStrictEqual(exchangeRateDTO);
+    });
+  });
 });
