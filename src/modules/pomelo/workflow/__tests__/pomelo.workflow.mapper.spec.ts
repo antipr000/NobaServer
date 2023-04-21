@@ -2,7 +2,6 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
-import { anything, capture, when } from "ts-mockito";
 import {
   PomeloCurrency,
   PomeloEntryMode,
@@ -14,10 +13,7 @@ import {
   PomeloTransactionType,
 } from "../../domain/PomeloTransaction";
 import { PomeloWorkflowMapper } from "../pomelo.workflow.mapper";
-import { getRandomPomeloTransaction } from "../../public/test_utils/util";
 import { PomeloTransactionDTO } from "../../dto/pomelo.workflow.controller.dto";
-import { NotFoundException } from "@nestjs/common";
-import { uuid } from "uuidv4";
 
 describe("PomeloWorkflowMapperTests", () => {
   jest.setTimeout(20000);
@@ -60,12 +56,16 @@ describe("PomeloWorkflowMapperTests", () => {
         localCurrency: PomeloCurrency.COP,
         settlementAmount: 3,
         settlementCurrency: PomeloCurrency.USD,
+        transactionAmount: 4,
+        transactionCurrency: PomeloCurrency.COP,
         countryCode: "COL",
         entryMode: PomeloEntryMode.CHIP,
         pointType: PomeloPointType.ATM,
         origin: PomeloOrigin.DOMESTIC,
         source: PomeloSource.CHARGEBACK_MANUAL,
         status: PomeloTransactionStatus.INSUFFICIENT_FUNDS,
+        merchantName: "MERCHANT_NAME",
+        merchantMCC: "MCC",
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
       };
@@ -82,16 +82,20 @@ describe("PomeloWorkflowMapperTests", () => {
         nobaTransactionID: "NOBA_TRANSACTION_ID",
         pomeloTransactionType: PomeloTransactionType.PAYMENT,
         amountInUSD: 1,
-        amountInLocalCurrency: 2,
+        localAmount: 2,
         localCurrency: PomeloCurrency.COP,
         settlementAmount: 3,
         settlementCurrency: PomeloCurrency.USD,
+        transactionAmount: 4,
+        transactionCurrency: PomeloCurrency.COP,
         countryCode: "COL",
         entryMode: PomeloEntryMode.CHIP,
         pointType: PomeloPointType.ATM,
         origin: PomeloOrigin.DOMESTIC,
         source: PomeloSource.CHARGEBACK_MANUAL,
         status: PomeloTransactionStatus.INSUFFICIENT_FUNDS,
+        merchantName: "MERCHANT_NAME",
+        merchantMCC: "MCC",
         createdTimestamp: pomeloTransaction.createdTimestamp,
         updatedTimestamp: pomeloTransaction.updatedTimestamp,
       });
