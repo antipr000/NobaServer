@@ -10,7 +10,16 @@ import { ExchangeRateClientFactory } from "./factory/exchangerate.factory";
 
 @Injectable()
 export class ExchangeRateService {
-  private readonly exchangeRatePairs: ExchangeRatePair[];
+  private readonly exchangeRatePairs: ExchangeRatePair[] = [
+    {
+      numeratorCurrency: "USD",
+      denominatorCurrency: "COP",
+    },
+    {
+      numeratorCurrency: "COP",
+      denominatorCurrency: "USD",
+    },
+  ];
 
   @Inject("ExchangeRateRepo")
   private readonly exchangeRateRepo: IExchangeRateRepo;
@@ -23,19 +32,6 @@ export class ExchangeRateService {
 
   @Inject()
   private readonly exchangeRateClientFactory: ExchangeRateClientFactory;
-
-  constructor(exchangeRatePairs: ExchangeRatePair[]) {
-    this.exchangeRatePairs = exchangeRatePairs ?? [
-      {
-        numeratorCurrency: "USD",
-        denominatorCurrency: "COP",
-      },
-      {
-        numeratorCurrency: "COP",
-        denominatorCurrency: "USD",
-      },
-    ];
-  }
 
   async createExchangeRate(exchangeRateDTO: ExchangeRateDTO): Promise<ExchangeRateDTO> {
     // If nobaRate is not provided, use bankRate
@@ -81,13 +77,16 @@ export class ExchangeRateService {
     const exchangeRates: Promise<ExchangeRateDTO>[] = [];
 
     for (const exchangeRatePair of this.exchangeRatePairs) {
-      console.log(
-        `Getting exchange rate for ${exchangeRatePair.numeratorCurrency} - ${exchangeRatePair.denominatorCurrency}`,
-      );
       const exchangeRateClient = this.exchangeRateClientFactory.getExchangeRateClientByCurrencyPair(
         exchangeRatePair.numeratorCurrency,
         exchangeRatePair.denominatorCurrency,
       );
+      if (!exchangeRateClient) {
+        this.logger.error(
+          `No exchange rate client found for currency pair "${exchangeRatePair.numeratorCurrency}-${exchangeRatePair.denominatorCurrency}"`,
+        );
+        continue;
+      }
 
       // soft guarantee that the exchange rate client will be able to get the exchange rate
       const exchangeRate = await exchangeRateClient.getExchangeRate(
