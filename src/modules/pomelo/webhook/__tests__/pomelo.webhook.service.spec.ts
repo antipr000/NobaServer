@@ -219,31 +219,42 @@ describe("PomeloTransactionServiceTests", () => {
 
   describe("authorizeTransaction", () => {
     describe("API contract error scenarios", () => {
-      it("should reject the transaction with OTHER status if the 'endpoint' mismatched", async () => {
-        const request: PomeloTransactionAuthzRequest = {
-          endpoint: "/transactions/invalid-authorizations",
+      let validRequest: PomeloTransactionAuthzRequest;
+
+      beforeEach(() => {
+        validRequest = {
+          endpoint: "/transactions/authorizations",
           rawBodyBuffer: getRawTransactionAuthzBodyBuffer(),
           rawSignature: transactionAuthzValidSignature,
           timestamp: transactionAuthzValidTimestamp,
           idempotencyKey: "IDEMPOTENCY_KEY",
 
-          localAmount: 50,
+          localAmount: 5000,
           localCurrency: PomeloCurrency.COP,
           settlementAmount: 50,
-          settlementCurrency: PomeloCurrency.COP,
+          settlementCurrency: PomeloCurrency.USD,
+          transactionAmount: 5000,
+          transactionCurrency: PomeloCurrency.COP,
           pomeloCardID: "POMELO_CARD_ID",
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
           pomeloUserID: "POMELO_USER_ID",
           transactionType: PomeloTransactionType.PURCHASE,
           merchantName: "MERCHANT_NAME",
+          merchantMCC: "MCC",
           countryCode: "COL",
           entryMode: PomeloEntryMode.MANUAL,
           pointType: PomeloPointType.ECOMMERCE,
           origin: PomeloOrigin.INTERNATIONAL,
           source: PomeloSource.ONLINE,
         };
+      });
 
-        const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
+      it("should reject the transaction with OTHER status if the 'endpoint' mismatched", async () => {
+        validRequest.endpoint = "/transactions/invalid-authorizations";
+
+        const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(
+          validRequest,
+        );
 
         expect(response).toStrictEqual({
           detailedStatus: PomeloTransactionAuthzDetailStatus.OTHER,
@@ -253,33 +264,6 @@ describe("PomeloTransactionServiceTests", () => {
       });
 
       describe("should reject with OTHER status if 'signature' mismatched", () => {
-        let validRequest: PomeloTransactionAuthzRequest;
-
-        beforeEach(() => {
-          validRequest = {
-            endpoint: "/transactions/authorizations",
-            rawBodyBuffer: getRawTransactionAuthzBodyBuffer(),
-            rawSignature: transactionAuthzValidSignature,
-            timestamp: transactionAuthzValidTimestamp,
-            idempotencyKey: "IDEMPOTENCY_KEY",
-
-            localAmount: 50,
-            localCurrency: PomeloCurrency.COP,
-            settlementAmount: 50,
-            settlementCurrency: PomeloCurrency.COP,
-            pomeloCardID: "POMELO_CARD_ID",
-            pomeloTransactionID: "POMELO_TRANSACTION_ID",
-            pomeloUserID: "POMELO_USER_ID",
-            transactionType: PomeloTransactionType.PURCHASE,
-            merchantName: "MERCHANT_NAME",
-            countryCode: "COL",
-            entryMode: PomeloEntryMode.MANUAL,
-            pointType: PomeloPointType.ECOMMERCE,
-            origin: PomeloOrigin.INTERNATIONAL,
-            source: PomeloSource.ONLINE,
-          };
-        });
-
         it("should return REJECTED if 'timestamp' differs by a few milliseconds", async () => {
           let request: PomeloTransactionAuthzRequest = validRequest;
           request.timestamp = "1680024225";
@@ -333,11 +317,14 @@ describe("PomeloTransactionServiceTests", () => {
         localCurrency: PomeloCurrency.COP,
         settlementAmount: 50,
         settlementCurrency: PomeloCurrency.USD,
+        transactionAmount: 5000,
+        transactionCurrency: PomeloCurrency.COP,
         pomeloCardID: "POMELO_CARD_ID",
         pomeloTransactionID: "POMELO_TRANSACTION_ID",
         pomeloUserID: "POMELO_USER_ID",
         transactionType: PomeloTransactionType.PURCHASE,
         merchantName: "MERCHANT_NAME",
+        merchantMCC: "MCC",
         countryCode: "COL",
         entryMode: PomeloEntryMode.MANUAL,
         pointType: PomeloPointType.ECOMMERCE,
@@ -348,7 +335,7 @@ describe("PomeloTransactionServiceTests", () => {
         id: uuid(),
         pomeloTransactionID: "POMELO_TRANSACTION_ID",
         parentPomeloTransactionID: null,
-        amountInLocalCurrency: 5000,
+        localAmount: 5000,
         localCurrency: PomeloCurrency.COP,
         amountInUSD: 50,
         nobaTransactionID: "NOBA_TRANSACTION_ID", // Not the one sent in request.
@@ -359,11 +346,15 @@ describe("PomeloTransactionServiceTests", () => {
         pomeloUserID: "POMELO_USER_ID",
         settlementAmount: 50,
         settlementCurrency: PomeloCurrency.USD,
+        transactionAmount: 5000,
+        transactionCurrency: PomeloCurrency.COP,
         countryCode: "COL",
         entryMode: PomeloEntryMode.MANUAL,
         pointType: PomeloPointType.ECOMMERCE,
         origin: PomeloOrigin.INTERNATIONAL,
         source: PomeloSource.ONLINE,
+        merchantName: "MERCHANT_NAME",
+        merchantMCC: "MCC",
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
       };
@@ -424,7 +415,7 @@ describe("PomeloTransactionServiceTests", () => {
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
           parentPomeloTransactionID: null,
-          amountInLocalCurrency: 5000,
+          localAmount: 5000,
           localCurrency: "COP",
           amountInUSD: 50,
           nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
@@ -438,7 +429,11 @@ describe("PomeloTransactionServiceTests", () => {
           pomeloUserID: "POMELO_USER_ID",
           settlementAmount: 50,
           settlementCurrency: PomeloCurrency.USD,
+          transactionAmount: 5000,
+          transactionCurrency: PomeloCurrency.COP,
           source: PomeloSource.ONLINE,
+          merchantName: "MERCHANT_NAME",
+          merchantMCC: "MCC",
         });
         const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
         expect(createNobaTransactionRequestParams).toStrictEqual({
@@ -456,7 +451,7 @@ describe("PomeloTransactionServiceTests", () => {
       it("should appove the transaction and deduct the amount rounded to 2 decimal places", async () => {
         when(mockPomeloRepo.createPomeloTransaction(anything())).thenResolve({
           ...pomeloTransaction,
-          amountInLocalCurrency: 4924.9,
+          localAmount: 4924.9,
         });
         when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenResolve(
           nobaConsumerID,
@@ -486,7 +481,7 @@ describe("PomeloTransactionServiceTests", () => {
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
           parentPomeloTransactionID: null,
-          amountInLocalCurrency: 4924.9,
+          localAmount: 4924.9,
           localCurrency: "COP",
           amountInUSD: 50,
           nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
@@ -500,7 +495,11 @@ describe("PomeloTransactionServiceTests", () => {
           pomeloUserID: "POMELO_USER_ID",
           settlementAmount: 50,
           settlementCurrency: PomeloCurrency.USD,
+          transactionAmount: 5000,
+          transactionCurrency: PomeloCurrency.COP,
           source: PomeloSource.ONLINE,
+          merchantName: "MERCHANT_NAME",
+          merchantMCC: "MCC",
         });
         const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
         expect(createNobaTransactionRequestParams).toStrictEqual({
@@ -542,7 +541,7 @@ describe("PomeloTransactionServiceTests", () => {
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
           parentPomeloTransactionID: null,
-          amountInLocalCurrency: 5000,
+          localAmount: 5000,
           localCurrency: "COP",
           amountInUSD: 50,
           nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
@@ -556,7 +555,11 @@ describe("PomeloTransactionServiceTests", () => {
           pomeloUserID: "POMELO_USER_ID",
           settlementAmount: 50,
           settlementCurrency: PomeloCurrency.USD,
+          transactionAmount: 5000,
+          transactionCurrency: PomeloCurrency.COP,
           source: PomeloSource.ONLINE,
+          merchantName: "MERCHANT_NAME",
+          merchantMCC: "MCC",
         });
 
         const [pomeloTransactionIDParamInUpdateRequest, pomeloTransactionStatusInUpdateRequest] = capture(
@@ -597,7 +600,7 @@ describe("PomeloTransactionServiceTests", () => {
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
           parentPomeloTransactionID: null,
-          amountInLocalCurrency: 5000,
+          localAmount: 5000,
           localCurrency: "COP",
           amountInUSD: 50,
           nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
@@ -611,7 +614,11 @@ describe("PomeloTransactionServiceTests", () => {
           pomeloUserID: "POMELO_USER_ID",
           settlementAmount: 50,
           settlementCurrency: PomeloCurrency.USD,
+          transactionAmount: 5000,
+          transactionCurrency: PomeloCurrency.COP,
           source: PomeloSource.ONLINE,
+          merchantName: "MERCHANT_NAME",
+          merchantMCC: "MCC",
         });
 
         const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
@@ -674,7 +681,7 @@ describe("PomeloTransactionServiceTests", () => {
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
           parentPomeloTransactionID: null,
-          amountInLocalCurrency: 5000,
+          localAmount: 5000,
           localCurrency: "COP",
           amountInUSD: 50,
           nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
@@ -688,7 +695,11 @@ describe("PomeloTransactionServiceTests", () => {
           pomeloUserID: "POMELO_USER_ID",
           settlementAmount: 50,
           settlementCurrency: PomeloCurrency.USD,
+          transactionAmount: 5000,
+          transactionCurrency: PomeloCurrency.COP,
           source: PomeloSource.ONLINE,
+          merchantName: "MERCHANT_NAME",
+          merchantMCC: "MCC",
         });
 
         const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
@@ -851,9 +862,11 @@ describe("PomeloTransactionServiceTests", () => {
 
   describe("adjustTransaction", () => {
     describe("API contract error scenarios", () => {
-      it("should reject the transaction with OTHER status if the 'endpoint' mismatched", async () => {
-        const request: PomeloTransactionAdjustmentRequest = {
-          endpoint: "/transactions/adjustments/invalid-type",
+      let validRequest: PomeloTransactionAdjustmentRequest;
+
+      beforeEach(() => {
+        validRequest = {
+          endpoint: "/transactions/adjustments/credit",
           rawBodyBuffer: getRawTransactionAdjustmentBodyBuffer(),
           rawSignature: transactionAdjustmentCreditValidSignature,
           timestamp: transactionAdjustmentValidTimestamp,
@@ -861,23 +874,30 @@ describe("PomeloTransactionServiceTests", () => {
 
           adjustmentType: PomeloAdjustmentType.CREDIT,
           pomeloOriginalTransactionID: "PARENT_POMELO_TRANSACTION_ID",
-          localAmount: 50,
+          localAmount: 5000,
           localCurrency: PomeloCurrency.COP,
           settlementAmount: 50,
-          settlementCurrency: PomeloCurrency.COP,
+          settlementCurrency: PomeloCurrency.USD,
+          transactionAmount: 5000,
+          transactionCurrency: PomeloCurrency.COP,
           pomeloCardID: "POMELO_CARD_ID",
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
           pomeloUserID: "POMELO_USER_ID",
           transactionType: PomeloTransactionType.PURCHASE,
           merchantName: "MERCHANT_NAME",
+          merchantMCC: "MCC",
           countryCode: "COL",
           entryMode: PomeloEntryMode.MANUAL,
           pointType: PomeloPointType.ECOMMERCE,
           origin: PomeloOrigin.INTERNATIONAL,
           source: PomeloSource.ONLINE,
         };
+      });
 
-        const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(request);
+      it("should reject the transaction with OTHER status if the 'endpoint' mismatched", async () => {
+        validRequest.endpoint = "/transactions/adjustments/invalid-type";
+
+        const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(validRequest);
 
         expect(response).toStrictEqual({
           detailedStatus: PomeloTransactionAuthzDetailStatus.OTHER,
@@ -887,35 +907,6 @@ describe("PomeloTransactionServiceTests", () => {
       });
 
       describe("should reject with OTHER status if 'signature' mismatched", () => {
-        let validRequest: PomeloTransactionAdjustmentRequest;
-
-        beforeEach(() => {
-          validRequest = {
-            endpoint: "/transactions/adjustments/credit",
-            rawBodyBuffer: getRawTransactionAdjustmentBodyBuffer(),
-            rawSignature: transactionAdjustmentCreditValidSignature,
-            timestamp: transactionAdjustmentValidTimestamp,
-            idempotencyKey: "IDEMPOTENCY_KEY",
-
-            adjustmentType: PomeloAdjustmentType.CREDIT,
-            pomeloOriginalTransactionID: "PARENT_POMELO_TRANSACTION_ID",
-            localAmount: 50,
-            localCurrency: PomeloCurrency.COP,
-            settlementAmount: 50,
-            settlementCurrency: PomeloCurrency.COP,
-            pomeloCardID: "POMELO_CARD_ID",
-            pomeloTransactionID: "POMELO_TRANSACTION_ID",
-            pomeloUserID: "POMELO_USER_ID",
-            transactionType: PomeloTransactionType.PURCHASE,
-            merchantName: "MERCHANT_NAME",
-            countryCode: "COL",
-            entryMode: PomeloEntryMode.MANUAL,
-            pointType: PomeloPointType.ECOMMERCE,
-            origin: PomeloOrigin.INTERNATIONAL,
-            source: PomeloSource.ONLINE,
-          };
-        });
-
         it("should return REJECTED if 'timestamp' differs by a few milliseconds", async () => {
           let request: PomeloTransactionAdjustmentRequest = validRequest;
           request.timestamp = "1681145220";
@@ -975,11 +966,14 @@ describe("PomeloTransactionServiceTests", () => {
         localCurrency: PomeloCurrency.COP,
         settlementAmount: 50,
         settlementCurrency: PomeloCurrency.USD,
+        transactionAmount: 5000,
+        transactionCurrency: PomeloCurrency.COP,
         pomeloCardID: "POMELO_CARD_ID",
         pomeloTransactionID: "POMELO_TRANSACTION_ID",
         pomeloUserID: "POMELO_USER_ID",
         transactionType: PomeloTransactionType.PAYMENT,
         merchantName: "MERCHANT_NAME",
+        merchantMCC: "MCC",
         countryCode: "COL",
         entryMode: PomeloEntryMode.MANUAL,
         pointType: PomeloPointType.ECOMMERCE,
@@ -999,11 +993,14 @@ describe("PomeloTransactionServiceTests", () => {
         localCurrency: PomeloCurrency.COP,
         settlementAmount: 50,
         settlementCurrency: PomeloCurrency.USD,
+        transactionAmount: 5000,
+        transactionCurrency: PomeloCurrency.COP,
         pomeloCardID: "POMELO_CARD_ID",
         pomeloTransactionID: "POMELO_TRANSACTION_ID",
         pomeloUserID: "POMELO_USER_ID",
         transactionType: PomeloTransactionType.REVERSAL_PAYMENT,
         merchantName: "MERCHANT_NAME",
+        merchantMCC: "MCC",
         countryCode: "COL",
         entryMode: PomeloEntryMode.MANUAL,
         pointType: PomeloPointType.ECOMMERCE,
@@ -1014,7 +1011,7 @@ describe("PomeloTransactionServiceTests", () => {
         id: uuid(),
         pomeloTransactionID: "POMELO_TRANSACTION_ID",
         parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
-        amountInLocalCurrency: 5000,
+        localAmount: 5000,
         localCurrency: PomeloCurrency.COP,
         amountInUSD: 50,
         nobaTransactionID: "NOBA_TRANSACTION_ID", // Not the one sent in request.
@@ -1023,6 +1020,8 @@ describe("PomeloTransactionServiceTests", () => {
         pomeloTransactionType: PomeloTransactionType.REVERSAL_PAYMENT,
         settlementAmount: 50,
         settlementCurrency: PomeloCurrency.USD,
+        transactionAmount: 5000,
+        transactionCurrency: PomeloCurrency.COP,
         pomeloIdempotencyKey: "IDEMPOTENCY_KEY",
         status: PomeloTransactionStatus.PENDING,
         countryCode: "COL",
@@ -1030,6 +1029,8 @@ describe("PomeloTransactionServiceTests", () => {
         pointType: PomeloPointType.ECOMMERCE,
         origin: PomeloOrigin.INTERNATIONAL,
         source: PomeloSource.ONLINE,
+        merchantName: "MERCHANT_NAME",
+        merchantMCC: "MCC",
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
       };
@@ -1037,7 +1038,7 @@ describe("PomeloTransactionServiceTests", () => {
         id: uuid(),
         pomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
         parentPomeloTransactionID: null,
-        amountInLocalCurrency: 5000,
+        localAmount: 5000,
         localCurrency: PomeloCurrency.COP,
         amountInUSD: 50,
         nobaTransactionID: "PARENT_NOBA_TRANSACTION_ID", // Not the one sent in request.
@@ -1046,6 +1047,8 @@ describe("PomeloTransactionServiceTests", () => {
         pomeloTransactionType: PomeloTransactionType.REVERSAL_PAYMENT,
         settlementAmount: 50,
         settlementCurrency: PomeloCurrency.USD,
+        transactionAmount: 5000,
+        transactionCurrency: PomeloCurrency.COP,
         pomeloIdempotencyKey: "IDEMPOTENCY_KEY",
         status: PomeloTransactionStatus.PENDING,
         countryCode: "COL",
@@ -1053,6 +1056,8 @@ describe("PomeloTransactionServiceTests", () => {
         pointType: PomeloPointType.ECOMMERCE,
         origin: PomeloOrigin.INTERNATIONAL,
         source: PomeloSource.ONLINE,
+        merchantName: "MERCHANT_NAME",
+        merchantMCC: "MCC",
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
       };
@@ -1159,7 +1164,7 @@ describe("PomeloTransactionServiceTests", () => {
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
             parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
-            amountInLocalCurrency: 5000,
+            localAmount: 5000,
             localCurrency: "COP",
             amountInUSD: 50,
             nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
@@ -1173,7 +1178,11 @@ describe("PomeloTransactionServiceTests", () => {
             pomeloUserID: "POMELO_USER_ID",
             settlementAmount: 50,
             settlementCurrency: PomeloCurrency.USD,
+            transactionAmount: 5000,
+            transactionCurrency: PomeloCurrency.COP,
             source: PomeloSource.ONLINE,
+            merchantName: "MERCHANT_NAME",
+            merchantMCC: "MCC",
           });
           const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
           expect(createNobaTransactionRequestParams).toStrictEqual({
@@ -1224,7 +1233,7 @@ describe("PomeloTransactionServiceTests", () => {
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
             parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
-            amountInLocalCurrency: 5000,
+            localAmount: 5000,
             localCurrency: "COP",
             amountInUSD: 50,
             nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
@@ -1238,7 +1247,11 @@ describe("PomeloTransactionServiceTests", () => {
             pomeloUserID: "POMELO_USER_ID",
             settlementAmount: 50,
             settlementCurrency: PomeloCurrency.USD,
+            transactionAmount: 5000,
+            transactionCurrency: PomeloCurrency.COP,
             source: PomeloSource.ONLINE,
+            merchantName: "MERCHANT_NAME",
+            merchantMCC: "MCC",
           });
 
           const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
@@ -1294,7 +1307,7 @@ describe("PomeloTransactionServiceTests", () => {
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
             parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
-            amountInLocalCurrency: 5000,
+            localAmount: 5000,
             localCurrency: "COP",
             amountInUSD: 50,
             nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
@@ -1308,7 +1321,11 @@ describe("PomeloTransactionServiceTests", () => {
             pomeloUserID: "POMELO_USER_ID",
             settlementAmount: 50,
             settlementCurrency: PomeloCurrency.USD,
+            transactionAmount: 5000,
+            transactionCurrency: PomeloCurrency.COP,
             source: PomeloSource.ONLINE,
+            merchantName: "MERCHANT_NAME",
+            merchantMCC: "MCC",
           });
           const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
           expect(createNobaTransactionRequestParams).toStrictEqual({
@@ -1334,7 +1351,7 @@ describe("PomeloTransactionServiceTests", () => {
           });
           when(mockPomeloRepo.createPomeloTransaction(anything())).thenResolve({
             ...pomeloTransaction,
-            amountInLocalCurrency: 4924.9,
+            localAmount: 4924.9,
           });
           when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenResolve(
             nobaConsumerID,
@@ -1363,7 +1380,7 @@ describe("PomeloTransactionServiceTests", () => {
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
             parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
-            amountInLocalCurrency: 4924.9,
+            localAmount: 4924.9,
             localCurrency: "COP",
             amountInUSD: 50,
             nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
@@ -1377,7 +1394,11 @@ describe("PomeloTransactionServiceTests", () => {
             pomeloUserID: "POMELO_USER_ID",
             settlementAmount: 50,
             settlementCurrency: PomeloCurrency.USD,
+            transactionAmount: 5000,
+            transactionCurrency: PomeloCurrency.COP,
             source: PomeloSource.ONLINE,
+            merchantName: "MERCHANT_NAME",
+            merchantMCC: "MCC",
           });
           const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
           expect(createNobaTransactionRequestParams).toStrictEqual({
@@ -1429,7 +1450,7 @@ describe("PomeloTransactionServiceTests", () => {
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
             parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
-            amountInLocalCurrency: 5000,
+            localAmount: 5000,
             localCurrency: "COP",
             amountInUSD: 50,
             nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
@@ -1443,7 +1464,11 @@ describe("PomeloTransactionServiceTests", () => {
             pomeloUserID: "POMELO_USER_ID",
             settlementAmount: 50,
             settlementCurrency: PomeloCurrency.USD,
+            transactionAmount: 5000,
+            transactionCurrency: PomeloCurrency.COP,
             source: PomeloSource.ONLINE,
+            merchantName: "MERCHANT_NAME",
+            merchantMCC: "MCC",
           });
 
           const [pomeloTransactionIDParamInUpdateRequest, pomeloTransactionStatusInUpdateRequest] = capture(
@@ -1491,7 +1516,7 @@ describe("PomeloTransactionServiceTests", () => {
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
             parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
-            amountInLocalCurrency: 5000,
+            localAmount: 5000,
             localCurrency: "COP",
             amountInUSD: 50,
             nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
@@ -1505,7 +1530,11 @@ describe("PomeloTransactionServiceTests", () => {
             pomeloUserID: "POMELO_USER_ID",
             settlementAmount: 50,
             settlementCurrency: PomeloCurrency.USD,
+            transactionAmount: 5000,
+            transactionCurrency: PomeloCurrency.COP,
             source: PomeloSource.ONLINE,
+            merchantName: "MERCHANT_NAME",
+            merchantMCC: "MCC",
           });
 
           const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
@@ -1580,7 +1609,7 @@ describe("PomeloTransactionServiceTests", () => {
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
             parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
-            amountInLocalCurrency: 5000,
+            localAmount: 5000,
             localCurrency: "COP",
             amountInUSD: 50,
             nobaTransactionID: expect.not.stringContaining("POMELO_TRANSACTION_ID"),
@@ -1594,7 +1623,11 @@ describe("PomeloTransactionServiceTests", () => {
             pomeloUserID: "POMELO_USER_ID",
             settlementAmount: 50,
             settlementCurrency: PomeloCurrency.USD,
+            transactionAmount: 5000,
+            transactionCurrency: PomeloCurrency.COP,
             source: PomeloSource.ONLINE,
+            merchantName: "MERCHANT_NAME",
+            merchantMCC: "MCC",
           });
 
           const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();

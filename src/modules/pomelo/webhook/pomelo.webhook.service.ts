@@ -102,7 +102,7 @@ export class PomeloTransactionService {
       const pomeloTransaction: PomeloTransaction = await this.getOrCreatePomeloTransaction({
         pomeloTransactionID: request.pomeloTransactionID,
         parentPomeloTransactionID: null,
-        amountInLocalCurrency: request.localAmount,
+        localAmount: request.localAmount,
         localCurrency: request.localCurrency,
         amountInUSD: request.settlementAmount,
         nobaTransactionID: uuid(),
@@ -116,7 +116,11 @@ export class PomeloTransactionService {
         pomeloUserID: request.pomeloUserID,
         settlementAmount: request.settlementAmount,
         settlementCurrency: request.settlementCurrency,
+        transactionAmount: request.transactionAmount,
+        transactionCurrency: request.transactionCurrency,
         source: request.source,
+        merchantName: request.merchantName,
+        merchantMCC: request.merchantMCC,
       });
       if (pomeloTransaction.status !== PomeloTransactionStatus.PENDING) {
         const detailAuthzStatus: PomeloTransactionAuthzDetailStatus =
@@ -131,7 +135,7 @@ export class PomeloTransactionService {
       const circleWalletID: string = await this.circleService.getOrCreateWallet(nobaConsumerID);
       const walletBalanceInUSD: number = await this.circleService.getWalletBalance(circleWalletID);
       const { amountInUSD: amountToDebitInUSD, exchangeRate } = await this.getCOPEquivalentUSDAmountToDeduct(
-        pomeloTransaction.amountInLocalCurrency,
+        pomeloTransaction.localAmount,
       );
 
       if (walletBalanceInUSD < amountToDebitInUSD) {
@@ -208,7 +212,7 @@ export class PomeloTransactionService {
       const pomeloTransaction: PomeloTransaction = await this.getOrCreatePomeloTransaction({
         pomeloTransactionID: request.pomeloTransactionID,
         parentPomeloTransactionID: request.pomeloOriginalTransactionID,
-        amountInLocalCurrency: request.localAmount,
+        localAmount: request.localAmount,
         localCurrency: request.localCurrency,
         amountInUSD: request.settlementAmount,
         nobaTransactionID: uuid(),
@@ -222,7 +226,11 @@ export class PomeloTransactionService {
         pomeloUserID: request.pomeloUserID,
         settlementAmount: request.settlementAmount,
         settlementCurrency: request.settlementCurrency,
+        transactionAmount: request.transactionAmount,
+        transactionCurrency: request.transactionCurrency,
         source: request.source,
+        merchantName: request.merchantName,
+        merchantMCC: request.merchantMCC,
       });
       if (pomeloTransaction.status !== PomeloTransactionStatus.PENDING) {
         const detailAuthzStatus: PomeloTransactionAuthzDetailStatus =

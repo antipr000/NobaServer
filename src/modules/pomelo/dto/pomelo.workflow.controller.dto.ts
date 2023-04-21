@@ -35,7 +35,7 @@ export class PomeloTransactionDTO {
   amountInUSD: number;
 
   @ApiProperty()
-  amountInLocalCurrency: number;
+  localAmount: number;
 
   @ApiProperty({ enum: PomeloCurrency })
   localCurrency: PomeloCurrency;
@@ -45,6 +45,12 @@ export class PomeloTransactionDTO {
 
   @ApiProperty({ enum: PomeloCurrency })
   settlementCurrency: PomeloCurrency;
+
+  @ApiProperty()
+  transactionAmount: number;
+
+  @ApiProperty({ enum: PomeloCurrency })
+  transactionCurrency: PomeloCurrency;
 
   @ApiProperty({ enum: PomeloTransactionStatus })
   status: PomeloTransactionStatus;
@@ -66,6 +72,12 @@ export class PomeloTransactionDTO {
 
   @ApiProperty({ enum: PomeloSource })
   source: PomeloSource;
+
+  @ApiProperty()
+  merchantName: string;
+
+  @ApiProperty()
+  merchantMCC: string;
 
   @ApiProperty()
   createdTimestamp: Date;
