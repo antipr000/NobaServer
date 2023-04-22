@@ -14,7 +14,6 @@ import { AlertService } from "../../../modules/common/alerts/alert.service";
 import { ExchangeRateClientFactory } from "../factory/exchangerate.factory";
 import { getMockExchangeRateClientFactoryWithDefaults } from "../mocks/mock.exchangerate.factory";
 import { StubExchangeRateClient } from "../clients/stub.exchangerate.client";
-import { IExchangeRateClient } from "../clients/exchangerate.client";
 
 describe("ExchangeRateService", () => {
   let exchangeRateService: ExchangeRateService;

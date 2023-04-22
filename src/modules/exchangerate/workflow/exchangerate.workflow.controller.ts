@@ -1,5 +1,5 @@
-import { BadRequestException, Body, Controller, HttpStatus, Inject, Post, Query } from "@nestjs/common";
-import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { Controller, HttpStatus, Inject, Post } from "@nestjs/common";
+import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ExchangeRateService } from "../exchangerate.service";
 import { ExchangeRateDTO } from "../dto/ExchangeRateDTO";
