@@ -41,7 +41,7 @@ jobs:
           rm -rf src/coverage-*/lcov-report
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarcloud-github-action@v1.8
         with:
           args: >
             -Dsonar.javascript.lcov.reportPaths=src/coverage-*/lcov.info

@@ -17,6 +17,7 @@ import {
 } from "../transaction/mapper/transaction.mapper.service";
 import { MonoModule } from "../psp/mono/mono.module";
 import { CirclePublicModule } from "../circle/public/circle.public.module";
+import { ExchangeRateModule } from "../exchangerate/exchangerate.module";
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CirclePublicModule } from "../circle/public/circle.public.module";
     EmployerModule,
     MonoModule,
     CirclePublicModule,
+    ExchangeRateModule,
   ],
   controllers: [AdminController],
   providers: [

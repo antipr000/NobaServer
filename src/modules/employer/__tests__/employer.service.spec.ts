@@ -34,8 +34,6 @@ import { getRandomPayroll, getRandomPayrollDisbursement } from "../test_utils/pa
 import { PayrollStatus } from "../domain/Payroll";
 import { getRandomEmployee } from "../../../modules/employee/test_utils/employee.test.utils";
 import { Utils } from "../../../core/utils/Utils";
-import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
-import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 import { S3Service } from "../../common/s3.service";
 import { getMockS3ServiceWithDefaults } from "../../common/mocks/mock.s3.service";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
@@ -48,6 +46,8 @@ import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { PayrollDisbursement } from "../domain/PayrollDisbursement";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
+import { getMockExchangeRateServiceWithDefaults } from "../../../modules/exchangerate/mocks/mock.exchangerate.service";
+import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {

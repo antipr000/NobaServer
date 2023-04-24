@@ -38,14 +38,14 @@ import { POMELO_REPO_PROVIDER } from "../../repos/pomelo.repo.module";
 import { anyString, anything, capture, instance, when } from "ts-mockito";
 import { CircleService } from "../../../../modules/circle/public/circle.service";
 import { uuid } from "uuidv4";
-import { ExchangeRateDTO } from "../../../../modules/common/dto/ExchangeRateDTO";
 import { Currency } from "../../../../modules/transaction/domain/TransactionTypes";
 import { Transaction, TransactionStatus } from "../../../../modules/transaction/domain/Transaction";
 import { WorkflowName } from "../../../../infra/temporal/workflow";
 import { UpdateWalletBalanceServiceDTO } from "../../../../modules/psp/domain/UpdateWalletBalanceServiceDTO";
 import { CircleWithdrawalStatus } from "../../../../modules/psp/domain/CircleTypes";
-import { ExchangeRateService } from "../../../../modules/common/exchangerate.service";
-import { getMockExchangeRateServiceWithDefaults } from "../../../../modules/common/mocks/mock.exchangerate.service";
+import { ExchangeRateService } from "../../../../modules/exchangerate/exchangerate.service";
+import { getMockExchangeRateServiceWithDefaults } from "../../../../modules/exchangerate/mocks/mock.exchangerate.service";
+import { ExchangeRateDTO } from "../../../../modules/exchangerate/dto/ExchangeRateDTO";
 
 const getRawTransactionAuthzBodyBuffer = (): Buffer => {
   const data = `{
