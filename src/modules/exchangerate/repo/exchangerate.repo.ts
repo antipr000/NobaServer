@@ -1,4 +1,3 @@
-import { IExchangeRateClient } from "../clients/exchangerate.client";
 import { ExchangeRate, InputExchangeRate } from "../domain/ExchangeRate";
 
 export interface IExchangeRateRepo {
