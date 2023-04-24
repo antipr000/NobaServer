@@ -505,6 +505,29 @@ model Identification {
   @@unique([consumerID, type, countryCode])
 }
 
+model Event {
+  id               String          @id @default(uuid())
+  name             String          @unique
+  createdTimestamp DateTime?       @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime?       @updatedAt // Marking optional so we don't need to set in tests
+  handlers         String[]
+  templates        EventTemplate[]
+}
+
+model EventTemplate {
+  id               String    @id @default(uuid())
+  createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
+  templateBody     String?
+  externalKey      String?
+  type             String
+  locale           String
+  eventID          String
+  event            Event     @relation(fields: [eventID], references: [id], onDelete: Cascade)
+
+  @@index([eventID])
+}
+
 enum IdentityType {
   CONSUMER
   NOBA_ADMIN
