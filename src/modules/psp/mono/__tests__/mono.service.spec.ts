@@ -915,31 +915,6 @@ describe("MonoServiceTests", () => {
         state: monoTransaction.state,
         declinationReason: undefined,
       });
-
-      /*      const [monoTransactionArg] = capture(monoRepo.createMonoTransaction).last();
-      expect(monoTransactionArg).toEqual({
-        nobaTransactionID: monoTransaction.nobaTransactionID,
-        type: MonoTransactionType.WITHDRAWAL,
-        withdrawalDetails: {
-          batchID: monoTransaction.withdrawalDetails.batchID,
-          transferID: monoTransaction.withdrawalDetails.transferID,
-        },
-      });
-
-      const [transferRequestArg] = capture(monoClient.transfer).last();
-      expect(transferRequestArg).toEqual({
-        amount: 100,
-        currency: MonoCurrency.COP,
-        accountNumber: decryptedAccountNumber,
-        accountType: "accountType",
-        bankCode: "bankCode",
-        consumerEmail: consumer.props.email,
-        consumerName: "First Last",
-        documentNumber: "documentNumber",
-        documentType: "documentType",
-        transactionID: monoTransaction.nobaTransactionID,
-        transactionRef: "nobaTransactionRef",
-      });*/
     });
   });
 
