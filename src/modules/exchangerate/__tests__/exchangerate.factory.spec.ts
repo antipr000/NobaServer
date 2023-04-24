@@ -62,12 +62,12 @@ describe("ExchangeRateFactoryTests", () => {
   });
 
   describe("getExchangeRateClientByCurrencyPair", () => {
-    it("should return a StubExchangeRateClient", async () => {
+    it("should return an ExchangeRateIOExchangeRateClient", async () => {
       const client = exchangeRateFactory.getExchangeRateClientByCurrencyPair("COP", "USD");
       expect(client).toBe(mockExchangeRateIOClient);
     });
 
-    it("should return a ExchangeRateIOExchangeRateClient", async () => {
+    it("should return an ExchangeRateIOExchangeRateClient", async () => {
       const client = exchangeRateFactory.getExchangeRateClientByCurrencyPair("USD", "COP");
       expect(client).toBe(mockExchangeRateIOClient);
     });

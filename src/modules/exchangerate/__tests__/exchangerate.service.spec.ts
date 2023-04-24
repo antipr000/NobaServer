@@ -54,7 +54,6 @@ describe("ExchangeRateService", () => {
           provide: ExchangeRateClientFactory,
           useFactory: () => instance(exchangeRateClientFactory),
         },
-        ,
         ExchangeRateService,
       ],
     }).compile();

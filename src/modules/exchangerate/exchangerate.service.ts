@@ -88,11 +88,28 @@ export class ExchangeRateService {
         continue;
       }
 
-      // soft guarantee that the exchange rate client will be able to get the exchange rate
-      const exchangeRate = await exchangeRateClient.getExchangeRate(
-        exchangeRatePair.numeratorCurrency,
-        exchangeRatePair.denominatorCurrency,
-      );
+      let exchangeRate;
+      try {
+        // soft guarantee that the exchange rate client will be able to get the exchange rate
+        exchangeRate = await exchangeRateClient.getExchangeRate(
+          exchangeRatePair.numeratorCurrency,
+          exchangeRatePair.denominatorCurrency,
+        );
+      } catch (err) {
+        this.logger.error(
+          `Error getting exchange rate from provider for currency pair "${exchangeRatePair.numeratorCurrency}-${exchangeRatePair.denominatorCurrency}": ${err}`,
+        );
+        continue;
+      }
+
+      // TODO: CRYPTO-998 - Add extra validation for exchange rate
+      if (!exchangeRate) {
+        this.logger.error(
+          `No exchange rate found for currency pair "${exchangeRatePair.numeratorCurrency}-${exchangeRatePair.denominatorCurrency}"`,
+        );
+        continue;
+      }
+
       exchangeRates.push(
         this.createExchangeRate({
           numeratorCurrency: exchangeRatePair.numeratorCurrency,
