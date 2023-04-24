@@ -54,10 +54,7 @@ describe("ExchangeRateService", () => {
           provide: ExchangeRateClientFactory,
           useFactory: () => instance(exchangeRateClientFactory),
         },
-        // {
-        //   provide: StubExchangeRateClient,
-        //   useFactory: () => instance(stubExchangeRateClient),
-        // },
+        ,
         ExchangeRateService,
       ],
     }).compile();
