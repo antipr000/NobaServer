@@ -29,7 +29,11 @@ export enum NotificationEventType {
   SEND_EMPLOYER_REQUEST_EVENT = "employee.request",
 }
 
-export const preferredNotificationMedium = {
+type PreferredMedium = {
+  [key in NotificationEventType]: NotificationEventHandler[];
+};
+
+export const preferredNotificationMedium: PreferredMedium = {
   [NotificationEventType.SEND_OTP_EVENT]: [NotificationEventHandler.EMAIL, NotificationEventHandler.SMS],
   [NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT]: [NotificationEventHandler.SMS],
   [NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT]: [
@@ -66,7 +70,14 @@ export const preferredNotificationMedium = {
   ],
 };
 
-export const emailTemplateExternalLinkMap = {
+type TemplateMap = {
+  [key: string]: {
+    en?: string;
+    es?: string;
+  };
+};
+
+export const emailTemplateExternalLinkMap: TemplateMap = {
   [NotificationEventType.SEND_OTP_EVENT]: {
     en: "d-62a393f5f89949f5a5a3d244a51ed2e7",
     es: "d-5e14091f8be44f9bb0689752411163a3",
@@ -150,7 +161,7 @@ export const emailTemplateExternalLinkMap = {
   },
 };
 
-export const smsTemplateStringMap = {
+export const smsTemplateStringMap: TemplateMap = {
   [NotificationEventType.SEND_OTP_EVENT]: {
     en: "{{otp}} is your one-time password for Noba login.",
     es: "{{otp}} es su contraseña de un solo uso para iniciar sesión en Noba.",
@@ -165,7 +176,7 @@ export const smsTemplateStringMap = {
   },
 };
 
-export const pushEventTemplateStringMap = {
+export const pushEventTemplateStringMap: TemplateMap = {
   [NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT]: {
     en: "Successfully deposited {{amount}} {{currency}} into your Noba account",
     es: "Se han depositado correctamente {{amount}} {{currency}} en tu cuenta de Noba",
