@@ -7,7 +7,7 @@ import { ExchangeRateWorkflowDTO } from "../dto/exchangerate.workflow.dto";
 
 @Controller("wf/v1/exchangerates") // This defines the path prefix
 @ApiBearerAuth("JWT-auth")
-@ApiTags("Workflow") // This determines where it shows up in the swagger docs. Seems fair for this to appear in the Consumer grouping.
+@ApiTags("Workflow")
 export class ExchangeRateWorkflowController {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
