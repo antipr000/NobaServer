@@ -143,6 +143,17 @@ export async function seedEventsAndTemplates(prisma: PrismaClient) {
           }
         }
       }
+
+      const allTemplates = await prisma.eventTemplate.findMany({ where: { eventID: event.id } });
+
+      // Delete templates that are not in the list of handlers
+      await Promise.all(
+        allTemplates.map(async template => {
+          if (!handlers.includes(template.type as NotificationEventHandler)) {
+            await prisma.eventTemplate.delete({ where: { id: template.id } });
+          }
+        }),
+      );
     }),
   );
 }
