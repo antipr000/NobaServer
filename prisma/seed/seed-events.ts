@@ -53,6 +53,16 @@ export async function seedEventsAndTemplates(prisma: PrismaClient) {
                   },
                 },
               });
+            } else if (template.externalKey !== externalTemplateKeyMap[locale]) {
+              // Update template
+              await prisma.eventTemplate.update({
+                where: {
+                  id: template.id,
+                },
+                data: {
+                  externalKey: externalTemplateKeyMap[locale],
+                },
+              });
             }
           }
         } else if (handler === NotificationEventHandler.SMS) {
@@ -81,6 +91,16 @@ export async function seedEventsAndTemplates(prisma: PrismaClient) {
                   },
                 },
               });
+            } else if (template.templateBody !== smsTemplateMap[locale]) {
+              // Update template
+              await prisma.eventTemplate.update({
+                where: {
+                  id: template.id,
+                },
+                data: {
+                  templateBody: smsTemplateMap[locale],
+                },
+              });
             }
           }
         } else if (handler === NotificationEventHandler.PUSH) {
@@ -107,6 +127,16 @@ export async function seedEventsAndTemplates(prisma: PrismaClient) {
                       id: event.id,
                     },
                   },
+                },
+              });
+            } else if (template.templateBody !== pushTemplateMap[locale]) {
+              // Update template
+              await prisma.eventTemplate.update({
+                where: {
+                  id: template.id,
+                },
+                data: {
+                  templateBody: pushTemplateMap[locale],
                 },
               });
             }
