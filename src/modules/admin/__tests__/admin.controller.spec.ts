@@ -44,7 +44,7 @@ import { getMockTransactionMapperServiceWithDefaults } from "../../../modules/tr
 import { Gender } from "../../../modules/consumer/domain/ExternalStates";
 import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/exchangerate/mocks/mock.exchangerate.service";
-import { ExchangeRateDTO } from "../../../modules/exchangerate/dto/ExchangeRateDTO";
+import { ExchangeRateDTO } from "../../../modules/exchangerate/dto/exchangerate.dto";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";

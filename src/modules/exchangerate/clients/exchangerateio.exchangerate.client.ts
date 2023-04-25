@@ -43,6 +43,6 @@ export class ExchangeRateIOExchangeRateClient implements IExchangeRateClient {
       this.axiosConfig,
     );
 
-    return response.data.rates[numeratorCurrency];
+    return response.data.rates[denominatorCurrency];
   }
 }

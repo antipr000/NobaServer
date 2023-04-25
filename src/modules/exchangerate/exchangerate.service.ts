@@ -5,7 +5,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { AlertKey } from "../common/alerts/alert.dto";
 import { AlertService } from "../common/alerts/alert.service";
-import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
+import { ExchangeRateDTO } from "./dto/exchangerate.dto";
 import { ExchangeRateClientFactory } from "./factory/exchangerate.factory";
 
 @Injectable()
@@ -105,7 +105,7 @@ export class ExchangeRateService {
       // TODO: CRYPTO-998 - Add extra validation for exchange rate
       if (!exchangeRate) {
         this.logger.error(
-          `No exchange rate found for currency pair "${exchangeRatePair.numeratorCurrency}-${exchangeRatePair.denominatorCurrency}"`,
+          `No exchange rate found for currency pair "${exchangeRatePair.numeratorCurrency}-${exchangeRatePair.denominatorCurrency}: ${exchangeRate}"`,
         );
         continue;
       }

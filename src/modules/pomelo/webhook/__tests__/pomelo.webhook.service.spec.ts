@@ -45,7 +45,7 @@ import { UpdateWalletBalanceServiceDTO } from "../../../../modules/psp/domain/Up
 import { CircleWithdrawalStatus } from "../../../../modules/psp/domain/CircleTypes";
 import { ExchangeRateService } from "../../../../modules/exchangerate/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../../modules/exchangerate/mocks/mock.exchangerate.service";
-import { ExchangeRateDTO } from "../../../../modules/exchangerate/dto/ExchangeRateDTO";
+import { ExchangeRateDTO } from "../../../../modules/exchangerate/dto/exchangerate.dto";
 
 const getRawTransactionAuthzBodyBuffer = (): Buffer => {
   const data = `{

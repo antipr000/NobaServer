@@ -3,7 +3,7 @@ import { anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { ExchangeRate, InputExchangeRate } from "../domain/ExchangeRate";
-import { ExchangeRateDTO } from "../dto/ExchangeRateDTO";
+import { ExchangeRateDTO } from "../dto/exchangerate.dto";
 import { ExchangeRateService } from "../exchangerate.service";
 import { IExchangeRateRepo } from "../repo/exchangerate.repo";
 import { ServiceException } from "../../../core/exception/service.exception";

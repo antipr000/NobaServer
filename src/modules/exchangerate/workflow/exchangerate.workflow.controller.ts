@@ -2,7 +2,8 @@ import { Controller, HttpStatus, Inject, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiForbiddenResponse, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ExchangeRateService } from "../exchangerate.service";
-import { ExchangeRateDTO } from "../dto/ExchangeRateDTO";
+import { ExchangeRateDTO } from "../dto/exchangerate.dto";
+import { ExchangeRateWorkflowDTO } from "../dto/exchangerate.workflow.dto";
 
 @Controller("wf/v1/exchangerates") // This defines the path prefix
 @ApiBearerAuth("JWT-auth")
@@ -17,10 +18,13 @@ export class ExchangeRateWorkflowController {
   @ApiOperation({ summary: "Update exchange rate entries" })
   @ApiResponse({
     status: HttpStatus.OK,
-    type: [ExchangeRateDTO],
+    type: ExchangeRateWorkflowDTO,
   })
   @ApiForbiddenResponse({ description: "User forbidden from adding new exchange rate" })
-  async createExchangeRate(): Promise<ExchangeRateDTO[]> {
-    return this.exchangeRateService.createExchangeRateFromProvider();
+  async createExchangeRate(): Promise<ExchangeRateWorkflowDTO> {
+    const exchangeRateResults = await this.exchangeRateService.createExchangeRateFromProvider();
+    return {
+      exchangeRates: exchangeRateResults,
+    };
   }
 }
