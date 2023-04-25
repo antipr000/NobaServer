@@ -83,7 +83,7 @@ export class TemplateProcessor {
       args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless"],
       executablePath: this.findChrome(this.chromePaths),
     });
-    this.writeTimingLog(`Browser initialized`, Date.now() - start);
+    this.writeTimingLog("Browser initialized", Date.now() - start);
   }
 
   public async loadTemplates() {
@@ -99,7 +99,7 @@ export class TemplateProcessor {
 
       this.unpopulatedTemplates.set(locale, template);
     }
-    this.writeTimingLog(`Templates loaded`, Date.now() - start);
+    this.writeTimingLog("Templates loaded", Date.now() - start);
   }
 
   public populateTemplate(locale: TemplateLocale, data: any) {
@@ -174,7 +174,7 @@ export class TemplateProcessor {
       format: "A4",
       printBackground: true,
       displayHeaderFooter: true,
-      headerTemplate: `<div></div>`,
+      headerTemplate: "<div></div>",
       footerTemplate: `
           <div style="font-family: system-ui; margin-left: 30px; margin-right: 30px; display: flex; font-size: 8px; width: 100%;">
             <div style="flex: 1; display:flex; justify-content:left;"><span>${footerData.left}</span></div>
@@ -204,11 +204,16 @@ export class TemplateProcessor {
     "/usr/bin/chromium-browser",
   ];
   private findChrome(files: string[]): string {
-    for (let file of files) {
+    for (const file of files) {
       if (existsSync(file)) {
         return file;
       }
     }
     return null;
+  }
+
+  public static parseTemplateString(templateString: string, params: any): string {
+    const template = Handlebars.compile(templateString);
+    return template(params);
   }
 }
