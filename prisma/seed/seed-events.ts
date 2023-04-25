@@ -45,7 +45,7 @@ export async function seedEventsAndTemplates(prisma: PrismaClient) {
                 data: {
                   locale,
                   type: handler,
-                  externalKey: externalTemplateKeyMap[locale],
+                  externalKey: externalTemplateKeyMap[locale as keyof typeof externalTemplateKeyMap],
                   event: {
                     connect: {
                       id: event.id,
@@ -53,14 +53,14 @@ export async function seedEventsAndTemplates(prisma: PrismaClient) {
                   },
                 },
               });
-            } else if (template.externalKey !== externalTemplateKeyMap[locale]) {
+            } else if (template.externalKey !== externalTemplateKeyMap[locale as keyof typeof externalTemplateKeyMap]) {
               // Update template
               await prisma.eventTemplate.update({
                 where: {
                   id: template.id,
                 },
                 data: {
-                  externalKey: externalTemplateKeyMap[locale],
+                  externalKey: externalTemplateKeyMap[locale as keyof typeof externalTemplateKeyMap],
                 },
               });
             }
@@ -83,7 +83,7 @@ export async function seedEventsAndTemplates(prisma: PrismaClient) {
                 data: {
                   locale,
                   type: handler,
-                  templateBody: smsTemplateMap[locale],
+                  templateBody: smsTemplateMap[locale as keyof typeof smsTemplateMap],
                   event: {
                     connect: {
                       id: event.id,
@@ -91,14 +91,14 @@ export async function seedEventsAndTemplates(prisma: PrismaClient) {
                   },
                 },
               });
-            } else if (template.templateBody !== smsTemplateMap[locale]) {
+            } else if (template.templateBody !== smsTemplateMap[locale as keyof typeof smsTemplateMap]) {
               // Update template
               await prisma.eventTemplate.update({
                 where: {
                   id: template.id,
                 },
                 data: {
-                  templateBody: smsTemplateMap[locale],
+                  templateBody: smsTemplateMap[locale as keyof typeof smsTemplateMap],
                 },
               });
             }
@@ -121,7 +121,7 @@ export async function seedEventsAndTemplates(prisma: PrismaClient) {
                 data: {
                   locale,
                   type: handler,
-                  templateBody: pushTemplateMap[locale],
+                  templateBody: pushTemplateMap[locale as keyof typeof pushTemplateMap],
                   event: {
                     connect: {
                       id: event.id,
@@ -129,14 +129,14 @@ export async function seedEventsAndTemplates(prisma: PrismaClient) {
                   },
                 },
               });
-            } else if (template.templateBody !== pushTemplateMap[locale]) {
+            } else if (template.templateBody !== pushTemplateMap[locale as keyof typeof pushTemplateMap]) {
               // Update template
               await prisma.eventTemplate.update({
                 where: {
                   id: template.id,
                 },
                 data: {
-                  templateBody: pushTemplateMap[locale],
+                  templateBody: pushTemplateMap[locale as keyof typeof pushTemplateMap],
                 },
               });
             }
