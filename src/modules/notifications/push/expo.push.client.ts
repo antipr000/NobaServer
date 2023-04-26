@@ -3,7 +3,7 @@ import { PushNotificationPayload } from "../domain/PushNotificationTypes";
 import { PushClient } from "./push.client";
 import { Expo, ExpoPushMessage } from "expo-server-sdk";
 import { Logger } from "winston";
-import { pushNotificationBodyTemplates, pushNotificationTitleTemplates } from "./templates.push";
+import { pushNotificationTitleTemplates } from "./templates.push";
 
 export class ExpoPushClient extends PushClient {
   private readonly expo: Expo;
@@ -15,12 +15,11 @@ export class ExpoPushClient extends PushClient {
 
   async sendPushNotificationInternal(request: PushNotificationPayload): Promise<void> {
     const title = pushNotificationTitleTemplates[request.templateKey]();
-    const body = pushNotificationBodyTemplates[request.templateKey](request.params);
 
     const message: ExpoPushMessage = {
       to: request.token,
       title: title,
-      body: body,
+      body: request.body,
       sound: "default",
       data: {
         ...(request.notificationType && { notificationType: request.notificationType }),

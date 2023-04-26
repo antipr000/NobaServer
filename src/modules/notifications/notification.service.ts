@@ -3,7 +3,7 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NotificationPayload } from "./domain/NotificationPayload";
-import { NotificationEventHandler, NotificationEventType } from "./domain/NotificationTypes";
+import { NotificationEventType } from "./domain/NotificationTypes";
 import {
   SendDocumentVerificationPendingEvent,
   validateDocumentVerificationPendingEvent,
@@ -225,9 +225,9 @@ export class NotificationService {
 
   // BEGIN-NOSCAN
   async getPreviousNotifications(): Promise<LatestNotificationResponse> {
-    const smsData = await this.eventEmitter.emitAsync(`${NotificationEventHandler.SMS}.get`);
-    const emailData = await this.eventEmitter.emitAsync(`${NotificationEventHandler.EMAIL}.get`);
-    const pushData = await this.eventEmitter.emitAsync(`${NotificationEventHandler.PUSH}.get`);
+    const smsData = await this.eventEmitter.emitAsync(`${EventHandlers.SMS}.get`);
+    const emailData = await this.eventEmitter.emitAsync(`${EventHandlers.EMAIL}.get`);
+    const pushData = await this.eventEmitter.emitAsync(`${EventHandlers.PUSH}.get`);
 
     return {
       smsData: smsData[0],
@@ -237,9 +237,9 @@ export class NotificationService {
   }
 
   async clearPreviousNotifications(): Promise<void> {
-    await this.eventEmitter.emitAsync(`${NotificationEventHandler.EMAIL}.clear`);
-    await this.eventEmitter.emitAsync(`${NotificationEventHandler.SMS}.clear`);
-    await this.eventEmitter.emitAsync(`${NotificationEventHandler.PUSH}.clear`);
+    await this.eventEmitter.emitAsync(`${EventHandlers.EMAIL}.clear`);
+    await this.eventEmitter.emitAsync(`${EventHandlers.SMS}.clear`);
+    await this.eventEmitter.emitAsync(`${EventHandlers.PUSH}.clear`);
   }
   // END-NOSCAN
 }

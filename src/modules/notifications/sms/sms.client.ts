@@ -1,19 +1,16 @@
 import { Logger } from "winston";
-import { TemplatePayload } from "./templates.sms";
 
 export abstract class SMSClient {
   constructor(protected readonly logger: Logger) {}
 
-  abstract sendSMSInternal(recipientPhoneNumber: string, templateKey: string, payload: TemplatePayload): Promise<void>;
+  abstract sendSMSInternal(recipientPhoneNumber: string, body: string): Promise<void>;
 
-  async sendSMS(recipientPhoneNumber: string, templateKey: string, payload: TemplatePayload): Promise<void> {
+  async sendSMS(recipientPhoneNumber: string, body: string): Promise<void> {
     this.logger.info(
-      `Sending SMS with the following parameters: recipientPhoneNumber: ${recipientPhoneNumber}, templateKey: ${templateKey}, payload: ${JSON.stringify(
-        payload,
-      )}`,
+      `Sending SMS with the following parameters: recipientPhoneNumber: ${recipientPhoneNumber}, body: ${body}`,
     );
     try {
-      await this.sendSMSInternal(recipientPhoneNumber, templateKey, payload);
+      await this.sendSMSInternal(recipientPhoneNumber, body);
     } catch (e) {
       this.logger.error(`Failed to send SMS. Reason: ${e.message}`);
     }
