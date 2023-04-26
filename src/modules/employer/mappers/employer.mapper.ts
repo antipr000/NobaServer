@@ -43,7 +43,7 @@ export class EmployerMapper {
     };
   }
 
-  toEmployeesWorkflowDTO(employees): EmployeesWorkflowDTO {
+  toEmployeesWorkflowDTO(employees: Employee[]): EmployeesWorkflowDTO {
     return {
       employees: employees.map(employee => ({
         id: employee.id,
@@ -51,6 +51,8 @@ export class EmployerMapper {
         allocationCurrency: employee.allocationCurrency,
         employerID: employee.employerID,
         consumerID: employee.consumerID,
+        status: employee.status,
+        ...(employee.email && { email: employee.email }),
         ...(employee.salary && { salary: employee.salary }),
       })),
     };
