@@ -298,7 +298,9 @@ export class MonoService implements IBank {
     });
   }
 
-  private async processAccountCreditedEvent(event: MonoAccountCreditedEvent): Promise<void> {}
+  private async processAccountCreditedEvent(event: MonoAccountCreditedEvent): Promise<void> {
+    this.logger.info(`Skipping 'account_credited' event: "${JSON.stringify(event)}"`);
+  }
 
   private validateWithdrawalRequest(request: WithdrawalRequest): void {
     if (request.currency !== MonoCurrency.COP) {
