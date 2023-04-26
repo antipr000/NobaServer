@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { Logger } from "winston";
-import { Employee, EmployeeAllocationCurrency } from "./domain/Employee";
+import { Employee, EmployeeAllocationCurrency, EmployeeStatus } from "./domain/Employee";
 import { IEmployeeRepo } from "./repo/employee.repo";
 import { EMPLOYEE_REPO_PROVIDER } from "./repo/employee.repo.module";
 import { UpdateEmployeeRequestDTO } from "./dto/employee.service.dto";
@@ -21,6 +21,7 @@ export class EmployeeService {
       allocationCurrency: EmployeeAllocationCurrency.COP,
       employerID: employerID,
       consumerID: consumerID,
+      status: EmployeeStatus.CREATED,
     });
   }
 
@@ -33,6 +34,15 @@ export class EmployeeService {
     }
 
     const employee = await this.getEmployeeByID(employeeID, true);
+
+    // If we are attempting to update the consumerID, ensure we're not switching from an existing consumer
+    if (updateRequest.consumerID && employee.consumerID && updateRequest.consumerID !== employee.consumerID) {
+      throw new ServiceException({
+        message: "Illegal attempt to modify existing consumerID on employee",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
     const employer = employee.employer;
 
     const maxAllocationPercent = employer.maxAllocationPercent ?? 100;
@@ -52,8 +62,11 @@ export class EmployeeService {
     }
 
     return this.employeeRepo.updateEmployee(employeeID, {
+      ...(updateRequest.consumerID && { consumerID: updateRequest.consumerID }),
       ...(allocationAmount >= 0 && { allocationAmount: allocationAmount }),
       ...(salary >= 0 && { salary: salary }),
+      ...(updateRequest.email && { email: updateRequest.email }),
+      ...(updateRequest.status && { status: updateRequest.status }),
     });
   }
 
