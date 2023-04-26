@@ -148,6 +148,7 @@ model Payroll {
   debitCurrency       String?
   creditCurrency      String?
   status              String
+  monoTransactionID   String?
   payrollDisbursement PayrollDisbursement[]
 }
 

@@ -24,6 +24,7 @@ import {
   BankTransferApprovedEvent,
   BankTransferRejectedEvent,
   CollectionIntentCreditedEvent,
+  MonoAccountCreditedEvent,
 } from "../dto/mono.webhook.dto";
 import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
 import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
@@ -205,6 +206,12 @@ export class MonoService implements IBank {
         );
         break;
 
+      case "account_credited":
+        await this.processAccountCreditedEvent(
+          this.monoWebhookHandlers.convertAccountCredited(requestBody, monoSignature),
+        );
+        break;
+
       case "batch_sent":
         this.logger.info(
           `Received ${requestBody.event.type} webhook event (silently ignoring): ${JSON.stringify(requestBody)}`,
@@ -290,6 +297,8 @@ export class MonoService implements IBank {
       declinationReason: event.declinationReason,
     });
   }
+
+  private async processAccountCreditedEvent(event: MonoAccountCreditedEvent): Promise<void> {}
 
   private validateWithdrawalRequest(request: WithdrawalRequest): void {
     if (request.currency !== MonoCurrency.COP) {

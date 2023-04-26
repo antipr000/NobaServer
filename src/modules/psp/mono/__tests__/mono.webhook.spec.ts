@@ -12,7 +12,7 @@ import { uuid } from "uuidv4";
 import { MonoWebhookHandlers } from "../mono.webhook";
 import { InternalServiceErrorException } from "../../../../core/exception/CommonAppException";
 import { createHmac } from "crypto";
-import { MonoTransactionState } from "../../domain/Mono";
+import { MonoCurrency, MonoTransactionState } from "../../domain/Mono";
 import { ServiceException } from "../../../../core/exception/service.exception";
 
 const webhookSecret = "whsec_LVeQsJFZ9MxlmUZLkpZ8lGLmuCaGuySk";
@@ -509,6 +509,203 @@ describe("MonoWebhookHandlersTest", () => {
         expect(e).toBeInstanceOf(ServiceException);
         expect(e.message).toContain("Unknown Mono transfer state");
       }
+    });
+  });
+
+  describe("convertAccountCredited ()", () => {
+    const accountCreditedEvent = {
+      event: {
+        data: {
+          account: { id: "acc_7gIagLj2uJPHBqcoidGQGi", number: "095000809" },
+          amount: { amount: 69300000, currency: "COP" },
+          description: "Abono SERI COLOMBIA SA BANCOLOMBIA - 901492363 Ref: PROVEEDOR",
+          extra: {},
+          id: "tx_4jxOSQGZBbFWV672igXiIM",
+          payer: {
+            bank: { code: "007", name: "BANCOLOMBIA" },
+            document_number: "901492363",
+            name: "SERI COLOMBIA SA",
+          },
+          transaction_at: "2023-04-24T22:26:19.000000Z",
+          type: "incoming_wire",
+        },
+        type: "account_credited",
+      },
+      timestamp: "2023-04-25T13:21:56.316609Z",
+    };
+    const webhookEventTime = 12345678;
+    const webhookResponseValidSignature = `t=${webhookEventTime},v1=${createMonoSignature(
+      accountCreditedEvent,
+      webhookEventTime,
+    )}`;
+
+    describe("Invalid Signature scenarios", () => {
+      it("should throw InternalServiceErrorException if the signature is not valid (timestamp is different)", () => {
+        const webhookResponseInvalidSignature = `t=${Date.now()},v1=${createMonoSignature(
+          accountCreditedEvent,
+          webhookEventTime,
+        )}`;
+
+        try {
+          monoWebhookHandlers.convertAccountCredited(accountCreditedEvent, webhookResponseInvalidSignature);
+          expect(true).toBe(false);
+        } catch (e) {
+          expect(e).toBeInstanceOf(InternalServiceErrorException);
+          expect(e.message).toContain("Invalid Mono signature");
+        }
+      });
+
+      it("should throw InternalServiceErrorException if the signature is not valid (signature is different)", () => {
+        const webhookResponseInvalidSignature = `t=${webhookEventTime},v1=${uuid()}`;
+
+        try {
+          monoWebhookHandlers.convertAccountCredited(accountCreditedEvent, webhookResponseInvalidSignature);
+          expect(true).toBe(false);
+        } catch (e) {
+          expect(e).toBeInstanceOf(InternalServiceErrorException);
+          expect(e.message).toContain("Invalid Mono signature");
+        }
+      });
+
+      it("should throw InternalServiceErrorException if the signature is not valid (rawBody is different)", () => {
+        const anotherWebhookEvent = {
+          event: {
+            data: accountCreditedEvent.event.data,
+            type: "bank_transfer_rejected",
+          },
+          timestamp: accountCreditedEvent.timestamp,
+        };
+
+        try {
+          monoWebhookHandlers.convertAccountCredited(anotherWebhookEvent, webhookResponseValidSignature);
+          expect(true).toBe(false);
+        } catch (e) {
+          expect(e).toBeInstanceOf(InternalServiceErrorException);
+          expect(e.message).toContain("Invalid Mono signature");
+        }
+      });
+    });
+
+    describe("Invalid event scenarios", () => {
+      describe("account", () => {
+        const requiredFields = ["id", "number"];
+        it.each(requiredFields)("should throw error if '%s' is not set", field => {
+          const localAccountCreditedEvent = JSON.parse(JSON.stringify(accountCreditedEvent));
+          delete localAccountCreditedEvent.event.data.account[field];
+
+          const signature = `t=${webhookEventTime},v1=${createMonoSignature(
+            localAccountCreditedEvent,
+            webhookEventTime,
+          )}`;
+
+          try {
+            monoWebhookHandlers.convertAccountCredited(localAccountCreditedEvent, signature);
+            expect(true).toBe(false);
+          } catch (e) {
+            expect(e).toBeInstanceOf(InternalServiceErrorException);
+            expect(e.message).toContain("event.data.account");
+            expect(e.message).toContain(field);
+          }
+        });
+      });
+
+      describe("amount", () => {
+        const requiredFields = ["amount", "currency"];
+        it.each(requiredFields)("should throw error if '%s' is not set", field => {
+          const localAccountCreditedEvent = JSON.parse(JSON.stringify(accountCreditedEvent));
+          delete localAccountCreditedEvent.event.data.amount[field];
+
+          const signature = `t=${webhookEventTime},v1=${createMonoSignature(
+            localAccountCreditedEvent,
+            webhookEventTime,
+          )}`;
+
+          try {
+            monoWebhookHandlers.convertAccountCredited(localAccountCreditedEvent, signature);
+            expect(true).toBe(false);
+          } catch (e) {
+            expect(e).toBeInstanceOf(InternalServiceErrorException);
+            expect(e.message).toContain("event.data.amount");
+            expect(e.message).toContain(field);
+          }
+        });
+      });
+
+      describe("payer", () => {
+        const requiredFields = ["document_number", "name"];
+        it.each(requiredFields)("should throw error if '%s' is not set", field => {
+          const localAccountCreditedEvent = JSON.parse(JSON.stringify(accountCreditedEvent));
+          delete localAccountCreditedEvent.event.data.payer[field];
+
+          const signature = `t=${webhookEventTime},v1=${createMonoSignature(
+            localAccountCreditedEvent,
+            webhookEventTime,
+          )}`;
+
+          try {
+            monoWebhookHandlers.convertAccountCredited(localAccountCreditedEvent, signature);
+            expect(true).toBe(false);
+          } catch (e) {
+            expect(e).toBeInstanceOf(InternalServiceErrorException);
+            expect(e.message).toContain("event.data.payer");
+            expect(e.message).toContain(field);
+          }
+        });
+      });
+
+      const otherTopLevelRequiredFields = ["description", "transaction_at"];
+      it.each(otherTopLevelRequiredFields)("should throw error if '%s' is not set", field => {
+        const localAccountCreditedEvent = JSON.parse(JSON.stringify(accountCreditedEvent));
+        delete localAccountCreditedEvent.event.data[field];
+
+        const signature = `t=${webhookEventTime},v1=${createMonoSignature(
+          localAccountCreditedEvent,
+          webhookEventTime,
+        )}`;
+
+        try {
+          monoWebhookHandlers.convertAccountCredited(localAccountCreditedEvent, signature);
+          expect(true).toBe(false);
+        } catch (e) {
+          expect(e).toBeInstanceOf(InternalServiceErrorException);
+          expect(e.message).toContain("event.data");
+          expect(e.message).toContain(field);
+        }
+      });
+
+      it("should throw error if 'type' is not 'account_credited'", () => {
+        const localAccountCreditedEvent = JSON.parse(JSON.stringify(accountCreditedEvent));
+        localAccountCreditedEvent.event.type = "bank_transfer";
+
+        const signature = `t=${webhookEventTime},v1=${createMonoSignature(
+          localAccountCreditedEvent,
+          webhookEventTime,
+        )}`;
+
+        try {
+          monoWebhookHandlers.convertAccountCredited(localAccountCreditedEvent, signature);
+          expect(true).toBe(false);
+        } catch (e) {
+          expect(e).toBeInstanceOf(InternalServiceErrorException);
+          expect(e.message).toContain("event.type");
+          expect(e.message).toContain("account_credited");
+        }
+      });
+    });
+
+    it("should map all the fields correctly", () => {
+      const response = monoWebhookHandlers.convertAccountCredited(accountCreditedEvent, webhookResponseValidSignature);
+
+      expect(response).toStrictEqual({
+        accountID: "acc_7gIagLj2uJPHBqcoidGQGi",
+        accountNumber: "095000809",
+        amount: 69300000,
+        currency: MonoCurrency.COP,
+        transactionID: "tx_4jxOSQGZBbFWV672igXiIM",
+        payerDocumentNumber: "901492363",
+        payerName: "SERI COLOMBIA SA",
+        description: "Abono SERI COLOMBIA SA BANCOLOMBIA - 901492363 Ref: PROVEEDOR",
+      });
     });
   });
 });

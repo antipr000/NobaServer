@@ -7,12 +7,14 @@ import {
   BankTransferApprovedEvent,
   BankTransferRejectedEvent,
   CollectionIntentCreditedEvent,
+  MonoAccountCreditedEvent,
 } from "../dto/mono.webhook.dto";
 import { createHmac } from "crypto";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { MONO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { MonoConfigs } from "../../../config/configtypes/MonoConfig";
 import { convertExternalTransactionStateToInternalState } from "./mono.utils";
+import Joi from "joi";
 
 @Injectable()
 export class MonoWebhookHandlers {
@@ -48,7 +50,7 @@ export class MonoWebhookHandlers {
   ): CollectionIntentCreditedEvent {
     if (!this.validateSignature(webhookData, monoSignature)) {
       throw new InternalServiceErrorException({
-        message: "Invalid Mono signature",
+        message: "Invalid Mono signature for 'collection_intent_credited'",
       });
     }
 
@@ -76,7 +78,7 @@ export class MonoWebhookHandlers {
   convertBankTransferApproved(webhookData: Record<string, any>, monoSignature: string): BankTransferApprovedEvent {
     if (!this.validateSignature(webhookData, monoSignature)) {
       throw new InternalServiceErrorException({
-        message: "Invalid Mono signature",
+        message: "Invalid Mono signature for 'bank_transfer_approved'",
       });
     }
 
@@ -112,7 +114,7 @@ export class MonoWebhookHandlers {
   convertBankTransferRejected(webhookData: Record<string, any>, monoSignature: string): BankTransferRejectedEvent {
     if (!this.validateSignature(webhookData, monoSignature)) {
       throw new InternalServiceErrorException({
-        message: "Invalid Mono signature",
+        message: "Invalid Mono signature for 'bank_transfer_rejected'",
       });
     }
 
@@ -143,5 +145,72 @@ export class MonoWebhookHandlers {
       state: convertExternalTransactionStateToInternalState(webhookData.event.data.state),
       declinationReason: webhookData.event.data.declination_reason,
     };
+  }
+
+  convertAccountCredited(webhookData: Record<string, any>, monoSignature: string): MonoAccountCreditedEvent {
+    if (!this.validateSignature(webhookData, monoSignature)) {
+      throw new InternalServiceErrorException({
+        message: "Invalid Mono signature for 'account_credited'",
+      });
+    }
+
+    try {
+      this.validateAccountCreditedWebhookEvent(webhookData);
+    } catch (err) {
+      this.logger.error("Event doesn't contains all the fields required for 'account_credited'.");
+      this.logger.error(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
+
+      throw new InternalServiceErrorException({
+        message: `Invalid 'account_credited' webhook response - "${err.message}"`,
+      });
+    }
+
+    return {
+      accountID: webhookData.event.data.account.id,
+      accountNumber: webhookData.event.data.account.number,
+      amount: webhookData.event.data.amount.amount,
+      currency: webhookData.event.data.amount.currency as MonoCurrency,
+      transactionID: webhookData.event.data.id,
+      payerDocumentNumber: webhookData.event.data.payer.document_number,
+      payerName: webhookData.event.data.payer.name,
+      description: webhookData.event.data.description,
+    };
+  }
+
+  private validateAccountCreditedWebhookEvent(webhookData: Record<string, any>) {
+    const joiValidationKeysForAccountSubObject = {
+      id: Joi.string().required(),
+      number: Joi.string().required(),
+    };
+    const joiValidationKeysForAmountSubObject = {
+      amount: Joi.number().required(),
+      currency: Joi.string()
+        .required()
+        .valid(...Object.values(MonoCurrency)),
+    };
+    const joiValidationKeysForPayerSubObject = {
+      document_number: Joi.string().required(),
+      name: Joi.string().required(),
+    };
+    const joiValidationKeysForDataSubObject = {
+      account: Joi.object(joiValidationKeysForAccountSubObject).required(),
+      amount: Joi.object(joiValidationKeysForAmountSubObject).required(),
+      description: Joi.string().required(),
+      id: Joi.string().required(),
+      payer: Joi.object(joiValidationKeysForPayerSubObject).required(),
+      transaction_at: Joi.string().required(),
+    };
+    const eventValidationKeys = {
+      data: Joi.object(joiValidationKeysForDataSubObject).required(),
+      type: Joi.string().required().valid("account_credited"),
+    };
+
+    const joiSchema = Joi.object({
+      event: Joi.object(eventValidationKeys).required(),
+    }).options({
+      allowUnknown: false,
+      stripUnknown: true,
+    });
+    Joi.attempt(webhookData, joiSchema);
   }
 }

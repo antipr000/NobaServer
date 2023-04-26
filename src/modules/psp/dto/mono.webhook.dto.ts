@@ -1,3 +1,4 @@
+import Joi from "joi";
 import { MonoCurrency, MonoTransactionState } from "../domain/Mono";
 
 export type CollectionIntentCreditedEvent = {
@@ -24,4 +25,15 @@ export type BankTransferRejectedEvent = {
   currency: MonoCurrency;
   state: MonoTransactionState;
   declinationReason: string;
+};
+
+export type MonoAccountCreditedEvent = {
+  accountID: string;
+  accountNumber: string;
+  amount: number;
+  currency: MonoCurrency;
+  transactionID: string;
+  payerDocumentNumber: string;
+  payerName: string;
+  description: string;
 };
