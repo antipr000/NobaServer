@@ -14,6 +14,8 @@ import { AlertService } from "../../../modules/common/alerts/alert.service";
 import { ExchangeRateClientFactory } from "../factory/exchangerate.factory";
 import { getMockExchangeRateClientFactoryWithDefaults } from "../mocks/mock.exchangerate.factory";
 import { StubExchangeRateClient } from "../clients/stub.exchangerate.client";
+import { AlertKey } from "../../../modules/common/alerts/alert.dto";
+import { anyString } from "ts-mockito";
 
 describe("ExchangeRateService", () => {
   let exchangeRateService: ExchangeRateService;
@@ -370,6 +372,10 @@ describe("ExchangeRateService", () => {
       when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("USD", "COP")).thenReturn(null);
       when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("COP", "USD")).thenReturn(null);
 
+      when(
+        alertService.raiseAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
+      ).thenResolve();
+
       const returnExchangeRate = await exchangeRateService.createExchangeRateFromProvider();
 
       expect(returnExchangeRate).toStrictEqual([]);
@@ -403,6 +409,9 @@ describe("ExchangeRateService", () => {
       when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("COP", "USD")).thenReturn(null);
 
       when(exchangeRateRepo.createExchangeRate(deepEqual(exchangeRateDTO))).thenResolve(exchangeRate);
+      when(
+        alertService.raiseAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
+      ).thenResolve();
 
       const returnExchangeRate = await exchangeRateService.createExchangeRateFromProvider();
 

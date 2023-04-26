@@ -92,7 +92,6 @@ export class ExchangeRateService {
 
       let exchangeRate;
       try {
-        // soft guarantee that the exchange rate client will be able to get the exchange rate
         exchangeRate = await exchangeRateClient.getExchangeRate(
           exchangeRatePair.numeratorCurrency,
           exchangeRatePair.denominatorCurrency,
