@@ -59,7 +59,7 @@ import { TransactionQueryResultDTO } from "../transaction/dto/TransactionQueryRe
 import { IncludeEventTypes } from "../transaction/dto/TransactionEventDTO";
 import { TransactionEvent } from "../transaction/domain/TransactionEvent";
 import { ExchangeRateService } from "../exchangerate/exchangerate.service";
-import { ExchangeRateDTO } from "../exchangerate/dto/ExchangeRateDTO";
+import { ExchangeRateDTO } from "../exchangerate/dto/exchangerate.dto";
 
 @Roles(Role.NOBA_ADMIN)
 @Controller("v1/admins")
