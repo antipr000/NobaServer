@@ -2,7 +2,7 @@ import { KeysRequired } from "../../../modules/common/domain/Types";
 import { EventTemplate, convertToDomainEventTemplate, eventTemplateJoiValidationKeys } from "./EventTemplates";
 import Joi from "joi";
 import { Event as PrismaEventModel, EventTemplate as PrismaEventTemplateModel } from "@prisma/client";
-import { EventTypes } from "./EventTypes";
+import { EventHandlers } from "./EventHandlers";
 
 export type EventModel = PrismaEventModel & {
   templates: PrismaEventTemplateModel[];
@@ -13,13 +13,13 @@ export class Event {
   name: string;
   createdTimestamp: Date;
   updatedTimestamp: Date;
-  handlers: EventTypes[];
+  handlers: EventHandlers[];
   templates: EventTemplate[];
 }
 
 export class EventCreateRequest {
   name: string;
-  handlers: EventTypes[];
+  handlers: EventHandlers[];
 }
 
 export class EventUpdateRequest {
@@ -30,7 +30,7 @@ export const validateEventCreateRequest = (event: EventCreateRequest) => {
   const eventJoiValidationKeys: KeysRequired<EventCreateRequest> = {
     name: Joi.string().required(),
     handlers: Joi.array()
-      .items(Joi.string().valid(...Object.values(EventTypes)))
+      .items(Joi.string().valid(...Object.values(EventHandlers)))
       .min(1)
       .required(),
   };
@@ -45,7 +45,7 @@ export const validateEventCreateRequest = (event: EventCreateRequest) => {
 export const validateEventUpdateRequest = (event: EventUpdateRequest) => {
   const eventJoiValidationKeys: KeysRequired<EventUpdateRequest> = {
     handlers: Joi.array()
-      .items(Joi.string().valid(...Object.values(EventTypes)))
+      .items(Joi.string().valid(...Object.values(EventHandlers)))
       .min(1)
       .required(),
   };
@@ -64,7 +64,7 @@ export const validateEvent = (event: Event) => {
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
     handlers: Joi.array()
-      .items(Joi.string().valid(...Object.values(EventTypes)))
+      .items(Joi.string().valid(...Object.values(EventHandlers)))
       .min(1)
       .required(),
     templates: Joi.array().items(Joi.object(eventTemplateJoiValidationKeys)).required(),
@@ -83,7 +83,7 @@ export const convertToDomainEvent = (event: EventModel): Event => {
     name: event.name,
     createdTimestamp: event.createdTimestamp,
     updatedTimestamp: event.updatedTimestamp,
-    handlers: event.handlers.map(handler => handler as EventTypes),
+    handlers: event.handlers.map(handler => handler as EventHandlers),
     templates: event.templates.map(template => convertToDomainEventTemplate(template)),
   };
 };

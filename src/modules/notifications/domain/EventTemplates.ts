@@ -1,5 +1,5 @@
 import { KeysRequired } from "../../../modules/common/domain/Types";
-import { EventTypes } from "./EventTypes";
+import { EventHandlers } from "./EventHandlers";
 import Joi from "joi";
 import { EventTemplate as PrismaEventTemplateModel } from "@prisma/client";
 
@@ -9,7 +9,7 @@ export class EventTemplate {
   updatedTimestamp: Date;
   templateBody?: string;
   externalKey?: string;
-  type: EventTypes;
+  type: EventHandlers;
   locale: string;
   eventID: string;
 }
@@ -17,7 +17,7 @@ export class EventTemplate {
 export class EventTemplateCreateRequest {
   templateBody?: string;
   externalKey?: string;
-  type: EventTypes;
+  type: EventHandlers;
   locale: string;
   eventID: string;
 }
@@ -25,7 +25,7 @@ export class EventTemplateCreateRequest {
 export class EventTemplateUpdateRequest {
   templateBody?: string;
   externalKey?: string;
-  type: EventTypes;
+  type: EventHandlers;
   locale: string;
 }
 
@@ -34,7 +34,7 @@ export const validateEventTemplateCreateRequest = (eventTemplate: EventTemplateC
     templateBody: Joi.string().optional(),
     externalKey: Joi.string().optional(),
     type: Joi.string()
-      .valid(...Object.values(EventTypes))
+      .valid(...Object.values(EventHandlers))
       .required(),
     locale: Joi.string().required(),
     eventID: Joi.string().required(),
@@ -52,7 +52,7 @@ export const validateEventTemplateUpdateRequest = (eventTemplate: EventTemplateU
     templateBody: Joi.string().optional(),
     externalKey: Joi.string().optional(),
     type: Joi.string()
-      .valid(...Object.values(EventTypes))
+      .valid(...Object.values(EventHandlers))
       .required(),
     locale: Joi.string().required(),
   };
@@ -68,7 +68,7 @@ export const eventTemplateJoiValidationKeys: KeysRequired<EventTemplateUpdateReq
   templateBody: Joi.string().optional(),
   externalKey: Joi.string().optional(),
   type: Joi.string()
-    .valid(...Object.values(EventTypes))
+    .valid(...Object.values(EventHandlers))
     .required(),
   locale: Joi.string().required(),
 };
@@ -80,7 +80,7 @@ export const validateEventTemplate = (eventTemplate: EventTemplate) => {
     updatedTimestamp: Joi.date().required(),
     templateBody: Joi.string().optional(),
     externalKey: Joi.string().optional(),
-    type: Joi.string().valid(Object.values(EventTypes)).required(),
+    type: Joi.string().valid(Object.values(EventHandlers)).required(),
     locale: Joi.string().required(),
     eventID: Joi.string().required(),
   };
@@ -99,7 +99,7 @@ export const convertToDomainEventTemplate = (eventTemplate: PrismaEventTemplateM
     updatedTimestamp: eventTemplate.updatedTimestamp,
     templateBody: eventTemplate.templateBody,
     externalKey: eventTemplate.externalKey,
-    type: eventTemplate.type as EventTypes,
+    type: eventTemplate.type as EventHandlers,
     locale: eventTemplate.locale,
     eventID: eventTemplate.eventID,
   };
