@@ -44,7 +44,7 @@ export class EmployeeCreateRequest {
   consumerID?: string;
   email?: string;
   salary?: number;
-  status: EmployeeStatus;
+  status?: EmployeeStatus;
 }
 
 export class EmployeeUpdateRequest {

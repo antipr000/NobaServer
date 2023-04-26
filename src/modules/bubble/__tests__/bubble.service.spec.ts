@@ -6,7 +6,7 @@ import { anyNumber, anyString, anything, capture, deepEqual, instance, verify, w
 import { uuid } from "uuidv4";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { Employer } from "../../../modules/employer/domain/Employer";
-import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
+import { Employee, EmployeeAllocationCurrency, EmployeeStatus } from "../../../modules/employee/domain/Employee";
 import { EmployerService } from "../../../modules/employer/employer.service";
 import { EmployeeService } from "../../../modules/employee/employee.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
@@ -50,6 +50,7 @@ const getRandomEmployee = (consumerID: string, employer: Employer): Employee => 
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
     employer: employer,
+    status: EmployeeStatus.LINKED,
   };
 
   return employee;
