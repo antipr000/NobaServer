@@ -1,7 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Logger } from "winston";
-import { EmailTemplates } from "./domain/EmailTemplates";
 import { Utils } from "../../core/utils/Utils";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { OnEvent } from "@nestjs/event-emitter";
@@ -29,6 +28,8 @@ import { SendTransferFailedEvent } from "./events/SendTransferFailedEvent";
 import { SendTransferReceivedEvent } from "./events/SendTransferReceivedEvent";
 import { SendPayrollDepositCompletedEvent } from "./events/SendPayrollDepositCompletedEvent";
 import { StubEmailClient } from "./emails/stub.email.client";
+import { EventHandlers } from "./domain/EventHandlers";
+import { EventRepo } from "./repos/event.repo";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -44,14 +45,36 @@ export class EmailEventHandler {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
 
+  @Inject("EventRepo")
+  private readonly eventRepo: EventRepo;
+
   constructor(configService: CustomConfigService, @Inject("EmailClient") private readonly emailClient: EmailClient) {}
+
+  private async getOrDefaultTemplateId(eventName: NotificationEventType, locale: string): Promise<string> {
+    const event = await this.eventRepo.getEventByName(eventName);
+    const emailTemplates = event.templates.filter(template => template.type === EventHandlers.EMAIL);
+
+    locale = locale?.toLowerCase() ?? "en";
+    if (emailTemplates.find(template => template.locale === locale)) {
+      return emailTemplates.find(template => template.locale === locale).externalKey;
+    }
+
+    const localePrefix = locale.split("_")[0];
+
+    if (emailTemplates.find(template => template.locale === localePrefix)) {
+      return emailTemplates.find(template => template.locale === localePrefix).externalKey;
+    }
+
+    return emailTemplates.find(template => template.locale === "en").externalKey;
+  }
 
   @OnEvent(`email.${NotificationEventType.SEND_OTP_EVENT}`)
   public async sendOtp(payload: SendOtpEvent) {
+    const templateID = await this.getOrDefaultTemplateId(NotificationEventType.SEND_OTP_EVENT, payload.locale);
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.OTP_EMAIL, payload.locale ?? "en"), //this is template id for sending otp without any context, see sendgrid dashboard
+      templateId: templateID, //this is template id for sending otp without any context, see sendgrid dashboard
       dynamicTemplateData: {
         firstName: payload.firstName ?? "",
         one_time_password: payload.otp,
@@ -63,10 +86,15 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT}`)
   public async sendWalletUpdateVerificationCode(payload: SendWalletUpdateVerificationCodeEvent) {
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.WALLET_UPDATE_OTP, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         user: payload.firstName ?? "",
         user_email: payload.email,
@@ -80,10 +108,15 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_WELCOME_MESSAGE_EVENT}`)
   public async sendWelcomeMessage(payload: SendWelcomeMessageEvent) {
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_WELCOME_MESSAGE_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.WELCOME_EMAIL, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {},
     };
 
@@ -92,13 +125,15 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_KYC_APPROVED_US_EVENT}`)
   public async sendKycApprovedUSEmail(payload: SendKycApprovedUSEvent) {
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(
-        EmailTemplates.ID_VERIFICATION_SUCCESSFUL_US_EMAIL,
-        payload.locale ?? "en",
-      ),
+      templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName ?? "",
       },
@@ -109,13 +144,15 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT}`)
   public async sendKycApprovedNonUSEmail(payload: SendKycApprovedNonUSEvent) {
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(
-        EmailTemplates.ID_VERIFICATION_SUCCESSFUL_NON_US_EMAIL,
-        payload.locale ?? "en",
-      ),
+      templateId: templateID,
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -127,10 +164,12 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_KYC_DENIED_EVENT}`)
   public async sendKycDeniedEmail(payload: SendKycDeniedEvent) {
+    const templateID = await this.getOrDefaultTemplateId(NotificationEventType.SEND_KYC_DENIED_EVENT, payload.locale);
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.KYC_DENIED_EMAIL, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName ?? "",
       },
@@ -141,10 +180,15 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT}`)
   public async sendKycPendingOrFlaggedEmail(payload: SendKycPendingOrFlaggedEvent) {
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.KYC_FLAGGED_EMAIL, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName ?? "",
       },
@@ -155,10 +199,15 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT}`)
   public async sendDocVerificationPendingEmail(payload: SendDocumentVerificationPendingEvent) {
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.DOC_VERIFICATION_PENDING_EMAIL, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName ?? "",
       },
@@ -169,10 +218,15 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT}`)
   public async sendDocVerificationRejectedEmail(payload: SendDocumentVerificationRejectedEvent) {
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.DOC_VERIFICATION_REJECTED_EMAIL, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -184,13 +238,15 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT}`)
   public async sendDocVerificationFailedTechEmail(payload: SendDocumentVerificationTechnicalFailureEvent) {
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(
-        EmailTemplates.DOC_VERIFICATION_FAILED_TECH_EMAIL,
-        payload.locale ?? "en",
-      ),
+      templateId: templateID,
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -205,10 +261,15 @@ export class EmailEventHandler {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.creditAmount) + Utils.roundTo2DecimalNumber(payload.params.totalFees);
 
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.DEPOSIT_SUCCESSFUL_EMAIL, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -233,10 +294,15 @@ export class EmailEventHandler {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.creditAmount) + Utils.roundTo2DecimalNumber(payload.params.totalFees);
 
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.DEPOSIT_INITIATED_EMAIL, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -261,10 +327,14 @@ export class EmailEventHandler {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.creditAmount) + Utils.roundTo2DecimalNumber(payload.params.totalFees);
 
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_DEPOSIT_FAILED_EVENT,
+      payload.locale,
+    );
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.DEPOSIT_FAILED_EMAIL, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -290,10 +360,15 @@ export class EmailEventHandler {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.debitAmount) - Utils.roundTo2DecimalNumber(payload.params.totalFees);
 
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.WITHDRAWAL_SUCCESSFUL_EMAIL, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -318,10 +393,15 @@ export class EmailEventHandler {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.debitAmount) - Utils.roundTo2DecimalNumber(payload.params.totalFees);
 
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.WITHDRAWAL_INITIATED_EMAIL, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -346,10 +426,14 @@ export class EmailEventHandler {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.debitAmount) - Utils.roundTo2DecimalNumber(payload.params.totalFees);
 
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT,
+      payload.locale,
+    );
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.WITHDRAWAL_FAILED_EMAIL, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName,
         debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -372,10 +456,15 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT}`)
   public async sendTransferCompletedEmail(payload: SendTransferCompletedEvent) {
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.TRANSFER_SUCCESSFUL_EMAIL, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         creditConsumer_firstName: payload.params.creditConsumer_firstName,
         creditConsumer_lastName: payload.params.creditConsumer_lastName,
@@ -398,10 +487,15 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT}`)
   public async sendTransferReceivedEvent(payload: SendTransferReceivedEvent) {
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.TRANSFER_RECEIVED_EMAIL, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         creditConsumer_firstName: payload.params.creditConsumer_firstName,
         creditConsumer_lastName: payload.params.creditConsumer_lastName,
@@ -426,10 +520,15 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_TRANSFER_FAILED_EVENT}`)
   public async sendTransferFailedEmail(payload: SendTransferFailedEvent) {
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_TRANSFER_FAILED_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.TRANSFER_FAILED_EMAIL, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         creditConsumer_firstName: payload.params.creditConsumer_firstName,
         creditConsumer_lastName: payload.params.creditConsumer_lastName,
@@ -456,10 +555,14 @@ export class EmailEventHandler {
     const subtotal =
       Utils.roundTo2DecimalNumber(payload.params.creditAmount) + Utils.roundTo2DecimalNumber(payload.params.totalFees);
 
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
+      payload.locale,
+    );
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.PAYROLL_DEPOSIT_COMPLETED_EMAIL, payload.locale ?? "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName,
         companyName: payload.params.companyName,
@@ -482,10 +585,15 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT}`)
   public async sendEmployerRequestEmail(payload: SendEmployerRequestEvent) {
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT,
+      payload.locale,
+    );
+
     const msg = {
       to: "kelsi@noba.com",
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.getOrDefault(EmailTemplates.EMPLOYER_REQUEST_EMAIL, "en"),
+      templateId: templateID,
       dynamicTemplateData: {
         employerEmail: payload.email,
         firstName: payload.firstName,

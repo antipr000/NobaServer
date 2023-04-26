@@ -3,11 +3,7 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NotificationPayload } from "./domain/NotificationPayload";
-import {
-  NotificationEventHandler,
-  NotificationEventType,
-  preferredNotificationMedium,
-} from "./domain/NotificationTypes";
+import { NotificationEventHandler, NotificationEventType } from "./domain/NotificationTypes";
 import {
   SendDocumentVerificationPendingEvent,
   validateDocumentVerificationPendingEvent,
@@ -64,35 +60,41 @@ import {
   validateSendPhoneVerificationCodeEvent,
 } from "./events/SendPhoneVerificationCodeEvent";
 import { LatestNotificationResponse } from "./dto/latestnotification.response.dto";
+import { EventRepo } from "./repos/event.repo";
+import { Event } from "./domain/Event";
+import { EventHandlers } from "./domain/EventHandlers";
 
 @Injectable()
 export class NotificationService {
   @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger;
+
+  @Inject("EventRepo")
+  private readonly eventRepo: EventRepo;
+
   constructor(private readonly eventEmitter: EventEmitter2) {}
 
-  private getNotificationMedium(
-    eventType: NotificationEventType,
-    payload: NotificationPayload,
-  ): NotificationEventHandler[] {
-    let notificationMedium = preferredNotificationMedium[eventType];
-    if (notificationMedium.indexOf(NotificationEventHandler.EMAIL) > -1 && !payload.email) {
-      notificationMedium = notificationMedium.filter(medium => medium !== NotificationEventHandler.EMAIL);
+  private getNotificationMedium(event: Event, payload: NotificationPayload): EventHandlers[] {
+    let notificationMedium = event.handlers;
+    if (notificationMedium.indexOf(EventHandlers.EMAIL) > -1 && !payload.email) {
+      notificationMedium = notificationMedium.filter(medium => medium !== EventHandlers.EMAIL);
     }
 
-    if (notificationMedium.indexOf(NotificationEventHandler.SMS) > -1 && !payload.phone) {
-      notificationMedium = notificationMedium.filter(medium => medium !== NotificationEventHandler.SMS);
+    if (notificationMedium.indexOf(EventHandlers.SMS) > -1 && !payload.phone) {
+      notificationMedium = notificationMedium.filter(medium => medium !== EventHandlers.SMS);
     }
 
-    if (notificationMedium.indexOf(NotificationEventHandler.PUSH) > -1 && !payload.nobaUserID) {
-      notificationMedium = notificationMedium.filter(medium => medium !== NotificationEventHandler.PUSH);
+    if (notificationMedium.indexOf(EventHandlers.PUSH) > -1 && !payload.nobaUserID) {
+      notificationMedium = notificationMedium.filter(medium => medium !== EventHandlers.PUSH);
     }
     return notificationMedium;
   }
 
   async sendNotification(eventType: NotificationEventType, payload: NotificationPayload): Promise<void> {
+    const event = await this.eventRepo.getEventByName(eventType);
+
     const notificationEvent = {
       notificationEventType: eventType,
-      notificationEventHandler: this.getNotificationMedium(eventType, payload),
+      notificationEventHandler: this.getNotificationMedium(event, payload),
     };
 
     if (notificationEvent.notificationEventHandler.length === 0) {

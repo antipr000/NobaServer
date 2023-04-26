@@ -24,14 +24,19 @@ import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { SendPayrollDepositCompletedEvent } from "../events/SendPayrollDepositCompletedEvent";
+import { EventRepo } from "../repos/event.repo";
+import { getMockEventRepoWithDefaults } from "../mocks/mock.event.repo";
+import { EventHandlers } from "../domain/EventHandlers";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
   let eventEmitter: EventEmitter2;
+  let mockEventRepo: EventRepo;
   jest.setTimeout(30000);
 
   beforeEach(async () => {
     eventEmitter = getMockEventEmitterWithDefaults();
+    mockEventRepo = getMockEventRepoWithDefaults();
 
     process.env = {
       ...process.env,
@@ -54,6 +59,10 @@ describe("NotificationService", () => {
           provide: EventEmitter2,
           useFactory: () => instance(eventEmitter),
         },
+        {
+          provide: "EventRepo",
+          useFactory: () => instance(mockEventRepo),
+        },
       ],
     }).compile();
 
@@ -62,6 +71,16 @@ describe("NotificationService", () => {
 
   it("should create email event for otp event when phone is missing", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_OTP_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_OTP_EVENT,
+      handlers: [EventHandlers.EMAIL],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [],
+    });
+
     const sendOtpEvent: NotificationPayload = {
       email: "fake+user@noba.com",
       phone: undefined,
@@ -79,6 +98,15 @@ describe("NotificationService", () => {
   it("should create sms event for otp event when phone is present", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_OTP_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_OTP_EVENT,
+      handlers: [EventHandlers.SMS],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [],
+    });
+
     const sendOtpEvent: NotificationPayload = {
       email: undefined,
       phone: "+1234567890",
@@ -95,6 +123,15 @@ describe("NotificationService", () => {
 
   it("should emit SMS event for 'SEND_PHONE_VERIFICATION_CODE_EVENT'", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT,
+      handlers: [EventHandlers.SMS],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [],
+    });
+
     const sendPhoneVerificationCodeEvent: NotificationPayload = {
       phone: "+1234567890",
       locale: "en",
@@ -117,6 +154,16 @@ describe("NotificationService", () => {
 
   it("should not emit any event for 'SEND_PHONE_VERIFICATION_CODE_EVENT' when phone is missing", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT,
+      handlers: [EventHandlers.SMS],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [],
+    });
+
     const sendPhoneVerificationCodeEvent: NotificationPayload = {
       locale: "en",
       otp: "123456",
@@ -138,6 +185,15 @@ describe("NotificationService", () => {
 
   it("should emit Email event for 'SEND_KYC_APPROVED_US_EVENT'", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_KYC_APPROVED_US_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
+      handlers: [EventHandlers.EMAIL],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [],
+    });
+
     const sendKycApprovedUSEvent = {
       email: "fake+user@noba.com",
       locale: "en",
@@ -161,6 +217,16 @@ describe("NotificationService", () => {
 
   it("should emit Email event for 'SEND_KYC_APPROVED_NON_US_EVENT'", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
+      handlers: [EventHandlers.EMAIL],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [],
+    });
+
     const sendKycApprovedNonUsEvent = {
       email: "fake+user@noba.com",
       locale: "en",
@@ -201,6 +267,15 @@ describe("NotificationService", () => {
     it(`should emit Email event for '${event}'`, async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
+      when(mockEventRepo.getEventByName(event)).thenResolve({
+        id: "fake-id",
+        name: event,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
       const payload: NotificationPayload = getNotificationPayload(event);
 
       await notificationService.sendNotification(event, payload);
@@ -220,6 +295,15 @@ describe("NotificationService", () => {
   describe("Dashboard Events", () => {
     it("should emit 'SEND_REGISTER_NEW_EMPLOYEE_EVENT' event in dashboard", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT,
+        handlers: [EventHandlers.DASHBOARD],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
 
       const payload: NotificationPayload = {
         locale: "en",
@@ -245,6 +329,17 @@ describe("NotificationService", () => {
     it("should emit 'SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT' event in dashboard", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
+      when(
+        mockEventRepo.getEventByName(NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT),
+      ).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
+        handlers: [EventHandlers.DASHBOARD],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
       const payload: NotificationPayload = {
         nobaEmployeeID: "fake-employee-id",
         allocationAmountInPesos: 10000,
@@ -266,6 +361,15 @@ describe("NotificationService", () => {
     it("should emit 'SEND_UPDATE_PAYROLL_STATUS_EVENT' event in dashboard", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT,
+        handlers: [EventHandlers.DASHBOARD],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
       const payload: NotificationPayload = {
         nobaPayrollID: "fake-payroll-id",
         payrollStatus: PayrollStatus.COMPLETED,
@@ -285,6 +389,16 @@ describe("NotificationService", () => {
   describe("Push Events", () => {
     it("should emit push event for DEPOSIT_COMPLETED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
+        handlers: [EventHandlers.PUSH],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
       const payload: NotificationPayload = getNotificationPayload(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT);
 
       await notificationService.sendNotification(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT, payload);
@@ -301,6 +415,15 @@ describe("NotificationService", () => {
 
     it("should emit push event for DEPOSIT_FAILED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_DEPOSIT_FAILED_EVENT,
+        handlers: [EventHandlers.PUSH],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
       const payload: NotificationPayload = getNotificationPayload(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT);
 
       await notificationService.sendNotification(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT, payload);
@@ -317,6 +440,16 @@ describe("NotificationService", () => {
 
     it("should emit push event for WITHDRAWAL_COMPLETED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
+        handlers: [EventHandlers.PUSH],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
       const payload: NotificationPayload = getNotificationPayload(
         NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
       );
@@ -334,6 +467,16 @@ describe("NotificationService", () => {
 
     it("should emit push event for WITHDRAWAL_FAILED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT,
+        handlers: [EventHandlers.PUSH],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
       const payload: NotificationPayload = getNotificationPayload(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT);
 
       await notificationService.sendNotification(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT, payload);
@@ -350,6 +493,16 @@ describe("NotificationService", () => {
 
     it("should emit push event for TRANSFER_COMPLETED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
+        handlers: [EventHandlers.PUSH],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
       const payload: NotificationPayload = getNotificationPayload(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT);
 
       await notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT, payload);
@@ -366,6 +519,16 @@ describe("NotificationService", () => {
 
     it("should emit push event for TRANSFER_FAILED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_FAILED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_TRANSFER_FAILED_EVENT,
+        handlers: [EventHandlers.PUSH],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
       const payload: NotificationPayload = getNotificationPayload(NotificationEventType.SEND_TRANSFER_FAILED_EVENT);
 
       await notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_FAILED_EVENT, payload);
@@ -382,6 +545,15 @@ describe("NotificationService", () => {
 
     it("should emit push event for TRANSFER_RECEIVED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT,
+        handlers: [EventHandlers.PUSH],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
       const payload: NotificationPayload = getNotificationPayload(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT);
 
       await notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT, payload);
@@ -398,6 +570,16 @@ describe("NotificationService", () => {
 
     it("should emit push event for PAYROLL_DEPOSIT_COMPLETED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
+        handlers: [EventHandlers.PUSH],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
       const payload: NotificationPayload = getNotificationPayload(
         NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
       );

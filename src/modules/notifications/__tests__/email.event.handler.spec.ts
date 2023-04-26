@@ -14,7 +14,6 @@ import { SendDocumentVerificationRejectedEvent } from "../events/SendDocumentVer
 import { SendDocumentVerificationTechnicalFailureEvent } from "../events/SendDocumentVerificationTechnicalFailureEvent";
 import { CurrencyService } from "../../common/currency.service";
 import { getMockCurrencyServiceWithDefaults } from "../../common/mocks/mock.currency.service";
-import { EmailTemplates } from "../domain/EmailTemplates";
 import { Utils } from "../../../core/utils/Utils";
 import { EmailClient } from "../emails/email.client";
 import { EmailEventHandler } from "../email.event.handler";
@@ -33,12 +32,17 @@ import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
 import { SendKycPendingOrFlaggedEvent } from "../events/SendKycPendingOrFlaggedEvent";
 import { SendPayrollDepositCompletedEvent } from "../events/SendPayrollDepositCompletedEvent";
+import { EventRepo } from "../repos/event.repo";
+import { getMockEventRepoWithDefaults } from "../mocks/mock.event.repo";
+import { NotificationEventType } from "../domain/NotificationTypes";
+import { EventHandlers } from "../domain/EventHandlers";
 
 describe("EmailEventHandler test for languages", () => {
   let currencyService: CurrencyService;
   let emailClient: EmailClient;
   let eventHandler: EmailEventHandler;
   let app: TestingModule;
+  let mockEventRepo: EventRepo;
 
   const SUPPORT_URL = "help.noba.com";
   const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -49,6 +53,7 @@ describe("EmailEventHandler test for languages", () => {
   beforeAll(async () => {
     currencyService = getMockCurrencyServiceWithDefaults();
     emailClient = getMockEmailClientWithDefaults();
+    mockEventRepo = getMockEventRepoWithDefaults();
 
     process.env = {
       ...process.env,
@@ -73,6 +78,10 @@ describe("EmailEventHandler test for languages", () => {
         {
           provide: "EmailClient",
           useFactory: () => instance(emailClient),
+        },
+        {
+          provide: "EventRepo",
+          useFactory: () => instance(mockEventRepo),
         },
         EmailEventHandler,
       ],
@@ -109,13 +118,41 @@ describe("EmailEventHandler test for languages", () => {
         handle: "fake-handle",
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_OTP_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_OTP_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendOtp(payload);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.OTP_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName ?? "",
           one_time_password: payload.otp,
@@ -137,13 +174,41 @@ describe("EmailEventHandler test for languages", () => {
       nobaUserID: "fake-noba-user-id",
     };
 
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
+      handlers: [EventHandlers.EMAIL],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [
+        {
+          id: "fake-template-id-1",
+          locale: "en",
+          externalKey: "en-template",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.EMAIL,
+        },
+        {
+          id: "fake-template-id-2",
+          locale: "es",
+          externalKey: "es-template",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.EMAIL,
+        },
+      ],
+    });
+
     await eventHandler.sendWalletUpdateVerificationCode(payload);
 
     const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.WALLET_UPDATE_OTP["en"],
+      templateId: "en-template",
       dynamicTemplateData: {
         user: payload.firstName ?? "",
         user_email: payload.email,
@@ -167,13 +232,41 @@ describe("EmailEventHandler test for languages", () => {
         nobaUserID: "fake-noba-user-id",
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_WELCOME_MESSAGE_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendWelcomeMessage(payload);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.WELCOME_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {},
       });
     });
@@ -193,13 +286,41 @@ describe("EmailEventHandler test for languages", () => {
         nobaUserID: "fake-noba-user-id",
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_KYC_APPROVED_US_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendKycApprovedUSEmail(payload);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_US_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
         },
@@ -216,13 +337,41 @@ describe("EmailEventHandler test for languages", () => {
       nobaUserID: "fake-noba-user-id",
     };
 
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
+      handlers: [EventHandlers.EMAIL],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [
+        {
+          id: "fake-template-id-1",
+          locale: "en",
+          externalKey: "en-template",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.EMAIL,
+        },
+        {
+          id: "fake-template-id-2",
+          locale: "es",
+          externalKey: "es-template",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.EMAIL,
+        },
+      ],
+    });
+
     await eventHandler.sendKycApprovedNonUSEmail(payload);
 
     const [emailRequest] = capture(emailClient.sendEmail).last();
     expect(emailRequest).toStrictEqual({
       to: payload.email,
       from: SENDER_EMAIL,
-      templateId: EmailTemplates.ID_VERIFICATION_SUCCESSFUL_NON_US_EMAIL["en"],
+      templateId: "en-template",
       dynamicTemplateData: {
         user_email: payload.email,
         username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -243,13 +392,42 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
         nobaUserID: "fake-noba-user-id",
       };
+
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_KYC_DENIED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_KYC_DENIED_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendKycDeniedEmail(payload);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.KYC_DENIED_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
         },
@@ -270,13 +448,42 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
         nobaUserID: "fake-noba-user-id",
       };
+
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendKycPendingOrFlaggedEmail(payload);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.KYC_FLAGGED_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
         },
@@ -298,13 +505,41 @@ describe("EmailEventHandler test for languages", () => {
         nobaUserID: "fake-noba-user-id",
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendDocVerificationPendingEmail(payload);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.DOC_VERIFICATION_PENDING_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
         },
@@ -314,6 +549,7 @@ describe("EmailEventHandler test for languages", () => {
 
   describe.each([
     ["en", "en"],
+    ["es", "en"],
     ["fake-locale", "en"],
   ])("SendDocVerificationRejected", (locale, templateLocale) => {
     it(`should send Document Verification Rejected email where locale ${locale} resolves to ${templateLocale} template`, async () => {
@@ -325,13 +561,32 @@ describe("EmailEventHandler test for languages", () => {
         nobaUserID: "fake-noba-user-id",
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendDocVerificationRejectedEmail(payload);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.DOC_VERIFICATION_REJECTED_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           user_email: payload.email,
           username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -352,13 +607,44 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
         nobaUserID: "fake-noba-user-id",
       };
+
+      when(
+        mockEventRepo.getEventByName(NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT),
+      ).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendDocVerificationFailedTechEmail(payload);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.DOC_VERIFICATION_FAILED_TECH_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           user_email: payload.email,
           username: Utils.getUsernameFromNameParts(payload.firstName, payload.lastName),
@@ -381,6 +667,34 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendDepositCompletedEmail(payload);
       const subtotal =
         Utils.roundTo2DecimalNumber(payload.params.creditAmount) +
@@ -391,7 +705,7 @@ describe("EmailEventHandler test for languages", () => {
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.DEPOSIT_SUCCESSFUL_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
           debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -427,6 +741,34 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_DEPOSIT_FAILED_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendDepositFailedEmail(payload);
       const subtotal =
         Utils.roundTo2DecimalNumber(payload.params.creditAmount) +
@@ -437,7 +779,7 @@ describe("EmailEventHandler test for languages", () => {
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.DEPOSIT_FAILED_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
           debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -473,6 +815,34 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendDepositInitiatedEmail(payload);
       const subtotal =
         Utils.roundTo2DecimalNumber(payload.params.creditAmount) +
@@ -483,7 +853,7 @@ describe("EmailEventHandler test for languages", () => {
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.DEPOSIT_INITIATED_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
           debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -518,6 +888,34 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendWithdrawalCompletedEmail(payload);
       const subtotal =
         Utils.roundTo2DecimalNumber(payload.params.debitAmount) -
@@ -528,7 +926,7 @@ describe("EmailEventHandler test for languages", () => {
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.WITHDRAWAL_SUCCESSFUL_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
           debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -563,6 +961,34 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendWithdrawalInitiatedEmail(payload);
       const subtotal =
         Utils.roundTo2DecimalNumber(payload.params.debitAmount) -
@@ -573,7 +999,7 @@ describe("EmailEventHandler test for languages", () => {
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.WITHDRAWAL_INITIATED_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
           debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -609,6 +1035,43 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT,
+        handlers: [EventHandlers.EMAIL, EventHandlers.PUSH],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-3",
+            locale: "en",
+            templateBody: "Sample push notification template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.PUSH,
+          },
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendWithdrawalFailedEmail(payload);
       const subtotal =
         Utils.roundTo2DecimalNumber(payload.params.debitAmount) -
@@ -619,7 +1082,7 @@ describe("EmailEventHandler test for languages", () => {
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.WITHDRAWAL_FAILED_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
           debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
@@ -659,13 +1122,41 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendTransferCompletedEmail(payload);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.TRANSFER_SUCCESSFUL_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           creditConsumer_firstName: payload.params.creditConsumer_firstName,
           creditConsumer_lastName: payload.params.creditConsumer_lastName,
@@ -707,13 +1198,59 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "es",
+            templateBody: "Sample push template in Spanish",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.PUSH,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "en",
+            templateBody: "Sample push template in English",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.PUSH,
+          },
+          {
+            id: "fake-template-id-3",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-4",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendTransferReceivedEvent(payload);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.TRANSFER_RECEIVED_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           creditConsumer_firstName: payload.params.creditConsumer_firstName,
           creditConsumer_lastName: payload.params.creditConsumer_lastName,
@@ -756,13 +1293,41 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_FAILED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_TRANSFER_FAILED_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendTransferFailedEmail(payload);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.TRANSFER_FAILED_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           creditConsumer_firstName: payload.params.creditConsumer_firstName,
           creditConsumer_lastName: payload.params.creditConsumer_lastName,
@@ -800,6 +1365,34 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendPayrollDepositCompletedEmail(payload);
       const subtotal =
         Utils.roundTo2DecimalNumber(payload.params.creditAmount) +
@@ -810,7 +1403,7 @@ describe("EmailEventHandler test for languages", () => {
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.PAYROLL_DEPOSIT_COMPLETED_EMAIL[templateLocale],
+        templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
           companyName: payload.params.companyName,
@@ -839,13 +1432,32 @@ describe("EmailEventHandler test for languages", () => {
         lastName: "Last",
       };
 
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
       await eventHandler.sendEmployerRequestEmail(payload);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: "kelsi@noba.com",
         from: SENDER_EMAIL,
-        templateId: EmailTemplates.EMPLOYER_REQUEST_EMAIL["en"],
+        templateId: "en-template",
         dynamicTemplateData: {
           firstName: payload.firstName,
           lastName: payload.lastName,
