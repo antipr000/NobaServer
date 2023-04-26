@@ -604,7 +604,6 @@ export class EmailEventHandler {
     await this.emailClient.sendEmail(msg);
   }
 
-  // BEGIN-NOSCAN
   @OnEvent("email.get")
   public async getPreviousNotifications() {
     if (this.emailClient instanceof StubEmailClient) {
@@ -619,5 +618,4 @@ export class EmailEventHandler {
       this.emailClient.clearPreviousEmails();
     }
   }
-  // END-NOSCAN
 }

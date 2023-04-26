@@ -12,6 +12,10 @@ export abstract class TestUtility {
     clearAccessTokenForNextRequests();
   }
 
+  async suiteLevelTeardown(): Promise<void> {
+    await this.app.close();
+  }
+
   async tearDown(): Promise<void> {
     const prisma = new PrismaClient();
     await prisma.$connect();
@@ -33,8 +37,6 @@ export abstract class TestUtility {
     }
 
     await prisma.$disconnect();
-    await this.reset();
-    await this.app.close();
   }
 
   async getApp(): Promise<INestApplication> {

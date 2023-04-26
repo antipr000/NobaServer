@@ -274,7 +274,7 @@ export class PushEventHandler {
 
     await Promise.all(promises);
   }
-  // BEGIN-NOSCAN
+
   @OnEvent("push.get")
   public async getPreviousNotifications() {
     if (this.pushClient instanceof StubPushClient) {
@@ -289,5 +289,4 @@ export class PushEventHandler {
       this.pushClient.clearPreviousPushNotifications();
     }
   }
-  // END-NOSCAN
 }

@@ -73,7 +73,7 @@ export class SMSEventHandler {
 
     await this.smsClient.sendSMS(payload.phone, body);
   }
-  // BEGIN-NOSCAN
+
   @OnEvent("sms.get")
   public async getPreviousNotifications() {
     if (this.smsClient instanceof StubSMSClient) {
@@ -88,5 +88,4 @@ export class SMSEventHandler {
       this.smsClient.clearPreviousSMS();
     }
   }
-  // END-NOSCAN
 }

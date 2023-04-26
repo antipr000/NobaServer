@@ -223,7 +223,6 @@ export class NotificationService {
     }
   }
 
-  // BEGIN-NOSCAN
   async getPreviousNotifications(): Promise<LatestNotificationResponse> {
     const smsData = await this.eventEmitter.emitAsync(`${EventHandlers.SMS}.get`);
     const emailData = await this.eventEmitter.emitAsync(`${EventHandlers.EMAIL}.get`);
@@ -241,5 +240,4 @@ export class NotificationService {
     await this.eventEmitter.emitAsync(`${EventHandlers.SMS}.clear`);
     await this.eventEmitter.emitAsync(`${EventHandlers.PUSH}.clear`);
   }
-  // END-NOSCAN
 }

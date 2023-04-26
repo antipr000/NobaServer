@@ -1,3 +1,4 @@
+//TODO(jira/CRYPTO-1014): Remove this once moved to db
 export const pushNotificationTitleTemplates = {
   template_send_deposit_successful_en: () => "Deposit completed",
   template_send_deposit_successful_es: () => "Depósito completado",
