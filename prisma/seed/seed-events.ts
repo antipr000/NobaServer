@@ -18,7 +18,9 @@ export async function seedEventsAndTemplates(prisma: PrismaClient) {
       // Creating event record
       const event = await prisma.event.upsert({
         where: { name: eventType },
-        update: {},
+        update: {
+          handlers: handlers,
+        },
         create: {
           name: eventType,
           handlers: handlers,
@@ -154,6 +156,16 @@ export async function seedEventsAndTemplates(prisma: PrismaClient) {
           }
         }),
       );
+    }),
+  );
+
+  // Removing events that are not in the list of notification events
+  const allEvents = await prisma.event.findMany();
+  await Promise.all(
+    allEvents.map(async event => {
+      if (!notificationEvents.includes(event.name as NotificationEventType)) {
+        await prisma.event.delete({ where: { id: event.id } });
+      }
     }),
   );
 }
