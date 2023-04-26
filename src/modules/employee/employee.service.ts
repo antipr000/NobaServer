@@ -15,13 +15,14 @@ export class EmployeeService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  async createEmployee(allocationAmount: number, employerID: string, consumerID: string): Promise<Employee> {
+  async createEmployee(allocationAmount: number, employerID: string, consumerID?: string): Promise<Employee> {
     return this.employeeRepo.createEmployee({
       allocationAmount: allocationAmount,
       allocationCurrency: EmployeeAllocationCurrency.COP,
       employerID: employerID,
       consumerID: consumerID,
-      status: EmployeeStatus.CREATED,
+      // If consumerID is populated, create a LINKED employee. Otherwise just set to CREATED.
+      status: consumerID ? EmployeeStatus.LINKED : EmployeeStatus.CREATED,
     });
   }
 
@@ -34,6 +35,7 @@ export class EmployeeService {
     }
 
     const employee = await this.getEmployeeByID(employeeID, true);
+    let status = updateRequest.status;
 
     // If we are attempting to update the consumerID, ensure we're not switching from an existing consumer
     if (updateRequest.consumerID && employee.consumerID && updateRequest.consumerID !== employee.consumerID) {
@@ -41,6 +43,9 @@ export class EmployeeService {
         message: "Illegal attempt to modify existing consumerID on employee",
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
+    } else if (updateRequest.consumerID && !employee.consumerID && !updateRequest.status) {
+      // If linking consumer and status is not explicitly passed, then set to LINKED
+      status = EmployeeStatus.LINKED;
     }
 
     const employer = employee.employer;
@@ -57,6 +62,14 @@ export class EmployeeService {
       salary = employee.salary;
     }
 
+    // Validate status transition
+    if (updateRequest.status === EmployeeStatus.CREATED) {
+      throw new ServiceException({
+        message: "Illegal attempt to set existing employee to CREATED status",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
     if (allocationAmount > (maxAllocationPercent * salary) / 100) {
       allocationAmount = Utils.roundTo2DecimalNumber((maxAllocationPercent * salary) / 100);
     }
@@ -66,7 +79,7 @@ export class EmployeeService {
       ...(allocationAmount >= 0 && { allocationAmount: allocationAmount }),
       ...(salary >= 0 && { salary: salary }),
       ...(updateRequest.email && { email: updateRequest.email }),
-      ...(updateRequest.status && { status: updateRequest.status }),
+      ...(status && { status: status }),
     });
   }
 

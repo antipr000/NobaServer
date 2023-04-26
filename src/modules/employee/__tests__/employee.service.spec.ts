@@ -19,6 +19,7 @@ const getRandomEmployee = (includeEmployer?: boolean): Employee => {
     id: uuid(),
     employerID: uuid(),
     consumerID: uuid(),
+    email: "rosie@noba.com",
     allocationAmount: Math.floor(Math.random() * 1000000),
     allocationCurrency: EmployeeAllocationCurrency.COP,
     createdTimestamp: new Date(),
@@ -85,7 +86,7 @@ describe("EmployeeServiceTests", () => {
   });
 
   describe("createEmployee", () => {
-    it("should create an employee and 'always' send the 'COP' as allocationCurrency", async () => {
+    it("should create an employee and 'always' set 'COP' as the allocationCurrency", async () => {
       const employee = getRandomEmployee();
       when(employeeRepo.createEmployee(anything())).thenResolve(employee);
 
@@ -103,6 +104,23 @@ describe("EmployeeServiceTests", () => {
         allocationCurrency: EmployeeAllocationCurrency.COP,
         employerID: employee.employerID,
         consumerID: employee.consumerID,
+        status: EmployeeStatus.LINKED,
+      });
+    });
+
+    it("should create an employee without linking to consumer", async () => {
+      const employee = getRandomEmployeeWithoutConsumer();
+      when(employeeRepo.createEmployee(anything())).thenResolve(employee);
+
+      const createdEmployee = await employeeService.createEmployee(employee.allocationAmount, employee.employerID);
+
+      expect(createdEmployee).toEqual(employee);
+
+      const [propagatedEmployeeCreateRequest] = capture(employeeRepo.createEmployee).last();
+      expect(propagatedEmployeeCreateRequest).toEqual({
+        allocationAmount: employee.allocationAmount,
+        allocationCurrency: EmployeeAllocationCurrency.COP,
+        employerID: employee.employerID,
         status: EmployeeStatus.CREATED,
       });
     });
@@ -136,15 +154,39 @@ describe("EmployeeServiceTests", () => {
       });
     });
 
-    it("should update an employee with consumerID", async () => {
+    it("should update an employee with consumerID and automatically update status", async () => {
       const employee = getRandomEmployeeWithoutConsumer(true);
 
       when(employeeRepo.getEmployeeByID(employee.id, true)).thenResolve(employee);
-      when(employeeRepo.updateEmployee(anything(), anything())).thenResolve(employee);
+      when(employeeRepo.updateEmployee(anything(), anything())).thenResolve({
+        ...employee,
+        status: EmployeeStatus.LINKED,
+      });
 
       const consumerID = uuid();
       const updatedEmployee = await employeeService.updateEmployee(employee.id, {
         consumerID: consumerID,
+      });
+
+      expect(updatedEmployee).toEqual({ ...employee, status: EmployeeStatus.LINKED });
+
+      const [employeeID, propagatedEmployeeUpdateRequest] = capture(employeeRepo.updateEmployee).last();
+      expect(employeeID).toEqual(employee.id);
+      expect(propagatedEmployeeUpdateRequest).toEqual({
+        allocationAmount: 0,
+        consumerID: consumerID,
+        status: EmployeeStatus.LINKED,
+      });
+    });
+
+    it("should update employee status", async () => {
+      const employee = getRandomEmployee(true);
+
+      when(employeeRepo.getEmployeeByID(employee.id, true)).thenResolve(employee);
+      when(employeeRepo.updateEmployee(anything(), anything())).thenResolve(employee);
+
+      const updatedEmployee = await employeeService.updateEmployee(employee.id, {
+        status: EmployeeStatus.UNLINKED,
       });
 
       expect(updatedEmployee).toEqual(employee);
@@ -152,8 +194,8 @@ describe("EmployeeServiceTests", () => {
       const [employeeID, propagatedEmployeeUpdateRequest] = capture(employeeRepo.updateEmployee).last();
       expect(employeeID).toEqual(employee.id);
       expect(propagatedEmployeeUpdateRequest).toEqual({
-        allocationAmount: 0,
-        consumerID: consumerID,
+        allocationAmount: employee.allocationAmount,
+        status: EmployeeStatus.UNLINKED,
       });
     });
 
@@ -166,6 +208,18 @@ describe("EmployeeServiceTests", () => {
       expect(
         employeeService.updateEmployee(employee.id, {
           consumerID: consumerID,
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should not allow an existing record to be updated with a status of CREATED", async () => {
+      const employee = getRandomEmployee(true);
+
+      when(employeeRepo.getEmployeeByID(employee.id, true)).thenResolve(employee);
+
+      expect(
+        employeeService.updateEmployee(employee.id, {
+          status: EmployeeStatus.CREATED,
         }),
       ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
     });
