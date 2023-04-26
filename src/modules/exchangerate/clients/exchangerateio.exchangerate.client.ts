@@ -24,6 +24,7 @@ export class ExchangeRateIOExchangeRateClient implements IExchangeRateClient {
   }
 
   async getHealth(): Promise<HealthCheckResponse> {
+    // DO NOT ADD to app controller health check because of api call limits (250 per month)
     const response = await axios.get(`${this.BASE_URL}/symbols`, this.axiosConfig);
 
     if (response.status === HttpStatus.OK && response.data.success) {
