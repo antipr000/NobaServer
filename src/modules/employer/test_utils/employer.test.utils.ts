@@ -25,6 +25,7 @@ export const getRandomEmployer = (name: string): Employer => {
     bubbleID: uuid(),
     leadDays: 3,
     logoURI: "https://www.google.com",
+    locale: "en-us",
     name: name || "Test Employer",
     payrollDates: ["2021-01-01", "2021-01-02"],
     referralID: uuid(),
