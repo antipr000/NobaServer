@@ -1934,20 +1934,24 @@ describe("ConsumerService", () => {
     it("should not overwrite an Employee by ID successfully", async () => {
       const consumer = getRandomConsumer();
       const employer = getRandomEmployer();
-      const employee = getRandomEmployee(null, employer);
+      const employee = getRandomEmployee(consumer.props.id, employer);
 
       when(employeeService.getEmployeeByID(employer.id, true)).thenResolve(employee);
-      when(employeeService.linkEmployee(employee.id, consumer.props.id));
+      when(employeeService.linkEmployee(employee.id, consumer.props.id)).thenThrow(
+        new ServiceException({ errorCode: ServiceErrorCode.SEMANTIC_VALIDATION }),
+      );
       when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
-      when(notificationService.sendNotification(anyString(), anything())).thenResolve();
       when(employeeService.getEmployeeByID(employee.id, true)).thenResolve({
         ...employee,
         employer: employer,
       });
 
-      const response = await consumerService.registerWithAnEmployer(employer.id, consumer.props.id, 100, employee.id);
+      const notificationSpy = jest.spyOn(notificationService, "sendNotification");
 
-      expect(response).toEqual(employee);
+      expect(
+        consumerService.registerWithAnEmployer(employer.id, consumer.props.id, 100, employee.id),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+      expect(notificationSpy).not.toBeCalled();
     });
 
     it("should register a consumer with an existing employee record successfully", async () => {
