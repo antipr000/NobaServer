@@ -5,7 +5,7 @@ export class Employer {
   id: string;
   name: string;
   logoURI: string;
-  locale: string;
+  locale?: string;
   referralID: string;
   bubbleID: string;
   leadDays: number;
@@ -47,7 +47,7 @@ export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) =
   const employerJoiValidationKeys: KeysRequired<EmployerCreateRequest> = {
     name: Joi.string().required(),
     logoURI: Joi.string().required(),
-    locale: Joi.string().optional(),
+    locale: Joi.string().optional().allow(null),
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
     maxAllocationPercent: Joi.number().optional(),
@@ -69,7 +69,7 @@ export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) =
 export const validateUpdateEmployerRequest = (employer: EmployerUpdateRequest) => {
   const employerJoiValidationKeys: KeysRequired<EmployerUpdateRequest> = {
     logoURI: Joi.string().optional(),
-    locale: Joi.string().optional(),
+    locale: Joi.string().optional().allow(null),
     referralID: Joi.string().optional(),
     leadDays: Joi.number().optional(),
     payrollAccountNumber: Joi.string().optional().allow(null),
@@ -91,7 +91,7 @@ export const validateEmployer = (employer: Employer) => {
     id: Joi.string().required(),
     name: Joi.string().required(),
     logoURI: Joi.string().required(),
-    locale: Joi.string().optional(),
+    locale: Joi.string().optional().allow(null),
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
     leadDays: Joi.number().required(),

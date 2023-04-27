@@ -12,7 +12,7 @@ export class RegisterEmployerRequestDTO {
   @ApiProperty()
   logoURI: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   locale?: string;
 
   @ApiProperty()
