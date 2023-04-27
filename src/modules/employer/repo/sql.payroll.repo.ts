@@ -85,6 +85,7 @@ export class SqlPayrollRepo implements IPayrollRepo {
         ...(payroll.exchangeRate && { exchangeRate: payroll.exchangeRate }),
         ...(payroll.debitCurrency && { debitCurrency: payroll.debitCurrency }),
         ...(payroll.creditCurrency && { creditCurrency: payroll.creditCurrency }),
+        ...(payroll.paymentMonoTransactionID && { paymentMonoTransactionID: payroll.paymentMonoTransactionID }),
       };
 
       const returnedPayroll: PrismaPayrollModel = await this.prismaService.payroll.update({
@@ -121,6 +122,54 @@ export class SqlPayrollRepo implements IPayrollRepo {
       const payrollFilter: Prisma.PayrollWhereInput = {
         employerID: employerID,
         ...(filters.status && { status: filters.status }),
+      };
+
+      const returnedPayrolls: PrismaPayrollModel[] = await this.prismaService.payroll.findMany({
+        where: payrollFilter,
+      });
+
+      return returnedPayrolls.map(payroll => convertToDomainPayroll(payroll));
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      return [];
+    }
+  }
+
+  async getPayrollMatchingAmountAndEmployerDocumentNumber(
+    debitAmount: number,
+    employerDocumentNumber: string,
+  ): Promise<Payroll[]> {
+    try {
+      const payrollFilter: Prisma.PayrollWhereInput = {
+        totalDebitAmount: debitAmount,
+        employer: {
+          documentNumber: employerDocumentNumber,
+        },
+        status: PayrollStatus.INVOICED,
+      };
+
+      const returnedPayrolls: PrismaPayrollModel[] = await this.prismaService.payroll.findMany({
+        where: payrollFilter,
+      });
+
+      return returnedPayrolls.map(payroll => convertToDomainPayroll(payroll));
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      return [];
+    }
+  }
+
+  async getPayrollMatchingAmountAndEmployerDepositMatchingName(
+    debitAmount: number,
+    employerDepositMatchingName: string,
+  ): Promise<Payroll[]> {
+    try {
+      const payrollFilter: Prisma.PayrollWhereInput = {
+        totalDebitAmount: debitAmount,
+        employer: {
+          depositMatchingName: employerDepositMatchingName,
+        },
+        status: PayrollStatus.INVOICED,
       };
 
       const returnedPayrolls: PrismaPayrollModel[] = await this.prismaService.payroll.findMany({

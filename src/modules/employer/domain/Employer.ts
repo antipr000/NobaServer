@@ -1,9 +1,11 @@
 import { Employer as PrismaEmployerModel } from "@prisma/client";
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
+
 export class Employer {
   id: string;
   name: string;
+  depositMatchingName?: string;
   logoURI: string;
   referralID: string;
   bubbleID: string;
@@ -23,6 +25,7 @@ export type EmployeeDisbursement = {
 };
 export class EmployerCreateRequest {
   name: string;
+  depositMatchingName?: string;
   logoURI: string;
   referralID: string;
   documentNumber?: string;
@@ -35,6 +38,7 @@ export class EmployerCreateRequest {
 
 export class EmployerUpdateRequest {
   name?: string;
+  depositMatchingName?: string;
   logoURI?: string;
   referralID?: string;
   leadDays?: number;
@@ -47,6 +51,7 @@ export class EmployerUpdateRequest {
 export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) => {
   const employerJoiValidationKeys: KeysRequired<EmployerCreateRequest> = {
     name: Joi.string().required(),
+    depositMatchingName: Joi.string().optional(),
     logoURI: Joi.string().required(),
     referralID: Joi.string().required(),
     documentNumber: Joi.string().optional(),
@@ -70,6 +75,7 @@ export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) =
 export const validateUpdateEmployerRequest = (employer: EmployerUpdateRequest) => {
   const employerJoiValidationKeys: KeysRequired<EmployerUpdateRequest> = {
     name: Joi.string().optional(),
+    depositMatchingName: Joi.string().optional(),
     logoURI: Joi.string().optional(),
     referralID: Joi.string().optional(),
     documentNumber: Joi.string().optional(),
@@ -92,6 +98,7 @@ export const validateEmployer = (employer: Employer) => {
   const employerJoiValidationKeys: KeysRequired<Employer> = {
     id: Joi.string().required(),
     name: Joi.string().required(),
+    depositMatchingName: Joi.string().optional().allow(null),
     logoURI: Joi.string().required(),
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
@@ -117,6 +124,7 @@ export const convertToDomainEmployer = (employer: PrismaEmployerModel): Employer
   return {
     id: employer.id,
     name: employer.name,
+    depositMatchingName: employer.depositMatchingName,
     logoURI: employer.logoURI,
     referralID: employer.referralID,
     bubbleID: employer.bubbleID,

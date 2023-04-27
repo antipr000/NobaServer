@@ -5,10 +5,17 @@ import { PrismaService } from "../../../infraproviders/PrismaService";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { getRandomPayroll, saveAndGetPayroll } from "../test_utils/payroll.test.utils";
+import {
+  getRandomPayroll,
+  saveAndGetPayroll,
+  savePayrollWithDebitAmountAndStatus,
+} from "../test_utils/payroll.test.utils";
 import { createTestEmployerAndStoreInDB } from "../test_utils/test.utils";
-import { PayrollStatus } from "../domain/Payroll";
+import { Payroll, PayrollStatus } from "../domain/Payroll";
 import { DatabaseInternalErrorException, NotFoundError } from "../../../core/exception/CommonAppException";
+import { uuid } from "uuidv4";
+import { getRandomEmployer, saveAndGetEmployer, saveEmployer } from "../test_utils/employer.test.utils";
+import { Employer } from "../domain/Employer";
 
 describe("SqlPayrollRepo tests", () => {
   jest.setTimeout(20000);
@@ -104,6 +111,32 @@ describe("SqlPayrollRepo tests", () => {
       expect(updatedPayroll.completedTimestamp).not.toBeNull();
     });
 
+    it("should update paymentMonoTransactionID", async () => {
+      const payroll = await saveAndGetPayroll(prismaService);
+      const updatedTransactionID = uuid();
+
+      const updatedPayroll = await payrollRepo.updatePayroll(payroll.id, {
+        paymentMonoTransactionID: updatedTransactionID,
+      });
+
+      expect(updatedPayroll).toStrictEqual({
+        id: payroll.id,
+        employerID: payroll.employerID,
+        referenceNumber: payroll.referenceNumber,
+        payrollDate: payroll.payrollDate,
+        totalDebitAmount: payroll.totalDebitAmount,
+        totalCreditAmount: payroll.totalCreditAmount,
+        exchangeRate: payroll.exchangeRate,
+        debitCurrency: payroll.debitCurrency,
+        creditCurrency: payroll.creditCurrency,
+        paymentMonoTransactionID: updatedTransactionID,
+        status: PayrollStatus.CREATED,
+        createdTimestamp: expect.any(Date),
+        updatedTimestamp: expect.any(Date),
+        completedTimestamp: expect.any(Date),
+      });
+    });
+
     it("should throw error if status is not valid", async () => {
       const payroll = await saveAndGetPayroll(prismaService);
 
@@ -178,6 +211,477 @@ describe("SqlPayrollRepo tests", () => {
       const allPayrolls = await payrollRepo.getAllPayrollsForEmployer("fake-id", {});
 
       expect(allPayrolls).toHaveLength(0);
+    });
+  });
+
+  describe("getPayrollMatchingAmountAndEmployerDocumentNumber", () => {
+    describe("'All' INVOICED payrolls", () => {
+      it("should return empty array if no 'debitAmount' matches but 'documentNumber' is null", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        delete employer1.documentNumber;
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          123456,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          123456,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(123456, uuid());
+
+        expect(queriedPayrolls).toHaveLength(0);
+      });
+
+      it("should return empty array if no 'debitAmount' doesn't matches but 'documentNumber' matches", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer1.documentNumber = uuid();
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer2.documentNumber = employer1.documentNumber;
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(
+          123456,
+          employer1.documentNumber,
+        );
+
+        expect(queriedPayrolls).toHaveLength(0);
+      });
+
+      it("should return empty array if 'debitAmount' matches with record1 but 'documentNumber' matches with record2", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer1.documentNumber = uuid();
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer2.documentNumber = uuid();
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          123456,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(
+          123456,
+          employer1.documentNumber,
+        );
+
+        expect(queriedPayrolls).toHaveLength(0);
+      });
+
+      it("should return matching 'single' record if 'debitAmount' matches and 'documentNumber' matches", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer1.documentNumber = uuid();
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer2.documentNumber = uuid();
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          123456,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(
+          123456,
+          employer2.documentNumber,
+        );
+
+        expect(queriedPayrolls).toHaveLength(1);
+        expect(queriedPayrolls[0]).toStrictEqual(payroll2);
+      });
+
+      it("should return matching 'multiple' record if 'debitAmount' matches and 'documentNumber' matches", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer1.documentNumber = uuid();
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer2.documentNumber = employer1.documentNumber;
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          123456,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          123456,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll3: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(
+          123456,
+          employer2.documentNumber,
+        );
+
+        expect(queriedPayrolls).toHaveLength(2);
+        expect(queriedPayrolls).toContainEqual(payroll2);
+        expect(queriedPayrolls).toContainEqual(payroll1);
+      });
+    });
+
+    describe("INVOICED + Other Payrolls", () => {
+      it("should return empty array if 'debitAmount' matches and 'documentNumber' matches but status is not INVOICED", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer1.documentNumber = uuid();
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer2.documentNumber = employer1.documentNumber;
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          123456,
+          PayrollStatus.CREATED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(
+          123456,
+          employer2.documentNumber,
+        );
+
+        expect(queriedPayrolls).toHaveLength(0);
+      });
+
+      it("should filter the non-INVOICED payrolls and return matching 'multiple' payrolls if 'debitAmount' matches and 'documentNumber' matches", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer1.documentNumber = uuid();
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer2.documentNumber = uuid();
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.CREATED,
+          prismaService,
+        );
+        const payroll3: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll4: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll5: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(
+          654321,
+          employer1.documentNumber,
+        );
+
+        expect(queriedPayrolls).toHaveLength(2);
+        expect(queriedPayrolls).toContainEqual(payroll3);
+        expect(queriedPayrolls).toContainEqual(payroll1);
+      });
+    });
+  });
+
+  describe("getPayrollMatchingAmountAndEmployerDepositMatchingName", () => {
+    describe("'All' INVOICED payrolls", () => {
+      it("should return empty array if no 'debitAmount' matches but 'depositMatchingName' is null", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        delete employer1.depositMatchingName;
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          123456,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          123456,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+          123456,
+          uuid(),
+        );
+
+        expect(queriedPayrolls).toHaveLength(0);
+      });
+
+      it("should return empty array if no 'debitAmount' doesn't matches but 'depositMatchingName' matches", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer1.depositMatchingName = uuid();
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer2.depositMatchingName = employer1.depositMatchingName;
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+          123456,
+          employer1.depositMatchingName,
+        );
+
+        expect(queriedPayrolls).toHaveLength(0);
+      });
+
+      it("should return empty array if 'debitAmount' matches with record1 but 'depositMatchingName' matches with record2", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer1.depositMatchingName = uuid();
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer2.depositMatchingName = uuid();
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          123456,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+          123456,
+          employer1.depositMatchingName,
+        );
+
+        expect(queriedPayrolls).toHaveLength(0);
+      });
+
+      it("should return matching 'single' record if 'debitAmount' matches and 'depositMatchingName' matches", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer1.depositMatchingName = uuid();
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer2.depositMatchingName = uuid();
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          123456,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+          123456,
+          employer2.depositMatchingName,
+        );
+
+        expect(queriedPayrolls).toHaveLength(1);
+        expect(queriedPayrolls[0]).toStrictEqual(payroll2);
+      });
+
+      it("should return matching 'multiple' record if 'debitAmount' matches and 'depositMatchingName' matches", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer1.depositMatchingName = uuid();
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer2.depositMatchingName = employer1.depositMatchingName;
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          123456,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          123456,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll3: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+          123456,
+          employer2.depositMatchingName,
+        );
+
+        expect(queriedPayrolls).toHaveLength(2);
+        expect(queriedPayrolls).toContainEqual(payroll2);
+        expect(queriedPayrolls).toContainEqual(payroll1);
+      });
+    });
+
+    describe("INVOICED + Other Payrolls", () => {
+      it("should return empty array if 'debitAmount' matches and 'depositMatchingName' matches but status is not INVOICED", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer1.depositMatchingName = uuid();
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer2.depositMatchingName = employer1.depositMatchingName;
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          123456,
+          PayrollStatus.CREATED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+          123456,
+          employer2.depositMatchingName,
+        );
+
+        expect(queriedPayrolls).toHaveLength(0);
+      });
+
+      it("should filter the non-INVOICED payrolls and return matching 'multiple' payrolls if 'debitAmount' matches and 'depositMatchingName' matches", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer1.depositMatchingName = uuid();
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        employer2.depositMatchingName = uuid();
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.CREATED,
+          prismaService,
+        );
+        const payroll3: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll4: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll5: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          654321,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+          654321,
+          employer1.depositMatchingName,
+        );
+
+        expect(queriedPayrolls).toHaveLength(2);
+        expect(queriedPayrolls).toContainEqual(payroll3);
+        expect(queriedPayrolls).toContainEqual(payroll1);
+      });
     });
   });
 });

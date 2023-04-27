@@ -27,6 +27,9 @@ export class EmployerDTO {
 
   @ApiPropertyOptional()
   documentNumber: string;
+
+  @ApiPropertyOptional()
+  depositMatchingName: string;
 }
 
 export class PayrollData {

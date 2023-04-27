@@ -24,6 +24,7 @@ const getRandomEmployer = (): EmployerCreateRequest => {
   const employee: EmployerCreateRequest = {
     bubbleID: uuid(),
     name: "Test Employer",
+    depositMatchingName: "Deposit Test Employer",
     referralID: uuid(),
     documentNumber: uuid(),
     logoURI: "https://www.google.com",
@@ -101,6 +102,35 @@ describe("SqlEmployerRepoTests", () => {
       expect(createdEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(createdEmployer.payrollDates).toEqual(employer.payrollDates);
       expect(createdEmployer.documentNumber).toEqual(employer.documentNumber);
+      expect(createdEmployer.depositMatchingName).toEqual(employer.depositMatchingName);
+      expect(createdEmployer.maxAllocationPercent).toBeUndefined();
+
+      const allEmployers = await getAllEmployerRecords(prismaService);
+      expect(allEmployers.length).toEqual(1);
+      delete allEmployers[0].maxAllocationPercent;
+      expect(allEmployers[0]).toEqual(createdEmployer);
+    });
+
+    it("should create a new employer with 'depositMatchingName' as null if not provided", async () => {
+      const employer = getRandomEmployer();
+      delete employer.depositMatchingName;
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN)).thenResolve(encryptedPayrollAccountNumber);
+
+      const createdEmployer = await employerRepo.createEmployer(employer);
+
+      expect(createdEmployer).toBeDefined();
+      expect(createdEmployer.id).toBeDefined();
+      expect(createdEmployer.createdTimestamp).toBeDefined();
+      expect(createdEmployer.updatedTimestamp).toBeDefined();
+      expect(createdEmployer.bubbleID).toEqual(employer.bubbleID);
+      expect(createdEmployer.name).toEqual(employer.name);
+      expect(createdEmployer.referralID).toEqual(employer.referralID);
+      expect(createdEmployer.logoURI).toEqual(employer.logoURI);
+      expect(createdEmployer.leadDays).toEqual(employer.leadDays);
+      expect(createdEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
+      expect(createdEmployer.payrollDates).toEqual(employer.payrollDates);
+      expect(createdEmployer.documentNumber).toEqual(employer.documentNumber);
+      expect(createdEmployer.depositMatchingName).toBeNull();
       expect(createdEmployer.maxAllocationPercent).toBeUndefined();
 
       const allEmployers = await getAllEmployerRecords(prismaService);
@@ -202,6 +232,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(updatedEmployer.payrollDates).toEqual(employer.payrollDates);
       expect(updatedEmployer.documentNumber).toEqual(employer.documentNumber);
+      expect(updatedEmployer.depositMatchingName).toEqual(employer.depositMatchingName);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
@@ -233,6 +264,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.payrollDates).toEqual(employer.payrollDates);
       expect(updatedEmployer.maxAllocationPercent).toEqual(20);
       expect(updatedEmployer.documentNumber).toEqual(employer.documentNumber);
+      expect(updatedEmployer.depositMatchingName).toEqual(employer.depositMatchingName);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
@@ -262,6 +294,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(updatedEmployer.payrollDates).toEqual(employer.payrollDates);
       expect(updatedEmployer.documentNumber).toEqual(employer.documentNumber);
+      expect(updatedEmployer.depositMatchingName).toEqual(employer.depositMatchingName);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
@@ -292,6 +325,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(updatedEmployer.payrollDates).toEqual(employer.payrollDates);
       expect(updatedEmployer.documentNumber).toEqual(employer.documentNumber);
+      expect(updatedEmployer.depositMatchingName).toEqual(employer.depositMatchingName);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
@@ -323,6 +357,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(updatedEmployer.payrollDates).toEqual(payrollDates);
       expect(updatedEmployer.documentNumber).toEqual(employer.documentNumber);
+      expect(updatedEmployer.depositMatchingName).toEqual(employer.depositMatchingName);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
@@ -356,6 +391,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.payrollAccountNumber).toEqual(newEncryptedPayrollAccountNumber);
       expect(updatedEmployer.payrollDates).toEqual(employer.payrollDates);
       expect(updatedEmployer.documentNumber).toEqual(employer.documentNumber);
+      expect(updatedEmployer.depositMatchingName).toEqual(employer.depositMatchingName);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
@@ -385,6 +421,37 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.payrollAccountNumber).toEqual(employer.payrollAccountNumber);
       expect(updatedEmployer.payrollDates).toEqual(employer.payrollDates);
       expect(updatedEmployer.documentNumber).toEqual(employer.documentNumber);
+      expect(updatedEmployer.depositMatchingName).toEqual(employer.depositMatchingName);
+
+      const allEmployers = await getAllEmployerRecords(prismaService);
+      expect(allEmployers.length).toEqual(1);
+      delete allEmployers[0].maxAllocationPercent;
+      expect(allEmployers[0]).toEqual(updatedEmployer);
+    });
+
+    it("should update 'depositMatchingName' of an existing employer", async () => {
+      const employer = getRandomEmployer();
+      when(kmsService.encryptString(payrollAccountNumber, KmsKeyType.SSN)).thenResolve(encryptedPayrollAccountNumber);
+      const createdEmployer = await employerRepo.createEmployer(employer);
+      const updatedDepositMatchingName = "UPDATED DEPOSIT NAME";
+
+      const updatedEmployer = await employerRepo.updateEmployer(createdEmployer.id, {
+        depositMatchingName: updatedDepositMatchingName,
+      });
+
+      expect(updatedEmployer).toBeDefined();
+      expect(updatedEmployer.id).toBeDefined();
+      expect(updatedEmployer.createdTimestamp).toBeDefined();
+      expect(updatedEmployer.updatedTimestamp).toBeDefined();
+      expect(updatedEmployer.bubbleID).toEqual(employer.bubbleID);
+      expect(updatedEmployer.name).toEqual(employer.name);
+      expect(updatedEmployer.referralID).toEqual(employer.referralID);
+      expect(updatedEmployer.logoURI).toEqual(employer.logoURI);
+      expect(updatedEmployer.leadDays).toEqual(employer.leadDays);
+      expect(updatedEmployer.payrollAccountNumber).toEqual(employer.payrollAccountNumber);
+      expect(updatedEmployer.payrollDates).toEqual(employer.payrollDates);
+      expect(updatedEmployer.documentNumber).toEqual(employer.documentNumber);
+      expect(updatedEmployer.depositMatchingName).toEqual(updatedDepositMatchingName);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
@@ -414,6 +481,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.leadDays).toEqual(employer.leadDays);
       expect(updatedEmployer.payrollAccountNumber).toEqual(employer.payrollAccountNumber);
       expect(updatedEmployer.payrollDates).toEqual(employer.payrollDates);
+      expect(updatedEmployer.depositMatchingName).toEqual(employer.depositMatchingName);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(1);
@@ -448,6 +516,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.payrollAccountNumber).toEqual(encryptedPayrollAccountNumber);
       expect(updatedEmployer.payrollDates).toEqual(createdEmployer1.payrollDates);
       expect(updatedEmployer.documentNumber).toEqual(createdEmployer1.documentNumber);
+      expect(updatedEmployer.depositMatchingName).toEqual(createdEmployer1.depositMatchingName);
 
       const allEmployers = await getAllEmployerRecords(prismaService);
       expect(allEmployers.length).toEqual(2);

@@ -106,6 +106,7 @@ model Employer {
   createdTimestamp     DateTime?  @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp     DateTime?  @updatedAt // Marking optional so we don't need to set in tests
   name                 String
+  depositMatchingName  String?
   logoURI              String
   referralID           String     @unique()
   bubbleID             String     @unique()

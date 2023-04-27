@@ -53,6 +53,7 @@ const getRandomEmployer = (): Employer => {
   const employer: Employer = {
     id: uuid(),
     name: "Test Employer",
+    depositMatchingName: "Deposit Test Employer",
     bubbleID: uuid(),
     logoURI: "https://www.google.com",
     documentNumber: uuid(),
@@ -289,6 +290,27 @@ describe("EmployerServiceTests", () => {
       expect(createdEmployer).toEqual(employer);
     });
 
+    it("should create an employer with no depositMatchingName", async () => {
+      const employer = getRandomEmployer();
+      delete employer.depositMatchingName;
+
+      when(mockEmployerRepo.createEmployer(anything())).thenResolve(employer);
+
+      const createdEmployer = await employerService.createEmployer({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        bubbleID: employer.bubbleID,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+        payrollAccountNumber: employer.payrollAccountNumber,
+        payrollDates: employer.payrollDates,
+        maxAllocationPercent: employer.maxAllocationPercent,
+        documentNumber: employer.documentNumber,
+      });
+
+      expect(createdEmployer).toEqual(employer);
+    });
+
     it("should set default 'leadDays' as '1' if not specified", async () => {
       const employer = getRandomEmployer();
       when(mockEmployerRepo.createEmployer(anything())).thenResolve(employer);
@@ -424,6 +446,26 @@ describe("EmployerServiceTests", () => {
       expect(employerID).toEqual(employer.id);
       expect(propagatedEmployerUpdateRequest).toEqual({
         documentNumber: newDocumentNumber,
+      });
+    });
+
+    it("should update 'only' the depositMatchingName of the employer", async () => {
+      const employer = getRandomEmployer();
+      const newDepositMatchingName = uuid();
+
+      employer.depositMatchingName = newDepositMatchingName;
+      when(mockEmployerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+
+      const updatedEmployer = await employerService.updateEmployer(employer.id, {
+        depositMatchingName: newDepositMatchingName,
+      });
+
+      expect(updatedEmployer).toEqual(employer);
+
+      const [employerID, propagatedEmployerUpdateRequest] = capture(mockEmployerRepo.updateEmployer).last();
+      expect(employerID).toEqual(employer.id);
+      expect(propagatedEmployerUpdateRequest).toEqual({
+        depositMatchingName: newDepositMatchingName,
       });
     });
 

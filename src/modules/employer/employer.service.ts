@@ -140,6 +140,7 @@ export class EmployerService {
       payrollDates: request.payrollDates,
       ...(request.documentNumber && { documentNumber: request.documentNumber }),
       ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
+      ...(request.depositMatchingName && { depositMatchingName: request.depositMatchingName }),
     });
   }
 
@@ -167,6 +168,7 @@ export class EmployerService {
       ...(request.documentNumber && { documentNumber: request.documentNumber }),
       ...(request.leadDays && { leadDays: request.leadDays }),
       ...(request.payrollDates && { payrollDates: request.payrollDates }),
+      ...(request.depositMatchingName && { depositMatchingName: request.depositMatchingName }),
       ...(request.payrollAccountNumber && { payrollAccountNumber: request.payrollAccountNumber }),
       ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
     });

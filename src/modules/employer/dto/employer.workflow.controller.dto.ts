@@ -28,6 +28,9 @@ export class EmployerWorkflowDTO {
 
   @ApiPropertyOptional()
   documentNumber: string;
+
+  @ApiPropertyOptional()
+  depositMatchingName: string;
 }
 
 export class EmployeesWorkflowDTO {

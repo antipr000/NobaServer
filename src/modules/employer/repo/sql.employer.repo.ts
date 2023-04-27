@@ -50,6 +50,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
         logoURI: request.logoURI,
         leadDays: request.leadDays,
         ...(request.documentNumber && { documentNumber: request.documentNumber }),
+        ...(request.depositMatchingName && { depositMatchingName: request.depositMatchingName }),
         payrollAccountNumber: request.payrollAccountNumber,
         payrollDates: request.payrollDates,
         ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
@@ -87,6 +88,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
     try {
       const employerInput: Prisma.EmployerUpdateInput = {
         ...(request.name && { name: request.name }),
+        ...(request.depositMatchingName && { depositMatchingName: request.depositMatchingName }),
         ...(request.logoURI && { logoURI: request.logoURI }),
         ...(request.referralID && { referralID: request.referralID }),
         ...(request.leadDays && { leadDays: request.leadDays }),
