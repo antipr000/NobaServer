@@ -15,7 +15,7 @@ import { Employee, EmployeeAllocationCurrency, EmployeeCreateRequest, EmployeeSt
 import { IEmployeeRepo } from "../repo/employee.repo";
 import { SqlEmployeeRepo } from "../repo/sql.employee.repo";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
-import { PaginatedResult } from "../../../core/infra/PaginationTypes";
+import { PaginatedResult, SortOrder } from "../../../core/infra/PaginationTypes";
 
 type EmployeeModel = PrismaEmployeeModel & {
   employer?: PrismaEmployerModel;
@@ -657,6 +657,79 @@ describe("SqlEmployeeRepoTests", () => {
       expect(filteredEmployees6.totalPages).toEqual(1);
       expect(filteredEmployees6.items[0].consumer.props.firstName).toEqual("Juan Danial");
       expect(filteredEmployees6.items[0].consumer.props.lastName).toEqual("Hoyon Castro");
+
+      await prismaService.employee.update({
+        where: {
+          id: createdEmployee4.id,
+        },
+        data: {
+          createdTimestamp: new Date("2020-01-01"),
+          status: EmployeeStatus.UNLINKED,
+        },
+      });
+
+      await prismaService.employee.update({
+        where: {
+          id: createdEmployee5.id,
+        },
+        data: {
+          createdTimestamp: new Date("2020-01-02"),
+          status: EmployeeStatus.CREATED,
+        },
+      });
+
+      // Filter by status
+      const filteredEmployees10: PaginatedResult<Employee> = await employeeRepo.getFilteredEmployees({
+        employerID: employerID1,
+        status: EmployeeStatus.UNLINKED,
+        pageLimit: 10,
+        pageOffset: 0,
+      });
+
+      expect(filteredEmployees10.items.length).toEqual(1);
+      expect(filteredEmployees10.totalPages).toEqual(1);
+      expect(filteredEmployees10.items[0].id).toEqual(createdEmployee4.id);
+
+      // Ordering tests
+
+      const filteredEmployees7 = await employeeRepo.getFilteredEmployees({
+        employerID: employerID1,
+        pageLimit: 10,
+        pageOffset: 0,
+        sortBy: {
+          createdAt: SortOrder.ASC,
+        },
+      });
+
+      expect(filteredEmployees7.items.length).toEqual(5);
+      expect(filteredEmployees7.items[0].id).toBe(createdEmployee4.id);
+      expect(filteredEmployees7.items[1].id).toBe(createdEmployee5.id);
+
+      const filteredEmployees8 = await employeeRepo.getFilteredEmployees({
+        employerID: employerID1,
+        pageLimit: 10,
+        pageOffset: 0,
+        sortBy: {
+          createdAt: SortOrder.DESC,
+        },
+      });
+
+      expect(filteredEmployees8.items.length).toEqual(5);
+      expect(filteredEmployees8.items[4].id).toBe(createdEmployee4.id);
+      expect(filteredEmployees8.items[3].id).toBe(createdEmployee5.id);
+
+      const filteredEmployees9 = await employeeRepo.getFilteredEmployees({
+        employerID: employerID1,
+        pageLimit: 10,
+        pageOffset: 0,
+        sortBy: {
+          sortStatus: true,
+        },
+      });
+
+      expect(filteredEmployees9.items.length).toEqual(5);
+      expect(filteredEmployees9.items[0].id).toBe(createdEmployee5.id); // status = CREATED
+      expect(filteredEmployees9.items[4].id).toBe(createdEmployee4.id); // status = UNLINKED
     });
   });
 });

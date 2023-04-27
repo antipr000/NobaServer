@@ -7,7 +7,7 @@ export class SortOptions {
   createdAt?: SortOrder;
 
   @ApiPropertyOptional()
-  status?: boolean;
+  sortStatus?: boolean;
 }
 
 export class EmployeeFilterOptionsDTO {
@@ -31,7 +31,7 @@ export class EmployeeFilterOptionsDTO {
   @ApiPropertyOptional({ description: "number of items per page" })
   pageLimit?: number;
 
-  @ApiPropertyOptional({ description: "sort by status", enum: EmployeeStatus })
+  @ApiPropertyOptional({ description: "filter by status", enum: EmployeeStatus })
   status?: EmployeeStatus;
 
   @ApiPropertyOptional()
