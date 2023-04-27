@@ -12,6 +12,9 @@ export class EmployerWorkflowDTO {
   employerLogoURI?: string;
 
   @ApiProperty()
+  locale?: string;
+
+  @ApiProperty()
   leadDays: number;
 
   @ApiProperty()
