@@ -12,10 +12,10 @@ export class RegisterEmployerRequestDTO {
   logoURI: string;
 
   @ApiProperty()
-  referralID: string;
+  locale?: string;
 
   @ApiProperty()
-  locale?: string;
+  referralID: string;
 
   @ApiProperty()
   bubbleID: string;
