@@ -696,9 +696,7 @@ describe("SqlEmployeeRepoTests", () => {
         employerID: employerID1,
         pageLimit: 10,
         pageOffset: 0,
-        sortBy: {
-          createdTimestamp: SortOrder.ASC,
-        },
+        createdTimestamp: SortOrder.ASC,
       });
 
       expect(filteredEmployees7.items.length).toEqual(5);
@@ -709,9 +707,7 @@ describe("SqlEmployeeRepoTests", () => {
         employerID: employerID1,
         pageLimit: 10,
         pageOffset: 0,
-        sortBy: {
-          createdTimestamp: SortOrder.DESC,
-        },
+        createdTimestamp: SortOrder.DESC,
       });
 
       expect(filteredEmployees8.items.length).toEqual(5);
@@ -722,9 +718,7 @@ describe("SqlEmployeeRepoTests", () => {
         employerID: employerID1,
         pageLimit: 10,
         pageOffset: 0,
-        sortBy: {
-          sortStatus: SortOrder.ASC,
-        },
+        sortStatus: SortOrder.ASC,
       });
 
       expect(filteredEmployees9.items.length).toEqual(5);

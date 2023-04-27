@@ -2,14 +2,6 @@ import { ApiPropertyOptional } from "@nestjs/swagger";
 import { EmployeeStatus } from "../domain/Employee";
 import { SortOrder } from "../../../core/infra/PaginationTypes";
 
-export class SortOptions {
-  @ApiPropertyOptional({ enum: SortOrder })
-  createdTimestamp?: SortOrder;
-
-  @ApiPropertyOptional({ enum: SortOrder })
-  sortStatus?: SortOrder;
-}
-
 export class EmployeeFilterOptionsDTO {
   @ApiPropertyOptional()
   employerID?: string;
@@ -34,6 +26,9 @@ export class EmployeeFilterOptionsDTO {
   @ApiPropertyOptional({ description: "filter by status", enum: EmployeeStatus })
   status?: EmployeeStatus;
 
-  @ApiPropertyOptional()
-  sortBy?: SortOptions;
+  @ApiPropertyOptional({ enum: SortOrder })
+  createdTimestamp?: SortOrder;
+
+  @ApiPropertyOptional({ enum: SortOrder })
+  sortStatus?: SortOrder;
 }
