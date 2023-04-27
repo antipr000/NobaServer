@@ -48,6 +48,9 @@ export class BubbleWebhookMapper {
           status: employee.status,
           firstName: employee.consumer.props.firstName,
           lastName: employee.consumer.props.lastName,
+          consumerEmail: employee.consumer.props.email,
+          phoneNumber: employee.consumer.props.phone,
+          handle: employee.consumer.props.handle,
         };
       }),
     };

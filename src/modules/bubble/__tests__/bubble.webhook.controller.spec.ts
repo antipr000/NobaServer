@@ -388,6 +388,9 @@ describe("BubbleWebhookControllerTests", () => {
             status: employee.status,
             firstName: employee.consumer.props.firstName,
             lastName: employee.consumer.props.lastName,
+            phoneNumber: employee.consumer.props.phone,
+            consumerEmail: employee.consumer.props.email,
+            handle: employee.consumer.props.handle,
           },
         ],
       });

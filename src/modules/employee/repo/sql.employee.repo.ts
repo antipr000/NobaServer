@@ -253,12 +253,12 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
       },
       orderBy: {
         ...(filterOptions.sortBy &&
-          filterOptions.sortBy.createdAt && {
-            createdTimestamp: filterOptions.sortBy.createdAt,
+          filterOptions.sortBy.createdTimestamp && {
+            createdTimestamp: filterOptions.sortBy.createdTimestamp,
           }),
         ...(filterOptions.sortBy &&
           filterOptions.sortBy.sortStatus && {
-            status: "asc",
+            status: filterOptions.sortBy.sortStatus,
           }),
       },
       include: {

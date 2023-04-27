@@ -125,6 +125,15 @@ export class EmployeeResponseDTO extends EmployeeDTO {
 
   @ApiPropertyOptional()
   lastName?: string;
+
+  @ApiProperty()
+  handle: string;
+
+  @ApiPropertyOptional()
+  consumerEmail?: string;
+
+  @ApiPropertyOptional()
+  phoneNumber?: string;
 }
 
 export class PaginatedEmployeeResponseDTO extends PaginatedResult<EmployeeResponseDTO> {

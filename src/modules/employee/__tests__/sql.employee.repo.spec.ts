@@ -697,7 +697,7 @@ describe("SqlEmployeeRepoTests", () => {
         pageLimit: 10,
         pageOffset: 0,
         sortBy: {
-          createdAt: SortOrder.ASC,
+          createdTimestamp: SortOrder.ASC,
         },
       });
 
@@ -710,7 +710,7 @@ describe("SqlEmployeeRepoTests", () => {
         pageLimit: 10,
         pageOffset: 0,
         sortBy: {
-          createdAt: SortOrder.DESC,
+          createdTimestamp: SortOrder.DESC,
         },
       });
 
@@ -723,7 +723,7 @@ describe("SqlEmployeeRepoTests", () => {
         pageLimit: 10,
         pageOffset: 0,
         sortBy: {
-          sortStatus: true,
+          sortStatus: SortOrder.ASC,
         },
       });
 

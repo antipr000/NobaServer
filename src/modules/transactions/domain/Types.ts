@@ -70,7 +70,6 @@ export interface CryptoTransactionRequestResult {
 }
 
 import { ApiPropertyOptional } from "@nestjs/swagger";
-import { TransactionProps } from "./Transaction";
 
 export enum TransactionsQuerySortField {
   transactionTimestamp = "transactionTimestamp",
@@ -125,19 +124,4 @@ export class TransactionFilterOptions {
 
   @ApiPropertyOptional()
   cryptoCurrency?: string;
-}
-
-export function transactionPropFromQuerySortField(transactionQuerySortField: TransactionsQuerySortField) {
-  if (!transactionQuerySortField) {
-    return undefined;
-  }
-  const mp: Record<TransactionsQuerySortField, keyof TransactionProps> = {
-    transactionTimestamp: "transactionTimestamp",
-    leg1Amount: "leg1Amount",
-    leg2Amount: "leg2Amount",
-    leg1: "leg1",
-    leg2: "leg2",
-  };
-
-  return mp[transactionQuerySortField];
 }

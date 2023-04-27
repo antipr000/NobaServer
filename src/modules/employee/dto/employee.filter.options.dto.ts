@@ -4,10 +4,10 @@ import { SortOrder } from "../../../core/infra/PaginationTypes";
 
 export class SortOptions {
   @ApiPropertyOptional({ enum: SortOrder })
-  createdAt?: SortOrder;
+  createdTimestamp?: SortOrder;
 
-  @ApiPropertyOptional()
-  sortStatus?: boolean;
+  @ApiPropertyOptional({ enum: SortOrder })
+  sortStatus?: SortOrder;
 }
 
 export class EmployeeFilterOptionsDTO {
