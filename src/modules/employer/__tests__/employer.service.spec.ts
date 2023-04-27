@@ -55,6 +55,7 @@ const getRandomEmployer = (): Employer => {
     name: "Test Employer",
     bubbleID: uuid(),
     logoURI: "https://www.google.com",
+    documentNumber: uuid(),
     referralID: uuid(),
     leadDays: 5,
     payrollAccountNumber: "111111111",
@@ -268,6 +269,26 @@ describe("EmployerServiceTests", () => {
       expect(createdEmployer).toEqual(employer);
     });
 
+    it("should create an employer with no documentNumber", async () => {
+      const employer = getRandomEmployer();
+      delete employer.documentNumber;
+
+      when(mockEmployerRepo.createEmployer(anything())).thenResolve(employer);
+
+      const createdEmployer = await employerService.createEmployer({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        bubbleID: employer.bubbleID,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+        payrollAccountNumber: employer.payrollAccountNumber,
+        payrollDates: employer.payrollDates,
+        maxAllocationPercent: employer.maxAllocationPercent,
+      });
+
+      expect(createdEmployer).toEqual(employer);
+    });
+
     it("should set default 'leadDays' as '1' if not specified", async () => {
       const employer = getRandomEmployer();
       when(mockEmployerRepo.createEmployer(anything())).thenResolve(employer);
@@ -383,6 +404,26 @@ describe("EmployerServiceTests", () => {
       expect(employerID).toEqual(employer.id);
       expect(propagatedEmployerUpdateRequest).toEqual({
         leadDays: 4,
+      });
+    });
+
+    it("should update 'only' the documentNumber of the employer", async () => {
+      const employer = getRandomEmployer();
+      const newDocumentNumber = uuid();
+
+      employer.documentNumber = newDocumentNumber;
+      when(mockEmployerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+
+      const updatedEmployer = await employerService.updateEmployer(employer.id, {
+        documentNumber: newDocumentNumber,
+      });
+
+      expect(updatedEmployer).toEqual(employer);
+
+      const [employerID, propagatedEmployerUpdateRequest] = capture(mockEmployerRepo.updateEmployer).last();
+      expect(employerID).toEqual(employer.id);
+      expect(propagatedEmployerUpdateRequest).toEqual({
+        documentNumber: newDocumentNumber,
       });
     });
 

@@ -138,6 +138,7 @@ export class EmployerService {
       leadDays: request.leadDays,
       payrollAccountNumber: request.payrollAccountNumber,
       payrollDates: request.payrollDates,
+      ...(request.documentNumber && { documentNumber: request.documentNumber }),
       ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
     });
   }
@@ -160,8 +161,10 @@ export class EmployerService {
     }
 
     return this.employerRepo.updateEmployer(id, {
+      ...(request.name && { name: request.name }),
       ...(request.logoURI && { logoURI: request.logoURI }),
       ...(request.referralID && { referralID: request.referralID }),
+      ...(request.documentNumber && { documentNumber: request.documentNumber }),
       ...(request.leadDays && { leadDays: request.leadDays }),
       ...(request.payrollDates && { payrollDates: request.payrollDates }),
       ...(request.payrollAccountNumber && { payrollAccountNumber: request.payrollAccountNumber }),

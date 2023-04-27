@@ -25,6 +25,9 @@ export class EmployerWorkflowDTO {
 
   @ApiPropertyOptional()
   maxAllocationPercent: number;
+
+  @ApiPropertyOptional()
+  documentNumber: string;
 }
 
 export class EmployeesWorkflowDTO {

@@ -24,6 +24,9 @@ export class EmployerDTO {
 
   @ApiPropertyOptional()
   maxAllocationPercent: number;
+
+  @ApiPropertyOptional()
+  documentNumber: string;
 }
 
 export class PayrollData {

@@ -18,6 +18,7 @@ const getRandomEmployer = (): Employer => {
     id: uuid(),
     name: "Test Employer",
     bubbleID: uuid(),
+    documentNumber: uuid(),
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 5,
@@ -85,6 +86,7 @@ describe("EmployerControllerTests", () => {
         employerReferralID: employer.referralID,
         leadDays: employer.leadDays,
         payrollDates: employer.payrollDates,
+        documentNumber: employer.documentNumber,
       });
     });
 
@@ -103,6 +105,7 @@ describe("EmployerControllerTests", () => {
         employerReferralID: employer.referralID,
         payrollDates: employer.payrollDates,
         maxAllocationPercent: employer.maxAllocationPercent,
+        documentNumber: employer.documentNumber,
       });
     });
 
@@ -120,6 +123,7 @@ describe("EmployerControllerTests", () => {
         employerReferralID: employer.referralID,
         payrollDates: employer.payrollDates,
         nextPayrollDate: employer.payrollDates[0],
+        documentNumber: employer.documentNumber,
       });
     });
 
@@ -137,6 +141,7 @@ describe("EmployerControllerTests", () => {
         employerReferralID: employer.referralID,
         payrollDates: employer.payrollDates,
         nextPayrollDate: employer.payrollDates[1],
+        documentNumber: employer.documentNumber,
       });
     });
 
@@ -155,6 +160,7 @@ describe("EmployerControllerTests", () => {
         leadDays: employer.leadDays,
         payrollDates: payrollDates,
         nextPayrollDate: employer.payrollDates[1],
+        documentNumber: employer.documentNumber,
       });
     });
 

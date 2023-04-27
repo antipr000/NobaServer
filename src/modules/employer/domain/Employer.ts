@@ -7,7 +7,7 @@ export class Employer {
   logoURI: string;
   referralID: string;
   bubbleID: string;
-  documentNumber: string;
+  documentNumber?: string;
   leadDays: number;
   maxAllocationPercent?: number;
   payrollDates: string[];
