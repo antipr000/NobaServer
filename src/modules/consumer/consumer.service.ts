@@ -627,22 +627,20 @@ export class ConsumerService {
     return await this.kmsService.decryptString(consumer.socialSecurityNumber, KmsKeyType.SSN);
   }
 
-  async addZeroHashParticipantCode(consumerID: string, zeroHashParticipantCode: string): Promise<Consumer> {
-    // const consumer = await this.getConsumer(consumerID);
-
-    // return await this.updateConsumer({
-    //   ...consumer.props,
-    //   zhParticipantCode: zeroHashParticipantCode,
-    // });
-    throw new Error("Not implemented");
-  }
-
   async registerWithAnEmployer(
     employerID: string,
     consumerID: string,
     allocationAmountInPesos: number,
+    employeeID?: string,
   ): Promise<Employee> {
-    let employee: Employee = await this.employeeService.createEmployee(allocationAmountInPesos, employerID, consumerID);
+    let employee: Employee;
+    if (employeeID) {
+      // Note that linkEmployee will call through to checks to ensure we don't already
+      // have a different consumer linked to this record. If we do, an error will be thrown.
+      employee = await this.employeeService.linkEmployee(employeeID, consumerID);
+    } else {
+      employee = await this.employeeService.createEmployee(allocationAmountInPesos, employerID, consumerID);
+    }
 
     // TODO: Design a way to post to Bubble efficiently without blocking end users.
     const consumer: Consumer = await this.consumerRepo.getConsumer(consumerID);
@@ -660,7 +658,10 @@ export class ConsumerService {
       });
     }
 
-    employee = await this.employeeService.getEmployeeByID(employee.id, true);
+    // We may or may not have employer details here. If we don't, we need them
+    if (!employee.employer) {
+      employee = await this.employeeService.getEmployeeByID(employee.id, true);
+    }
     const payload = NotificationPayloadMapper.toRegisterNewEmployeeEvent(consumer, employee);
     await this.notificationService.sendNotification(NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT, payload);
 

@@ -6,4 +6,7 @@ export class RegisterWithEmployerDTO {
 
   @ApiProperty()
   allocationAmountInPesos: number;
+
+  @ApiPropertyOptional()
+  employeeID: string;
 }

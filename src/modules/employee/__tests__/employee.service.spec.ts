@@ -127,6 +127,31 @@ describe("EmployeeServiceTests", () => {
     });
   });
 
+  describe("linkEmployee", () => {
+    it("should link an unlinked employee to a consumer", async () => {
+      const employee = getRandomEmployeeWithoutConsumer(true);
+
+      when(employeeRepo.getEmployeeByID(employee.id, true)).thenResolve(employee);
+      when(employeeRepo.updateEmployee(anything(), anything())).thenResolve({
+        ...employee,
+        status: EmployeeStatus.LINKED,
+      });
+
+      const consumerID = uuid();
+      const updatedEmployee = await employeeService.linkEmployee(employee.id, consumerID);
+
+      expect(updatedEmployee).toEqual({ ...employee, status: EmployeeStatus.LINKED });
+
+      const [employeeID, propagatedEmployeeUpdateRequest] = capture(employeeRepo.updateEmployee).last();
+      expect(employeeID).toEqual(employee.id);
+      expect(propagatedEmployeeUpdateRequest).toEqual({
+        allocationAmount: 0,
+        consumerID: consumerID,
+        status: EmployeeStatus.LINKED,
+      });
+    });
+  });
+
   describe("updateEmployee", () => {
     it("should update an employee", async () => {
       const employee = getRandomEmployee(true);
