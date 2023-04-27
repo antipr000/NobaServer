@@ -1,4 +1,4 @@
-import { anyString, anything, mock, when } from "ts-mockito";
+import { anyNumber, anyString, anything, mock, when } from "ts-mockito";
 import { IPayrollRepo } from "../repo/payroll.repo";
 import { SqlPayrollRepo } from "../repo/sql.payroll.repo";
 
@@ -9,6 +9,12 @@ export function getMockPayrollRepoWithDefaults(): IPayrollRepo {
   when(payrollRepo.getAllPayrollsForEmployer(anyString(), anything())).thenReject(new Error("Not implemented"));
   when(payrollRepo.getPayrollByID(anyString())).thenReject(new Error("Not implemented"));
   when(payrollRepo.updatePayroll(anyString(), anything())).thenReject(new Error("Not implemented"));
+  when(payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(anyNumber(), anyString())).thenReject(
+    new Error("Not implemented"),
+  );
+  when(payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(anyNumber(), anyString())).thenReject(
+    new Error("Not implemented"),
+  );
 
   return payrollRepo;
 }

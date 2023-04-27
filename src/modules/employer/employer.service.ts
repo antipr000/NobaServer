@@ -661,6 +661,23 @@ export class EmployerService {
     return this.employerRepo.getEmployerByID(payroll.employerID);
   }
 
+  async getPayrollMatchingAmountAndEmployerDocumentNumber(
+    debitAmount: number,
+    employerDocumentNumber: string,
+  ): Promise<Payroll[]> {
+    return this.payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(debitAmount, employerDocumentNumber);
+  }
+
+  async getPayrollMatchingAmountAndEmployerDepositMatchingName(
+    debitAmount: number,
+    employerDepositMatchingName: string,
+  ): Promise<Payroll[]> {
+    return this.payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+      debitAmount,
+      employerDepositMatchingName,
+    );
+  }
+
   private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDisbursement[]> {
     const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
 
