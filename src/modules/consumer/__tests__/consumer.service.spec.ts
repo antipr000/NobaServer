@@ -71,6 +71,7 @@ const getRandomEmployer = (): Employer => {
   const employer: Employer = {
     id: uuid(),
     name: "Test Employer",
+    locale: "en-us",
     bubbleID: uuid(),
     logoURI: "https://www.google.com",
     referralID: uuid(),

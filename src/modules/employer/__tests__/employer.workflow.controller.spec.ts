@@ -62,6 +62,7 @@ describe("EmployerWorkflowControllerTests", () => {
         employerID: employer.id,
         employerName: employer.name,
         employerLogoURI: employer.logoURI,
+        locale: employer.locale,
         employerReferralID: employer.referralID,
         leadDays: employer.leadDays,
         payrollDates: sortedPayrollDates,
