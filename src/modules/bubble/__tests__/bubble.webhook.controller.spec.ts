@@ -215,7 +215,7 @@ describe("BubbleWebhookControllerTests", () => {
         bubbleService.updateEmployee,
       ).last();
       expect(bubbleServiceUpdateEmployeeEmployeeIDArgs).toEqual("employeeID");
-      expect(bubbleServiceUpdateEmployeeRequestBodyArgs).toEqual({
+      expect(bubbleServiceUpdateEmployeeRequestBodyArgs).toStrictEqual({
         status: EmployeeStatus.UNLINKED,
       });
     });
