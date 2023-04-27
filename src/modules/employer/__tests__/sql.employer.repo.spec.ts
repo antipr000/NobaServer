@@ -24,7 +24,7 @@ const getRandomEmployer = (): EmployerCreateRequest => {
   const employee: EmployerCreateRequest = {
     bubbleID: uuid(),
     name: "Test Employer",
-    locale: "en-us",
+    locale: "en_us",
     referralID: uuid(),
     logoURI: "https://www.google.com",
     payrollAccountNumber: payrollAccountNumber,
