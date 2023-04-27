@@ -3,6 +3,7 @@ import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { Bool } from "../../../core/domain/ApiEnums";
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { EmployeeDTO } from "../../../modules/employee/dto/employee.dto";
+import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
 
 export class RegisterEmployerRequestDTO {
   @ApiProperty()
@@ -54,8 +55,11 @@ export class UpdateEmployerRequestDTO {
 }
 
 export class UpdateEmployeeRequestDTO {
-  @ApiProperty()
-  salary: number;
+  @ApiPropertyOptional()
+  salary?: number;
+
+  @ApiPropertyOptional({ enum: EmployeeStatus })
+  status?: EmployeeStatus;
 }
 
 export class CreatePayrollRequestDTO {

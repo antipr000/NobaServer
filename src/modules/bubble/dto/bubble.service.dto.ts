@@ -1,3 +1,4 @@
+import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
 import { Payroll } from "../../../modules/employer/domain/Payroll";
 import { PayrollDisbursement } from "../../../modules/employer/domain/PayrollDisbursement";
 
@@ -23,7 +24,8 @@ export type UpdateNobaEmployerRequest = {
 };
 
 export type UpdateNobaEmployeeRequest = {
-  salary: number;
+  salary?: number;
+  status?: EmployeeStatus;
 };
 
 export type PayrollWithDisbursements = Payroll & {

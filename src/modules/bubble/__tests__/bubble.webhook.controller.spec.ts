@@ -17,6 +17,7 @@ import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/moc
 import { getRandomEmployer } from "../../../modules/employer/test_utils/employer.test.utils";
 import { getRandomEmployee } from "../../../modules/employee/test_utils/employee.test.utils";
 import { getRandomActiveConsumer } from "../../../modules/consumer/test_utils/test.utils";
+import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
 
 describe("BubbleWebhookControllerTests", () => {
   jest.setTimeout(20000);
@@ -181,7 +182,7 @@ describe("BubbleWebhookControllerTests", () => {
   });
 
   describe("updateEmployee", () => {
-    it("should forwards the request to the BubbleService", async () => {
+    it("should forward the request to the BubbleService for salary update", async () => {
       const employeeID = "employeeID";
       const requestBody = {
         salary: 1000,
@@ -197,6 +198,46 @@ describe("BubbleWebhookControllerTests", () => {
       expect(bubbleServiceUpdateEmployeeEmployeeIDArgs).toEqual("employeeID");
       expect(bubbleServiceUpdateEmployeeRequestBodyArgs).toEqual({
         salary: 1000,
+      });
+    });
+
+    it("should forward the request to the BubbleService for status update", async () => {
+      const employeeID = "employeeID";
+      const requestBody = {
+        status: EmployeeStatus.UNLINKED,
+      };
+
+      when(bubbleService.updateEmployee(anyString(), anything())).thenResolve();
+
+      await bubbleWebhookController.updateEmployee(requestBody, employeeID);
+
+      const [bubbleServiceUpdateEmployeeEmployeeIDArgs, bubbleServiceUpdateEmployeeRequestBodyArgs] = capture(
+        bubbleService.updateEmployee,
+      ).last();
+      expect(bubbleServiceUpdateEmployeeEmployeeIDArgs).toEqual("employeeID");
+      expect(bubbleServiceUpdateEmployeeRequestBodyArgs).toEqual({
+        status: EmployeeStatus.UNLINKED,
+      });
+    });
+
+    it("should forward the request to the BubbleService for all fields update", async () => {
+      const employeeID = "employeeID";
+      const requestBody = {
+        salary: 1000,
+        status: EmployeeStatus.UNLINKED,
+      };
+
+      when(bubbleService.updateEmployee(anyString(), anything())).thenResolve();
+
+      await bubbleWebhookController.updateEmployee(requestBody, employeeID);
+
+      const [bubbleServiceUpdateEmployeeEmployeeIDArgs, bubbleServiceUpdateEmployeeRequestBodyArgs] = capture(
+        bubbleService.updateEmployee,
+      ).last();
+      expect(bubbleServiceUpdateEmployeeEmployeeIDArgs).toEqual("employeeID");
+      expect(bubbleServiceUpdateEmployeeRequestBodyArgs).toEqual({
+        salary: 1000,
+        status: EmployeeStatus.UNLINKED,
       });
     });
   });

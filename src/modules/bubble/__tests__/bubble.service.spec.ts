@@ -428,7 +428,7 @@ describe("BubbleServiceTests", () => {
   });
 
   describe("updateEmployee", () => {
-    it("should update employee", async () => {
+    it("should update employee salary", async () => {
       const employer = getRandomEmployer();
       const consumer = getRandomConsumer();
       const employee = getRandomEmployee(consumer.props.id, employer);
@@ -447,6 +447,28 @@ describe("BubbleServiceTests", () => {
       expect(propagatedEmployeeIDToEmployeeService).toEqual(employee.id);
       expect(propagatedEmployeePropsToEmployeeService).toEqual({
         salary: 1000,
+      });
+    });
+
+    it("should update employee status", async () => {
+      const employer = getRandomEmployer();
+      const consumer = getRandomConsumer();
+      const employee = getRandomEmployee(consumer.props.id, employer);
+
+      when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
+      when(employeeService.updateEmployee(anyString(), anything())).thenResolve(employee);
+
+      await bubbleService.updateEmployee(employee.id, {
+        status: EmployeeStatus.UNLINKED,
+      });
+
+      const [propagatedEmployeeIDToEmployeeService, propagatedEmployeePropsToEmployeeService] = capture(
+        employeeService.updateEmployee,
+      ).last();
+
+      expect(propagatedEmployeeIDToEmployeeService).toEqual(employee.id);
+      expect(propagatedEmployeePropsToEmployeeService).toEqual({
+        status: EmployeeStatus.UNLINKED,
       });
     });
 
@@ -620,6 +642,14 @@ describe("BubbleServiceTests", () => {
       expect(response).toStrictEqual([payrollDisbursement]);
     });
 
+    it("should throw ServiceException if employer doesn't exist", async () => {
+      when(employerService.getEmployerByReferralID(anything())).thenResolve(null);
+
+      expect(bubbleService.getAllDisbursementsForEmployee("1234", "456")).rejects.toThrowServiceException(
+        ServiceErrorCode.DOES_NOT_EXIST,
+      );
+    });
+
     it("should throw ServiceException when employee does not belong to employer", async () => {
       const employer = getRandomEmployer();
       const employee = getRandomEmployee("fake-consumer-id", employer);
@@ -628,9 +658,9 @@ describe("BubbleServiceTests", () => {
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
 
-      await expect(
-        async () => await bubbleService.getAllDisbursementsForEmployee(employer.referralID, employee.id),
-      ).rejects.toThrow(ServiceException);
+      expect(
+        bubbleService.getAllDisbursementsForEmployee(employer.referralID, employee.id),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
     });
   });
 

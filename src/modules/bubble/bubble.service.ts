@@ -93,6 +93,7 @@ export class BubbleService {
 
     const updatedEmployee = await this.employeeService.updateEmployee(employeeID, {
       salary: request.salary,
+      status: request.status,
     });
 
     // If the salary update triggered a change to the allocation percent, update Bubble
