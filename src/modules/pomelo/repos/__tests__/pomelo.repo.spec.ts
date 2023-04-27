@@ -685,16 +685,20 @@ describe("SqlPomeloRepoTests", () => {
         pomeloCardID: uuid(),
         pomeloUserID: uuid(),
         amountInUSD: 10,
-        amountInLocalCurrency: 500,
+        localAmount: 500,
         localCurrency: PomeloCurrency.COP,
         settlementAmount: 10,
         settlementCurrency: PomeloCurrency.USD,
+        transactionAmount: 500,
+        transactionCurrency: PomeloCurrency.COP,
         pomeloTransactionType: PomeloTransactionType.PURCHASE,
         pointType: PomeloPointType.ECOMMERCE,
         entryMode: PomeloEntryMode.CONTACTLESS,
         countryCode: "COL",
         origin: PomeloOrigin.DOMESTIC,
         source: PomeloSource.CLEARING,
+        merchantName: "MERCHANT NAME",
+        merchantMCC: "MCC",
       };
 
       const requiredFields = [
@@ -703,17 +707,21 @@ describe("SqlPomeloRepoTests", () => {
         "pomeloCardID",
         "pomeloUserID",
         "amountInUSD",
-        "amountInLocalCurrency",
+        "localAmount",
         "localCurrency",
         "pomeloIdempotencyKey",
         "settlementAmount",
         "settlementCurrency",
+        "transactionAmount",
+        "transactionCurrency",
         "pomeloTransactionType",
         "pointType",
         "entryMode",
         "countryCode",
         "origin",
         "source",
+        "merchantName",
+        "merchantMCC",
       ];
       it.each(requiredFields)("should throw an error if '%s' is not specified", async field => {
         const request: PomeloTransactionSaveRequest = JSON.parse(JSON.stringify(completeRequest));
@@ -732,6 +740,7 @@ describe("SqlPomeloRepoTests", () => {
       const enumFields = [
         "localCurrency",
         "settlementCurrency",
+        "transactionCurrency",
         "pomeloTransactionType",
         "pointType",
         "entryMode",
@@ -774,16 +783,20 @@ describe("SqlPomeloRepoTests", () => {
           pomeloCardID: pomeloCard.pomeloCardID,
           pomeloUserID: pomeloUser.pomeloID,
           amountInUSD: 10,
-          amountInLocalCurrency: 500,
+          localAmount: 500,
           localCurrency: PomeloCurrency.COP,
           settlementAmount: 10,
           settlementCurrency: PomeloCurrency.USD,
+          transactionAmount: 500,
+          transactionCurrency: PomeloCurrency.COP,
           pomeloTransactionType: PomeloTransactionType.PURCHASE,
           pointType: PomeloPointType.ECOMMERCE,
           entryMode: PomeloEntryMode.CONTACTLESS,
           countryCode: "COL",
           origin: PomeloOrigin.DOMESTIC,
           source: PomeloSource.CLEARING,
+          merchantName: "MERCHANT NAME",
+          merchantMCC: "MCC",
         };
       });
 
@@ -854,16 +867,20 @@ describe("SqlPomeloRepoTests", () => {
           pomeloCardID: pomeloCard.pomeloCardID,
           pomeloUserID: pomeloUser.pomeloID,
           amountInUSD: 10,
-          amountInLocalCurrency: 500,
+          localAmount: 500,
           localCurrency: PomeloCurrency.COP,
           settlementAmount: 10,
           settlementCurrency: PomeloCurrency.USD,
+          transactionAmount: 500,
+          transactionCurrency: PomeloCurrency.COP,
           pomeloTransactionType: PomeloTransactionType.PURCHASE,
           pointType: PomeloPointType.ECOMMERCE,
           entryMode: PomeloEntryMode.CONTACTLESS,
           countryCode: "COL",
           origin: PomeloOrigin.DOMESTIC,
           source: PomeloSource.CLEARING,
+          merchantName: "MERCHANT NAME",
+          merchantMCC: "MCC",
         };
       });
 
@@ -889,7 +906,7 @@ describe("SqlPomeloRepoTests", () => {
           parentPomeloTransactionID: null,
           nobaTransactionID: request1.nobaTransactionID,
           amountInUSD: request1.amountInUSD,
-          amountInLocalCurrency: request1.amountInLocalCurrency,
+          localAmount: request1.localAmount,
           localCurrency: request1.localCurrency,
           status: PomeloTransactionStatus.PENDING,
           countryCode: request1.countryCode,
@@ -900,7 +917,11 @@ describe("SqlPomeloRepoTests", () => {
           pomeloUserID: request1.pomeloUserID,
           settlementAmount: request1.settlementAmount,
           settlementCurrency: request1.settlementCurrency,
+          transactionAmount: request1.transactionAmount,
+          transactionCurrency: request1.transactionCurrency,
           source: request1.source,
+          merchantName: "MERCHANT NAME",
+          merchantMCC: "MCC",
           createdTimestamp: expect.any(Date),
           updatedTimestamp: expect.any(Date),
         });
@@ -912,7 +933,7 @@ describe("SqlPomeloRepoTests", () => {
           parentPomeloTransactionID: request1.pomeloTransactionID,
           nobaTransactionID: request2.nobaTransactionID,
           amountInUSD: request2.amountInUSD,
-          amountInLocalCurrency: request2.amountInLocalCurrency,
+          localAmount: request2.localAmount,
           localCurrency: request2.localCurrency,
           status: PomeloTransactionStatus.PENDING,
           countryCode: request2.countryCode,
@@ -923,7 +944,11 @@ describe("SqlPomeloRepoTests", () => {
           pomeloUserID: request2.pomeloUserID,
           settlementAmount: request2.settlementAmount,
           settlementCurrency: request2.settlementCurrency,
+          transactionAmount: request2.transactionAmount,
+          transactionCurrency: request2.transactionCurrency,
           source: request2.source,
+          merchantName: "MERCHANT NAME",
+          merchantMCC: "MCC",
           createdTimestamp: expect.any(Date),
           updatedTimestamp: expect.any(Date),
         });
@@ -946,7 +971,7 @@ describe("SqlPomeloRepoTests", () => {
           parentPomeloTransactionID: null,
           nobaTransactionID: request.nobaTransactionID,
           amountInUSD: request.amountInUSD,
-          amountInLocalCurrency: request.amountInLocalCurrency,
+          localAmount: request.localAmount,
           localCurrency: request.localCurrency,
           status: PomeloTransactionStatus.PENDING,
           countryCode: request.countryCode,
@@ -957,6 +982,10 @@ describe("SqlPomeloRepoTests", () => {
           pomeloUserID: request.pomeloUserID,
           settlementAmount: request.settlementAmount,
           settlementCurrency: request.settlementCurrency,
+          transactionAmount: request.transactionAmount,
+          transactionCurrency: request.transactionCurrency,
+          merchantName: "MERCHANT NAME",
+          merchantMCC: "MCC",
           source: request.source,
           createdTimestamp: expect.any(Date),
           updatedTimestamp: expect.any(Date),
@@ -1159,6 +1188,72 @@ describe("SqlPomeloRepoTests", () => {
       );
 
       expect(response).toStrictEqual(pomeloTransaction1);
+    });
+  });
+
+  describe("getPomeloTransactionByPomeloTransactionID", () => {
+    it("should return null when matching 'pomeloTransactionID' is not found", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const pomeloUser = await createPomeloUser(consumerID, prismaService);
+      const nobaCard: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUser.pomeloID,
+        nobaCard.id,
+        prismaService,
+      );
+      const nobaTransactionID = uuid();
+      const pomeloTransaction: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard.pomeloCardID,
+        pomeloUser.pomeloID,
+        nobaTransactionID,
+        null,
+        prismaService,
+      );
+
+      const response = await pomeloRepo.getPomeloTransactionByPomeloTransactionID(uuid());
+
+      expect(response).toBe(null);
+    });
+
+    it("should return PomeloTransaction with the matching 'pomeloTransactionID'", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const pomeloUser = await createPomeloUser(consumerID, prismaService);
+
+      const nobaCard1: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard1: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUser.pomeloID,
+        nobaCard1.id,
+        prismaService,
+      );
+      const nobaTransactionID1 = uuid();
+      const pomeloTransaction1: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard1.pomeloCardID,
+        pomeloUser.pomeloID,
+        nobaTransactionID1,
+        null,
+        prismaService,
+      );
+
+      const nobaCard2: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard2: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUser.pomeloID,
+        nobaCard2.id,
+        prismaService,
+      );
+      const nobaTransactionID2 = uuid();
+      const pomeloTransaction2: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard2.pomeloCardID,
+        pomeloUser.pomeloID,
+        nobaTransactionID2,
+        null,
+        prismaService,
+      );
+
+      const response = await pomeloRepo.getPomeloTransactionByPomeloTransactionID(
+        pomeloTransaction2.pomeloTransactionID,
+      );
+
+      expect(response).toStrictEqual(pomeloTransaction2);
     });
   });
 });

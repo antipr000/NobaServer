@@ -1,6 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { Bool } from "../../../core/domain/ApiEnums";
+import { PaginatedResult } from "../../../core/infra/PaginationTypes";
+import { EmployeeDTO } from "../../../modules/employee/dto/employee.dto";
+import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
 
 export class RegisterEmployerRequestDTO {
   @ApiProperty()
@@ -8,6 +11,9 @@ export class RegisterEmployerRequestDTO {
 
   @ApiProperty()
   logoURI: string;
+
+  @ApiPropertyOptional()
+  locale?: string;
 
   @ApiProperty()
   referralID: string;
@@ -33,6 +39,9 @@ export class UpdateEmployerRequestDTO {
   logoURI?: string;
 
   @ApiPropertyOptional()
+  locale?: string;
+
+  @ApiPropertyOptional()
   leadDays?: number;
 
   @ApiPropertyOptional()
@@ -46,8 +55,11 @@ export class UpdateEmployerRequestDTO {
 }
 
 export class UpdateEmployeeRequestDTO {
-  @ApiProperty()
-  salary: number;
+  @ApiPropertyOptional()
+  salary?: number;
+
+  @ApiPropertyOptional({ enum: EmployeeStatus })
+  status?: EmployeeStatus;
 }
 
 export class CreatePayrollRequestDTO {
@@ -115,4 +127,26 @@ export class PayrollDTO {
 
   @ApiPropertyOptional()
   disbursements?: DisbursementDTO[];
+}
+
+export class EmployeeResponseDTO extends EmployeeDTO {
+  @ApiPropertyOptional()
+  firstName?: string;
+
+  @ApiPropertyOptional()
+  lastName?: string;
+
+  @ApiProperty()
+  handle: string;
+
+  @ApiPropertyOptional()
+  consumerEmail?: string;
+
+  @ApiPropertyOptional()
+  phoneNumber?: string;
+}
+
+export class PaginatedEmployeeResponseDTO extends PaginatedResult<EmployeeResponseDTO> {
+  @ApiProperty({ type: [EmployeeResponseDTO] })
+  items: EmployeeResponseDTO[];
 }

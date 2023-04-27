@@ -1,6 +1,6 @@
+import { SQLExchangeRateRepo } from "../../../modules/exchangerate/repo/sql.exchangerate.repo";
+import { IExchangeRateRepo } from "../../../modules/exchangerate/repo/exchangerate.repo";
 import { anyString, anything, mock, when } from "ts-mockito";
-import { IExchangeRateRepo } from "../repo/exchangerate.repo";
-import { SQLExchangeRateRepo } from "../repo/sql.exchangerate.repo";
 
 export function getMockExchangeRateRepoWithDefaults(): IExchangeRateRepo {
   const mockExchangeRateRepo = mock(SQLExchangeRateRepo);

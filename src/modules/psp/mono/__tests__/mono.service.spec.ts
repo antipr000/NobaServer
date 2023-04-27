@@ -41,6 +41,7 @@ import { MonoClientErrorCode, MonoClientException } from "../exception/mono.clie
 import { AppEnvironment, NOBA_CONFIG_KEY } from "../../../../config/ConfigurationUtils";
 import { AlertService } from "../../../../modules/common/alerts/alert.service";
 import { getMockAlertServiceWithDefaults } from "../../../../modules/common/mocks/mock.alert.service";
+import { DebitBankFactoryResponse } from "../../domain/BankFactoryTypes";
 
 describe("MonoServiceTests", () => {
   jest.setTimeout(20000);
@@ -833,6 +834,88 @@ describe("MonoServiceTests", () => {
         });
       });
     });
+
+    describe("Unknown Transaction Type", () => {
+      it("should throw ServiceException", async () => {
+        const consumer: Consumer = Consumer.createConsumer({
+          email: "test@noba.com",
+          id: "CCCCCCCCCC",
+          displayEmail: "test@noba.com",
+          handle: "test",
+          phone: "+1234567890",
+          firstName: "First",
+          lastName: "Last",
+        });
+        when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+
+        const createMonoTransactionRequest: CreateMonoTransactionRequest = {
+          amount: 100,
+          currency: MonoCurrency.COP,
+          nobaTransactionID: "12345",
+          consumerID: consumer.props.id,
+          type: "UNKNOWN" as MonoTransactionType,
+          nobaPublicTransactionRef: "nobaTransactionRef",
+          withdrawalDetails: {
+            accountType: "accountType",
+            bankCode: "bankCode",
+            documentNumber: "documentNumber",
+            documentType: "documentType",
+            encryptedAccountNumber: "encryptedAccountNumber",
+          },
+        };
+
+        expect(monoService.createMonoTransaction(createMonoTransactionRequest)).rejects.toThrowServiceException(
+          ServiceErrorCode.UNABLE_TO_PROCESS,
+        );
+      });
+    });
+  });
+
+  describe("debit", () => {
+    it("should initiate the WITHDRAWAL from NOBA account to Consumer Account", async () => {
+      const monoTransaction: MonoTransaction = getRandomMonoTransaction(MonoTransactionType.WITHDRAWAL);
+      const consumer: Consumer = Consumer.createConsumer({
+        email: "test@noba.com",
+        id: "CCCCCCCCCC",
+        displayEmail: "test@noba.com",
+        handle: "test",
+        phone: "+1234567890",
+        firstName: "First",
+        lastName: "Last",
+      });
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+
+      const decryptedAccountNumber = "1234567890";
+      when(kmsService.decryptString("encryptedAccountNumber", KmsKeyType.SSN)).thenResolve(decryptedAccountNumber);
+      when(monoRepo.getMonoTransactionByNobaTransactionID(anyString())).thenResolve(null);
+
+      when(monoClient.transfer(anything())).thenResolve({
+        batchID: monoTransaction.withdrawalDetails.batchID,
+        transferID: monoTransaction.withdrawalDetails.transferID,
+        state: "SUCCESS",
+        declinationReason: null,
+      });
+      when(monoRepo.createMonoTransaction(anything())).thenResolve(monoTransaction);
+
+      const response: DebitBankFactoryResponse = await monoService.debit({
+        amount: 100,
+        currency: MonoCurrency.COP,
+        transactionID: "txn-id",
+        transactionRef: "txn-ref",
+        consumerID: consumer.props.id,
+        accountType: "accountType",
+        bankCode: "bankCode",
+        documentNumber: "documentNumber",
+        documentType: "documentType",
+        accountNumber: "encryptedAccountNumber",
+      });
+
+      expect(response).toEqual({
+        withdrawalID: monoTransaction.id,
+        state: monoTransaction.state,
+        declinationReason: undefined,
+      });
+    });
   });
 
   describe("processWebhookEvent", () => {
@@ -1057,21 +1140,34 @@ describe("MonoServiceTests", () => {
       });
     });
 
-    it("should throw InternalServiceErrorException if unknown webhook event is sent", async () => {
+    it("should not process ignored events", async () => {
       const webhookBody = {
         event: {
           data: {},
-          type: "unknown",
+          type: "batch_sent",
         },
         timestamp: "2022-12-29T15:42:08.325158Z",
       };
       const webhookSignature = "signature";
 
-      expect(monoService.processWebhookEvent(webhookBody, webhookSignature)).rejects.toThrowError(
-        InternalServiceErrorException,
-      );
+      await monoService.processWebhookEvent(webhookBody, webhookSignature);
 
       verify(monoRepo.updateMonoTransaction(anyString(), anything())).never();
     });
+  });
+
+  it("should not throw an error if unknown webhook event is sent", async () => {
+    const webhookBody = {
+      event: {
+        data: {},
+        type: "unknown",
+      },
+      timestamp: "2022-12-29T15:42:08.325158Z",
+    };
+    const webhookSignature = "signature";
+
+    await monoService.processWebhookEvent(webhookBody, webhookSignature);
+
+    verify(monoRepo.updateMonoTransaction(anyString(), anything())).never();
   });
 });

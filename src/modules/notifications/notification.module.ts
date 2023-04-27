@@ -19,7 +19,7 @@ import { SendgridEmailClient } from "./emails/sendgrid.email.client";
 import { SMSEventHandler } from "./sms.event.handler";
 import { StubSMSClient } from "./sms/stub.sms.client";
 import { TwilioSMSClient } from "./sms/twilio.sms.service";
-import { PushTokenRepoModule } from "./repos/pushtoken.repo.module";
+import { NotificationRepoModule } from "./repos/notification.repo.module";
 import { DashboardEventHandler } from "./dashboard.event.handler";
 import { StubDashboardClient } from "./dashboard/stub.dashboard.client";
 import { BubbleClient } from "./dashboard/bubble.client";
@@ -98,7 +98,7 @@ export const PushNotificationProvider: Provider = {
 };
 
 @Module({
-  imports: [ConfigModule, CommonModule, PushTokenRepoModule],
+  imports: [ConfigModule, CommonModule, NotificationRepoModule],
   controllers: [],
   providers: [
     NotificationService,

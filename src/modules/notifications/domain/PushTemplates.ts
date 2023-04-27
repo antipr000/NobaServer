@@ -1,3 +1,4 @@
+// TODO(jira/CRYPTO-1014): Remove this once moved to db
 export const PushTemplates = {
   getOrDefault: (templateObject: object, locale: string): string => {
     locale = locale.toLowerCase();

@@ -11,10 +11,12 @@ export class PomeloTransaction {
   pomeloCardID: string;
   pomeloUserID: string;
   amountInUSD: number;
-  amountInLocalCurrency: number;
+  localAmount: number;
   localCurrency: PomeloCurrency;
   settlementAmount: number;
   settlementCurrency: PomeloCurrency;
+  transactionAmount: number;
+  transactionCurrency: PomeloCurrency;
   status: PomeloTransactionStatus;
   pomeloTransactionType: PomeloTransactionType;
   pointType: PomeloPointType;
@@ -22,6 +24,8 @@ export class PomeloTransaction {
   countryCode: string;
   origin: PomeloOrigin;
   source: PomeloSource;
+  merchantName: string;
+  merchantMCC: string;
   createdTimestamp: Date;
   updatedTimestamp: Date;
 }
@@ -95,16 +99,20 @@ export class PomeloTransactionSaveRequest {
   pomeloCardID: string;
   pomeloUserID: string;
   amountInUSD: number;
-  amountInLocalCurrency: number;
+  localAmount: number;
   localCurrency: PomeloCurrency;
   settlementAmount: number;
   settlementCurrency: PomeloCurrency;
+  transactionAmount: number;
+  transactionCurrency: PomeloCurrency;
   pomeloTransactionType: PomeloTransactionType;
   pointType: PomeloPointType;
   entryMode: PomeloEntryMode;
   countryCode: string;
   origin: PomeloOrigin;
   source: PomeloSource;
+  merchantName: string;
+  merchantMCC: string;
 }
 
 export const validateSavePomeloTransactionRequest = (request: PomeloTransactionSaveRequest) => {
@@ -116,12 +124,16 @@ export const validateSavePomeloTransactionRequest = (request: PomeloTransactionS
     pomeloCardID: Joi.string().required(),
     pomeloUserID: Joi.string().required(),
     amountInUSD: Joi.number().required(),
-    amountInLocalCurrency: Joi.number().required(),
+    localAmount: Joi.number().required(),
     localCurrency: Joi.string()
       .required()
       .valid(...Object.values(PomeloCurrency)),
     settlementAmount: Joi.number().required(),
     settlementCurrency: Joi.string()
+      .required()
+      .valid(...Object.values(PomeloCurrency)),
+    transactionAmount: Joi.number().required(),
+    transactionCurrency: Joi.string()
       .required()
       .valid(...Object.values(PomeloCurrency)),
     pomeloTransactionType: Joi.string()
@@ -140,6 +152,8 @@ export const validateSavePomeloTransactionRequest = (request: PomeloTransactionS
     source: Joi.string()
       .required()
       .valid(...Object.values(PomeloSource)),
+    merchantName: Joi.string().required(),
+    merchantMCC: Joi.string().required(),
   };
 
   const pomeloTransactionsJoiSchema = Joi.object(pomeloTransactionsJoiValidationKeys).options({
@@ -160,12 +174,16 @@ export const validatePomeloTransaction = (pomeloTransaction: PomeloTransaction) 
     pomeloCardID: Joi.string().required(),
     pomeloUserID: Joi.string().required(),
     amountInUSD: Joi.number().required(),
-    amountInLocalCurrency: Joi.number().required(),
+    localAmount: Joi.number().required(),
     localCurrency: Joi.string()
       .required()
       .valid(...Object.values(PomeloCurrency)),
     settlementAmount: Joi.number().required(),
     settlementCurrency: Joi.string()
+      .required()
+      .valid(...Object.values(PomeloCurrency)),
+    transactionAmount: Joi.number().required(),
+    transactionCurrency: Joi.string()
       .required()
       .valid(...Object.values(PomeloCurrency)),
     status: Joi.string()
@@ -187,6 +205,8 @@ export const validatePomeloTransaction = (pomeloTransaction: PomeloTransaction) 
     source: Joi.string()
       .required()
       .valid(...Object.values(PomeloSource)),
+    merchantName: Joi.string().required(),
+    merchantMCC: Joi.string().required(),
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
   };
@@ -210,10 +230,12 @@ export const convertToDomainPomeloTransaction = (
     pomeloIdempotencyKey: pomeloTransaction.pomeloIdempotencyKey,
     nobaTransactionID: pomeloTransaction.nobaTransactionID,
     amountInUSD: pomeloTransaction.amountInUSD,
-    amountInLocalCurrency: pomeloTransaction.amountInLocalCurrency,
+    localAmount: pomeloTransaction.localAmount,
     localCurrency: pomeloTransaction.localCurrency as PomeloCurrency,
     settlementAmount: pomeloTransaction.settlementAmount,
     settlementCurrency: pomeloTransaction.settlementCurrency as PomeloCurrency,
+    transactionAmount: pomeloTransaction.transactionAmount,
+    transactionCurrency: pomeloTransaction.transactionCurrency as PomeloCurrency,
     pomeloTransactionType: pomeloTransaction.pomeloTransactionType as PomeloTransactionType,
     pointType: pomeloTransaction.pointType as PomeloPointType,
     entryMode: pomeloTransaction.entryMode as PomeloEntryMode,
@@ -221,6 +243,8 @@ export const convertToDomainPomeloTransaction = (
     origin: pomeloTransaction.origin as PomeloOrigin,
     source: pomeloTransaction.source as PomeloSource,
     status: pomeloTransaction.status as PomeloTransactionStatus,
+    merchantName: pomeloTransaction.merchantName,
+    merchantMCC: pomeloTransaction.merchantMCC,
     createdTimestamp: pomeloTransaction.createdTimestamp,
     updatedTimestamp: pomeloTransaction.updatedTimestamp,
   };

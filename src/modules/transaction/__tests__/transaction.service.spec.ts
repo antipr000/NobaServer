@@ -22,12 +22,9 @@ import { Currency } from "../domain/TransactionTypes";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { Utils } from "../../../core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
-import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
-import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 import { InputTransactionEvent, TransactionEvent } from "../domain/TransactionEvent";
 import { UpdateTransactionDTO } from "../dto/TransactionDTO";
-import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { VerificationService } from "../../../modules/verification/verification.service";
 import { getMockVerificationServiceWithDefaults } from "../../../modules/verification/mocks/mock.verification.service";
 import { WorkflowFactory } from "../factory/workflow.factory";
@@ -73,6 +70,9 @@ import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/moc
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { TransactionFilterOptionsDTO } from "../dto/TransactionFilterOptionsDTO";
 import { CardReversalTransactionType, InitiateTransactionRequest } from "../dto/transaction.service.dto";
+import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
+import { getMockExchangeRateServiceWithDefaults } from "../../../modules/exchangerate/mocks/mock.exchangerate.service";
+import { ExchangeRateDTO } from "../../../modules/exchangerate/dto/exchangerate.dto";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);

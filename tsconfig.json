@@ -14,7 +14,8 @@
     "resolveJsonModule": true,
     "types": ["jest", "node"],
     "esModuleInterop": true,
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false,
+    "allowJs": true
   },
   "ts-node": {
     "compilerOptions": {

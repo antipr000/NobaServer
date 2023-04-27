@@ -109,6 +109,7 @@ model Employer {
   logoURI              String
   referralID           String     @unique()
   bubbleID             String     @unique()
+  locale               String?
   leadDays             Int?
   maxAllocationPercent Float?
   payrollDates         String[]
@@ -118,17 +119,20 @@ model Employer {
 }
 
 model Employee {
-  id                  String                @id @default(uuid())
-  createdTimestamp    DateTime?             @default(now()) // Marking optional so we don't need to set in tests
-  updatedTimestamp    DateTime?             @updatedAt // Marking optional so we don't need to set in tests
-  allocationAmount    Float
-  allocationCurrency  String
-  salary              Float?
-  employer            Employer              @relation(fields: [employerID], references: [id], onDelete: Cascade)
-  employerID          String
-  consumer            Consumer              @relation(fields: [consumerID], references: [id], onDelete: Cascade)
-  consumerID          String
-  PayrollDisbursement PayrollDisbursement[]
+  id                      String                @id @default(uuid())
+  createdTimestamp        DateTime?             @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp        DateTime?             @updatedAt // Marking optional so we don't need to set in tests
+  allocationAmount        Float
+  allocationCurrency      String
+  salary                  Float?
+  email                   String?
+  status                  String
+  lastInviteSentTimestamp DateTime?
+  employer                Employer              @relation(fields: [employerID], references: [id], onDelete: Cascade)
+  employerID              String
+  consumer                Consumer?             @relation(fields: [consumerID], references: [id], onDelete: Cascade)
+  consumerID              String?
+  PayrollDisbursement     PayrollDisbursement[]
 
   @@unique([consumerID, employerID])
 }
@@ -394,16 +398,20 @@ model PomeloTransaction {
   pomeloUserID              String
   pomeloUser                PomeloUser          @relation(fields: [pomeloUserID], references: [pomeloID], onDelete: Cascade)
   amountInUSD               Float
-  amountInLocalCurrency     Float
+  localAmount               Float
   localCurrency             String
   settlementAmount          Float
   settlementCurrency        String
+  transactionAmount         Float
+  transactionCurrency       String
   pomeloTransactionType     String
   pointType                 String
   entryMode                 String
   countryCode               String
   origin                    String
   source                    String
+  merchantName              String
+  merchantMCC               String
   createdTimestamp          DateTime?           @default(now())
   updatedTimestamp          DateTime?           @updatedAt
 }
@@ -499,6 +507,29 @@ model Identification {
   updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
 
   @@unique([consumerID, type, countryCode])
+}
+
+model Event {
+  id               String          @id @default(uuid())
+  name             String          @unique
+  createdTimestamp DateTime?       @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime?       @updatedAt // Marking optional so we don't need to set in tests
+  handlers         String[]
+  templates        EventTemplate[]
+}
+
+model EventTemplate {
+  id               String    @id @default(uuid())
+  createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
+  templateBody     String?
+  externalKey      String?
+  type             String
+  locale           String
+  eventID          String
+  event            Event     @relation(fields: [eventID], references: [id], onDelete: Cascade)
+
+  @@index([eventID])
 }
 
 enum IdentityType {

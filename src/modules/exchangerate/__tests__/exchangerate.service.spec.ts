@@ -3,19 +3,29 @@ import { anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { ExchangeRate, InputExchangeRate } from "../domain/ExchangeRate";
-import { ExchangeRateDTO } from "../dto/ExchangeRateDTO";
+import { ExchangeRateDTO } from "../dto/exchangerate.dto";
 import { ExchangeRateService } from "../exchangerate.service";
-import { getMockExchangeRateRepoWithDefaults } from "../mocks/mock.exchangerate.repo";
 import { IExchangeRateRepo } from "../repo/exchangerate.repo";
 import { ServiceException } from "../../../core/exception/service.exception";
-import { AlertService } from "../alerts/alert.service";
-import { getMockAlertServiceWithDefaults } from "../mocks/mock.alert.service";
 import { AppEnvironment, NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
+import { getMockExchangeRateRepoWithDefaults } from "../mocks/mock.exchangerate.repo";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { ExchangeRateClientFactory } from "../factory/exchangerate.factory";
+import { getMockExchangeRateClientFactoryWithDefaults } from "../mocks/mock.exchangerate.factory";
+import { StubExchangeRateClient } from "../clients/stub.exchangerate.client";
+import { AlertKey } from "../../../modules/common/alerts/alert.dto";
+import { anyString } from "ts-mockito";
+import { ExchangeRateIOExchangeRateClient } from "../clients/exchangerateio.exchangerate.client";
+import { getMockExchangeRateIOExchangeRateClientWithDefaults } from "../mocks/mock.exchangerateio.exchangerate.client";
 
 describe("ExchangeRateService", () => {
   let exchangeRateService: ExchangeRateService;
   let exchangeRateRepo: IExchangeRateRepo;
   let alertService: AlertService;
+  let exchangeRateClientFactory: ExchangeRateClientFactory;
+  let stubExchangeRateClient: StubExchangeRateClient;
+  let mockExchangeRateClient: ExchangeRateIOExchangeRateClient;
   let app: TestingModule;
 
   jest.setTimeout(30000);
@@ -23,6 +33,9 @@ describe("ExchangeRateService", () => {
   beforeEach(async () => {
     exchangeRateRepo = getMockExchangeRateRepoWithDefaults();
     alertService = getMockAlertServiceWithDefaults();
+    exchangeRateClientFactory = getMockExchangeRateClientFactoryWithDefaults();
+    stubExchangeRateClient = new StubExchangeRateClient();
+    mockExchangeRateClient = getMockExchangeRateIOExchangeRateClientWithDefaults();
 
     app = await Test.createTestingModule({
       imports: [
@@ -42,6 +55,10 @@ describe("ExchangeRateService", () => {
         {
           provide: AlertService,
           useFactory: () => instance(alertService),
+        },
+        {
+          provide: ExchangeRateClientFactory,
+          useFactory: () => instance(exchangeRateClientFactory),
         },
         ExchangeRateService,
       ],
@@ -299,6 +316,201 @@ describe("ExchangeRateService", () => {
       const returnExchangeRate = await exchangeRateService.getExchangeRateForCurrencyPair("XXX", "YYY");
 
       expect(returnExchangeRate).toBe(null);
+    });
+  });
+
+  describe("createExchangeRateFromProvider", () => {
+    it("Should create an exchange rate", async () => {
+      const createdTimestamp = new Date();
+      const updatedTimestamp = new Date();
+      const id = "exchange-rate-1";
+
+      const exchangeRateDTO = {
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 4000,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(createdTimestamp.getTime() + 25 * 60 * 60 * 1000), // 25 hours from now
+      };
+
+      const exchangeRateDTOInverse = {
+        numeratorCurrency: "COP",
+        denominatorCurrency: "USD",
+        bankRate: 0.00025,
+        nobaRate: 0.00025,
+        expirationTimestamp: new Date(createdTimestamp.getTime() + 25 * 60 * 60 * 1000), // 25 hours from now
+      };
+
+      const exchangeRate: ExchangeRate = {
+        id: id,
+        createdTimestamp: createdTimestamp,
+        updatedTimestamp: updatedTimestamp,
+        ...exchangeRateDTO,
+      };
+
+      const exchangeRateInverse: ExchangeRate = {
+        id: id,
+        createdTimestamp: createdTimestamp,
+        updatedTimestamp: updatedTimestamp,
+        ...exchangeRateDTOInverse,
+      };
+
+      const returnedExchangeRateClient = stubExchangeRateClient;
+
+      when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("USD", "COP")).thenReturn(
+        returnedExchangeRateClient,
+      );
+      when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("COP", "USD")).thenReturn(
+        returnedExchangeRateClient,
+      );
+
+      when(exchangeRateRepo.createExchangeRate(deepEqual(exchangeRateDTO))).thenResolve(exchangeRate);
+      when(exchangeRateRepo.createExchangeRate(deepEqual(exchangeRateDTOInverse))).thenResolve(exchangeRateInverse);
+
+      const returnExchangeRate = await exchangeRateService.createExchangeRateFromProvider();
+
+      expect(returnExchangeRate).toStrictEqual([exchangeRateDTO, exchangeRateDTOInverse]);
+    });
+
+    it("Should return empty when unable to find any exchange rate clients", async () => {
+      when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("USD", "COP")).thenReturn(null);
+      when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("COP", "USD")).thenReturn(null);
+
+      when(
+        alertService.raiseAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
+      ).thenResolve();
+
+      const returnExchangeRate = await exchangeRateService.createExchangeRateFromProvider();
+
+      expect(returnExchangeRate).toStrictEqual([]);
+    });
+
+    it("Should return one when only able to find one exchange rate client", async () => {
+      const createdTimestamp = new Date();
+      const updatedTimestamp = new Date();
+      const id = "exchange-rate-1";
+
+      const exchangeRateDTO = {
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 4000,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(createdTimestamp.getTime() + 25 * 60 * 60 * 1000), // 25 hours from now
+      };
+
+      const exchangeRate: ExchangeRate = {
+        id: id,
+        createdTimestamp: createdTimestamp,
+        updatedTimestamp: updatedTimestamp,
+        ...exchangeRateDTO,
+      };
+
+      const returnedExchangeRateClient = stubExchangeRateClient;
+
+      when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("USD", "COP")).thenReturn(
+        returnedExchangeRateClient,
+      );
+      when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("COP", "USD")).thenReturn(null);
+
+      when(exchangeRateRepo.createExchangeRate(deepEqual(exchangeRateDTO))).thenResolve(exchangeRate);
+      when(
+        alertService.raiseAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
+      ).thenResolve();
+
+      const returnExchangeRate = await exchangeRateService.createExchangeRateFromProvider();
+
+      expect(returnExchangeRate).toStrictEqual([exchangeRateDTO]);
+    });
+
+    it("Should raise alert when error thrown by provider to get exchange rate", async () => {
+      const returnedExchangeRateClient = mockExchangeRateClient;
+
+      when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("USD", "COP")).thenReturn(
+        instance(returnedExchangeRateClient),
+      );
+      when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("COP", "USD")).thenReturn(
+        instance(returnedExchangeRateClient),
+      );
+
+      when(returnedExchangeRateClient.getExchangeRate("USD", "COP")).thenThrow(
+        new Error("Error getting exchange rate"),
+      );
+      when(returnedExchangeRateClient.getExchangeRate("COP", "USD")).thenThrow(
+        new Error("Error getting exchange rate"),
+      );
+
+      when(
+        alertService.raiseAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
+      ).thenResolve();
+
+      const returnExchangeRate = await exchangeRateService.createExchangeRateFromProvider();
+
+      expect(returnExchangeRate).toStrictEqual([]);
+    });
+
+    it("Should raise alert when exchange rate from provider is null/undefined", async () => {
+      const returnedExchangeRateClient = mockExchangeRateClient;
+
+      when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("USD", "COP")).thenReturn(
+        instance(returnedExchangeRateClient),
+      );
+      when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("COP", "USD")).thenReturn(
+        instance(returnedExchangeRateClient),
+      );
+
+      when(returnedExchangeRateClient.getExchangeRate("USD", "COP")).thenResolve(null);
+      when(returnedExchangeRateClient.getExchangeRate("COP", "USD")).thenResolve(undefined);
+
+      when(
+        alertService.raiseAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
+      ).thenResolve();
+
+      const returnExchangeRate = await exchangeRateService.createExchangeRateFromProvider();
+
+      expect(returnExchangeRate).toStrictEqual([]);
+    });
+
+    it("Should raise alert when exchange rate from provider is outside of threshold", async () => {
+      const returnedExchangeRateClient = mockExchangeRateClient;
+
+      when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("USD", "COP")).thenReturn(
+        instance(returnedExchangeRateClient),
+      );
+      when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("COP", "USD")).thenReturn(
+        instance(returnedExchangeRateClient),
+      );
+
+      when(returnedExchangeRateClient.getExchangeRate("USD", "COP")).thenResolve(5000);
+      when(returnedExchangeRateClient.getExchangeRate("COP", "USD")).thenResolve(0.0002);
+
+      when(exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve({
+        id: "exchange-rate-1",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        numeratorCurrency: "USD",
+        denominatorCurrency: "COP",
+        bankRate: 4000,
+        nobaRate: 4000,
+        expirationTimestamp: new Date(),
+      });
+      when(exchangeRateRepo.getExchangeRateForCurrencyPair("COP", "USD")).thenResolve({
+        id: "exchange-rate-2",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        numeratorCurrency: "COP",
+        denominatorCurrency: "USD",
+        bankRate: 0.00025,
+        nobaRate: 0.00025,
+        expirationTimestamp: new Date(),
+      });
+
+      when(
+        alertService.raiseAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
+      ).thenResolve();
+
+      const returnExchangeRate = await exchangeRateService.createExchangeRateFromProvider();
+
+      expect(returnExchangeRate).toStrictEqual([]);
     });
   });
 });

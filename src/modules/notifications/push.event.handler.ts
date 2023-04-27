@@ -13,6 +13,10 @@ import { SendTransferFailedEvent } from "./events/SendTransferFailedEvent";
 import { SendPayrollDepositCompletedEvent } from "./events/SendPayrollDepositCompletedEvent";
 import { PushNotificationType } from "./domain/PushNotificationTypes";
 import { PushTokenService } from "./push.token.service";
+import { StubPushClient } from "./push/stub.push.client";
+import { EventRepo } from "./repos/event.repo";
+import { EventHandlers } from "./domain/EventHandlers";
+import { TemplateProcessor } from "../common/utils/template.processor";
 
 @Injectable()
 export class PushEventHandler {
@@ -22,9 +26,40 @@ export class PushEventHandler {
   @Inject()
   private readonly pushTokenService: PushTokenService;
 
+  @Inject("EventRepo")
+  private readonly eventRepo: EventRepo;
+
+  private async getOrDefaultTemplateBody(eventName: NotificationEventType, locale: string): Promise<string> {
+    const event = await this.eventRepo.getEventByName(eventName);
+    const pushTemplates = event.templates.filter(template => template.type === EventHandlers.PUSH);
+
+    locale = locale?.toLowerCase() ?? "en";
+    if (pushTemplates.find(template => template.locale === locale)) {
+      return pushTemplates.find(template => template.locale === locale).templateBody;
+    }
+
+    const localePrefix = locale.split("_")[0];
+
+    if (pushTemplates.find(template => template.locale === localePrefix)) {
+      return pushTemplates.find(template => template.locale === localePrefix).templateBody;
+    }
+
+    return pushTemplates.find(template => template.locale === "en").templateBody;
+  }
+
   @OnEvent(`push.${NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT}`)
   async sendDepositCompletedEvent(payload: SendDepositCompletedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
+
+    const templateBody = await this.getOrDefaultTemplateBody(
+      NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
+      payload.locale,
+    );
+
+    const body = TemplateProcessor.parseTemplateString(templateBody, {
+      amount: payload.params.creditAmount,
+      currency: payload.params.creditCurrency,
+    });
 
     for (const pushToken of pushTokens) {
       await this.pushClient.sendPushNotification({
@@ -32,12 +67,7 @@ export class PushEventHandler {
         templateKey: PushTemplates.getOrDefault(PushTemplates.DEPOSIT_COMPLETED_PUSH, payload.locale ?? "en"),
         notificationType: PushNotificationType.TRANSACTION_UPDATE,
         transactionRef: payload.params.transactionRef,
-        params: {
-          transactionParams: {
-            amount: payload.params.creditAmount,
-            currency: payload.params.creditCurrency,
-          },
-        },
+        body,
       });
     }
   }
@@ -45,6 +75,17 @@ export class PushEventHandler {
   @OnEvent(`push.${NotificationEventType.SEND_DEPOSIT_FAILED_EVENT}`)
   async sendDepositFailedEvent(payload: SendDepositFailedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
+
+    const templateBody = await this.getOrDefaultTemplateBody(
+      NotificationEventType.SEND_DEPOSIT_FAILED_EVENT,
+      payload.locale,
+    );
+
+    const body = TemplateProcessor.parseTemplateString(templateBody, {
+      amount: payload.params.creditAmount,
+      currency: payload.params.creditCurrency,
+    });
+
     const promises = pushTokens.map(
       async pushToken =>
         await this.pushClient.sendPushNotification({
@@ -52,12 +93,7 @@ export class PushEventHandler {
           templateKey: PushTemplates.getOrDefault(PushTemplates.DEPOSIT_FAILED_PUSH, payload.locale ?? "en"),
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.creditAmount,
-              currency: payload.params.creditCurrency,
-            },
-          },
+          body,
         }),
     );
 
@@ -67,6 +103,17 @@ export class PushEventHandler {
   @OnEvent(`push.${NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT}`)
   async sendWithdrawalCompletedEvent(payload: SendWithdrawalCompletedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
+
+    const templateBody = await this.getOrDefaultTemplateBody(
+      NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
+      payload.locale,
+    );
+
+    const body = TemplateProcessor.parseTemplateString(templateBody, {
+      amount: payload.params.debitAmount,
+      currency: payload.params.debitCurrency,
+    });
+
     const promises = pushTokens.map(
       async pushToken =>
         await this.pushClient.sendPushNotification({
@@ -74,12 +121,7 @@ export class PushEventHandler {
           templateKey: PushTemplates.getOrDefault(PushTemplates.WITHDRAWAL_COMPLETED_PUSH, payload.locale ?? "en"),
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.debitAmount,
-              currency: payload.params.debitCurrency,
-            },
-          },
+          body,
         }),
     );
 
@@ -90,6 +132,16 @@ export class PushEventHandler {
   async sendWithdrawalFailedEvent(payload: SendWithdrawalFailedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
 
+    const templateBody = await this.getOrDefaultTemplateBody(
+      NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT,
+      payload.locale,
+    );
+
+    const body = TemplateProcessor.parseTemplateString(templateBody, {
+      amount: payload.params.debitAmount,
+      currency: payload.params.debitCurrency,
+    });
+
     const promises = pushTokens.map(
       async pushToken =>
         await this.pushClient.sendPushNotification({
@@ -97,12 +149,7 @@ export class PushEventHandler {
           templateKey: PushTemplates.getOrDefault(PushTemplates.WITHDRAWAL_FAILED_PUSH, payload.locale ?? "en"),
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.debitAmount,
-              currency: payload.params.debitCurrency,
-            },
-          },
+          body,
         }),
     );
 
@@ -113,6 +160,17 @@ export class PushEventHandler {
   async sendTransferCompletedEvent(payload: SendTransferCompletedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
 
+    const templateBody = await this.getOrDefaultTemplateBody(
+      NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
+      payload.locale,
+    );
+
+    const body = TemplateProcessor.parseTemplateString(templateBody, {
+      amount: payload.params.debitAmount,
+      currency: payload.params.debitCurrency,
+      receiverHandle: payload.params.creditConsumer_handle,
+    });
+
     const promises = pushTokens.map(
       async pushToken =>
         await this.pushClient.sendPushNotification({
@@ -120,13 +178,7 @@ export class PushEventHandler {
           templateKey: PushTemplates.getOrDefault(PushTemplates.TRANSFER_COMPLETED_PUSH, payload.locale ?? "en"),
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.debitAmount,
-              currency: payload.params.debitCurrency,
-              receiverHandle: payload.params.creditConsumer_handle,
-            },
-          },
+          body,
           transferCounterPartyHandle: payload.params.creditConsumer_handle,
         }),
     );
@@ -138,6 +190,17 @@ export class PushEventHandler {
   async sendTransferFailedEvent(payload: SendTransferFailedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
 
+    const templateBody = await this.getOrDefaultTemplateBody(
+      NotificationEventType.SEND_TRANSFER_FAILED_EVENT,
+      payload.locale,
+    );
+
+    const body = TemplateProcessor.parseTemplateString(templateBody, {
+      amount: payload.params.debitAmount,
+      currency: payload.params.debitCurrency,
+      receiverHandle: payload.params.creditConsumer_handle,
+    });
+
     const promises = pushTokens.map(
       async pushToken =>
         await this.pushClient.sendPushNotification({
@@ -145,13 +208,7 @@ export class PushEventHandler {
           templateKey: PushTemplates.getOrDefault(PushTemplates.TRANSFER_FAILED_PUSH, payload.locale ?? "en"),
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.debitAmount,
-              currency: payload.params.debitCurrency,
-              receiverHandle: payload.params.creditConsumer_handle,
-            },
-          },
+          body,
           transferCounterPartyHandle: payload.params.creditConsumer_handle,
         }),
     );
@@ -163,6 +220,17 @@ export class PushEventHandler {
   async sendTransferReceivedEvent(payload: SendTransferReceivedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
 
+    const templateBody = await this.getOrDefaultTemplateBody(
+      NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT,
+      payload.locale,
+    );
+
+    const body = TemplateProcessor.parseTemplateString(templateBody, {
+      amount: payload.params.creditAmount,
+      currency: payload.params.creditCurrency,
+      senderHandle: payload.params.debitConsumer_handle,
+    });
+
     const promises = pushTokens.map(
       async pushToken =>
         await this.pushClient.sendPushNotification({
@@ -170,13 +238,7 @@ export class PushEventHandler {
           templateKey: PushTemplates.getOrDefault(PushTemplates.TRANSFER_RECEIVED_PUSH, payload.locale ?? "en"),
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.creditAmount,
-              currency: payload.params.creditCurrency,
-              senderHandle: payload.params.debitConsumer_handle,
-            },
-          },
+          body,
           transferCounterPartyHandle: payload.params.debitConsumer_handle,
         }),
     );
@@ -188,6 +250,17 @@ export class PushEventHandler {
   async sendPayrollDepositCompletedEvent(payload: SendPayrollDepositCompletedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
 
+    const templateBody = await this.getOrDefaultTemplateBody(
+      NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
+      payload.locale,
+    );
+
+    const body = TemplateProcessor.parseTemplateString(templateBody, {
+      amount: payload.params.debitAmount,
+      currency: payload.params.debitCurrency,
+      companyName: payload.params.companyName,
+    });
+
     const promises = pushTokens.map(
       async pushToken =>
         await this.pushClient.sendPushNotification({
@@ -195,18 +268,25 @@ export class PushEventHandler {
           templateKey: PushTemplates.getOrDefault(PushTemplates.PAYROLL_DEPOSIT_COMPLETED_PUSH, payload.locale ?? "en"),
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            payrollParams: {
-              companyName: payload.params.companyName,
-            },
-            transactionParams: {
-              amount: payload.params.debitAmount,
-              currency: payload.params.debitCurrency,
-            },
-          },
+          body,
         }),
     );
 
     await Promise.all(promises);
+  }
+
+  @OnEvent("push.get")
+  public async getPreviousNotifications() {
+    if (this.pushClient instanceof StubPushClient) {
+      const notifications = this.pushClient.getPreviousPushNotifications();
+      return notifications;
+    }
+  }
+
+  @OnEvent("push.clear")
+  public async clearPreviousNotifications() {
+    if (this.pushClient instanceof StubPushClient) {
+      this.pushClient.clearPreviousPushNotifications();
+    }
   }
 }

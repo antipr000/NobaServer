@@ -24,6 +24,7 @@ import {
   BankTransferApprovedEvent,
   BankTransferRejectedEvent,
   CollectionIntentCreditedEvent,
+  MonoAccountCreditedEvent,
 } from "../dto/mono.webhook.dto";
 import { InternalServiceErrorException } from "../../../core/exception/CommonAppException";
 import { SupportedBanksDTO } from "../dto/SupportedBanksDTO";
@@ -205,11 +206,21 @@ export class MonoService implements IBank {
         );
         break;
 
+      case "account_credited":
+        await this.processAccountCreditedEvent(
+          this.monoWebhookHandlers.convertAccountCredited(requestBody, monoSignature),
+        );
+        break;
+
+      case "batch_sent":
+        this.logger.info(
+          `Received ${requestBody.event.type} webhook event (silently ignoring): ${JSON.stringify(requestBody)}`,
+        );
+        break;
+
       default:
-        this.logger.error(`Unknown Mono webhook event: ${JSON.stringify(requestBody)}`);
-        throw new InternalServiceErrorException({
-          message: `Unknown Mono webhook event: ${JSON.stringify(requestBody)}`,
-        });
+        // Writing a logger.error is enough as throwing an error will cause the webhook to be retried
+        this.logger.error(`Unexpected Mono webhook event: ${JSON.stringify(requestBody)}`);
     }
   }
 
@@ -285,6 +296,10 @@ export class MonoService implements IBank {
       state: event.state,
       declinationReason: event.declinationReason,
     });
+  }
+
+  private async processAccountCreditedEvent(event: MonoAccountCreditedEvent): Promise<void> {
+    this.logger.info(`Skipping 'account_credited' event: "${JSON.stringify(event)}"`);
   }
 
   private validateWithdrawalRequest(request: WithdrawalRequest): void {

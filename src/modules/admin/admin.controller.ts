@@ -41,8 +41,6 @@ import { AdminUpdateConsumerRequestDTO } from "./dto/AdminUpdateConsumerRequestD
 import { ConsumerService } from "../consumer/consumer.service";
 import { ConsumerMapper } from "../consumer/mappers/ConsumerMapper";
 import { AddNobaAdminDTO } from "./dto/AddNobaAdminDTO";
-import { ExchangeRateService } from "../common/exchangerate.service";
-import { ExchangeRateDTO } from "../common/dto/ExchangeRateDTO";
 import { Role } from "../auth/role.enum";
 import { AccountBalanceFiltersDTO } from "./dto/AccountBalanceFiltersDTO";
 import { AccountBalanceDTO } from "./dto/AccountBalanceDTO";
@@ -60,6 +58,8 @@ import { TransactionFilterOptionsDTO } from "../transaction/dto/TransactionFilte
 import { TransactionQueryResultDTO } from "../transaction/dto/TransactionQueryResultDTO";
 import { IncludeEventTypes } from "../transaction/dto/TransactionEventDTO";
 import { TransactionEvent } from "../transaction/domain/TransactionEvent";
+import { ExchangeRateService } from "../exchangerate/exchangerate.service";
+import { ExchangeRateDTO } from "../exchangerate/dto/exchangerate.dto";
 
 @Roles(Role.NOBA_ADMIN)
 @Controller("v1/admins")

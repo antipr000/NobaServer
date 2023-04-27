@@ -24,14 +24,14 @@ import {
   InitiateTransactionRequest,
 } from "../../../modules/transaction/dto/transaction.service.dto";
 import { WorkflowName } from "../../../infra/temporal/workflow";
-import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
 import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
-import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { Transaction } from "../../../modules/transaction/domain/Transaction";
 import { UpdateWalletBalanceServiceDTO } from "../../../modules/psp/domain/UpdateWalletBalanceServiceDTO";
 import { CircleWithdrawalStatus } from "../../../modules/psp/domain/CircleTypes";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { Utils } from "../../../core/utils/Utils";
+import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
+import { ExchangeRateDTO } from "../../../modules/exchangerate/dto/exchangerate.dto";
 
 @Injectable()
 export class PomeloTransactionService {
@@ -102,7 +102,7 @@ export class PomeloTransactionService {
       const pomeloTransaction: PomeloTransaction = await this.getOrCreatePomeloTransaction({
         pomeloTransactionID: request.pomeloTransactionID,
         parentPomeloTransactionID: null,
-        amountInLocalCurrency: request.localAmount,
+        localAmount: request.localAmount,
         localCurrency: request.localCurrency,
         amountInUSD: request.settlementAmount,
         nobaTransactionID: uuid(),
@@ -116,7 +116,11 @@ export class PomeloTransactionService {
         pomeloUserID: request.pomeloUserID,
         settlementAmount: request.settlementAmount,
         settlementCurrency: request.settlementCurrency,
+        transactionAmount: request.transactionAmount,
+        transactionCurrency: request.transactionCurrency,
         source: request.source,
+        merchantName: request.merchantName,
+        merchantMCC: request.merchantMCC,
       });
       if (pomeloTransaction.status !== PomeloTransactionStatus.PENDING) {
         const detailAuthzStatus: PomeloTransactionAuthzDetailStatus =
@@ -131,7 +135,7 @@ export class PomeloTransactionService {
       const circleWalletID: string = await this.circleService.getOrCreateWallet(nobaConsumerID);
       const walletBalanceInUSD: number = await this.circleService.getWalletBalance(circleWalletID);
       const { amountInUSD: amountToDebitInUSD, exchangeRate } = await this.getCOPEquivalentUSDAmountToDeduct(
-        pomeloTransaction.amountInLocalCurrency,
+        pomeloTransaction.localAmount,
       );
 
       if (walletBalanceInUSD < amountToDebitInUSD) {
@@ -208,7 +212,7 @@ export class PomeloTransactionService {
       const pomeloTransaction: PomeloTransaction = await this.getOrCreatePomeloTransaction({
         pomeloTransactionID: request.pomeloTransactionID,
         parentPomeloTransactionID: request.pomeloOriginalTransactionID,
-        amountInLocalCurrency: request.localAmount,
+        localAmount: request.localAmount,
         localCurrency: request.localCurrency,
         amountInUSD: request.settlementAmount,
         nobaTransactionID: uuid(),
@@ -222,7 +226,11 @@ export class PomeloTransactionService {
         pomeloUserID: request.pomeloUserID,
         settlementAmount: request.settlementAmount,
         settlementCurrency: request.settlementCurrency,
+        transactionAmount: request.transactionAmount,
+        transactionCurrency: request.transactionCurrency,
         source: request.source,
+        merchantName: request.merchantName,
+        merchantMCC: request.merchantMCC,
       });
       if (pomeloTransaction.status !== PomeloTransactionStatus.PENDING) {
         const detailAuthzStatus: PomeloTransactionAuthzDetailStatus =
@@ -235,9 +243,14 @@ export class PomeloTransactionService {
         request.pomeloUserID,
       );
       const circleWalletID: string = await this.circleService.getOrCreateWallet(nobaConsumerID);
-      const { amountInUSD, exchangeRate } = await this.getCOPEquivalentUSDAmountToDeduct(
-        pomeloTransaction.amountInLocalCurrency,
+      const parentNobaTransaction: Transaction = await this.getParentNobaTransaction(
+        request.pomeloOriginalTransactionID,
       );
+      const exchangeRate: number = parentNobaTransaction.exchangeRate;
+      const amountInUSD =
+        parentNobaTransaction.workflowName === WorkflowName.CARD_WITHDRAWAL
+          ? parentNobaTransaction.debitAmount
+          : parentNobaTransaction.debitAmount || parentNobaTransaction.creditAmount;
 
       switch (request.adjustmentType) {
         case PomeloAdjustmentType.CREDIT:
@@ -420,7 +433,30 @@ export class PomeloTransactionService {
     );
     return {
       amountInUSD: Utils.roundTo2DecimalNumber(copAmount / exchangeRate.nobaRate),
-      exchangeRate: exchangeRate.nobaRate,
+      exchangeRate: 1 / exchangeRate.nobaRate,
     };
+  }
+
+  private async getParentNobaTransaction(parentPomeloTransactionID: string): Promise<Transaction> {
+    const parentPomeloTransaction: PomeloTransaction = await this.pomeloRepo.getPomeloTransactionByPomeloTransactionID(
+      parentPomeloTransactionID,
+    );
+    if (!parentPomeloTransaction) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Parent PomeloTransaction with ID '${parentPomeloTransactionID}' is not found`,
+      });
+    }
+    const parentNobaTransaction: Transaction = await this.transactionService.getTransactionByTransactionID(
+      parentPomeloTransaction.nobaTransactionID,
+    );
+    if (!parentNobaTransaction) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Parent NobaTransaction with ID '${parentPomeloTransaction.nobaTransactionID}' is not found`,
+      });
+    }
+
+    return parentNobaTransaction;
   }
 }

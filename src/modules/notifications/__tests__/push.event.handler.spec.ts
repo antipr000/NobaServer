@@ -18,6 +18,10 @@ import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 import { PushTokenService } from "../push.token.service";
 import { getMockPushTokenServiceWithDefaults } from "../mocks/mock.pushtoken.service";
 import { SendWithdrawalCompletedEvent } from "../events/SendWithdrawalCompletedEvent";
+import { EventRepo } from "../repos/event.repo";
+import { getMockEventRepoWithDefaults } from "../mocks/mock.event.repo";
+import { NotificationEventType } from "../domain/NotificationTypes";
+import { EventHandlers } from "../domain/EventHandlers";
 
 describe.each([
   ["en", "en"],
@@ -28,12 +32,14 @@ describe.each([
   let mockPushClient: PushClient;
   let eventHandler: PushEventHandler;
   let mockPushTokenService: PushTokenService;
+  let mockEventRepo: EventRepo;
 
   jest.setTimeout(30000);
 
   beforeEach(async () => {
     mockPushClient = getMockPushClientWithDefaults();
     mockPushTokenService = getMockPushTokenServiceWithDefaults();
+    mockEventRepo = getMockEventRepoWithDefaults();
 
     process.env = {
       ...process.env,
@@ -51,6 +57,10 @@ describe.each([
         {
           provide: PushTokenService,
           useFactory: () => instance(mockPushTokenService),
+        },
+        {
+          provide: "EventRepo",
+          useFactory: () => instance(mockEventRepo),
         },
         PushEventHandler,
       ],
@@ -74,6 +84,34 @@ describe.each([
       "push-token-2",
     ]);
 
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
+      handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [
+        {
+          id: "fake-template-id-1",
+          locale: "es",
+          templateBody: "Deposited {{amount}} {{currency}} to your Noba account. Message is in es",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+        {
+          id: "fake-template-id-2",
+          locale: "en",
+          templateBody: "Deposited {{amount}} {{currency}} to your Noba account. Message is in en",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+      ],
+    });
+
     await eventHandler.sendDepositCompletedEvent(payload);
 
     verify(
@@ -83,12 +121,7 @@ describe.each([
           templateKey: `template_send_deposit_successful_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.creditAmount,
-              currency: payload.params.creditCurrency,
-            },
-          },
+          body: `Deposited ${payload.params.creditAmount} ${payload.params.creditCurrency} to your Noba account. Message is in ${expectedSuffix}`,
         }),
       ),
     ).once();
@@ -100,12 +133,7 @@ describe.each([
           templateKey: `template_send_deposit_successful_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.creditAmount,
-              currency: payload.params.creditCurrency,
-            },
-          },
+          body: `Deposited ${payload.params.creditAmount} ${payload.params.creditCurrency} to your Noba account. Message is in ${expectedSuffix}`,
         }),
       ),
     ).once();
@@ -128,6 +156,34 @@ describe.each([
       "push-token-2",
     ]);
 
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_DEPOSIT_FAILED_EVENT,
+      handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [
+        {
+          id: "fake-template-id-1",
+          locale: "es",
+          templateBody: "Failed to deposit {{amount}} {{currency}} to your Noba account. Message is in es",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+        {
+          id: "fake-template-id-2",
+          locale: "en",
+          templateBody: "Failed to deposit {{amount}} {{currency}} to your Noba account. Message is in en",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+      ],
+    });
+
     await eventHandler.sendDepositFailedEvent(payload);
 
     verify(
@@ -137,12 +193,7 @@ describe.each([
           templateKey: `template_send_deposit_failed_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.creditAmount,
-              currency: payload.params.creditCurrency,
-            },
-          },
+          body: `Failed to deposit ${payload.params.creditAmount} ${payload.params.creditCurrency} to your Noba account. Message is in ${expectedSuffix}`,
         }),
       ),
     ).once();
@@ -154,12 +205,7 @@ describe.each([
           templateKey: `template_send_deposit_failed_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.creditAmount,
-              currency: payload.params.creditCurrency,
-            },
-          },
+          body: `Failed to deposit ${payload.params.creditAmount} ${payload.params.creditCurrency} to your Noba account. Message is in ${expectedSuffix}`,
         }),
       ),
     ).once();
@@ -181,6 +227,34 @@ describe.each([
       "push-token-2",
     ]);
 
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
+      handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [
+        {
+          id: "fake-template-id-1",
+          locale: "es",
+          templateBody: "Successfully withdrawn {{amount}} {{currency}} from your Noba account. Message is in es",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+        {
+          id: "fake-template-id-2",
+          locale: "en",
+          templateBody: "Successfully withdrawn {{amount}} {{currency}} from your Noba account. Message is in en",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+      ],
+    });
+
     await eventHandler.sendWithdrawalCompletedEvent(payload);
 
     verify(
@@ -190,12 +264,7 @@ describe.each([
           templateKey: `template_send_withdrawal_successful_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.debitAmount,
-              currency: payload.params.debitCurrency,
-            },
-          },
+          body: `Successfully withdrawn ${payload.params.debitAmount} ${payload.params.debitCurrency} from your Noba account. Message is in ${expectedSuffix}`,
         }),
       ),
     ).once();
@@ -207,12 +276,7 @@ describe.each([
           templateKey: `template_send_withdrawal_successful_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.debitAmount,
-              currency: payload.params.debitCurrency,
-            },
-          },
+          body: `Successfully withdrawn ${payload.params.debitAmount} ${payload.params.debitCurrency} from your Noba account. Message is in ${expectedSuffix}`,
         }),
       ),
     ).once();
@@ -235,6 +299,34 @@ describe.each([
       "push-token-2",
     ]);
 
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT,
+      handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [
+        {
+          id: "fake-template-id-1",
+          locale: "es",
+          templateBody: "Failed to withdraw {{amount}} {{currency}} from your Noba account. Message is in es",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+        {
+          id: "fake-template-id-2",
+          locale: "en",
+          templateBody: "Failed to withdraw {{amount}} {{currency}} from your Noba account. Message is in en",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+      ],
+    });
+
     await eventHandler.sendWithdrawalFailedEvent(payload);
 
     verify(
@@ -244,12 +336,7 @@ describe.each([
           templateKey: `template_send_withdrawal_failed_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.debitAmount,
-              currency: payload.params.debitCurrency,
-            },
-          },
+          body: `Failed to withdraw ${payload.params.debitAmount} ${payload.params.debitCurrency} from your Noba account. Message is in ${expectedSuffix}`,
         }),
       ),
     ).once();
@@ -261,12 +348,7 @@ describe.each([
           templateKey: `template_send_withdrawal_failed_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.debitAmount,
-              currency: payload.params.debitCurrency,
-            },
-          },
+          body: `Failed to withdraw ${payload.params.debitAmount} ${payload.params.debitCurrency} from your Noba account. Message is in ${expectedSuffix}`,
         }),
       ),
     ).once();
@@ -292,6 +374,34 @@ describe.each([
       "push-token-2",
     ]);
 
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
+      handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [
+        {
+          id: "fake-template-id-1",
+          locale: "es",
+          templateBody: "Successfully transferred {{amount}} {{currency}} to {{receiverHandle}}. Message is in es",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+        {
+          id: "fake-template-id-2",
+          locale: "en",
+          templateBody: "Successfully transferred {{amount}} {{currency}} to {{receiverHandle}}. Message is in en",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+      ],
+    });
+
     await eventHandler.sendTransferCompletedEvent(payload);
 
     verify(
@@ -301,13 +411,7 @@ describe.each([
           templateKey: `template_send_transfer_successful_sender_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.debitAmount,
-              currency: payload.params.debitCurrency,
-              receiverHandle: payload.params.creditConsumer_handle,
-            },
-          },
+          body: `Successfully transferred ${payload.params.debitAmount} ${payload.params.debitCurrency} to ${payload.params.creditConsumer_handle}. Message is in ${expectedSuffix}`,
           transferCounterPartyHandle: payload.params.creditConsumer_handle,
         }),
       ),
@@ -320,13 +424,7 @@ describe.each([
           templateKey: `template_send_transfer_successful_sender_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.debitAmount,
-              currency: payload.params.debitCurrency,
-              receiverHandle: payload.params.creditConsumer_handle,
-            },
-          },
+          body: `Successfully transferred ${payload.params.debitAmount} ${payload.params.debitCurrency} to ${payload.params.creditConsumer_handle}. Message is in ${expectedSuffix}`,
           transferCounterPartyHandle: payload.params.creditConsumer_handle,
         }),
       ),
@@ -354,6 +452,34 @@ describe.each([
       "push-token-2",
     ]);
 
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_FAILED_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_TRANSFER_FAILED_EVENT,
+      handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [
+        {
+          id: "fake-template-id-1",
+          locale: "es",
+          templateBody: "Failed to transfer {{amount}} {{currency}} to {{receiverHandle}}. Message is in es",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+        {
+          id: "fake-template-id-2",
+          locale: "en",
+          templateBody: "Failed to transfer {{amount}} {{currency}} to {{receiverHandle}}. Message is in en",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+      ],
+    });
+
     await eventHandler.sendTransferFailedEvent(payload);
 
     verify(
@@ -363,13 +489,7 @@ describe.each([
           templateKey: `template_send_transfer_failed_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.debitAmount,
-              currency: payload.params.debitCurrency,
-              receiverHandle: payload.params.creditConsumer_handle,
-            },
-          },
+          body: `Failed to transfer ${payload.params.debitAmount} ${payload.params.debitCurrency} to ${payload.params.creditConsumer_handle}. Message is in ${expectedSuffix}`,
           transferCounterPartyHandle: payload.params.creditConsumer_handle,
         }),
       ),
@@ -382,13 +502,7 @@ describe.each([
           templateKey: `template_send_transfer_failed_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.debitAmount,
-              currency: payload.params.debitCurrency,
-              receiverHandle: payload.params.creditConsumer_handle,
-            },
-          },
+          body: `Failed to transfer ${payload.params.debitAmount} ${payload.params.debitCurrency} to ${payload.params.creditConsumer_handle}. Message is in ${expectedSuffix}`,
           transferCounterPartyHandle: payload.params.creditConsumer_handle,
         }),
       ),
@@ -417,6 +531,34 @@ describe.each([
       "push-token-2",
     ]);
 
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT,
+      handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [
+        {
+          id: "fake-template-id-1",
+          locale: "es",
+          templateBody: "Received {{amount}} {{currency}} from {{senderHandle}}. Message is in es",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+        {
+          id: "fake-template-id-2",
+          locale: "en",
+          templateBody: "Received {{amount}} {{currency}} from {{senderHandle}}. Message is in en",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+      ],
+    });
+
     await eventHandler.sendTransferReceivedEvent(payload);
 
     verify(
@@ -426,13 +568,7 @@ describe.each([
           templateKey: `template_send_transfer_successful_receiver_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.creditAmount,
-              currency: payload.params.creditCurrency,
-              senderHandle: payload.params.debitConsumer_handle,
-            },
-          },
+          body: `Received ${payload.params.creditAmount} ${payload.params.creditCurrency} from ${payload.params.debitConsumer_handle}. Message is in ${expectedSuffix}`,
           transferCounterPartyHandle: payload.params.debitConsumer_handle,
         }),
       ),
@@ -445,13 +581,7 @@ describe.each([
           templateKey: `template_send_transfer_successful_receiver_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.creditAmount,
-              currency: payload.params.creditCurrency,
-              senderHandle: payload.params.debitConsumer_handle,
-            },
-          },
+          body: `Received ${payload.params.creditAmount} ${payload.params.creditCurrency} from ${payload.params.debitConsumer_handle}. Message is in ${expectedSuffix}`,
           transferCounterPartyHandle: payload.params.debitConsumer_handle,
         }),
       ),
@@ -475,6 +605,34 @@ describe.each([
       "push-token-2",
     ]);
 
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
+      handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [
+        {
+          id: "fake-template-id-1",
+          locale: "es",
+          templateBody: "Received {{amount}} {{currency}} from {{companyName}}. Message is in es",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+        {
+          id: "fake-template-id-2",
+          locale: "en",
+          templateBody: "Received {{amount}} {{currency}} from {{companyName}}. Message is in en",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+      ],
+    });
+
     await eventHandler.sendPayrollDepositCompletedEvent(payload);
 
     verify(
@@ -484,15 +642,7 @@ describe.each([
           templateKey: `template_send_payroll_deposit_completed_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.debitAmount,
-              currency: payload.params.debitCurrency,
-            },
-            payrollParams: {
-              companyName: payload.params.companyName,
-            },
-          },
+          body: `Received ${payload.params.debitAmount} ${payload.params.debitCurrency} from ${payload.params.companyName}. Message is in ${expectedSuffix}`,
         }),
       ),
     ).once();
@@ -504,15 +654,7 @@ describe.each([
           templateKey: `template_send_payroll_deposit_completed_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
-          params: {
-            transactionParams: {
-              amount: payload.params.debitAmount,
-              currency: payload.params.debitCurrency,
-            },
-            payrollParams: {
-              companyName: payload.params.companyName,
-            },
-          },
+          body: `Received ${payload.params.debitAmount} ${payload.params.debitCurrency} from ${payload.params.companyName}. Message is in ${expectedSuffix}`,
         }),
       ),
     ).once();

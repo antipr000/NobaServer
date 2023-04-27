@@ -16,9 +16,6 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { KYCStatus, DocumentVerificationStatus, KYCProvider } from "@prisma/client";
 import { BadRequestError } from "../../../core/exception/CommonAppException";
-import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
-import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
-import { ExchangeRateDTO } from "../../../modules/common/dto/ExchangeRateDTO";
 import { getMockTransactionServiceWithDefaults } from "../../../modules/transaction/mocks/mock.transaction.service";
 import { ConsumerMapper } from "../../../modules/consumer/mappers/ConsumerMapper";
 import { EmployeeService } from "../../../modules/employee/employee.service";
@@ -45,6 +42,9 @@ import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/
 import { TransactionService } from "../../../modules/transaction/transaction.service";
 import { getMockTransactionMapperServiceWithDefaults } from "../../../modules/transaction/mocks/mock.transaction.mapper.service";
 import { Gender } from "../../../modules/consumer/domain/ExternalStates";
+import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
+import { getMockExchangeRateServiceWithDefaults } from "../../../modules/exchangerate/mocks/mock.exchangerate.service";
+import { ExchangeRateDTO } from "../../../modules/exchangerate/dto/exchangerate.dto";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";

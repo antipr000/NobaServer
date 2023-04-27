@@ -22,7 +22,7 @@ import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mo
 import { getMockConsumerMapperWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.mapper";
 import { getMockCircleServiceWithDefaults } from "../../circle/public/mocks/mock.circle.service";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
-import { Employee } from "../../../modules/employee/domain/Employee";
+import { Employee, EmployeeStatus } from "../../../modules/employee/domain/Employee";
 import { DocumentVerificationStatus, KYCProvider, KYCStatus } from "@prisma/client";
 import { AdminUpdateConsumerRequestDTO } from "../dto/AdminUpdateConsumerRequestDTO";
 import { ConsumerInternalDTO } from "../../../modules/consumer/dto/ConsumerInternalDTO";
@@ -406,6 +406,7 @@ describe("AdminService", () => {
         allocationCurrency: "USD" as any,
         employerID: "employer-id-1",
         consumerID: consumer1.props.id,
+        status: EmployeeStatus.LINKED,
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
         employer: {
@@ -413,6 +414,7 @@ describe("AdminService", () => {
           name: "Employer 1",
           bubbleID: "bubble-id-1",
           logoURI: "logo-uri-1",
+          locale: "en_us",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           leadDays: 1,
@@ -427,6 +429,7 @@ describe("AdminService", () => {
         allocationCurrency: "USD" as any,
         employerID: "employer-id-2",
         consumerID: consumer2.props.id,
+        status: EmployeeStatus.LINKED,
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
         employer: {
@@ -434,6 +437,7 @@ describe("AdminService", () => {
           name: "Employer 2",
           bubbleID: "bubble-id-2",
           logoURI: "logo-uri-2",
+          locale: "en_us",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           leadDays: 2,

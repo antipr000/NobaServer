@@ -56,6 +56,7 @@ describe("PomeloWebhookMapperService", () => {
         },
         merchant: {
           name: "MERCHANT_NAME",
+          mcc: "MCC",
         },
         card: {
           id: "POMELO_CARD_ID",
@@ -267,6 +268,22 @@ describe("PomeloWebhookMapperService", () => {
               expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
               expect(err.message).toEqual(expect.stringContaining("merchant"));
               expect(err.message).toEqual(expect.stringContaining("name"));
+            }
+          });
+
+          it("should throw error when 'merchant' object's 'mcc' field is missing", () => {
+            const headers = JSON.parse(JSON.stringify(validMinimalHeaders));
+            const requestBody = JSON.parse(JSON.stringify(validMinimalRequestBody));
+            delete requestBody.merchant.mcc;
+
+            try {
+              pomeloWebhookMapper.convertToPomeloTransactionAuthzRequest(requestBody, headers);
+              expect(true).toBe(false);
+            } catch (err) {
+              expect(err).toBeInstanceOf(ServiceException);
+              expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
+              expect(err.message).toEqual(expect.stringContaining("merchant"));
+              expect(err.message).toEqual(expect.stringContaining("mcc"));
             }
           });
         });
@@ -734,12 +751,15 @@ describe("PomeloWebhookMapperService", () => {
         pomeloTransactionID: "POMELO_TRANSACTION_ID",
         transactionType: PomeloTransactionType.PURCHASE,
         merchantName: "Noba Technologies",
+        merchantMCC: "5555",
         pomeloCardID: "POMELO_CARD_ID",
         pomeloUserID: "POMELO_USER_ID",
         localAmount: 1111,
         localCurrency: PomeloCurrency.COP,
         settlementAmount: 11,
         settlementCurrency: PomeloCurrency.USD,
+        transactionAmount: 111,
+        transactionCurrency: PomeloCurrency.COP,
         countryCode: "ESP",
         entryMode: PomeloEntryMode.MANUAL,
         pointType: PomeloPointType.ECOMMERCE,
@@ -765,6 +785,7 @@ describe("PomeloWebhookMapperService", () => {
         },
         merchant: {
           name: "MERCHANT_NAME",
+          mcc: "MCC",
         },
         card: {
           id: "POMELO_CARD_ID",
@@ -1021,6 +1042,23 @@ describe("PomeloWebhookMapperService", () => {
               expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
               expect(err.message).toEqual(expect.stringContaining("merchant"));
               expect(err.message).toEqual(expect.stringContaining("name"));
+            }
+          });
+
+          it("should throw error when 'merchant' object's 'mcc' field is missing", () => {
+            const headers = JSON.parse(JSON.stringify(validMinimalHeaders));
+            const requestBody = JSON.parse(JSON.stringify(validMinimalRequestBody));
+            delete requestBody.merchant.mcc;
+            const adjustmentType = validAdjustmentType;
+
+            try {
+              pomeloWebhookMapper.convertToPomeloTransactionAdjustmentRequest(requestBody, headers, adjustmentType);
+              expect(true).toBe(false);
+            } catch (err) {
+              expect(err).toBeInstanceOf(ServiceException);
+              expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
+              expect(err.message).toEqual(expect.stringContaining("merchant"));
+              expect(err.message).toEqual(expect.stringContaining("mcc"));
             }
           });
         });
@@ -1547,12 +1585,15 @@ describe("PomeloWebhookMapperService", () => {
         adjustmentType: PomeloAdjustmentType.CREDIT,
         transactionType: PomeloTransactionType.REVERSAL_PURCHASE,
         merchantName: "Noba Technologies",
+        merchantMCC: "5555",
         pomeloCardID: "POMELO_CARD_ID",
         pomeloUserID: "POMELO_USER_ID",
         localAmount: 1111,
         localCurrency: PomeloCurrency.COP,
         settlementAmount: 11,
         settlementCurrency: PomeloCurrency.USD,
+        transactionAmount: 111,
+        transactionCurrency: PomeloCurrency.COP,
         countryCode: "ESP",
         entryMode: PomeloEntryMode.MANUAL,
         pointType: PomeloPointType.ECOMMERCE,

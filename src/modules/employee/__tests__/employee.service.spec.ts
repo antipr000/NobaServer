@@ -2,27 +2,45 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { Employee, EmployeeAllocationCurrency } from "../domain/Employee";
+import { Employee, EmployeeAllocationCurrency, EmployeeStatus } from "../domain/Employee";
 import { IEmployeeRepo } from "../repo/employee.repo";
 import { getMockEmployeeRepoWithDefaults } from "../mocks/mock.employee.repo";
 import { EMPLOYEE_REPO_PROVIDER } from "../repo/employee.repo.module";
-import { anything, capture, instance, verify, when } from "ts-mockito";
+import { anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { EmployeeService } from "../employee.service";
 import { uuid } from "uuidv4";
-import { ServiceException } from "../../../core/exception/service.exception";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { createTestEmployer } from "../../../modules/employer/test_utils/test.utils";
 import { EmployerService } from "../../../modules/employer/employer.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
+import { EmployeeFilterOptionsDTO } from "../dto/employee.filter.options.dto";
 
 const getRandomEmployee = (includeEmployer?: boolean): Employee => {
   const employee: Employee = {
     id: uuid(),
     employerID: uuid(),
     consumerID: uuid(),
+    email: "rosie@noba.com",
     allocationAmount: Math.floor(Math.random() * 1000000),
     allocationCurrency: EmployeeAllocationCurrency.COP,
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    status: EmployeeStatus.LINKED,
+    ...(includeEmployer && { employer: createTestEmployer() }),
+  };
+
+  return employee;
+};
+
+const getRandomEmployeeWithoutConsumer = (includeEmployer?: boolean): Employee => {
+  const employee: Employee = {
+    id: uuid(),
+    employerID: uuid(),
+    allocationAmount: 0,
+    allocationCurrency: EmployeeAllocationCurrency.COP,
+    createdTimestamp: new Date(),
+    updatedTimestamp: new Date(),
+    status: EmployeeStatus.INVITED,
     ...(includeEmployer && { employer: createTestEmployer() }),
   };
 
@@ -69,7 +87,7 @@ describe("EmployeeServiceTests", () => {
   });
 
   describe("createEmployee", () => {
-    it("should create an employee and 'always' send the 'COP' as allocationCurrency", async () => {
+    it("should create an employee and 'always' set 'COP' as the allocationCurrency", async () => {
       const employee = getRandomEmployee();
       when(employeeRepo.createEmployee(anything())).thenResolve(employee);
 
@@ -87,6 +105,24 @@ describe("EmployeeServiceTests", () => {
         allocationCurrency: EmployeeAllocationCurrency.COP,
         employerID: employee.employerID,
         consumerID: employee.consumerID,
+        status: EmployeeStatus.LINKED,
+      });
+    });
+
+    it("should create an employee without linking to consumer", async () => {
+      const employee = getRandomEmployeeWithoutConsumer();
+      when(employeeRepo.createEmployee(anything())).thenResolve(employee);
+
+      const createdEmployee = await employeeService.createEmployee(employee.allocationAmount, employee.employerID);
+
+      expect(createdEmployee).toEqual(employee);
+
+      const [propagatedEmployeeCreateRequest] = capture(employeeRepo.createEmployee).last();
+      expect(propagatedEmployeeCreateRequest).toEqual({
+        allocationAmount: employee.allocationAmount,
+        allocationCurrency: EmployeeAllocationCurrency.COP,
+        employerID: employee.employerID,
+        status: EmployeeStatus.CREATED,
       });
     });
   });
@@ -105,6 +141,7 @@ describe("EmployeeServiceTests", () => {
 
       const updatedEmployee = await employeeService.updateEmployee(employee.id, {
         salary: newSalary,
+        email: "rosie@noba.com",
       });
 
       expect(updatedEmployee).toEqual(employee);
@@ -114,7 +151,91 @@ describe("EmployeeServiceTests", () => {
       expect(propagatedEmployeeUpdateRequest).toEqual({
         allocationAmount: 20,
         salary: newSalary,
+        email: "rosie@noba.com",
       });
+    });
+
+    it("should update an employee with consumerID and automatically update status", async () => {
+      const employee = getRandomEmployeeWithoutConsumer(true);
+
+      when(employeeRepo.getEmployeeByID(employee.id, true)).thenResolve(employee);
+      when(employeeRepo.updateEmployee(anything(), anything())).thenResolve({
+        ...employee,
+        status: EmployeeStatus.LINKED,
+      });
+
+      const consumerID = uuid();
+      const updatedEmployee = await employeeService.updateEmployee(employee.id, {
+        consumerID: consumerID,
+      });
+
+      expect(updatedEmployee).toEqual({ ...employee, status: EmployeeStatus.LINKED });
+
+      const [employeeID, propagatedEmployeeUpdateRequest] = capture(employeeRepo.updateEmployee).last();
+      expect(employeeID).toEqual(employee.id);
+      expect(propagatedEmployeeUpdateRequest).toEqual({
+        allocationAmount: 0,
+        consumerID: consumerID,
+        status: EmployeeStatus.LINKED,
+      });
+    });
+
+    it("should update employee status", async () => {
+      const employee = getRandomEmployee(true);
+
+      when(employeeRepo.getEmployeeByID(employee.id, true)).thenResolve(employee);
+      when(employeeRepo.updateEmployee(anything(), anything())).thenResolve(employee);
+
+      const updatedEmployee = await employeeService.updateEmployee(employee.id, {
+        status: EmployeeStatus.UNLINKED,
+      });
+
+      expect(updatedEmployee).toEqual(employee);
+
+      const [employeeID, propagatedEmployeeUpdateRequest] = capture(employeeRepo.updateEmployee).last();
+      expect(employeeID).toEqual(employee.id);
+      expect(propagatedEmployeeUpdateRequest).toEqual({
+        allocationAmount: employee.allocationAmount,
+        status: EmployeeStatus.UNLINKED,
+      });
+    });
+
+    it("should not allow a consumerID update when employee already has a different consumerID", async () => {
+      const employee = getRandomEmployee(true);
+
+      when(employeeRepo.getEmployeeByID(employee.id, true)).thenResolve(employee);
+
+      const consumerID = uuid();
+      expect(
+        employeeService.updateEmployee(employee.id, {
+          consumerID: consumerID,
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should not allow an existing record to be updated with a status of CREATED", async () => {
+      const employee = getRandomEmployee(true);
+
+      when(employeeRepo.getEmployeeByID(employee.id, true)).thenResolve(employee);
+
+      expect(
+        employeeService.updateEmployee(employee.id, {
+          status: EmployeeStatus.CREATED,
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should not throw an error if updating employee with same consumerID", async () => {
+      const employee = getRandomEmployee(true);
+
+      when(employeeRepo.getEmployeeByID(employee.id, true)).thenResolve(employee);
+      when(employeeRepo.updateEmployee(anything(), anything())).thenResolve(employee);
+
+      const consumerID = employee.consumerID;
+      const updatedEmployee = await employeeService.updateEmployee(employee.id, {
+        consumerID: consumerID,
+      });
+      expect(updatedEmployee.consumerID).toEqual(consumerID);
     });
 
     it("should update an employee with new allocation amount based on new salary", async () => {
@@ -320,6 +441,21 @@ describe("EmployeeServiceTests", () => {
     });
   });
 
+  describe("getEmployeesForEmployer", () => {
+    it("should get all employees for an employer", async () => {
+      const employee = getRandomEmployee(true);
+      when(employeeRepo.getEmployeesForEmployerWithConsumer(employee.employerID)).thenResolve([employee]);
+      const employees = await employeeService.getEmployeesForEmployer(employee.employerID);
+      expect(employees.length).toBe(1);
+    });
+
+    it("should throw an error if employerID is not supplied", async () => {
+      expect(employeeService.getEmployeesForEmployer(undefined)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+  });
+
   describe("updateAllocationAmountsForNewMaxAllocationPercent", () => {
     it("should update the allocation amounts for all employees of an employer when max allocation percent changes", async () => {
       const employee1 = getRandomEmployee();
@@ -406,6 +542,34 @@ describe("EmployeeServiceTests", () => {
       expect(employeeID2).toEqual(employee2.id);
       expect(employeeUpdateRequest2).toEqual({
         allocationAmount: 200,
+      });
+    });
+  });
+
+  describe("getFilteredEmployees", () => {
+    it("should return paginated list of filtered employees", async () => {
+      const employee1 = getRandomEmployee();
+
+      const filter: EmployeeFilterOptionsDTO = {
+        employerID: employee1.employerID,
+        pageLimit: 5,
+        pageOffset: 0,
+      };
+      when(employeeRepo.getFilteredEmployees(deepEqual(filter))).thenResolve({
+        page: 1,
+        hasNextPage: false,
+        items: [employee1],
+        totalItems: 1,
+        totalPages: 1,
+      });
+
+      const result = await employeeService.getFilteredEmployees(filter);
+      expect(result).toStrictEqual({
+        page: 1,
+        hasNextPage: false,
+        items: [employee1],
+        totalItems: 1,
+        totalPages: 1,
       });
     });
   });

@@ -31,8 +31,6 @@ import { LocationDTO } from "./modules/common/dto/LocationDTO";
 import { LocationService } from "./modules/common/location.service";
 import { CreditCardService } from "./modules/common/creditcard.service";
 import { CurrencyService } from "./modules/common/currency.service";
-import { ExchangeRateService } from "./modules/common/exchangerate.service";
-import { ExchangeRateDTO } from "./modules/common/dto/ExchangeRateDTO";
 import { SupportedBanksDTO } from "./modules/psp/dto/SupportedBanksDTO";
 import { MonoService } from "./modules/psp/mono/mono.service";
 import { HealthCheckResponseDTO } from "./modules/common/dto/HealthCheckResponseDTO";
@@ -43,6 +41,8 @@ import { WorkflowExecutor } from "./infra/temporal/workflow.executor";
 import { IdentificationService } from "./modules/common/identification.service";
 import { IdentificationTypeCountryDTO } from "./modules/common/dto/identification.type.country.dto";
 import { CircleService } from "./modules/circle/public/circle.service";
+import { ExchangeRateDTO } from "./modules/exchangerate/dto/exchangerate.dto";
+import { ExchangeRateService } from "./modules/exchangerate/exchangerate.service";
 
 @Controller("v1")
 @ApiHeaders(getCommonHeaders())

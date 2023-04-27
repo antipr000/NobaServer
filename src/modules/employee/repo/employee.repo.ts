@@ -1,4 +1,6 @@
+import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { Employee, EmployeeCreateRequest, EmployeeUpdateRequest } from "../domain/Employee";
+import { EmployeeFilterOptionsDTO } from "../dto/employee.filter.options.dto";
 
 export interface IEmployeeRepo {
   createEmployee(request: EmployeeCreateRequest): Promise<Employee>;
@@ -12,4 +14,5 @@ export interface IEmployeeRepo {
   ): Promise<Employee>;
   getEmployeesForEmployer(employerID: string, fetchEmployerDetails?: boolean): Promise<Employee[]>;
   getEmployeesForEmployerWithConsumer(employerID: string): Promise<Employee[]>;
+  getFilteredEmployees(filterOptions: EmployeeFilterOptionsDTO): Promise<PaginatedResult<Employee>>;
 }

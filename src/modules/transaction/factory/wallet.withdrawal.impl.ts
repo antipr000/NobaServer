@@ -5,7 +5,6 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { Currency } from "../domain/TransactionTypes";
-import { ExchangeRateService } from "../../common/exchangerate.service";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { Transaction } from "../domain/Transaction";
 import { TransactionFlags } from "../domain/TransactionFlags";
@@ -16,6 +15,7 @@ import { NobaConfigs } from "../../../config/configtypes/NobaConfigs";
 import { NOBA_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { FeeType } from "../domain/TransactionFee";
 import { ProcessedTransactionDTO } from "../dto/ProcessedTransactionDTO";
+import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
 
 export class WalletWithdrawalImpl implements IWorkflowImpl {
   private monoWithdrawalFeeAmount: number;

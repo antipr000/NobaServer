@@ -1,6 +1,16 @@
 import Joi from "joi";
 import { ExchangeRate as PrismaExchangeRateModel } from "@prisma/client";
-import { KeysRequired } from "./Types";
+import { KeysRequired } from "../../../modules/common/domain/Types";
+
+export enum ExchangeRateName {
+  STUB = "STUB",
+  EXCHANGERATEIO = "EXCHANGERATEIO",
+}
+
+export type ExchangeRatePair = {
+  numeratorCurrency: string;
+  denominatorCurrency: string;
+};
 
 export class ExchangeRate {
   id?: string;

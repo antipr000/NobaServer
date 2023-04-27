@@ -13,8 +13,6 @@ import { SQLOTPRepo } from "./repo/sql.otp.repo";
 import { OTPService } from "./otp.service";
 import { DeleteExpiredOTPs } from "../auth/DeleteExpiredOTPs";
 import { QRService } from "./qrcode.service";
-import { SQLExchangeRateRepo } from "./repo/sql.exchangerate.repo";
-import { ExchangeRateService } from "./exchangerate.service";
 import { S3Service } from "./s3.service";
 import { AlertService } from "./alerts/alert.service";
 import { IdentificationService } from "./identification.service";
@@ -28,7 +26,6 @@ import { IdentificationService } from "./identification.service";
     CreditCardService,
     LocationService,
     IdentificationService,
-    ExchangeRateService,
     ConfigurationProviderService,
     EllipticService,
     {
@@ -38,10 +35,6 @@ import { IdentificationService } from "./identification.service";
     {
       provide: "OTPRepo",
       useClass: SQLOTPRepo,
-    },
-    {
-      provide: "ExchangeRateRepo",
-      useClass: SQLExchangeRateRepo,
     },
     OTPService,
     DeleteExpiredOTPs,
@@ -53,7 +46,6 @@ import { IdentificationService } from "./identification.service";
     CsvService,
     KmsService,
     CurrencyService,
-    ExchangeRateService,
     CreditCardService,
     LocationService,
     IdentificationService,

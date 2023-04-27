@@ -34,8 +34,6 @@ import { getRandomPayroll, getRandomPayrollDisbursement } from "../test_utils/pa
 import { PayrollStatus } from "../domain/Payroll";
 import { getRandomEmployee } from "../../../modules/employee/test_utils/employee.test.utils";
 import { Utils } from "../../../core/utils/Utils";
-import { ExchangeRateService } from "../../../modules/common/exchangerate.service";
-import { getMockExchangeRateServiceWithDefaults } from "../../../modules/common/mocks/mock.exchangerate.service";
 import { S3Service } from "../../common/s3.service";
 import { getMockS3ServiceWithDefaults } from "../../common/mocks/mock.s3.service";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
@@ -48,11 +46,14 @@ import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { PayrollDisbursement } from "../domain/PayrollDisbursement";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
+import { getMockExchangeRateServiceWithDefaults } from "../../../modules/exchangerate/mocks/mock.exchangerate.service";
+import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
     id: uuid(),
     name: "Test Employer",
+    locale: "en_us",
     bubbleID: uuid(),
     logoURI: "https://www.google.com",
     referralID: uuid(),
@@ -1707,6 +1708,47 @@ describe("EmployerServiceTests", () => {
         TemplateProcessModule.TemplateLocale.SPANISH,
         EmployerService.FOOTER_TRANSLATIONS[TemplateProcessModule.TemplateLocale.SPANISH.toString()],
       );
+    });
+  });
+
+  describe("getFilteredEmployeesForEmployer", () => {
+    it("should throw ServiceException if employer with referralID does not exist", async () => {
+      when(mockEmployerRepo.getEmployerByReferralID("fake-referral-id")).thenResolve(null);
+
+      await expect(employerService.getFilteredEmployeesForEmployer("fake-referral-id", {})).rejects.toThrow(
+        ServiceException,
+      );
+    });
+
+    it("should return paginated list of employees for employer", async () => {
+      const employer = getRandomEmployer();
+      const employee1 = getRandomEmployee(employer.id);
+      const employee2 = getRandomEmployee(employer.id);
+
+      when(mockEmployerRepo.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(
+        mockEmployeeService.getFilteredEmployees(
+          deepEqual({
+            employerID: employer.id,
+          }),
+        ),
+      ).thenResolve({
+        items: [employee1, employee2],
+        totalItems: 2,
+        page: 1,
+        totalPages: 1,
+        hasNextPage: false,
+      });
+
+      const result = await employerService.getFilteredEmployeesForEmployer(employer.referralID, {});
+
+      expect(result).toStrictEqual({
+        items: [employee1, employee2],
+        totalItems: 2,
+        page: 1,
+        totalPages: 1,
+        hasNextPage: false,
+      });
     });
   });
 });

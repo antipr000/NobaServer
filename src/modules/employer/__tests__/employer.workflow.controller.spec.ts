@@ -9,7 +9,7 @@ import { getMockEmployerServiceWithDefaults } from "../mocks/mock.employer.servi
 import { EmployerWorkflowController } from "../employer.workflow.controller";
 import { getRandomEmployee } from "../../../modules/employee/test_utils/employee.test.utils";
 import { createTestEmployer } from "../test_utils/test.utils";
-import { Employee } from "../../../modules/employee/domain/Employee";
+import { Employee, EmployeeStatus } from "../../../modules/employee/domain/Employee";
 
 describe("EmployerWorkflowControllerTests", () => {
   jest.setTimeout(20000);
@@ -62,6 +62,7 @@ describe("EmployerWorkflowControllerTests", () => {
         employerID: employer.id,
         employerName: employer.name,
         employerLogoURI: employer.logoURI,
+        locale: employer.locale,
         employerReferralID: employer.referralID,
         leadDays: employer.leadDays,
         payrollDates: sortedPayrollDates,
@@ -89,6 +90,7 @@ describe("EmployerWorkflowControllerTests", () => {
             allocationCurrency: employee1.allocationCurrency,
             employerID: employer.id,
             consumerID: employee1.consumerID,
+            status: EmployeeStatus.LINKED,
           },
           {
             id: employee2.id,
@@ -97,6 +99,7 @@ describe("EmployerWorkflowControllerTests", () => {
             employerID: employer.id,
             consumerID: employee2.consumerID,
             salary: 10,
+            status: EmployeeStatus.LINKED,
           },
         ],
       });
