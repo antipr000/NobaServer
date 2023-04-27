@@ -23,6 +23,7 @@ export const createTestEmployer = (): Employer => {
     bubbleID: v4(),
     logoURI: "https://www.google.com",
     referralID: v4(),
+    documentNumber: v4(),
     leadDays: 1,
     payrollDates: ["2020-02-29", "2020-03-01", "2020-03-02"],
     id: v4(),

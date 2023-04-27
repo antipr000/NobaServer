@@ -28,6 +28,7 @@ export const getRandomEmployer = (name: string): Employer => {
     name: name || "Test Employer",
     payrollDates: ["2021-01-01", "2021-01-02"],
     referralID: uuid(),
+    documentNumber: uuid(),
     maxAllocationPercent: 100,
     payrollAccountNumber: "123456789",
     createdTimestamp: new Date(),

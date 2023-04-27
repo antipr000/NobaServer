@@ -49,6 +49,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
         bubbleID: request.bubbleID,
         logoURI: request.logoURI,
         leadDays: request.leadDays,
+        ...(request.documentNumber && { documentNumber: request.documentNumber }),
         payrollAccountNumber: request.payrollAccountNumber,
         payrollDates: request.payrollDates,
         ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
@@ -85,9 +86,11 @@ export class SqlEmployerRepo implements IEmployerRepo {
 
     try {
       const employerInput: Prisma.EmployerUpdateInput = {
+        ...(request.name && { name: request.name }),
         ...(request.logoURI && { logoURI: request.logoURI }),
         ...(request.referralID && { referralID: request.referralID }),
         ...(request.leadDays && { leadDays: request.leadDays }),
+        ...(request.documentNumber && { documentNumber: request.documentNumber }),
         ...(request.payrollAccountNumber && { payrollAccountNumber: request.payrollAccountNumber }),
         ...(request.payrollDates && { payrollDates: request.payrollDates }),
         ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
