@@ -1,14 +1,24 @@
 import { ApiPropertyOptional } from "@nestjs/swagger";
+import { EmployeeStatus } from "../domain/Employee";
+import { SortOrder } from "../../../core/infra/PaginationTypes";
+
+export class SortOptions {
+  @ApiPropertyOptional({ enum: SortOrder })
+  createdAt?: SortOrder;
+
+  @ApiPropertyOptional()
+  status?: boolean;
+}
 
 export class EmployeeFilterOptionsDTO {
   @ApiPropertyOptional()
   employerID?: string;
 
   @ApiPropertyOptional()
-  firstNameStartsWith?: string;
+  firstNameContains?: string;
 
   @ApiPropertyOptional()
-  lastNameStartsWith?: string;
+  lastNameContains?: string;
 
   @ApiPropertyOptional()
   employeeEmail?: string;
@@ -20,4 +30,10 @@ export class EmployeeFilterOptionsDTO {
 
   @ApiPropertyOptional({ description: "number of items per page" })
   pageLimit?: number;
+
+  @ApiPropertyOptional({ description: "sort by status", enum: EmployeeStatus })
+  status?: EmployeeStatus;
+
+  @ApiPropertyOptional()
+  sortBy?: SortOptions;
 }

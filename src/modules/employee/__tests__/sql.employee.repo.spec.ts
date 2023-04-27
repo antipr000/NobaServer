@@ -554,7 +554,7 @@ describe("SqlEmployeeRepoTests", () => {
       const consumerID4: string = await createTestConsumer(prismaService, "Diana", "Prince");
       const consumerID5: string = await createTestConsumer(prismaService, "Diego", "Forlan");
       const consumerID6: string = await createTestConsumer(prismaService, "Diego", "Maradona");
-      const consumerID7: string = await createTestConsumer(prismaService, "Clive", "Lloyd");
+      const consumerID7: string = await createTestConsumer(prismaService, "Juan Danial", "Hoyon Castro");
 
       const employerID1: string = await createTestEmployerAndStoreInDB(prismaService);
       const employerID2: string = await createTestEmployerAndStoreInDB(prismaService);
@@ -597,7 +597,7 @@ describe("SqlEmployeeRepoTests", () => {
       // Filter by employerID1 and partial firstName
       const filteredEmployees2: PaginatedResult<Employee> = await employeeRepo.getFilteredEmployees({
         employerID: employerID1,
-        firstNameStartsWith: "Di",
+        firstNameContains: "Di",
         pageLimit: 10,
         pageOffset: 0,
       });
@@ -611,7 +611,7 @@ describe("SqlEmployeeRepoTests", () => {
       // Filter by employerID1 and partial lastName
       const filteredEmployees3: PaginatedResult<Employee> = await employeeRepo.getFilteredEmployees({
         employerID: employerID1,
-        lastNameStartsWith: "W",
+        lastNameContains: "W",
         pageLimit: 10,
         pageOffset: 0,
       });
@@ -645,6 +645,18 @@ describe("SqlEmployeeRepoTests", () => {
       });
 
       expect(filteredEmployees5.items.length).toEqual(0);
+
+      // Case insensitive substring search
+      const filteredEmployees6: PaginatedResult<Employee> = await employeeRepo.getFilteredEmployees({
+        employerID: employerID2,
+        firstNameContains: "dan",
+        lastNameContains: "cas",
+      });
+
+      expect(filteredEmployees6.items.length).toEqual(1);
+      expect(filteredEmployees6.totalPages).toEqual(1);
+      expect(filteredEmployees6.items[0].consumer.props.firstName).toEqual("Juan Danial");
+      expect(filteredEmployees6.items[0].consumer.props.lastName).toEqual("Hoyon Castro");
     });
   });
 });

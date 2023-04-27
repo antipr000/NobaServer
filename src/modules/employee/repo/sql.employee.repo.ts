@@ -235,10 +235,31 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
       where: {
         ...(filterOptions.employerID && { employerID: filterOptions.employerID }),
         ...(filterOptions.employeeEmail && { email: filterOptions.employeeEmail }),
+        ...(filterOptions.status && { status: filterOptions.status }),
         consumer: {
-          ...(filterOptions.firstNameStartsWith && { firstName: { startsWith: filterOptions.firstNameStartsWith } }),
-          ...(filterOptions.lastNameStartsWith && { lastName: { startsWith: filterOptions.lastNameStartsWith } }),
+          ...(filterOptions.firstNameContains && {
+            firstName: {
+              contains: filterOptions.firstNameContains,
+              mode: "insensitive",
+            },
+          }),
+          ...(filterOptions.lastNameContains && {
+            lastName: {
+              contains: filterOptions.lastNameContains,
+              mode: "insensitive",
+            },
+          }),
         },
+      },
+      orderBy: {
+        ...(filterOptions.sortBy &&
+          filterOptions.sortBy.createdAt && {
+            createdTimestamp: filterOptions.sortBy.createdAt,
+          }),
+        ...(filterOptions.sortBy &&
+          filterOptions.sortBy.status && {
+            status: "asc",
+          }),
       },
       include: {
         employer: true,

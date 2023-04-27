@@ -21,6 +21,7 @@ import {
   CreatePayrollRequestDTO,
   CreatePayrollResponseDTO,
   DisbursementDTO,
+  PaginatedEmployeeResponseDTO,
   PayrollDTO,
   PayrollQueryDTO,
   RegisterEmployerRequestDTO,
@@ -32,6 +33,7 @@ import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { isValidDateString } from "../../core/utils/DateUtils";
 import { BubbleWebhookMapper } from "./mapper/bubble.webhook.mapper";
 import { Bool } from "../../core/domain/ApiEnums";
+import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
 
 @Controller("/webhooks/bubble")
 @ApiTags("Webhooks")
@@ -65,6 +67,17 @@ export class BubbleWebhookController {
     return {
       nobaEmployerID,
     };
+  }
+
+  @Get("/employers/:referralID/employees")
+  @ApiOperation({ summary: "Get all employees for employer in Noba" })
+  @ApiResponse({ status: HttpStatus.OK, type: [PaginatedEmployeeResponseDTO] })
+  async getAllEmployees(
+    @Param("referralID") referralID: string,
+    @Query() filterOptions: EmployeeFilterOptionsDTO,
+  ): Promise<PaginatedEmployeeResponseDTO> {
+    const paginatedResult = await this.bubbleService.getAllEmployeesForEmployer(referralID, filterOptions);
+    return this.mapper.toPaginatedEmployeeDTOs(paginatedResult);
   }
 
   @Post("/employers/:referralID/payroll")

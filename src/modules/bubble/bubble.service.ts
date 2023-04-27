@@ -17,6 +17,9 @@ import { NotificationEventType } from "../notifications/domain/NotificationTypes
 import { PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
 import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
 import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
+import { Employee } from "../employee/domain/Employee";
+import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
 
 @Injectable()
 export class BubbleService {
@@ -181,5 +184,19 @@ export class BubbleService {
     }
 
     return this.employerService.getAllDisbursementsForEmployee(employeeID);
+  }
+
+  async getAllEmployeesForEmployer(
+    referralID: string,
+    filterOptions: EmployeeFilterOptionsDTO,
+  ): Promise<PaginatedResult<Employee>> {
+    if (!referralID) {
+      throw new ServiceException({
+        message: "referralID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    return this.employerService.getFilteredEmployeesForEmployer(referralID, filterOptions);
   }
 }

@@ -632,4 +632,34 @@ describe("BubbleServiceTests", () => {
       ).rejects.toThrow(ServiceException);
     });
   });
+
+  describe("getAllEmployeesForEmployer", () => {
+    it("should throw 'ServiceException' when referralID is undefined", async () => {
+      await expect(async () => await bubbleService.getAllEmployeesForEmployer(undefined, {})).rejects.toThrow(
+        ServiceException,
+      );
+    });
+
+    it("should return paginated list of employees", async () => {
+      const employer = getRandomEmployer();
+      const employee = getRandomEmployee("fake-consumer-id", employer);
+
+      when(employerService.getFilteredEmployeesForEmployer(employer.referralID, deepEqual({}))).thenResolve({
+        items: [employee],
+        page: 1,
+        totalItems: 1,
+        totalPages: 1,
+        hasNextPage: false,
+      });
+
+      const response = await bubbleService.getAllEmployeesForEmployer(employer.referralID, {});
+      expect(response).toStrictEqual({
+        items: [employee],
+        page: 1,
+        totalItems: 1,
+        totalPages: 1,
+        hasNextPage: false,
+      });
+    });
+  });
 });

@@ -1,6 +1,8 @@
 import { Payroll } from "../../../modules/employer/domain/Payroll";
-import { DisbursementDTO, PayrollDTO } from "../dto/bubble.webhook.controller.dto";
+import { DisbursementDTO, PaginatedEmployeeResponseDTO, PayrollDTO } from "../dto/bubble.webhook.controller.dto";
 import { PayrollDisbursement } from "../../../modules/employer/domain/PayrollDisbursement";
+import { PaginatedResult } from "../../../core/infra/PaginationTypes";
+import { Employee } from "../../../modules/employee/domain/Employee";
 
 export class BubbleWebhookMapper {
   toPayrollDTO(payroll: Payroll): PayrollDTO {
@@ -25,6 +27,29 @@ export class BubbleWebhookMapper {
       employeeID: disbursement.employeeID,
       transactionID: disbursement.transactionID,
       debitAmount: disbursement.allocationAmount,
+    };
+  }
+
+  toPaginatedEmployeeDTOs(paginatedResult: PaginatedResult<Employee>): PaginatedEmployeeResponseDTO {
+    return {
+      page: paginatedResult.page,
+      totalItems: paginatedResult.totalItems,
+      totalPages: paginatedResult.totalPages,
+      hasNextPage: paginatedResult.hasNextPage,
+      items: paginatedResult.items.map(employee => {
+        return {
+          id: employee.id,
+          allocationAmount: employee.allocationAmount,
+          allocationCurrency: employee.allocationCurrency,
+          employerID: employee.employerID,
+          consumerID: employee.consumerID,
+          salary: employee.salary,
+          email: employee.email,
+          status: employee.status,
+          firstName: employee.consumer.props.firstName,
+          lastName: employee.consumer.props.lastName,
+        };
+      }),
     };
   }
 }

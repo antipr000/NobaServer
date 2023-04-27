@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { Bool } from "../../../core/domain/ApiEnums";
+import { PaginatedResult } from "../../../core/infra/PaginationTypes";
+import { EmployeeDTO } from "../../../modules/employee/dto/employee.dto";
 
 export class RegisterEmployerRequestDTO {
   @ApiProperty()
@@ -115,4 +117,17 @@ export class PayrollDTO {
 
   @ApiPropertyOptional()
   disbursements?: DisbursementDTO[];
+}
+
+export class EmployeeResponseDTO extends EmployeeDTO {
+  @ApiPropertyOptional()
+  firstName?: string;
+
+  @ApiPropertyOptional()
+  lastName?: string;
+}
+
+export class PaginatedEmployeeResponseDTO extends PaginatedResult<EmployeeResponseDTO> {
+  @ApiProperty({ type: [EmployeeResponseDTO] })
+  items: EmployeeResponseDTO[];
 }
