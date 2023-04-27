@@ -1,4 +1,4 @@
-import { Controller, Get, HttpStatus, Inject, Param, Query } from "@nestjs/common";
+import { Controller, Get, HttpStatus, Inject, Param } from "@nestjs/common";
 import { ApiBearerAuth, ApiNotFoundResponse, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";

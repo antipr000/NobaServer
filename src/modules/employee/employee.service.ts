@@ -7,6 +7,8 @@ import { IEmployeeRepo } from "./repo/employee.repo";
 import { EMPLOYEE_REPO_PROVIDER } from "./repo/employee.repo.module";
 import { UpdateEmployeeRequestDTO } from "./dto/employee.service.dto";
 import { Utils } from "../../core/utils/Utils";
+import { EmployeeFilterOptionsDTO } from "./dto/employee.filter.options.dto";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
 
 @Injectable()
 export class EmployeeService {
@@ -110,6 +112,10 @@ export class EmployeeService {
     }
 
     return this.employeeRepo.getEmployeeByConsumerAndEmployerID(consumerID, employerID);
+  }
+
+  async getFilteredEmployees(filterOptions: EmployeeFilterOptionsDTO): Promise<PaginatedResult<Employee>> {
+    return this.employeeRepo.getFilteredEmployees(filterOptions);
   }
 
   async getEmployeesForConsumerID(consumerID: string, fetchEmployerDetails = false): Promise<Employee[]> {

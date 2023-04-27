@@ -21,6 +21,9 @@ import {
 import { IEmployeeRepo } from "./employee.repo";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
+import { PaginatedResult } from "../../../core/infra/PaginationTypes";
+import { createPaginator } from "../../../infra/sql/paginate/PaginationPipeline";
+import { EmployeeFilterOptionsDTO } from "../dto/employee.filter.options.dto";
 
 type EmployeeModelType = EmployeePrismaModel & {
   employer?: EmployerPrismaModel;
@@ -217,6 +220,43 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
       this.logger.error(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
         message: `Error retrieving employees with consumerID: '${consumerID}'`,
+      });
+    }
+  }
+
+  async getFilteredEmployees(filterOptions: EmployeeFilterOptionsDTO): Promise<PaginatedResult<Employee>> {
+    const paginator = createPaginator<Employee>(
+      filterOptions.pageOffset,
+      filterOptions.pageLimit,
+      convertToDomainEmployee,
+    );
+
+    const filterQuery: Prisma.EmployeeFindManyArgs = {
+      where: {
+        ...(filterOptions.employerID && { employerID: filterOptions.employerID }),
+        ...(filterOptions.employeeEmail && { email: filterOptions.employeeEmail }),
+        consumer: {
+          ...(filterOptions.firstNameStartsWith && { firstName: { startsWith: filterOptions.firstNameStartsWith } }),
+          ...(filterOptions.lastNameStartsWith && { lastName: { startsWith: filterOptions.lastNameStartsWith } }),
+        },
+      },
+      include: {
+        employer: true,
+        consumer: {
+          include: {
+            verificationData: true,
+          },
+        },
+      },
+    };
+
+    try {
+      return await paginator(this.prismaService.employee, filterQuery);
+    } catch (err) {
+      this.logger.error(`Error retrieving employees with filter options: ${JSON.stringify(filterOptions)}`);
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: "Error retrieving employees with given filters",
       });
     }
   }

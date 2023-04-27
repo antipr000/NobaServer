@@ -6,13 +6,14 @@ import { Employee, EmployeeAllocationCurrency, EmployeeStatus } from "../domain/
 import { IEmployeeRepo } from "../repo/employee.repo";
 import { getMockEmployeeRepoWithDefaults } from "../mocks/mock.employee.repo";
 import { EMPLOYEE_REPO_PROVIDER } from "../repo/employee.repo.module";
-import { anything, capture, instance, verify, when } from "ts-mockito";
+import { anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { EmployeeService } from "../employee.service";
 import { uuid } from "uuidv4";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { createTestEmployer } from "../../../modules/employer/test_utils/test.utils";
 import { EmployerService } from "../../../modules/employer/employer.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
+import { EmployeeFilterOptionsDTO } from "../dto/employee.filter.options.dto";
 
 const getRandomEmployee = (includeEmployer?: boolean): Employee => {
   const employee: Employee = {
@@ -541,6 +542,34 @@ describe("EmployeeServiceTests", () => {
       expect(employeeID2).toEqual(employee2.id);
       expect(employeeUpdateRequest2).toEqual({
         allocationAmount: 200,
+      });
+    });
+  });
+
+  describe("getFilteredEmployees", () => {
+    it("should return paginated list of filtered employees", async () => {
+      const employee1 = getRandomEmployee();
+
+      const filter: EmployeeFilterOptionsDTO = {
+        employerID: employee1.employerID,
+        pageLimit: 5,
+        pageOffset: 0,
+      };
+      when(employeeRepo.getFilteredEmployees(deepEqual(filter))).thenResolve({
+        page: 1,
+        hasNextPage: false,
+        items: [employee1],
+        totalItems: 1,
+        totalPages: 1,
+      });
+
+      const result = await employeeService.getFilteredEmployees(filter);
+      expect(result).toStrictEqual({
+        page: 1,
+        hasNextPage: false,
+        items: [employee1],
+        totalItems: 1,
+        totalPages: 1,
       });
     });
   });

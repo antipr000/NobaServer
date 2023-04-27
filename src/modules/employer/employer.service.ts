@@ -48,6 +48,8 @@ import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
 import { v4 } from "uuid";
 import { Utils } from "../../core/utils/Utils";
 import { ExchangeRateService } from "../exchangerate/exchangerate.service";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
+import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
 
 @Injectable()
 export class EmployerService {
@@ -107,6 +109,21 @@ export class EmployerService {
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
+  }
+
+  async getFilteredEmployeesForEmployer(
+    referralID: string,
+    filterOptions: EmployeeFilterOptionsDTO,
+  ): Promise<PaginatedResult<Employee>> {
+    const employer = await this.employerRepo.getEmployerByReferralID(referralID);
+    if (!employer) {
+      throw new ServiceException({
+        message: "Employer not found",
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+    filterOptions.employerID = employer.id;
+    return this.employeeService.getFilteredEmployees(filterOptions);
   }
 
   async getAllEmployees(employerID: string): Promise<Employee[]> {
@@ -255,7 +272,7 @@ export class EmployerService {
       this.logger,
       this.s3Service,
       `${this.invoiceTemplateBucketPath}/payroll-invoice/`,
-      `template_LOCALE.hbs`,
+      "template_LOCALE.hbs",
       `${this.invoicesFolderBucketPath}/${employer.id}/`,
       `inv_${payroll.id}`,
     );
@@ -350,7 +367,7 @@ export class EmployerService {
       this.logger,
       this.s3Service,
       `${this.invoiceTemplateBucketPath}/payroll-receipt/`,
-      `template_LOCALE.hbs`,
+      "template_LOCALE.hbs",
       `${this.invoicesFolderBucketPath}/${employer.id}/`,
       `rct_${payroll.id}`,
     );
