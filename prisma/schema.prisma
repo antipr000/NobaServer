@@ -109,7 +109,7 @@ model Employer {
   logoURI              String
   referralID           String     @unique()
   bubbleID             String     @unique()
-  locale               String
+  locale               String?
   leadDays             Int?
   maxAllocationPercent Float?
   payrollDates         String[]
