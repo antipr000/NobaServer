@@ -57,6 +57,7 @@ export class BubbleWebhookController {
     const nobaEmployerID: string = await this.bubbleService.registerEmployerInNoba({
       bubbleID: requestBody.bubbleID,
       logoURI: requestBody.logoURI,
+      locale: requestBody.locale,
       name: requestBody.name,
       referralID: requestBody.referralID,
       leadDays: requestBody.leadDays,

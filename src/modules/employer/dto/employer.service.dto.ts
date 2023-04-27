@@ -1,6 +1,7 @@
 export type CreateEmployerRequestDTO = {
   name: string;
   logoURI: string;
+  locale?: string;
   referralID: string;
   bubbleID: string;
   maxAllocationPercent?: number;
@@ -11,6 +12,7 @@ export type CreateEmployerRequestDTO = {
 
 export type UpdateEmployerRequestDTO = {
   logoURI?: string;
+  locale?: string;
   referralID?: string;
   leadDays?: number;
   payrollAccountNumber?: string;

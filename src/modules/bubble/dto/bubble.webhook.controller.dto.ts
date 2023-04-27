@@ -15,6 +15,9 @@ export class RegisterEmployerRequestDTO {
   referralID: string;
 
   @ApiProperty()
+  locale?: string;
+
+  @ApiProperty()
   bubbleID: string;
 
   @ApiPropertyOptional()
@@ -33,6 +36,9 @@ export class RegisterEmployerRequestDTO {
 export class UpdateEmployerRequestDTO {
   @ApiPropertyOptional()
   logoURI?: string;
+
+  @ApiPropertyOptional()
+  locale?: string;
 
   @ApiPropertyOptional()
   leadDays?: number;

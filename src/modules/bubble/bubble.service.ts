@@ -36,6 +36,7 @@ export class BubbleService {
       name: request.name,
       referralID: request.referralID,
       logoURI: request.logoURI,
+      locale: request.locale,
       bubbleID: request.bubbleID,
       ...(request.payrollAccountNumber && { payrollAccountNumber: request.payrollAccountNumber }),
       ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
@@ -58,6 +59,7 @@ export class BubbleService {
     await this.employerService.updateEmployer(employer.id, {
       leadDays: request.leadDays,
       logoURI: request.logoURI,
+      locale: request.locale,
       payrollDates: request.payrollDates,
       payrollAccountNumber: request.payrollAccountNumber,
       maxAllocationPercent: request.maxAllocationPercent,

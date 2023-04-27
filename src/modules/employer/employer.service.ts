@@ -150,6 +150,7 @@ export class EmployerService {
     return this.employerRepo.createEmployer({
       name: request.name,
       logoURI: request.logoURI,
+      locale: request.locale,
       referralID: request.referralID,
       bubbleID: request.bubbleID,
       leadDays: request.leadDays,
@@ -178,6 +179,7 @@ export class EmployerService {
 
     return this.employerRepo.updateEmployer(id, {
       ...(request.logoURI && { logoURI: request.logoURI }),
+      ...(request.locale && { locale: request.locale }),
       ...(request.referralID && { referralID: request.referralID }),
       ...(request.leadDays && { leadDays: request.leadDays }),
       ...(request.payrollDates && { payrollDates: request.payrollDates }),

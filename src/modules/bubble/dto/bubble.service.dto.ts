@@ -4,6 +4,7 @@ import { PayrollDisbursement } from "../../../modules/employer/domain/PayrollDis
 export type RegisterEmployerRequest = {
   name: string;
   logoURI: string;
+  locale?: string;
   referralID: string;
   bubbleID: string;
   leadDays?: number;
@@ -14,6 +15,7 @@ export type RegisterEmployerRequest = {
 
 export type UpdateNobaEmployerRequest = {
   logoURI?: string;
+  locale?: string;
   leadDays?: number;
   payrollDates?: string[];
   payrollAccountNumber?: string;
