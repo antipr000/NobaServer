@@ -45,7 +45,6 @@ import { ConsumerVerificationResult } from "../../../modules/verification/domain
 import { TransactionVerification } from "../../../modules/verification/domain/TransactionVerification";
 import { SeverityLevel } from "../../../core/exception/base.exception";
 import { getMockMonoWorkflowServiceWithDefaults } from "../../mono/workflow/mocks/mock.mono.workflow.service";
-import { MonoWorkflowService } from "../../mono/workflow/mono.workflow.service";
 import { EmployeeService } from "../../../modules/employee/employee.service";
 import { EmployerService } from "../../../modules/employer/employer.service";
 import { getMockEmployeeRepoWithDefaults } from "../../../modules/employee/mocks/mock.employee.repo";
@@ -73,6 +72,8 @@ import { CardReversalTransactionType, InitiateTransactionRequest } from "../dto/
 import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/exchangerate/mocks/mock.exchangerate.service";
 import { ExchangeRateDTO } from "../../../modules/exchangerate/dto/exchangerate.dto";
+import { MonoService } from "../../../modules/mono/public/mono.service";
+import { getMockMonoServiceWithDefaults } from "../../../modules/mono/public/mocks/mock.mono.service";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -88,7 +89,7 @@ describe("TransactionServiceTests", () => {
   let walletWithdrawalImpl: WalletWithdrawalImpl;
   let walletDepositImpl: WalletDepositImpl;
   let bankFactory: BankFactory;
-  let monoWorkflowService: MonoWorkflowService;
+  let monoService: MonoService;
   let withdrawalDetailsRepo: IWithdrawalDetailsRepo;
   let employeeService: EmployeeService;
   let employerService: EmployerService;
@@ -105,7 +106,7 @@ describe("TransactionServiceTests", () => {
     walletWithdrawalImpl = getMockWalletWithdrawalImplWithDefaults();
     walletDepositImpl = getMockWalletDepositImplWithDefaults();
     bankFactory = getMockBankFactoryWithDefaults();
-    monoWorkflowService = getMockMonoWorkflowServiceWithDefaults();
+    monoService = getMockMonoServiceWithDefaults();
     withdrawalDetailsRepo = getMockWithdrawalDetailsRepoWithDefaults();
     employeeService = getMockEmployeeServiceWithDefaults();
     employerService = getMockEmployerServiceWithDefaults();
@@ -148,8 +149,8 @@ describe("TransactionServiceTests", () => {
           useFactory: () => instance(bankFactory),
         },
         {
-          provide: MonoWorkflowService,
-          useFactory: () => instance(monoWorkflowService),
+          provide: MonoService,
+          useFactory: () => instance(monoService),
         },
         {
           provide: EmployeeService,
@@ -1324,19 +1325,19 @@ describe("TransactionServiceTests", () => {
       };
       when(withdrawalDetailsRepo.getWithdrawalDetailsByTransactionID(transaction.id)).thenResolve(withdrawalDetails);
 
-      const returnedBankService = instance(monoWorkflowService);
+      const returnedBankService = instance(monoService);
       when(bankFactory.getBankImplementationByCurrency(transaction.creditCurrency)).thenReturn(returnedBankService);
 
       const factoryResponse = {
         state: "SUCCESS",
         withdrawalID: "fake-withdrawal-id",
       };
-      when(monoWorkflowService.debit(anything())).thenResolve(factoryResponse);
+      when(monoService.debit(anything())).thenResolve(factoryResponse);
 
       const response = await transactionService.debitFromBank(transaction.id);
 
       expect(response).toStrictEqual(factoryResponse);
-      const [debitRequest] = capture(monoWorkflowService.debit).last();
+      const [debitRequest] = capture(monoService.debit).last();
       expect(debitRequest).toEqual({
         amount: 111,
         currency: "USD",
