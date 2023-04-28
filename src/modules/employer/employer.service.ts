@@ -457,6 +457,7 @@ export class EmployerService {
   }
 
   async getAllEnrichedDisbursementsForPayroll(
+    referralID: string,
     payrollID: string,
     filters: EnrichedDisbursementFilterOptionsDTO,
   ): Promise<EnrichedDisbursementDTO[]> {
