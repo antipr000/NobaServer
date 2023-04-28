@@ -8,8 +8,8 @@ import { getMockCircleServiceWithDefaults } from "../../circle/public/mocks/mock
 import { IBank } from "../factory/ibank";
 import { BankName } from "../domain/BankFactoryTypes";
 import { CircleService } from "../../../modules/circle/public/circle.service";
-import { getMockMonoServiceWithDefaults } from "src/modules/mono/public/mocks/mock.mono.service";
-import { MonoService } from "src/modules/mono/public/mono.service";
+import { getMockMonoServiceWithDefaults } from "../../../modules/mono/public/mocks/mock.mono.service";
+import { MonoService } from "../../../modules/mono/public/mono.service";
 
 describe("BankFactory Tests", () => {
   jest.setTimeout(20000);

@@ -3,7 +3,7 @@ import { CircleService } from "../../../modules/circle/public/circle.service";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { BankName } from "../domain/BankFactoryTypes";
 import { IBank } from "./ibank";
-import { MonoService } from "src/modules/mono/public/mono.service";
+import { MonoService } from "../../../modules/mono/public/mono.service";
 
 @Injectable()
 export class BankFactory {

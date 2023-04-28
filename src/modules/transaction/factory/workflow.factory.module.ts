@@ -8,7 +8,7 @@ import { WalletTransferImpl } from "./wallet.transfer.impl";
 import { CommonModule } from "../../../modules/common/common.module";
 import { PayrollDepositImpl } from "./payroll.deposit.impl";
 import { ExchangeRateModule } from "../../exchangerate/exchangerate.module";
-import { MonoPublicModule } from "src/modules/mono/public/mono.public.module";
+import { MonoPublicModule } from "../../../modules/mono/public/mono.public.module";
 
 @Module({
   imports: [PspModule, TemporalModule, CommonModule, ExchangeRateModule, MonoPublicModule],
