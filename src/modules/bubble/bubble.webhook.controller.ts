@@ -24,7 +24,6 @@ import {
   EnrichedDisbursementDTO,
   PaginatedEmployeeResponseDTO,
   PayrollDTO,
-  PayrollQueryDTO,
   RegisterEmployerRequestDTO,
   UpdateEmployeeRequestDTO,
   UpdateEmployerRequestDTO,
@@ -114,17 +113,11 @@ export class BubbleWebhookController {
   async getPayroll(
     @Param("referralID") referralID: string,
     @Param("payrollID") payrollID: string,
-    @Query() query: PayrollQueryDTO,
   ): Promise<PayrollDTO> {
-    const payrollWithDisbursements = await this.bubbleService.getPayrollWithDisbursements(
-      referralID,
-      payrollID,
-      query.shouldIncludeDisbursements === Bool.True,
-    );
+    const payrollWithDisbursements = await this.bubbleService.getPayroll(referralID, payrollID);
 
     return {
       ...this.mapper.toPayrollDTO(payrollWithDisbursements),
-      disbursements: payrollWithDisbursements.disbursements.map(this.mapper.toDisbursementDTO),
     };
   }
 

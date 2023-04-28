@@ -27,7 +27,3 @@ export type UpdateNobaEmployeeRequest = {
   salary?: number;
   status?: EmployeeStatus;
 };
-
-export type PayrollWithDisbursements = Payroll & {
-  disbursements: PayrollDisbursement[];
-};

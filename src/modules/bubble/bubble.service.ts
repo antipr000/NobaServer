@@ -4,7 +4,6 @@ import { ServiceErrorCode, ServiceException } from "../../core/exception/service
 import { Logger } from "winston";
 import { EmployeeService } from "../employee/employee.service";
 import {
-  PayrollWithDisbursements,
   RegisterEmployerRequest,
   UpdateNobaEmployeeRequest,
   UpdateNobaEmployerRequest,
@@ -133,11 +132,7 @@ export class BubbleService {
     return this.employerService.getAllPayrollsForEmployer(employer.id);
   }
 
-  async getPayrollWithDisbursements(
-    referralID: string,
-    payrollID: string,
-    shouldIncludeDisbursements?: boolean,
-  ): Promise<PayrollWithDisbursements> {
+  async getPayroll(referralID: string, payrollID: string): Promise<Payroll> {
     if (!referralID) {
       throw new ServiceException({
         message: "referralID is required",
@@ -156,19 +151,7 @@ export class BubbleService {
       });
     }
 
-    if (shouldIncludeDisbursements) {
-      const disbursements = await this.employerService.getAllDisbursementsForPayroll(payrollID);
-
-      return {
-        ...payroll,
-        disbursements,
-      };
-    } else {
-      return {
-        ...payroll,
-        disbursements: [],
-      };
-    }
+    return payroll;
   }
 
   async getAllDisbursementsForEmployee(referralID: string, employeeID: string): Promise<PayrollDisbursement[]> {
@@ -212,7 +195,7 @@ export class BubbleService {
       });
     }
 
-    return this.employerService.getAllEnrichedDisbursementsForPayroll(payrollID, filterOptions);
+    return this.employerService.getAllEnrichedDisbursementsForPayroll(referralID, payrollID, filterOptions);
   }
 
   async getAllEmployeesForEmployer(

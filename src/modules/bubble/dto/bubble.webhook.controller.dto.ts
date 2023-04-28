@@ -73,11 +73,6 @@ export class CreatePayrollResponseDTO {
   payrollID: string;
 }
 
-export class PayrollQueryDTO {
-  @ApiProperty({ enum: Bool })
-  shouldIncludeDisbursements: Bool;
-}
-
 export class DisbursementDTO {
   @ApiProperty()
   id: string;

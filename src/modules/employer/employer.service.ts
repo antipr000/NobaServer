@@ -461,6 +461,13 @@ export class EmployerService {
     payrollID: string,
     filters: EnrichedDisbursementFilterOptionsDTO,
   ): Promise<EnrichedDisbursementDTO[]> {
+    if (!referralID) {
+      throw new ServiceException({
+        message: "referralID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
     if (!payrollID) {
       throw new ServiceException({
         message: "payrollID is required",
@@ -472,7 +479,7 @@ export class EmployerService {
     if (!payroll) {
       throw new ServiceException({
         message: "Payroll not found",
-        errorCode: ServiceErrorCode.NOT_FOUND,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
       });
     }
 
@@ -480,11 +487,11 @@ export class EmployerService {
     if (!employer) {
       throw new ServiceException({
         message: "Employer not found",
-        errorCode: ServiceErrorCode.NOT_FOUND,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
       });
     }
 
-    const employeeDisbursements = await this.getEmployeeDisbursements(payrollID, filters);
+    const employeeDisbursements = await this.getAllDisbursementsForPayroll;
 
     const enrichedDisbursements: EnrichedDisbursementDTO[] = employeeDisbursements.map(
       (disbursement: EmployeeDisbursement) => {
