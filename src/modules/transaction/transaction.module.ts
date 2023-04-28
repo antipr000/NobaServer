@@ -13,11 +13,11 @@ import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from 
 import { TransactionWorkflowMapper } from "./mapper/transaction.workflow.mapper";
 import { VerificationModule } from "../verification/verification.module";
 import { WorkflowFactoryModule } from "./factory/workflow.factory.module";
-import { MonoModule } from "../psp/mono/mono.module";
 import { BankFactoryModule } from "../psp/factory/bank.factory.module";
 import { EmployerModule } from "../employer/employer.module";
 import { EmployeeModule } from "../employee/employee.module";
 import { CirclePublicModule } from "../circle/public/circle.public.module";
+import { MonoPublicModule } from "../mono/public/mono.public.module";
 
 @Module({
   imports: [
@@ -28,7 +28,7 @@ import { CirclePublicModule } from "../circle/public/circle.public.module";
     CommonModule,
     WorkflowFactoryModule,
     BankFactoryModule,
-    MonoModule,
+    MonoPublicModule,
     EmployerModule,
     EmployeeModule,
     CirclePublicModule,

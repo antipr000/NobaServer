@@ -15,8 +15,8 @@ import { ConfigurationProviderService } from "../modules/common/configuration.pr
 import { getMockConfigurationProviderServiceWithDefaults } from "../modules/common/mocks/mock.configuration.provider.service";
 import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { BINValidity, CardType, CreditCardDTO } from "../modules/common/dto/CreditCardDTO";
-import { MonoService } from "../modules/psp/mono/mono.service";
-import { getMockMonoServiceWithDefaults } from "../modules/psp/mono/mocks/mock.mono.service";
+import { MonoService } from "../modules/mono/public/mono.service";
+import { getMockMonoServiceWithDefaults } from "../modules/mono/public/mocks/mock.mono.service";
 import { VerificationService } from "../modules/verification/verification.service";
 import { getMockVerificationServiceWithDefaults } from "../modules/verification/mocks/mock.verification.service";
 import { HealthCheckStatus } from "../core/domain/HealthCheckTypes";

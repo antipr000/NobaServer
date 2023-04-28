@@ -2,13 +2,13 @@ import { Inject, Injectable } from "@nestjs/common";
 import { CircleService } from "../../../modules/circle/public/circle.service";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { BankName } from "../domain/BankFactoryTypes";
-import { MonoWorkflowService } from "../mono/mono.workflow.service";
 import { IBank } from "./ibank";
+import { MonoService } from "src/modules/mono/public/mono.service";
 
 @Injectable()
 export class BankFactory {
   @Inject()
-  private readonly monoWorkflowService: MonoWorkflowService;
+  private readonly monoService: MonoService;
 
   @Inject()
   private readonly circleService: CircleService;
@@ -16,7 +16,7 @@ export class BankFactory {
   getBankImplementation(bankName: BankName): IBank {
     switch (bankName) {
       case BankName.MONO:
-        return this.monoWorkflowService;
+        return this.monoService;
       case BankName.CIRCLE:
         return this.circleService;
       default:
@@ -32,7 +32,7 @@ export class BankFactory {
       case "USD":
         return this.circleService;
       case "COP":
-        return this.monoWorkflowService;
+        return this.monoService;
       default:
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,

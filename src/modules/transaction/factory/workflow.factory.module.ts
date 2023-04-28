@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { TemporalModule } from "../../../infra/temporal/temporal.module";
-import { MonoModule } from "../../../modules/psp/mono/mono.module";
 import { PspModule } from "../../../modules/psp/psp.module";
 import { WorkflowFactory } from "./workflow.factory";
 import { WalletDepositImpl } from "./wallet.deposit.impl";
@@ -9,9 +8,10 @@ import { WalletTransferImpl } from "./wallet.transfer.impl";
 import { CommonModule } from "../../../modules/common/common.module";
 import { PayrollDepositImpl } from "./payroll.deposit.impl";
 import { ExchangeRateModule } from "../../exchangerate/exchangerate.module";
+import { MonoPublicModule } from "src/modules/mono/public/mono.public.module";
 
 @Module({
-  imports: [PspModule, TemporalModule, MonoModule, CommonModule, ExchangeRateModule],
+  imports: [PspModule, TemporalModule, CommonModule, ExchangeRateModule, MonoPublicModule],
   providers: [WorkflowFactory, WalletDepositImpl, WalletWithdrawalImpl, WalletTransferImpl, PayrollDepositImpl],
   exports: [WorkflowFactory],
 })
