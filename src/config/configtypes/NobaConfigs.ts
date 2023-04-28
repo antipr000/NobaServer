@@ -40,6 +40,9 @@ import {
   AppEnvironment,
   NOBA_PROXY_IP,
   NOBA_PROXY_PORT,
+  EXCHANGERATEIO_API_KEY,
+  EXCHANGERATEIO_AWS_SECRET_KEY_FOR_API_KEY,
+  EXCHANGERATEIO_BASE_URL,
 } from "../ConfigurationUtils";
 
 export interface NobaConfigs {
@@ -91,4 +94,10 @@ export interface NobaTransactionConfigs {
 export interface NobaPayrollConfigs {
   [NOBA_PAYROLL_ACCOUNT_NUMBER]: string;
   [NOBA_PAYROLL_AWS_SECRET_KEY_FOR_NOBA_PAYROLL_ACCOUNT_NUMBER]: string;
+}
+
+export interface NobaExchangeRateConfigs {
+  [EXCHANGERATEIO_API_KEY]: string;
+  [EXCHANGERATEIO_AWS_SECRET_KEY_FOR_API_KEY]: string;
+  [EXCHANGERATEIO_BASE_URL]: string;
 }
