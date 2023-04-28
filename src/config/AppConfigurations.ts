@@ -151,6 +151,9 @@ import {
   NOBA_PROXY_IP,
   NOBA_PROXY_PORT,
   DEPENDENCY_PUSH_CLIENT,
+  EXCHANGERATEIO_CONFIG_KEY,
+  EXCHANGERATEIO_AWS_SECRET_KEY_FOR_API_KEY,
+  EXCHANGERATEIO_API_KEY,
 } from "./ConfigurationUtils";
 import fs from "fs";
 
@@ -177,6 +180,7 @@ import { MonoConfigs } from "./configtypes/MonoConfig";
 import { SecretProvider } from "./SecretProvider";
 import { BubbleConfigs } from "./configtypes/BubbleConfigs";
 import { PomeloConfigs } from "./configtypes/PomeloConfigs";
+import { ExchangeRateIOConfigs } from "./configtypes/exchangerateio.configs";
 
 const envNameToPropertyFileNameMap = {
   [AppEnvironment.AWSDEV]: "awsdev.yaml",
@@ -348,6 +352,7 @@ async function configureAllVendorCredentials(
     configureCircleConfigurations,
     configureNobaWorkflowCredentials,
     configureMonoCredentials,
+    configureExchangeRateIOCredentials,
     configureBubbleCredentials,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
@@ -486,6 +491,32 @@ async function configurePomeloCredentials(
   );
 
   configs[POMELO_CONFIG_KEY] = pomeloConfig;
+  return configs;
+}
+
+async function configureExchangeRateIOCredentials(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const exchangeRateIOConfigs: ExchangeRateIOConfigs = configs[EXCHANGERATEIO_CONFIG_KEY];
+
+  if (exchangeRateIOConfigs === undefined) {
+    const errorMessage =
+      "\n'ExchangeRateIO' configurations are required. Please configure the ExchangeRateIO credentials in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${EXCHANGERATEIO_CONFIG_KEY}" and populate ` +
+      `("${EXCHANGERATEIO_AWS_SECRET_KEY_FOR_API_KEY}" or "${EXCHANGERATEIO_API_KEY}") ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+
+    throw Error(errorMessage);
+  }
+
+  exchangeRateIOConfigs.baseURL = await getParameterValue(undefined, exchangeRateIOConfigs.baseURL);
+  exchangeRateIOConfigs.apiKey = await getParameterValue(
+    exchangeRateIOConfigs.awsSecretNameForApiKey,
+    exchangeRateIOConfigs.apiKey,
+  );
+
+  configs[EXCHANGERATEIO_CONFIG_KEY] = exchangeRateIOConfigs;
   return configs;
 }
 

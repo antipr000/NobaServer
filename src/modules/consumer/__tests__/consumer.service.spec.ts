@@ -1915,6 +1915,48 @@ describe("ConsumerService", () => {
     it("should register an Employee by ID successfully", async () => {
       const consumer = getRandomConsumer();
       const employer = getRandomEmployer();
+      const employee = getRandomEmployee(null, employer);
+
+      when(employeeService.getEmployeeByID(employer.id, true)).thenResolve(employee);
+      when(employeeService.linkEmployee(employee.id, consumer.props.id)).thenResolve(employee);
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(notificationService.sendNotification(anyString(), anything())).thenResolve();
+      when(employeeService.getEmployeeByID(employee.id, true)).thenResolve({
+        ...employee,
+        employer: employer,
+      });
+
+      const response = await consumerService.registerWithAnEmployer(employer.id, consumer.props.id, 100, employee.id);
+
+      expect(response).toEqual(employee);
+    });
+
+    it("should not overwrite an Employee by ID successfully", async () => {
+      const consumer = getRandomConsumer();
+      const employer = getRandomEmployer();
+      const employee = getRandomEmployee(consumer.props.id, employer);
+
+      when(employeeService.getEmployeeByID(employer.id, true)).thenResolve(employee);
+      when(employeeService.linkEmployee(employee.id, consumer.props.id)).thenThrow(
+        new ServiceException({ errorCode: ServiceErrorCode.SEMANTIC_VALIDATION }),
+      );
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(employeeService.getEmployeeByID(employee.id, true)).thenResolve({
+        ...employee,
+        employer: employer,
+      });
+
+      const notificationSpy = jest.spyOn(notificationService, "sendNotification");
+
+      expect(
+        consumerService.registerWithAnEmployer(employer.id, consumer.props.id, 100, employee.id),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+      expect(notificationSpy).not.toBeCalled();
+    });
+
+    it("should register a consumer with an existing employee record successfully", async () => {
+      const consumer = getRandomConsumer();
+      const employer = getRandomEmployer();
       const employee = getRandomEmployee(consumer.props.id, employer);
 
       when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);

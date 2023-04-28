@@ -49,7 +49,7 @@ import { BadRequestError } from "../../core/exception/CommonAppException";
 import { QRCodeDTO } from "./dto/QRCodeDTO";
 import { ContactConsumerRequestDTO } from "./dto/ContactConsumerRequestDTO";
 import { ContactConsumerResponseDTO } from "./dto/ContactConsumerResponseDTO";
-import { RegisterWithEmployerDTO } from "./dto/RegisterWithEmployerDTO";
+import { RegisterWithEmployerDTO } from "./dto/register.with.employer.dto";
 import { LinkedEmployerDTO } from "./dto/LinkedEmployerDTO";
 import { Employee } from "../employee/domain/Employee";
 import { UpdateEmployerAllocationDTO } from "./dto/UpdateEmployerAllocationDTO";
@@ -448,6 +448,7 @@ export class ConsumerController {
       requestBody.employerID,
       consumer.props.id,
       requestBody.allocationAmountInPesos,
+      requestBody.employeeID,
     );
     return {};
   }

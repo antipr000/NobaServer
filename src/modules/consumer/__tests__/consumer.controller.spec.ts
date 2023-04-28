@@ -1192,6 +1192,20 @@ describe("ConsumerController", () => {
         consumer,
       );
     });
+
+    it("should forward the call to consumerService with employeeID", async () => {
+      const consumer = getRandomConsumer();
+      when(consumerService.registerWithAnEmployer("employerID", consumer.props.id, 1478, "employeeID")).thenResolve();
+
+      await consumerController.registerWithAnEmployer(
+        {
+          employerID: "employerID",
+          allocationAmountInPesos: 1478,
+          employeeID: "employeeID",
+        },
+        consumer,
+      );
+    });
   });
 
   describe("listLinkedEmployers", () => {

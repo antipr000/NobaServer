@@ -28,6 +28,11 @@ export class EmployeeService {
     });
   }
 
+  // Just a helper to abstract status update from caller
+  async linkEmployee(employeeID: string, consumerID: string): Promise<Employee> {
+    return this.updateEmployee(employeeID, { consumerID: consumerID, status: EmployeeStatus.LINKED });
+  }
+
   async updateEmployee(employeeID: string, updateRequest: UpdateEmployeeRequestDTO): Promise<Employee> {
     if (!employeeID) {
       throw new ServiceException({
