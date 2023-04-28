@@ -1,14 +1,8 @@
-import { ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { SortOrder } from "../../../core/infra/PaginationTypes";
 import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 
-export class EmployeeFilterOptionsDTO {
-  @ApiPropertyOptional()
-  referralID?: string;
-
-  @ApiPropertyOptional()
-  payrollID?: string;
-
+export class EnrichedDisbursementFilterOptionsDTO {
   @ApiPropertyOptional({
     description: "number of pages to skip, offset 0 means first page results, 1 means second page etc.",
   })
@@ -21,7 +15,13 @@ export class EmployeeFilterOptionsDTO {
   status?: TransactionStatus;
 
   @ApiPropertyOptional({ enum: SortOrder })
-  createdTimestamp?: SortOrder;
+  sortLastName?: SortOrder;
+
+  @ApiPropertyOptional({ enum: SortOrder })
+  sortAllocationAmount?: SortOrder;
+
+  @ApiPropertyOptional({ enum: SortOrder })
+  sortCreditAmount?: SortOrder;
 
   @ApiPropertyOptional({ enum: SortOrder })
   sortStatus?: SortOrder;

@@ -20,6 +20,8 @@ import { NotificationPayloadMapper } from "../notifications/domain/NotificationP
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { Employee } from "../employee/domain/Employee";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
+import { EnrichedDisbursementFilterOptionsDTO } from "../employer/dto/enriched.disbursement.filter.options.dto";
+import { EnrichedDisbursementDTO } from "./dto/bubble.webhook.controller.dto";
 
 @Injectable()
 export class BubbleService {
@@ -187,6 +189,30 @@ export class BubbleService {
     }
 
     return this.employerService.getAllDisbursementsForEmployee(employeeID);
+  }
+
+  async getAllEnrichedDisbursementsForPayroll(
+    referralID: string,
+    payrollID: string,
+    filterOptions: EnrichedDisbursementFilterOptionsDTO,
+  ): Promise<EnrichedDisbursementDTO[]> {
+    const employer = await this.employerService.getEmployerByReferralID(referralID);
+    if (!employer) {
+      throw new ServiceException({
+        message: `No employer found with referralID: ${referralID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    const payroll = await this.employerService.getPayrollByID(payrollID);
+    if (!payroll || payroll.employerID !== employer.id) {
+      throw new ServiceException({
+        message: `No payroll found with ID: ${payrollID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    return this.employerService.getAllEnrichedDisbursementsForPayroll(payrollID, filterOptions);
   }
 
   async getAllEmployeesForEmployer(

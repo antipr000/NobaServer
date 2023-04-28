@@ -21,6 +21,7 @@ import {
   CreatePayrollRequestDTO,
   CreatePayrollResponseDTO,
   DisbursementDTO,
+  EnrichedDisbursementDTO,
   PaginatedEmployeeResponseDTO,
   PayrollDTO,
   PayrollQueryDTO,
@@ -34,6 +35,7 @@ import { isValidDateString } from "../../core/utils/DateUtils";
 import { BubbleWebhookMapper } from "./mapper/bubble.webhook.mapper";
 import { Bool } from "../../core/domain/ApiEnums";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
+import { EnrichedDisbursementFilterOptionsDTO } from "../employer/dto/enriched.disbursement.filter.options.dto";
 
 @Controller("/webhooks/bubble")
 @ApiTags("Webhooks")
@@ -134,6 +136,22 @@ export class BubbleWebhookController {
     @Param("employeeID") employeeID: string,
   ): Promise<DisbursementDTO[]> {
     const disbursements = await this.bubbleService.getAllDisbursementsForEmployee(referralID, employeeID);
+    return disbursements.map(this.mapper.toDisbursementDTO);
+  }
+
+  @Get("/employers/:referralID/payrolls/:payrollID/disbursements")
+  @ApiOperation({ summary: "Get all disbursements for payroll in Noba" })
+  @ApiResponse({ status: HttpStatus.OK, type: [EnrichedDisbursementDTO] })
+  async getAllDisbursementsForPayroll(
+    @Param("referralID") referralID: string,
+    @Param("payrollID") payrollID: string,
+    @Body() filterOptions: EnrichedDisbursementFilterOptionsDTO,
+  ): Promise<EnrichedDisbursementDTO[]> {
+    const disbursements = await this.bubbleService.getAllEnrichedDisbursementsForPayroll(
+      referralID,
+      payrollID,
+      filterOptions,
+    );
     return disbursements.map(this.mapper.toDisbursementDTO);
   }
 

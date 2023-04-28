@@ -4,6 +4,7 @@ import { Bool } from "../../../core/domain/ApiEnums";
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { EmployeeDTO } from "../../../modules/employee/dto/employee.dto";
 import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
+import { TransactionStatus } from "src/modules/transaction/domain/Transaction";
 
 export class RegisterEmployerRequestDTO {
   @ApiProperty()
@@ -89,6 +90,29 @@ export class DisbursementDTO {
 
   @ApiProperty()
   debitAmount: number;
+}
+
+export class EnrichedDisbursementDTO {
+  // id->Disbursement.id
+  id: string;
+
+  // debitAmount->Disbursement.allocationAmount
+  debitAmount: number;
+
+  // creditAmount->Disbursement.creditAmount
+  creditAmount: number;
+
+  // status->Transaction.status
+  status: TransactionStatus;
+
+  // firstName->Employee.Consumer.firstName
+  firstName: string;
+
+  // lastName->Employee.Consumer.lastName
+  lastName: string;
+
+  // lastUpdated->Transaction.updatedTimestamp
+  lastUpdated: Date;
 }
 
 export class PayrollDTO {

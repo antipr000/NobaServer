@@ -50,6 +50,8 @@ import { Utils } from "../../core/utils/Utils";
 import { ExchangeRateService } from "../exchangerate/exchangerate.service";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
+import { EnrichedDisbursementFilterOptionsDTO } from "./dto/enriched.disbursement.filter.options.dto";
+import { EnrichedDisbursementDTO } from "../bubble/dto/bubble.webhook.controller.dto";
 
 @Injectable()
 export class EmployerService {
@@ -452,6 +454,62 @@ export class EmployerService {
     }
 
     return this.payrollRepo.getAllPayrollsForEmployer(employerID, {});
+  }
+
+  async getAllEnrichedDisbursementsForPayroll(
+    payrollID: string,
+    filters: EnrichedDisbursementFilterOptionsDTO,
+  ): Promise<EnrichedDisbursementDTO[]> {
+    if (!payrollID) {
+      throw new ServiceException({
+        message: "payrollID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const payroll = await this.payrollRepo.getPayrollByID(payrollID);
+    if (!payroll) {
+      throw new ServiceException({
+        message: "Payroll not found",
+        errorCode: ServiceErrorCode.NOT_FOUND,
+      });
+    }
+
+    const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
+    if (!employer) {
+      throw new ServiceException({
+        message: "Employer not found",
+        errorCode: ServiceErrorCode.NOT_FOUND,
+      });
+    }
+
+    const employeeDisbursements = await this.getEmployeeDisbursements(payrollID, filters);
+
+    const enrichedDisbursements: EnrichedDisbursementDTO[] = employeeDisbursements.map(
+      (disbursement: EmployeeDisbursement) => {
+        const enrichedDisbursement: EnrichedDisbursementDTO = {
+          id: disbursement.id,
+          employeeID: disbursement.employeeID,
+          employeeName: disbursement.employeeName,
+          amount: disbursement.amount,
+          creditAmount: disbursement.creditAmount,
+          debitAmount: disbursement.debitAmount,
+          currency: disbursement.currency,
+          status: disbursement.status,
+          payrollID: disbursement.payrollID,
+          payrollReferenceNumber: disbursement.payrollReferenceNumber,
+          payrollDate: disbursement.payrollDate,
+          employerID: disbursement.employerID,
+          employerName: employer.name,
+          employerAccountNumber: employer.accountNumber,
+          employerCurrency: employer.currency,
+        };
+
+        return enrichedDisbursement;
+      },
+    );
+
+    return enrichedDisbursements;
   }
 
   async createPayroll(employerID: string, payrollDate: string): Promise<Payroll> {
