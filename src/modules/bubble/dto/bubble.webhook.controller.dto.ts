@@ -129,6 +129,14 @@ export class PayrollDTO {
   disbursements?: DisbursementDTO[];
 }
 
+export class EmployeeCreateRequestDTO {
+  @ApiProperty()
+  email: string;
+
+  @ApiProperty()
+  sendEmail: boolean;
+}
+
 export class EmployeeResponseDTO extends EmployeeDTO {
   @ApiPropertyOptional()
   firstName?: string;
@@ -136,8 +144,8 @@ export class EmployeeResponseDTO extends EmployeeDTO {
   @ApiPropertyOptional()
   lastName?: string;
 
-  @ApiProperty()
-  handle: string;
+  @ApiPropertyOptional()
+  handle?: string;
 
   @ApiPropertyOptional()
   consumerEmail?: string;

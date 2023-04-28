@@ -91,11 +91,11 @@ describe("EmployeeServiceTests", () => {
       const employee = getRandomEmployee();
       when(employeeRepo.createEmployee(anything())).thenResolve(employee);
 
-      const createdEmployee = await employeeService.createEmployee(
-        employee.allocationAmount,
-        employee.employerID,
-        employee.consumerID,
-      );
+      const createdEmployee = await employeeService.createEmployee({
+        allocationAmount: employee.allocationAmount,
+        employerID: employee.employerID,
+        consumerID: employee.consumerID,
+      });
 
       expect(createdEmployee).toEqual(employee);
 
@@ -113,7 +113,10 @@ describe("EmployeeServiceTests", () => {
       const employee = getRandomEmployeeWithoutConsumer();
       when(employeeRepo.createEmployee(anything())).thenResolve(employee);
 
-      const createdEmployee = await employeeService.createEmployee(employee.allocationAmount, employee.employerID);
+      const createdEmployee = await employeeService.createEmployee({
+        allocationAmount: employee.allocationAmount,
+        employerID: employee.employerID,
+      });
 
       expect(createdEmployee).toEqual(employee);
 

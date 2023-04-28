@@ -7,3 +7,11 @@ export class UpdateEmployeeRequestDTO {
   email?: string;
   status?: EmployeeStatus;
 }
+
+export class CreateEmployeeRequestDTO {
+  consumerID?: string;
+  allocationAmount: number;
+  employerID: string;
+  salary?: number;
+  email?: string;
+}

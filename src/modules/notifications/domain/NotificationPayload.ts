@@ -31,6 +31,7 @@ import { Employee } from "../../../modules/employee/domain/Employee";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { Utils } from "../../../core/utils/Utils";
 import { BaseEvent } from "../events/BaseEvent";
+import { SendInviteEmployeeEvent } from "../events/SendInviteEmployeeEvent";
 
 export type NotificationPayload =
   | SendDepositCompletedEvent
@@ -57,7 +58,8 @@ export type NotificationPayload =
   | SendWelcomeMessageEvent
   | SendWithdrawalCompletedEvent
   | SendWithdrawalFailedEvent
-  | SendWithdrawalInitiatedEvent;
+  | SendWithdrawalInitiatedEvent
+  | SendInviteEmployeeEvent;
 
 export class NotificationPayloadMapper {
   private static getBaseParams(consumer: Consumer): BaseEvent {
@@ -121,6 +123,22 @@ export class NotificationPayloadMapper {
       firstName: firstName,
       lastName: lastName,
       locale: "en", // This will always be en as it goes to Kelsi
+    };
+  }
+
+  static toInviteEmployeeEvent(
+    email: string,
+    companyName: string,
+    inviteUrl: string,
+    employeeID: string,
+    locale?: string,
+  ): SendInviteEmployeeEvent {
+    return {
+      email: email,
+      companyName: companyName,
+      inviteUrl: inviteUrl,
+      employeeID: employeeID,
+      locale: locale,
     };
   }
 

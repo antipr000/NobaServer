@@ -1959,7 +1959,15 @@ describe("ConsumerService", () => {
       const employer = getRandomEmployer();
       const employee = getRandomEmployee(consumer.props.id, employer);
 
-      when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
+      when(
+        employeeService.createEmployee(
+          deepEqual({
+            allocationAmount: 100,
+            employerID: employer.id,
+            consumerID: consumer.props.id,
+          }),
+        ),
+      ).thenResolve(employee);
       when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
       when(notificationService.sendNotification(anyString(), anything())).thenResolve();
       when(employeeService.getEmployeeByID(employee.id, true)).thenResolve({
@@ -1978,7 +1986,15 @@ describe("ConsumerService", () => {
       const employee = getRandomEmployee(consumer.props.id, employer);
       consumer.props.isDisabled = true;
 
-      when(employeeService.createEmployee(100, employer.id, consumer.props.id)).thenResolve(employee);
+      when(
+        employeeService.createEmployee(
+          deepEqual({
+            allocationAmount: 100,
+            employerID: employer.id,
+            consumerID: consumer.props.id,
+          }),
+        ),
+      ).thenResolve(employee);
       when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(null);
       when(notificationService.sendNotification(anyString(), anything())).thenResolve();
       expect(

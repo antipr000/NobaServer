@@ -18,8 +18,9 @@ import { PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
 import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
 import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
-import { Employee } from "../employee/domain/Employee";
+import { Employee, EmployeeStatus } from "../employee/domain/Employee";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
+import { EmployeeCreateRequestDTO } from "./dto/bubble.webhook.controller.dto";
 
 @Injectable()
 export class BubbleService {
@@ -201,5 +202,58 @@ export class BubbleService {
     }
 
     return this.employerService.getFilteredEmployeesForEmployer(referralID, filterOptions);
+  }
+
+  async createEmployeeForEmployer(referralID: string, payload: EmployeeCreateRequestDTO): Promise<Employee> {
+    if (!referralID) {
+      throw new ServiceException({
+        message: "referralID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const employer = await this.employerService.getEmployerByReferralID(referralID);
+    if (!employer) {
+      throw new ServiceException({
+        message: `No employer found with referralID: ${referralID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    if (!payload.email) {
+      throw new ServiceException({
+        message: "Email is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    let employee = await this.employeeService.createEmployee({
+      allocationAmount: 0,
+      email: payload.email,
+      employerID: employer.id,
+    });
+
+    // If opted send notification to the new Employee
+
+    if (payload.sendEmail) {
+      const inviteUrl = `https://app.noba.com/app-routing/LoadingScreen/na/na/na/na/na/na/${employee.id}`;
+
+      await this.notificationService.sendNotification(
+        NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT,
+        NotificationPayloadMapper.toInviteEmployeeEvent(
+          payload.email,
+          employer.name,
+          inviteUrl,
+          employee.id,
+          employer.locale,
+        ),
+      );
+
+      employee = await this.employeeService.updateEmployee(employee.id, {
+        status: EmployeeStatus.INVITED,
+      });
+    }
+
+    return employee;
   }
 }

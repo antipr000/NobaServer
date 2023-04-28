@@ -1,5 +1,10 @@
 import { Payroll } from "../../../modules/employer/domain/Payroll";
-import { DisbursementDTO, PaginatedEmployeeResponseDTO, PayrollDTO } from "../dto/bubble.webhook.controller.dto";
+import {
+  DisbursementDTO,
+  EmployeeResponseDTO,
+  PaginatedEmployeeResponseDTO,
+  PayrollDTO,
+} from "../dto/bubble.webhook.controller.dto";
 import { PayrollDisbursement } from "../../../modules/employer/domain/PayrollDisbursement";
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { Employee } from "../../../modules/employee/domain/Employee";
@@ -27,6 +32,16 @@ export class BubbleWebhookMapper {
       employeeID: disbursement.employeeID,
       transactionID: disbursement.transactionID,
       debitAmount: disbursement.allocationAmount,
+    };
+  }
+
+  toEmployeeResponseDTO(employee: Employee): EmployeeResponseDTO {
+    return {
+      id: employee.id,
+      allocationAmount: employee.allocationAmount,
+      allocationCurrency: employee.allocationCurrency,
+      status: employee.status,
+      employerID: employee.employerID,
     };
   }
 

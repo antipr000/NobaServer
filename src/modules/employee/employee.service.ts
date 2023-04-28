@@ -5,7 +5,7 @@ import { Logger } from "winston";
 import { Employee, EmployeeAllocationCurrency, EmployeeStatus } from "./domain/Employee";
 import { IEmployeeRepo } from "./repo/employee.repo";
 import { EMPLOYEE_REPO_PROVIDER } from "./repo/employee.repo.module";
-import { UpdateEmployeeRequestDTO } from "./dto/employee.service.dto";
+import { CreateEmployeeRequestDTO, UpdateEmployeeRequestDTO } from "./dto/employee.service.dto";
 import { Utils } from "../../core/utils/Utils";
 import { EmployeeFilterOptionsDTO } from "./dto/employee.filter.options.dto";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
@@ -17,14 +17,16 @@ export class EmployeeService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
-  async createEmployee(allocationAmount: number, employerID: string, consumerID?: string): Promise<Employee> {
+  async createEmployee(request: CreateEmployeeRequestDTO): Promise<Employee> {
     return this.employeeRepo.createEmployee({
-      allocationAmount: allocationAmount,
+      allocationAmount: request.allocationAmount,
       allocationCurrency: EmployeeAllocationCurrency.COP,
-      employerID: employerID,
-      consumerID: consumerID,
+      employerID: request.employerID,
+      ...(request.consumerID && { consumerID: request.consumerID }),
       // If consumerID is populated, create a LINKED employee. Otherwise just set to CREATED.
-      status: consumerID ? EmployeeStatus.LINKED : EmployeeStatus.CREATED,
+      status: request.consumerID ? EmployeeStatus.LINKED : EmployeeStatus.CREATED,
+      ...(request.email && { email: request.email }),
+      ...(request.salary && { salary: request.salary }),
     });
   }
 
@@ -87,6 +89,7 @@ export class EmployeeService {
       ...(salary >= 0 && { salary: salary }),
       ...(updateRequest.email && { email: updateRequest.email }),
       ...(status && { status: status }),
+      ...(status === EmployeeStatus.INVITED && { lastInviteSentTimestamp: new Date() }),
     });
   }
 

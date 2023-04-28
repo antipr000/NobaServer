@@ -15,7 +15,7 @@ export class EmployeeDTO {
   employerID: string;
 
   @ApiPropertyOptional()
-  consumerID: string;
+  consumerID?: string;
 
   @ApiPropertyOptional()
   salary?: number;

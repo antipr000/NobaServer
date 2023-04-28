@@ -38,7 +38,13 @@ export class S3Service {
     });
   }
 
-  async uploadToS3(folderPath: string, objectName: string, content: string | Buffer): Promise<any> {
+  async uploadToS3(
+    folderPath: string,
+    objectName: string,
+    content: string | Buffer,
+    contentEncoding?: string,
+    contentType?: string,
+  ): Promise<any> {
     // Ensure speparation between folder path and filename
     if (!folderPath.endsWith("/") && !objectName.startsWith("/")) {
       folderPath += "/";
@@ -50,6 +56,8 @@ export class S3Service {
         Bucket: this.generatedDataBucketName,
         Key: folderPath + objectName,
         Body: content,
+        ...(contentEncoding && { ContentEncoding: contentEncoding }),
+        ...(contentType && { ContentType: contentType }),
       };
 
       try {

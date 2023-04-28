@@ -31,6 +31,7 @@ export enum NotificationEventType {
   SEND_REGISTER_NEW_EMPLOYEE_EVENT = "register.employee",
   SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT = "update.employee.allocation.amount",
   SEND_UPDATE_PAYROLL_STATUS_EVENT = "update.payroll.status",
+  SEND_INVITE_EMPLOYEE_EVENT = "invite.employee",
 }
 
 type PreferredMedium = {
@@ -72,6 +73,7 @@ export const preferredNotificationMedium: PreferredMedium = {
     NotificationEventHandler.EMAIL,
     NotificationEventHandler.PUSH,
   ],
+  [NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT]: [NotificationEventHandler.DASHBOARD],
   [NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT]: [NotificationEventHandler.DASHBOARD],
   [NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT]: [NotificationEventHandler.DASHBOARD],
@@ -165,6 +167,9 @@ export const emailTemplateExternalLinkMap: TemplateMap = {
   },
   [NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT]: {
     en: "d-db917173c48448fb90dadcb77259f4cc",
+  },
+  [NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT]: {
+    es: "d-1b01521028054dcbb9739a554bc38b0a",
   },
 };
 
