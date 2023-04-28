@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { EmployeeAllocationCurrency } from "../domain/Employee";
+import { EmployeeAllocationCurrency, EmployeeStatus } from "../domain/Employee";
 
 export class EmployeeDTO {
   @ApiProperty()
@@ -14,9 +14,15 @@ export class EmployeeDTO {
   @ApiProperty()
   employerID: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   consumerID: string;
 
   @ApiPropertyOptional()
   salary?: number;
+
+  @ApiPropertyOptional()
+  email?: string;
+
+  @ApiProperty()
+  status: EmployeeStatus;
 }

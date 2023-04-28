@@ -7,6 +7,7 @@ export class Employer {
   name: string;
   depositMatchingName?: string;
   logoURI: string;
+  locale?: string;
   referralID: string;
   bubbleID: string;
   documentNumber?: string;
@@ -27,6 +28,7 @@ export class EmployerCreateRequest {
   name: string;
   depositMatchingName?: string;
   logoURI: string;
+  locale?: string;
   referralID: string;
   documentNumber?: string;
   bubbleID: string;
@@ -40,6 +42,7 @@ export class EmployerUpdateRequest {
   name?: string;
   depositMatchingName?: string;
   logoURI?: string;
+  locale?: string;
   referralID?: string;
   leadDays?: number;
   documentNumber?: string;
@@ -53,6 +56,7 @@ export const validateCreateEmployerRequest = (employer: EmployerCreateRequest) =
     name: Joi.string().required(),
     depositMatchingName: Joi.string().optional(),
     logoURI: Joi.string().required(),
+    locale: Joi.string().optional().allow(null),
     referralID: Joi.string().required(),
     documentNumber: Joi.string().optional(),
     bubbleID: Joi.string().required(),
@@ -77,6 +81,7 @@ export const validateUpdateEmployerRequest = (employer: EmployerUpdateRequest) =
     name: Joi.string().optional(),
     depositMatchingName: Joi.string().optional(),
     logoURI: Joi.string().optional(),
+    locale: Joi.string().optional().allow(null),
     referralID: Joi.string().optional(),
     documentNumber: Joi.string().optional(),
     leadDays: Joi.number().optional(),
@@ -100,6 +105,7 @@ export const validateEmployer = (employer: Employer) => {
     name: Joi.string().required(),
     depositMatchingName: Joi.string().optional().allow(null),
     logoURI: Joi.string().required(),
+    locale: Joi.string().optional().allow(null),
     referralID: Joi.string().required(),
     bubbleID: Joi.string().required(),
     documentNumber: Joi.string().required().allow(null),
@@ -126,6 +132,7 @@ export const convertToDomainEmployer = (employer: PrismaEmployerModel): Employer
     name: employer.name,
     depositMatchingName: employer.depositMatchingName,
     logoURI: employer.logoURI,
+    locale: employer.locale,
     referralID: employer.referralID,
     bubbleID: employer.bubbleID,
     documentNumber: employer.documentNumber,

@@ -111,6 +111,7 @@ model Employer {
   referralID           String     @unique()
   bubbleID             String     @unique()
   documentNumber       String?
+  locale               String?
   leadDays             Int?
   maxAllocationPercent Float?
   payrollDates         String[]
@@ -120,17 +121,20 @@ model Employer {
 }
 
 model Employee {
-  id                  String                @id @default(uuid())
-  createdTimestamp    DateTime?             @default(now()) // Marking optional so we don't need to set in tests
-  updatedTimestamp    DateTime?             @updatedAt // Marking optional so we don't need to set in tests
-  allocationAmount    Float
-  allocationCurrency  String
-  salary              Float?
-  employer            Employer              @relation(fields: [employerID], references: [id], onDelete: Cascade)
-  employerID          String
-  consumer            Consumer              @relation(fields: [consumerID], references: [id], onDelete: Cascade)
-  consumerID          String
-  PayrollDisbursement PayrollDisbursement[]
+  id                      String                @id @default(uuid())
+  createdTimestamp        DateTime?             @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp        DateTime?             @updatedAt // Marking optional so we don't need to set in tests
+  allocationAmount        Float
+  allocationCurrency      String
+  salary                  Float?
+  email                   String?
+  status                  String
+  lastInviteSentTimestamp DateTime?
+  employer                Employer              @relation(fields: [employerID], references: [id], onDelete: Cascade)
+  employerID              String
+  consumer                Consumer?             @relation(fields: [consumerID], references: [id], onDelete: Cascade)
+  consumerID              String?
+  PayrollDisbursement     PayrollDisbursement[]
 
   @@unique([consumerID, employerID])
 }

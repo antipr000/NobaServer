@@ -11,6 +11,9 @@ export class EmployerDTO {
   employerLogoURI?: string;
 
   @ApiProperty()
+  locale?: string;
+
+  @ApiProperty()
   leadDays: number;
 
   @ApiProperty()

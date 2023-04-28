@@ -25,6 +25,7 @@ const getRandomEmployer = (): EmployerCreateRequest => {
     bubbleID: uuid(),
     name: "Test Employer",
     depositMatchingName: "Deposit Test Employer",
+    locale: "en_us",
     referralID: uuid(),
     documentNumber: uuid(),
     logoURI: "https://www.google.com",
@@ -96,6 +97,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(createdEmployer.updatedTimestamp).toBeDefined();
       expect(createdEmployer.bubbleID).toEqual(employer.bubbleID);
       expect(createdEmployer.name).toEqual(employer.name);
+      expect(createdEmployer.locale).toEqual(employer.locale);
       expect(createdEmployer.referralID).toEqual(employer.referralID);
       expect(createdEmployer.logoURI).toEqual(employer.logoURI);
       expect(createdEmployer.leadDays).toEqual(employer.leadDays);
@@ -225,6 +227,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.createdTimestamp).toBeDefined();
       expect(updatedEmployer.updatedTimestamp).toBeDefined();
       expect(updatedEmployer.bubbleID).toEqual(employer.bubbleID);
+      expect(updatedEmployer.locale).toEqual(employer.locale);
       expect(updatedEmployer.name).toEqual(employer.name);
       expect(updatedEmployer.referralID).toEqual(employer.referralID);
       expect(updatedEmployer.logoURI).toEqual("https://www.non-google.com");
@@ -257,6 +260,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.updatedTimestamp).toBeDefined();
       expect(updatedEmployer.bubbleID).toEqual(employer.bubbleID);
       expect(updatedEmployer.name).toEqual(employer.name);
+      expect(updatedEmployer.locale).toEqual(employer.locale);
       expect(updatedEmployer.referralID).toEqual(employer.referralID);
       expect(updatedEmployer.logoURI).toEqual(employer.logoURI);
       expect(updatedEmployer.leadDays).toEqual(employer.leadDays);
@@ -288,6 +292,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.updatedTimestamp).toBeDefined();
       expect(updatedEmployer.bubbleID).toEqual(employer.bubbleID);
       expect(updatedEmployer.name).toEqual(employer.name);
+      expect(updatedEmployer.locale).toEqual(employer.locale);
       expect(updatedEmployer.referralID).toEqual("new-referral-id");
       expect(updatedEmployer.logoURI).toEqual(employer.logoURI);
       expect(updatedEmployer.leadDays).toEqual(employer.leadDays);
@@ -319,6 +324,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.updatedTimestamp).toBeDefined();
       expect(updatedEmployer.bubbleID).toEqual(employer.bubbleID);
       expect(updatedEmployer.name).toEqual(employer.name);
+      expect(updatedEmployer.locale).toEqual(employer.locale);
       expect(updatedEmployer.referralID).toEqual(employer.referralID);
       expect(updatedEmployer.logoURI).toEqual(employer.logoURI);
       expect(updatedEmployer.leadDays).toEqual(3);
@@ -351,6 +357,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.updatedTimestamp).toBeDefined();
       expect(updatedEmployer.bubbleID).toEqual(employer.bubbleID);
       expect(updatedEmployer.name).toEqual(employer.name);
+      expect(updatedEmployer.locale).toEqual(employer.locale);
       expect(updatedEmployer.referralID).toEqual(employer.referralID);
       expect(updatedEmployer.logoURI).toEqual(employer.logoURI);
       expect(updatedEmployer.leadDays).toEqual(employer.leadDays);
@@ -385,6 +392,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.updatedTimestamp).toBeDefined();
       expect(updatedEmployer.bubbleID).toEqual(employer.bubbleID);
       expect(updatedEmployer.name).toEqual(employer.name);
+      expect(updatedEmployer.locale).toEqual(employer.locale);
       expect(updatedEmployer.referralID).toEqual(employer.referralID);
       expect(updatedEmployer.logoURI).toEqual(employer.logoURI);
       expect(updatedEmployer.leadDays).toEqual(employer.leadDays);
@@ -510,6 +518,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(updatedEmployer.updatedTimestamp).toBeDefined();
       expect(updatedEmployer.bubbleID).toEqual(createdEmployer1.bubbleID);
       expect(updatedEmployer.name).toEqual(createdEmployer1.name);
+      expect(updatedEmployer.locale).toEqual(createdEmployer1.locale);
       expect(updatedEmployer.referralID).toEqual("new-referral-id");
       expect(updatedEmployer.logoURI).toEqual("https://www.non-google.com");
       expect(updatedEmployer.leadDays).toEqual(createdEmployer1.leadDays);
@@ -581,6 +590,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(foundEmployer.updatedTimestamp).toBeDefined();
       expect(foundEmployer.bubbleID).toEqual(employer1.bubbleID);
       expect(foundEmployer.name).toEqual(employer1.name);
+      expect(foundEmployer.locale).toEqual(employer1.locale);
       expect(foundEmployer.referralID).toEqual(employer1.referralID);
       expect(foundEmployer.logoURI).toEqual(employer1.logoURI);
       expect(foundEmployer.leadDays).toEqual(employer1.leadDays);
@@ -618,6 +628,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(foundEmployer.updatedTimestamp).toBeDefined();
       expect(foundEmployer.bubbleID).toEqual(employer1.bubbleID);
       expect(foundEmployer.name).toEqual(employer1.name);
+      expect(foundEmployer.locale).toEqual(employer1.locale);
       expect(foundEmployer.referralID).toEqual(employer1.referralID);
       expect(foundEmployer.logoURI).toEqual(employer1.logoURI);
       expect(foundEmployer.leadDays).toEqual(employer1.leadDays);
@@ -654,6 +665,7 @@ describe("SqlEmployerRepoTests", () => {
       expect(foundEmployer.updatedTimestamp).toBeDefined();
       expect(foundEmployer.bubbleID).toEqual(employer1.bubbleID);
       expect(foundEmployer.name).toEqual(employer1.name);
+      expect(foundEmployer.locale).toEqual(employer1.locale);
       expect(foundEmployer.referralID).toEqual(employer1.referralID);
       expect(foundEmployer.logoURI).toEqual(employer1.logoURI);
       expect(foundEmployer.leadDays).toEqual(employer1.leadDays);

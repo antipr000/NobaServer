@@ -53,13 +53,15 @@ describe("ExchangeRateWorkflowControllerTests", () => {
 
       const result = await exchangeRateWorkflowController.createExchangeRate();
 
-      expect(result).toEqual([
-        {
-          numeratorCurrency: "USD",
-          denominatorCurrency: "EUR",
-          bankRate: 0.8,
-        },
-      ]);
+      expect(result).toEqual({
+        exchangeRates: [
+          {
+            numeratorCurrency: "USD",
+            denominatorCurrency: "EUR",
+            bankRate: 0.8,
+          },
+        ],
+      });
     });
 
     it("should return an error if the exchange rate cannot be created", async () => {

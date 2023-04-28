@@ -3,7 +3,7 @@ import { seedAdmins } from "./seed-admins";
 import { seedExchangeRates } from "./seed-exchangerates";
 import { seedConsumers } from "./seed-consumers";
 import { seedEmployers } from "./seed-employers";
-import { seedEmployees } from "./seed-employees";
+import { seedEventsAndTemplates } from "./seed-events";
 
 const prisma = new PrismaClient();
 
@@ -19,6 +19,8 @@ async function main() {
   } else {
     console.log("Not seeding in production environment");
   }
+
+  await seedEventsAndTemplates(prisma); // Events and templates needs to be seeded in all environments
 }
 
 main()

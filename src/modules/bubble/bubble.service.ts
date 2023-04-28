@@ -17,6 +17,9 @@ import { NotificationEventType } from "../notifications/domain/NotificationTypes
 import { PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
 import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
 import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
+import { Employee } from "../employee/domain/Employee";
+import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
 
 @Injectable()
 export class BubbleService {
@@ -34,6 +37,7 @@ export class BubbleService {
       referralID: request.referralID,
       logoURI: request.logoURI,
       bubbleID: request.bubbleID,
+      ...(request.locale && { locale: request.locale }),
       ...(request.payrollAccountNumber && { payrollAccountNumber: request.payrollAccountNumber }),
       ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
       ...(request.leadDays && { leadDays: request.leadDays }),
@@ -55,6 +59,7 @@ export class BubbleService {
     await this.employerService.updateEmployer(employer.id, {
       leadDays: request.leadDays,
       logoURI: request.logoURI,
+      locale: request.locale,
       payrollDates: request.payrollDates,
       payrollAccountNumber: request.payrollAccountNumber,
       maxAllocationPercent: request.maxAllocationPercent,
@@ -88,6 +93,7 @@ export class BubbleService {
 
     const updatedEmployee = await this.employeeService.updateEmployee(employeeID, {
       salary: request.salary,
+      status: request.status,
     });
 
     // If the salary update triggered a change to the allocation percent, update Bubble
@@ -181,5 +187,19 @@ export class BubbleService {
     }
 
     return this.employerService.getAllDisbursementsForEmployee(employeeID);
+  }
+
+  async getAllEmployeesForEmployer(
+    referralID: string,
+    filterOptions: EmployeeFilterOptionsDTO,
+  ): Promise<PaginatedResult<Employee>> {
+    if (!referralID) {
+      throw new ServiceException({
+        message: "referralID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    return this.employerService.getFilteredEmployeesForEmployer(referralID, filterOptions);
   }
 }

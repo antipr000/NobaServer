@@ -48,6 +48,8 @@ import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
 import { v4 } from "uuid";
 import { Utils } from "../../core/utils/Utils";
 import { ExchangeRateService } from "../exchangerate/exchangerate.service";
+import { PaginatedResult } from "../../core/infra/PaginationTypes";
+import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
 
 @Injectable()
 export class EmployerService {
@@ -109,6 +111,21 @@ export class EmployerService {
     }
   }
 
+  async getFilteredEmployeesForEmployer(
+    referralID: string,
+    filterOptions: EmployeeFilterOptionsDTO,
+  ): Promise<PaginatedResult<Employee>> {
+    const employer = await this.employerRepo.getEmployerByReferralID(referralID);
+    if (!employer) {
+      throw new ServiceException({
+        message: "Employer not found",
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+    filterOptions.employerID = employer.id;
+    return this.employeeService.getFilteredEmployees(filterOptions);
+  }
+
   async getAllEmployees(employerID: string): Promise<Employee[]> {
     if (!employerID) {
       throw new ServiceException({
@@ -133,6 +150,7 @@ export class EmployerService {
     return this.employerRepo.createEmployer({
       name: request.name,
       logoURI: request.logoURI,
+      locale: request.locale,
       referralID: request.referralID,
       bubbleID: request.bubbleID,
       leadDays: request.leadDays,
@@ -164,6 +182,7 @@ export class EmployerService {
     return this.employerRepo.updateEmployer(id, {
       ...(request.name && { name: request.name }),
       ...(request.logoURI && { logoURI: request.logoURI }),
+      ...(request.locale && { locale: request.locale }),
       ...(request.referralID && { referralID: request.referralID }),
       ...(request.documentNumber && { documentNumber: request.documentNumber }),
       ...(request.leadDays && { leadDays: request.leadDays }),
@@ -260,7 +279,7 @@ export class EmployerService {
       this.logger,
       this.s3Service,
       `${this.invoiceTemplateBucketPath}/payroll-invoice/`,
-      `template_LOCALE.hbs`,
+      "template_LOCALE.hbs",
       `${this.invoicesFolderBucketPath}/${employer.id}/`,
       `inv_${payroll.id}`,
     );
@@ -355,7 +374,7 @@ export class EmployerService {
       this.logger,
       this.s3Service,
       `${this.invoiceTemplateBucketPath}/payroll-receipt/`,
-      `template_LOCALE.hbs`,
+      "template_LOCALE.hbs",
       `${this.invoicesFolderBucketPath}/${employer.id}/`,
       `rct_${payroll.id}`,
     );

@@ -2,6 +2,7 @@ export type CreateEmployerRequestDTO = {
   name: string;
   depositMatchingName?: string;
   logoURI: string;
+  locale?: string;
   referralID: string;
   documentNumber?: string;
   bubbleID: string;
@@ -15,6 +16,7 @@ export type UpdateEmployerRequestDTO = {
   name?: string;
   depositMatchingName?: string;
   logoURI?: string;
+  locale?: string;
   referralID?: string;
   documentNumber?: string;
   leadDays?: number;

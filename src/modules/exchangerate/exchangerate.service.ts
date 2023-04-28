@@ -5,7 +5,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { AlertKey } from "../common/alerts/alert.dto";
 import { AlertService } from "../common/alerts/alert.service";
-import { ExchangeRateDTO } from "./dto/ExchangeRateDTO";
+import { ExchangeRateDTO } from "./dto/exchangerate.dto";
 import { ExchangeRateClientFactory } from "./factory/exchangerate.factory";
 
 @Injectable()
@@ -75,38 +75,53 @@ export class ExchangeRateService {
 
   async createExchangeRateFromProvider(): Promise<ExchangeRateDTO[]> {
     const exchangeRates: Promise<ExchangeRateDTO>[] = [];
+    const errorMessages: string[] = [];
 
     for (const exchangeRatePair of this.exchangeRatePairs) {
+      const currencyPairText = `${exchangeRatePair.numeratorCurrency}-${exchangeRatePair.denominatorCurrency}`;
       const exchangeRateClient = this.exchangeRateClientFactory.getExchangeRateClientByCurrencyPair(
         exchangeRatePair.numeratorCurrency,
         exchangeRatePair.denominatorCurrency,
       );
       if (!exchangeRateClient) {
-        this.logger.error(
-          `No exchange rate client found for currency pair "${exchangeRatePair.numeratorCurrency}-${exchangeRatePair.denominatorCurrency}"`,
-        );
+        const errorMessage = `No exchange rate client found for currency pair "${currencyPairText}"`;
+        this.logger.error(errorMessage);
+        errorMessages.push(errorMessage);
         continue;
       }
 
       let exchangeRate;
       try {
-        // soft guarantee that the exchange rate client will be able to get the exchange rate
         exchangeRate = await exchangeRateClient.getExchangeRate(
           exchangeRatePair.numeratorCurrency,
           exchangeRatePair.denominatorCurrency,
         );
       } catch (err) {
-        this.logger.error(
-          `Error getting exchange rate from provider for currency pair "${exchangeRatePair.numeratorCurrency}-${exchangeRatePair.denominatorCurrency}": ${err}`,
-        );
+        const errorMessage = `Error getting exchange rate from provider for currency pair "${currencyPairText}": ${err}`;
+        this.logger.error(errorMessage);
+        errorMessages.push(errorMessage);
         continue;
       }
 
-      // TODO: CRYPTO-998 - Add extra validation for exchange rate
       if (!exchangeRate) {
-        this.logger.error(
-          `No exchange rate found for currency pair "${exchangeRatePair.numeratorCurrency}-${exchangeRatePair.denominatorCurrency}"`,
-        );
+        const errorMessage = `No exchange rate found for currency pair "${currencyPairText}": "${exchangeRate}"`;
+        this.logger.error(errorMessage);
+        errorMessages.push(errorMessage);
+        continue;
+      }
+
+      const existingExchangeRate = await this.exchangeRateRepo.getExchangeRateForCurrencyPair(
+        exchangeRatePair.numeratorCurrency,
+        exchangeRatePair.denominatorCurrency,
+      );
+
+      if (
+        existingExchangeRate &&
+        (exchangeRate < existingExchangeRate.bankRate * 0.9 || exchangeRate > existingExchangeRate.bankRate * 1.1)
+      ) {
+        const errorMessage = `Exchange rate from provider for currency pair "${currencyPairText}" is outside of the 10% threshold of existing exchange rate. Provider: ${exchangeRate} Existing: ${existingExchangeRate.bankRate}`;
+        this.logger.error(errorMessage);
+        errorMessages.push(errorMessage);
         continue;
       }
 
@@ -119,6 +134,13 @@ export class ExchangeRateService {
           expirationTimestamp: new Date(Date.now() + 25 * 60 * 60 * 1000),
         }),
       );
+    }
+
+    if (errorMessages.length > 0) {
+      this.alertService.raiseAlert({
+        key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED,
+        message: errorMessages.join("\n"),
+      });
     }
 
     return Promise.all(exchangeRates);

@@ -5,11 +5,15 @@ import { Consumer } from "../domain/Consumer";
 import { Address } from "../domain/Address";
 import { DocumentVerificationStatus, KYCProvider, KYCStatus } from "@prisma/client";
 
-export const createTestConsumer = async (prismaService: PrismaService): Promise<string> => {
+export const createTestConsumer = async (
+  prismaService: PrismaService,
+  firstName?: string,
+  lastName?: string,
+): Promise<string> => {
   const savedConsumer = await prismaService.consumer.create({
     data: {
-      firstName: "Test",
-      lastName: "Consumer",
+      firstName: firstName ?? "Test",
+      lastName: lastName ?? "Consumer",
       email: `${uuid()}@noba.com`,
       displayEmail: `${uuid()}@noba.com`,
       handle: `${uuid().slice(5)}${Date.now().valueOf()}`,

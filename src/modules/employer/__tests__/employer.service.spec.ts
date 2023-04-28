@@ -54,6 +54,7 @@ const getRandomEmployer = (): Employer => {
     id: uuid(),
     name: "Test Employer",
     depositMatchingName: "Deposit Test Employer",
+    locale: "en_us",
     bubbleID: uuid(),
     logoURI: "https://www.google.com",
     documentNumber: uuid(),
@@ -1813,6 +1814,47 @@ describe("EmployerServiceTests", () => {
       );
 
       expect(payrolls).toStrictEqual([]);
+    });
+  });
+
+  describe("getFilteredEmployeesForEmployer", () => {
+    it("should throw ServiceException if employer with referralID does not exist", async () => {
+      when(mockEmployerRepo.getEmployerByReferralID("fake-referral-id")).thenResolve(null);
+
+      await expect(employerService.getFilteredEmployeesForEmployer("fake-referral-id", {})).rejects.toThrow(
+        ServiceException,
+      );
+    });
+
+    it("should return paginated list of employees for employer", async () => {
+      const employer = getRandomEmployer();
+      const employee1 = getRandomEmployee(employer.id);
+      const employee2 = getRandomEmployee(employer.id);
+
+      when(mockEmployerRepo.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(
+        mockEmployeeService.getFilteredEmployees(
+          deepEqual({
+            employerID: employer.id,
+          }),
+        ),
+      ).thenResolve({
+        items: [employee1, employee2],
+        totalItems: 2,
+        page: 1,
+        totalPages: 1,
+        hasNextPage: false,
+      });
+
+      const result = await employerService.getFilteredEmployeesForEmployer(employer.referralID, {});
+
+      expect(result).toStrictEqual({
+        items: [employee1, employee2],
+        totalItems: 2,
+        page: 1,
+        totalPages: 1,
+        hasNextPage: false,
+      });
     });
   });
 });

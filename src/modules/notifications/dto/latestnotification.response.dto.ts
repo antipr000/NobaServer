@@ -19,10 +19,7 @@ export class SMSData {
   recipientPhoneNumber: string;
 
   @ApiProperty()
-  templateKey: string;
-
-  @ApiProperty()
-  payload: object;
+  body: string;
 }
 
 export class PushData {
@@ -33,7 +30,7 @@ export class PushData {
   templateKey: string;
 
   @ApiProperty()
-  params: object;
+  body: string;
 
   @ApiProperty()
   notificationType: string;

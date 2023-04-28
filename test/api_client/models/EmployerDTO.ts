@@ -8,6 +8,7 @@ export type EmployerDTO = {
   employerLogoURI: string;
   leadDays: number;
   employerReferralID: string;
+  locale: string;
   payrollDates: Array<string>;
   nextPayrollDate: string;
   maxAllocationPercent?: number;

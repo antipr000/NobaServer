@@ -49,7 +49,7 @@ describe("Verification", () => {
   });
 
   afterAll(async () => {
-    await integrationTestUtils.tearDown();
+    await integrationTestUtils.suiteLevelTeardown();
   });
 
   afterEach(async () => {

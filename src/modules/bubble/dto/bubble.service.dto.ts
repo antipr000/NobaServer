@@ -1,9 +1,11 @@
+import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
 import { Payroll } from "../../../modules/employer/domain/Payroll";
 import { PayrollDisbursement } from "../../../modules/employer/domain/PayrollDisbursement";
 
 export type RegisterEmployerRequest = {
   name: string;
   logoURI: string;
+  locale?: string;
   referralID: string;
   bubbleID: string;
   leadDays?: number;
@@ -14,6 +16,7 @@ export type RegisterEmployerRequest = {
 
 export type UpdateNobaEmployerRequest = {
   logoURI?: string;
+  locale?: string;
   leadDays?: number;
   payrollDates?: string[];
   payrollAccountNumber?: string;
@@ -21,7 +24,8 @@ export type UpdateNobaEmployerRequest = {
 };
 
 export type UpdateNobaEmployeeRequest = {
-  salary: number;
+  salary?: number;
+  status?: EmployeeStatus;
 };
 
 export type PayrollWithDisbursements = Payroll & {

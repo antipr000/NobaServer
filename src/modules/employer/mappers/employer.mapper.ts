@@ -19,6 +19,7 @@ export class EmployerMapper {
       employerID: employer.id,
       employerName: employer.name,
       employerLogoURI: employer.logoURI,
+      locale: employer.locale,
       leadDays: employer.leadDays,
       employerReferralID: employer.referralID,
       payrollDates: payrollDatesAsc,
@@ -37,6 +38,7 @@ export class EmployerMapper {
       employerID: employer.id,
       employerName: employer.name,
       employerLogoURI: employer.logoURI,
+      locale: employer.locale,
       leadDays: employer.leadDays,
       employerReferralID: employer.referralID,
       payrollDates: payrollDatesAsc,
@@ -47,7 +49,7 @@ export class EmployerMapper {
     };
   }
 
-  toEmployeesWorkflowDTO(employees): EmployeesWorkflowDTO {
+  toEmployeesWorkflowDTO(employees: Employee[]): EmployeesWorkflowDTO {
     return {
       employees: employees.map(employee => ({
         id: employee.id,
@@ -55,6 +57,8 @@ export class EmployerMapper {
         allocationCurrency: employee.allocationCurrency,
         employerID: employee.employerID,
         consumerID: employee.consumerID,
+        status: employee.status,
+        ...(employee.email && { email: employee.email }),
         ...(employee.salary && { salary: employee.salary }),
       })),
     };

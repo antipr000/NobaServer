@@ -6,6 +6,7 @@ import {
   EmployeeAllocationCurrency,
   EmployeeCreateRequest,
   convertToDomainEmployee,
+  EmployeeStatus,
 } from "../domain/Employee";
 import { uuid } from "uuidv4";
 
@@ -19,7 +20,9 @@ export const saveAndGetEmployee = async (prismaService: PrismaService): Promise<
     consumerID: consumerID,
   };
 
-  const employee = await prismaService.employee.create({ data: employeeCreateInput });
+  const employee = await prismaService.employee.create({
+    data: { ...employeeCreateInput, status: EmployeeStatus.CREATED },
+  });
 
   return convertToDomainEmployee(employee);
 };
@@ -33,5 +36,6 @@ export const getRandomEmployee = (employerID: string): Employee => {
     consumerID: uuid(),
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
+    status: EmployeeStatus.LINKED,
   };
 };

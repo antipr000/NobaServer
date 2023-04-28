@@ -16,6 +16,7 @@ export function getMockEmployeeServiceWithDefaults(): EmployeeService {
   when(mockEmployeeService.updateAllocationAmountsForNewMaxAllocationPercent(anyString(), anyNumber())).thenReject(
     new Error("Method not implemented"),
   );
+  when(mockEmployeeService.getFilteredEmployees(anything())).thenReject(new Error("Method not implemented"));
 
   return mockEmployeeService;
 }

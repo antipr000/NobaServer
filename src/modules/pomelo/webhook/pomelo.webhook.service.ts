@@ -31,7 +31,7 @@ import { CircleWithdrawalStatus } from "../../../modules/psp/domain/CircleTypes"
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { Utils } from "../../../core/utils/Utils";
 import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
-import { ExchangeRateDTO } from "../../../modules/exchangerate/dto/ExchangeRateDTO";
+import { ExchangeRateDTO } from "../../../modules/exchangerate/dto/exchangerate.dto";
 
 @Injectable()
 export class PomeloTransactionService {

@@ -52,7 +52,7 @@ import { EmployerService } from "../../../modules/employer/employer.service";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
 import { Employer } from "../../../modules/employer/domain/Employer";
-import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
+import { Employee, EmployeeAllocationCurrency, EmployeeStatus } from "../../../modules/employee/domain/Employee";
 import { uuid } from "uuidv4";
 import { BubbleService } from "../../bubble/bubble.service";
 import { getMockBubbleServiceWithDefaults } from "../../../modules/bubble/mocks/mock.bubble.service";
@@ -71,6 +71,7 @@ const getRandomEmployer = (): Employer => {
   const employer: Employer = {
     id: uuid(),
     name: "Test Employer",
+    locale: "en_us",
     bubbleID: uuid(),
     logoURI: "https://www.google.com",
     referralID: uuid(),
@@ -93,6 +94,7 @@ const getRandomEmployee = (consumerID: string, employer: Employer): Employee => 
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
     employer: employer,
+    status: EmployeeStatus.CREATED,
   };
 
   return employee;

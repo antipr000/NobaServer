@@ -41,7 +41,7 @@ import { WorkflowExecutor } from "./infra/temporal/workflow.executor";
 import { IdentificationService } from "./modules/common/identification.service";
 import { IdentificationTypeCountryDTO } from "./modules/common/dto/identification.type.country.dto";
 import { CircleService } from "./modules/circle/public/circle.service";
-import { ExchangeRateDTO } from "./modules/exchangerate/dto/ExchangeRateDTO";
+import { ExchangeRateDTO } from "./modules/exchangerate/dto/exchangerate.dto";
 import { ExchangeRateService } from "./modules/exchangerate/exchangerate.service";
 
 @Controller("v1")

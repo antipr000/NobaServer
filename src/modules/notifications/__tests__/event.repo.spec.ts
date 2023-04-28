@@ -7,7 +7,7 @@ import { EventRepo } from "../repos/event.repo";
 import { SQLEventRepo } from "../repos/sql.event.repo";
 import { EventCreateRequest, EventUpdateRequest } from "../domain/Event";
 import { uuid } from "uuidv4";
-import { EventTypes } from "../domain/EventTypes";
+import { EventHandlers } from "../domain/EventHandlers";
 import { RepoException } from "../../../core/exception/repo.exception";
 import { EventTemplateCreateRequest, EventTemplateUpdateRequest } from "../domain/EventTemplates";
 
@@ -42,7 +42,7 @@ describe("EventRepoTests", () => {
     it("should create Event if parameters are correct", async () => {
       const eventCreateRequest: EventCreateRequest = {
         name: uuid(),
-        handlers: [EventTypes.EMAIL, EventTypes.PUSH],
+        handlers: [EventHandlers.EMAIL, EventHandlers.PUSH],
       };
 
       const event = await eventRepo.createEvent(eventCreateRequest);
@@ -55,7 +55,7 @@ describe("EventRepoTests", () => {
     it("should throw RepoException if 'name' is duplicate", async () => {
       const eventCreateRequest: EventCreateRequest = {
         name: uuid(),
-        handlers: [EventTypes.EMAIL, EventTypes.PUSH],
+        handlers: [EventHandlers.EMAIL, EventHandlers.PUSH],
       };
 
       await eventRepo.createEvent(eventCreateRequest);
@@ -66,7 +66,7 @@ describe("EventRepoTests", () => {
     it("should throw error if 'name' is empty", async () => {
       const eventCreateRequest: EventCreateRequest = {
         name: "",
-        handlers: [EventTypes.EMAIL, EventTypes.PUSH],
+        handlers: [EventHandlers.EMAIL, EventHandlers.PUSH],
       };
 
       await expect(eventRepo.createEvent(eventCreateRequest)).rejects.toThrow(Error);
@@ -84,7 +84,7 @@ describe("EventRepoTests", () => {
     it("should throw Error if handler is not valid EventType", async () => {
       const eventCreateRequest: EventCreateRequest = {
         name: uuid(),
-        handlers: ["INVALID_HANDLER" as EventTypes],
+        handlers: ["INVALID_HANDLER" as EventHandlers],
       };
 
       await expect(eventRepo.createEvent(eventCreateRequest)).rejects.toThrow(Error);
@@ -95,7 +95,7 @@ describe("EventRepoTests", () => {
     it("should return Event if Event exists", async () => {
       const eventCreateRequest: EventCreateRequest = {
         name: uuid(),
-        handlers: [EventTypes.EMAIL, EventTypes.PUSH],
+        handlers: [EventHandlers.EMAIL, EventHandlers.PUSH],
       };
 
       const event = await eventRepo.createEvent(eventCreateRequest);
@@ -117,7 +117,7 @@ describe("EventRepoTests", () => {
     it("should return Event if Event exists", async () => {
       const eventCreateRequest: EventCreateRequest = {
         name: uuid(),
-        handlers: [EventTypes.EMAIL, EventTypes.PUSH],
+        handlers: [EventHandlers.EMAIL, EventHandlers.PUSH],
       };
 
       const event = await eventRepo.createEvent(eventCreateRequest);
@@ -139,13 +139,13 @@ describe("EventRepoTests", () => {
     it("should update Event if parameters are correct", async () => {
       const eventCreateRequest: EventCreateRequest = {
         name: uuid(),
-        handlers: [EventTypes.EMAIL, EventTypes.PUSH],
+        handlers: [EventHandlers.EMAIL, EventHandlers.PUSH],
       };
 
       const event = await eventRepo.createEvent(eventCreateRequest);
 
       const eventUpdateRequest: EventUpdateRequest = {
-        handlers: [EventTypes.EMAIL],
+        handlers: [EventHandlers.EMAIL],
       };
 
       const updatedEvent = await eventRepo.updateEvent(event.id, eventUpdateRequest);
@@ -157,7 +157,7 @@ describe("EventRepoTests", () => {
 
     it("should throw RepoException if Event does not exist", async () => {
       const eventUpdateRequest: EventUpdateRequest = {
-        handlers: [EventTypes.EMAIL],
+        handlers: [EventHandlers.EMAIL],
       };
 
       await expect(eventRepo.updateEvent("INVALID_ID", eventUpdateRequest)).rejects.toThrow(RepoException);
@@ -166,13 +166,13 @@ describe("EventRepoTests", () => {
     it("should throw Error if handler is invalid", async () => {
       const eventCreateRequest: EventCreateRequest = {
         name: uuid(),
-        handlers: [EventTypes.EMAIL, EventTypes.PUSH],
+        handlers: [EventHandlers.EMAIL, EventHandlers.PUSH],
       };
 
       const event = await eventRepo.createEvent(eventCreateRequest);
 
       const eventUpdateRequest: EventUpdateRequest = {
-        handlers: ["INVALID_HANDLER" as EventTypes],
+        handlers: ["INVALID_HANDLER" as EventHandlers],
       };
 
       await expect(eventRepo.updateEvent(event.id, eventUpdateRequest)).rejects.toThrow(Error);
@@ -183,14 +183,14 @@ describe("EventRepoTests", () => {
     it("should create event template and add it to event if parameters are correct", async () => {
       const eventCreateRequest: EventCreateRequest = {
         name: uuid(),
-        handlers: [EventTypes.EMAIL, EventTypes.PUSH],
+        handlers: [EventHandlers.EMAIL, EventHandlers.PUSH],
       };
 
       const event = await eventRepo.createEvent(eventCreateRequest);
 
       const eventTemplateCreateRequest: EventTemplateCreateRequest = {
         eventID: event.id,
-        type: EventTypes.EMAIL,
+        type: EventHandlers.EMAIL,
         locale: "en",
         externalKey: "sg-1234",
       };
@@ -208,7 +208,7 @@ describe("EventRepoTests", () => {
     it("should throw RepoException if event does not exist", async () => {
       const eventTemplateCreateRequest: EventTemplateCreateRequest = {
         eventID: "INVALID_ID",
-        type: EventTypes.EMAIL,
+        type: EventHandlers.EMAIL,
         locale: "en",
         externalKey: "sg-1234",
       };
@@ -219,14 +219,14 @@ describe("EventRepoTests", () => {
     it("should throw Error if type is invalid", async () => {
       const eventCreateRequest: EventCreateRequest = {
         name: uuid(),
-        handlers: [EventTypes.EMAIL, EventTypes.PUSH],
+        handlers: [EventHandlers.EMAIL, EventHandlers.PUSH],
       };
 
       const event = await eventRepo.createEvent(eventCreateRequest);
 
       const eventTemplateCreateRequest: EventTemplateCreateRequest = {
         eventID: event.id,
-        type: "INVALID_TYPE" as EventTypes,
+        type: "INVALID_TYPE" as EventHandlers,
         locale: "en",
         externalKey: "sg-1234",
       };
@@ -237,14 +237,14 @@ describe("EventRepoTests", () => {
     it("should throw Error if locale is undefined", async () => {
       const eventCreateRequest: EventCreateRequest = {
         name: uuid(),
-        handlers: [EventTypes.EMAIL, EventTypes.PUSH],
+        handlers: [EventHandlers.EMAIL, EventHandlers.PUSH],
       };
 
       const event = await eventRepo.createEvent(eventCreateRequest);
 
       const eventTemplateCreateRequest: EventTemplateCreateRequest = {
         eventID: event.id,
-        type: EventTypes.EMAIL,
+        type: EventHandlers.EMAIL,
         locale: undefined,
         externalKey: "sg-1234",
       };
@@ -257,14 +257,14 @@ describe("EventRepoTests", () => {
     it("should update event template and add it to event if parameters are correct", async () => {
       const eventCreateRequest: EventCreateRequest = {
         name: uuid(),
-        handlers: [EventTypes.EMAIL, EventTypes.PUSH],
+        handlers: [EventHandlers.EMAIL, EventHandlers.PUSH],
       };
 
       const event = await eventRepo.createEvent(eventCreateRequest);
 
       const eventTemplateCreateRequest: EventTemplateCreateRequest = {
         eventID: event.id,
-        type: EventTypes.EMAIL,
+        type: EventHandlers.EMAIL,
         locale: "en",
         externalKey: "sg-1234",
       };
@@ -272,7 +272,7 @@ describe("EventRepoTests", () => {
       const eventWithTemplate = await eventRepo.createEventTemplate(eventTemplateCreateRequest);
 
       const eventTemplateUpdateRequest: EventTemplateUpdateRequest = {
-        type: EventTypes.PUSH,
+        type: EventHandlers.PUSH,
         locale: "en",
         templateBody: "template body",
       };
@@ -293,7 +293,7 @@ describe("EventRepoTests", () => {
 
     it("should throw RepoException if template with id does not exist", async () => {
       const eventTemplateUpdateRequest: EventTemplateUpdateRequest = {
-        type: EventTypes.PUSH,
+        type: EventHandlers.PUSH,
         locale: "en",
         templateBody: "template body",
       };

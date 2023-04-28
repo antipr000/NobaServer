@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { anyString, anything, capture, instance, when } from "ts-mockito";
+import { anyString, anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { BubbleWebhookController } from "../bubble.webhook.controller";
 import { BubbleService } from "../bubble.service";
 import { getMockBubbleServiceWithDefaults } from "../mocks/mock.bubble.service";
@@ -14,6 +14,10 @@ import { BadRequestException } from "@nestjs/common";
 import { Bool } from "../../../core/domain/ApiEnums";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
+import { getRandomEmployer } from "../../../modules/employer/test_utils/employer.test.utils";
+import { getRandomEmployee } from "../../../modules/employee/test_utils/employee.test.utils";
+import { getRandomActiveConsumer } from "../../../modules/consumer/test_utils/test.utils";
+import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
 
 describe("BubbleWebhookControllerTests", () => {
   jest.setTimeout(20000);
@@ -178,7 +182,7 @@ describe("BubbleWebhookControllerTests", () => {
   });
 
   describe("updateEmployee", () => {
-    it("should forwards the request to the BubbleService", async () => {
+    it("should forward the request to the BubbleService for salary update", async () => {
       const employeeID = "employeeID";
       const requestBody = {
         salary: 1000,
@@ -194,6 +198,46 @@ describe("BubbleWebhookControllerTests", () => {
       expect(bubbleServiceUpdateEmployeeEmployeeIDArgs).toEqual("employeeID");
       expect(bubbleServiceUpdateEmployeeRequestBodyArgs).toEqual({
         salary: 1000,
+      });
+    });
+
+    it("should forward the request to the BubbleService for status update", async () => {
+      const employeeID = "employeeID";
+      const requestBody = {
+        status: EmployeeStatus.UNLINKED,
+      };
+
+      when(bubbleService.updateEmployee(anyString(), anything())).thenResolve();
+
+      await bubbleWebhookController.updateEmployee(requestBody, employeeID);
+
+      const [bubbleServiceUpdateEmployeeEmployeeIDArgs, bubbleServiceUpdateEmployeeRequestBodyArgs] = capture(
+        bubbleService.updateEmployee,
+      ).last();
+      expect(bubbleServiceUpdateEmployeeEmployeeIDArgs).toEqual("employeeID");
+      expect(bubbleServiceUpdateEmployeeRequestBodyArgs).toStrictEqual({
+        status: EmployeeStatus.UNLINKED,
+      });
+    });
+
+    it("should forward the request to the BubbleService for all fields update", async () => {
+      const employeeID = "employeeID";
+      const requestBody = {
+        salary: 1000,
+        status: EmployeeStatus.UNLINKED,
+      };
+
+      when(bubbleService.updateEmployee(anyString(), anything())).thenResolve();
+
+      await bubbleWebhookController.updateEmployee(requestBody, employeeID);
+
+      const [bubbleServiceUpdateEmployeeEmployeeIDArgs, bubbleServiceUpdateEmployeeRequestBodyArgs] = capture(
+        bubbleService.updateEmployee,
+      ).last();
+      expect(bubbleServiceUpdateEmployeeEmployeeIDArgs).toEqual("employeeID");
+      expect(bubbleServiceUpdateEmployeeRequestBodyArgs).toEqual({
+        salary: 1000,
+        status: EmployeeStatus.UNLINKED,
       });
     });
   });
@@ -346,6 +390,51 @@ describe("BubbleWebhookControllerTests", () => {
           debitAmount: payrollDisbursement.allocationAmount,
         },
       ]);
+    });
+  });
+
+  describe("getAllEmployees", () => {
+    it("should get all employees for employer", async () => {
+      const employer = getRandomEmployer("Fake Employer");
+      const employee = getRandomEmployee(employer.id);
+      const consumer = getRandomActiveConsumer("57", "CO");
+
+      employee.consumer = consumer;
+      employee.consumerID = consumer.props.id;
+
+      when(bubbleService.getAllEmployeesForEmployer(employer.referralID, deepEqual({}))).thenResolve({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [employee],
+      });
+
+      const result = await bubbleWebhookController.getAllEmployees(employer.referralID, {});
+
+      expect(result).toStrictEqual({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [
+          {
+            id: employee.id,
+            allocationAmount: employee.allocationAmount,
+            allocationCurrency: employee.allocationCurrency,
+            employerID: employee.employerID,
+            consumerID: employee.consumerID,
+            salary: employee.salary,
+            email: employee.email,
+            status: employee.status,
+            firstName: employee.consumer.props.firstName,
+            lastName: employee.consumer.props.lastName,
+            phoneNumber: employee.consumer.props.phone,
+            consumerEmail: employee.consumer.props.email,
+            handle: employee.consumer.props.handle,
+          },
+        ],
+      });
     });
   });
 });

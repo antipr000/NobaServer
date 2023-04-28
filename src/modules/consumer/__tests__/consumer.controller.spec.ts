@@ -39,7 +39,7 @@ import { PaymentMethod } from "../domain/PaymentMethod";
 import { QRCodeDTO } from "../dto/QRCodeDTO";
 import { EmployeeService } from "../../../modules/employee/employee.service";
 import { Employer } from "../../../modules/employer/domain/Employer";
-import { Employee, EmployeeAllocationCurrency } from "../../../modules/employee/domain/Employee";
+import { Employee, EmployeeAllocationCurrency, EmployeeStatus } from "../../../modules/employee/domain/Employee";
 import { uuid } from "uuidv4";
 import { getMockEmployeeServiceWithDefaults } from "../../../modules/employee/mocks/mock.employee.service";
 import { getRandomIdentification } from "../test_utils/identification.test.utils";
@@ -48,6 +48,7 @@ const getRandomEmployer = (): Employer => {
   const employer: Employer = {
     id: uuid(),
     name: "Test Employer",
+    locale: "en_us",
     bubbleID: uuid(),
     logoURI: "https://www.google.com",
     referralID: uuid(),
@@ -67,6 +68,7 @@ const getRandomEmployee = (consumerID: string, employerID: string): Employee => 
     consumerID: consumerID,
     allocationAmount: Math.floor(Math.random() * 1000000),
     allocationCurrency: EmployeeAllocationCurrency.COP,
+    status: EmployeeStatus.CREATED,
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
   };

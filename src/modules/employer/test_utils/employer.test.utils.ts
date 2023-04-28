@@ -46,6 +46,7 @@ export const getRandomEmployer = (name: string): Employer => {
     bubbleID: uuid(),
     leadDays: 3,
     logoURI: "https://www.google.com",
+    locale: "en_us",
     name: name || "Test Employer",
     depositMatchingName: name ? `Deposit ${name}` : "Deposit Test Employer",
     payrollDates: ["2021-01-01", "2021-01-02"],
