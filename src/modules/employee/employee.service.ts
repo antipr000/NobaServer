@@ -18,6 +18,12 @@ export class EmployeeService {
   ) {}
 
   async createEmployee(request: CreateEmployeeRequestDTO): Promise<Employee> {
+    const activeEmployee = await this.employeeRepo.getActiveEmployeeByEmail(request.email);
+
+    if (activeEmployee) {
+      this.logger.info(`Tried to create employee with email ${request.email} that already exists!`);
+      return activeEmployee;
+    }
     return this.employeeRepo.createEmployee({
       allocationAmount: request.allocationAmount,
       allocationCurrency: EmployeeAllocationCurrency.COP,

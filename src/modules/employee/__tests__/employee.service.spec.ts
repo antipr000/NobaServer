@@ -90,6 +90,7 @@ describe("EmployeeServiceTests", () => {
     it("should create an employee and 'always' set 'COP' as the allocationCurrency", async () => {
       const employee = getRandomEmployee();
       when(employeeRepo.createEmployee(anything())).thenResolve(employee);
+      when(employeeRepo.getActiveEmployeeByEmail(employee.email)).thenResolve(null);
 
       const createdEmployee = await employeeService.createEmployee({
         allocationAmount: employee.allocationAmount,
@@ -112,6 +113,7 @@ describe("EmployeeServiceTests", () => {
     it("should create an employee without linking to consumer", async () => {
       const employee = getRandomEmployeeWithoutConsumer();
       when(employeeRepo.createEmployee(anything())).thenResolve(employee);
+      when(employeeRepo.getActiveEmployeeByEmail(employee.email)).thenResolve(null);
 
       const createdEmployee = await employeeService.createEmployee({
         allocationAmount: employee.allocationAmount,
@@ -127,6 +129,21 @@ describe("EmployeeServiceTests", () => {
         employerID: employee.employerID,
         status: EmployeeStatus.CREATED,
       });
+    });
+
+    it("should return active employee if it already exists", async () => {
+      const employee = getRandomEmployeeWithoutConsumer();
+      when(employeeRepo.createEmployee(anything())).thenResolve(employee);
+      when(employeeRepo.getActiveEmployeeByEmail(employee.email)).thenResolve(employee);
+
+      const createdEmployee = await employeeService.createEmployee({
+        allocationAmount: employee.allocationAmount,
+        employerID: employee.employerID,
+      });
+
+      expect(createdEmployee).toEqual(employee);
+
+      verify(employeeRepo.createEmployee(anything())).never();
     });
   });
 

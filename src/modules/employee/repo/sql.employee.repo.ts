@@ -336,4 +336,26 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
       });
     }
   }
+
+  async getActiveEmployeeByEmail(emailID: string): Promise<Employee> {
+    try {
+      const employee: EmployeeModelType = await this.prismaService.employee.findFirst({
+        where: {
+          email: emailID,
+          NOT: { status: EmployeeStatus.UNLINKED },
+        },
+      });
+
+      if (!employee) {
+        return null;
+      }
+
+      return convertToDomainEmployee(employee);
+    } catch (e) {
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: `Error retrieving employees with email: '${emailID}'`,
+      });
+    }
+  }
 }
