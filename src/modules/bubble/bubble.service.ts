@@ -18,7 +18,7 @@ import { PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
 import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
 import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
-import { Employee, EmployeeStatus } from "../employee/domain/Employee";
+import { Employee } from "../employee/domain/Employee";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
 import { EmployeeCreateRequestDTO } from "./dto/bubble.webhook.controller.dto";
 
@@ -227,33 +227,6 @@ export class BubbleService {
       });
     }
 
-    let employee = await this.employeeService.createEmployee({
-      allocationAmount: 0,
-      email: payload.email,
-      employerID: employer.id,
-    });
-
-    // If opted send notification to the new Employee
-
-    if (payload.sendEmail) {
-      const inviteUrl = `https://app.noba.com/app-routing/LoadingScreen/na/na/na/na/na/na/${employee.id}`;
-
-      await this.notificationService.sendNotification(
-        NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT,
-        NotificationPayloadMapper.toInviteEmployeeEvent(
-          payload.email,
-          employer.name,
-          inviteUrl,
-          employee.id,
-          employer.locale,
-        ),
-      );
-
-      employee = await this.employeeService.updateEmployee(employee.id, {
-        status: EmployeeStatus.INVITED,
-      });
-    }
-
-    return employee;
+    return this.employeeService.inviteEmployee(payload.email, employer, payload.sendEmail);
   }
 }

@@ -723,96 +723,20 @@ describe("BubbleServiceTests", () => {
       ).rejects.toThrow(ServiceException);
     });
 
-    it("should create new employee and send invite if opted for", async () => {
+    it("should call employeeService.inviteEmployee", async () => {
       const employer = getRandomEmployer();
-      employer.locale = "es";
       const employee = getRandomEmployee(null, employer);
-      const email = "fake+email@employer.com";
-      employee.email = email;
-      employee.status = EmployeeStatus.CREATED;
-
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
-      when(employeeService.createEmployee(anything())).thenResolve(employee);
-      when(notificationService.sendNotification(anyString(), anything())).thenResolve();
-      when(employeeService.updateEmployee(anyString(), anything())).thenResolve({
-        ...employee,
-        status: EmployeeStatus.INVITED,
-        lastInviteSentTimestamp: new Date("2020-01-01"),
-      });
+      when(employeeService.inviteEmployee(anyString(), anything(), anything())).thenResolve(employee);
 
       const response = await bubbleService.createEmployeeForEmployer(employer.referralID, {
-        email,
+        email: "fake-email@noba.com",
         sendEmail: true,
-      });
-
-      expect(response).toStrictEqual({
-        ...employee,
-        status: EmployeeStatus.INVITED,
-        lastInviteSentTimestamp: new Date("2020-01-01"),
-      });
-
-      verify(
-        employeeService.createEmployee(
-          deepEqual({
-            allocationAmount: 0,
-            email,
-            employerID: employer.id,
-          }),
-        ),
-      ).once();
-
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT,
-          deepEqual({
-            email,
-            locale: "es",
-            companyName: employer.name,
-            employeeID: employee.id,
-            inviteUrl: `https://app.noba.com/app-routing/LoadingScreen/na/na/na/na/na/na/${employee.id}`,
-          }),
-        ),
-      ).once();
-
-      verify(
-        employeeService.updateEmployee(
-          employee.id,
-          deepEqual({
-            status: EmployeeStatus.INVITED,
-          }),
-        ),
-      ).once();
-    });
-
-    it("should create employee but not send invite if not opted for", async () => {
-      const employer = getRandomEmployer();
-      employer.locale = "es";
-      const employee = getRandomEmployee(null, employer);
-      const email = "fake+email@employer.com";
-      employee.email = email;
-      employee.status = EmployeeStatus.CREATED;
-
-      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
-      when(employeeService.createEmployee(anything())).thenResolve(employee);
-
-      const response = await bubbleService.createEmployeeForEmployer(employer.referralID, {
-        email,
-        sendEmail: false,
       });
 
       expect(response).toStrictEqual(employee);
 
-      verify(
-        employeeService.createEmployee(
-          deepEqual({
-            allocationAmount: 0,
-            email,
-            employerID: employer.id,
-          }),
-        ),
-      ).once();
-
-      verify(notificationService.sendNotification(anyString(), anything())).never();
+      verify(employeeService.inviteEmployee("fake-email@noba.com", deepEqual(employer), true)).once();
     });
   });
 });

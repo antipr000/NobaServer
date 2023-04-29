@@ -6,14 +6,16 @@ import { Employee, EmployeeAllocationCurrency, EmployeeStatus } from "../domain/
 import { IEmployeeRepo } from "../repo/employee.repo";
 import { getMockEmployeeRepoWithDefaults } from "../mocks/mock.employee.repo";
 import { EMPLOYEE_REPO_PROVIDER } from "../repo/employee.repo.module";
-import { anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
+import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { EmployeeService } from "../employee.service";
 import { uuid } from "uuidv4";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { createTestEmployer } from "../../../modules/employer/test_utils/test.utils";
-import { EmployerService } from "../../../modules/employer/employer.service";
-import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
 import { EmployeeFilterOptionsDTO } from "../dto/employee.filter.options.dto";
+import { NotificationService } from "../../../modules/notifications/notification.service";
+import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
+import { getRandomEmployer } from "../../../modules/employer/test_utils/employer.test.utils";
+import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 
 const getRandomEmployee = (includeEmployer?: boolean): Employee => {
   const employee: Employee = {
@@ -52,12 +54,12 @@ describe("EmployeeServiceTests", () => {
 
   let employeeRepo: IEmployeeRepo;
   let app: TestingModule;
-  let employerService: EmployerService;
+  let mockNotificationService: NotificationService;
   let employeeService: EmployeeService;
 
   beforeEach(async () => {
     employeeRepo = getMockEmployeeRepoWithDefaults();
-    employerService = getMockEmployerServiceWithDefaults();
+    mockNotificationService = getMockNotificationServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -72,8 +74,8 @@ describe("EmployeeServiceTests", () => {
           useFactory: () => instance(employeeRepo),
         },
         {
-          provide: EmployerService,
-          useFactory: () => instance(employerService),
+          provide: NotificationService,
+          useFactory: () => instance(mockNotificationService),
         },
         EmployeeService,
       ],
@@ -169,6 +171,105 @@ describe("EmployeeServiceTests", () => {
         consumerID: consumerID,
         status: EmployeeStatus.LINKED,
       });
+    });
+  });
+
+  describe("inviteEmployee", () => {
+    it("should create new employee and send invite if opted for", async () => {
+      const employer = getRandomEmployer("Fake Employer");
+      employer.locale = "es";
+      const employee = getRandomEmployeeWithoutConsumer(false);
+      employee.employer = employer;
+      const email = "fake+email@employer.com";
+      employee.email = email;
+      employee.status = EmployeeStatus.CREATED;
+
+      when(employeeRepo.createEmployee(anything())).thenResolve(employee);
+      when(employeeRepo.getActiveEmployeeByEmail(employee.email)).thenResolve(null);
+      when(employeeRepo.getEmployeeByID(employee.id, true)).thenResolve(employee);
+      when(mockNotificationService.sendNotification(anyString(), anything())).thenResolve();
+      when(employeeRepo.updateEmployee(anyString(), anything())).thenResolve({
+        ...employee,
+        status: EmployeeStatus.INVITED,
+        lastInviteSentTimestamp: new Date("2020-01-01"),
+      });
+
+      const response = await employeeService.inviteEmployee(email, employer, true);
+
+      expect(response).toStrictEqual({
+        ...employee,
+        status: EmployeeStatus.INVITED,
+        lastInviteSentTimestamp: new Date("2020-01-01"),
+      });
+
+      verify(
+        employeeRepo.createEmployee(
+          deepEqual({
+            allocationAmount: 0,
+            allocationCurrency: EmployeeAllocationCurrency.COP,
+            employerID: employer.id,
+            status: EmployeeStatus.CREATED,
+            email: email,
+          }),
+        ),
+      ).once();
+
+      verify(
+        mockNotificationService.sendNotification(
+          NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT,
+          deepEqual({
+            email,
+            locale: "es",
+            companyName: employer.name,
+            employeeID: employee.id,
+            inviteUrl: `https://app.noba.com/app-routing/LoadingScreen/na/na/na/na/na/na/${employee.id}`,
+          }),
+        ),
+      ).once();
+
+      verify(
+        employeeRepo.updateEmployee(
+          employee.id,
+          deepEqual({
+            status: EmployeeStatus.INVITED,
+            lastInviteSentTimestamp: anything(),
+            allocationAmount: 0,
+          }),
+        ),
+      ).once();
+    });
+
+    it("should create employee but not send invite if not opted for", async () => {
+      const employer = getRandomEmployer("Fake Employer");
+      employer.locale = "es";
+      const employee = getRandomEmployeeWithoutConsumer(false);
+      employee.employer = employer;
+      const email = "fake+email@employer.com";
+      employee.email = email;
+      employee.status = EmployeeStatus.CREATED;
+
+      when(employeeRepo.createEmployee(anything())).thenResolve(employee);
+      when(employeeRepo.getActiveEmployeeByEmail(employee.email)).thenResolve(null);
+      const response = await employeeService.inviteEmployee(email, employer, false);
+
+      expect(response).toStrictEqual({
+        ...employee,
+        status: EmployeeStatus.CREATED,
+      });
+
+      verify(
+        employeeRepo.createEmployee(
+          deepEqual({
+            allocationAmount: 0,
+            allocationCurrency: EmployeeAllocationCurrency.COP,
+            employerID: employer.id,
+            status: EmployeeStatus.CREATED,
+            email: email,
+          }),
+        ),
+      ).once();
+
+      verify(mockNotificationService.sendNotification(anyString(), anything())).never();
     });
   });
 

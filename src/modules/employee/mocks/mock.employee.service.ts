@@ -15,6 +15,10 @@ export function getMockEmployeeServiceWithDefaults(): EmployeeService {
     new Error("Method not implemented"),
   );
   when(mockEmployeeService.getFilteredEmployees(anything())).thenReject(new Error("Method not implemented"));
+  when(mockEmployeeService.linkEmployee(anyString(), anyString())).thenReject(new Error("Method not implemented"));
+  when(mockEmployeeService.inviteEmployee(anyString(), anything(), anything())).thenReject(
+    new Error("Method not implemented"),
+  );
 
   return mockEmployeeService;
 }

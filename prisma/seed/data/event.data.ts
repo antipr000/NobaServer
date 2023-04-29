@@ -169,6 +169,7 @@ export const emailTemplateExternalLinkMap: TemplateMap = {
     en: "d-db917173c48448fb90dadcb77259f4cc",
   },
   [NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT]: {
+    en: "d-d0cee49e89d34a479394d84d01656f84",
     es: "d-1b01521028054dcbb9739a554bc38b0a",
   },
 };

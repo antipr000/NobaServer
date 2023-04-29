@@ -6,6 +6,7 @@ export class UpdateEmployeeRequestDTO {
   salary?: number;
   email?: string;
   status?: EmployeeStatus;
+  lastInviteSentTimestamp?: Date;
 }
 
 export class CreateEmployeeRequestDTO {
