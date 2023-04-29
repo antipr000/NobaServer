@@ -16,6 +16,7 @@ import {
   DatabaseInternalErrorException,
   InvalidDatabaseRecordException,
 } from "../../../core/exception/CommonAppException";
+import { EnrichedDisbursementFilterOptionsDTO } from "../dto/enriched.disbursement.filter.options.dto";
 
 @Injectable()
 export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
@@ -143,10 +144,54 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
 
   async getAllDisbursementsForPayroll(payrollID: string): Promise<PayrollDisbursement[]> {
     try {
-      const allDisburementsForEmployee = await this.prismaService.payrollDisbursement.findMany({
+      const allDisbursementsForEmployee = await this.prismaService.payrollDisbursement.findMany({
         where: { payrollID },
       });
-      return allDisburementsForEmployee.map(disbursement => convertToDomainPayrollDisbursement(disbursement));
+      return allDisbursementsForEmployee.map(disbursement => convertToDomainPayrollDisbursement(disbursement));
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      return [];
+    }
+  }
+
+  async getAllEnrichedDisbursementsForPayroll(
+    payrollID: string,
+    filterOptions: EnrichedDisbursementFilterOptionsDTO,
+  ): Promise<PayrollDisbursement[]> {
+    // May decide to share implementation with `getAllDisbursementsForPayroll`
+    try {
+      const allDisbursementsForEmployee = await this.prismaService.payrollDisbursement.findMany({
+        where: { payrollID, transaction: { status: { in: filterOptions.status } } },
+        orderBy: {
+          employee: {
+            consumer: {
+              ...(filterOptions.sortLastName && {
+                lastName: filterOptions.sortLastName,
+              }),
+            },
+          },
+          ...(filterOptions.sortAllocationAmount && {
+            allocationAmount: filterOptions.sortAllocationAmount,
+          }),
+          ...(filterOptions.sortCreditAmount && {
+            creditAmount: filterOptions.sortCreditAmount,
+          }),
+          transaction: {
+            ...(filterOptions.sortStatus && {
+              status: filterOptions.sortStatus,
+            }),
+          },
+        },
+        include: {
+          employee: {
+            include: {
+              consumer: true,
+            },
+          },
+          transaction: true,
+        },
+      });
+      return allDisbursementsForEmployee.map(disbursement => convertToDomainPayrollDisbursement(disbursement));
     } catch (err) {
       this.logger.error(JSON.stringify(err));
       return [];

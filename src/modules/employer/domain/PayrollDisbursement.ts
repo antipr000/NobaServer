@@ -1,6 +1,7 @@
 import Joi from "joi";
-import { PayrollDisbursement as PrismaPayrollDisbursementModel } from "@prisma/client";
+import { Consumer, Employee, PayrollDisbursement as PrismaPayrollDisbursementModel, Transaction } from "@prisma/client";
 import { KeysRequired } from "../../../modules/common/domain/Types";
+import { TransactionStatus } from "src/modules/transaction/domain/Transaction";
 
 export class PayrollDisbursement {
   id: string;
@@ -11,6 +12,16 @@ export class PayrollDisbursement {
   transactionID?: string;
   allocationAmount: number;
   creditAmount: number;
+}
+
+export class EnrichedDisbursement {
+  id: string;
+  debitAmount: number;
+  creditAmount: number;
+  status: TransactionStatus;
+  firstName: string;
+  lastName: string;
+  lastUpdated: Date;
 }
 
 export class PayrollDisbursementCreateRequest {
@@ -82,5 +93,24 @@ export const convertToDomainPayrollDisbursement = (
     transactionID: payrollDisbursement.transactionID,
     allocationAmount: payrollDisbursement.allocationAmount,
     creditAmount: payrollDisbursement.creditAmount,
+  };
+};
+
+export const convertToDomainEnrichedDisbursements = (
+  enrichedDisbursement: PrismaPayrollDisbursementModel & {
+    transaction: Transaction;
+    employee: Employee & {
+      consumer: Consumer;
+    };
+  },
+): EnrichedDisbursement => {
+  return {
+    id: enrichedDisbursement.id,
+    debitAmount: enrichedDisbursement.allocationAmount,
+    creditAmount: enrichedDisbursement.creditAmount,
+    status: enrichedDisbursement.transaction.status as TransactionStatus,
+    firstName: enrichedDisbursement.employee.consumer.firstName,
+    lastName: enrichedDisbursement.employee.consumer.lastName,
+    lastUpdated: enrichedDisbursement.transaction.updatedTimestamp,
   };
 };

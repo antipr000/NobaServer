@@ -457,17 +457,9 @@ export class EmployerService {
   }
 
   async getAllEnrichedDisbursementsForPayroll(
-    referralID: string,
     payrollID: string,
     filters: EnrichedDisbursementFilterOptionsDTO,
   ): Promise<EnrichedDisbursementDTO[]> {
-    if (!referralID) {
-      throw new ServiceException({
-        message: "referralID is required",
-        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
-      });
-    }
-
     if (!payrollID) {
       throw new ServiceException({
         message: "payrollID is required",
@@ -491,7 +483,10 @@ export class EmployerService {
       });
     }
 
-    const employeeDisbursements = await this.getAllDisbursementsForPayroll;
+    const employeeDisbursements = await this.payrollDisbursementRepo.getAllEnrichedDisbursementsForPayroll(
+      payrollID,
+      filters,
+    );
 
     const enrichedDisbursements: EnrichedDisbursementDTO[] = employeeDisbursements.map(
       (disbursement: EmployeeDisbursement) => {

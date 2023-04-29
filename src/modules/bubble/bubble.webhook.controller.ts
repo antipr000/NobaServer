@@ -114,10 +114,10 @@ export class BubbleWebhookController {
     @Param("referralID") referralID: string,
     @Param("payrollID") payrollID: string,
   ): Promise<PayrollDTO> {
-    const payrollWithDisbursements = await this.bubbleService.getPayroll(referralID, payrollID);
+    const payroll = await this.bubbleService.getPayroll(referralID, payrollID);
 
     return {
-      ...this.mapper.toPayrollDTO(payrollWithDisbursements),
+      ...this.mapper.toPayrollDTO(payroll),
     };
   }
 
