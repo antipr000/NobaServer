@@ -15,4 +15,5 @@ export interface IEmployeeRepo {
   getEmployeesForEmployer(employerID: string, fetchEmployerDetails?: boolean): Promise<Employee[]>;
   getEmployeesForEmployerWithConsumer(employerID: string): Promise<Employee[]>;
   getFilteredEmployees(filterOptions: EmployeeFilterOptionsDTO): Promise<PaginatedResult<Employee>>;
+  getActiveEmployeeByEmail(emailID: string): Promise<Employee>;
 }

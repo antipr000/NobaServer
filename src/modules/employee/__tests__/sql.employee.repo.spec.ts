@@ -726,4 +726,50 @@ describe("SqlEmployeeRepoTests", () => {
       expect(filteredEmployees9.items[4].id).toBe(createdEmployee4.id); // status = UNLINKED
     });
   });
+
+  describe("getActiveEmployeeByEmail", () => {
+    it("should return the active employee with the given email", async () => {
+      const consumerID: string = await createTestConsumer(prismaService);
+
+      const employerID: string = await createTestEmployerAndStoreInDB(prismaService);
+
+      const employee: EmployeeCreateRequest = getRandomEmployee(employerID, consumerID);
+      const createdEmployee: Employee = await employeeRepo.createEmployee(employee);
+
+      const activeEmployee: Employee = await employeeRepo.getActiveEmployeeByEmail(createdEmployee.email);
+
+      expect(activeEmployee.id).toEqual(createdEmployee.id);
+    });
+
+    it("should return null if no active employee with the given email exists", async () => {
+      const consumerID: string = await createTestConsumer(prismaService);
+
+      const employerID: string = await createTestEmployerAndStoreInDB(prismaService);
+
+      const employee: EmployeeCreateRequest = getRandomEmployee(employerID, consumerID);
+      const createdEmployee: Employee = await employeeRepo.createEmployee(employee);
+
+      await employeeRepo.updateEmployee(createdEmployee.id, {
+        status: EmployeeStatus.UNLINKED,
+      });
+
+      const activeEmployee: Employee = await employeeRepo.getActiveEmployeeByEmail(createdEmployee.email);
+
+      expect(activeEmployee).toBeNull();
+    });
+
+    it("should return employee with email null", async () => {
+      const consumerID: string = await createTestConsumer(prismaService);
+
+      const employerID: string = await createTestEmployerAndStoreInDB(prismaService);
+
+      const employee: EmployeeCreateRequest = getRandomEmployee(employerID, consumerID);
+      delete employee.email;
+      const createdEmployee: Employee = await employeeRepo.createEmployee(employee);
+
+      const activeEmployee: Employee = await employeeRepo.getActiveEmployeeByEmail(undefined);
+
+      expect(activeEmployee.id).toEqual(createdEmployee.id);
+    });
+  });
 });

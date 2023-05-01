@@ -5,32 +5,73 @@ import { Logger } from "winston";
 import { Employee, EmployeeAllocationCurrency, EmployeeStatus } from "./domain/Employee";
 import { IEmployeeRepo } from "./repo/employee.repo";
 import { EMPLOYEE_REPO_PROVIDER } from "./repo/employee.repo.module";
-import { UpdateEmployeeRequestDTO } from "./dto/employee.service.dto";
+import { CreateEmployeeRequestDTO, UpdateEmployeeRequestDTO } from "./dto/employee.service.dto";
 import { Utils } from "../../core/utils/Utils";
 import { EmployeeFilterOptionsDTO } from "./dto/employee.filter.options.dto";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
+import { Employer } from "../employer/domain/Employer";
+import { NotificationService } from "../notifications/notification.service";
+import { NotificationEventType } from "../notifications/domain/NotificationTypes";
+import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
 
 @Injectable()
 export class EmployeeService {
-  constructor(
-    @Inject(EMPLOYEE_REPO_PROVIDER) private readonly employeeRepo: IEmployeeRepo,
-    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
-  ) {}
+  @Inject(EMPLOYEE_REPO_PROVIDER) private readonly employeeRepo: IEmployeeRepo;
+  @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger;
 
-  async createEmployee(allocationAmount: number, employerID: string, consumerID?: string): Promise<Employee> {
+  @Inject() private readonly notificationService: NotificationService;
+
+  async createEmployee(request: CreateEmployeeRequestDTO): Promise<Employee> {
+    if (request.email) {
+      const activeEmployee = await this.employeeRepo.getActiveEmployeeByEmail(request.email);
+
+      if (activeEmployee) {
+        this.logger.info(`Tried to create employee with email ${request.email} that already exists!`);
+        return activeEmployee;
+      }
+    }
+
     return this.employeeRepo.createEmployee({
-      allocationAmount: allocationAmount,
+      allocationAmount: request.allocationAmount,
       allocationCurrency: EmployeeAllocationCurrency.COP,
-      employerID: employerID,
-      consumerID: consumerID,
+      employerID: request.employerID,
+      ...(request.consumerID && { consumerID: request.consumerID }),
       // If consumerID is populated, create a LINKED employee. Otherwise just set to CREATED.
-      status: consumerID ? EmployeeStatus.LINKED : EmployeeStatus.CREATED,
+      status: request.consumerID ? EmployeeStatus.LINKED : EmployeeStatus.CREATED,
+      ...(request.email && { email: request.email }),
+      ...(request.salary && { salary: request.salary }),
     });
   }
 
   // Just a helper to abstract status update from caller
   async linkEmployee(employeeID: string, consumerID: string): Promise<Employee> {
     return this.updateEmployee(employeeID, { consumerID: consumerID, status: EmployeeStatus.LINKED });
+  }
+
+  async inviteEmployee(email: string, employer: Employer, sendEmail: boolean): Promise<Employee> {
+    let employee = await this.createEmployee({
+      allocationAmount: 0,
+      email: email,
+      employerID: employer.id,
+    });
+
+    // If opted send notification to the new Employee
+
+    if (sendEmail) {
+      const inviteUrl = `https://app.noba.com/app-routing/LoadingScreen/na/na/na/na/na/na/${employee.id}`;
+
+      await this.notificationService.sendNotification(
+        NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT,
+        NotificationPayloadMapper.toInviteEmployeeEvent(email, employer.name, inviteUrl, employee.id, employer.locale),
+      );
+
+      employee = await this.updateEmployee(employee.id, {
+        status: EmployeeStatus.INVITED,
+        lastInviteSentTimestamp: new Date(),
+      });
+    }
+
+    return employee;
   }
 
   async updateEmployee(employeeID: string, updateRequest: UpdateEmployeeRequestDTO): Promise<Employee> {
@@ -87,6 +128,7 @@ export class EmployeeService {
       ...(salary >= 0 && { salary: salary }),
       ...(updateRequest.email && { email: updateRequest.email }),
       ...(status && { status: status }),
+      ...(updateRequest.lastInviteSentTimestamp && { lastInviteSentTimestamp: updateRequest.lastInviteSentTimestamp }),
     });
   }
 

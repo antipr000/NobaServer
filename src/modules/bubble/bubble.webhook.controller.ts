@@ -22,6 +22,8 @@ import {
   CreatePayrollResponseDTO,
   DisbursementDTO,
   EnrichedDisbursementDTO,
+  EmployeeCreateRequestDTO,
+  EmployeeResponseDTO,
   PaginatedEmployeeResponseDTO,
   PayrollDTO,
   RegisterEmployerRequestDTO,
@@ -80,6 +82,17 @@ export class BubbleWebhookController {
   ): Promise<PaginatedEmployeeResponseDTO> {
     const paginatedResult = await this.bubbleService.getAllEmployeesForEmployer(referralID, filterOptions);
     return this.mapper.toPaginatedEmployeeDTOs(paginatedResult);
+  }
+
+  @Post("/employers/:referralID/employees")
+  @ApiOperation({ summary: "Creates a new employee for employer and sends an invite if specified" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: EmployeeResponseDTO })
+  async createEmployee(
+    @Param("referralID") referralID: string,
+    @Body() requestBody: EmployeeCreateRequestDTO,
+  ): Promise<EmployeeResponseDTO> {
+    const employee = await this.bubbleService.createEmployeeForEmployer(referralID, requestBody);
+    return this.mapper.toEmployeeResponseDTO(employee);
   }
 
   @Post("/employers/:referralID/payroll")

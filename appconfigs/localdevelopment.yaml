@@ -208,6 +208,8 @@ supportedCryptoFileBucketPath: "assets/data/cryptocurrency_tokens.csv"
 sanctionedCryptoWalletsFileBucketPath: "assets/data/sanctioned_wallets.csv"
 templatesFolderBucketPath: "assets/templates/lowers"
 invoicesFolderBucketPath: "lowers/invoices"
+qrCodesFolderBucketPath: "lowers/qr_codes"
+qrCodesBaseUrl: "https://d1wcliyueysdo0.cloudfront.net"
 
 # Should ONLY EVER be set in localdevelopment.yaml, e2e_test.yaml and awsdev.yaml!
 staticDevOTP: 111111

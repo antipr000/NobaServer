@@ -21,6 +21,7 @@ import { Employee } from "../employee/domain/Employee";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
 import { EnrichedDisbursementFilterOptionsDTO } from "../employer/dto/enriched.disbursement.filter.options.dto";
 import { EnrichedDisbursementDTO } from "./dto/bubble.webhook.controller.dto";
+import { EmployeeCreateRequestDTO } from "./dto/bubble.webhook.controller.dto";
 
 @Injectable()
 export class BubbleService {
@@ -210,5 +211,31 @@ export class BubbleService {
     }
 
     return this.employerService.getFilteredEmployeesForEmployer(referralID, filterOptions);
+  }
+
+  async createEmployeeForEmployer(referralID: string, payload: EmployeeCreateRequestDTO): Promise<Employee> {
+    if (!referralID) {
+      throw new ServiceException({
+        message: "referralID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const employer = await this.employerService.getEmployerByReferralID(referralID);
+    if (!employer) {
+      throw new ServiceException({
+        message: `No employer found with referralID: ${referralID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    if (!payload.email) {
+      throw new ServiceException({
+        message: "Email is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    return this.employeeService.inviteEmployee(payload.email, employer, payload.sendEmail);
   }
 }

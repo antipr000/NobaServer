@@ -693,4 +693,50 @@ describe("BubbleServiceTests", () => {
       });
     });
   });
+
+  describe("createEmployeeForEmployer", () => {
+    it("should throw ServiceException if referralID is missing", async () => {
+      await expect(async () => await bubbleService.createEmployeeForEmployer(undefined, {} as any)).rejects.toThrow(
+        ServiceException,
+      );
+    });
+
+    it("should throw ServiceException if employer with referralID does not exist", async () => {
+      when(employerService.getEmployerByReferralID(anything())).thenResolve(null);
+
+      await expect(
+        async () => await bubbleService.createEmployeeForEmployer("fake-referral-id", {} as any),
+      ).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw ServiceException when email is missing", async () => {
+      const employer = getRandomEmployer();
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+
+      await expect(
+        async () =>
+          await bubbleService.createEmployeeForEmployer(employer.referralID, {
+            email: undefined,
+            sendEmail: false,
+          }),
+      ).rejects.toThrow(ServiceException);
+    });
+
+    it("should call employeeService.inviteEmployee", async () => {
+      const employer = getRandomEmployer();
+      const employee = getRandomEmployee(null, employer);
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employeeService.inviteEmployee(anyString(), anything(), anything())).thenResolve(employee);
+
+      const response = await bubbleService.createEmployeeForEmployer(employer.referralID, {
+        email: "fake-email@noba.com",
+        sendEmail: true,
+      });
+
+      expect(response).toStrictEqual(employee);
+
+      verify(employeeService.inviteEmployee("fake-email@noba.com", deepEqual(employer), true)).once();
+    });
+  });
 });

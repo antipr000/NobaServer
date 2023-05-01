@@ -437,4 +437,36 @@ describe("BubbleWebhookControllerTests", () => {
       });
     });
   });
+
+  describe("createEmployee", () => {
+    it("should create and return employee", async () => {
+      const employer = getRandomEmployer("Fake Employer");
+      const employee = getRandomEmployee(employer.id);
+      employee.email = "fake-email@noba.com";
+      employee.status = EmployeeStatus.INVITED;
+
+      when(
+        bubbleService.createEmployeeForEmployer(
+          employer.referralID,
+          deepEqual({
+            email: employee.email,
+            sendEmail: true,
+          }),
+        ),
+      ).thenResolve(employee);
+
+      const result = await bubbleWebhookController.createEmployee(employer.referralID, {
+        email: employee.email,
+        sendEmail: true,
+      });
+
+      expect(result).toStrictEqual({
+        id: employee.id,
+        allocationAmount: employee.allocationAmount,
+        allocationCurrency: employee.allocationCurrency,
+        employerID: employee.employerID,
+        status: employee.status,
+      });
+    });
+  });
 });

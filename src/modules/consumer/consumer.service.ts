@@ -634,12 +634,17 @@ export class ConsumerService {
     employeeID?: string,
   ): Promise<Employee> {
     let employee: Employee;
+
     if (employeeID) {
       // Note that linkEmployee will call through to checks to ensure we don't already
       // have a different consumer linked to this record. If we do, an error will be thrown.
       employee = await this.employeeService.linkEmployee(employeeID, consumerID);
     } else {
-      employee = await this.employeeService.createEmployee(allocationAmountInPesos, employerID, consumerID);
+      employee = await this.employeeService.createEmployee({
+        allocationAmount: allocationAmountInPesos,
+        employerID,
+        consumerID,
+      });
     }
 
     // TODO: Design a way to post to Bubble efficiently without blocking end users.
