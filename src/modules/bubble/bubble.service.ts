@@ -195,7 +195,7 @@ export class BubbleService {
       });
     }
 
-    return this.employerService.getAllEnrichedDisbursementsForPayroll(referralID, payrollID, filterOptions);
+    return this.employerService.getAllEnrichedDisbursementsForPayroll(payrollID, filterOptions);
   }
 
   async getAllEmployeesForEmployer(

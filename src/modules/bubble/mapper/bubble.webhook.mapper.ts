@@ -1,6 +1,11 @@
 import { Payroll } from "../../../modules/employer/domain/Payroll";
-import { DisbursementDTO, PaginatedEmployeeResponseDTO, PayrollDTO } from "../dto/bubble.webhook.controller.dto";
-import { PayrollDisbursement } from "../../../modules/employer/domain/PayrollDisbursement";
+import {
+  DisbursementDTO,
+  EnrichedDisbursementDTO,
+  PaginatedEmployeeResponseDTO,
+  PayrollDTO,
+} from "../dto/bubble.webhook.controller.dto";
+import { EnrichedDisbursement, PayrollDisbursement } from "../../../modules/employer/domain/PayrollDisbursement";
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { Employee } from "../../../modules/employee/domain/Employee";
 
@@ -27,6 +32,18 @@ export class BubbleWebhookMapper {
       employeeID: disbursement.employeeID,
       transactionID: disbursement.transactionID,
       debitAmount: disbursement.allocationAmount,
+    };
+  }
+
+  toEnrichedDisbursementDTO(enrichedDisbursement: EnrichedDisbursement): EnrichedDisbursementDTO {
+    return {
+      id: enrichedDisbursement.id,
+      debitAmount: enrichedDisbursement.debitAmount,
+      creditAmount: enrichedDisbursement.creditAmount,
+      status: enrichedDisbursement.status,
+      firstName: enrichedDisbursement.firstName,
+      lastName: enrichedDisbursement.lastName,
+      lastUpdated: enrichedDisbursement.lastUpdated,
     };
   }
 

@@ -7,6 +7,8 @@ import {
   convertToDomainPayrollDisbursement,
   validatePayrollDisbursement,
   validateUpdatePayrollDisbursementRequest,
+  EnrichedDisbursement,
+  convertToDomainEnrichedDisbursements,
 } from "../domain/PayrollDisbursement";
 import { IPayrollDisbursementRepo } from "./payroll.disbursement.repo";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -17,6 +19,9 @@ import {
   InvalidDatabaseRecordException,
 } from "../../../core/exception/CommonAppException";
 import { EnrichedDisbursementFilterOptionsDTO } from "../dto/enriched.disbursement.filter.options.dto";
+import { PaginatedResult } from "src/core/infra/PaginationTypes";
+import { createPaginator } from "src/infra/sql/paginate/PaginationPipeline";
+import { RepoErrorCode, RepoException } from "src/core/exception/repo.exception";
 
 @Injectable()
 export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
@@ -154,13 +159,18 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
     }
   }
 
-  async getAllEnrichedDisbursementsForPayroll(
+  async getFilteredEnrichedDisbursementsForPayroll(
     payrollID: string,
     filterOptions: EnrichedDisbursementFilterOptionsDTO,
-  ): Promise<PayrollDisbursement[]> {
-    // May decide to share implementation with `getAllDisbursementsForPayroll`
+  ): Promise<PaginatedResult<EnrichedDisbursement>> {
+    const paginator = createPaginator<EnrichedDisbursement>(
+      filterOptions.pageOffset,
+      filterOptions.pageLimit,
+      convertToDomainEnrichedDisbursements,
+    );
+
     try {
-      const allDisbursementsForEmployee = await this.prismaService.payrollDisbursement.findMany({
+      const filterQuery = await this.prismaService.payrollDisbursement.findMany({
         where: { payrollID, transaction: { status: { in: filterOptions.status } } },
         orderBy: {
           employee: {
@@ -191,10 +201,13 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
           transaction: true,
         },
       });
-      return allDisbursementsForEmployee.map(disbursement => convertToDomainPayrollDisbursement(disbursement));
+      return await paginator(this.prismaService.employee, filterQuery);
     } catch (err) {
       this.logger.error(JSON.stringify(err));
-      return [];
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: "Error retrieving employees with given filters",
+      });
     }
   }
 }

@@ -23,7 +23,7 @@ import {
   UpdateDisbursementRequestDTO,
   UpdatePayrollRequestDTO,
 } from "./dto/payroll.workflow.controller.dto";
-import { PayrollDisbursement } from "./domain/PayrollDisbursement";
+import { EnrichedDisbursement, PayrollDisbursement } from "./domain/PayrollDisbursement";
 import { PayrollUpdateRequest, PayrollStatus } from "./domain/Payroll";
 import { Currency } from "../transaction/domain/TransactionTypes";
 import { isValidDateString } from "../../core/utils/DateUtils";
@@ -51,7 +51,6 @@ import { ExchangeRateService } from "../exchangerate/exchangerate.service";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
 import { EnrichedDisbursementFilterOptionsDTO } from "./dto/enriched.disbursement.filter.options.dto";
-import { EnrichedDisbursementDTO } from "../bubble/dto/bubble.webhook.controller.dto";
 
 @Injectable()
 export class EmployerService {
@@ -456,10 +455,10 @@ export class EmployerService {
     return this.payrollRepo.getAllPayrollsForEmployer(employerID, {});
   }
 
-  async getAllEnrichedDisbursementsForPayroll(
+  async getFilteredEnrichedDisbursementsForPayroll(
     payrollID: string,
     filters: EnrichedDisbursementFilterOptionsDTO,
-  ): Promise<EnrichedDisbursementDTO[]> {
+  ): Promise<PaginatedResult<EnrichedDisbursement>> {
     if (!payrollID) {
       throw new ServiceException({
         message: "payrollID is required",
@@ -483,33 +482,9 @@ export class EmployerService {
       });
     }
 
-    const employeeDisbursements = await this.payrollDisbursementRepo.getAllEnrichedDisbursementsForPayroll(
+    const enrichedDisbursements = await this.payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(
       payrollID,
       filters,
-    );
-
-    const enrichedDisbursements: EnrichedDisbursementDTO[] = employeeDisbursements.map(
-      (disbursement: EmployeeDisbursement) => {
-        const enrichedDisbursement: EnrichedDisbursementDTO = {
-          id: disbursement.id,
-          employeeID: disbursement.employeeID,
-          employeeName: disbursement.employeeName,
-          amount: disbursement.amount,
-          creditAmount: disbursement.creditAmount,
-          debitAmount: disbursement.debitAmount,
-          currency: disbursement.currency,
-          status: disbursement.status,
-          payrollID: disbursement.payrollID,
-          payrollReferenceNumber: disbursement.payrollReferenceNumber,
-          payrollDate: disbursement.payrollDate,
-          employerID: disbursement.employerID,
-          employerName: employer.name,
-          employerAccountNumber: employer.accountNumber,
-          employerCurrency: employer.currency,
-        };
-
-        return enrichedDisbursement;
-      },
     );
 
     return enrichedDisbursements;
