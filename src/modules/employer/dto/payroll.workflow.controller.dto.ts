@@ -7,7 +7,7 @@ export class UpdatePayrollRequestDTO {
   status?: PayrollStatus;
 
   @ApiPropertyOptional()
-  paymentMonoTransactionID: string;
+  paymentMonoTransactionID?: string;
 }
 
 export class CreateDisbursementRequestDTO {

@@ -7,9 +7,10 @@ import { MonoPublicModule } from "../public/mono.public.module";
 import { MonoWebhookController } from "./mono.webhook.controller";
 import { MonoWebhookService } from "./mono.webhook.service";
 import { MonoRepoModule } from "../repo/mono.repo.module";
+import { EmployerModule } from "../../../modules/employer/employer.module";
 
 @Module({
-  imports: [InfraProvidersModule, ConsumerModule, CommonModule, MonoPublicModule, MonoRepoModule],
+  imports: [InfraProvidersModule, ConsumerModule, CommonModule, MonoPublicModule, MonoRepoModule, EmployerModule],
   controllers: [MonoWebhookController],
   providers: [MonoWebhookMappers, MonoWebhookService],
   exports: [],
