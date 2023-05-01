@@ -13,14 +13,13 @@ import { Employer } from "../employer/domain/Employer";
 import { Payroll } from "../employer/domain/Payroll";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
-import { PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
+import { EnrichedDisbursement, PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
 import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
 import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { Employee } from "../employee/domain/Employee";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
 import { EnrichedDisbursementFilterOptionsDTO } from "../employer/dto/enriched.disbursement.filter.options.dto";
-import { EnrichedDisbursementDTO } from "./dto/bubble.webhook.controller.dto";
 import { EmployeeCreateRequestDTO } from "./dto/bubble.webhook.controller.dto";
 
 @Injectable()
@@ -175,11 +174,11 @@ export class BubbleService {
     return this.employerService.getAllDisbursementsForEmployee(employeeID);
   }
 
-  async getAllEnrichedDisbursementsForPayroll(
+  async getFilteredEnrichedDisbursementsForPayroll(
     referralID: string,
     payrollID: string,
     filterOptions: EnrichedDisbursementFilterOptionsDTO,
-  ): Promise<EnrichedDisbursementDTO[]> {
+  ): Promise<PaginatedResult<EnrichedDisbursement>> {
     const employer = await this.employerService.getEmployerByReferralID(referralID);
     if (!employer) {
       throw new ServiceException({
@@ -196,7 +195,7 @@ export class BubbleService {
       });
     }
 
-    return this.employerService.getAllEnrichedDisbursementsForPayroll(payrollID, filterOptions);
+    return this.employerService.getFilteredEnrichedDisbursementsForPayroll(payrollID, filterOptions);
   }
 
   async getAllEmployeesForEmployer(

@@ -177,3 +177,8 @@ export class PaginatedEmployeeResponseDTO extends PaginatedResult<EmployeeRespon
   @ApiProperty({ type: [EmployeeResponseDTO] })
   items: EmployeeResponseDTO[];
 }
+
+export class PaginatedEnrichedDisbursementResponseDTO extends PaginatedResult<EnrichedDisbursementDTO> {
+  @ApiProperty({ type: [EnrichedDisbursementDTO] })
+  items: EnrichedDisbursementDTO[];
+}

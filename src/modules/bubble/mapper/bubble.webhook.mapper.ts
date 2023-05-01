@@ -83,4 +83,26 @@ export class BubbleWebhookMapper {
       }),
     };
   }
+
+  toPaginatedEnrichedDisbursementDTOs(
+    paginatedResult: PaginatedResult<EnrichedDisbursement>,
+  ): PaginatedResult<EnrichedDisbursementDTO> {
+    return {
+      page: paginatedResult.page,
+      totalItems: paginatedResult.totalItems,
+      totalPages: paginatedResult.totalPages,
+      hasNextPage: paginatedResult.hasNextPage,
+      items: paginatedResult.items.map(enrichedDisbursement => {
+        return {
+          id: enrichedDisbursement.id,
+          debitAmount: enrichedDisbursement.debitAmount,
+          creditAmount: enrichedDisbursement.creditAmount,
+          status: enrichedDisbursement.status,
+          firstName: enrichedDisbursement.firstName,
+          lastName: enrichedDisbursement.lastName,
+          lastUpdated: enrichedDisbursement.lastUpdated,
+        };
+      }),
+    };
+  }
 }

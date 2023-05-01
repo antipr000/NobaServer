@@ -29,6 +29,7 @@ import {
   RegisterEmployerRequestDTO,
   UpdateEmployeeRequestDTO,
   UpdateEmployerRequestDTO,
+  PaginatedEnrichedDisbursementResponseDTO,
 } from "./dto/bubble.webhook.controller.dto";
 import { EmployerRegisterResponseDTO } from "./dto/EmployerRegisterResponseDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
@@ -151,14 +152,15 @@ export class BubbleWebhookController {
   async getAllDisbursementsForPayroll(
     @Param("referralID") referralID: string,
     @Param("payrollID") payrollID: string,
-    @Body() filterOptions: EnrichedDisbursementFilterOptionsDTO,
-  ): Promise<EnrichedDisbursementDTO[]> {
-    const disbursements = await this.bubbleService.getAllEnrichedDisbursementsForPayroll(
+    @Query() filterOptions: EnrichedDisbursementFilterOptionsDTO,
+  ): Promise<PaginatedEnrichedDisbursementResponseDTO> {
+    const paginatedResult = await this.bubbleService.getFilteredEnrichedDisbursementsForPayroll(
       referralID,
       payrollID,
       filterOptions,
     );
-    return disbursements.map(this.mapper.toDisbursementDTO);
+
+    return this.mapper.toPaginatedEnrichedDisbursementDTOs(paginatedResult);
   }
 
   @Patch("/employers/:referralID")

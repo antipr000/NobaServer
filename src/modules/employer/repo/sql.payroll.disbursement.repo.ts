@@ -170,27 +170,36 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
     );
 
     try {
-      const filterQuery = await this.prismaService.payrollDisbursement.findMany({
-        where: { payrollID, transaction: { status: { in: filterOptions.status } } },
+      const filterQuery: Prisma.PayrollDisbursementFindManyArgs = {
+        where: {
+          payrollID,
+          // transaction: {
+          //   ...(filterOptions.status && {
+          //     status: {
+          //       in: filterOptions.status,
+          //     },
+          //   }),
+          // },
+        },
         orderBy: {
-          employee: {
-            consumer: {
-              ...(filterOptions.sortLastName && {
-                lastName: filterOptions.sortLastName,
-              }),
-            },
-          },
+          // employee: {
+          //   consumer: {
+          //     ...(filterOptions.sortLastName && {
+          //       lastName: filterOptions.sortLastName,
+          //     }),
+          //   },
+          // },
           ...(filterOptions.sortAllocationAmount && {
             allocationAmount: filterOptions.sortAllocationAmount,
           }),
           ...(filterOptions.sortCreditAmount && {
             creditAmount: filterOptions.sortCreditAmount,
           }),
-          transaction: {
-            ...(filterOptions.sortStatus && {
-              status: filterOptions.sortStatus,
-            }),
-          },
+          // transaction: {
+          //   ...(filterOptions.sortStatus && {
+          //     status: filterOptions.sortStatus,
+          //   }),
+          // },
         },
         include: {
           employee: {
@@ -200,13 +209,14 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
           },
           transaction: true,
         },
-      });
-      return await paginator(this.prismaService.employee, filterQuery);
+      };
+      return await paginator(this.prismaService.payrollDisbursement, filterQuery);
     } catch (err) {
+      console.log(err);
       this.logger.error(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
-        message: "Error retrieving employees with given filters",
+        message: "Error retrieving payroll disbursements with given filters",
       });
     }
   }
