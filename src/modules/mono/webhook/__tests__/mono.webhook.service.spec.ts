@@ -342,9 +342,9 @@ describe("MonoServiceTests", () => {
         when(monoWebhookMappers.convertAccountCredited(deepEqual(webhookBody), webhookSignature)).thenReturn(
           convertedEvent,
         );
-        when(employerService.getPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT_12345")).thenResolve([
-          payroll,
-        ]);
+        when(
+          employerService.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT_12345"),
+        ).thenResolve([payroll]);
         when(employerService.updatePayroll(anyString(), anything())).thenResolve();
 
         await monoWebhookService.processWebhookEvent(webhookBody, webhookSignature);
@@ -385,11 +385,10 @@ describe("MonoServiceTests", () => {
         when(monoWebhookMappers.convertAccountCredited(deepEqual(webhookBody), webhookSignature)).thenReturn(
           convertedEvent,
         );
-        when(employerService.getPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT_12345")).thenResolve([
-          payroll1,
-          payroll2,
-        ]);
-        when(employerService.getPayrollMatchingAmountAndEmployerDepositMatchingName(100, "PAYER")).thenResolve([
+        when(
+          employerService.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT_12345"),
+        ).thenResolve([payroll1, payroll2]);
+        when(employerService.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(100, "PAYER")).thenResolve([
           payroll3,
         ]);
         when(employerService.updatePayroll(anyString(), anything())).thenResolve();
@@ -432,11 +431,10 @@ describe("MonoServiceTests", () => {
         when(monoWebhookMappers.convertAccountCredited(deepEqual(webhookBody), webhookSignature)).thenReturn(
           convertedEvent,
         );
-        when(employerService.getPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT_12345")).thenResolve([
-          payroll1,
-          payroll2,
-        ]);
-        when(employerService.getPayrollMatchingAmountAndEmployerDepositMatchingName(100, "PAYER")).thenResolve([
+        when(
+          employerService.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT_12345"),
+        ).thenResolve([payroll1, payroll2]);
+        when(employerService.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(100, "PAYER")).thenResolve([
           payroll3,
           payroll2,
         ]);
@@ -480,12 +478,10 @@ describe("MonoServiceTests", () => {
         when(monoWebhookMappers.convertAccountCredited(deepEqual(webhookBody), webhookSignature)).thenReturn(
           convertedEvent,
         );
-        when(employerService.getPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT_12345")).thenResolve([
-          payroll1,
-          payroll2,
-          payroll3,
-        ]);
-        when(employerService.getPayrollMatchingAmountAndEmployerDepositMatchingName(100, "PAYER")).thenResolve([
+        when(
+          employerService.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT_12345"),
+        ).thenResolve([payroll1, payroll2, payroll3]);
+        when(employerService.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(100, "PAYER")).thenResolve([
           payroll3,
           payroll2,
         ]);
@@ -527,12 +523,10 @@ describe("MonoServiceTests", () => {
         when(monoWebhookMappers.convertAccountCredited(deepEqual(webhookBody), webhookSignature)).thenReturn(
           convertedEvent,
         );
-        when(employerService.getPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT_12345")).thenResolve([
-          payroll1,
-          payroll2,
-          payroll3,
-        ]);
-        when(employerService.getPayrollMatchingAmountAndEmployerDepositMatchingName(100, "PAYER")).thenResolve([
+        when(
+          employerService.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT_12345"),
+        ).thenResolve([payroll1, payroll2, payroll3]);
+        when(employerService.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(100, "PAYER")).thenResolve([
           payroll3,
           payroll2,
         ]);

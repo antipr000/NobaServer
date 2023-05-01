@@ -141,10 +141,11 @@ export class MonoWebhookService {
   private async processAccountCreditedEvent(event: MonoAccountCreditedEvent): Promise<void> {
     let matchingDocumentNumberPayrolls: Payroll[] = [];
     if (event.payerDocumentNumber) {
-      matchingDocumentNumberPayrolls = await this.employerService.getPayrollMatchingAmountAndEmployerDocumentNumber(
-        event.amount,
-        event.payerDocumentNumber,
-      );
+      matchingDocumentNumberPayrolls =
+        await this.employerService.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
+          event.amount,
+          event.payerDocumentNumber,
+        );
     }
     if (matchingDocumentNumberPayrolls.length === 1) {
       await this.employerService.updatePayroll(matchingDocumentNumberPayrolls[0].id, {
@@ -156,10 +157,11 @@ export class MonoWebhookService {
 
     let matchingBankNamePayrolls: Payroll[] = [];
     if (event.payerName) {
-      matchingBankNamePayrolls = await this.employerService.getPayrollMatchingAmountAndEmployerDepositMatchingName(
-        event.amount,
-        event.payerName,
-      );
+      matchingBankNamePayrolls =
+        await this.employerService.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
+          event.amount,
+          event.payerName,
+        );
     }
     if (matchingBankNamePayrolls.length === 1) {
       await this.employerService.updatePayroll(matchingBankNamePayrolls[0].id, {

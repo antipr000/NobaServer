@@ -1796,9 +1796,9 @@ describe("EmployerServiceTests", () => {
 
   describe("getPayrollMatchingAmountAndEmployerDocumentNumber", () => {
     it("should forward the request to the payrollRepo", async () => {
-      when(mockPayrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT")).thenResolve([]);
+      when(mockPayrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT")).thenResolve([]);
 
-      const payrolls = await employerService.getPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT");
+      const payrolls = await employerService.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT");
 
       expect(payrolls).toStrictEqual([]);
     });
@@ -1806,9 +1806,11 @@ describe("EmployerServiceTests", () => {
 
   describe("getPayrollMatchingAmountAndEmployerDepositMatchingName", () => {
     it("should forward the request to the payrollRepo", async () => {
-      when(mockPayrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(100, "DEPOSIT_NAME")).thenResolve([]);
+      when(
+        mockPayrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(100, "DEPOSIT_NAME"),
+      ).thenResolve([]);
 
-      const payrolls = await employerService.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+      const payrolls = await employerService.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
         100,
         "DEPOSIT_NAME",
       );

@@ -236,7 +236,37 @@ describe("SqlPayrollRepo tests", () => {
           prismaService,
         );
 
-        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(123456, uuid());
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
+          123456,
+          uuid(),
+        );
+
+        expect(queriedPayrolls).toHaveLength(0);
+      });
+
+      it("should return empty array if no 'debitAmount' is null but 'documentNumber' matches", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          null,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          null,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
+          123456,
+          employer1.documentNumber,
+        );
 
         expect(queriedPayrolls).toHaveLength(0);
       });
@@ -262,7 +292,7 @@ describe("SqlPayrollRepo tests", () => {
           prismaService,
         );
 
-        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
           123456,
           employer1.documentNumber,
         );
@@ -291,7 +321,7 @@ describe("SqlPayrollRepo tests", () => {
           prismaService,
         );
 
-        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
           123456,
           employer1.documentNumber,
         );
@@ -320,7 +350,7 @@ describe("SqlPayrollRepo tests", () => {
           prismaService,
         );
 
-        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
           123456,
           employer2.documentNumber,
         );
@@ -356,7 +386,7 @@ describe("SqlPayrollRepo tests", () => {
           prismaService,
         );
 
-        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
           123456,
           employer2.documentNumber,
         );
@@ -389,7 +419,7 @@ describe("SqlPayrollRepo tests", () => {
           prismaService,
         );
 
-        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
           123456,
           employer2.documentNumber,
         );
@@ -436,7 +466,7 @@ describe("SqlPayrollRepo tests", () => {
           prismaService,
         );
 
-        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
           654321,
           employer1.documentNumber,
         );
@@ -470,9 +500,36 @@ describe("SqlPayrollRepo tests", () => {
           prismaService,
         );
 
-        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
           123456,
           uuid(),
+        );
+
+        expect(queriedPayrolls).toHaveLength(0);
+      });
+
+      it("should return empty array if no 'debitAmount' is null but 'depositMatchingName' matches", async () => {
+        const employer1: Employer = getRandomEmployer("EMPLOYEE_1");
+        await saveEmployer(employer1, prismaService);
+        const employer2: Employer = getRandomEmployer("EMPLOYEE_1");
+        await saveEmployer(employer2, prismaService);
+
+        const payroll1: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer1.id,
+          null,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+        const payroll2: Payroll = await savePayrollWithDebitAmountAndStatus(
+          employer2.id,
+          null,
+          PayrollStatus.INVOICED,
+          prismaService,
+        );
+
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
+          99099,
+          employer1.depositMatchingName,
         );
 
         expect(queriedPayrolls).toHaveLength(0);
@@ -499,7 +556,7 @@ describe("SqlPayrollRepo tests", () => {
           prismaService,
         );
 
-        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
           123456,
           employer1.depositMatchingName,
         );
@@ -528,7 +585,7 @@ describe("SqlPayrollRepo tests", () => {
           prismaService,
         );
 
-        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
           123456,
           employer1.depositMatchingName,
         );
@@ -557,7 +614,7 @@ describe("SqlPayrollRepo tests", () => {
           prismaService,
         );
 
-        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
           123456,
           employer2.depositMatchingName,
         );
@@ -593,7 +650,7 @@ describe("SqlPayrollRepo tests", () => {
           prismaService,
         );
 
-        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
           123456,
           employer2.depositMatchingName,
         );
@@ -626,7 +683,7 @@ describe("SqlPayrollRepo tests", () => {
           prismaService,
         );
 
-        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
           123456,
           employer2.depositMatchingName,
         );
@@ -673,7 +730,7 @@ describe("SqlPayrollRepo tests", () => {
           prismaService,
         );
 
-        const queriedPayrolls = await payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+        const queriedPayrolls = await payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
           654321,
           employer1.depositMatchingName,
         );

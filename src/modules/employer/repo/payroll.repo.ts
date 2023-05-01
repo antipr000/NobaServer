@@ -5,11 +5,11 @@ export interface IPayrollRepo {
   updatePayroll(id: string, payroll: PayrollUpdateRequest): Promise<Payroll>;
   getPayrollByID(id: string): Promise<Payroll>;
   getAllPayrollsForEmployer(employerID: string, filters: PayrollFilter): Promise<Payroll[]>;
-  getPayrollMatchingAmountAndEmployerDocumentNumber(
+  getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
     debitAmount: number,
     employerDocumentNumber: string,
   ): Promise<Payroll[]>;
-  getPayrollMatchingAmountAndEmployerDepositMatchingName(
+  getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
     debitAmount: number,
     employerDepositMatchingName: string,
   ): Promise<Payroll[]>;

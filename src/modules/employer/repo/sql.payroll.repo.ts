@@ -135,7 +135,7 @@ export class SqlPayrollRepo implements IPayrollRepo {
     }
   }
 
-  async getPayrollMatchingAmountAndEmployerDocumentNumber(
+  async getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
     debitAmount: number,
     employerDocumentNumber: string,
   ): Promise<Payroll[]> {
@@ -159,7 +159,7 @@ export class SqlPayrollRepo implements IPayrollRepo {
     }
   }
 
-  async getPayrollMatchingAmountAndEmployerDepositMatchingName(
+  async getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
     debitAmount: number,
     employerDepositMatchingName: string,
   ): Promise<Payroll[]> {

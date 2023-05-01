@@ -681,18 +681,21 @@ export class EmployerService {
     return this.employerRepo.getEmployerByID(payroll.employerID);
   }
 
-  public async getPayrollMatchingAmountAndEmployerDocumentNumber(
+  public async getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
     debitAmount: number,
     employerDocumentNumber: string,
   ): Promise<Payroll[]> {
-    return this.payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(debitAmount, employerDocumentNumber);
+    return this.payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
+      debitAmount,
+      employerDocumentNumber,
+    );
   }
 
-  public async getPayrollMatchingAmountAndEmployerDepositMatchingName(
+  public async getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
     debitAmount: number,
     employerDepositMatchingName: string,
   ): Promise<Payroll[]> {
-    return this.payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+    return this.payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
       debitAmount,
       employerDepositMatchingName,
     );

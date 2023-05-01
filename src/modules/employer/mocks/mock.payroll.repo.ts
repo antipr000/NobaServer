@@ -9,10 +9,10 @@ export function getMockPayrollRepoWithDefaults(): IPayrollRepo {
   when(payrollRepo.getAllPayrollsForEmployer(anyString(), anything())).thenReject(new Error("Not implemented"));
   when(payrollRepo.getPayrollByID(anyString())).thenReject(new Error("Not implemented"));
   when(payrollRepo.updatePayroll(anyString(), anything())).thenReject(new Error("Not implemented"));
-  when(payrollRepo.getPayrollMatchingAmountAndEmployerDepositMatchingName(anyNumber(), anyString())).thenReject(
+  when(payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(anyNumber(), anyString())).thenReject(
     new Error("Not implemented"),
   );
-  when(payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(anyNumber(), anyString())).thenReject(
+  when(payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(anyNumber(), anyString())).thenReject(
     new Error("Not implemented"),
   );
 
