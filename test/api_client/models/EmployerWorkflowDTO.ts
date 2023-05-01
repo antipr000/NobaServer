@@ -12,4 +12,6 @@ export type EmployerWorkflowDTO = {
   payrollDates: Array<string>;
   nextPayrollDate: string;
   maxAllocationPercent?: number;
+  documentNumber?: string;
+  depositMatchingName?: string;
 };

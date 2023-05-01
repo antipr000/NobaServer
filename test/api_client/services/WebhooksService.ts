@@ -7,6 +7,8 @@ import type { CreatePayrollRequestDTO } from "../models/CreatePayrollRequestDTO"
 import type { CreatePayrollResponseDTO } from "../models/CreatePayrollResponseDTO";
 import type { DisbursementDTO } from "../models/DisbursementDTO";
 import type { DocumentVerificationWebhookRequestDTO } from "../models/DocumentVerificationWebhookRequestDTO";
+import type { EmployeeCreateRequestDTO } from "../models/EmployeeCreateRequestDTO";
+import type { EmployeeResponseDTO } from "../models/EmployeeResponseDTO";
 import type { EmployerRegisterResponseDTO } from "../models/EmployerRegisterResponseDTO";
 import type { PaginatedEmployeeResponseDTO } from "../models/PaginatedEmployeeResponseDTO";
 import type { PayrollDTO } from "../models/PayrollDTO";
@@ -28,21 +30,6 @@ export class WebhooksService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/vendors/checkout/webhooks",
-    });
-  }
-
-  /**
-   * Handle all the Mono Webhook requests
-   * @returns any
-   * @throws ApiError
-   */
-  public static processWebhookRequests({ monoSignature }: { monoSignature: string }): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/webhooks/mono",
-      headers: {
-        "mono-signature": monoSignature,
-      },
     });
   }
 
@@ -87,6 +74,21 @@ export class WebhooksService {
       },
       body: requestBody,
       mediaType: "application/json",
+    });
+  }
+
+  /**
+   * Handle all the Mono Webhook requests
+   * @returns any
+   * @throws ApiError
+   */
+  public static processWebhookRequests({ monoSignature }: { monoSignature: string }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/webhooks/mono",
+      headers: {
+        "mono-signature": monoSignature,
+      },
     });
   }
 
@@ -162,6 +164,29 @@ export class WebhooksService {
         createdTimestamp: createdTimestamp,
         sortStatus: sortStatus,
       },
+    });
+  }
+
+  /**
+   * Creates a new employee for employer and sends an invite if specified
+   * @returns EmployeeResponseDTO
+   * @throws ApiError
+   */
+  public static createEmployee({
+    referralId,
+    requestBody,
+  }: {
+    referralId: string;
+    requestBody: EmployeeCreateRequestDTO;
+  }): CancelablePromise<EmployeeResponseDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/webhooks/bubble/employers/{referralID}/employees",
+      path: {
+        referralID: referralId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
     });
   }
 

@@ -3,7 +3,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { Consumer } from "../consumer/domain/Consumer";
 import { ITransactionRepo } from "../transaction/repo/transaction.repo";
-import { TransactionAllowedStatus } from "../transactions/domain/TransactionAllowedStatus";
+import { TransactionAllowedStatus } from "./domain/TransactionAllowedStatus";
 import { ConsumerLimitsDTO } from "./dto/ConsumerLimitsDTO";
 import { CheckTransactionDTO } from "./dto/CheckTransactionDTO";
 import { ILimitProfileRepo } from "./repo/limitprofile.repo";

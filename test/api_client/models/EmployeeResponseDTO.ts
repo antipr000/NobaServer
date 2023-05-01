@@ -13,7 +13,7 @@ export type EmployeeResponseDTO = {
   status: any;
   firstName?: string;
   lastName?: string;
-  handle: string;
+  handle?: string;
   consumerEmail?: string;
   phoneNumber?: string;
 };

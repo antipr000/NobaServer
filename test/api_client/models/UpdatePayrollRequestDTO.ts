@@ -13,4 +13,5 @@ export type UpdatePayrollRequestDTO = {
     | "RECEIPT"
     | "COMPLETED"
     | "EXPIRED";
+  paymentMonoTransactionID?: string;
 };

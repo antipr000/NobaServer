@@ -116,25 +116,6 @@ export class WorkflowService {
   }
 
   /**
-   * Fetches the Mono Transaction for the specified 'nobaTransactionID'
-   * @returns MonoTransactionDTO
-   * @throws ApiError
-   */
-  public static getMonoTransactionByNobaTransactionId({
-    nobaTransactionId,
-  }: {
-    nobaTransactionId: string;
-  }): CancelablePromise<MonoTransactionDTO> {
-    return __request(OpenAPI, {
-      method: "GET",
-      url: "/wf/v1/mono/nobatransactions/{nobaTransactionID}",
-      path: {
-        nobaTransactionID: nobaTransactionId,
-      },
-    });
-  }
-
-  /**
    * Update exchange rate entries
    * @returns ExchangeRateWorkflowDTO
    * @throws ApiError
@@ -343,6 +324,25 @@ export class WorkflowService {
       errors: {
         400: `Invalid parameters`,
         404: `Requested payroll is not found`,
+      },
+    });
+  }
+
+  /**
+   * Fetches the Mono Transaction for the specified 'nobaTransactionID'
+   * @returns MonoTransactionDTO
+   * @throws ApiError
+   */
+  public static getMonoTransactionByNobaTransactionId({
+    nobaTransactionId,
+  }: {
+    nobaTransactionId: string;
+  }): CancelablePromise<MonoTransactionDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/wf/v1/mono/nobatransactions/{nobaTransactionID}",
+      path: {
+        nobaTransactionID: nobaTransactionId,
       },
     });
   }

@@ -1,5 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { ConsumerAccountProvider } from "../../transactions/domain/AssetTypes";
 
 export class PeriodLimit {
   @ApiProperty()
@@ -27,15 +26,4 @@ export class ConsumerLimitsDTO {
 
   @ApiPropertyOptional({ type: PeriodLimit })
   daily?: PeriodLimit;
-}
-
-export class ConsumerBalanceDTO {
-  @ApiProperty()
-  asset: string;
-
-  @ApiProperty()
-  balance: string;
-
-  @ApiPropertyOptional({ enum: Object.values(ConsumerAccountProvider) })
-  accountType?: string;
 }

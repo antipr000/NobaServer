@@ -59,6 +59,7 @@ export type { DocumentVerificationResponseDTO } from "./models/DocumentVerificat
 export type { DocumentVerificationResultDTO } from "./models/DocumentVerificationResultDTO";
 export type { DocumentVerificationWebhookRequestDTO } from "./models/DocumentVerificationWebhookRequestDTO";
 export type { EmailVerificationOtpRequest } from "./models/EmailVerificationOtpRequest";
+export type { EmployeeCreateRequestDTO } from "./models/EmployeeCreateRequestDTO";
 export type { EmployeeResponseDTO } from "./models/EmployeeResponseDTO";
 export type { EmployerDTO } from "./models/EmployerDTO";
 export type { EmployerRegisterResponseDTO } from "./models/EmployerRegisterResponseDTO";
