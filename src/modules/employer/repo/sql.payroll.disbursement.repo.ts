@@ -173,33 +173,33 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
       const filterQuery: Prisma.PayrollDisbursementFindManyArgs = {
         where: {
           payrollID,
-          // transaction: {
-          //   ...(filterOptions.status && {
-          //     status: {
-          //       in: filterOptions.status,
-          //     },
-          //   }),
-          // },
+          transaction: {
+            ...(filterOptions.status && {
+              status: {
+                in: filterOptions.status,
+              },
+            }),
+          },
         },
         orderBy: {
-          // employee: {
-          //   consumer: {
-          //     ...(filterOptions.sortLastName && {
-          //       lastName: filterOptions.sortLastName,
-          //     }),
-          //   },
-          // },
+          ...(filterOptions.sortLastName && {
+            employee: {
+              consumer: {
+                lastName: filterOptions.sortLastName,
+              },
+            },
+          }),
           ...(filterOptions.sortAllocationAmount && {
             allocationAmount: filterOptions.sortAllocationAmount,
           }),
           ...(filterOptions.sortCreditAmount && {
             creditAmount: filterOptions.sortCreditAmount,
           }),
-          // transaction: {
-          //   ...(filterOptions.sortStatus && {
-          //     status: filterOptions.sortStatus,
-          //   }),
-          // },
+          ...(filterOptions.sortStatus && {
+            transaction: {
+              status: filterOptions.sortStatus,
+            },
+          }),
         },
         include: {
           employee: {
