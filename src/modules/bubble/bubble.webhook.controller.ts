@@ -35,7 +35,6 @@ import { EmployerRegisterResponseDTO } from "./dto/EmployerRegisterResponseDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { isValidDateString } from "../../core/utils/DateUtils";
 import { BubbleWebhookMapper } from "./mapper/bubble.webhook.mapper";
-import { Bool } from "../../core/domain/ApiEnums";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
 import { EnrichedDisbursementFilterOptionsDTO } from "../employer/dto/enriched.disbursement.filter.options.dto";
 
@@ -149,16 +148,20 @@ export class BubbleWebhookController {
   @Get("/employers/:referralID/payrolls/:payrollID/disbursements")
   @ApiOperation({ summary: "Get all disbursements for payroll in Noba" })
   @ApiResponse({ status: HttpStatus.OK, type: [EnrichedDisbursementDTO] })
-  async getAllDisbursementsForPayroll(
+  async getAllEnrichedDisbursementsForPayroll(
     @Param("referralID") referralID: string,
     @Param("payrollID") payrollID: string,
     @Query() filterOptions: EnrichedDisbursementFilterOptionsDTO,
   ): Promise<PaginatedEnrichedDisbursementResponseDTO> {
-    const paginatedResult = await this.bubbleService.getFilteredEnrichedDisbursementsForPayroll(
+    const paginatedResult = await this.bubbleService.getAllEnrichedDisbursementsForPayroll(
       referralID,
       payrollID,
       filterOptions,
     );
+
+    console.log(referralID, payrollID, filterOptions);
+
+    console.log(paginatedResult);
 
     return this.mapper.toPaginatedEnrichedDisbursementDTOs(paginatedResult);
   }

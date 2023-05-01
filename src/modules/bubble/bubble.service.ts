@@ -174,7 +174,7 @@ export class BubbleService {
     return this.employerService.getAllDisbursementsForEmployee(employeeID);
   }
 
-  async getFilteredEnrichedDisbursementsForPayroll(
+  async getAllEnrichedDisbursementsForPayroll(
     referralID: string,
     payrollID: string,
     filterOptions: EnrichedDisbursementFilterOptionsDTO,

@@ -19,9 +19,9 @@ import {
   InvalidDatabaseRecordException,
 } from "../../../core/exception/CommonAppException";
 import { EnrichedDisbursementFilterOptionsDTO } from "../dto/enriched.disbursement.filter.options.dto";
-import { PaginatedResult } from "src/core/infra/PaginationTypes";
-import { createPaginator } from "src/infra/sql/paginate/PaginationPipeline";
-import { RepoErrorCode, RepoException } from "src/core/exception/repo.exception";
+import { PaginatedResult } from "../../../core/infra/PaginationTypes";
+import { createPaginator } from "../../../infra/sql/paginate/PaginationPipeline";
+import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
 
 @Injectable()
 export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
