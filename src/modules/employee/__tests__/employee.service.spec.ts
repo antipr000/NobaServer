@@ -135,10 +135,12 @@ describe("EmployeeServiceTests", () => {
 
     it("should return active employee if it already exists", async () => {
       const employee = getRandomEmployeeWithoutConsumer();
+      employee.email = "fake+employee@noba.com";
       when(employeeRepo.createEmployee(anything())).thenResolve(employee);
       when(employeeRepo.getActiveEmployeeByEmail(employee.email)).thenResolve(employee);
 
       const createdEmployee = await employeeService.createEmployee({
+        email: employee.email,
         allocationAmount: employee.allocationAmount,
         employerID: employee.employerID,
       });
