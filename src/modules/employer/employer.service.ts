@@ -501,6 +501,7 @@ export class EmployerService {
 
     const payrollUpdateRequest: PayrollUpdateRequest = {
       status: request.status,
+      ...(request.paymentMonoTransactionID && { paymentMonoTransactionID: request.paymentMonoTransactionID }),
     };
 
     if (request.status === PayrollStatus.COMPLETED) {
@@ -680,14 +681,14 @@ export class EmployerService {
     return this.employerRepo.getEmployerByID(payroll.employerID);
   }
 
-  async getPayrollMatchingAmountAndEmployerDocumentNumber(
+  public async getPayrollMatchingAmountAndEmployerDocumentNumber(
     debitAmount: number,
     employerDocumentNumber: string,
   ): Promise<Payroll[]> {
     return this.payrollRepo.getPayrollMatchingAmountAndEmployerDocumentNumber(debitAmount, employerDocumentNumber);
   }
 
-  async getPayrollMatchingAmountAndEmployerDepositMatchingName(
+  public async getPayrollMatchingAmountAndEmployerDepositMatchingName(
     debitAmount: number,
     employerDepositMatchingName: string,
   ): Promise<Payroll[]> {

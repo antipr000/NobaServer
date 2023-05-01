@@ -130,7 +130,7 @@ describe("EmployerControllerTests", () => {
         employerReferralID: employer.referralID,
         payrollDates: employer.payrollDates,
         documentNumber: employer.documentNumber,
-        depositMatchingName: undefined,
+        locale: "en_us",
       });
     });
 
@@ -150,6 +150,7 @@ describe("EmployerControllerTests", () => {
         payrollDates: employer.payrollDates,
         documentNumber: undefined,
         depositMatchingName: employer.depositMatchingName,
+        locale: "en_us",
       });
     });
 

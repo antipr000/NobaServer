@@ -15,6 +15,8 @@ import {
   CollectionIntentCreditedEvent,
   MonoAccountCreditedEvent,
 } from "../dto/mono.webhook.dto";
+import { Payroll, PayrollStatus } from "../../../modules/employer/domain/Payroll";
+import { EmployerService } from "../../../modules/employer/employer.service";
 
 // TODO: Remove the dependency on the MonoRepo by going via MonoService
 @Injectable()
@@ -36,6 +38,9 @@ export class MonoWebhookService {
 
   @Inject()
   private readonly alertService: AlertService;
+
+  @Inject()
+  private readonly employerService: EmployerService;
 
   async processWebhookEvent(requestBody: Record<string, any>, monoSignature: string): Promise<void> {
     switch (requestBody.event.type) {
@@ -134,6 +139,50 @@ export class MonoWebhookService {
   }
 
   private async processAccountCreditedEvent(event: MonoAccountCreditedEvent): Promise<void> {
-    this.logger.info(`Skipping 'account_credited' event: "${JSON.stringify(event)}"`);
+    let matchingDocumentNumberPayrolls: Payroll[] = [];
+    if (event.payerDocumentNumber) {
+      matchingDocumentNumberPayrolls = await this.employerService.getPayrollMatchingAmountAndEmployerDocumentNumber(
+        event.amount,
+        event.payerDocumentNumber,
+      );
+    }
+    if (matchingDocumentNumberPayrolls.length === 1) {
+      await this.employerService.updatePayroll(matchingDocumentNumberPayrolls[0].id, {
+        status: PayrollStatus.FUNDED,
+        paymentMonoTransactionID: event.transactionID,
+      });
+      return;
+    }
+
+    let matchingBankNamePayrolls: Payroll[] = [];
+    if (event.payerName) {
+      matchingBankNamePayrolls = await this.employerService.getPayrollMatchingAmountAndEmployerDepositMatchingName(
+        event.amount,
+        event.payerName,
+      );
+    }
+    if (matchingBankNamePayrolls.length === 1) {
+      await this.employerService.updatePayroll(matchingBankNamePayrolls[0].id, {
+        status: PayrollStatus.FUNDED,
+        paymentMonoTransactionID: event.transactionID,
+      });
+      return;
+    }
+
+    const matchingBothPayrolls: Payroll[] = matchingDocumentNumberPayrolls.filter((payroll: Payroll) => {
+      return matchingBankNamePayrolls.findIndex(payroll2 => payroll2.id === payroll.id) !== -1;
+    });
+    if (matchingBothPayrolls.length === 1) {
+      await this.employerService.updatePayroll(matchingBothPayrolls[0].id, {
+        status: PayrollStatus.FUNDED,
+        paymentMonoTransactionID: event.transactionID,
+      });
+      return;
+    }
+
+    this.alertService.raiseAlert({
+      key: AlertKey.UNMATCHED_ACCOUNT_CREDITED_MONO_EVENT,
+      message: `Unmatched event: "${JSON.stringify(event)}"`,
+    });
   }
 }
