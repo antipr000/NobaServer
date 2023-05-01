@@ -156,7 +156,9 @@ export class EmployerService {
       leadDays: request.leadDays,
       payrollAccountNumber: request.payrollAccountNumber,
       payrollDates: request.payrollDates,
+      ...(request.documentNumber && { documentNumber: request.documentNumber }),
       ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
+      ...(request.depositMatchingName && { depositMatchingName: request.depositMatchingName }),
     });
   }
 
@@ -178,11 +180,14 @@ export class EmployerService {
     }
 
     return this.employerRepo.updateEmployer(id, {
+      ...(request.name && { name: request.name }),
       ...(request.logoURI && { logoURI: request.logoURI }),
       ...(request.locale && { locale: request.locale }),
       ...(request.referralID && { referralID: request.referralID }),
+      ...(request.documentNumber && { documentNumber: request.documentNumber }),
       ...(request.leadDays && { leadDays: request.leadDays }),
       ...(request.payrollDates && { payrollDates: request.payrollDates }),
+      ...(request.depositMatchingName && { depositMatchingName: request.depositMatchingName }),
       ...(request.payrollAccountNumber && { payrollAccountNumber: request.payrollAccountNumber }),
       ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
     });
@@ -496,6 +501,7 @@ export class EmployerService {
 
     const payrollUpdateRequest: PayrollUpdateRequest = {
       status: request.status,
+      ...(request.paymentMonoTransactionID && { paymentMonoTransactionID: request.paymentMonoTransactionID }),
     };
 
     if (request.status === PayrollStatus.COMPLETED) {
@@ -673,6 +679,26 @@ export class EmployerService {
 
     // Then get the employer associated with the payroll
     return this.employerRepo.getEmployerByID(payroll.employerID);
+  }
+
+  public async getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
+    debitAmount: number,
+    employerDocumentNumber: string,
+  ): Promise<Payroll[]> {
+    return this.payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
+      debitAmount,
+      employerDocumentNumber,
+    );
+  }
+
+  public async getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
+    debitAmount: number,
+    employerDepositMatchingName: string,
+  ): Promise<Payroll[]> {
+    return this.payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
+      debitAmount,
+      employerDepositMatchingName,
+    );
   }
 
   private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDisbursement[]> {

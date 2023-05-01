@@ -7,8 +7,8 @@ import { ServiceErrorCode, ServiceException } from "../../../core/exception/serv
 import { Currency } from "../domain/TransactionTypes";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { Transaction } from "../domain/Transaction";
-import { MonoService } from "../../psp/mono/mono.service";
-import { MonoCurrency, MonoTransactionType } from "../../psp/domain/Mono";
+import { MonoService } from "../../mono/public/mono.service";
+import { MonoCurrency, MonoTransactionType } from "../../mono/domain/Mono";
 import { TransactionFlags } from "../domain/TransactionFlags";
 import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
 import { Utils } from "../../../core/utils/Utils";

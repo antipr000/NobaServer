@@ -4,8 +4,8 @@ import { ConsumerInformationDTO, TransactionDTO, TransactionFeeDTO } from "../dt
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { TransactionEvent } from "../domain/TransactionEvent";
-import { MonoTransaction } from "../../../modules/psp/domain/Mono";
-import { MonoService } from "../../../modules/psp/mono/mono.service";
+import { MonoTransaction } from "../../mono/domain/Mono";
+import { MonoService } from "../../mono/public/mono.service";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { toTransactionEventDTO, toTransactionFeesDTO } from "./transaction.mapper.util";
 import { TransactionFee } from "../domain/TransactionFee";

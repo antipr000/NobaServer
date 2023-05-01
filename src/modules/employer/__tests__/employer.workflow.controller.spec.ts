@@ -67,6 +67,8 @@ describe("EmployerWorkflowControllerTests", () => {
         leadDays: employer.leadDays,
         payrollDates: sortedPayrollDates,
         nextPayrollDate: employer.payrollDates[1],
+        documentNumber: employer.documentNumber,
+        depositMatchingName: employer.depositMatchingName,
       });
     });
   });

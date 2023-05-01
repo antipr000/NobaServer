@@ -14,7 +14,6 @@ import { CommonModule } from "./modules/common/common.module";
 import { AdminModule } from "./modules/admin/admin.module";
 import { JwtAuthGuard } from "./modules/auth/jwt-auth.guard";
 import { EventEmitterModule } from "@nestjs/event-emitter";
-import { MonoModule } from "./modules/psp/mono/mono.module";
 import { PspModule, PspWorkflowModule } from "./modules/psp/psp.module";
 import { PrivateAuthGuard } from "./modules/auth/private-auth.guard";
 import { NotificationWorkflowModule } from "./modules/notifications/notification.workflow.module";
@@ -27,6 +26,9 @@ import { CirclePublicModule } from "./modules/circle/public/circle.public.module
 import { CircleWorkflowModule } from "./modules/circle/workflow/circle.workflow.module";
 import { ExchangeRateModule } from "./modules/exchangerate/exchangerate.module";
 import { PomeloWorkflowModule } from "./modules/pomelo/workflow/pomelo.workflow.module";
+import { MonoPublicModule } from "./modules/mono/public/mono.public.module";
+import { MonoWebhookModule } from "./modules/mono/webhook/mono.webhook.module";
+import { MonoWorkflowModule } from "./modules/mono/workflow/mono.workflow.module";
 
 @Module({
   imports: [
@@ -42,8 +44,9 @@ import { PomeloWorkflowModule } from "./modules/pomelo/workflow/pomelo.workflow.
     TransactionModule,
     AdminModule,
     PspModule,
-    // TODO: Remove this once we have a proper way to handle PSP dependencies.
-    MonoModule,
+    MonoPublicModule,
+    MonoWebhookModule,
+    MonoWorkflowModule,
     BubbleModule,
     TransactionWorkflowModule,
     PspWorkflowModule,
@@ -84,8 +87,9 @@ export class AppModule {}
     VerificationWebhookModule,
     TransactionModule,
     AdminModule,
-    // TODO: Remove this once we have a proper way to handle PSP dependencies.
-    MonoModule,
+    MonoPublicModule,
+    MonoWebhookModule,
+    MonoWorkflowModule,
     BubbleModule,
     PspWorkflowModule,
     TransactionWorkflowModule,

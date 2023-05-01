@@ -32,7 +32,7 @@ import { LocationService } from "./modules/common/location.service";
 import { CreditCardService } from "./modules/common/creditcard.service";
 import { CurrencyService } from "./modules/common/currency.service";
 import { SupportedBanksDTO } from "./modules/psp/dto/SupportedBanksDTO";
-import { MonoService } from "./modules/psp/mono/mono.service";
+import { MonoService } from "./modules/mono/public/mono.service";
 import { HealthCheckResponseDTO } from "./modules/common/dto/HealthCheckResponseDTO";
 import { VerificationService } from "./modules/verification/verification.service";
 import { HealthCheckStatus } from "./core/domain/HealthCheckTypes";

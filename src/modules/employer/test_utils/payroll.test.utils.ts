@@ -25,6 +25,8 @@ export const getRandomPayroll = (
     debitCurrency: "COP",
     creditCurrency: "USD",
     status: PayrollStatus.CREATED,
+    completedTimestamp: new Date(),
+    paymentMonoTransactionID: uuid(),
   };
 
   const payrollCreateInput: PayrollCreateRequest = {
@@ -59,6 +61,34 @@ export const saveAndGetPayroll = async (prismaService: PrismaService, employerID
       debitCurrency: "COP",
       creditCurrency: "USD",
       status: PayrollStatus.CREATED,
+      completedTimestamp: new Date(),
+    },
+  });
+
+  return convertToDomainPayroll(createdPayroll);
+};
+
+export const savePayrollWithDebitAmountAndStatus = async (
+  employerID: string,
+  debitAmount: number,
+  payrollStatus: PayrollStatus,
+  prismaService: PrismaService,
+): Promise<Payroll> => {
+  const createdPayroll = await prismaService.payroll.create({
+    data: {
+      id: uuid(),
+      referenceNumber: 1,
+      employerID: employerID,
+      payrollDate: "2023-03-01",
+      createdTimestamp: new Date("2023-02-20"),
+      updatedTimestamp: new Date("2023-02-20"),
+      totalDebitAmount: debitAmount,
+      totalCreditAmount: 10,
+      exchangeRate: 1000,
+      debitCurrency: "COP",
+      creditCurrency: "USD",
+      status: payrollStatus,
+      completedTimestamp: new Date(),
     },
   });
 
