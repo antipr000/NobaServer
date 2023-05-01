@@ -1515,7 +1515,6 @@ const getRandomTransaction = (
 
   const transactionDTO: InitiateTransactionDTO = {
     workflowName: transaction.workflowName,
-    exchangeRate: transaction.exchangeRate,
     memo: transaction.memo,
     ...(withdrawalData && { withdrawalData }),
   };

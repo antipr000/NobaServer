@@ -712,7 +712,6 @@ describe("Transaction Controller tests", () => {
         debitCurrency: Currency.COP,
         debitAmount: 100,
         memo: testMemo,
-        exchangeRate: testExchangeRate,
         withdrawalData: {
           accountNumber: "123456789",
           accountType: AccountType.CHECKING,

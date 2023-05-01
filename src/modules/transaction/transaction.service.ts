@@ -168,7 +168,7 @@ export class TransactionService {
     return transaction;
   }
 
-  // [DEPRECATED]: use `initiateTransction` method instead.
+  // [DEPRECATED]: use `initiateTransaction` method instead.
   async deprecatedInitiateTransaction(
     transactionDetails: InitiateTransactionDTO,
     initiatingConsumer: string,

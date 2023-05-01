@@ -99,15 +99,12 @@ export class WalletDepositImpl implements IWorkflowImpl {
       isCollection ? [TransactionFlags.IS_COLLECTION] : [],
     );
 
-    transactionDetails.creditAmount = Number(transactionQuote.quoteAmountWithFees);
-    transactionDetails.exchangeRate = Number(transactionQuote.nobaRate);
-
     return {
-      creditAmount: transactionDetails.creditAmount,
+      creditAmount: Number(transactionQuote.quoteAmountWithFees),
       creditCurrency: transactionDetails.creditCurrency,
       debitAmount: transactionDetails.debitAmount,
       debitCurrency: transactionDetails.debitCurrency,
-      exchangeRate: transactionDetails.exchangeRate,
+      exchangeRate: Number(transactionQuote.nobaRate),
       workflowName: transactionDetails.workflowName,
       memo: transactionDetails.memo,
       transactionFees: [

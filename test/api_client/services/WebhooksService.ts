@@ -8,6 +8,7 @@ import type { CreatePayrollResponseDTO } from "../models/CreatePayrollResponseDT
 import type { DisbursementDTO } from "../models/DisbursementDTO";
 import type { DocumentVerificationWebhookRequestDTO } from "../models/DocumentVerificationWebhookRequestDTO";
 import type { EmployerRegisterResponseDTO } from "../models/EmployerRegisterResponseDTO";
+import type { PaginatedEmployeeResponseDTO } from "../models/PaginatedEmployeeResponseDTO";
 import type { PayrollDTO } from "../models/PayrollDTO";
 import type { RegisterEmployerRequestDTO } from "../models/RegisterEmployerRequestDTO";
 import type { UpdateEmployeeRequestDTO } from "../models/UpdateEmployeeRequestDTO";
@@ -104,6 +105,63 @@ export class WebhooksService {
       url: "/webhooks/bubble/employers",
       body: requestBody,
       mediaType: "application/json",
+    });
+  }
+
+  /**
+   * Get all employees for employer in Noba
+   * @returns PaginatedEmployeeResponseDTO
+   * @throws ApiError
+   */
+  public static getAllEmployees({
+    referralId,
+    employerId,
+    firstNameContains,
+    lastNameContains,
+    employeeEmail,
+    pageOffset,
+    pageLimit,
+    status,
+    createdTimestamp,
+    sortStatus,
+  }: {
+    referralId: string;
+    employerId?: string;
+    firstNameContains?: string;
+    lastNameContains?: string;
+    employeeEmail?: string;
+    /**
+     * number of pages to skip, offset 0 means first page results, 1 means second page etc.
+     */
+    pageOffset?: number;
+    /**
+     * number of items per page
+     */
+    pageLimit?: number;
+    /**
+     * filter by status
+     */
+    status?: "CREATED" | "INVITED" | "LINKED" | "UNLINKED";
+    createdTimestamp?: "asc" | "desc";
+    sortStatus?: "asc" | "desc";
+  }): CancelablePromise<Array<PaginatedEmployeeResponseDTO>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/webhooks/bubble/employers/{referralID}/employees",
+      path: {
+        referralID: referralId,
+      },
+      query: {
+        employerID: employerId,
+        firstNameContains: firstNameContains,
+        lastNameContains: lastNameContains,
+        employeeEmail: employeeEmail,
+        pageOffset: pageOffset,
+        pageLimit: pageLimit,
+        status: status,
+        createdTimestamp: createdTimestamp,
+        sortStatus: sortStatus,
+      },
     });
   }
 
