@@ -22,12 +22,15 @@ export class EmployeeService {
   @Inject() private readonly notificationService: NotificationService;
 
   async createEmployee(request: CreateEmployeeRequestDTO): Promise<Employee> {
-    const activeEmployee = await this.employeeRepo.getActiveEmployeeByEmail(request.email);
+    if (request.email) {
+      const activeEmployee = await this.employeeRepo.getActiveEmployeeByEmail(request.email);
 
-    if (activeEmployee) {
-      this.logger.info(`Tried to create employee with email ${request.email} that already exists!`);
-      return activeEmployee;
+      if (activeEmployee) {
+        this.logger.info(`Tried to create employee with email ${request.email} that already exists!`);
+        return activeEmployee;
+      }
     }
+
     return this.employeeRepo.createEmployee({
       allocationAmount: request.allocationAmount,
       allocationCurrency: EmployeeAllocationCurrency.COP,

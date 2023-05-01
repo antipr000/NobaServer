@@ -757,5 +757,19 @@ describe("SqlEmployeeRepoTests", () => {
 
       expect(activeEmployee).toBeNull();
     });
+
+    it("should return employee with email null", async () => {
+      const consumerID: string = await createTestConsumer(prismaService);
+
+      const employerID: string = await createTestEmployerAndStoreInDB(prismaService);
+
+      const employee: EmployeeCreateRequest = getRandomEmployee(employerID, consumerID);
+      delete employee.email;
+      const createdEmployee: Employee = await employeeRepo.createEmployee(employee);
+
+      const activeEmployee: Employee = await employeeRepo.getActiveEmployeeByEmail(undefined);
+
+      expect(activeEmployee.id).toEqual(createdEmployee.id);
+    });
   });
 });
