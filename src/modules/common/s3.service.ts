@@ -26,16 +26,8 @@ export class S3Service {
     };
 
     const getObjectCommand = new GetObjectCommand(options);
-
-    return s3
-      .send(getObjectCommand)
-      .then(getObjectResult => {
-        return getObjectResult.Body.transformToString();
-      })
-      .catch(e => {
-        this.logger.error(`Failed to load file from S3: ${e.message}`);
-        throw e;
-      });
+    const getObjectResult = await s3.send(getObjectCommand);
+    return getObjectResult.Body.transformToString();
   }
 
   async uploadToS3(
@@ -60,15 +52,6 @@ export class S3Service {
     };
 
     const putObjectCommand = new PutObjectCommand(options);
-
-    return s3
-      .send(putObjectCommand)
-      .then(putObjectResult => {
-        return putObjectResult;
-      })
-      .catch(e => {
-        this.logger.error(`Failed to upload file to S3: ${e.message}`);
-        throw e;
-      });
+    return s3.send(putObjectCommand);
   }
 }
