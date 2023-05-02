@@ -11,7 +11,6 @@ import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { CurrencyDTO } from "../../modules/common/dto/CurrencyDTO";
 import { Readable } from "stream";
 
-export const CHAINTYPE_ERC20 = "ERC20";
 @Injectable()
 export class CurrencyService {
   private currencies: Array<CurrencyDTO>;
@@ -24,21 +23,19 @@ export class CurrencyService {
 
   private async loadCurrenciesFromS3(): Promise<Array<CurrencyDTO>> {
     const environment: AppEnvironment = getEnvironmentName();
+    const results = new Array<CurrencyDTO>();
+    const parser = parse({ delimiter: ",", columns: true });
+    const s3 = new S3({});
+    const options = {
+      Bucket: this.configService.get(ASSETS_BUCKET_NAME),
+      Key: this.configService.get(SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH),
+    };
 
-    return new Promise(async (resolve, reject) => {
-      const results = new Array<CurrencyDTO>();
-      const parser = parse({ delimiter: ",", columns: true });
-      const s3 = new S3({});
-      const options = {
-        Bucket: this.configService.get(ASSETS_BUCKET_NAME),
-        Key: this.configService.get(SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH),
-      };
+    const getObjectCommand = new GetObjectCommand(options);
+    const getObjectResult = await s3.send(getObjectCommand);
+    const stringifiedResult = await getObjectResult.Body.transformToString();
 
-      const getObjectCommand = new GetObjectCommand(options);
-
-      const getObjectResult = await s3.send(getObjectCommand);
-
-      const stringifiedResult = await getObjectResult.Body.transformToString();
+    return new Promise((resolve, reject) => {
       const readStream = new Readable();
       readStream.push(stringifiedResult);
       readStream.push(null);
