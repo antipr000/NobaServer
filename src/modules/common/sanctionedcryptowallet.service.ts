@@ -16,21 +16,21 @@ export class SanctionedCryptoWalletService {
   }
 
   private async loadCryptoWalletsFromS3(): Promise<string[]> {
-    return new Promise(async (resolve, reject) => {
-      const results = new Array<string>();
-      const parser = parse({ delimiter: ",", columns: true });
-      const s3 = new S3({});
-      const options = {
-        Bucket: this.configService.get(ASSETS_BUCKET_NAME),
-        Key: this.configService.get(SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH),
-      };
+    const results = new Array<string>();
+    const parser = parse({ delimiter: ",", columns: true });
+    const s3 = new S3({});
+    const options = {
+      Bucket: this.configService.get(ASSETS_BUCKET_NAME),
+      Key: this.configService.get(SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH),
+    };
 
-      const getObjectCommand = new GetObjectCommand(options);
+    const getObjectCommand = new GetObjectCommand(options);
 
-      const getObjectResult = await s3.send(getObjectCommand);
+    const getObjectResult = await s3.send(getObjectCommand);
 
-      const stringifiedResult = await getObjectResult.Body.transformToString();
+    const stringifiedResult = await getObjectResult.Body.transformToString();
 
+    return new Promise((resolve, reject) => {
       const readStream = new Readable();
       readStream.push(stringifiedResult);
       readStream.push(null);

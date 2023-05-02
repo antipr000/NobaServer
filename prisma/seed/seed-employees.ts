@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { EmployeeStatus } from "../../src/modules/employee/domain/Employee";
 
 /*
  * "Test Consumer1" is an employee of "Test Employer 1"
@@ -19,6 +20,7 @@ export async function seedEmployees(prisma: PrismaClient) {
       employerID: testEmployer1.id,
       allocationAmount: 50000,
       allocationCurrency: "COP",
+      status: EmployeeStatus.LINKED,
     },
   });
 
@@ -33,6 +35,7 @@ export async function seedEmployees(prisma: PrismaClient) {
       employerID: testEmployer2.id,
       allocationAmount: 25000,
       allocationCurrency: "COP",
+      status: EmployeeStatus.LINKED,
     },
   });
 
@@ -46,6 +49,7 @@ export async function seedEmployees(prisma: PrismaClient) {
       employerID: testEmployer1.id,
       allocationAmount: 100000,
       allocationCurrency: "COP",
+      status: EmployeeStatus.LINKED,
     },
   });
 
@@ -57,6 +61,7 @@ export async function seedEmployees(prisma: PrismaClient) {
       employerID: testEmployer2.id,
       allocationAmount: 200000,
       allocationCurrency: "COP",
+      status: EmployeeStatus.LINKED,
     },
   });
 }
