@@ -9,6 +9,7 @@ import { PayrollWorkflowController } from "../payroll.workflow.controller";
 import { getRandomPayroll, getRandomPayrollDisbursement } from "../test_utils/payroll.test.utils";
 import { NotFoundException } from "@nestjs/common";
 import { PayrollStatus } from "../domain/Payroll";
+import { Utils } from "../../../core/utils/Utils";
 
 describe("EmployerWorkflowControllerTests", () => {
   jest.setTimeout(20000);
@@ -102,7 +103,7 @@ describe("EmployerWorkflowControllerTests", () => {
         id: payroll.id,
         employerID: payroll.employerID,
         reference: payroll.referenceNumber,
-        payrollDate: `${payroll.payrollDate}T03:30:00.000Z`,
+        payrollDate: `${payroll.payrollDate} 09:00:00 ${Utils.getCurrentEasternTimezone()}`,
         totalDebitAmount: payroll.totalDebitAmount,
         totalCreditAmount: payroll.totalCreditAmount,
         exchangeRate: payroll.exchangeRate,

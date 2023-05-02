@@ -18,6 +18,7 @@ import {
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { PayrollDisbursementDTO, PayrollDisbursementDTOWrapper } from "./dto/PayrollDisbursementDTO";
 import { EmployerService } from "./employer.service";
+import { Utils } from "../../core/utils/Utils";
 
 @Controller("wf/v1/payrolls")
 @ApiBearerAuth("JWT-auth")
@@ -110,19 +111,13 @@ export class PayrollWorkflowController {
     }
 
     // convert to 9AM Eastern Time
-    const payrollDate: Date = new Date(payroll.payrollDate);
-    const easternTime = payrollDate.toLocaleString("en-US", {
-      timeZone: "America/New_York",
-      hour: "numeric",
-      minute: "numeric",
-    });
-    const nineAMEastern = new Date(`${payrollDate.toLocaleDateString()} ${easternTime}`).setHours(9, 0, 0, 0);
+    const nineAMEastern = `${payroll.payrollDate} 09:00:00 ${Utils.getCurrentEasternTimezone()}`;
 
     return {
       id: payroll.id,
       employerID: payroll.employerID,
       reference: payroll.referenceNumber,
-      payrollDate: new Date(nineAMEastern).toISOString(),
+      payrollDate: nineAMEastern,
       totalDebitAmount: payroll.totalDebitAmount,
       totalCreditAmount: payroll.totalCreditAmount,
       exchangeRate: payroll.exchangeRate,
