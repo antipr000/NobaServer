@@ -93,15 +93,7 @@ export class BubbleWebhookMapper {
       totalPages: paginatedResult.totalPages,
       hasNextPage: paginatedResult.hasNextPage,
       items: paginatedResult.items.map(enrichedDisbursement => {
-        return {
-          id: enrichedDisbursement.id,
-          debitAmount: enrichedDisbursement.debitAmount,
-          creditAmount: enrichedDisbursement.creditAmount,
-          status: enrichedDisbursement.status,
-          firstName: enrichedDisbursement.firstName,
-          lastName: enrichedDisbursement.lastName,
-          updatedTimestamp: enrichedDisbursement.updatedTimestamp,
-        };
+        return this.toEnrichedDisbursementDTO(enrichedDisbursement);
       }),
     };
   }
