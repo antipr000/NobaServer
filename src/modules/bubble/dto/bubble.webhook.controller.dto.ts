@@ -16,7 +16,7 @@ export class RegisterEmployerRequestDTO {
   @ApiPropertyOptional()
   locale?: string;
 
-  @ApiProperty() EnrichedDisbursementDTO;
+  @ApiProperty()
   referralID: string;
 
   @ApiProperty()

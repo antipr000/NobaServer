@@ -4,7 +4,7 @@ import { TransactionStatus } from "../../../modules/transaction/domain/Transacti
 
 export class EnrichedDisbursementFilterOptionsDTO {
   @ApiPropertyOptional({
-    description: "number of pages to skip, offset 0 means first page results, 1 means second page etc.",
+    description: "Page number, offset 1 means first page results, 2 means second page etc.",
   })
   pageOffset?: number;
 

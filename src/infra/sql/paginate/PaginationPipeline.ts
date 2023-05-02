@@ -10,10 +10,10 @@ export const createPaginator = <T>(
   convertToDomainObject: DomainConverterMethod<T>,
 ): PaginateFunction => {
   return async (model, args: any = { where: undefined }) => {
-    if (!page) page = 0;
+    if (!page) page = 1;
     if (!perPage) perPage = 10;
 
-    const skip = page > 0 ? perPage * page : 0;
+    const skip = page > 0 ? perPage * (page - 1) : 0;
     const [total, data] = await Promise.all([
       model.count({ where: args.where }),
       model.findMany({
@@ -26,7 +26,7 @@ export const createPaginator = <T>(
 
     return {
       items: data.map(item => convertToDomainObject(item)),
-      page: page + 1,
+      page: page,
       hasNextPage: page < lastPage,
       totalPages: lastPage,
       totalItems: total,
