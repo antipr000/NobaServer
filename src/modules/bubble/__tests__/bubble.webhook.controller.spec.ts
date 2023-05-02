@@ -472,7 +472,7 @@ describe("BubbleWebhookControllerTests", () => {
         status: TransactionStatus.COMPLETED,
         firstName: "Fake",
         lastName: "Fake",
-        lastUpdated: new Date(),
+        updatedTimestamp: new Date(),
       };
 
       when(bubbleService.getAllEnrichedDisbursementsForPayroll(referralID, payroll.id, null)).thenResolve({
@@ -498,7 +498,7 @@ describe("BubbleWebhookControllerTests", () => {
             status: enrichedDisbursement.status,
             firstName: enrichedDisbursement.firstName,
             lastName: enrichedDisbursement.lastName,
-            lastUpdated: enrichedDisbursement.lastUpdated,
+            updatedTimestamp: enrichedDisbursement.updatedTimestamp,
           },
         ],
       });
@@ -516,7 +516,7 @@ describe("BubbleWebhookControllerTests", () => {
         status: TransactionStatus.COMPLETED,
         firstName: "Fake",
         lastName: "Fake",
-        lastUpdated: new Date(),
+        updatedTimestamp: new Date(),
       };
 
       when(
@@ -552,7 +552,7 @@ describe("BubbleWebhookControllerTests", () => {
             status: enrichedDisbursement.status,
             firstName: enrichedDisbursement.firstName,
             lastName: enrichedDisbursement.lastName,
-            lastUpdated: enrichedDisbursement.lastUpdated,
+            updatedTimestamp: enrichedDisbursement.updatedTimestamp,
           },
         ],
       });

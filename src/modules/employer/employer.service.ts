@@ -487,14 +487,16 @@ export class EmployerService {
       });
     }
 
-    const sortFilterOptions = Object.entries(filters).filter(([key, value]) => {
-      return key.startsWith("sort") && value;
-    });
-    if (sortFilterOptions.length > 1) {
-      throw new ServiceException({
-        message: "Only one sort option is allowed",
-        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+    if (filters) {
+      const sortFilterOptions = Object.entries(filters).filter(([key, value]) => {
+        return key.startsWith("sort") && value;
       });
+      if (sortFilterOptions.length > 1) {
+        throw new ServiceException({
+          message: "Only one sort option is allowed",
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        });
+      }
     }
 
     const enrichedDisbursements = await this.payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(
