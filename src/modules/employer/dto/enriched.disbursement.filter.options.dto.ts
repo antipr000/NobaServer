@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { ApiPropertyOptional } from "@nestjs/swagger";
 import { SortOrder } from "../../../core/infra/PaginationTypes";
 import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 

@@ -4,7 +4,6 @@ import {
   Employee as PrismaEmployeeModel,
   Transaction as PrismaTransactionModel,
   PayrollDisbursement as PrismaPayrollDisbursementModel,
-  Transaction,
 } from "@prisma/client";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";

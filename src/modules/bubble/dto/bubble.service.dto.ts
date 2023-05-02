@@ -1,6 +1,4 @@
 import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
-import { Payroll } from "../../../modules/employer/domain/Payroll";
-import { PayrollDisbursement } from "../../../modules/employer/domain/PayrollDisbursement";
 
 export type RegisterEmployerRequest = {
   name: string;

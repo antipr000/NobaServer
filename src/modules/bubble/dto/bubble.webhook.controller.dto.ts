@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
-import { Bool } from "../../../core/domain/ApiEnums";
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { EmployeeDTO } from "../../../modules/employee/dto/employee.dto";
 import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
