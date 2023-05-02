@@ -408,6 +408,39 @@ describe("SqlPayrollDisbursementRepo tests", () => {
         });
       expect(enrichedDisbursementsPayroll2SortByStatusAsc.items[0].status).toBe(TransactionStatus.INITIATED);
       expect(enrichedDisbursementsPayroll2SortByStatusAsc.items[1].status).toBe(TransactionStatus.PROCESSING);
+
+      const enrichedDisbursementsPayroll1SortByLastNameDesc =
+        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
+          sortBy: EnrichedDisbursementSortOptions.LAST_NAME,
+          sortDirection: SortOrder.DESC,
+        });
+      expect(enrichedDisbursementsPayroll1SortByLastNameDesc.items[0].lastName).toBe("Wayne");
+      expect(enrichedDisbursementsPayroll1SortByLastNameDesc.items[1].lastName).toBe("Prince");
+      expect(enrichedDisbursementsPayroll1SortByLastNameDesc.items[4].lastName).toBe("Allen");
+
+      const enrichedDisbursementsPayroll2SortByLastNameDesc =
+        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
+          sortBy: EnrichedDisbursementSortOptions.LAST_NAME,
+          sortDirection: SortOrder.DESC,
+        });
+      expect(enrichedDisbursementsPayroll2SortByLastNameDesc.items[0].lastName).toBe("Maradona");
+      expect(enrichedDisbursementsPayroll2SortByLastNameDesc.items[1].lastName).toBe("Hoyon Castro");
+
+      const enrichedDisbursementsPayroll1SortByLastNameAsc =
+        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
+          sortBy: EnrichedDisbursementSortOptions.LAST_NAME,
+          sortDirection: SortOrder.ASC,
+        });
+      expect(enrichedDisbursementsPayroll1SortByLastNameAsc.items[0].lastName).toBe("Allen");
+      expect(enrichedDisbursementsPayroll1SortByLastNameAsc.items[1].lastName).toBe("Forlan");
+
+      const enrichedDisbursementsPayroll2SortByLastNameAsc =
+        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
+          sortBy: EnrichedDisbursementSortOptions.LAST_NAME,
+          sortDirection: SortOrder.ASC,
+        });
+      expect(enrichedDisbursementsPayroll2SortByLastNameAsc.items[0].lastName).toBe("Hoyon Castro");
+      expect(enrichedDisbursementsPayroll2SortByLastNameAsc.items[1].lastName).toBe("Maradona");
     });
   });
 
