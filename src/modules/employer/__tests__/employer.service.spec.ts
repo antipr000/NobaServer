@@ -1216,7 +1216,7 @@ describe("EmployerServiceTests", () => {
     });
 
     it("should throw 'ServiceException' when employeeID is undefined", async () => {
-      expect(employerService.getAllDisbursementsForEmployee(undefined)).toThrowServiceException(
+      expect(employerService.getAllDisbursementsForEmployee(undefined)).rejects.toThrowServiceException(
         ServiceErrorCode.SEMANTIC_VALIDATION,
       );
     });
@@ -1224,7 +1224,7 @@ describe("EmployerServiceTests", () => {
 
   describe("getFilteredEnrichedDisbursementsForPayroll", () => {
     it("should throw ServiceException when payroll is null", async () => {
-      expect(employerService.getFilteredEnrichedDisbursementsForPayroll(null, null)).toThrowServiceException(
+      expect(employerService.getFilteredEnrichedDisbursementsForPayroll(null, null)).rejects.toThrowServiceException(
         ServiceErrorCode.SEMANTIC_VALIDATION,
       );
     });
@@ -1232,9 +1232,9 @@ describe("EmployerServiceTests", () => {
     it("should throw ServiceException when payroll not found", async () => {
       when(mockPayrollRepo.getPayrollByID(anything())).thenResolve(null);
 
-      expect(employerService.getFilteredEnrichedDisbursementsForPayroll("fake-payroll", null)).toThrowServiceException(
-        ServiceErrorCode.DOES_NOT_EXIST,
-      );
+      expect(
+        employerService.getFilteredEnrichedDisbursementsForPayroll("fake-payroll", null),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
     });
 
     it("should throw ServiceException when payroll is not for employer", async () => {
@@ -1243,9 +1243,9 @@ describe("EmployerServiceTests", () => {
       when(mockPayrollRepo.getPayrollByID(anything())).thenResolve(payroll);
       when(mockEmployerRepo.getEmployerByID(anything())).thenResolve(null);
 
-      expect(employerService.getFilteredEnrichedDisbursementsForPayroll("fake-payroll", null)).toThrowServiceException(
-        ServiceErrorCode.DOES_NOT_EXIST,
-      );
+      expect(
+        employerService.getFilteredEnrichedDisbursementsForPayroll("fake-payroll", null),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
     });
 
     it("should return enriched disbursements for payroll", async () => {
