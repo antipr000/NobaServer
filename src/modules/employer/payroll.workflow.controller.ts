@@ -111,13 +111,13 @@ export class PayrollWorkflowController {
     }
 
     // convert to 9AM Eastern Time
-    const nineAMEastern = `${payroll.payrollDate} 09:00:00 ${Utils.getCurrentEasternTimezone()}`;
+    const nineAMEastern = new Date(`${payroll.payrollDate}T09:00:00${Utils.getCurrentEasternTimezoneOffset()}`);
 
     return {
       id: payroll.id,
       employerID: payroll.employerID,
       reference: payroll.referenceNumber,
-      payrollDate: nineAMEastern,
+      payrollDate: nineAMEastern.toISOString(),
       totalDebitAmount: payroll.totalDebitAmount,
       totalCreditAmount: payroll.totalCreditAmount,
       exchangeRate: payroll.exchangeRate,

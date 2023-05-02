@@ -140,4 +140,8 @@ export class Utils {
       return "EST";
     }
   }
+
+  static getCurrentEasternTimezoneOffset(): string {
+    return this.getCurrentEasternTimezone() === "EDT" ? "-04:00" : "-05:00";
+  }
 }
