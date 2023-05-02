@@ -74,9 +74,6 @@ export class MonoService implements IBank {
       });
     }
 
-    if (monoTransaction.type === MonoTransactionType.WITHDRAWAL && !isTerminalState(monoTransaction.state)) {
-      monoTransaction = await this.refreshWithdrawalState(monoTransaction);
-    }
     return monoTransaction;
   }
 
@@ -167,22 +164,6 @@ export class MonoService implements IBank {
           errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
         });
     }
-  }
-
-  private async refreshWithdrawalState(monoTransaction: MonoTransaction): Promise<MonoTransaction> {
-    const updatedState: MonoTransferStatusResponse = await this.monoClient.getTransferStatus(
-      monoTransaction.withdrawalDetails.transferID,
-    );
-
-    if (updatedState.state !== monoTransaction.state) {
-      await this.monoRepo.updateMonoTransaction(monoTransaction.id, {
-        state: updatedState.state,
-        ...(updatedState.declinationReason && { declinationReason: updatedState.declinationReason }),
-      });
-      monoTransaction.state = updatedState.state;
-    }
-
-    return monoTransaction;
   }
 
   private validateWithdrawalRequest(request: WithdrawalRequest): void {

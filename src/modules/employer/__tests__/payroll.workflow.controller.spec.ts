@@ -102,7 +102,7 @@ describe("EmployerWorkflowControllerTests", () => {
         id: payroll.id,
         employerID: payroll.employerID,
         reference: payroll.referenceNumber,
-        payrollDate: payroll.payrollDate,
+        payrollDate: `${payroll.payrollDate}T03:30:00.000Z`,
         totalDebitAmount: payroll.totalDebitAmount,
         totalCreditAmount: payroll.totalCreditAmount,
         exchangeRate: payroll.exchangeRate,

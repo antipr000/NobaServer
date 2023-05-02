@@ -109,11 +109,20 @@ export class PayrollWorkflowController {
       throw new NotFoundException(`Payroll with id ${payrollID} is not found`);
     }
 
+    // convert to 9AM Eastern Time
+    const payrollDate: Date = new Date(payroll.payrollDate);
+    const easternTime = payrollDate.toLocaleString("en-US", {
+      timeZone: "America/New_York",
+      hour: "numeric",
+      minute: "numeric",
+    });
+    const nineAMEastern = new Date(`${payrollDate.toLocaleDateString()} ${easternTime}`).setHours(9, 0, 0, 0);
+
     return {
       id: payroll.id,
       employerID: payroll.employerID,
       reference: payroll.referenceNumber,
-      payrollDate: payroll.payrollDate,
+      payrollDate: new Date(nineAMEastern).toISOString(),
       totalDebitAmount: payroll.totalDebitAmount,
       totalCreditAmount: payroll.totalCreditAmount,
       exchangeRate: payroll.exchangeRate,
