@@ -48,14 +48,13 @@ export class WalletTransferImpl implements IWorkflowImpl {
     transactionDetails.debitConsumerIDOrTag = initiatingConsumer; // Debit consumer must always be the current consumer
     transactionDetails.creditAmount = transactionDetails.debitAmount;
     transactionDetails.creditCurrency = transactionDetails.debitCurrency;
-    transactionDetails.exchangeRate = 1;
 
     return {
       creditAmount: transactionDetails.creditAmount,
       creditCurrency: transactionDetails.creditCurrency,
       debitAmount: transactionDetails.debitAmount,
       debitCurrency: transactionDetails.debitCurrency,
-      exchangeRate: transactionDetails.exchangeRate,
+      exchangeRate: 1,
       workflowName: transactionDetails.workflowName,
       memo: transactionDetails.memo,
       transactionFees: [],

@@ -3,5 +3,6 @@
 /* eslint-disable */
 
 export type UpdateEmployeeRequestDTO = {
-  salary: number;
+  salary?: number;
+  status?: "CREATED" | "INVITED" | "LINKED" | "UNLINKED";
 };

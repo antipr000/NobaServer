@@ -19,7 +19,6 @@ export type InitiateTransactionDTO = {
   debitAmount?: number;
   creditCurrency?: "USD" | "COP";
   creditAmount?: number;
-  exchangeRate?: number;
   memo?: string;
   options?: Array<"IS_COLLECTION">;
   withdrawalData?: WithdrawalDTO;

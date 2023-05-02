@@ -758,7 +758,7 @@ describe("SqlEmployeeRepoTests", () => {
       expect(activeEmployee).toBeNull();
     });
 
-    it("should return employee with email null", async () => {
+    it("should return employee with no email when query email is undefined", async () => {
       const consumerID: string = await createTestConsumer(prismaService);
 
       const employerID: string = await createTestEmployerAndStoreInDB(prismaService);

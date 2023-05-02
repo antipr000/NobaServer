@@ -32,13 +32,13 @@ import {
   TransactionMappingService,
   TRANSACTION_MAPPING_SERVICE_PROVIDER,
 } from "../../../modules/transaction/mapper/transaction.mapper.service";
-import { MonoService } from "../../../modules/psp/mono/mono.service";
+import { MonoService } from "../../mono/public/mono.service";
 import { IncludeEventTypes, TransactionEventDTO } from "../../../modules/transaction/dto/TransactionEventDTO";
 import { TransactionDTO } from "../../../modules/transaction/dto/TransactionDTO";
 import { Utils } from "../../../core/utils/Utils";
-import { MonoTransaction, MonoTransactionState, MonoTransactionType } from "../../../modules/psp/domain/Mono";
+import { MonoTransaction, MonoTransactionState, MonoTransactionType } from "../../mono/domain/Mono";
 import { TransactionEvent } from "../../../modules/transaction/domain/TransactionEvent";
-import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
+import { getMockMonoServiceWithDefaults } from "../../mono/public/mocks/mock.mono.service";
 import { TransactionService } from "../../../modules/transaction/transaction.service";
 import { getMockTransactionMapperServiceWithDefaults } from "../../../modules/transaction/mocks/mock.transaction.mapper.service";
 import { Gender } from "../../../modules/consumer/domain/ExternalStates";

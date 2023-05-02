@@ -17,8 +17,10 @@ const getRandomEmployer = (): Employer => {
   const employer: Employer = {
     id: uuid(),
     name: "Test Employer",
+    depositMatchingName: "Deposit Test Employer",
     locale: "en_us",
     bubbleID: uuid(),
+    documentNumber: uuid(),
     logoURI: "https://www.google.com",
     referralID: uuid(),
     leadDays: 5,
@@ -87,6 +89,8 @@ describe("EmployerControllerTests", () => {
         employerReferralID: employer.referralID,
         leadDays: employer.leadDays,
         payrollDates: employer.payrollDates,
+        documentNumber: employer.documentNumber,
+        depositMatchingName: employer.depositMatchingName,
       });
     });
 
@@ -106,6 +110,47 @@ describe("EmployerControllerTests", () => {
         employerReferralID: employer.referralID,
         payrollDates: employer.payrollDates,
         maxAllocationPercent: employer.maxAllocationPercent,
+        documentNumber: employer.documentNumber,
+        depositMatchingName: employer.depositMatchingName,
+      });
+    });
+
+    it("shouldn't return depositMatchingName when not available", async () => {
+      const employer: Employer = getRandomEmployer();
+      delete employer.depositMatchingName;
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+
+      const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
+      expect(foundEmployer).toEqual({
+        employerID: employer.id,
+        employerName: employer.name,
+        employerLogoURI: employer.logoURI,
+        leadDays: employer.leadDays,
+        employerReferralID: employer.referralID,
+        payrollDates: employer.payrollDates,
+        documentNumber: employer.documentNumber,
+        locale: "en_us",
+      });
+    });
+
+    it("shouldn't return documentNumber when not available", async () => {
+      const employer: Employer = getRandomEmployer();
+      delete employer.documentNumber;
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+
+      const foundEmployer = await employerController.getEmployerByReferralID(employer.referralID);
+      expect(foundEmployer).toEqual({
+        employerID: employer.id,
+        employerName: employer.name,
+        employerLogoURI: employer.logoURI,
+        leadDays: employer.leadDays,
+        employerReferralID: employer.referralID,
+        payrollDates: employer.payrollDates,
+        documentNumber: undefined,
+        depositMatchingName: employer.depositMatchingName,
+        locale: "en_us",
       });
     });
 
@@ -124,6 +169,8 @@ describe("EmployerControllerTests", () => {
         employerReferralID: employer.referralID,
         payrollDates: employer.payrollDates,
         nextPayrollDate: employer.payrollDates[0],
+        documentNumber: employer.documentNumber,
+        depositMatchingName: employer.depositMatchingName,
       });
     });
 
@@ -142,6 +189,8 @@ describe("EmployerControllerTests", () => {
         employerReferralID: employer.referralID,
         payrollDates: employer.payrollDates,
         nextPayrollDate: employer.payrollDates[1],
+        documentNumber: employer.documentNumber,
+        depositMatchingName: employer.depositMatchingName,
       });
     });
 
@@ -161,6 +210,8 @@ describe("EmployerControllerTests", () => {
         leadDays: employer.leadDays,
         payrollDates: payrollDates,
         nextPayrollDate: employer.payrollDates[1],
+        documentNumber: employer.documentNumber,
+        depositMatchingName: employer.depositMatchingName,
       });
     });
 

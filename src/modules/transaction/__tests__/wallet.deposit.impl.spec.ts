@@ -21,11 +21,11 @@ import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { Utils } from "../../../core/utils/Utils";
-import { MonoService } from "../../../modules/psp/mono/mono.service";
-import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
+import { MonoService } from "../../mono/public/mono.service";
+import { getMockMonoServiceWithDefaults } from "../../mono/public/mocks/mock.mono.service";
 import { WalletDepositImpl } from "../factory/wallet.deposit.impl";
 import { ServiceException } from "../../../core/exception/service.exception";
-import { MonoCurrency, MonoTransactionType } from "../../../modules/psp/domain/Mono";
+import { MonoCurrency, MonoTransactionType } from "../../mono/domain/Mono";
 import { TransactionFlags } from "../domain/TransactionFlags";
 import { FeeType } from "../domain/TransactionFee";
 import { ProcessedTransactionDTO } from "../dto/ProcessedTransactionDTO";
@@ -328,7 +328,6 @@ const getRandomTransaction = (
 
   const transactionDTO: InitiateTransactionDTO = {
     workflowName: transaction.workflowName,
-    exchangeRate: transaction.exchangeRate,
     memo: transaction.memo,
     options: [TransactionFlags.IS_COLLECTION],
   };

@@ -106,9 +106,11 @@ model Employer {
   createdTimestamp     DateTime?  @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp     DateTime?  @updatedAt // Marking optional so we don't need to set in tests
   name                 String
+  depositMatchingName  String?
   logoURI              String
   referralID           String     @unique()
   bubbleID             String     @unique()
+  documentNumber       String?
   locale               String?
   leadDays             Int?
   maxAllocationPercent Float?
@@ -138,21 +140,22 @@ model Employee {
 }
 
 model Payroll {
-  id                  String                @id @default(uuid())
-  employer            Employer              @relation(fields: [employerID], references: [id], onDelete: Cascade)
-  employerID          String
-  referenceNumber     Int                   @default(autoincrement())
-  payrollDate         String
-  createdTimestamp    DateTime?             @default(now()) // Marking optional so we don't need to set in tests
-  updatedTimestamp    DateTime?             @updatedAt // Marking optional so we don't need to set in tests
-  completedTimestamp  DateTime?
-  totalDebitAmount    Float?
-  totalCreditAmount   Float?
-  exchangeRate        Float?
-  debitCurrency       String?
-  creditCurrency      String?
-  status              String
-  payrollDisbursement PayrollDisbursement[]
+  id                       String                @id @default(uuid())
+  employer                 Employer              @relation(fields: [employerID], references: [id], onDelete: Cascade)
+  employerID               String
+  referenceNumber          Int                   @default(autoincrement())
+  payrollDate              String
+  createdTimestamp         DateTime?             @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp         DateTime?             @updatedAt // Marking optional so we don't need to set in tests
+  completedTimestamp       DateTime?
+  totalDebitAmount         Float?
+  totalCreditAmount        Float?
+  exchangeRate             Float?
+  debitCurrency            String?
+  creditCurrency           String?
+  status                   String
+  paymentMonoTransactionID String?
+  payrollDisbursement      PayrollDisbursement[]
 }
 
 model PayrollDisbursement {

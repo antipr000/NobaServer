@@ -23,12 +23,12 @@ import { ConsumerService } from "../../../modules/consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../modules/consumer/mocks/mock.consumer.service";
 import { TRANSACTION_MAPPING_SERVICE_PROVIDER, TransactionMappingService } from "../mapper/transaction.mapper.service";
 import { TransactionEvent } from "../domain/TransactionEvent";
-import { MonoService } from "../../../modules/psp/mono/mono.service";
-import { getMockMonoServiceWithDefaults } from "../../../modules/psp/mono/mocks/mock.mono.service";
+import { MonoService } from "../../mono/public/mono.service";
+import { getMockMonoServiceWithDefaults } from "../../mono/public/mocks/mock.mono.service";
 import { InitiateTransactionDTO } from "../dto/CreateTransactionDTO";
 import { AccountType, DocumentType } from "../domain/WithdrawalDetails";
 import { TransactionFlags } from "../domain/TransactionFlags";
-import { MonoTransaction, MonoTransactionState, MonoTransactionType } from "../../../modules/psp/domain/Mono";
+import { MonoTransaction, MonoTransactionState, MonoTransactionType } from "../../mono/domain/Mono";
 import { FeeType } from "../domain/TransactionFee";
 
 const getRandomTransaction = (consumerID: string, isCreditTransaction = false): Transaction => {
@@ -712,7 +712,6 @@ describe("Transaction Controller tests", () => {
         debitCurrency: Currency.COP,
         debitAmount: 100,
         memo: testMemo,
-        exchangeRate: testExchangeRate,
         withdrawalData: {
           accountNumber: "123456789",
           accountType: AccountType.CHECKING,

@@ -7,7 +7,10 @@ import type { CreatePayrollRequestDTO } from "../models/CreatePayrollRequestDTO"
 import type { CreatePayrollResponseDTO } from "../models/CreatePayrollResponseDTO";
 import type { DisbursementDTO } from "../models/DisbursementDTO";
 import type { DocumentVerificationWebhookRequestDTO } from "../models/DocumentVerificationWebhookRequestDTO";
+import type { EmployeeCreateRequestDTO } from "../models/EmployeeCreateRequestDTO";
+import type { EmployeeResponseDTO } from "../models/EmployeeResponseDTO";
 import type { EmployerRegisterResponseDTO } from "../models/EmployerRegisterResponseDTO";
+import type { PaginatedEmployeeResponseDTO } from "../models/PaginatedEmployeeResponseDTO";
 import type { PayrollDTO } from "../models/PayrollDTO";
 import type { RegisterEmployerRequestDTO } from "../models/RegisterEmployerRequestDTO";
 import type { UpdateEmployeeRequestDTO } from "../models/UpdateEmployeeRequestDTO";
@@ -27,21 +30,6 @@ export class WebhooksService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/v1/vendors/checkout/webhooks",
-    });
-  }
-
-  /**
-   * Handle all the Mono Webhook requests
-   * @returns any
-   * @throws ApiError
-   */
-  public static processWebhookRequests({ monoSignature }: { monoSignature: string }): CancelablePromise<any> {
-    return __request(OpenAPI, {
-      method: "POST",
-      url: "/webhooks/mono",
-      headers: {
-        "mono-signature": monoSignature,
-      },
     });
   }
 
@@ -90,6 +78,21 @@ export class WebhooksService {
   }
 
   /**
+   * Handle all the Mono Webhook requests
+   * @returns any
+   * @throws ApiError
+   */
+  public static processWebhookRequests({ monoSignature }: { monoSignature: string }): CancelablePromise<any> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/webhooks/mono",
+      headers: {
+        "mono-signature": monoSignature,
+      },
+    });
+  }
+
+  /**
    * Register the Employer in Noba
    * @returns EmployerRegisterResponseDTO
    * @throws ApiError
@@ -102,6 +105,86 @@ export class WebhooksService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/webhooks/bubble/employers",
+      body: requestBody,
+      mediaType: "application/json",
+    });
+  }
+
+  /**
+   * Get all employees for employer in Noba
+   * @returns PaginatedEmployeeResponseDTO
+   * @throws ApiError
+   */
+  public static getAllEmployees({
+    referralId,
+    employerId,
+    firstNameContains,
+    lastNameContains,
+    employeeEmail,
+    pageOffset,
+    pageLimit,
+    status,
+    createdTimestamp,
+    sortStatus,
+  }: {
+    referralId: string;
+    employerId?: string;
+    firstNameContains?: string;
+    lastNameContains?: string;
+    employeeEmail?: string;
+    /**
+     * number of pages to skip, offset 0 means first page results, 1 means second page etc.
+     */
+    pageOffset?: number;
+    /**
+     * number of items per page
+     */
+    pageLimit?: number;
+    /**
+     * filter by status
+     */
+    status?: "CREATED" | "INVITED" | "LINKED" | "UNLINKED";
+    createdTimestamp?: "asc" | "desc";
+    sortStatus?: "asc" | "desc";
+  }): CancelablePromise<Array<PaginatedEmployeeResponseDTO>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/webhooks/bubble/employers/{referralID}/employees",
+      path: {
+        referralID: referralId,
+      },
+      query: {
+        employerID: employerId,
+        firstNameContains: firstNameContains,
+        lastNameContains: lastNameContains,
+        employeeEmail: employeeEmail,
+        pageOffset: pageOffset,
+        pageLimit: pageLimit,
+        status: status,
+        createdTimestamp: createdTimestamp,
+        sortStatus: sortStatus,
+      },
+    });
+  }
+
+  /**
+   * Creates a new employee for employer and sends an invite if specified
+   * @returns EmployeeResponseDTO
+   * @throws ApiError
+   */
+  public static createEmployee({
+    referralId,
+    requestBody,
+  }: {
+    referralId: string;
+    requestBody: EmployeeCreateRequestDTO;
+  }): CancelablePromise<EmployeeResponseDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/webhooks/bubble/employers/{referralID}/employees",
+      path: {
+        referralID: referralId,
+      },
       body: requestBody,
       mediaType: "application/json",
     });

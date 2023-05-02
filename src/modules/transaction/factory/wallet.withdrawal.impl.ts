@@ -95,15 +95,12 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
       transactionDetails.creditCurrency,
     );
 
-    transactionDetails.creditAmount = Number(transactionQuote.quoteAmountWithFees);
-    transactionDetails.exchangeRate = Number(transactionQuote.nobaRate);
-
     return {
-      creditAmount: transactionDetails.creditAmount,
+      creditAmount: Number(transactionQuote.quoteAmountWithFees),
       creditCurrency: transactionDetails.creditCurrency,
       debitAmount: transactionDetails.debitAmount,
       debitCurrency: transactionDetails.debitCurrency,
-      exchangeRate: transactionDetails.exchangeRate,
+      exchangeRate: Number(transactionQuote.nobaRate),
       workflowName: transactionDetails.workflowName,
       memo: transactionDetails.memo,
       transactionFees: [
