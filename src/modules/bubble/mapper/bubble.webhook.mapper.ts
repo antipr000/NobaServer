@@ -54,7 +54,7 @@ export class BubbleWebhookMapper {
       status: enrichedDisbursement.status,
       firstName: enrichedDisbursement.firstName,
       lastName: enrichedDisbursement.lastName,
-      lastUpdated: enrichedDisbursement.lastUpdated,
+      updatedTimestamp: enrichedDisbursement.updatedTimestamp,
     };
   }
 
@@ -100,7 +100,7 @@ export class BubbleWebhookMapper {
           status: enrichedDisbursement.status,
           firstName: enrichedDisbursement.firstName,
           lastName: enrichedDisbursement.lastName,
-          lastUpdated: enrichedDisbursement.lastUpdated,
+          updatedTimestamp: enrichedDisbursement.updatedTimestamp,
         };
       }),
     };

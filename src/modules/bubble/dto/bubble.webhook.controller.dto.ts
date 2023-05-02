@@ -4,7 +4,7 @@ import { Bool } from "../../../core/domain/ApiEnums";
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { EmployeeDTO } from "../../../modules/employee/dto/employee.dto";
 import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
-import { TransactionStatus } from "src/modules/transaction/domain/Transaction";
+import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 
 export class RegisterEmployerRequestDTO {
   @ApiProperty()
@@ -16,7 +16,7 @@ export class RegisterEmployerRequestDTO {
   @ApiPropertyOptional()
   locale?: string;
 
-  @ApiProperty()
+  @ApiProperty() EnrichedDisbursementDTO;
   referralID: string;
 
   @ApiProperty()
@@ -88,26 +88,26 @@ export class DisbursementDTO {
 }
 
 export class EnrichedDisbursementDTO {
-  // id->Disbursement.id
+  @ApiProperty()
   id: string;
 
-  // debitAmount->Disbursement.allocationAmount
+  @ApiProperty()
   debitAmount: number;
 
-  // creditAmount->Disbursement.creditAmount
+  @ApiProperty()
   creditAmount: number;
 
-  // status->Transaction.status
+  @ApiProperty()
   status: TransactionStatus;
 
-  // firstName->Employee.Consumer.firstName
+  @ApiProperty()
   firstName: string;
 
-  // lastName->Employee.Consumer.lastName
+  @ApiProperty()
   lastName: string;
 
-  // lastUpdated->Transaction.updatedTimestamp
-  lastUpdated: Date;
+  @ApiProperty()
+  updatedTimestamp: Date;
 }
 
 export class PayrollDTO {

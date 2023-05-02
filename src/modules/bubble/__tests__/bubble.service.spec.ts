@@ -572,9 +572,7 @@ describe("BubbleServiceTests", () => {
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(null);
       when(employerService.getAllPayrollsForEmployer(employer.id)).thenResolve([payroll]);
 
-      await expect(async () => await bubbleService.getAllPayrollsForEmployer(employer.referralID)).rejects.toThrow(
-        ServiceException,
-      );
+      expect(bubbleService.getAllPayrollsForEmployer(employer.referralID)).rejects.toThrow(ServiceException);
     });
   });
 
@@ -593,9 +591,7 @@ describe("BubbleServiceTests", () => {
     });
 
     it("should throw ServiceException when employer with referralID does not exist", async () => {
-      await expect(async () => await bubbleService.getPayroll(undefined, "fake-payroll-id")).rejects.toThrow(
-        ServiceException,
-      );
+      expect(bubbleService.getPayroll(undefined, "fake-payroll-id")).rejects.toThrow(ServiceException);
     });
 
     it("should throw error when payroll does not belong to employer", async () => {
@@ -605,9 +601,7 @@ describe("BubbleServiceTests", () => {
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(employerService.getPayrollByID(payroll.id)).thenResolve(payroll);
 
-      await expect(async () => await bubbleService.getPayroll(employer.referralID, payroll.id)).rejects.toThrow(
-        ServiceException,
-      );
+      expect(bubbleService.getPayroll(employer.referralID, payroll.id)).rejects.toThrow(ServiceException);
     });
   });
 
@@ -737,7 +731,7 @@ describe("BubbleServiceTests", () => {
         status: TransactionStatus.COMPLETED,
         firstName: "Fake",
         lastName: "Fake",
-        lastUpdated: new Date(),
+        updatedTimestamp: new Date(),
       };
 
       const paginatedEnrichedDisbursements = {

@@ -1219,6 +1219,14 @@ describe("EmployerServiceTests", () => {
     });
   });
 
+  describe("getFilteredEnrichedDisbursementsForPayroll", () => {
+    it("should throw Service Exception when payroll does not exist", async () => {
+      expect(employerService.getFilteredEnrichedDisbursementsForPayroll("fake-payroll", null)).rejects.toThrowError(
+        ServiceException,
+      );
+    });
+  });
+
   describe("getEmployerForTransactionID", () => {
     it("should return the employer associated with a transaction", async () => {
       const transactionID = "transaction-id-1";

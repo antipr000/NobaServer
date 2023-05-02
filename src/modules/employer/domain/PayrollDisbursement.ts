@@ -7,7 +7,7 @@ import {
   Transaction,
 } from "@prisma/client";
 import { KeysRequired } from "../../../modules/common/domain/Types";
-import { TransactionStatus } from "src/modules/transaction/domain/Transaction";
+import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 
 export class PayrollDisbursement {
   id: string;
@@ -27,7 +27,7 @@ export class EnrichedDisbursement {
   status: TransactionStatus;
   firstName: string;
   lastName: string;
-  lastUpdated: Date;
+  updatedTimestamp: Date;
 }
 
 export class PayrollDisbursementCreateRequest {
@@ -110,8 +110,6 @@ export const convertToDomainEnrichedDisbursements = (
     };
   },
 ): EnrichedDisbursement => {
-  console.log(enrichedDisbursement);
-
   return {
     id: enrichedDisbursement.id,
     debitAmount: enrichedDisbursement.allocationAmount,
@@ -119,6 +117,6 @@ export const convertToDomainEnrichedDisbursements = (
     status: enrichedDisbursement.transaction?.status as TransactionStatus,
     firstName: enrichedDisbursement.employee.consumer.firstName,
     lastName: enrichedDisbursement.employee.consumer.lastName,
-    lastUpdated: enrichedDisbursement.transaction?.updatedTimestamp,
+    updatedTimestamp: enrichedDisbursement.transaction?.updatedTimestamp,
   };
 };
