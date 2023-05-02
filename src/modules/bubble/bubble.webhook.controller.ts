@@ -159,10 +159,6 @@ export class BubbleWebhookController {
       filterOptions,
     );
 
-    console.log(referralID, payrollID, filterOptions);
-
-    console.log(paginatedResult);
-
     return this.mapper.toPaginatedEnrichedDisbursementDTOs(paginatedResult);
   }
 

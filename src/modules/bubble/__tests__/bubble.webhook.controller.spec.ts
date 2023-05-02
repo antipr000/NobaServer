@@ -465,8 +465,6 @@ describe("BubbleWebhookControllerTests", () => {
       const { payroll } = getRandomPayroll(employerID);
       const referralID = "fake-referral";
 
-      const { payrollDisbursement } = getRandomPayrollDisbursement(payroll.id, "fake-employee-id");
-
       const enrichedDisbursement = {
         id: "fake-id",
         debitAmount: 1000,
@@ -510,8 +508,6 @@ describe("BubbleWebhookControllerTests", () => {
       const employerID = "fake-employer";
       const { payroll } = getRandomPayroll(employerID);
       const referralID = "fake-referral";
-
-      const { payrollDisbursement } = getRandomPayrollDisbursement(payroll.id, "fake-employee-id");
 
       const enrichedDisbursement = {
         id: "fake-id",
