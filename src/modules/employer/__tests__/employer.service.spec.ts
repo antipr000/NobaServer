@@ -1280,6 +1280,50 @@ describe("EmployerServiceTests", () => {
         items: [enrichedDisbursement],
       });
     });
+
+    it("should return enriched disbursements for payroll with filter", async () => {
+      const { payroll } = getRandomPayroll("fake-employer");
+      const employer = getRandomEmployer();
+
+      const enrichedDisbursement = {
+        id: "fake-id",
+        debitAmount: 1000,
+        creditAmount: 1000,
+        status: TransactionStatus.COMPLETED,
+        firstName: "Fake",
+        lastName: "Fake",
+        updatedTimestamp: new Date(),
+      };
+
+      when(mockPayrollRepo.getPayrollByID(anything())).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(anything())).thenResolve(employer);
+      when(
+        mockPayrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(
+          payroll.id,
+          deepEqual({
+            status: TransactionStatus.COMPLETED,
+          }),
+        ),
+      ).thenResolve({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [enrichedDisbursement],
+      });
+
+      const response = await employerService.getFilteredEnrichedDisbursementsForPayroll(payroll.id, {
+        status: TransactionStatus.COMPLETED,
+      });
+
+      expect(response).toStrictEqual({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [enrichedDisbursement],
+      });
+    });
   });
 
   describe("getEmployerForTransactionID", () => {

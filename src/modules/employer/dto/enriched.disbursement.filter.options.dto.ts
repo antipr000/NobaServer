@@ -3,10 +3,10 @@ import { SortOrder } from "../../../core/infra/PaginationTypes";
 import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 
 export enum EnrichedDisbursementSortOptions {
-  DIRECTION = "direction",
   LAST_NAME = "lastName",
   ALLOCATION_AMOUNT = "allocationAmount",
   CREDIT_AMOUNT = "creditAmount",
+  STATUS = "status",
 }
 
 export class EnrichedDisbursementFilterOptionsDTO {
@@ -21,9 +21,9 @@ export class EnrichedDisbursementFilterOptionsDTO {
   @ApiPropertyOptional({ description: "filter by status", enum: TransactionStatus })
   status?: TransactionStatus;
 
-  @ApiPropertyOptional({ enum: SortOrder })
+  @ApiPropertyOptional({ enum: SortOrder, description: "sort direction" })
   sortDirection?: SortOrder;
 
-  @ApiPropertyOptional({ enum: EnrichedDisbursementSortOptions })
+  @ApiPropertyOptional({ enum: EnrichedDisbursementSortOptions, description: "sort options" })
   sortBy?: EnrichedDisbursementSortOptions;
 }
