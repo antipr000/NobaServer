@@ -10,7 +10,7 @@ import {
   getRandomPayroll,
   getRandomPayrollDisbursement,
 } from "../../../modules/employer/test_utils/payroll.test.utils";
-import { BadRequestException } from "@nestjs/common";
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 import { getRandomEmployer } from "../../../modules/employer/test_utils/employer.test.utils";
@@ -556,6 +556,24 @@ describe("BubbleWebhookControllerTests", () => {
           },
         ],
       });
+    });
+
+    it("should throw NotFoundException if paginated response is empty", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const referralID = "fake-referral";
+
+      when(bubbleService.getAllEnrichedDisbursementsForPayroll(referralID, payroll.id, null)).thenResolve({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 0,
+        items: [],
+      });
+
+      expect(
+        bubbleWebhookController.getAllEnrichedDisbursementsForPayroll(referralID, payroll.id, null),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });
