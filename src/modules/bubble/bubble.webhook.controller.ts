@@ -5,6 +5,7 @@ import {
   Get,
   HttpStatus,
   Inject,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -158,6 +159,9 @@ export class BubbleWebhookController {
       payrollID,
       filterOptions,
     );
+    if (!paginatedResult || paginatedResult.items?.length === 0) {
+      throw new NotFoundException("No disbursements found for the given payroll");
+    }
 
     return this.mapper.toPaginatedEnrichedDisbursementDTOs(paginatedResult);
   }

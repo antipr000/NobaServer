@@ -171,299 +171,314 @@ describe("SqlPayrollDisbursementRepo tests", () => {
   });
 
   describe("getFilteredEnrichedDisbursementsForPayroll", () => {
-    it("should get all enriched disbursements for payroll", async () => {
-      const consumerID1: string = await createTestConsumer(prismaService, "Barry", "Allen");
-      const consumerID2: string = await createTestConsumer(prismaService, "Bruce", "Wayne");
-      const consumerID3: string = await createTestConsumer(prismaService, "Clark", "Kent");
-      const consumerID4: string = await createTestConsumer(prismaService, "Diana", "Prince");
-      const consumerID5: string = await createTestConsumer(prismaService, "Diego", "Forlan");
-      const consumerID6: string = await createTestConsumer(prismaService, "Diego", "Maradona");
-      const consumerID7: string = await createTestConsumer(prismaService, "Juan Danial", "Hoyon Castro");
+    describe("should get all enriched disbursements for payroll", () => {
+      let payroll1;
+      let payroll2;
 
-      const employerID1: string = await createTestEmployerAndStoreInDB(prismaService);
-      const employerID2: string = await createTestEmployerAndStoreInDB(prismaService);
+      beforeAll(async () => {
+        const consumerID1: string = await createTestConsumer(prismaService, "Barry", "Allen");
+        const consumerID2: string = await createTestConsumer(prismaService, "Bruce", "Wayne");
+        const consumerID3: string = await createTestConsumer(prismaService, "Clark", "Kent");
+        const consumerID4: string = await createTestConsumer(prismaService, "Diana", "Prince");
+        const consumerID5: string = await createTestConsumer(prismaService, "Diego", "Forlan");
+        const consumerID6: string = await createTestConsumer(prismaService, "Diego", "Maradona");
+        const consumerID7: string = await createTestConsumer(prismaService, "Juan Danial", "Hoyon Castro");
 
-      const employee1: EmployeeCreateRequest = getRandomEmployee(employerID1, consumerID1);
-      const employeeID1 = await createEmployee(prismaService, employee1);
-      const employee2: EmployeeCreateRequest = getRandomEmployee(employerID1, consumerID2);
-      const employeeID2 = await createEmployee(prismaService, employee2);
-      const employee3: EmployeeCreateRequest = getRandomEmployee(employerID1, consumerID3);
-      const employeeID3 = await createEmployee(prismaService, employee3);
-      const employee4: EmployeeCreateRequest = getRandomEmployee(employerID1, consumerID4);
-      const employeeID4 = await createEmployee(prismaService, employee4);
-      const employee5: EmployeeCreateRequest = getRandomEmployee(employerID1, consumerID5);
-      const employeeID5 = await createEmployee(prismaService, employee5);
-      const employee6: EmployeeCreateRequest = getRandomEmployee(employerID2, consumerID6);
-      const employeeID6 = await createEmployee(prismaService, employee6);
-      const employee7: EmployeeCreateRequest = getRandomEmployee(employerID2, consumerID7);
-      const employeeID7 = await createEmployee(prismaService, employee7);
+        const employerID1: string = await createTestEmployerAndStoreInDB(prismaService);
+        const employerID2: string = await createTestEmployerAndStoreInDB(prismaService);
 
-      const payroll1 = await saveAndGetPayroll(prismaService, employerID1);
-      const payroll2 = await saveAndGetPayroll(prismaService, employerID2);
+        const employee1: EmployeeCreateRequest = getRandomEmployee(employerID1, consumerID1);
+        const employeeID1 = await createEmployee(prismaService, employee1);
+        const employee2: EmployeeCreateRequest = getRandomEmployee(employerID1, consumerID2);
+        const employeeID2 = await createEmployee(prismaService, employee2);
+        const employee3: EmployeeCreateRequest = getRandomEmployee(employerID1, consumerID3);
+        const employeeID3 = await createEmployee(prismaService, employee3);
+        const employee4: EmployeeCreateRequest = getRandomEmployee(employerID1, consumerID4);
+        const employeeID4 = await createEmployee(prismaService, employee4);
+        const employee5: EmployeeCreateRequest = getRandomEmployee(employerID1, consumerID5);
+        const employeeID5 = await createEmployee(prismaService, employee5);
+        const employee6: EmployeeCreateRequest = getRandomEmployee(employerID2, consumerID6);
+        const employeeID6 = await createEmployee(prismaService, employee6);
+        const employee7: EmployeeCreateRequest = getRandomEmployee(employerID2, consumerID7);
+        const employeeID7 = await createEmployee(prismaService, employee7);
 
-      const { payrollDisbursementCreateInput: payrollDisbursementCreateInput1 } = getRandomPayrollDisbursement(
-        payroll1.id,
-        employeeID1,
-      );
-      const payrollDisbursement1 = await payrollDisbursementRepo.createPayrollDisbursement(
-        payrollDisbursementCreateInput1,
-      );
-      const { payrollDisbursementCreateInput: payrollDisbursementCreateInput2 } = getRandomPayrollDisbursement(
-        payroll1.id,
-        employeeID2,
-      );
-      const payrollDisbursement2 = await payrollDisbursementRepo.createPayrollDisbursement(
-        payrollDisbursementCreateInput2,
-      );
-      const { payrollDisbursementCreateInput: payrollDisbursementCreateInput3 } = getRandomPayrollDisbursement(
-        payroll1.id,
-        employeeID3,
-      );
-      const payrollDisbursement3 = await payrollDisbursementRepo.createPayrollDisbursement(
-        payrollDisbursementCreateInput3,
-      );
-      const { payrollDisbursementCreateInput: payrollDisbursementCreateInput4 } = getRandomPayrollDisbursement(
-        payroll1.id,
-        employeeID4,
-      );
-      const payrollDisbursement4 = await payrollDisbursementRepo.createPayrollDisbursement(
-        payrollDisbursementCreateInput4,
-      );
-      const { payrollDisbursementCreateInput: payrollDisbursementCreateInput5 } = getRandomPayrollDisbursement(
-        payroll1.id,
-        employeeID5,
-      );
-      const payrollDisbursement5 = await payrollDisbursementRepo.createPayrollDisbursement(
-        payrollDisbursementCreateInput5,
-      );
-      const { payrollDisbursementCreateInput: payrollDisbursementCreateInput6 } = getRandomPayrollDisbursement(
-        payroll2.id,
-        employeeID6,
-      );
-      const payrollDisbursement6 = await payrollDisbursementRepo.createPayrollDisbursement(
-        payrollDisbursementCreateInput6,
-      );
-      const { payrollDisbursementCreateInput: payrollDisbursementCreateInput7 } = getRandomPayrollDisbursement(
-        payroll2.id,
-        employeeID7,
-      );
-      const payrollDisbursement7 = await payrollDisbursementRepo.createPayrollDisbursement(
-        payrollDisbursementCreateInput7,
-      );
+        payroll1 = await saveAndGetPayroll(prismaService, employerID1);
+        payroll2 = await saveAndGetPayroll(prismaService, employerID2);
 
-      const transactionID1 = await createTransaction({
-        prismaService,
-        consumerID: consumerID1,
-        status: TransactionStatus.PROCESSING,
-      });
-      await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement1.id, {
-        transactionID: transactionID1,
-        creditAmount: 1000,
-      });
-      const transactionID2 = await createTransaction({
-        prismaService,
-        consumerID: consumerID2,
-        status: TransactionStatus.COMPLETED,
-      });
-      await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement2.id, {
-        transactionID: transactionID2,
-        creditAmount: 2000,
-      });
-      const transactionID3 = await createTransaction({
-        prismaService,
-        consumerID: consumerID3,
-        status: TransactionStatus.FAILED,
-      });
-      await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement3.id, {
-        transactionID: transactionID3,
-        creditAmount: 3000,
-      });
-      const transactionID4 = await createTransaction({
-        prismaService,
-        consumerID: consumerID4,
-        status: TransactionStatus.COMPLETED,
-      });
-      await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement4.id, {
-        transactionID: transactionID4,
-        creditAmount: 4000,
-      });
-      const transactionID5 = await createTransaction({
-        prismaService,
-        consumerID: consumerID5,
-        status: TransactionStatus.EXPIRED,
-      });
-      await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement5.id, {
-        transactionID: transactionID5,
-        creditAmount: 5000,
-      });
-      const transactionID6 = await createTransaction({
-        prismaService,
-        consumerID: consumerID6,
-        status: TransactionStatus.INITIATED,
-      });
-      await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement6.id, {
-        transactionID: transactionID6,
-        creditAmount: 6000,
-      });
-      const transactionID7 = await createTransaction({
-        prismaService,
-        consumerID: consumerID7,
-        status: TransactionStatus.PROCESSING,
-      });
-      await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement7.id, {
-        transactionID: transactionID7,
-        creditAmount: 7000,
-      });
+        const { payrollDisbursementCreateInput: payrollDisbursementCreateInput1 } = getRandomPayrollDisbursement(
+          payroll1.id,
+          employeeID1,
+        );
+        const payrollDisbursement1 = await payrollDisbursementRepo.createPayrollDisbursement(
+          payrollDisbursementCreateInput1,
+        );
+        const { payrollDisbursementCreateInput: payrollDisbursementCreateInput2 } = getRandomPayrollDisbursement(
+          payroll1.id,
+          employeeID2,
+        );
+        const payrollDisbursement2 = await payrollDisbursementRepo.createPayrollDisbursement(
+          payrollDisbursementCreateInput2,
+        );
+        const { payrollDisbursementCreateInput: payrollDisbursementCreateInput3 } = getRandomPayrollDisbursement(
+          payroll1.id,
+          employeeID3,
+        );
+        const payrollDisbursement3 = await payrollDisbursementRepo.createPayrollDisbursement(
+          payrollDisbursementCreateInput3,
+        );
+        const { payrollDisbursementCreateInput: payrollDisbursementCreateInput4 } = getRandomPayrollDisbursement(
+          payroll1.id,
+          employeeID4,
+        );
+        const payrollDisbursement4 = await payrollDisbursementRepo.createPayrollDisbursement(
+          payrollDisbursementCreateInput4,
+        );
+        const { payrollDisbursementCreateInput: payrollDisbursementCreateInput5 } = getRandomPayrollDisbursement(
+          payroll1.id,
+          employeeID5,
+        );
+        const payrollDisbursement5 = await payrollDisbursementRepo.createPayrollDisbursement(
+          payrollDisbursementCreateInput5,
+        );
+        const { payrollDisbursementCreateInput: payrollDisbursementCreateInput6 } = getRandomPayrollDisbursement(
+          payroll2.id,
+          employeeID6,
+        );
+        const payrollDisbursement6 = await payrollDisbursementRepo.createPayrollDisbursement(
+          payrollDisbursementCreateInput6,
+        );
+        const { payrollDisbursementCreateInput: payrollDisbursementCreateInput7 } = getRandomPayrollDisbursement(
+          payroll2.id,
+          employeeID7,
+        );
+        const payrollDisbursement7 = await payrollDisbursementRepo.createPayrollDisbursement(
+          payrollDisbursementCreateInput7,
+        );
 
-      const enrichedDisbursementsPayroll1NoFilter =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {});
-      expect(enrichedDisbursementsPayroll1NoFilter.totalItems).toBe(5);
-      expect(
-        enrichedDisbursementsPayroll1NoFilter.items.filter(item => item.status === TransactionStatus.COMPLETED),
-      ).toHaveLength(2);
-
-      const enrichedDisbursementsPayroll2NoFiler =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {});
-      expect(enrichedDisbursementsPayroll2NoFiler.totalItems).toBe(2);
-      expect(
-        enrichedDisbursementsPayroll2NoFiler.items.filter(item => item.status === TransactionStatus.COMPLETED),
-      ).toHaveLength(0);
-
-      const enrichedDisbursementsPayroll1FilterByStatus =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
+        const transactionID1 = await createTransaction({
+          prismaService,
+          consumerID: consumerID1,
           status: TransactionStatus.PROCESSING,
         });
-      expect(enrichedDisbursementsPayroll1FilterByStatus.totalItems).toBe(1);
-
-      const enrichedDisbursementsPayroll2FilterByStatus =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
+        await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement1.id, {
+          transactionID: transactionID1,
+          creditAmount: 1000,
+        });
+        const transactionID2 = await createTransaction({
+          prismaService,
+          consumerID: consumerID2,
+          status: TransactionStatus.COMPLETED,
+        });
+        await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement2.id, {
+          transactionID: transactionID2,
+          creditAmount: 2000,
+        });
+        const transactionID3 = await createTransaction({
+          prismaService,
+          consumerID: consumerID3,
+          status: TransactionStatus.FAILED,
+        });
+        await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement3.id, {
+          transactionID: transactionID3,
+          creditAmount: 3000,
+        });
+        const transactionID4 = await createTransaction({
+          prismaService,
+          consumerID: consumerID4,
+          status: TransactionStatus.COMPLETED,
+        });
+        await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement4.id, {
+          transactionID: transactionID4,
+          creditAmount: 4000,
+        });
+        const transactionID5 = await createTransaction({
+          prismaService,
+          consumerID: consumerID5,
+          status: TransactionStatus.EXPIRED,
+        });
+        await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement5.id, {
+          transactionID: transactionID5,
+          creditAmount: 5000,
+        });
+        const transactionID6 = await createTransaction({
+          prismaService,
+          consumerID: consumerID6,
+          status: TransactionStatus.INITIATED,
+        });
+        await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement6.id, {
+          transactionID: transactionID6,
+          creditAmount: 6000,
+        });
+        const transactionID7 = await createTransaction({
+          prismaService,
+          consumerID: consumerID7,
           status: TransactionStatus.PROCESSING,
         });
-      expect(enrichedDisbursementsPayroll2FilterByStatus.totalItems).toBe(1);
-
-      const enrichedDisbursementsPayroll1SortByAmountDesc =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
-          sortBy: EnrichedDisbursementSortOptions.CREDIT_AMOUNT,
-          sortDirection: SortOrder.DESC,
+        await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement7.id, {
+          transactionID: transactionID7,
+          creditAmount: 7000,
         });
-      expect(enrichedDisbursementsPayroll1SortByAmountDesc.items[0].creditAmount).toBe(5000);
-      expect(enrichedDisbursementsPayroll1SortByAmountDesc.items[1].creditAmount).toBe(4000);
-      expect(enrichedDisbursementsPayroll1SortByAmountDesc.items[4].creditAmount).toBe(1000);
+      });
 
-      const enrichedDisbursementsPayroll2SortByAmountDesc =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
-          sortBy: EnrichedDisbursementSortOptions.CREDIT_AMOUNT,
-          sortDirection: SortOrder.DESC,
-        });
-      expect(enrichedDisbursementsPayroll2SortByAmountDesc.items[0].creditAmount).toBe(7000);
-      expect(enrichedDisbursementsPayroll2SortByAmountDesc.items[1].creditAmount).toBe(6000);
+      it("should get all enriched disbursements no filter", async () => {
+        const enrichedDisbursementsPayroll1NoFilter =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {});
+        expect(enrichedDisbursementsPayroll1NoFilter.totalItems).toBe(5);
+        expect(
+          enrichedDisbursementsPayroll1NoFilter.items.filter(item => item.status === TransactionStatus.COMPLETED),
+        ).toHaveLength(2);
 
-      const enrichedDisbursementsPayroll1SortByAmountAsc =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
-          sortBy: EnrichedDisbursementSortOptions.CREDIT_AMOUNT,
-          sortDirection: SortOrder.ASC,
-        });
-      expect(enrichedDisbursementsPayroll1SortByAmountAsc.items[0].creditAmount).toBe(1000);
-      expect(enrichedDisbursementsPayroll1SortByAmountAsc.items[1].creditAmount).toBe(2000);
-      expect(enrichedDisbursementsPayroll1SortByAmountAsc.items[4].creditAmount).toBe(5000);
+        const enrichedDisbursementsPayroll2NoFilter =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {});
+        expect(enrichedDisbursementsPayroll2NoFilter.totalItems).toBe(2);
+        expect(
+          enrichedDisbursementsPayroll2NoFilter.items.filter(item => item.status === TransactionStatus.COMPLETED),
+        ).toHaveLength(0);
+      });
 
-      const enrichedDisbursementsPayroll2SortByAmountAsc =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
-          sortBy: EnrichedDisbursementSortOptions.CREDIT_AMOUNT,
-          sortDirection: SortOrder.ASC,
-        });
-      expect(enrichedDisbursementsPayroll2SortByAmountAsc.items[0].creditAmount).toBe(6000);
-      expect(enrichedDisbursementsPayroll2SortByAmountAsc.items[1].creditAmount).toBe(7000);
+      it("should get all enriched disbursements filter by status", async () => {
+        const enrichedDisbursementsPayroll1FilterByStatus =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
+            status: TransactionStatus.PROCESSING,
+          });
+        expect(enrichedDisbursementsPayroll1FilterByStatus.totalItems).toBe(1);
 
-      const enrichedDisbursementsPayroll1SortByStatusDesc =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
-          sortBy: EnrichedDisbursementSortOptions.STATUS,
-          sortDirection: SortOrder.DESC,
-        });
-      expect(enrichedDisbursementsPayroll1SortByStatusDesc.items[0].status).toBe(TransactionStatus.PROCESSING);
-      expect(enrichedDisbursementsPayroll1SortByStatusDesc.items[1].status).toBe(TransactionStatus.FAILED);
-      expect(enrichedDisbursementsPayroll1SortByStatusDesc.items[4].status).toBe(TransactionStatus.COMPLETED);
+        const enrichedDisbursementsPayroll2FilterByStatus =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
+            status: TransactionStatus.PROCESSING,
+          });
+        expect(enrichedDisbursementsPayroll2FilterByStatus.totalItems).toBe(1);
+      });
 
-      const enrichedDisbursementsPayroll2SortByStatusDesc =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
-          sortBy: EnrichedDisbursementSortOptions.STATUS,
-          sortDirection: SortOrder.DESC,
-        });
-      expect(enrichedDisbursementsPayroll2SortByStatusDesc.items[0].status).toBe(TransactionStatus.PROCESSING);
-      expect(enrichedDisbursementsPayroll2SortByStatusDesc.items[1].status).toBe(TransactionStatus.INITIATED);
+      it("should get all enriched disbursements sort by amount", async () => {
+        const enrichedDisbursementsPayroll1SortByAmountDesc =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
+            sortBy: EnrichedDisbursementSortOptions.CREDIT_AMOUNT,
+            sortDirection: SortOrder.DESC,
+          });
+        expect(enrichedDisbursementsPayroll1SortByAmountDesc.items[0].creditAmount).toBe(5000);
+        expect(enrichedDisbursementsPayroll1SortByAmountDesc.items[1].creditAmount).toBe(4000);
+        expect(enrichedDisbursementsPayroll1SortByAmountDesc.items[4].creditAmount).toBe(1000);
 
-      const enrichedDisbursementsPayroll1SortByStatusAsc =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
-          sortBy: EnrichedDisbursementSortOptions.STATUS,
-          sortDirection: SortOrder.ASC,
-        });
-      expect(enrichedDisbursementsPayroll1SortByStatusAsc.items[0].status).toBe(TransactionStatus.COMPLETED);
-      expect(enrichedDisbursementsPayroll1SortByStatusAsc.items[1].status).toBe(TransactionStatus.COMPLETED);
-      expect(enrichedDisbursementsPayroll1SortByStatusAsc.items[4].status).toBe(TransactionStatus.PROCESSING);
+        const enrichedDisbursementsPayroll2SortByAmountDesc =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
+            sortBy: EnrichedDisbursementSortOptions.CREDIT_AMOUNT,
+            sortDirection: SortOrder.DESC,
+          });
+        expect(enrichedDisbursementsPayroll2SortByAmountDesc.items[0].creditAmount).toBe(7000);
+        expect(enrichedDisbursementsPayroll2SortByAmountDesc.items[1].creditAmount).toBe(6000);
 
-      const enrichedDisbursementsPayroll2SortByStatusAsc =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
-          sortBy: EnrichedDisbursementSortOptions.STATUS,
-          sortDirection: SortOrder.ASC,
-        });
-      expect(enrichedDisbursementsPayroll2SortByStatusAsc.items[0].status).toBe(TransactionStatus.INITIATED);
-      expect(enrichedDisbursementsPayroll2SortByStatusAsc.items[1].status).toBe(TransactionStatus.PROCESSING);
+        const enrichedDisbursementsPayroll1SortByAmountAsc =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
+            sortBy: EnrichedDisbursementSortOptions.CREDIT_AMOUNT,
+            sortDirection: SortOrder.ASC,
+          });
+        expect(enrichedDisbursementsPayroll1SortByAmountAsc.items[0].creditAmount).toBe(1000);
+        expect(enrichedDisbursementsPayroll1SortByAmountAsc.items[1].creditAmount).toBe(2000);
+        expect(enrichedDisbursementsPayroll1SortByAmountAsc.items[4].creditAmount).toBe(5000);
 
-      const enrichedDisbursementsPayroll1SortByLastNameDesc =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
-          sortBy: EnrichedDisbursementSortOptions.LAST_NAME,
-          sortDirection: SortOrder.DESC,
-        });
-      expect(enrichedDisbursementsPayroll1SortByLastNameDesc.items[0].lastName).toBe("Wayne");
-      expect(enrichedDisbursementsPayroll1SortByLastNameDesc.items[1].lastName).toBe("Prince");
-      expect(enrichedDisbursementsPayroll1SortByLastNameDesc.items[4].lastName).toBe("Allen");
+        const enrichedDisbursementsPayroll2SortByAmountAsc =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
+            sortBy: EnrichedDisbursementSortOptions.CREDIT_AMOUNT,
+            sortDirection: SortOrder.ASC,
+          });
+        expect(enrichedDisbursementsPayroll2SortByAmountAsc.items[0].creditAmount).toBe(6000);
+        expect(enrichedDisbursementsPayroll2SortByAmountAsc.items[1].creditAmount).toBe(7000);
+      });
 
-      const enrichedDisbursementsPayroll2SortByLastNameDesc =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
-          sortBy: EnrichedDisbursementSortOptions.LAST_NAME,
-          sortDirection: SortOrder.DESC,
-        });
-      expect(enrichedDisbursementsPayroll2SortByLastNameDesc.items[0].lastName).toBe("Maradona");
-      expect(enrichedDisbursementsPayroll2SortByLastNameDesc.items[1].lastName).toBe("Hoyon Castro");
+      it("should get all enriched disbursements sort by status", async () => {
+        const enrichedDisbursementsPayroll1SortByStatusDesc =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
+            sortBy: EnrichedDisbursementSortOptions.STATUS,
+            sortDirection: SortOrder.DESC,
+          });
+        expect(enrichedDisbursementsPayroll1SortByStatusDesc.items[0].status).toBe(TransactionStatus.PROCESSING);
+        expect(enrichedDisbursementsPayroll1SortByStatusDesc.items[1].status).toBe(TransactionStatus.FAILED);
+        expect(enrichedDisbursementsPayroll1SortByStatusDesc.items[4].status).toBe(TransactionStatus.COMPLETED);
 
-      const enrichedDisbursementsPayroll1SortByLastNameAsc =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
-          sortBy: EnrichedDisbursementSortOptions.LAST_NAME,
-          sortDirection: SortOrder.ASC,
-        });
-      expect(enrichedDisbursementsPayroll1SortByLastNameAsc.items[0].lastName).toBe("Allen");
-      expect(enrichedDisbursementsPayroll1SortByLastNameAsc.items[1].lastName).toBe("Forlan");
+        const enrichedDisbursementsPayroll2SortByStatusDesc =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
+            sortBy: EnrichedDisbursementSortOptions.STATUS,
+            sortDirection: SortOrder.DESC,
+          });
+        expect(enrichedDisbursementsPayroll2SortByStatusDesc.items[0].status).toBe(TransactionStatus.PROCESSING);
+        expect(enrichedDisbursementsPayroll2SortByStatusDesc.items[1].status).toBe(TransactionStatus.INITIATED);
 
-      const enrichedDisbursementsPayroll2SortByLastNameAsc =
-        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
-          sortBy: EnrichedDisbursementSortOptions.LAST_NAME,
-          sortDirection: SortOrder.ASC,
-        });
-      expect(enrichedDisbursementsPayroll2SortByLastNameAsc.items[0].lastName).toBe("Hoyon Castro");
-      expect(enrichedDisbursementsPayroll2SortByLastNameAsc.items[1].lastName).toBe("Maradona");
+        const enrichedDisbursementsPayroll1SortByStatusAsc =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
+            sortBy: EnrichedDisbursementSortOptions.STATUS,
+            sortDirection: SortOrder.ASC,
+          });
+        expect(enrichedDisbursementsPayroll1SortByStatusAsc.items[0].status).toBe(TransactionStatus.COMPLETED);
+        expect(enrichedDisbursementsPayroll1SortByStatusAsc.items[1].status).toBe(TransactionStatus.COMPLETED);
+        expect(enrichedDisbursementsPayroll1SortByStatusAsc.items[4].status).toBe(TransactionStatus.PROCESSING);
+
+        const enrichedDisbursementsPayroll2SortByStatusAsc =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
+            sortBy: EnrichedDisbursementSortOptions.STATUS,
+            sortDirection: SortOrder.ASC,
+          });
+        expect(enrichedDisbursementsPayroll2SortByStatusAsc.items[0].status).toBe(TransactionStatus.INITIATED);
+        expect(enrichedDisbursementsPayroll2SortByStatusAsc.items[1].status).toBe(TransactionStatus.PROCESSING);
+      });
+
+      it("should get all enriched disbursements sort by last name", async () => {
+        const enrichedDisbursementsPayroll1SortByLastNameDesc =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
+            sortBy: EnrichedDisbursementSortOptions.LAST_NAME,
+            sortDirection: SortOrder.DESC,
+          });
+        expect(enrichedDisbursementsPayroll1SortByLastNameDesc.items[0].lastName).toBe("Wayne");
+        expect(enrichedDisbursementsPayroll1SortByLastNameDesc.items[1].lastName).toBe("Prince");
+        expect(enrichedDisbursementsPayroll1SortByLastNameDesc.items[4].lastName).toBe("Allen");
+
+        const enrichedDisbursementsPayroll2SortByLastNameDesc =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
+            sortBy: EnrichedDisbursementSortOptions.LAST_NAME,
+            sortDirection: SortOrder.DESC,
+          });
+        expect(enrichedDisbursementsPayroll2SortByLastNameDesc.items[0].lastName).toBe("Maradona");
+        expect(enrichedDisbursementsPayroll2SortByLastNameDesc.items[1].lastName).toBe("Hoyon Castro");
+
+        const enrichedDisbursementsPayroll1SortByLastNameAsc =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
+            sortBy: EnrichedDisbursementSortOptions.LAST_NAME,
+            sortDirection: SortOrder.ASC,
+          });
+        expect(enrichedDisbursementsPayroll1SortByLastNameAsc.items[0].lastName).toBe("Allen");
+        expect(enrichedDisbursementsPayroll1SortByLastNameAsc.items[1].lastName).toBe("Forlan");
+
+        const enrichedDisbursementsPayroll2SortByLastNameAsc =
+          await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
+            sortBy: EnrichedDisbursementSortOptions.LAST_NAME,
+            sortDirection: SortOrder.ASC,
+          });
+        expect(enrichedDisbursementsPayroll2SortByLastNameAsc.items[0].lastName).toBe("Hoyon Castro");
+        expect(enrichedDisbursementsPayroll2SortByLastNameAsc.items[1].lastName).toBe("Maradona");
+      });
     });
-  });
 
-  describe("getAllDisbursementsForEmployee", () => {
-    it("should get all disbursements for employee", async () => {
-      const payrollDisbursement = await saveAndGetPayrollDisbursement(prismaService);
+    describe("getAllDisbursementsForEmployee", () => {
+      it("should get all disbursements for employee", async () => {
+        const payrollDisbursement = await saveAndGetPayrollDisbursement(prismaService);
 
-      const allDisbursementsForEmployee = await payrollDisbursementRepo.getAllDisbursementsForEmployee(
-        payrollDisbursement.employeeID,
-      );
+        const allDisbursementsForEmployee = await payrollDisbursementRepo.getAllDisbursementsForEmployee(
+          payrollDisbursement.employeeID,
+        );
 
-      expect(allDisbursementsForEmployee).toHaveLength(1);
-      expect(allDisbursementsForEmployee).toEqual(expect.arrayContaining(allDisbursementsForEmployee));
-    });
+        expect(allDisbursementsForEmployee).toHaveLength(1);
+        expect(allDisbursementsForEmployee).toEqual(expect.arrayContaining(allDisbursementsForEmployee));
+      });
 
-    it("should return empty list if employee with id does not exist", async () => {
-      await saveAndGetPayrollDisbursement(prismaService);
+      it("should return empty list if employee with id does not exist", async () => {
+        await saveAndGetPayrollDisbursement(prismaService);
 
-      const allDisbursementsForEmployee = await payrollDisbursementRepo.getAllDisbursementsForEmployee(
-        "fake-employee-id",
-      );
+        const allDisbursementsForEmployee = await payrollDisbursementRepo.getAllDisbursementsForEmployee(
+          "fake-employee-id",
+        );
 
-      expect(allDisbursementsForEmployee).toHaveLength(0);
+        expect(allDisbursementsForEmployee).toHaveLength(0);
+      });
     });
   });
 

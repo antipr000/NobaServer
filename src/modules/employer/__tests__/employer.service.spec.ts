@@ -1216,22 +1216,24 @@ describe("EmployerServiceTests", () => {
     });
 
     it("should throw 'ServiceException' when employeeID is undefined", async () => {
-      await expect(employerService.getAllDisbursementsForEmployee(undefined)).rejects.toThrowError(ServiceException);
+      expect(employerService.getAllDisbursementsForEmployee(undefined)).toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
     });
   });
 
   describe("getFilteredEnrichedDisbursementsForPayroll", () => {
     it("should throw ServiceException when payroll is null", async () => {
-      expect(employerService.getFilteredEnrichedDisbursementsForPayroll(null, null)).rejects.toThrowError(
-        ServiceException,
+      expect(employerService.getFilteredEnrichedDisbursementsForPayroll(null, null)).toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
       );
     });
 
     it("should throw ServiceException when payroll not found", async () => {
       when(mockPayrollRepo.getPayrollByID(anything())).thenResolve(null);
 
-      expect(employerService.getFilteredEnrichedDisbursementsForPayroll("fake-payroll", null)).rejects.toThrowError(
-        ServiceException,
+      expect(employerService.getFilteredEnrichedDisbursementsForPayroll("fake-payroll", null)).toThrowServiceException(
+        ServiceErrorCode.DOES_NOT_EXIST,
       );
     });
 
@@ -1241,8 +1243,8 @@ describe("EmployerServiceTests", () => {
       when(mockPayrollRepo.getPayrollByID(anything())).thenResolve(payroll);
       when(mockEmployerRepo.getEmployerByID(anything())).thenResolve(null);
 
-      expect(employerService.getFilteredEnrichedDisbursementsForPayroll("fake-payroll", null)).rejects.toThrowError(
-        ServiceException,
+      expect(employerService.getFilteredEnrichedDisbursementsForPayroll("fake-payroll", null)).toThrowServiceException(
+        ServiceErrorCode.DOES_NOT_EXIST,
       );
     });
 

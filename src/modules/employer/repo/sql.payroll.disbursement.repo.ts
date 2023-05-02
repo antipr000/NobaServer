@@ -211,30 +211,31 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
     sortBy: EnrichedDisbursementSortOptions,
     sortDirection: SortOrder,
   ): Prisma.Enumerable<Prisma.PayrollDisbursementOrderByWithRelationInput> {
-    if (sortBy === "lastName") {
-      return {
-        employee: {
-          consumer: {
-            lastName: sortDirection,
+    switch (sortBy) {
+      case EnrichedDisbursementSortOptions.LAST_NAME:
+        return {
+          employee: {
+            consumer: {
+              lastName: sortDirection,
+            },
           },
-        },
-      };
-    } else if (sortBy === "allocationAmount") {
-      return {
-        allocationAmount: sortDirection,
-      };
-    } else if (sortBy === "creditAmount") {
-      return {
-        creditAmount: sortDirection,
-      };
-    } else if (sortBy === "status") {
-      return {
-        transaction: {
-          status: sortDirection,
-        },
-      };
+        };
+      case EnrichedDisbursementSortOptions.ALLOCATION_AMOUNT:
+        return {
+          allocationAmount: sortDirection,
+        };
+      case EnrichedDisbursementSortOptions.CREDIT_AMOUNT:
+        return {
+          creditAmount: sortDirection,
+        };
+      case EnrichedDisbursementSortOptions.STATUS:
+        return {
+          transaction: {
+            status: sortDirection,
+          },
+        };
+      default:
+        return undefined;
     }
-
-    return undefined;
   }
 }
