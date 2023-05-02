@@ -343,37 +343,71 @@ describe("SqlPayrollDisbursementRepo tests", () => {
 
       const enrichedDisbursementsPayroll1SortByAmountDesc =
         await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
-          sortBy: EnrichedDisbursementSortOptions.ALLOCATION_AMOUNT,
+          sortBy: EnrichedDisbursementSortOptions.CREDIT_AMOUNT,
           sortDirection: SortOrder.DESC,
         });
-      expect(enrichedDisbursementsPayroll1SortByAmountDesc.items[0].creditAmount).toBe(1000);
-      expect(enrichedDisbursementsPayroll1SortByAmountDesc.items[1].creditAmount).toBe(2000);
-      expect(enrichedDisbursementsPayroll1SortByAmountDesc.items[4].creditAmount).toBe(5000);
+      expect(enrichedDisbursementsPayroll1SortByAmountDesc.items[0].creditAmount).toBe(5000);
+      expect(enrichedDisbursementsPayroll1SortByAmountDesc.items[1].creditAmount).toBe(4000);
+      expect(enrichedDisbursementsPayroll1SortByAmountDesc.items[4].creditAmount).toBe(1000);
 
       const enrichedDisbursementsPayroll2SortByAmountDesc =
         await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
-          sortBy: EnrichedDisbursementSortOptions.ALLOCATION_AMOUNT,
+          sortBy: EnrichedDisbursementSortOptions.CREDIT_AMOUNT,
           sortDirection: SortOrder.DESC,
         });
-      expect(enrichedDisbursementsPayroll2SortByAmountDesc.items[0].creditAmount).toBe(6000);
-      expect(enrichedDisbursementsPayroll2SortByAmountDesc.items[1].creditAmount).toBe(7000);
+      expect(enrichedDisbursementsPayroll2SortByAmountDesc.items[0].creditAmount).toBe(7000);
+      expect(enrichedDisbursementsPayroll2SortByAmountDesc.items[1].creditAmount).toBe(6000);
 
       const enrichedDisbursementsPayroll1SortByAmountAsc =
         await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
-          sortBy: EnrichedDisbursementSortOptions.ALLOCATION_AMOUNT,
+          sortBy: EnrichedDisbursementSortOptions.CREDIT_AMOUNT,
           sortDirection: SortOrder.ASC,
         });
-      expect(enrichedDisbursementsPayroll1SortByAmountAsc.items[0].creditAmount).toBe(5000);
-      expect(enrichedDisbursementsPayroll1SortByAmountAsc.items[1].creditAmount).toBe(4000);
-      expect(enrichedDisbursementsPayroll1SortByAmountAsc.items[4].creditAmount).toBe(1000);
+      expect(enrichedDisbursementsPayroll1SortByAmountAsc.items[0].creditAmount).toBe(1000);
+      expect(enrichedDisbursementsPayroll1SortByAmountAsc.items[1].creditAmount).toBe(2000);
+      expect(enrichedDisbursementsPayroll1SortByAmountAsc.items[4].creditAmount).toBe(5000);
 
       const enrichedDisbursementsPayroll2SortByAmountAsc =
         await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
-          sortBy: EnrichedDisbursementSortOptions.ALLOCATION_AMOUNT,
+          sortBy: EnrichedDisbursementSortOptions.CREDIT_AMOUNT,
           sortDirection: SortOrder.ASC,
         });
-      expect(enrichedDisbursementsPayroll2SortByAmountAsc.items[0].creditAmount).toBe(7000);
-      expect(enrichedDisbursementsPayroll2SortByAmountAsc.items[1].creditAmount).toBe(6000);
+      expect(enrichedDisbursementsPayroll2SortByAmountAsc.items[0].creditAmount).toBe(6000);
+      expect(enrichedDisbursementsPayroll2SortByAmountAsc.items[1].creditAmount).toBe(7000);
+
+      const enrichedDisbursementsPayroll1SortByStatusDesc =
+        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
+          sortBy: EnrichedDisbursementSortOptions.STATUS,
+          sortDirection: SortOrder.DESC,
+        });
+      expect(enrichedDisbursementsPayroll1SortByStatusDesc.items[0].status).toBe(TransactionStatus.PROCESSING);
+      expect(enrichedDisbursementsPayroll1SortByStatusDesc.items[1].status).toBe(TransactionStatus.FAILED);
+      expect(enrichedDisbursementsPayroll1SortByStatusDesc.items[4].status).toBe(TransactionStatus.COMPLETED);
+
+      const enrichedDisbursementsPayroll2SortByStatusDesc =
+        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
+          sortBy: EnrichedDisbursementSortOptions.STATUS,
+          sortDirection: SortOrder.DESC,
+        });
+      expect(enrichedDisbursementsPayroll2SortByStatusDesc.items[0].status).toBe(TransactionStatus.PROCESSING);
+      expect(enrichedDisbursementsPayroll2SortByStatusDesc.items[1].status).toBe(TransactionStatus.INITIATED);
+
+      const enrichedDisbursementsPayroll1SortByStatusAsc =
+        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
+          sortBy: EnrichedDisbursementSortOptions.STATUS,
+          sortDirection: SortOrder.ASC,
+        });
+      expect(enrichedDisbursementsPayroll1SortByStatusAsc.items[0].status).toBe(TransactionStatus.COMPLETED);
+      expect(enrichedDisbursementsPayroll1SortByStatusAsc.items[1].status).toBe(TransactionStatus.COMPLETED);
+      expect(enrichedDisbursementsPayroll1SortByStatusAsc.items[4].status).toBe(TransactionStatus.PROCESSING);
+
+      const enrichedDisbursementsPayroll2SortByStatusAsc =
+        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
+          sortBy: EnrichedDisbursementSortOptions.STATUS,
+          sortDirection: SortOrder.ASC,
+        });
+      expect(enrichedDisbursementsPayroll2SortByStatusAsc.items[0].status).toBe(TransactionStatus.INITIATED);
+      expect(enrichedDisbursementsPayroll2SortByStatusAsc.items[1].status).toBe(TransactionStatus.PROCESSING);
     });
   });
 

@@ -18,7 +18,10 @@ import {
   DatabaseInternalErrorException,
   InvalidDatabaseRecordException,
 } from "../../../core/exception/CommonAppException";
-import { EnrichedDisbursementFilterOptionsDTO } from "../dto/enriched.disbursement.filter.options.dto";
+import {
+  EnrichedDisbursementFilterOptionsDTO,
+  EnrichedDisbursementSortOptions,
+} from "../dto/enriched.disbursement.filter.options.dto";
 import { PaginatedResult, SortOrder } from "../../../core/infra/PaginationTypes";
 import { createPaginator } from "../../../infra/sql/paginate/PaginationPipeline";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
@@ -205,31 +208,29 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
   }
 
   private convertToSortOption(
-    sortBy: string,
-    sortDirection: string,
+    sortBy: EnrichedDisbursementSortOptions,
+    sortDirection: SortOrder,
   ): Prisma.Enumerable<Prisma.PayrollDisbursementOrderByWithRelationInput> {
-    const sortOrder = sortDirection === "asc" ? SortOrder.ASC : SortOrder.DESC;
-
     if (sortBy === "lastName") {
       return {
         employee: {
           consumer: {
-            lastName: sortOrder,
+            lastName: sortDirection,
           },
         },
       };
     } else if (sortBy === "allocationAmount") {
       return {
-        allocationAmount: sortOrder,
+        allocationAmount: sortDirection,
       };
     } else if (sortBy === "creditAmount") {
       return {
-        creditAmount: sortOrder,
+        creditAmount: sortDirection,
       };
     } else if (sortBy === "status") {
       return {
         transaction: {
-          status: sortOrder,
+          status: sortDirection,
         },
       };
     }
