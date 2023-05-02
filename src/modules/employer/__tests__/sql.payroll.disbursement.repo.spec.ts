@@ -13,11 +13,12 @@ import { DatabaseInternalErrorException } from "../../../core/exception/CommonAp
 import { IPayrollDisbursementRepo } from "../repo/payroll.disbursement.repo";
 import { SqlPayrollDisbursementRepo } from "../repo/sql.payroll.disbursement.repo";
 import { createEmployee, saveAndGetEmployee } from "../../employee/test_utils/employee.test.utils";
-import { createTestNobaTransaction } from "../../transaction/test_utils/test.utils";
+import { createTestNobaTransaction, createTransaction } from "../../transaction/test_utils/test.utils";
 import { createTestConsumer } from "../../../modules/consumer/test_utils/test.utils";
 import { createTestEmployerAndStoreInDB } from "../test_utils/test.utils";
 import { Employee, EmployeeCreateRequest } from "../../../modules/employee/domain/Employee";
 import { getRandomEmployee } from "../../employee/test_utils/employee.test.utils";
+import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 
 describe("SqlPayrollDisbursementRepo tests", () => {
   jest.setTimeout(20000);
@@ -248,37 +249,65 @@ describe("SqlPayrollDisbursementRepo tests", () => {
         payrollDisbursementCreateInput7,
       );
 
-      const transactionID1 = await createTestNobaTransaction(prismaService);
+      const transactionID1 = await createTransaction({
+        prismaService,
+        consumerID: consumerID1,
+        status: TransactionStatus.PROCESSING,
+      });
       await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement1.id, {
         transactionID: transactionID1,
         creditAmount: 1000,
       });
-      const transactionID2 = await createTestNobaTransaction(prismaService);
+      const transactionID2 = await createTransaction({
+        prismaService,
+        consumerID: consumerID2,
+        status: TransactionStatus.COMPLETED,
+      });
       await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement2.id, {
         transactionID: transactionID2,
         creditAmount: 2000,
       });
-      const transactionID3 = await createTestNobaTransaction(prismaService);
+      const transactionID3 = await createTransaction({
+        prismaService,
+        consumerID: consumerID3,
+        status: TransactionStatus.FAILED,
+      });
       await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement3.id, {
         transactionID: transactionID3,
         creditAmount: 3000,
       });
-      const transactionID4 = await createTestNobaTransaction(prismaService);
+      const transactionID4 = await createTransaction({
+        prismaService,
+        consumerID: consumerID4,
+        status: TransactionStatus.COMPLETED,
+      });
       await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement4.id, {
         transactionID: transactionID4,
         creditAmount: 4000,
       });
-      const transactionID5 = await createTestNobaTransaction(prismaService);
+      const transactionID5 = await createTransaction({
+        prismaService,
+        consumerID: consumerID5,
+        status: TransactionStatus.EXPIRED,
+      });
       await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement5.id, {
         transactionID: transactionID5,
         creditAmount: 5000,
       });
-      const transactionID6 = await createTestNobaTransaction(prismaService);
+      const transactionID6 = await createTransaction({
+        prismaService,
+        consumerID: consumerID6,
+        status: TransactionStatus.INITIATED,
+      });
       await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement6.id, {
         transactionID: transactionID6,
         creditAmount: 6000,
       });
-      const transactionID7 = await createTestNobaTransaction(prismaService);
+      const transactionID7 = await createTransaction({
+        prismaService,
+        consumerID: consumerID7,
+        status: TransactionStatus.PROCESSING,
+      });
       await payrollDisbursementRepo.updatePayrollDisbursement(payrollDisbursement7.id, {
         transactionID: transactionID7,
         creditAmount: 7000,
@@ -287,10 +316,28 @@ describe("SqlPayrollDisbursementRepo tests", () => {
       const enrichedDisbursementsPayroll1NoFilter =
         await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {});
       expect(enrichedDisbursementsPayroll1NoFilter.totalItems).toBe(5);
+      expect(
+        enrichedDisbursementsPayroll1NoFilter.items.filter(item => item.status === TransactionStatus.COMPLETED),
+      ).toHaveLength(2);
 
       const enrichedDisbursementsPayroll2NoFiler =
         await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {});
       expect(enrichedDisbursementsPayroll2NoFiler.totalItems).toBe(2);
+      expect(
+        enrichedDisbursementsPayroll2NoFiler.items.filter(item => item.status === TransactionStatus.COMPLETED),
+      ).toHaveLength(0);
+
+      const enrichedDisbursementsPayroll1FilterByStatus =
+        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll1.id, {
+          status: TransactionStatus.PROCESSING,
+        });
+      expect(enrichedDisbursementsPayroll1FilterByStatus.totalItems).toBe(1);
+
+      const enrichedDisbursementsPayroll2FilterByStatus =
+        await payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll2.id, {
+          status: TransactionStatus.PROCESSING,
+        });
+      expect(enrichedDisbursementsPayroll2FilterByStatus.totalItems).toBe(1);
     });
   });
 
