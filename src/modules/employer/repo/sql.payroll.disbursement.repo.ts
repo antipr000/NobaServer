@@ -19,7 +19,7 @@ import {
   InvalidDatabaseRecordException,
 } from "../../../core/exception/CommonAppException";
 import { EnrichedDisbursementFilterOptionsDTO } from "../dto/enriched.disbursement.filter.options.dto";
-import { PaginatedResult } from "../../../core/infra/PaginationTypes";
+import { PaginatedResult, SortOrder } from "../../../core/infra/PaginationTypes";
 import { createPaginator } from "../../../infra/sql/paginate/PaginationPipeline";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
 
@@ -169,38 +169,21 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
       convertToDomainEnrichedDisbursements,
     );
 
+    const sortOption = this.convertToSortOption(filterOptions.sortBy, filterOptions.sortDirection);
+
     try {
       const filterQuery: Prisma.PayrollDisbursementFindManyArgs = {
         where: {
           payrollID,
-          transaction: {
-            ...(filterOptions.status && {
+          ...(filterOptions.status && {
+            transaction: {
               status: {
                 in: filterOptions.status,
               },
-            }),
-          },
-        },
-        orderBy: {
-          ...(filterOptions.sortLastName && {
-            employee: {
-              consumer: {
-                lastName: filterOptions.sortLastName,
-              },
-            },
-          }),
-          ...(filterOptions.sortAllocationAmount && {
-            allocationAmount: filterOptions.sortAllocationAmount,
-          }),
-          ...(filterOptions.sortCreditAmount && {
-            creditAmount: filterOptions.sortCreditAmount,
-          }),
-          ...(filterOptions.sortStatus && {
-            transaction: {
-              status: filterOptions.sortStatus,
             },
           }),
         },
+        ...(sortOption && { orderBy: sortOption }),
         include: {
           employee: {
             include: {
@@ -219,5 +202,38 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
         message: "Error retrieving payroll disbursements with given filters",
       });
     }
+  }
+
+  private convertToSortOption(
+    sortBy: string,
+    sortDirection: string,
+  ): Prisma.Enumerable<Prisma.PayrollDisbursementOrderByWithRelationInput> {
+    const sortOrder = sortDirection === "asc" ? SortOrder.ASC : SortOrder.DESC;
+
+    if (sortBy === "lastName") {
+      return {
+        employee: {
+          consumer: {
+            lastName: sortOrder,
+          },
+        },
+      };
+    } else if (sortBy === "allocationAmount") {
+      return {
+        allocationAmount: sortOrder,
+      };
+    } else if (sortBy === "creditAmount") {
+      return {
+        creditAmount: sortOrder,
+      };
+    } else if (sortBy === "status") {
+      return {
+        transaction: {
+          status: sortOrder,
+        },
+      };
+    }
+
+    return undefined;
   }
 }
