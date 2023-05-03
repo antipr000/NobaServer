@@ -807,17 +807,17 @@ describe("BubbleServiceTests", () => {
 
   describe("bulkInviteEmployeesForEmployer", () => {
     it("should throw ServiceException if referralID is missing", async () => {
-      await expect(
+      expect(
         async () => await bubbleService.bulkInviteEmployeesForEmployer(undefined, {} as any),
-      ).rejects.toThrow(ServiceException);
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
     });
 
     it("should throw ServiceException if employer with referralID does not exist", async () => {
       when(employerService.getEmployerByReferralID(anything())).thenResolve(null);
 
-      await expect(
+      expect(
         async () => await bubbleService.bulkInviteEmployeesForEmployer("fake-referral-id", {} as any),
-      ).rejects.toThrow(ServiceException);
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
     });
 
     it("should throw ServiceException when CSV format is not valid", async () => {
@@ -827,12 +827,12 @@ describe("BubbleServiceTests", () => {
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(csvService.getHeadersFromCsvFile(anything())).thenResolve(csvHeaders);
 
-      await expect(
+      expect(
         async () =>
           await bubbleService.bulkInviteEmployeesForEmployer(employer.referralID, {
             buffer: Buffer.from("fake-csv"),
           } as any),
-      ).rejects.toThrow(ServiceException);
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
     });
 
     it("should dispatch workflow event to invite employees", async () => {
