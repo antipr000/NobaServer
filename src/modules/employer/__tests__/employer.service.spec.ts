@@ -48,6 +48,7 @@ import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/exchangerate/mocks/mock.exchangerate.service";
 import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
+import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -1215,7 +1216,115 @@ describe("EmployerServiceTests", () => {
     });
 
     it("should throw 'ServiceException' when employeeID is undefined", async () => {
-      await expect(employerService.getAllDisbursementsForEmployee(undefined)).rejects.toThrowError(ServiceException);
+      expect(employerService.getAllDisbursementsForEmployee(undefined)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+  });
+
+  describe("getFilteredEnrichedDisbursementsForPayroll", () => {
+    it("should throw ServiceException when payroll is null", async () => {
+      expect(employerService.getFilteredEnrichedDisbursementsForPayroll(null, null)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should throw ServiceException when payroll not found", async () => {
+      when(mockPayrollRepo.getPayrollByID(anything())).thenResolve(null);
+
+      expect(
+        employerService.getFilteredEnrichedDisbursementsForPayroll("fake-payroll", null),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
+    });
+
+    it("should throw ServiceException when payroll is not for employer", async () => {
+      const { payroll } = getRandomPayroll("fake-employer");
+
+      when(mockPayrollRepo.getPayrollByID(anything())).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(anything())).thenResolve(null);
+
+      expect(
+        employerService.getFilteredEnrichedDisbursementsForPayroll("fake-payroll", null),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
+    });
+
+    it("should return enriched disbursements for payroll", async () => {
+      const { payroll } = getRandomPayroll("fake-employer");
+      const employer = getRandomEmployer();
+
+      const enrichedDisbursement = {
+        id: "fake-id",
+        debitAmount: 1000,
+        creditAmount: 1000,
+        status: TransactionStatus.COMPLETED,
+        firstName: "Fake",
+        lastName: "Fake",
+        updatedTimestamp: new Date(),
+      };
+
+      when(mockPayrollRepo.getPayrollByID(anything())).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(anything())).thenResolve(employer);
+      when(mockPayrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll.id, null)).thenResolve({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [enrichedDisbursement],
+      });
+
+      const response = await employerService.getFilteredEnrichedDisbursementsForPayroll(payroll.id, null);
+
+      expect(response).toStrictEqual({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [enrichedDisbursement],
+      });
+    });
+
+    it("should return enriched disbursements for payroll with filter", async () => {
+      const { payroll } = getRandomPayroll("fake-employer");
+      const employer = getRandomEmployer();
+
+      const enrichedDisbursement = {
+        id: "fake-id",
+        debitAmount: 1000,
+        creditAmount: 1000,
+        status: TransactionStatus.COMPLETED,
+        firstName: "Fake",
+        lastName: "Fake",
+        updatedTimestamp: new Date(),
+      };
+
+      when(mockPayrollRepo.getPayrollByID(anything())).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(anything())).thenResolve(employer);
+      when(
+        mockPayrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(
+          payroll.id,
+          deepEqual({
+            status: TransactionStatus.COMPLETED,
+          }),
+        ),
+      ).thenResolve({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [enrichedDisbursement],
+      });
+
+      const response = await employerService.getFilteredEnrichedDisbursementsForPayroll(payroll.id, {
+        status: TransactionStatus.COMPLETED,
+      });
+
+      expect(response).toStrictEqual({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [enrichedDisbursement],
+      });
     });
   });
 

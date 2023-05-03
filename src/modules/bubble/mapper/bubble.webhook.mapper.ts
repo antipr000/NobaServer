@@ -1,11 +1,12 @@
 import { Payroll } from "../../../modules/employer/domain/Payroll";
 import {
   DisbursementDTO,
+  EnrichedDisbursementDTO,
   EmployeeResponseDTO,
   PaginatedEmployeeResponseDTO,
   PayrollDTO,
 } from "../dto/bubble.webhook.controller.dto";
-import { PayrollDisbursement } from "../../../modules/employer/domain/PayrollDisbursement";
+import { EnrichedDisbursement, PayrollDisbursement } from "../../../modules/employer/domain/PayrollDisbursement";
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { Employee } from "../../../modules/employee/domain/Employee";
 
@@ -45,6 +46,18 @@ export class BubbleWebhookMapper {
     };
   }
 
+  toEnrichedDisbursementDTO(enrichedDisbursement: EnrichedDisbursement): EnrichedDisbursementDTO {
+    return {
+      id: enrichedDisbursement.id,
+      debitAmount: enrichedDisbursement.debitAmount,
+      creditAmount: enrichedDisbursement.creditAmount,
+      status: enrichedDisbursement.status,
+      firstName: enrichedDisbursement.firstName,
+      lastName: enrichedDisbursement.lastName,
+      updatedTimestamp: enrichedDisbursement.updatedTimestamp,
+    };
+  }
+
   toPaginatedEmployeeDTOs(paginatedResult: PaginatedResult<Employee>): PaginatedEmployeeResponseDTO {
     return {
       page: paginatedResult.page,
@@ -67,6 +80,20 @@ export class BubbleWebhookMapper {
           phoneNumber: employee.consumer.props.phone,
           handle: employee.consumer.props.handle,
         };
+      }),
+    };
+  }
+
+  toPaginatedEnrichedDisbursementDTOs(
+    paginatedResult: PaginatedResult<EnrichedDisbursement>,
+  ): PaginatedResult<EnrichedDisbursementDTO> {
+    return {
+      page: paginatedResult.page,
+      totalItems: paginatedResult.totalItems,
+      totalPages: paginatedResult.totalPages,
+      hasNextPage: paginatedResult.hasNextPage,
+      items: paginatedResult.items.map(enrichedDisbursement => {
+        return this.toEnrichedDisbursementDTO(enrichedDisbursement);
       }),
     };
   }

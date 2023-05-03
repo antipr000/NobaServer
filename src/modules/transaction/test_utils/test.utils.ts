@@ -25,3 +25,34 @@ export const createTestNobaTransaction = async (prismaService: PrismaService): P
 
   return savedNobaTransaction.id;
 };
+
+export const createTransaction = async ({
+  prismaService,
+  consumerID,
+  creditAmount,
+  status,
+}: {
+  prismaService: PrismaService;
+  consumerID: string;
+  creditAmount?: number;
+  status?: TransactionStatus;
+}): Promise<string> => {
+  const savedNobaTransaction = await prismaService.transaction.create({
+    data: {
+      transactionRef: uuid(),
+      exchangeRate: 1,
+      workflowName: WorkflowName.WALLET_DEPOSIT,
+      creditAmount: creditAmount,
+      creditCurrency: "USD",
+      creditConsumer: {
+        connect: {
+          id: consumerID,
+        },
+      },
+      status: status,
+      sessionKey: uuid(),
+    },
+  });
+
+  return savedNobaTransaction.id;
+};

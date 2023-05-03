@@ -27,15 +27,26 @@ export const saveAndGetEmployee = async (prismaService: PrismaService): Promise<
   return convertToDomainEmployee(employee);
 };
 
-export const getRandomEmployee = (employerID: string): Employee => {
+export const getRandomEmployee = (employerID: string, consumerID?: string): Employee => {
   return {
     id: uuid(),
     allocationAmount: 10,
     allocationCurrency: EmployeeAllocationCurrency.COP,
     employerID: employerID,
-    consumerID: uuid(),
+    consumerID: consumerID || uuid(),
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
     status: EmployeeStatus.LINKED,
   };
+};
+
+export const createEmployee = async (
+  prismaService: PrismaService,
+  employeeCreate: EmployeeCreateRequest,
+): Promise<string> => {
+  const employee = await prismaService.employee.create({
+    data: { ...employeeCreate, status: EmployeeStatus.CREATED },
+  });
+
+  return employee.id;
 };

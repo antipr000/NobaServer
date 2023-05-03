@@ -23,7 +23,7 @@ import {
   UpdateDisbursementRequestDTO,
   UpdatePayrollRequestDTO,
 } from "./dto/payroll.workflow.controller.dto";
-import { PayrollDisbursement } from "./domain/PayrollDisbursement";
+import { EnrichedDisbursement, PayrollDisbursement } from "./domain/PayrollDisbursement";
 import { PayrollUpdateRequest, PayrollStatus } from "./domain/Payroll";
 import { Currency } from "../transaction/domain/TransactionTypes";
 import { isValidDateString } from "../../core/utils/DateUtils";
@@ -50,6 +50,7 @@ import { Utils } from "../../core/utils/Utils";
 import { ExchangeRateService } from "../exchangerate/exchangerate.service";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
+import { EnrichedDisbursementFilterOptionsDTO } from "./dto/enriched.disbursement.filter.options.dto";
 
 @Injectable()
 export class EmployerService {
@@ -457,6 +458,41 @@ export class EmployerService {
     }
 
     return this.payrollRepo.getAllPayrollsForEmployer(employerID, {});
+  }
+
+  async getFilteredEnrichedDisbursementsForPayroll(
+    payrollID: string,
+    filters: EnrichedDisbursementFilterOptionsDTO,
+  ): Promise<PaginatedResult<EnrichedDisbursement>> {
+    if (!payrollID) {
+      throw new ServiceException({
+        message: "payrollID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const payroll = await this.payrollRepo.getPayrollByID(payrollID);
+    if (!payroll) {
+      throw new ServiceException({
+        message: "Payroll not found",
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
+    if (!employer) {
+      throw new ServiceException({
+        message: "Employer not found",
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    const enrichedDisbursements = await this.payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(
+      payrollID,
+      filters,
+    );
+
+    return enrichedDisbursements;
   }
 
   async createPayroll(employerID: string, payrollDate: string): Promise<Payroll> {

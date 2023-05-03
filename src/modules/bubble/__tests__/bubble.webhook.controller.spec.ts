@@ -10,14 +10,14 @@ import {
   getRandomPayroll,
   getRandomPayrollDisbursement,
 } from "../../../modules/employer/test_utils/payroll.test.utils";
-import { BadRequestException } from "@nestjs/common";
-import { Bool } from "../../../core/domain/ApiEnums";
+import { BadRequestException, NotFoundException } from "@nestjs/common";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 import { getRandomEmployer } from "../../../modules/employer/test_utils/employer.test.utils";
 import { getRandomEmployee } from "../../../modules/employee/test_utils/employee.test.utils";
 import { getRandomActiveConsumer } from "../../../modules/consumer/test_utils/test.utils";
 import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
+import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 
 describe("BubbleWebhookControllerTests", () => {
   jest.setTimeout(20000);
@@ -336,14 +336,11 @@ describe("BubbleWebhookControllerTests", () => {
 
       const { payrollDisbursement } = getRandomPayrollDisbursement(payroll.id, "fake-employee-id");
 
-      when(bubbleService.getPayrollWithDisbursements(referralID, payroll.id, true)).thenResolve({
+      when(bubbleService.getPayroll(referralID, payroll.id)).thenResolve({
         ...payroll,
-        disbursements: [payrollDisbursement],
       });
 
-      const result = await bubbleWebhookController.getPayroll(referralID, payroll.id, {
-        shouldIncludeDisbursements: Bool.True,
-      });
+      const result = await bubbleWebhookController.getPayroll(referralID, payroll.id);
 
       expect(result).toStrictEqual({
         payrollID: payroll.id,
@@ -357,14 +354,6 @@ describe("BubbleWebhookControllerTests", () => {
         ...(payroll.debitCurrency && { debitCurrency: payroll.debitCurrency }),
         ...(payroll.creditCurrency && { creditCurrency: payroll.creditCurrency }),
         ...(payroll.exchangeRate && { exchangeRate: payroll.exchangeRate }),
-        disbursements: [
-          {
-            id: payrollDisbursement.id,
-            employeeID: payrollDisbursement.employeeID,
-            transactionID: payrollDisbursement.transactionID,
-            debitAmount: payrollDisbursement.allocationAmount,
-          },
-        ],
       });
     });
   });
@@ -467,6 +456,124 @@ describe("BubbleWebhookControllerTests", () => {
         employerID: employee.employerID,
         status: employee.status,
       });
+    });
+  });
+
+  describe("getAllEnrichedDisbursementsForPayroll", () => {
+    it("should get all enriched disbursements for payroll empty filters", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const referralID = "fake-referral";
+
+      const enrichedDisbursement = {
+        id: "fake-id",
+        debitAmount: 1000,
+        creditAmount: 1000,
+        status: TransactionStatus.COMPLETED,
+        firstName: "Fake",
+        lastName: "Fake",
+        updatedTimestamp: new Date(),
+      };
+
+      when(bubbleService.getAllEnrichedDisbursementsForPayroll(referralID, payroll.id, null)).thenResolve({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [enrichedDisbursement],
+      });
+
+      expect(
+        bubbleWebhookController.getAllEnrichedDisbursementsForPayroll(referralID, payroll.id, null),
+      ).resolves.toEqual({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [
+          {
+            id: enrichedDisbursement.id,
+            debitAmount: enrichedDisbursement.debitAmount,
+            creditAmount: enrichedDisbursement.creditAmount,
+            status: enrichedDisbursement.status,
+            firstName: enrichedDisbursement.firstName,
+            lastName: enrichedDisbursement.lastName,
+            updatedTimestamp: enrichedDisbursement.updatedTimestamp,
+          },
+        ],
+      });
+    });
+
+    it("should get all enriched disbursements for payroll with filters", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const referralID = "fake-referral";
+
+      const enrichedDisbursement = {
+        id: "fake-id",
+        debitAmount: 1000,
+        creditAmount: 1000,
+        status: TransactionStatus.COMPLETED,
+        firstName: "Fake",
+        lastName: "Fake",
+        updatedTimestamp: new Date(),
+      };
+
+      when(
+        bubbleService.getAllEnrichedDisbursementsForPayroll(
+          referralID,
+          payroll.id,
+          deepEqual({
+            status: TransactionStatus.COMPLETED,
+          }),
+        ),
+      ).thenResolve({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [enrichedDisbursement],
+      });
+
+      expect(
+        bubbleWebhookController.getAllEnrichedDisbursementsForPayroll(referralID, payroll.id, {
+          status: TransactionStatus.COMPLETED,
+        }),
+      ).resolves.toEqual({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [
+          {
+            id: enrichedDisbursement.id,
+            debitAmount: enrichedDisbursement.debitAmount,
+            creditAmount: enrichedDisbursement.creditAmount,
+            status: enrichedDisbursement.status,
+            firstName: enrichedDisbursement.firstName,
+            lastName: enrichedDisbursement.lastName,
+            updatedTimestamp: enrichedDisbursement.updatedTimestamp,
+          },
+        ],
+      });
+    });
+
+    it("should throw NotFoundException if paginated response is empty", async () => {
+      const employerID = "fake-employer";
+      const { payroll } = getRandomPayroll(employerID);
+      const referralID = "fake-referral";
+
+      when(bubbleService.getAllEnrichedDisbursementsForPayroll(referralID, payroll.id, null)).thenResolve({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 0,
+        items: [],
+      });
+
+      expect(
+        bubbleWebhookController.getAllEnrichedDisbursementsForPayroll(referralID, payroll.id, null),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

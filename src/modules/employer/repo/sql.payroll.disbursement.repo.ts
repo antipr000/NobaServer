@@ -7,6 +7,8 @@ import {
   convertToDomainPayrollDisbursement,
   validatePayrollDisbursement,
   validateUpdatePayrollDisbursementRequest,
+  EnrichedDisbursement,
+  convertToDomainEnrichedDisbursements,
 } from "../domain/PayrollDisbursement";
 import { IPayrollDisbursementRepo } from "./payroll.disbursement.repo";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -16,6 +18,13 @@ import {
   DatabaseInternalErrorException,
   InvalidDatabaseRecordException,
 } from "../../../core/exception/CommonAppException";
+import {
+  EnrichedDisbursementFilterOptionsDTO,
+  EnrichedDisbursementSortOptions,
+} from "../dto/enriched.disbursement.filter.options.dto";
+import { PaginatedResult, SortOrder } from "../../../core/infra/PaginationTypes";
+import { createPaginator } from "../../../infra/sql/paginate/PaginationPipeline";
+import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
 
 @Injectable()
 export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
@@ -143,13 +152,90 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
 
   async getAllDisbursementsForPayroll(payrollID: string): Promise<PayrollDisbursement[]> {
     try {
-      const allDisburementsForEmployee = await this.prismaService.payrollDisbursement.findMany({
+      const allDisbursementsForEmployee = await this.prismaService.payrollDisbursement.findMany({
         where: { payrollID },
       });
-      return allDisburementsForEmployee.map(disbursement => convertToDomainPayrollDisbursement(disbursement));
+      return allDisbursementsForEmployee.map(disbursement => convertToDomainPayrollDisbursement(disbursement));
     } catch (err) {
       this.logger.error(JSON.stringify(err));
       return [];
+    }
+  }
+
+  async getFilteredEnrichedDisbursementsForPayroll(
+    payrollID: string,
+    filterOptions: EnrichedDisbursementFilterOptionsDTO,
+  ): Promise<PaginatedResult<EnrichedDisbursement>> {
+    const paginator = createPaginator<EnrichedDisbursement>(
+      filterOptions.pageOffset,
+      filterOptions.pageLimit,
+      convertToDomainEnrichedDisbursements,
+    );
+
+    const sortOption = this.convertToSortOption(filterOptions.sortBy, filterOptions.sortDirection);
+
+    try {
+      const filterQuery: Prisma.PayrollDisbursementFindManyArgs = {
+        where: {
+          payrollID,
+          ...(filterOptions.status && {
+            transaction: {
+              status: {
+                in: filterOptions.status,
+              },
+            },
+          }),
+        },
+        ...(sortOption && { orderBy: sortOption }),
+        include: {
+          employee: {
+            include: {
+              consumer: true,
+            },
+          },
+          transaction: true,
+        },
+      };
+      return await paginator(this.prismaService.payrollDisbursement, filterQuery);
+    } catch (err) {
+      console.log(err);
+      this.logger.error(JSON.stringify(err));
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: "Error retrieving payroll disbursements with given filters",
+      });
+    }
+  }
+
+  private convertToSortOption(
+    sortBy: EnrichedDisbursementSortOptions,
+    sortDirection: SortOrder,
+  ): Prisma.Enumerable<Prisma.PayrollDisbursementOrderByWithRelationInput> {
+    switch (sortBy) {
+      case EnrichedDisbursementSortOptions.LAST_NAME:
+        return {
+          employee: {
+            consumer: {
+              lastName: sortDirection,
+            },
+          },
+        };
+      case EnrichedDisbursementSortOptions.ALLOCATION_AMOUNT:
+        return {
+          allocationAmount: sortDirection,
+        };
+      case EnrichedDisbursementSortOptions.CREDIT_AMOUNT:
+        return {
+          creditAmount: sortDirection,
+        };
+      case EnrichedDisbursementSortOptions.STATUS:
+        return {
+          transaction: {
+            status: sortDirection,
+          },
+        };
+      default:
+        return undefined;
     }
   }
 }
