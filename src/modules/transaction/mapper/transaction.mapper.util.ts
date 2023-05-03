@@ -42,7 +42,6 @@ export const toTransactionEventDTO = (transactionEvent: TransactionEvent, locale
     internal: transactionEvent.internal,
     message: transactionEvent.message,
     ...(transactionEvent.details !== undefined && { details: transactionEvent.details }),
-    ...(transactionEvent.key !== undefined && { key: transactionEvent.key }),
     text: translatedContent,
   };
 };
