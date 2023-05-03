@@ -99,6 +99,27 @@ describe("transaction.mapper.util suite", () => {
         key: "KEY",
       });
     });
+
+    it("should return translated transaction event message", () => {
+      const transactionEvent: TransactionEvent = {
+        id: "ID_1",
+        message: "message",
+        timestamp: new Date(),
+        transactionID: "ID",
+        internal: false,
+        details: "DETAILS",
+        key: "KEY",
+      };
+
+      expect(toTransactionEventDTO(transactionEvent)).toEqual({
+        timestamp: transactionEvent.timestamp,
+        internal: false,
+        message: "TRANSLATED_MESSAGE",
+        details: "DETAILS",
+        key: "KEY",
+        text: "test",
+      });
+    });
   });
 
   describe("toTransactionFeesDTO", () => {
