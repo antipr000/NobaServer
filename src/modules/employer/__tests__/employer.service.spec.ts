@@ -1976,7 +1976,9 @@ describe("EmployerServiceTests", () => {
       const employer = getRandomEmployer();
       when(mockEmployerRepo.getEmployerByID(employer.id)).thenResolve(employer);
 
-      await expect(employerService.inviteEmployee(employer.id, {} as any)).rejects.toThrow(ServiceException);
+      expect(employerService.inviteEmployee(employer.id, {} as any)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
     });
 
     it("should invite a new employee", async () => {
