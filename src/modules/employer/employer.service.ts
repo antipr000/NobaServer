@@ -51,6 +51,7 @@ import { ExchangeRateService } from "../exchangerate/exchangerate.service";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
 import { EnrichedDisbursementFilterOptionsDTO } from "./dto/enriched.disbursement.filter.options.dto";
+import { InviteEmployeeRequestDTO } from "./dto/employer.controller.dto";
 import { AlertService } from "../common/alerts/alert.service";
 import { AlertKey } from "../common/alerts/alert.dto";
 
@@ -783,5 +784,18 @@ export class EmployerService {
       }
       return 0;
     });
+  }
+
+  async inviteEmployee(employerID: string, inviteRequest: InviteEmployeeRequestDTO): Promise<Employee> {
+    const employer = await this.getEmployerByID(employerID);
+
+    if (!inviteRequest.email) {
+      throw new ServiceException({
+        message: "email is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    return this.employeeService.inviteEmployee(inviteRequest.email, employer, true, inviteRequest.salary);
   }
 }

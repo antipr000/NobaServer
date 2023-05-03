@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { instance, when } from "ts-mockito";
+import { deepEqual, instance, when } from "ts-mockito";
 import { EmployerService } from "../employer.service";
 import { Employer } from "../domain/Employer";
 import { getMockEmployerServiceWithDefaults } from "../mocks/mock.employer.service";
@@ -104,6 +104,47 @@ describe("EmployerWorkflowControllerTests", () => {
             status: EmployeeStatus.LINKED,
           },
         ],
+      });
+    });
+  });
+
+  describe("inviteEmployee", () => {
+    it("should invite the employee", async () => {
+      const employer = createTestEmployer();
+      const employee = getRandomEmployee(employer.id);
+      employee.email = "fake+employee@noba.com";
+      employee.salary = 10;
+      employee.status = EmployeeStatus.INVITED;
+      employee.consumerID = null;
+
+      when(
+        employerService.inviteEmployee(
+          employer.id,
+          deepEqual({
+            email: employee.email,
+            salary: employee.salary,
+            firstName: "Fake",
+            lastName: "Employee",
+          }),
+        ),
+      ).thenResolve(employee);
+
+      const receivedEmployee = await employerWorkflowController.inviteEmployee(employer.id, {
+        email: employee.email,
+        salary: employee.salary,
+        firstName: "Fake",
+        lastName: "Employee",
+      });
+
+      expect(receivedEmployee).toEqual({
+        id: employee.id,
+        allocationAmount: employee.allocationAmount,
+        allocationCurrency: employee.allocationCurrency,
+        employerID: employer.id,
+        consumerID: employee.consumerID,
+        salary: employee.salary,
+        status: EmployeeStatus.INVITED,
+        email: employee.email,
       });
     });
   });

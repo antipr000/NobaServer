@@ -273,6 +273,39 @@ describe("EmployeeServiceTests", () => {
 
       verify(mockNotificationService.sendNotification(anyString(), anything())).never();
     });
+
+    it("should not send invite if employee exists and status is INVITED", async () => {
+      const employer = getRandomEmployer("Fake Employer");
+      employer.locale = "es";
+      const employee = getRandomEmployeeWithoutConsumer(false);
+      employee.employer = employer;
+      const email = "fake+email@employer.com";
+      employee.email = email;
+      employee.status = EmployeeStatus.INVITED;
+
+      when(employeeRepo.getActiveEmployeeByEmail(employee.email)).thenResolve(employee);
+      const response = await employeeService.inviteEmployee(email, employer, true);
+
+      expect(response).toStrictEqual({
+        ...employee,
+        status: EmployeeStatus.INVITED,
+      });
+
+      verify(
+        employeeRepo.createEmployee(
+          deepEqual({
+            allocationAmount: 0,
+            allocationCurrency: EmployeeAllocationCurrency.COP,
+            employerID: employer.id,
+            status: EmployeeStatus.CREATED,
+            email: email,
+          }),
+        ),
+      ).never();
+
+      verify(mockNotificationService.sendNotification(anyString(), anything())).never();
+      verify(employeeRepo.updateEmployee(employee.id, anything())).never();
+    });
   });
 
   describe("updateEmployee", () => {

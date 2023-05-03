@@ -33,6 +33,7 @@ export const TEMPLATES_FOLDER_BUCKET_PATH = "templatesFolderBucketPath";
 export const INVOICES_FOLDER_BUCKET_PATH = "invoicesFolderBucketPath";
 export const QR_CODES_FOLDER_BUCKET_PATH = "qrCodesFolderBucketPath";
 export const QR_CODES_BASE_URL = "qrCodesBaseUrl";
+export const INVITE_CSV_FOLDER_BUCKET_PATH = "invitesCsvFolderBucketPath";
 export const STATIC_DEV_OTP = "staticDevOTP";
 
 export const AWS_ACCESS_KEY_ID_ATTR = "awsAccessKeyId";
