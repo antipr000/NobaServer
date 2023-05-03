@@ -15,9 +15,9 @@ import {
   TransactionMappingService,
   TRANSACTION_MAPPING_SERVICE_PROVIDER,
 } from "../transaction/mapper/transaction.mapper.service";
-import { MonoModule } from "../psp/mono/mono.module";
 import { CirclePublicModule } from "../circle/public/circle.public.module";
 import { ExchangeRateModule } from "../exchangerate/exchangerate.module";
+import { MonoPublicModule } from "../mono/public/mono.public.module";
 
 @Module({
   imports: [
@@ -29,7 +29,7 @@ import { ExchangeRateModule } from "../exchangerate/exchangerate.module";
     PspModule,
     EmployeeModule,
     EmployerModule,
-    MonoModule,
+    MonoPublicModule,
     CirclePublicModule,
     ExchangeRateModule,
   ],

@@ -28,6 +28,12 @@ export class EmployerWorkflowDTO {
 
   @ApiPropertyOptional()
   maxAllocationPercent: number;
+
+  @ApiPropertyOptional()
+  documentNumber: string;
+
+  @ApiPropertyOptional()
+  depositMatchingName: string;
 }
 
 export class EmployeesWorkflowDTO {

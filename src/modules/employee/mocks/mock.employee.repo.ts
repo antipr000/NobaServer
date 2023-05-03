@@ -13,6 +13,7 @@ export function getMockEmployeeRepoWithDefaults(): IEmployeeRepo {
     new Error("Method not implemented"),
   );
   when(mockEmployeeRepo.getFilteredEmployees(anything())).thenReject(new Error("Method not implemented"));
+  when(mockEmployeeRepo.getActiveEmployeeByEmail(anyString())).thenReject(new Error("Method not implemented"));
 
   return mockEmployeeRepo;
 }

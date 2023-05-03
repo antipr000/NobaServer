@@ -1,4 +1,4 @@
-import { anyString, anything, mock, when } from "ts-mockito";
+import { anyNumber, anyString, anything, mock, when } from "ts-mockito";
 import { EmployerService } from "../employer.service";
 
 export function getMockEmployerServiceWithDefaults(): EmployerService {
@@ -20,6 +20,12 @@ export function getMockEmployerServiceWithDefaults(): EmployerService {
   );
   when(mockEmployerService.updatePayroll(anyString(), anything())).thenReject(new Error("Method not implemented"));
   when(mockEmployerService.getEmployerForTransactionID(anyString())).thenReject(new Error("Method not implemented"));
+  when(
+    mockEmployerService.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(anyNumber(), anyString()),
+  ).thenReject(new Error("Method not implemented"));
+  when(
+    mockEmployerService.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(anyNumber(), anyString()),
+  ).thenReject(new Error("Method not implemented"));
 
   return mockEmployerService;
 }

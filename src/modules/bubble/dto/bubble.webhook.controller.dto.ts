@@ -1,9 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
-import { Bool } from "../../../core/domain/ApiEnums";
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { EmployeeDTO } from "../../../modules/employee/dto/employee.dto";
 import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
+import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 
 export class RegisterEmployerRequestDTO {
   @ApiProperty()
@@ -72,11 +72,6 @@ export class CreatePayrollResponseDTO {
   payrollID: string;
 }
 
-export class PayrollQueryDTO {
-  @ApiProperty({ enum: Bool })
-  shouldIncludeDisbursements: Bool;
-}
-
 export class DisbursementDTO {
   @ApiProperty()
   id: string;
@@ -89,6 +84,29 @@ export class DisbursementDTO {
 
   @ApiProperty()
   debitAmount: number;
+}
+
+export class EnrichedDisbursementDTO {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  debitAmount: number;
+
+  @ApiProperty()
+  creditAmount: number;
+
+  @ApiProperty()
+  status: TransactionStatus;
+
+  @ApiProperty()
+  firstName: string;
+
+  @ApiProperty()
+  lastName: string;
+
+  @ApiProperty()
+  updatedTimestamp: Date;
 }
 
 export class PayrollDTO {
@@ -129,6 +147,14 @@ export class PayrollDTO {
   disbursements?: DisbursementDTO[];
 }
 
+export class EmployeeCreateRequestDTO {
+  @ApiProperty()
+  email: string;
+
+  @ApiProperty()
+  sendEmail: boolean;
+}
+
 export class EmployeeResponseDTO extends EmployeeDTO {
   @ApiPropertyOptional()
   firstName?: string;
@@ -136,8 +162,8 @@ export class EmployeeResponseDTO extends EmployeeDTO {
   @ApiPropertyOptional()
   lastName?: string;
 
-  @ApiProperty()
-  handle: string;
+  @ApiPropertyOptional()
+  handle?: string;
 
   @ApiPropertyOptional()
   consumerEmail?: string;
@@ -149,4 +175,9 @@ export class EmployeeResponseDTO extends EmployeeDTO {
 export class PaginatedEmployeeResponseDTO extends PaginatedResult<EmployeeResponseDTO> {
   @ApiProperty({ type: [EmployeeResponseDTO] })
   items: EmployeeResponseDTO[];
+}
+
+export class PaginatedEnrichedDisbursementResponseDTO extends PaginatedResult<EnrichedDisbursementDTO> {
+  @ApiProperty({ type: [EnrichedDisbursementDTO] })
+  items: EnrichedDisbursementDTO[];
 }

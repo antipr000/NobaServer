@@ -129,4 +129,19 @@ export class Utils {
     const nanoid = customAlphabet("1234567890bcdfghjklmnpqrstvwxyz", length);
     return nanoid();
   }
+
+  static getCurrentEasternTimezone(): string {
+    try {
+      const now = new Date(Date.now()); // Use this instead of new Date() so we can mock Date.now() in tests
+      return now.toLocaleString("en-us", { timeZone: "America/New_York", timeZoneName: "short" }).match(/(EDT|EST)/)[1];
+    } catch (err) {
+      // There should really NEVER be an error here, but if there is, just log it and return EST
+      console.error(`Error getting current Eastern timezone: ${err}`);
+      return "EST";
+    }
+  }
+
+  static getCurrentEasternTimezoneOffset(): string {
+    return this.getCurrentEasternTimezone() === "EDT" ? "-04:00" : "-05:00";
+  }
 }

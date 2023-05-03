@@ -1,6 +1,5 @@
 import { HttpStatus, HttpException, BadRequestException, InternalServerErrorException } from "@nestjs/common";
 import Joi from "joi";
-import { TransactionSubmissionException } from "../../modules/transactions/exceptions/TransactionSubmissionException";
 import { Logger } from "winston";
 import { AppExceptionCode, BadRequestError } from "./CommonAppException";
 import { serviceToHTTP } from "./mappers/service.http";
@@ -30,11 +29,6 @@ export function convertToHTTPException(logger: Logger, exception: any): HttpExce
     return workflowToHTTP(logger, exception);
   } else if (exception instanceof BaseException) {
     return new InternalServerErrorException(exception.message);
-  }
-
-  // This should be refactored to RepositoryException
-  if (exception instanceof TransactionSubmissionException) {
-    return new BadRequestException(exception.disposition, exception.message);
   }
 
   //We return 500, if the exception is not known i.e. we don't leak sensitive information to outside world

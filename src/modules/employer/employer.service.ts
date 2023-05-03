@@ -23,7 +23,7 @@ import {
   UpdateDisbursementRequestDTO,
   UpdatePayrollRequestDTO,
 } from "./dto/payroll.workflow.controller.dto";
-import { PayrollDisbursement } from "./domain/PayrollDisbursement";
+import { EnrichedDisbursement, PayrollDisbursement } from "./domain/PayrollDisbursement";
 import { PayrollUpdateRequest, PayrollStatus } from "./domain/Payroll";
 import { Currency } from "../transaction/domain/TransactionTypes";
 import { isValidDateString } from "../../core/utils/DateUtils";
@@ -50,6 +50,7 @@ import { Utils } from "../../core/utils/Utils";
 import { ExchangeRateService } from "../exchangerate/exchangerate.service";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
+import { EnrichedDisbursementFilterOptionsDTO } from "./dto/enriched.disbursement.filter.options.dto";
 
 @Injectable()
 export class EmployerService {
@@ -156,7 +157,9 @@ export class EmployerService {
       leadDays: request.leadDays,
       payrollAccountNumber: request.payrollAccountNumber,
       payrollDates: request.payrollDates,
+      ...(request.documentNumber && { documentNumber: request.documentNumber }),
       ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
+      ...(request.depositMatchingName && { depositMatchingName: request.depositMatchingName }),
     });
   }
 
@@ -178,11 +181,14 @@ export class EmployerService {
     }
 
     return this.employerRepo.updateEmployer(id, {
+      ...(request.name && { name: request.name }),
       ...(request.logoURI && { logoURI: request.logoURI }),
       ...(request.locale && { locale: request.locale }),
       ...(request.referralID && { referralID: request.referralID }),
+      ...(request.documentNumber && { documentNumber: request.documentNumber }),
       ...(request.leadDays && { leadDays: request.leadDays }),
       ...(request.payrollDates && { payrollDates: request.payrollDates }),
+      ...(request.depositMatchingName && { depositMatchingName: request.depositMatchingName }),
       ...(request.payrollAccountNumber && { payrollAccountNumber: request.payrollAccountNumber }),
       ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
     });
@@ -454,6 +460,41 @@ export class EmployerService {
     return this.payrollRepo.getAllPayrollsForEmployer(employerID, {});
   }
 
+  async getFilteredEnrichedDisbursementsForPayroll(
+    payrollID: string,
+    filters: EnrichedDisbursementFilterOptionsDTO,
+  ): Promise<PaginatedResult<EnrichedDisbursement>> {
+    if (!payrollID) {
+      throw new ServiceException({
+        message: "payrollID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const payroll = await this.payrollRepo.getPayrollByID(payrollID);
+    if (!payroll) {
+      throw new ServiceException({
+        message: "Payroll not found",
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
+    if (!employer) {
+      throw new ServiceException({
+        message: "Employer not found",
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    const enrichedDisbursements = await this.payrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(
+      payrollID,
+      filters,
+    );
+
+    return enrichedDisbursements;
+  }
+
   async createPayroll(employerID: string, payrollDate: string): Promise<Payroll> {
     if (!employerID) {
       throw new ServiceException({
@@ -496,6 +537,7 @@ export class EmployerService {
 
     const payrollUpdateRequest: PayrollUpdateRequest = {
       status: request.status,
+      ...(request.paymentMonoTransactionID && { paymentMonoTransactionID: request.paymentMonoTransactionID }),
     };
 
     if (request.status === PayrollStatus.COMPLETED) {
@@ -673,6 +715,26 @@ export class EmployerService {
 
     // Then get the employer associated with the payroll
     return this.employerRepo.getEmployerByID(payroll.employerID);
+  }
+
+  public async getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
+    debitAmount: number,
+    employerDocumentNumber: string,
+  ): Promise<Payroll[]> {
+    return this.payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(
+      debitAmount,
+      employerDocumentNumber,
+    );
+  }
+
+  public async getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
+    debitAmount: number,
+    employerDepositMatchingName: string,
+  ): Promise<Payroll[]> {
+    return this.payrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
+      debitAmount,
+      employerDepositMatchingName,
+    );
   }
 
   private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDisbursement[]> {

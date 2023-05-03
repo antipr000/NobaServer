@@ -11,10 +11,13 @@ import type { CreateDisbursementRequestDTO } from "../models/CreateDisbursementR
 import type { CreateTransactionDTO } from "../models/CreateTransactionDTO";
 import type { DebitBankRequestDTO } from "../models/DebitBankRequestDTO";
 import type { EmployerWorkflowDTO } from "../models/EmployerWorkflowDTO";
+import type { ExchangeRateWorkflowDTO } from "../models/ExchangeRateWorkflowDTO";
+import type { LatestNotificationResponse } from "../models/LatestNotificationResponse";
 import type { MonoTransactionDTO } from "../models/MonoTransactionDTO";
 import type { PayrollDisbursementDTO } from "../models/PayrollDisbursementDTO";
 import type { PayrollDisbursementDTOWrapper } from "../models/PayrollDisbursementDTOWrapper";
 import type { PayrollDTO } from "../models/PayrollDTO";
+import type { PomeloTransactionDTO } from "../models/PomeloTransactionDTO";
 import type { SendNotificationRequestDTO } from "../models/SendNotificationRequestDTO";
 import type { UpdateDisbursementRequestDTO } from "../models/UpdateDisbursementRequestDTO";
 import type { UpdatePayrollRequestDTO } from "../models/UpdatePayrollRequestDTO";
@@ -113,20 +116,16 @@ export class WorkflowService {
   }
 
   /**
-   * Fetches the Mono Transaction for the specified 'nobaTransactionID'
-   * @returns MonoTransactionDTO
+   * Update exchange rate entries
+   * @returns ExchangeRateWorkflowDTO
    * @throws ApiError
    */
-  public static getMonoTransactionByNobaTransactionId({
-    nobaTransactionId,
-  }: {
-    nobaTransactionId: string;
-  }): CancelablePromise<MonoTransactionDTO> {
+  public static createExchangeRate(): CancelablePromise<ExchangeRateWorkflowDTO> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/wf/v1/mono/nobatransactions/{nobaTransactionID}",
-      path: {
-        nobaTransactionID: nobaTransactionId,
+      method: "POST",
+      url: "/wf/v1/exchangerates",
+      errors: {
+        403: `User forbidden from adding new exchange rate`,
       },
     });
   }
@@ -330,6 +329,25 @@ export class WorkflowService {
   }
 
   /**
+   * Fetches the Mono Transaction for the specified 'nobaTransactionID'
+   * @returns MonoTransactionDTO
+   * @throws ApiError
+   */
+  public static getMonoTransactionByNobaTransactionId({
+    nobaTransactionId,
+  }: {
+    nobaTransactionId: string;
+  }): CancelablePromise<MonoTransactionDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/wf/v1/mono/nobatransactions/{nobaTransactionID}",
+      path: {
+        nobaTransactionID: nobaTransactionId,
+      },
+    });
+  }
+
+  /**
    * Get consumer's wallet ID
    * @returns CircleWalletResponseDTO
    * @throws ApiError
@@ -468,6 +486,52 @@ export class WorkflowService {
       },
       body: requestBody,
       mediaType: "application/json",
+    });
+  }
+
+  /**
+   * Get previous notifications in test environment
+   * @returns LatestNotificationResponse
+   * @throws ApiError
+   */
+  public static getPreviousNotifications(): CancelablePromise<LatestNotificationResponse> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/wf/v1/notification/test",
+    });
+  }
+
+  /**
+   * Clear previous notifications in test environment
+   * @returns BlankResponseDTO
+   * @throws ApiError
+   */
+  public static clearPreviousNotifications(): CancelablePromise<BlankResponseDTO> {
+    return __request(OpenAPI, {
+      method: "DELETE",
+      url: "/wf/v1/notification/test",
+    });
+  }
+
+  /**
+   * Fetches a Pomelo Transaction
+   * @returns PomeloTransactionDTO
+   * @throws ApiError
+   */
+  public static getPomeloTransasction({
+    pomeloTransactionId,
+  }: {
+    pomeloTransactionId: string;
+  }): CancelablePromise<PomeloTransactionDTO> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/wf/v1/pomelo/transactions/{pomeloTransactionID}",
+      path: {
+        pomeloTransactionID: pomeloTransactionId,
+      },
+      errors: {
+        404: `Requested Transaction is not found`,
+      },
     });
   }
 }

@@ -2,7 +2,12 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { anything, capture, instance, when } from "ts-mockito";
-import { SENDGRID_API_KEY, SENDGRID_CONFIG_KEY } from "../../../config/ConfigurationUtils";
+import {
+  QR_CODES_BASE_URL,
+  QR_CODES_FOLDER_BUCKET_PATH,
+  SENDGRID_API_KEY,
+  SENDGRID_CONFIG_KEY,
+} from "../../../config/ConfigurationUtils";
 import { SendOtpEvent } from "../events/SendOtpEvent";
 import { SendWalletUpdateVerificationCodeEvent } from "../events/SendWalletUpdateVerificationCodeEvent";
 import { SendWelcomeMessageEvent } from "../events/SendWelcomeMessageEvent";
@@ -36,6 +41,11 @@ import { EventRepo } from "../repos/event.repo";
 import { getMockEventRepoWithDefaults } from "../mocks/mock.event.repo";
 import { NotificationEventType } from "../domain/NotificationTypes";
 import { EventHandlers } from "../domain/EventHandlers";
+import { S3Service } from "../../../modules/common/s3.service";
+import { QRService } from "../../../modules/common/qrcode.service";
+import { getMockS3ServiceWithDefaults } from "../../../modules/common/mocks/mock.s3.service";
+import { getMockQRServiceWithDefaults } from "../../../modules/common/mocks/mock.qr.service";
+import { SendInviteEmployeeEvent } from "../events/SendInviteEmployeeEvent";
 
 describe("EmailEventHandler test for languages", () => {
   let currencyService: CurrencyService;
@@ -43,6 +53,8 @@ describe("EmailEventHandler test for languages", () => {
   let eventHandler: EmailEventHandler;
   let app: TestingModule;
   let mockEventRepo: EventRepo;
+  let mockS3Service: S3Service;
+  let mockQRService: QRService;
 
   const SUPPORT_URL = "help.noba.com";
   const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -54,6 +66,8 @@ describe("EmailEventHandler test for languages", () => {
     currencyService = getMockCurrencyServiceWithDefaults();
     emailClient = getMockEmailClientWithDefaults();
     mockEventRepo = getMockEventRepoWithDefaults();
+    mockS3Service = getMockS3ServiceWithDefaults();
+    mockQRService = getMockQRServiceWithDefaults();
 
     process.env = {
       ...process.env,
@@ -66,6 +80,8 @@ describe("EmailEventHandler test for languages", () => {
           [SENDGRID_CONFIG_KEY]: {
             [SENDGRID_API_KEY]: "SG.fake_api_key",
           },
+          [QR_CODES_BASE_URL]: "https://qrcodes.noba.com",
+          [QR_CODES_FOLDER_BUCKET_PATH]: "lowers/qr_codes",
         }),
         getTestWinstonModule(),
       ],
@@ -82,6 +98,14 @@ describe("EmailEventHandler test for languages", () => {
         {
           provide: "EventRepo",
           useFactory: () => instance(mockEventRepo),
+        },
+        {
+          provide: QRService,
+          useFactory: () => instance(mockQRService),
+        },
+        {
+          provide: S3Service,
+          useFactory: () => instance(mockS3Service),
         },
         EmailEventHandler,
       ],
@@ -1462,6 +1486,61 @@ describe("EmailEventHandler test for languages", () => {
           firstName: payload.firstName,
           lastName: payload.lastName,
           employerEmail: payload.email,
+        },
+      });
+    });
+  });
+
+  describe.each([["es_co", "es"]])("SendEmployerRequest", (locale, expectedLocale) => {
+    it(`should send Employee Invite Email with ${expectedLocale} template when locale is ${locale}`, async () => {
+      const payload: SendInviteEmployeeEvent = {
+        email: "fake+user@noba.com",
+        locale: locale,
+        employeeID: "fake-employee-id",
+        inviteUrl: "https://noba.com",
+        companyName: "Fake Company",
+      };
+
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
+      when(mockQRService.generateQRCode(payload.inviteUrl)).thenResolve("fake-qr-code");
+      when(
+        mockS3Service.uploadToS3(
+          "lowers/qr_codes",
+          `employee_${payload.employeeID}.png`,
+          anything(),
+          "base64",
+          "image/png",
+        ),
+      ).thenResolve();
+
+      await eventHandler.sendInviteEmployeeEmail(payload);
+
+      const [emailRequest] = capture(emailClient.sendEmail).last();
+      expect(emailRequest).toStrictEqual({
+        to: payload.email,
+        from: SENDER_EMAIL,
+        templateId: "es-template",
+        dynamicTemplateData: {
+          companyName: payload.companyName,
+          qrCodeImageUrl: "https://qrcodes.noba.com/lowers/qr_codes/employee_fake-employee-id.png",
         },
       });
     });

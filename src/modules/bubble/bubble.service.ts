@@ -4,7 +4,6 @@ import { ServiceErrorCode, ServiceException } from "../../core/exception/service
 import { Logger } from "winston";
 import { EmployeeService } from "../employee/employee.service";
 import {
-  PayrollWithDisbursements,
   RegisterEmployerRequest,
   UpdateNobaEmployeeRequest,
   UpdateNobaEmployerRequest,
@@ -14,12 +13,14 @@ import { Employer } from "../employer/domain/Employer";
 import { Payroll } from "../employer/domain/Payroll";
 import { NotificationService } from "../notifications/notification.service";
 import { NotificationEventType } from "../notifications/domain/NotificationTypes";
-import { PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
+import { EnrichedDisbursement, PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
 import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
 import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { Employee } from "../employee/domain/Employee";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
+import { EnrichedDisbursementFilterOptionsDTO } from "../employer/dto/enriched.disbursement.filter.options.dto";
+import { EmployeeCreateRequestDTO } from "./dto/bubble.webhook.controller.dto";
 
 @Injectable()
 export class BubbleService {
@@ -131,11 +132,7 @@ export class BubbleService {
     return this.employerService.getAllPayrollsForEmployer(employer.id);
   }
 
-  async getPayrollWithDisbursements(
-    referralID: string,
-    payrollID: string,
-    shouldIncludeDisbursements?: boolean,
-  ): Promise<PayrollWithDisbursements> {
+  async getPayroll(referralID: string, payrollID: string): Promise<Payroll> {
     if (!referralID) {
       throw new ServiceException({
         message: "referralID is required",
@@ -154,19 +151,7 @@ export class BubbleService {
       });
     }
 
-    if (shouldIncludeDisbursements) {
-      const disbursements = await this.employerService.getAllDisbursementsForPayroll(payrollID);
-
-      return {
-        ...payroll,
-        disbursements,
-      };
-    } else {
-      return {
-        ...payroll,
-        disbursements: [],
-      };
-    }
+    return payroll;
   }
 
   async getAllDisbursementsForEmployee(referralID: string, employeeID: string): Promise<PayrollDisbursement[]> {
@@ -189,6 +174,30 @@ export class BubbleService {
     return this.employerService.getAllDisbursementsForEmployee(employeeID);
   }
 
+  async getAllEnrichedDisbursementsForPayroll(
+    referralID: string,
+    payrollID: string,
+    filterOptions: EnrichedDisbursementFilterOptionsDTO,
+  ): Promise<PaginatedResult<EnrichedDisbursement>> {
+    const employer = await this.employerService.getEmployerByReferralID(referralID);
+    if (!employer) {
+      throw new ServiceException({
+        message: `No employer found with referralID: ${referralID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    const payroll = await this.employerService.getPayrollByID(payrollID);
+    if (!payroll || payroll.employerID !== employer.id) {
+      throw new ServiceException({
+        message: `No payroll found with ID: ${payrollID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    return this.employerService.getFilteredEnrichedDisbursementsForPayroll(payrollID, filterOptions);
+  }
+
   async getAllEmployeesForEmployer(
     referralID: string,
     filterOptions: EmployeeFilterOptionsDTO,
@@ -201,5 +210,31 @@ export class BubbleService {
     }
 
     return this.employerService.getFilteredEmployeesForEmployer(referralID, filterOptions);
+  }
+
+  async createEmployeeForEmployer(referralID: string, payload: EmployeeCreateRequestDTO): Promise<Employee> {
+    if (!referralID) {
+      throw new ServiceException({
+        message: "referralID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const employer = await this.employerService.getEmployerByReferralID(referralID);
+    if (!employer) {
+      throw new ServiceException({
+        message: `No employer found with referralID: ${referralID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    if (!payload.email) {
+      throw new ServiceException({
+        message: "Email is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    return this.employeeService.inviteEmployee(payload.email, employer, payload.sendEmail);
   }
 }

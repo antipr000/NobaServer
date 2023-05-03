@@ -30,6 +30,10 @@ import { SendPayrollDepositCompletedEvent } from "./events/SendPayrollDepositCom
 import { StubEmailClient } from "./emails/stub.email.client";
 import { EventHandlers } from "./domain/EventHandlers";
 import { EventRepo } from "./repos/event.repo";
+import { SendInviteEmployeeEvent } from "./events/SendInviteEmployeeEvent";
+import { QRService } from "../common/qrcode.service";
+import { S3Service } from "../common/s3.service";
+import { QR_CODES_BASE_URL, QR_CODES_FOLDER_BUCKET_PATH } from "../../config/ConfigurationUtils";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -48,7 +52,16 @@ export class EmailEventHandler {
   @Inject("EventRepo")
   private readonly eventRepo: EventRepo;
 
-  constructor(configService: CustomConfigService, @Inject("EmailClient") private readonly emailClient: EmailClient) {}
+  @Inject()
+  private readonly qrCodeService: QRService;
+
+  @Inject()
+  private readonly s3Service: S3Service;
+
+  constructor(
+    private readonly configService: CustomConfigService,
+    @Inject("EmailClient") private readonly emailClient: EmailClient,
+  ) {}
 
   private async getOrDefaultTemplateId(eventName: NotificationEventType, locale: string): Promise<string> {
     const event = await this.eventRepo.getEventByName(eventName);
@@ -598,6 +611,35 @@ export class EmailEventHandler {
         employerEmail: payload.email,
         firstName: payload.firstName,
         lastName: payload.lastName,
+      },
+    };
+
+    await this.emailClient.sendEmail(msg);
+  }
+
+  @OnEvent(`email.${NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT}`)
+  public async sendInviteEmployeeEmail(payload: SendInviteEmployeeEvent) {
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT,
+      payload.locale,
+    );
+
+    const folderPath = this.configService.get(QR_CODES_FOLDER_BUCKET_PATH);
+    const fileName = `employee_${payload.employeeID}.png`;
+    const desinationPath = `${this.configService.get(QR_CODES_BASE_URL)}/${folderPath}/${fileName}`;
+
+    const base64EncodedQRCode = await this.qrCodeService.generateQRCode(payload.inviteUrl);
+    const buffer = Buffer.from(base64EncodedQRCode.replace(/^data:image\/\w+;base64,/, ""), "base64");
+
+    await this.s3Service.uploadToS3(folderPath, fileName, buffer, "base64", "image/png");
+
+    const msg = {
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: templateID,
+      dynamicTemplateData: {
+        companyName: payload.companyName,
+        qrCodeImageUrl: desinationPath,
       },
     };
 

@@ -19,47 +19,39 @@ export class S3Service {
   }
 
   async loadFromS3(folderPath: string, objectName: string): Promise<string> {
-    return new Promise(async (resolve, reject) => {
-      const s3 = new S3({});
-      const options = {
-        Bucket: this.assetsBucketName,
-        Key: folderPath + objectName,
-      };
+    const s3 = new S3({});
+    const options = {
+      Bucket: this.assetsBucketName,
+      Key: folderPath + objectName,
+    };
 
-      try {
-        const getObjectCommand = new GetObjectCommand(options);
-        const getObjectResult = await s3.send(getObjectCommand);
-        const stringifiedResult = await getObjectResult.Body.transformToString();
-        resolve(stringifiedResult);
-      } catch (e) {
-        this.logger.error(`Failed to load file from S3: ${e.message}`);
-        reject(e);
-      }
-    });
+    const getObjectCommand = new GetObjectCommand(options);
+    const getObjectResult = await s3.send(getObjectCommand);
+    return getObjectResult.Body.transformToString();
   }
 
-  async uploadToS3(folderPath: string, objectName: string, content: string | Buffer): Promise<any> {
-    // Ensure speparation between folder path and filename
+  async uploadToS3(
+    folderPath: string,
+    objectName: string,
+    content: string | Buffer,
+    contentEncoding?: string,
+    contentType?: string,
+  ): Promise<any> {
+    // Ensure separation between folder path and filename
     if (!folderPath.endsWith("/") && !objectName.startsWith("/")) {
       folderPath += "/";
     }
 
-    return new Promise(async (resolve, reject) => {
-      const s3 = new S3({});
-      const options = {
-        Bucket: this.generatedDataBucketName,
-        Key: folderPath + objectName,
-        Body: content,
-      };
+    const s3 = new S3({});
+    const options = {
+      Bucket: this.generatedDataBucketName,
+      Key: folderPath + objectName,
+      Body: content,
+      ...(contentEncoding && { ContentEncoding: contentEncoding }),
+      ...(contentType && { ContentType: contentType }),
+    };
 
-      try {
-        const putObjectCommand = new PutObjectCommand(options);
-        const putObjectResult = await s3.send(putObjectCommand);
-        resolve(putObjectResult);
-      } catch (e) {
-        this.logger.error(`Failed to upload file to S3: ${e.message}`);
-        reject(e);
-      }
-    });
+    const putObjectCommand = new PutObjectCommand(options);
+    return s3.send(putObjectCommand);
   }
 }

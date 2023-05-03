@@ -5,6 +5,7 @@
 export type RegisterEmployerRequestDTO = {
   name: string;
   logoURI: string;
+  locale?: string;
   referralID: string;
   bubbleID: string;
   maxAllocationPercent?: number;

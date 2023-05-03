@@ -18,6 +18,7 @@ import {
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { PayrollDisbursementDTO, PayrollDisbursementDTOWrapper } from "./dto/PayrollDisbursementDTO";
 import { EmployerService } from "./employer.service";
+import { Utils } from "../../core/utils/Utils";
 
 @Controller("wf/v1/payrolls")
 @ApiBearerAuth("JWT-auth")
@@ -109,11 +110,14 @@ export class PayrollWorkflowController {
       throw new NotFoundException(`Payroll with id ${payrollID} is not found`);
     }
 
+    // convert to 9AM Eastern Time
+    const nineAMEastern = new Date(`${payroll.payrollDate}T09:00:00${Utils.getCurrentEasternTimezoneOffset()}`);
+
     return {
       id: payroll.id,
       employerID: payroll.employerID,
       reference: payroll.referenceNumber,
-      payrollDate: payroll.payrollDate,
+      payrollDate: nineAMEastern.toISOString(),
       totalDebitAmount: payroll.totalDebitAmount,
       totalCreditAmount: payroll.totalCreditAmount,
       exchangeRate: payroll.exchangeRate,

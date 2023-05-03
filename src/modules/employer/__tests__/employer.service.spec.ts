@@ -48,14 +48,17 @@ import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/exchangerate/mocks/mock.exchangerate.service";
 import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
+import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
     id: uuid(),
     name: "Test Employer",
+    depositMatchingName: "Deposit Test Employer",
     locale: "en_us",
     bubbleID: uuid(),
     logoURI: "https://www.google.com",
+    documentNumber: uuid(),
     referralID: uuid(),
     leadDays: 5,
     payrollAccountNumber: "111111111",
@@ -269,6 +272,47 @@ describe("EmployerServiceTests", () => {
       expect(createdEmployer).toEqual(employer);
     });
 
+    it("should create an employer with no documentNumber", async () => {
+      const employer = getRandomEmployer();
+      delete employer.documentNumber;
+
+      when(mockEmployerRepo.createEmployer(anything())).thenResolve(employer);
+
+      const createdEmployer = await employerService.createEmployer({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        bubbleID: employer.bubbleID,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+        payrollAccountNumber: employer.payrollAccountNumber,
+        payrollDates: employer.payrollDates,
+        maxAllocationPercent: employer.maxAllocationPercent,
+      });
+
+      expect(createdEmployer).toEqual(employer);
+    });
+
+    it("should create an employer with no depositMatchingName", async () => {
+      const employer = getRandomEmployer();
+      delete employer.depositMatchingName;
+
+      when(mockEmployerRepo.createEmployer(anything())).thenResolve(employer);
+
+      const createdEmployer = await employerService.createEmployer({
+        name: employer.name,
+        logoURI: employer.logoURI,
+        bubbleID: employer.bubbleID,
+        referralID: employer.referralID,
+        leadDays: employer.leadDays,
+        payrollAccountNumber: employer.payrollAccountNumber,
+        payrollDates: employer.payrollDates,
+        maxAllocationPercent: employer.maxAllocationPercent,
+        documentNumber: employer.documentNumber,
+      });
+
+      expect(createdEmployer).toEqual(employer);
+    });
+
     it("should set default 'leadDays' as '1' if not specified", async () => {
       const employer = getRandomEmployer();
       when(mockEmployerRepo.createEmployer(anything())).thenResolve(employer);
@@ -384,6 +428,46 @@ describe("EmployerServiceTests", () => {
       expect(employerID).toEqual(employer.id);
       expect(propagatedEmployerUpdateRequest).toEqual({
         leadDays: 4,
+      });
+    });
+
+    it("should update 'only' the documentNumber of the employer", async () => {
+      const employer = getRandomEmployer();
+      const newDocumentNumber = uuid();
+
+      employer.documentNumber = newDocumentNumber;
+      when(mockEmployerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+
+      const updatedEmployer = await employerService.updateEmployer(employer.id, {
+        documentNumber: newDocumentNumber,
+      });
+
+      expect(updatedEmployer).toEqual(employer);
+
+      const [employerID, propagatedEmployerUpdateRequest] = capture(mockEmployerRepo.updateEmployer).last();
+      expect(employerID).toEqual(employer.id);
+      expect(propagatedEmployerUpdateRequest).toEqual({
+        documentNumber: newDocumentNumber,
+      });
+    });
+
+    it("should update 'only' the depositMatchingName of the employer", async () => {
+      const employer = getRandomEmployer();
+      const newDepositMatchingName = uuid();
+
+      employer.depositMatchingName = newDepositMatchingName;
+      when(mockEmployerRepo.updateEmployer(anything(), anything())).thenResolve(employer);
+
+      const updatedEmployer = await employerService.updateEmployer(employer.id, {
+        depositMatchingName: newDepositMatchingName,
+      });
+
+      expect(updatedEmployer).toEqual(employer);
+
+      const [employerID, propagatedEmployerUpdateRequest] = capture(mockEmployerRepo.updateEmployer).last();
+      expect(employerID).toEqual(employer.id);
+      expect(propagatedEmployerUpdateRequest).toEqual({
+        depositMatchingName: newDepositMatchingName,
       });
     });
 
@@ -1132,7 +1216,115 @@ describe("EmployerServiceTests", () => {
     });
 
     it("should throw 'ServiceException' when employeeID is undefined", async () => {
-      await expect(employerService.getAllDisbursementsForEmployee(undefined)).rejects.toThrowError(ServiceException);
+      expect(employerService.getAllDisbursementsForEmployee(undefined)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+  });
+
+  describe("getFilteredEnrichedDisbursementsForPayroll", () => {
+    it("should throw ServiceException when payroll is null", async () => {
+      expect(employerService.getFilteredEnrichedDisbursementsForPayroll(null, null)).rejects.toThrowServiceException(
+        ServiceErrorCode.SEMANTIC_VALIDATION,
+      );
+    });
+
+    it("should throw ServiceException when payroll not found", async () => {
+      when(mockPayrollRepo.getPayrollByID(anything())).thenResolve(null);
+
+      expect(
+        employerService.getFilteredEnrichedDisbursementsForPayroll("fake-payroll", null),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
+    });
+
+    it("should throw ServiceException when payroll is not for employer", async () => {
+      const { payroll } = getRandomPayroll("fake-employer");
+
+      when(mockPayrollRepo.getPayrollByID(anything())).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(anything())).thenResolve(null);
+
+      expect(
+        employerService.getFilteredEnrichedDisbursementsForPayroll("fake-payroll", null),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
+    });
+
+    it("should return enriched disbursements for payroll", async () => {
+      const { payroll } = getRandomPayroll("fake-employer");
+      const employer = getRandomEmployer();
+
+      const enrichedDisbursement = {
+        id: "fake-id",
+        debitAmount: 1000,
+        creditAmount: 1000,
+        status: TransactionStatus.COMPLETED,
+        firstName: "Fake",
+        lastName: "Fake",
+        updatedTimestamp: new Date(),
+      };
+
+      when(mockPayrollRepo.getPayrollByID(anything())).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(anything())).thenResolve(employer);
+      when(mockPayrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(payroll.id, null)).thenResolve({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [enrichedDisbursement],
+      });
+
+      const response = await employerService.getFilteredEnrichedDisbursementsForPayroll(payroll.id, null);
+
+      expect(response).toStrictEqual({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [enrichedDisbursement],
+      });
+    });
+
+    it("should return enriched disbursements for payroll with filter", async () => {
+      const { payroll } = getRandomPayroll("fake-employer");
+      const employer = getRandomEmployer();
+
+      const enrichedDisbursement = {
+        id: "fake-id",
+        debitAmount: 1000,
+        creditAmount: 1000,
+        status: TransactionStatus.COMPLETED,
+        firstName: "Fake",
+        lastName: "Fake",
+        updatedTimestamp: new Date(),
+      };
+
+      when(mockPayrollRepo.getPayrollByID(anything())).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(anything())).thenResolve(employer);
+      when(
+        mockPayrollDisbursementRepo.getFilteredEnrichedDisbursementsForPayroll(
+          payroll.id,
+          deepEqual({
+            status: TransactionStatus.COMPLETED,
+          }),
+        ),
+      ).thenResolve({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [enrichedDisbursement],
+      });
+
+      const response = await employerService.getFilteredEnrichedDisbursementsForPayroll(payroll.id, {
+        status: TransactionStatus.COMPLETED,
+      });
+
+      expect(response).toStrictEqual({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [enrichedDisbursement],
+      });
     });
   });
 
@@ -1708,6 +1900,31 @@ describe("EmployerServiceTests", () => {
         TemplateProcessModule.TemplateLocale.SPANISH,
         EmployerService.FOOTER_TRANSLATIONS[TemplateProcessModule.TemplateLocale.SPANISH.toString()],
       );
+    });
+  });
+
+  describe("getPayrollMatchingAmountAndEmployerDocumentNumber", () => {
+    it("should forward the request to the payrollRepo", async () => {
+      when(mockPayrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT")).thenResolve([]);
+
+      const payrolls = await employerService.getInvoicedPayrollMatchingAmountAndEmployerDocumentNumber(100, "DOCUMENT");
+
+      expect(payrolls).toStrictEqual([]);
+    });
+  });
+
+  describe("getPayrollMatchingAmountAndEmployerDepositMatchingName", () => {
+    it("should forward the request to the payrollRepo", async () => {
+      when(
+        mockPayrollRepo.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(100, "DEPOSIT_NAME"),
+      ).thenResolve([]);
+
+      const payrolls = await employerService.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(
+        100,
+        "DEPOSIT_NAME",
+      );
+
+      expect(payrolls).toStrictEqual([]);
     });
   });
 

@@ -22,6 +22,7 @@ import { getMockNotificationServiceWithDefaults } from "../../../modules/notific
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
+import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -571,9 +572,7 @@ describe("BubbleServiceTests", () => {
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(null);
       when(employerService.getAllPayrollsForEmployer(employer.id)).thenResolve([payroll]);
 
-      await expect(async () => await bubbleService.getAllPayrollsForEmployer(employer.referralID)).rejects.toThrow(
-        ServiceException,
-      );
+      expect(bubbleService.getAllPayrollsForEmployer(employer.referralID)).rejects.toThrow(ServiceException);
     });
   });
 
@@ -581,37 +580,18 @@ describe("BubbleServiceTests", () => {
     it("should return payroll with disbursements", async () => {
       const employer = getRandomEmployer();
       const { payroll } = getRandomPayroll(employer.id);
-      const { payrollDisbursement } = getRandomPayrollDisbursement(payroll.id, "fake-employee");
-
-      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
-      when(employerService.getPayrollByID(payroll.id)).thenResolve(payroll);
-      when(employerService.getAllDisbursementsForPayroll(payroll.id)).thenResolve([payrollDisbursement]);
-
-      const response = await bubbleService.getPayrollWithDisbursements(employer.referralID, payroll.id, true);
-      expect(response).toStrictEqual({
-        ...payroll,
-        disbursements: [payrollDisbursement],
-      });
-    });
-
-    it("should return empty list of disbursements when flag is false", async () => {
-      const employer = getRandomEmployer();
-      const { payroll } = getRandomPayroll(employer.id);
 
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(employerService.getPayrollByID(payroll.id)).thenResolve(payroll);
 
-      const response = await bubbleService.getPayrollWithDisbursements(employer.referralID, payroll.id, false);
+      const response = await bubbleService.getPayroll(employer.referralID, payroll.id);
       expect(response).toStrictEqual({
         ...payroll,
-        disbursements: [],
       });
     });
 
     it("should throw ServiceException when employer with referralID does not exist", async () => {
-      await expect(
-        async () => await bubbleService.getPayrollWithDisbursements(undefined, "fake-payroll-id", true),
-      ).rejects.toThrow(ServiceException);
+      expect(bubbleService.getPayroll(undefined, "fake-payroll-id")).rejects.toThrow(ServiceException);
     });
 
     it("should throw error when payroll does not belong to employer", async () => {
@@ -621,9 +601,7 @@ describe("BubbleServiceTests", () => {
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(employerService.getPayrollByID(payroll.id)).thenResolve(payroll);
 
-      await expect(
-        async () => await bubbleService.getPayrollWithDisbursements(employer.referralID, payroll.id, true),
-      ).rejects.toThrow(ServiceException);
+      expect(bubbleService.getPayroll(employer.referralID, payroll.id)).rejects.toThrow(ServiceException);
     });
   });
 
@@ -691,6 +669,117 @@ describe("BubbleServiceTests", () => {
         totalPages: 1,
         hasNextPage: false,
       });
+    });
+  });
+
+  describe("createEmployeeForEmployer", () => {
+    it("should throw ServiceException if referralID is missing", async () => {
+      await expect(async () => await bubbleService.createEmployeeForEmployer(undefined, {} as any)).rejects.toThrow(
+        ServiceException,
+      );
+    });
+
+    it("should throw ServiceException if employer with referralID does not exist", async () => {
+      when(employerService.getEmployerByReferralID(anything())).thenResolve(null);
+
+      await expect(
+        async () => await bubbleService.createEmployeeForEmployer("fake-referral-id", {} as any),
+      ).rejects.toThrow(ServiceException);
+    });
+
+    it("should throw ServiceException when email is missing", async () => {
+      const employer = getRandomEmployer();
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+
+      await expect(
+        async () =>
+          await bubbleService.createEmployeeForEmployer(employer.referralID, {
+            email: undefined,
+            sendEmail: false,
+          }),
+      ).rejects.toThrow(ServiceException);
+    });
+
+    it("should call employeeService.inviteEmployee", async () => {
+      const employer = getRandomEmployer();
+      const employee = getRandomEmployee(null, employer);
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employeeService.inviteEmployee(anyString(), anything(), anything())).thenResolve(employee);
+
+      const response = await bubbleService.createEmployeeForEmployer(employer.referralID, {
+        email: "fake-email@noba.com",
+        sendEmail: true,
+      });
+
+      expect(response).toStrictEqual(employee);
+
+      verify(employeeService.inviteEmployee("fake-email@noba.com", deepEqual(employer), true)).once();
+    });
+  });
+
+  describe("getAllEnrichedDisbursementsForPayroll", () => {
+    it("should return all enriched disbursements for payroll", async () => {
+      const employer = getRandomEmployer();
+      const employee = getRandomEmployee("fake-consumer-id", employer);
+      const { payroll } = getRandomPayroll(employer.id);
+
+      const enrichedDisbursement = {
+        id: "fake-id",
+        debitAmount: 1000,
+        creditAmount: 1000,
+        status: TransactionStatus.COMPLETED,
+        firstName: "Fake",
+        lastName: "Fake",
+        updatedTimestamp: new Date(),
+      };
+
+      const paginatedEnrichedDisbursements = {
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [enrichedDisbursement],
+      };
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.getFilteredEnrichedDisbursementsForPayroll(payroll.id, null)).thenResolve(
+        paginatedEnrichedDisbursements,
+      );
+      when(employerService.getPayrollByID(payroll.id)).thenResolve(payroll);
+
+      const response = await bubbleService.getAllEnrichedDisbursementsForPayroll(employer.referralID, payroll.id, null);
+      expect(response).toStrictEqual(paginatedEnrichedDisbursements);
+    });
+
+    it("should throw ServiceException if employer doesn't exist", async () => {
+      when(employerService.getEmployerByReferralID(anything())).thenResolve(null);
+
+      expect(bubbleService.getAllEnrichedDisbursementsForPayroll("1234", "456", null)).rejects.toThrowServiceException(
+        ServiceErrorCode.DOES_NOT_EXIST,
+      );
+    });
+
+    it("should throw ServiceException if payroll doesn't exist", async () => {
+      const employer = getRandomEmployer();
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.getPayrollByID(anything())).thenResolve(null);
+
+      expect(
+        bubbleService.getAllEnrichedDisbursementsForPayroll(employer.referralID, "456", null),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
+    });
+
+    it("should throw ServiceException when payroll does not belong to employer", async () => {
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll("fake-employer-id");
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.getPayrollByID(payroll.id)).thenResolve(payroll);
+
+      expect(
+        bubbleService.getAllEnrichedDisbursementsForPayroll(employer.referralID, payroll.id, null),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
     });
   });
 });

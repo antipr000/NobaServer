@@ -9,6 +9,7 @@ import { PayrollWorkflowController } from "../payroll.workflow.controller";
 import { getRandomPayroll, getRandomPayrollDisbursement } from "../test_utils/payroll.test.utils";
 import { NotFoundException } from "@nestjs/common";
 import { PayrollStatus } from "../domain/Payroll";
+import { Utils } from "../../../core/utils/Utils";
 
 describe("EmployerWorkflowControllerTests", () => {
   jest.setTimeout(20000);
@@ -98,11 +99,57 @@ describe("EmployerWorkflowControllerTests", () => {
 
       const result = await payrollWorkflowController.getPayroll(payroll.id);
 
+      const time = Utils.getCurrentEasternTimezone() == "EDT" ? "13:00:00.000" : "14:00:00.000";
+
       expect(result).toStrictEqual({
         id: payroll.id,
         employerID: payroll.employerID,
         reference: payroll.referenceNumber,
-        payrollDate: payroll.payrollDate,
+        payrollDate: `${payroll.payrollDate}T${time}Z`,
+        totalDebitAmount: payroll.totalDebitAmount,
+        totalCreditAmount: payroll.totalCreditAmount,
+        exchangeRate: payroll.exchangeRate,
+        debitCurrency: payroll.debitCurrency,
+        creditCurrency: payroll.creditCurrency,
+        status: payroll.status,
+      });
+    });
+
+    it("should get a payroll in EDT", async () => {
+      const { payroll } = getRandomPayroll("fake-employer");
+
+      when(mockEmployerService.getPayrollByID(payroll.id)).thenResolve(payroll);
+      jest.spyOn(Date, "now").mockReturnValueOnce(new Date(2023, 7, 14).getTime()); // EDT date
+
+      const result = await payrollWorkflowController.getPayroll(payroll.id);
+
+      expect(result).toStrictEqual({
+        id: payroll.id,
+        employerID: payroll.employerID,
+        reference: payroll.referenceNumber,
+        payrollDate: `${payroll.payrollDate}T13:00:00.000Z`,
+        totalDebitAmount: payroll.totalDebitAmount,
+        totalCreditAmount: payroll.totalCreditAmount,
+        exchangeRate: payroll.exchangeRate,
+        debitCurrency: payroll.debitCurrency,
+        creditCurrency: payroll.creditCurrency,
+        status: payroll.status,
+      });
+    });
+
+    it("should get a payroll in EST", async () => {
+      const { payroll } = getRandomPayroll("fake-employer");
+
+      when(mockEmployerService.getPayrollByID(payroll.id)).thenResolve(payroll);
+      jest.spyOn(Date, "now").mockReturnValueOnce(new Date(2023, 1, 14).getTime()); // EST date
+
+      const result = await payrollWorkflowController.getPayroll(payroll.id);
+
+      expect(result).toStrictEqual({
+        id: payroll.id,
+        employerID: payroll.employerID,
+        reference: payroll.referenceNumber,
+        payrollDate: `${payroll.payrollDate}T14:00:00.000Z`,
         totalDebitAmount: payroll.totalDebitAmount,
         totalCreditAmount: payroll.totalCreditAmount,
         exchangeRate: payroll.exchangeRate,

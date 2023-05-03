@@ -7,8 +7,8 @@ import { ServiceErrorCode, ServiceException } from "../../../core/exception/serv
 import { Currency } from "../domain/TransactionTypes";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { Transaction } from "../domain/Transaction";
-import { MonoService } from "../../psp/mono/mono.service";
-import { MonoCurrency, MonoTransactionType } from "../../psp/domain/Mono";
+import { MonoService } from "../../mono/public/mono.service";
+import { MonoCurrency, MonoTransactionType } from "../../mono/domain/Mono";
 import { TransactionFlags } from "../domain/TransactionFlags";
 import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
 import { Utils } from "../../../core/utils/Utils";
@@ -99,15 +99,12 @@ export class WalletDepositImpl implements IWorkflowImpl {
       isCollection ? [TransactionFlags.IS_COLLECTION] : [],
     );
 
-    transactionDetails.creditAmount = Number(transactionQuote.quoteAmountWithFees);
-    transactionDetails.exchangeRate = Number(transactionQuote.nobaRate);
-
     return {
-      creditAmount: transactionDetails.creditAmount,
+      creditAmount: Number(transactionQuote.quoteAmountWithFees),
       creditCurrency: transactionDetails.creditCurrency,
       debitAmount: transactionDetails.debitAmount,
       debitCurrency: transactionDetails.debitCurrency,
-      exchangeRate: transactionDetails.exchangeRate,
+      exchangeRate: Number(transactionQuote.nobaRate),
       workflowName: transactionDetails.workflowName,
       memo: transactionDetails.memo,
       transactionFees: [

@@ -4,9 +4,7 @@ import { EmployeeService } from "../employee.service";
 export function getMockEmployeeServiceWithDefaults(): EmployeeService {
   const mockEmployeeService: EmployeeService = mock(EmployeeService);
 
-  when(mockEmployeeService.createEmployee(anyNumber(), anyString(), anyString())).thenReject(
-    new Error("Method not implemented"),
-  );
+  when(mockEmployeeService.createEmployee(anything())).thenReject(new Error("Method not implemented"));
   when(mockEmployeeService.updateEmployee(anyString(), anything())).thenReject(new Error("Method not implemented"));
   when(mockEmployeeService.getEmployeeByID(anyString())).thenReject(new Error("Method not implemented"));
   when(mockEmployeeService.getEmployeesForConsumerID(anyString())).thenReject(new Error("Method not implemented"));
@@ -17,6 +15,10 @@ export function getMockEmployeeServiceWithDefaults(): EmployeeService {
     new Error("Method not implemented"),
   );
   when(mockEmployeeService.getFilteredEmployees(anything())).thenReject(new Error("Method not implemented"));
+  when(mockEmployeeService.linkEmployee(anyString(), anyString())).thenReject(new Error("Method not implemented"));
+  when(mockEmployeeService.inviteEmployee(anyString(), anything(), anything())).thenReject(
+    new Error("Method not implemented"),
+  );
 
   return mockEmployeeService;
 }

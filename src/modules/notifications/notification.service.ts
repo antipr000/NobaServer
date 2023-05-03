@@ -63,6 +63,7 @@ import { LatestNotificationResponse } from "./dto/latestnotification.response.dt
 import { EventRepo } from "./repos/event.repo";
 import { Event } from "./domain/Event";
 import { EventHandlers } from "./domain/EventHandlers";
+import { SendInviteEmployeeEvent, validateSendInviteEmployeeEvent } from "./events/SendInviteEmployeeEvent";
 
 @Injectable()
 export class NotificationService {
@@ -203,6 +204,11 @@ export class NotificationService {
 
       case NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT:
         validateSendEmployerRequestEvent(payload as SendEmployerRequestEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
+        break;
+
+      case NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT:
+        validateSendInviteEmployeeEvent(payload as SendInviteEmployeeEvent);
         this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT:

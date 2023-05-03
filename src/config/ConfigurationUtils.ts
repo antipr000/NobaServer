@@ -31,6 +31,8 @@ export const SUPPORTED_CRYPTO_TOKENS_FILE_BUCKET_PATH = "supportedCryptoFileBuck
 export const SANCTIONED_CRYPTO_WALLETS_FILE_BUCKET_PATH = "sanctionedCryptoWalletsFileBucketPath";
 export const TEMPLATES_FOLDER_BUCKET_PATH = "templatesFolderBucketPath";
 export const INVOICES_FOLDER_BUCKET_PATH = "invoicesFolderBucketPath";
+export const QR_CODES_FOLDER_BUCKET_PATH = "qrCodesFolderBucketPath";
+export const QR_CODES_BASE_URL = "qrCodesBaseUrl";
 export const STATIC_DEV_OTP = "staticDevOTP";
 
 export const AWS_ACCESS_KEY_ID_ATTR = "awsAccessKeyId";

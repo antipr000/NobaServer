@@ -6,4 +6,13 @@ export class UpdateEmployeeRequestDTO {
   salary?: number;
   email?: string;
   status?: EmployeeStatus;
+  lastInviteSentTimestamp?: Date;
+}
+
+export class CreateEmployeeRequestDTO {
+  consumerID?: string;
+  allocationAmount: number;
+  employerID: string;
+  salary?: number;
+  email?: string;
 }

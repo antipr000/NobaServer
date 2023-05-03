@@ -25,6 +25,8 @@ export class EmployerMapper {
       payrollDates: payrollDatesAsc,
       nextPayrollDate: futurePayrollDates[0],
       ...(employer.maxAllocationPercent && { maxAllocationPercent: employer.maxAllocationPercent }),
+      ...(employer.documentNumber && { documentNumber: employer.documentNumber }),
+      ...(employer.depositMatchingName && { depositMatchingName: employer.depositMatchingName }),
     };
   }
 
@@ -42,6 +44,8 @@ export class EmployerMapper {
       payrollDates: payrollDatesAsc,
       nextPayrollDate: futurePayrollDates[0],
       ...(employer.maxAllocationPercent && { maxAllocationPercent: employer.maxAllocationPercent }),
+      ...(employer.documentNumber && { documentNumber: employer.documentNumber }),
+      ...(employer.depositMatchingName && { depositMatchingName: employer.depositMatchingName }),
     };
   }
 

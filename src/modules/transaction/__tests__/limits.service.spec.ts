@@ -6,7 +6,7 @@ import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { ConsumerService } from "../../consumer/consumer.service";
 import { Consumer } from "../../consumer/domain/Consumer";
 import { getMockConsumerServiceWithDefaults } from "../../consumer/mocks/mock.consumer.service";
-import { TransactionAllowedStatus } from "../../transactions/domain/TransactionAllowedStatus";
+import { TransactionAllowedStatus } from "../domain/TransactionAllowedStatus";
 import { CheckTransactionDTO } from "../dto/CheckTransactionDTO";
 import { ConsumerLimitsDTO } from "../dto/ConsumerLimitsDTO";
 import { LimitsService } from "../limits.service";

@@ -7,13 +7,7 @@ import { EllipticConfigs } from "../../config/configtypes/EllipticConfig";
 import { ELLIPTIC_CONFIG_KEY, isProductionEnvironment } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Transaction } from "../transaction/domain/Transaction";
-import { CHAINTYPE_ERC20, CurrencyService } from "./currency.service";
-import {
-  ellipticSupportedCurrencies,
-  ellipticSupportedCurrenciesWithOutputType,
-  EllipticTransactionAnalysisRequest,
-  EllipticTransactionAnalysisResponse,
-} from "./domain/EllipticTransactionAnalysisTypes";
+import { CurrencyService } from "./currency.service";
 import { WalletExposureResponse } from "./domain/WalletExposureResponse";
 
 @Injectable()
@@ -61,68 +55,7 @@ export class EllipticService {
     }
   }
 
-  private async getAssetType(cryptocurrencyTicker: string): Promise<string> {
-    let assetType: string = cryptocurrencyTicker;
-    if (cryptocurrencyTicker.indexOf(".") > -1) {
-      // Trim everything starting with the . to convert to base cryptocurrency name
-      assetType = cryptocurrencyTicker.substring(0, cryptocurrencyTicker.indexOf(".") - 1);
-    }
-
-    // If the cryptocurrency isn't in the list of supported Elliptic cryptocurrencies,
-    // check if it's a ERC20 chain type which is also supported
-    if (!ellipticSupportedCurrencies.includes(assetType)) {
-      const cryptocurrency = await this.currencyService.getCryptocurrency(cryptocurrencyTicker);
-      if (cryptocurrency === null) {
-        throw new Error(`Unknown Cryptocurrency: ${cryptocurrencyTicker}`); // Should never happen
-      }
-
-      if (cryptocurrency.type === CHAINTYPE_ERC20) {
-        assetType = CHAINTYPE_ERC20;
-      }
-    }
-
-    return assetType;
-  }
-
   public async transactionAnalysis(transaction: Transaction): Promise<WalletExposureResponse> {
     throw new Error("Elliptic is not supported in this version of Noba");
-    /*const assetType: string = await this.getAssetType(transaction.props.leg2);
-
-    let output_params = {};
-    if (ellipticSupportedCurrenciesWithOutputType.includes(assetType)) {
-      output_params = {
-        output_type: "address",
-        output_address: transaction.props.destinationWalletAddress,
-      };
-    }
-
-    const requestBody: EllipticTransactionAnalysisRequest = {
-      subject: {
-        asset: assetType,
-        type: "transaction",
-        hash: transaction.props.blockchainTransactionId,
-        ...output_params,
-      },
-      type: "destination_of_funds",
-      customer_reference: transaction.props.userId,
-    };
-
-    const path = "/v2/analyses/synchronous";
-    if (isProductionEnvironment()) {
-      this.logger.info(`Posting to elliptic (${path}): ${JSON.stringify(requestBody)}`);
-      try {
-        const { data }: { data: EllipticTransactionAnalysisResponse } = await this.makeRequest(path, requestBody);
-        return {
-          riskScore: data.risk_score,
-        };
-      } catch (e) {
-        this.logger.error(`Request to elliptic failed: Error: ${JSON.stringify(e)}`);
-        throw new BadRequestException(e.message);
-      }
-    } else {
-      this.logger.info(
-        `Bypassing call to elliptic in lower environment but would've sent (${path}): ${JSON.stringify(requestBody)}`,
-      );
-    }*/
   }
 }

@@ -3,6 +3,10 @@ import { Utils } from "../utils/Utils";
 describe("Utils", () => {
   jest.setTimeout(2000);
 
+  afterEach(async () => {
+    jest.resetAllMocks();
+  });
+
   describe("roundTo2DecimalNumber()", () => {
     it("It should round to 2 decimals", () => {
       expect(Utils.roundTo2DecimalNumber(50.1234)).toEqual(50.12);
@@ -294,6 +298,50 @@ describe("Utils", () => {
 
     it("Should return true for no email provided", () => {
       expect(Utils.isValidEmail(null)).toEqual(false);
+    });
+  });
+
+  describe("getNYDSTOffset", () => {
+    it("Should return correct value for winter (non-DST) time", () => {
+      const nowSpy = jest.spyOn(Date, "now").mockReturnValueOnce(new Date(2023, 1, 14).getTime());
+      expect(Utils.getCurrentEasternTimezone()).toEqual("EST");
+      expect(nowSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("Should return correct value for summer (DST) time", () => {
+      const nowSpy = jest.spyOn(Date, "now").mockReturnValueOnce(new Date(2023, 7, 14).getTime());
+      expect(Utils.getCurrentEasternTimezone()).toEqual("EDT");
+      expect(nowSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("Should return EST if there is an error", () => {
+      const nowSpy = jest.spyOn(Date, "now").mockReturnValueOnce(new Date(2023, 7, 14).getTime());
+      const toLocaleStringSpy = jest.spyOn(Date.prototype, "toLocaleString").mockReturnValueOnce("error");
+      expect(Utils.getCurrentEasternTimezone()).toEqual("EST");
+      expect(nowSpy).toHaveBeenCalledTimes(1);
+      expect(toLocaleStringSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("getCurrentEasternTimezoneOffset", () => {
+    it("Should return 5 hour offset for winter (non-DST) time", () => {
+      const nowSpy = jest.spyOn(Date, "now").mockReturnValueOnce(new Date(2023, 1, 14).getTime());
+      expect(Utils.getCurrentEasternTimezoneOffset()).toEqual("-05:00");
+      expect(nowSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("Should return 4 hour offset for summer (DST) time", () => {
+      const nowSpy = jest.spyOn(Date, "now").mockReturnValueOnce(new Date(2023, 7, 14).getTime());
+      expect(Utils.getCurrentEasternTimezoneOffset()).toEqual("-04:00");
+      expect(nowSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("Should return 5 hour offset if there is an error", () => {
+      const nowSpy = jest.spyOn(Date, "now").mockReturnValueOnce(new Date(2023, 7, 14).getTime());
+      const toLocaleStringSpy = jest.spyOn(Date.prototype, "toLocaleString").mockReturnValueOnce("error");
+      expect(Utils.getCurrentEasternTimezoneOffset()).toEqual("-05:00");
+      expect(nowSpy).toHaveBeenCalledTimes(1);
+      expect(toLocaleStringSpy).toHaveBeenCalledTimes(1);
     });
   });
 });

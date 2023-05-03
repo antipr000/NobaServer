@@ -5,6 +5,7 @@ import {
   Get,
   HttpStatus,
   Inject,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -21,19 +22,22 @@ import {
   CreatePayrollRequestDTO,
   CreatePayrollResponseDTO,
   DisbursementDTO,
+  EnrichedDisbursementDTO,
+  EmployeeCreateRequestDTO,
+  EmployeeResponseDTO,
   PaginatedEmployeeResponseDTO,
   PayrollDTO,
-  PayrollQueryDTO,
   RegisterEmployerRequestDTO,
   UpdateEmployeeRequestDTO,
   UpdateEmployerRequestDTO,
+  PaginatedEnrichedDisbursementResponseDTO,
 } from "./dto/bubble.webhook.controller.dto";
 import { EmployerRegisterResponseDTO } from "./dto/EmployerRegisterResponseDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { isValidDateString } from "../../core/utils/DateUtils";
 import { BubbleWebhookMapper } from "./mapper/bubble.webhook.mapper";
-import { Bool } from "../../core/domain/ApiEnums";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
+import { EnrichedDisbursementFilterOptionsDTO } from "../employer/dto/enriched.disbursement.filter.options.dto";
 
 @Controller("/webhooks/bubble")
 @ApiTags("Webhooks")
@@ -81,6 +85,17 @@ export class BubbleWebhookController {
     return this.mapper.toPaginatedEmployeeDTOs(paginatedResult);
   }
 
+  @Post("/employers/:referralID/employees")
+  @ApiOperation({ summary: "Creates a new employee for employer and sends an invite if specified" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: EmployeeResponseDTO })
+  async createEmployee(
+    @Param("referralID") referralID: string,
+    @Body() requestBody: EmployeeCreateRequestDTO,
+  ): Promise<EmployeeResponseDTO> {
+    const employee = await this.bubbleService.createEmployeeForEmployer(referralID, requestBody);
+    return this.mapper.toEmployeeResponseDTO(employee);
+  }
+
   @Post("/employers/:referralID/payroll")
   @ApiOperation({ summary: "Creates payroll for employer in Noba" })
   @ApiResponse({ status: HttpStatus.CREATED, type: CreatePayrollResponseDTO })
@@ -112,17 +127,11 @@ export class BubbleWebhookController {
   async getPayroll(
     @Param("referralID") referralID: string,
     @Param("payrollID") payrollID: string,
-    @Query() query: PayrollQueryDTO,
   ): Promise<PayrollDTO> {
-    const payrollWithDisbursements = await this.bubbleService.getPayrollWithDisbursements(
-      referralID,
-      payrollID,
-      query.shouldIncludeDisbursements === Bool.True,
-    );
+    const payroll = await this.bubbleService.getPayroll(referralID, payrollID);
 
     return {
-      ...this.mapper.toPayrollDTO(payrollWithDisbursements),
-      disbursements: payrollWithDisbursements.disbursements.map(this.mapper.toDisbursementDTO),
+      ...this.mapper.toPayrollDTO(payroll),
     };
   }
 
@@ -135,6 +144,26 @@ export class BubbleWebhookController {
   ): Promise<DisbursementDTO[]> {
     const disbursements = await this.bubbleService.getAllDisbursementsForEmployee(referralID, employeeID);
     return disbursements.map(this.mapper.toDisbursementDTO);
+  }
+
+  @Get("/employers/:referralID/payrolls/:payrollID/disbursements")
+  @ApiOperation({ summary: "Get all disbursements for payroll in Noba" })
+  @ApiResponse({ status: HttpStatus.OK, type: [EnrichedDisbursementDTO] })
+  async getAllEnrichedDisbursementsForPayroll(
+    @Param("referralID") referralID: string,
+    @Param("payrollID") payrollID: string,
+    @Query() filterOptions: EnrichedDisbursementFilterOptionsDTO,
+  ): Promise<PaginatedEnrichedDisbursementResponseDTO> {
+    const paginatedResult = await this.bubbleService.getAllEnrichedDisbursementsForPayroll(
+      referralID,
+      payrollID,
+      filterOptions,
+    );
+    if (!paginatedResult || paginatedResult.items?.length === 0) {
+      throw new NotFoundException("No disbursements found for the given payroll");
+    }
+
+    return this.mapper.toPaginatedEnrichedDisbursementDTOs(paginatedResult);
   }
 
   @Patch("/employers/:referralID")

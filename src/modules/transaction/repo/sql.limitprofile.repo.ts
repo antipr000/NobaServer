@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import { LimitProfile } from "../domain/LimitProfile";
 import { ILimitProfileRepo } from "./limitprofile.repo";
 import { PrismaService } from "../../../infraproviders/PrismaService";
-import { LimitsRepoMapper } from "../../transactions/mapper/LimitsRepoMapper";
+import { LimitsRepoMapper } from "../mapper/limits.repo.mapper";
 
 @Injectable()
 export class SQLLimitProfileRepo implements ILimitProfileRepo {

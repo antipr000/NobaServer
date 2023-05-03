@@ -6,8 +6,8 @@ import { BankFactory } from "../factory/bank.factory";
 import { PaymentService } from "../payment.service";
 import { instance, when } from "ts-mockito";
 import { BankName } from "../domain/BankFactoryTypes";
-import { MonoService } from "../mono/mono.service";
-import { getMockMonoServiceWithDefaults } from "../mono/mocks/mock.mono.service";
+import { MonoService } from "../../mono/public/mono.service";
+import { getMockMonoServiceWithDefaults } from "../../mono/public/mocks/mock.mono.service";
 import { getMockCircleServiceWithDefaults } from "../../../modules/circle/public/mocks/mock.circle.service";
 import { CircleService } from "../../../modules/circle/public/circle.service";
 

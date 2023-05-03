@@ -27,6 +27,7 @@ import { SendPayrollDepositCompletedEvent } from "../events/SendPayrollDepositCo
 import { EventRepo } from "../repos/event.repo";
 import { getMockEventRepoWithDefaults } from "../mocks/mock.event.repo";
 import { EventHandlers } from "../domain/EventHandlers";
+import { SendInviteEmployeeEvent } from "../events/SendInviteEmployeeEvent";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -263,6 +264,7 @@ describe("NotificationService", () => {
     [NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT, {}],
     [NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT, {}],
     [NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT, {}],
+    [NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT, {}],
   ])("Email event tests", (event, options) => {
     it(`should emit Email event for '${event}'`, async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
@@ -877,6 +879,14 @@ function getNotificationPayload(event: NotificationEventType): NotificationPaylo
         locale: "en",
         nobaUserID: "fake-id-1234",
       } as SendPayrollDepositCompletedEvent;
+      break;
+    case NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT:
+      return {
+        email: "fake+employee@noba.com",
+        employeeID: "fake-employee-id",
+        companyName: "Fake Company",
+        inviteUrl: "https://fake-invite.noba.com",
+      } as SendInviteEmployeeEvent;
       break;
   }
 
