@@ -16,6 +16,8 @@ export enum PayrollStatus {
 }
 
 export const isStatusTransitionAllowed = (oldStatus: PayrollStatus, newStatus: PayrollStatus) => {
+  if (oldStatus === newStatus) return true; // No-op
+
   switch (newStatus) {
     case PayrollStatus.CREATED:
       // We should not receive updates for CREATED
