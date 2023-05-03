@@ -51,3 +51,17 @@ export class PayrollData {
   @ApiProperty()
   payrollAccountNumber: string;
 }
+
+export class InviteEmployeeRequestDTO {
+  @ApiProperty()
+  email: string;
+
+  @ApiPropertyOptional()
+  firstName?: string;
+
+  @ApiPropertyOptional()
+  lastName?: string;
+
+  @ApiProperty()
+  salary: number;
+}

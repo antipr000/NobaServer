@@ -138,7 +138,7 @@ export class NotificationPayloadMapper {
       companyName: companyName,
       inviteUrl: inviteUrl,
       employeeID: employeeID,
-      locale: locale,
+      ...(locale && { locale: locale }),
     };
   }
 

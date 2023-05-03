@@ -10,9 +10,11 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { BubbleWebhookAuthGuard } from "../auth/bubble.webhooks.auth.guard";
@@ -38,6 +40,7 @@ import { isValidDateString } from "../../core/utils/DateUtils";
 import { BubbleWebhookMapper } from "./mapper/bubble.webhook.mapper";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
 import { EnrichedDisbursementFilterOptionsDTO } from "../employer/dto/enriched.disbursement.filter.options.dto";
+import { FileInterceptor } from "@nestjs/platform-express";
 
 @Controller("/webhooks/bubble")
 @ApiTags("Webhooks")
@@ -94,6 +97,30 @@ export class BubbleWebhookController {
   ): Promise<EmployeeResponseDTO> {
     const employee = await this.bubbleService.createEmployeeForEmployer(referralID, requestBody);
     return this.mapper.toEmployeeResponseDTO(employee);
+  }
+
+  @Post("/employers/:referralID/employees/invite")
+  @ApiConsumes("multipart/form-data")
+  @ApiOperation({ summary: "Sends an invite to multiple employees" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: BlankResponseDTO })
+  @ApiBody({
+    schema: {
+      type: "object",
+      properties: {
+        file: {
+          type: "string",
+          format: "binary",
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor("file"))
+  async sendInviteToEmployees(
+    @Param("referralID") referralID: string,
+    @UploadedFile("file") file: Express.Multer.File,
+  ): Promise<BlankResponseDTO> {
+    await this.bubbleService.bulkInviteEmployeesForEmployer(referralID, file);
+    return {};
   }
 
   @Post("/employers/:referralID/payroll")

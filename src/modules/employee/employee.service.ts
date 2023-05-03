@@ -48,16 +48,17 @@ export class EmployeeService {
     return this.updateEmployee(employeeID, { consumerID: consumerID, status: EmployeeStatus.LINKED });
   }
 
-  async inviteEmployee(email: string, employer: Employer, sendEmail: boolean): Promise<Employee> {
+  async inviteEmployee(email: string, employer: Employer, sendEmail: boolean, salary?: number): Promise<Employee> {
     let employee = await this.createEmployee({
       allocationAmount: 0,
       email: email,
       employerID: employer.id,
+      ...(salary && { salary: salary }),
     });
 
-    // If opted send notification to the new Employee
+    // If opted and employee status is CREATED send notification to the new Employee
 
-    if (sendEmail) {
+    if (sendEmail && employee.status === EmployeeStatus.CREATED) {
       const inviteUrl = `https://app.noba.com/app-routing/LoadingScreen/na/na/na/na/na/na/${employee.id}`;
 
       await this.notificationService.sendNotification(

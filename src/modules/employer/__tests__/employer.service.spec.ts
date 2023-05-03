@@ -49,6 +49,8 @@ import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/moc
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/exchangerate/mocks/mock.exchangerate.service";
 import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
 import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
+import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
+import { InviteEmployeeRequestDTO } from "../dto/employer.controller.dto";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -1966,6 +1968,45 @@ describe("EmployerServiceTests", () => {
         totalPages: 1,
         hasNextPage: false,
       });
+    });
+  });
+
+  describe("inviteEmployee", () => {
+    it("should throw ServiceException if email is not populated", async () => {
+      const employer = getRandomEmployer();
+      when(mockEmployerRepo.getEmployerByID(employer.id)).thenResolve(employer);
+
+      await expect(employerService.inviteEmployee(employer.id, {} as any)).rejects.toThrow(ServiceException);
+    });
+
+    it("should invite a new employee", async () => {
+      const employer = getRandomEmployer();
+      const employee = getRandomEmployee(employer.id);
+      employee.status = EmployeeStatus.INVITED;
+      employee.consumerID = null;
+      employee.salary = 10;
+      employee.email = "fake+employee@noba.com";
+
+      const inviteEmployeeDTO: InviteEmployeeRequestDTO = {
+        email: "fake+employee@noba.com",
+        salary: 10,
+        firstName: "Fake",
+        lastName: "Employee",
+      };
+
+      when(mockEmployerRepo.getEmployerByID(employer.id)).thenResolve(employer);
+      when(
+        mockEmployeeService.inviteEmployee(
+          inviteEmployeeDTO.email,
+          deepEqual(employer),
+          true,
+          inviteEmployeeDTO.salary,
+        ),
+      ).thenResolve(employee);
+
+      const result = await employerService.inviteEmployee(employer.id, inviteEmployeeDTO);
+
+      expect(result).toStrictEqual(employee);
     });
   });
 });

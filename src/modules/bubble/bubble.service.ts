@@ -21,15 +21,22 @@ import { Employee } from "../employee/domain/Employee";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
 import { EnrichedDisbursementFilterOptionsDTO } from "../employer/dto/enriched.disbursement.filter.options.dto";
 import { EmployeeCreateRequestDTO } from "./dto/bubble.webhook.controller.dto";
+import { S3Service } from "../common/s3.service";
+import { CustomConfigService } from "../../core/utils/AppConfigModule";
+import { GENERATED_DATA_BUCKET_NAME, INVITE_CSV_FOLDER_BUCKET_PATH } from "../../config/ConfigurationUtils";
+import { CsvService } from "../common/csv.service";
 
 @Injectable()
 export class BubbleService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly configService: CustomConfigService,
     private readonly notificationService: NotificationService,
     private readonly employeeService: EmployeeService,
     private readonly employerService: EmployerService,
     private readonly workflowExecutor: WorkflowExecutor,
+    private readonly s3Service: S3Service,
+    private readonly csvService: CsvService,
   ) {}
 
   async registerEmployerInNoba(request: RegisterEmployerRequest): Promise<string> {
@@ -236,5 +243,48 @@ export class BubbleService {
     }
 
     return this.employeeService.inviteEmployee(payload.email, employer, payload.sendEmail);
+  }
+
+  async bulkInviteEmployeesForEmployer(referralID: string, file: Express.Multer.File): Promise<void> {
+    if (!referralID) {
+      throw new ServiceException({
+        message: "referralID is required",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const employer = await this.employerService.getEmployerByReferralID(referralID);
+    if (!employer) {
+      throw new ServiceException({
+        message: `No employer found with referralID: ${referralID}`,
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+      });
+    }
+
+    // Validate CSV file is or correct format
+    const headers = await this.csvService.getHeadersFromCsvFile(file.buffer);
+
+    const validHeaders = ["Email", "First Name", "Last Name", "Salary"];
+
+    if (validHeaders.some(header => !headers.includes(header))) {
+      throw new ServiceException({
+        message: "CSV file is not in the correct format",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    const bucketName = this.configService.get(GENERATED_DATA_BUCKET_NAME);
+    const bucketPath = this.configService.get(INVITE_CSV_FOLDER_BUCKET_PATH);
+    const fileName = `${employer.id}.csv`;
+    // Upload to S3
+    await this.s3Service.uploadToS3(bucketPath, fileName, file.buffer);
+
+    // Trigger workflow
+    await this.workflowExecutor.executeBulkInviteEmployeesWorkflow(
+      employer.id,
+      bucketName,
+      `${bucketPath}/${fileName}`,
+      employer.id,
+    );
   }
 }
