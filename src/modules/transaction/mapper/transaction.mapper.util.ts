@@ -33,7 +33,7 @@ export const toTransactionEventDTO = (transactionEvent: TransactionEvent, locale
   };
 
   let translatedContent = i18next.t(transactionEvent.key, translationParams);
-  if (translatedContent === transactionEvent.key) {
+  if (!transactionEvent.key || translatedContent === transactionEvent.key) {
     translatedContent = transactionEvent.message;
   }
 
