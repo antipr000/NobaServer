@@ -234,7 +234,8 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
     const filterQuery: Prisma.EmployeeFindManyArgs = {
       where: {
         ...(filterOptions.employerID && { employerID: filterOptions.employerID }),
-        ...(filterOptions.employeeEmail && { email: filterOptions.employeeEmail }),
+        // email field is always in lowercase, so forcing the search term to lowercase is the cheapest way of doing a case-insensitive search
+        ...(filterOptions.employeeEmail && { email: filterOptions.employeeEmail.toLowerCase() }),
         ...(filterOptions.status && { status: filterOptions.status }),
         consumer: {
           ...(filterOptions.firstNameContains && {
