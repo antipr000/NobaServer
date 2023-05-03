@@ -108,16 +108,21 @@ describe("transaction.mapper.util suite", () => {
         transactionID: "ID",
         internal: false,
         details: "DETAILS",
-        key: "KEY",
+        key: "PARAMS_TEST",
+        param1: "PARAM1",
+        param2: "PARAM2",
+        param3: "PARAM3",
+        param4: "PARAM4",
+        param5: "PARAM5",
       };
 
-      expect(toTransactionEventDTO(transactionEvent)).toEqual({
+      expect(toTransactionEventDTO(transactionEvent, "test")).toEqual({
         timestamp: transactionEvent.timestamp,
         internal: false,
-        message: "TRANSLATED_MESSAGE",
+        message: "message",
         details: "DETAILS",
-        key: "KEY",
-        text: "test",
+        key: "PARAMS_TEST",
+        text: "Param 1:PARAM1, Param 2:PARAM2, Param 3:PARAM3, Param 4:PARAM4, Param 5:PARAM5",
       });
     });
   });

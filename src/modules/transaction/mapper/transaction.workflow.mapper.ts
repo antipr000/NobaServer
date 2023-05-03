@@ -25,7 +25,7 @@ export class TransactionWorkflowMapper {
       exchangeRate: transaction.exchangeRate.toString(),
       status: transaction.status,
       memo: transaction.memo,
-      transactionEvents: transactionEvents?.map(event => toTransactionEventDTO(event)),
+      transactionEvents: transactionEvents?.map(event => toTransactionEventDTO(event, "en")),
       totalFees: getTotalFees(transaction),
       transactionFees: transaction.transactionFees?.map(fee => toTransactionFeesDTO(fee)),
     };

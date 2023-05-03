@@ -70,7 +70,7 @@ export class TransactionMappingService {
       createdTimestamp: transaction.createdTimestamp,
       updatedTimestamp: transaction.updatedTimestamp,
       memo: transaction.memo,
-      transactionEvents: transactionEvents?.map(event => toTransactionEventDTO(event)),
+      transactionEvents: transactionEvents?.map(event => toTransactionEventDTO(event, consumer?.props.locale)),
       totalFees: getTotalFees(transaction),
       transactionFees: transaction.transactionFees?.map(fee => toTransactionFeesDTO(fee)),
       ...(monoTransaction &&
