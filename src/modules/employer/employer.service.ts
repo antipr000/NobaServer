@@ -51,6 +51,8 @@ import { ExchangeRateService } from "../exchangerate/exchangerate.service";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
 import { EnrichedDisbursementFilterOptionsDTO } from "./dto/enriched.disbursement.filter.options.dto";
+import { AlertService } from "../common/alerts/alert.service";
+import { AlertKey } from "../common/alerts/alert.dto";
 
 @Injectable()
 export class EmployerService {
@@ -73,6 +75,9 @@ export class EmployerService {
 
   @Inject()
   private readonly kmsService: KmsService;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   @Inject()
   private readonly workflowExecutor: WorkflowExecutor;
@@ -540,22 +545,38 @@ export class EmployerService {
       ...(request.paymentMonoTransactionID && { paymentMonoTransactionID: request.paymentMonoTransactionID }),
     };
 
-    if (request.status === PayrollStatus.COMPLETED) {
-      payrollUpdateRequest.completedTimestamp = new Date();
-    } else if (request.status === PayrollStatus.PREPARED) {
-      const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
+    // Be sure to only do this if the status actually changes
+    if (request.status !== payroll.status) {
+      if (request.status === PayrollStatus.COMPLETED) {
+        payrollUpdateRequest.completedTimestamp = new Date();
+      } else if (request.status === PayrollStatus.PREPARED) {
+        const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
 
-      const totalDebitAmountInCOP = disbursements.reduce((acc, disbursement) => acc + disbursement.allocationAmount, 0);
+        const totalDebitAmountInCOP = disbursements.reduce(
+          (acc, disbursement) => acc + disbursement.allocationAmount,
+          0,
+        );
 
-      const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD);
+        const exchangeRateDTO = await this.exchangeRateService.getExchangeRateForCurrencyPair(
+          Currency.COP,
+          Currency.USD,
+        );
 
-      const totalCreditAmountInUSD = totalDebitAmountInCOP * exchangeRateDTO.nobaRate;
+        const totalCreditAmountInUSD = totalDebitAmountInCOP * exchangeRateDTO.nobaRate;
 
-      payrollUpdateRequest.totalDebitAmount = totalDebitAmountInCOP;
-      payrollUpdateRequest.exchangeRate = exchangeRateDTO.nobaRate;
-      payrollUpdateRequest.totalCreditAmount = totalCreditAmountInUSD;
-      payrollUpdateRequest.debitCurrency = Currency.COP;
-      payrollUpdateRequest.creditCurrency = Currency.USD;
+        payrollUpdateRequest.totalDebitAmount = totalDebitAmountInCOP;
+        payrollUpdateRequest.exchangeRate = exchangeRateDTO.nobaRate;
+        payrollUpdateRequest.totalCreditAmount = totalCreditAmountInUSD;
+        payrollUpdateRequest.debitCurrency = Currency.COP;
+        payrollUpdateRequest.creditCurrency = Currency.USD;
+      } else if (request.status === PayrollStatus.EXPIRED) {
+        // We want to alert in this case as it means manual intervention is required
+        const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
+        this.alertService.raiseAlert({
+          key: AlertKey.PAYROLL_EXPIRED,
+          message: `Payroll ${payrollID} for ${employer.name} has expired`,
+        });
+      }
     }
 
     const updatedPayroll = await this.payrollRepo.updatePayroll(payrollID, payrollUpdateRequest);

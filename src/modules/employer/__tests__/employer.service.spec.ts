@@ -49,6 +49,8 @@ import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/moc
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/exchangerate/mocks/mock.exchangerate.service";
 import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
 import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -102,6 +104,7 @@ describe("EmployerServiceTests", () => {
   let mockExchangeRateService: ExchangeRateService;
   let mockS3Service: S3Service;
   let mockKMSService: KmsService;
+  let mockAlertService: AlertService;
   let mockWorkflowExecutor: WorkflowExecutor;
   let mockTemplateProcessorInstance;
 
@@ -114,6 +117,7 @@ describe("EmployerServiceTests", () => {
     mockExchangeRateService = getMockExchangeRateServiceWithDefaults();
     mockS3Service = getMockS3ServiceWithDefaults();
     mockKMSService = getMockKMSServiceWithDefaults();
+    mockAlertService = getMockAlertServiceWithDefaults();
     mockWorkflowExecutor = getMockWorkflowExecutorWithDefaults();
     mockTemplateProcessorInstance = instance(mockTemplateProcessor);
     constructorSpy.mockImplementationOnce(() => mockTemplateProcessorInstance);
@@ -163,6 +167,10 @@ describe("EmployerServiceTests", () => {
         {
           provide: KmsService,
           useFactory: () => instance(mockKMSService),
+        },
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
         },
         {
           provide: WorkflowExecutor,
@@ -888,6 +896,15 @@ describe("EmployerServiceTests", () => {
     });
 
     it.each([
+      [PayrollStatus.CREATED, PayrollStatus.CREATED],
+      [PayrollStatus.PREPARED, PayrollStatus.PREPARED],
+      [PayrollStatus.INVOICED, PayrollStatus.INVOICED],
+      [PayrollStatus.INVESTIGATION, PayrollStatus.INVESTIGATION],
+      [PayrollStatus.FUNDED, PayrollStatus.FUNDED],
+      [PayrollStatus.IN_PROGRESS, PayrollStatus.IN_PROGRESS],
+      [PayrollStatus.RECEIPT, PayrollStatus.RECEIPT],
+      [PayrollStatus.COMPLETED, PayrollStatus.COMPLETED],
+      [PayrollStatus.EXPIRED, PayrollStatus.EXPIRED],
       [PayrollStatus.CREATED, PayrollStatus.PREPARED],
       [PayrollStatus.PREPARED, PayrollStatus.INVOICED],
       [PayrollStatus.INVOICED, PayrollStatus.FUNDED],
@@ -903,7 +920,8 @@ describe("EmployerServiceTests", () => {
       [PayrollStatus.INVOICED, PayrollStatus.EXPIRED],
       [PayrollStatus.INVESTIGATION, PayrollStatus.EXPIRED],
     ])("should allow status to be updated from %s to %s", async (fromStatus, toStatus) => {
-      const employerID = "fake-employer";
+      const employer = getRandomEmployer();
+      const employerID = employer.id;
       const { payroll } = getRandomPayroll(employerID);
       payroll.status = fromStatus;
 
@@ -925,6 +943,8 @@ describe("EmployerServiceTests", () => {
         denominatorCurrency: "USD",
       });
 
+      when(mockEmployerRepo.getEmployerByID(employerID)).thenResolve(employer);
+      when(mockAlertService.raiseAlert(anything())).thenResolve();
       when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
       when(mockPayrollRepo.updatePayroll(anyString(), anything())).thenResolve({
         ...payroll,
@@ -1018,6 +1038,36 @@ describe("EmployerServiceTests", () => {
           status: PayrollStatus.COMPLETED,
         }),
       ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should raise an alert when moving to EXPIRED status", async () => {
+      const employer = getRandomEmployer();
+      const { payroll } = getRandomPayroll(employer.id);
+      payroll.status = PayrollStatus.INVOICED;
+
+      when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
+      when(mockEmployerRepo.getEmployerByID(payroll.employerID)).thenResolve(employer);
+      when(mockAlertService.raiseAlert(anything())).thenResolve();
+      when(mockPayrollRepo.updatePayroll(anyString(), anything())).thenResolve({
+        ...payroll,
+        status: PayrollStatus.EXPIRED,
+      });
+
+      const response = await employerService.updatePayroll(payroll.id, {
+        status: PayrollStatus.EXPIRED,
+      });
+
+      expect(response).toStrictEqual({
+        ...payroll,
+        status: PayrollStatus.EXPIRED,
+      });
+
+      const [payrollID, payrollUpdateRequest] = capture(mockPayrollRepo.updatePayroll).last();
+      expect(payrollID).toEqual(payroll.id);
+      expect(payrollUpdateRequest.status).toEqual(PayrollStatus.EXPIRED);
+
+      const [alertCall] = capture(mockAlertService.raiseAlert).last();
+      expect(alertCall).toEqual(expect.objectContaining({ key: "PAYROLL_EXPIRED" }));
     });
   });
 
