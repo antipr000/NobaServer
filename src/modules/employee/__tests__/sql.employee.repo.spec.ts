@@ -658,6 +658,16 @@ describe("SqlEmployeeRepoTests", () => {
       expect(filteredEmployees6.items[0].consumer.props.firstName).toEqual("Juan Danial");
       expect(filteredEmployees6.items[0].consumer.props.lastName).toEqual("Hoyon Castro");
 
+      // Case-insensitive email search
+      const filteredEmployeesEmail: PaginatedResult<Employee> = await employeeRepo.getFilteredEmployees({
+        employerID: employerID2,
+        employeeEmail: employee6.email.toUpperCase(),
+      });
+
+      expect(filteredEmployeesEmail.items.length).toEqual(1);
+      expect(filteredEmployeesEmail.totalPages).toEqual(1);
+      expect(filteredEmployeesEmail.items[0].email).toEqual(employee6.email);
+
       await prismaService.employee.update({
         where: {
           id: createdEmployee4.id,
