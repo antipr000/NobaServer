@@ -1116,7 +1116,7 @@ describe("TransactionServiceTests", () => {
       const { transaction } = getRandomTransaction("consumerID", "consumerID2");
       when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(transaction);
 
-      const transactionEventToAdd: TransactionEventDTO = {
+      const transactionEventToAdd = {
         message: "Test event",
         details: "This is a test event",
         internal: false,
