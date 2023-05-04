@@ -1,8 +1,9 @@
 {
-  "INSUFFICIENT_FUNDS": "Insufficient Funds for account {{0}}",
-  "BANK_TRANSFER_COMPLETED": "Consumer Bank transfer is successfully completed",
-  "BANK_TRANSFER_CANCELLED": "Bank Transfer was cancelled",
-  "BANK_TRANSFER_DECLINED": "Bank Transfer was declined",
-  "INTERNAL_ERROR": "Unexpected error happened",
-  "COLLECTION_LINK_EXPIRED": "Mono collection link has expired"
+  "INSUFFICIENT_FUNDS": "Fondos insuficientes para la cuenta {{0}}.",
+  "BANK_TRANSFER_COMPLETED": "La transferencia bancaria del consumidor se ha completado con éxito.",
+  "BANK_TRANSFER_CANCELLED": "La transferencia bancaria fue cancelada.",
+  "BANK_TRANSFER_DECLINED": "La transferencia bancaria fue rechazada.",
+  "INTERNAL_ERROR": "Se produjo un error inesperado.",
+  "DUPLICATE_TRANSACTION": "Se detectó una transacción duplicada.",
+  "COLLECTION_LINK_EXPIRED": "El enlace de colección de Mono ha expirado."
 }

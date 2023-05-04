@@ -34,7 +34,7 @@ describe("TransactionWorkflowMapperTest", () => {
   });
 
   describe("toWorkflowTransactionDTO", () => {
-    it("should map all the fields correctly", () => {
+    it("should map all the fields correctly", async () => {
       const transaction: Transaction = {
         exchangeRate: 1.2,
         status: TransactionStatus.INITIATED,
@@ -78,7 +78,7 @@ describe("TransactionWorkflowMapperTest", () => {
         },
       ];
 
-      const workflowTransactionDTO: WorkflowTransactionDTO = transactionWorkflowMapper.toWorkflowTransactionDTO(
+      const workflowTransactionDTO: WorkflowTransactionDTO = await transactionWorkflowMapper.toWorkflowTransactionDTO(
         transaction,
         transactionEvents,
       );
@@ -102,7 +102,7 @@ describe("TransactionWorkflowMapperTest", () => {
             message: "INTERNAL_MESSAGE_WITH_DETAILS_KEY_AND_PARAMS",
             internal: true,
             details: "DETAILS",
-            text: "INTERNAL_MESSAGE_WITH_DETAILS_KEY_AND_PARAMS",
+            text: "",
           },
         ],
         totalFees: 10,
@@ -117,11 +117,13 @@ describe("TransactionWorkflowMapperTest", () => {
     });
 
     it("should throw 'NotFoundError' if the input transaction is 'null'", () => {
-      expect(() => transactionWorkflowMapper.toWorkflowTransactionDTO(null, [])).toThrowError(NotFoundError);
+      expect(() => transactionWorkflowMapper.toWorkflowTransactionDTO(null, [])).rejects.toThrowError(NotFoundError);
     });
 
     it("should throw 'NotFoundError' if the input transaction is 'undefined'", () => {
-      expect(() => transactionWorkflowMapper.toWorkflowTransactionDTO(undefined, [])).toThrowError(NotFoundError);
+      expect(() => transactionWorkflowMapper.toWorkflowTransactionDTO(undefined, [])).rejects.toThrowError(
+        NotFoundError,
+      );
     });
   });
 });

@@ -188,7 +188,7 @@ describe("Transaction Workflow Controller tests", () => {
       const transaction: Transaction = getRandomTransaction("testConsumerID");
 
       when(mockTransactionService.getTransactionByTransactionID(anyString())).thenResolve(transaction);
-      when(transactionWorkflowMapper.toWorkflowTransactionDTO(anything(), anything())).thenReturn(null);
+      when(transactionWorkflowMapper.toWorkflowTransactionDTO(anything(), anything())).thenResolve(null);
       when(mockTransactionService.getTransactionEvents(anyString(), anything())).thenResolve([]);
 
       await transactionWorkflowController.getTransactionByTransactionID(transaction.id);
