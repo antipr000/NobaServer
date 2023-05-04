@@ -20,7 +20,6 @@ describe("transaction.mapper.util suite", () => {
         timestamp: transactionEvent.timestamp,
         internal: true,
         message: "default message",
-        key: "KEY",
         text: "default message",
       });
     });
@@ -60,7 +59,6 @@ describe("transaction.mapper.util suite", () => {
         internal: true,
         message: "default message",
         details: "DETAILS",
-        key: "NOT_FOUND",
         text: "default message",
       });
     });
@@ -86,7 +84,6 @@ describe("transaction.mapper.util suite", () => {
         internal: false,
         message: "default message",
         details: "DETAILS",
-        key: "PARAMS_TEST",
         text: "Param 1:PARAM1, Param 2:PARAM2, Param 3:PARAM3, Param 4:PARAM4, Param 5:PARAM5",
       });
     });
@@ -107,7 +104,6 @@ describe("transaction.mapper.util suite", () => {
         internal: false,
         message: "default message",
         details: "DETAILS",
-        key: "NO_PARAMS_TEST",
         text: "No Params.",
       });
     });
@@ -133,7 +129,6 @@ describe("transaction.mapper.util suite", () => {
         internal: false,
         message: "default message",
         details: "DETAILS",
-        key: "NO_PARAMS_TEST",
         text: "No Params.",
       });
     });
@@ -154,7 +149,6 @@ describe("transaction.mapper.util suite", () => {
         internal: false,
         message: "default message",
         details: "DETAILS",
-        key: "INTERNAL_ERROR",
         text: "Unexpected error occurred.",
       });
     });
