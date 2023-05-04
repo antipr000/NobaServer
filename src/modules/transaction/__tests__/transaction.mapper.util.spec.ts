@@ -144,12 +144,40 @@ describe("transaction.mapper.util suite", () => {
         key: "INTERNAL_ERROR",
       };
 
-      expect(toTransactionEventDTO(transactionEvent, "test")).resolves.toEqual({
+      expect(toTransactionEventDTO(transactionEvent, "")).resolves.toEqual({
         timestamp: transactionEvent.timestamp,
         internal: false,
         message: "default message",
         details: "DETAILS",
         text: "Unexpected error occurred.",
+      });
+    });
+
+    it.each([
+      ["en_us", "Insufficient Funds for account 12345."],
+      ["es_co", "Fondos insuficientes para la cuenta 12345."],
+      [undefined, "Insufficient Funds for account 12345."],
+      [null, "Insufficient Funds for account 12345."],
+      ["", "Insufficient Funds for account 12345."],
+      ["test", "12345 Insufficient funds test."],
+    ])("should return translated insufficient funds text with params in %s", (language, translatedText) => {
+      const transactionEvent: TransactionEvent = {
+        id: "ID_1",
+        message: "default message",
+        timestamp: new Date(),
+        transactionID: "ID",
+        internal: false,
+        details: "DETAILS",
+        key: "INSUFFICIENT_FUNDS",
+        param1: "12345",
+      };
+
+      expect(toTransactionEventDTO(transactionEvent, language)).resolves.toEqual({
+        timestamp: transactionEvent.timestamp,
+        internal: false,
+        message: "default message",
+        details: "DETAILS",
+        text: translatedText,
       });
     });
   });

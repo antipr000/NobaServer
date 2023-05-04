@@ -18,15 +18,24 @@ export const toTransactionEventDTO = async (
   transactionEvent: TransactionEvent,
   locale?: string,
 ): Promise<TransactionEventDTO> => {
+  const supportedLngs = ["en-us", "es-co", "test"];
+
   await i18next.use(FsBackend).init<FsBackendOptions>({
     initImmediate: false,
-    fallbackLng: "en",
+    fallbackLng: "en-us",
     backend: {
       loadPath: join(__dirname, "../../../../appconfigs/i18n/translations_{{lng}}.json"),
     },
   });
 
-  await i18next.changeLanguage(locale || "en");
+  let normalizedLocale = normalizeLocale(locale);
+  if (!supportedLngs.includes(normalizedLocale)) {
+    normalizedLocale = "en-us";
+  }
+
+  await i18next.changeLanguage(normalizedLocale);
+
+  console.log(i18next.language);
   const translationParams = {
     0: transactionEvent.param1,
     1: transactionEvent.param2,
@@ -47,4 +56,12 @@ export const toTransactionEventDTO = async (
     ...(transactionEvent.details !== undefined && { details: transactionEvent.details }),
     text: translatedContent,
   };
+};
+
+const normalizeLocale = (locale: string): string => {
+  if (!locale) {
+    return null;
+  }
+
+  return locale.replace("_", "-");
 };
