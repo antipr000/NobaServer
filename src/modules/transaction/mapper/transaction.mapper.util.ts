@@ -14,8 +14,11 @@ export const toTransactionFeesDTO = (transactionFees: TransactionFee): Transacti
   };
 };
 
-export const toTransactionEventDTO = (transactionEvent: TransactionEvent, locale?: string): TransactionEventDTO => {
-  i18next.use(FsBackend).init<FsBackendOptions>({
+export const toTransactionEventDTO = async (
+  transactionEvent: TransactionEvent,
+  locale?: string,
+): Promise<TransactionEventDTO> => {
+  await i18next.use(FsBackend).init<FsBackendOptions>({
     initImmediate: false,
     fallbackLng: "en",
     backend: {
@@ -23,7 +26,7 @@ export const toTransactionEventDTO = (transactionEvent: TransactionEvent, locale
     },
   });
 
-  i18next.changeLanguage(locale || "en");
+  await i18next.changeLanguage(locale || "en");
   const translationParams = {
     0: transactionEvent.param1,
     1: transactionEvent.param2,
@@ -34,7 +37,7 @@ export const toTransactionEventDTO = (transactionEvent: TransactionEvent, locale
 
   let translatedContent = i18next.t(transactionEvent.key, translationParams);
   if (!transactionEvent.key || translatedContent === transactionEvent.key) {
-    translatedContent = transactionEvent.message;
+    translatedContent = "";
   }
 
   return {

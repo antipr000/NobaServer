@@ -436,14 +436,14 @@ describe("Transaction Controller tests", () => {
           message: "Test event",
           details: "This is a test event",
           internal: false,
-          text: "Test event",
+          text: "",
           timestamp: transactionEvents[0].timestamp,
         },
         {
           message: "Test event 2",
           details: "This is a test event 2",
           internal: false,
-          text: "Test event 2",
+          text: "",
           timestamp: transactionEvents[1].timestamp,
         },
       ];

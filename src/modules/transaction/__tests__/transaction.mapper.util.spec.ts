@@ -16,11 +16,11 @@ describe("transaction.mapper.util suite", () => {
         key: "KEY",
       };
 
-      expect(toTransactionEventDTO(transactionEvent)).toEqual({
+      expect(toTransactionEventDTO(transactionEvent)).resolves.toEqual({
         timestamp: transactionEvent.timestamp,
         internal: true,
         message: "default message",
-        text: "default message",
+        text: "",
       });
     });
 
@@ -34,16 +34,16 @@ describe("transaction.mapper.util suite", () => {
         details: "DETAILS",
       };
 
-      expect(toTransactionEventDTO(transactionEvent)).toEqual({
+      expect(toTransactionEventDTO(transactionEvent)).resolves.toEqual({
         timestamp: transactionEvent.timestamp,
         internal: true,
         message: "default message",
         details: "DETAILS",
-        text: "default message",
+        text: "",
       });
     });
 
-    it("Should fill text with message if key is not found", () => {
+    it("Should fill leave text blank if key is not found", () => {
       const transactionEvent: TransactionEvent = {
         id: "ID_1",
         message: "default message",
@@ -54,12 +54,12 @@ describe("transaction.mapper.util suite", () => {
         key: "NOT_FOUND",
       };
 
-      expect(toTransactionEventDTO(transactionEvent, "test")).toEqual({
+      expect(toTransactionEventDTO(transactionEvent, "test")).resolves.toEqual({
         timestamp: transactionEvent.timestamp,
         internal: true,
         message: "default message",
         details: "DETAILS",
-        text: "default message",
+        text: "",
       });
     });
 
@@ -79,7 +79,7 @@ describe("transaction.mapper.util suite", () => {
         param5: "PARAM5",
       };
 
-      expect(toTransactionEventDTO(transactionEvent, "test")).toEqual({
+      expect(toTransactionEventDTO(transactionEvent, "test")).resolves.toEqual({
         timestamp: transactionEvent.timestamp,
         internal: false,
         message: "default message",
@@ -99,7 +99,7 @@ describe("transaction.mapper.util suite", () => {
         key: "NO_PARAMS_TEST",
       };
 
-      expect(toTransactionEventDTO(transactionEvent, "test")).toEqual({
+      expect(toTransactionEventDTO(transactionEvent, "test")).resolves.toEqual({
         timestamp: transactionEvent.timestamp,
         internal: false,
         message: "default message",
@@ -124,7 +124,7 @@ describe("transaction.mapper.util suite", () => {
         param5: "PARAM5",
       };
 
-      expect(toTransactionEventDTO(transactionEvent, "test")).toEqual({
+      expect(toTransactionEventDTO(transactionEvent, "test")).resolves.toEqual({
         timestamp: transactionEvent.timestamp,
         internal: false,
         message: "default message",
@@ -144,7 +144,7 @@ describe("transaction.mapper.util suite", () => {
         key: "INTERNAL_ERROR",
       };
 
-      expect(toTransactionEventDTO(transactionEvent, "test")).toEqual({
+      expect(toTransactionEventDTO(transactionEvent, "test")).resolves.toEqual({
         timestamp: transactionEvent.timestamp,
         internal: false,
         message: "default message",
