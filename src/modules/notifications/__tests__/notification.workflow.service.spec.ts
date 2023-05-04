@@ -81,10 +81,9 @@ describe("NotificationService", () => {
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
       when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
 
-      await notificationWorflowService.sendTransactionNotification(
-        NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT,
-        transaction.id,
-      );
+      await notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT, {
+        transactionID: transaction.id,
+      });
 
       const notificationPayload = NotificationPayloadMapper.toDepositCompletedEvent(consumer, transaction);
       verify(
@@ -102,10 +101,9 @@ describe("NotificationService", () => {
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
       when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
 
-      await notificationWorflowService.sendTransactionNotification(
-        NotificationWorkflowTypes.DEPOSIT_FAILED_EVENT,
-        transaction.id,
-      );
+      await notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEPOSIT_FAILED_EVENT, {
+        transactionID: transaction.id,
+      });
 
       const notificationPayload = NotificationPayloadMapper.toDepositFailedEvent(consumer, transaction);
       verify(
@@ -123,10 +121,9 @@ describe("NotificationService", () => {
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
       when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
 
-      await notificationWorflowService.sendTransactionNotification(
-        NotificationWorkflowTypes.WITHDRAWAL_COMPLETED_EVENT,
-        transaction.id,
-      );
+      await notificationWorflowService.sendNotification(NotificationWorkflowTypes.WITHDRAWAL_COMPLETED_EVENT, {
+        transactionID: transaction.id,
+      });
 
       const notificationPayload = NotificationPayloadMapper.toWithdrawalCompletedEvent(consumer, transaction);
       verify(
@@ -144,10 +141,9 @@ describe("NotificationService", () => {
       when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
       when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
 
-      await notificationWorflowService.sendTransactionNotification(
-        NotificationWorkflowTypes.WITHDRAWAL_FAILED_EVENT,
-        transaction.id,
-      );
+      await notificationWorflowService.sendNotification(NotificationWorkflowTypes.WITHDRAWAL_FAILED_EVENT, {
+        transactionID: transaction.id,
+      });
 
       const notificationPayload = NotificationPayloadMapper.toWithdrawalFailedEvent(consumer, transaction);
       verify(
@@ -168,10 +164,9 @@ describe("NotificationService", () => {
       when(consumerService.getConsumer(consumerID2)).thenResolve(consumer2);
       when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
 
-      await notificationWorflowService.sendTransactionNotification(
-        NotificationWorkflowTypes.TRANSFER_COMPLETED_EVENT,
-        transaction.id,
-      );
+      await notificationWorflowService.sendNotification(NotificationWorkflowTypes.TRANSFER_COMPLETED_EVENT, {
+        transactionID: transaction.id,
+      });
 
       const notificationPayload = NotificationPayloadMapper.toTransferCompletedEvent(consumer, consumer2, transaction);
       const creditSideNotificationPayload = NotificationPayloadMapper.toTransferReceivedEvent(
@@ -205,10 +200,9 @@ describe("NotificationService", () => {
       when(consumerService.getConsumer(consumerID2)).thenResolve(consumer2);
       when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
 
-      await notificationWorflowService.sendTransactionNotification(
-        NotificationWorkflowTypes.TRANSFER_FAILED_EVENT,
-        transaction.id,
-      );
+      await notificationWorflowService.sendNotification(NotificationWorkflowTypes.TRANSFER_FAILED_EVENT, {
+        transactionID: transaction.id,
+      });
 
       const notificationPayload = NotificationPayloadMapper.toTransferFailedEvent(consumer, consumer2, transaction);
       verify(
@@ -228,10 +222,9 @@ describe("NotificationService", () => {
       when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
       when(employerService.getEmployerForTransactionID(transaction.id)).thenResolve(employer);
 
-      await notificationWorflowService.sendTransactionNotification(
-        NotificationWorkflowTypes.PAYROLL_DEPOSIT_COMPLETED_EVENT,
-        transaction.id,
-      );
+      await notificationWorflowService.sendNotification(NotificationWorkflowTypes.PAYROLL_DEPOSIT_COMPLETED_EVENT, {
+        transactionID: transaction.id,
+      });
       const notificationPayload = NotificationPayloadMapper.toPayrollDepositCompletedEvent(
         consumer,
         transaction,
@@ -250,10 +243,9 @@ describe("NotificationService", () => {
       when(transactionService.getTransactionByTransactionID(transactionID)).thenResolve(null);
 
       await expect(
-        notificationWorflowService.sendTransactionNotification(
-          NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT,
-          transactionID,
-        ),
+        notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT, {
+          transactionID: transactionID,
+        }),
       ).rejects.toThrowError(ServiceException);
     });
 
@@ -263,16 +255,17 @@ describe("NotificationService", () => {
       when(transactionService.getTransactionByTransactionID(transactionID)).thenResolve(transaction);
 
       await expect(
-        notificationWorflowService.sendTransactionNotification("INVALID_TYPE" as any, transactionID),
+        notificationWorflowService.sendNotification("INVALID_TYPE" as any, {
+          transactionID: transactionID,
+        }),
       ).rejects.toThrowError(ServiceException);
     });
 
     it("should throw ServiceException when transactionID is not defined", async () => {
       await expect(
-        notificationWorflowService.sendTransactionNotification(
-          NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT,
-          undefined,
-        ),
+        notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT, {
+          transactionID: undefined,
+        }),
       ).rejects.toThrowError(ServiceException);
     });
   });
@@ -290,7 +283,10 @@ describe("NotificationService", () => {
         updatedTimestamp: new Date(),
       } as any);
 
-      await notificationWorflowService.sendPayrollStatusUpdateNotification(payrollID, payrollStatus);
+      await notificationWorflowService.sendNotification(NotificationWorkflowTypes.UPDATE_PAYROLL_STATUS_EVENT, {
+        payrollID: payrollID,
+        payrollStatus: payrollStatus,
+      });
 
       verify(
         notificationService.sendNotification(
@@ -305,11 +301,17 @@ describe("NotificationService", () => {
 
     it("should throw 'ServiceException' when payrollID or payrollStatus is undefined", async () => {
       await expect(
-        notificationWorflowService.sendPayrollStatusUpdateNotification(undefined, PayrollStatus.COMPLETED),
+        notificationWorflowService.sendNotification(NotificationWorkflowTypes.UPDATE_PAYROLL_STATUS_EVENT, {
+          payrollID: undefined,
+          payrollStatus: PayrollStatus.COMPLETED,
+        }),
       ).rejects.toThrowError(ServiceException);
 
       await expect(
-        notificationWorflowService.sendPayrollStatusUpdateNotification("fake-payroll-id", undefined),
+        notificationWorflowService.sendNotification(NotificationWorkflowTypes.UPDATE_PAYROLL_STATUS_EVENT, {
+          payrollID: "fake-payroll-id",
+          payrollStatus: undefined,
+        }),
       ).rejects.toThrowError(ServiceException);
     });
 
@@ -320,7 +322,10 @@ describe("NotificationService", () => {
       when(employerService.getPayrollByID(payrollID)).thenResolve(null);
 
       await expect(
-        notificationWorflowService.sendPayrollStatusUpdateNotification(payrollID, payrollStatus),
+        notificationWorflowService.sendNotification(NotificationWorkflowTypes.UPDATE_PAYROLL_STATUS_EVENT, {
+          payrollID: payrollID,
+          payrollStatus: payrollStatus,
+        }),
       ).rejects.toThrowError(ServiceException);
     });
   });

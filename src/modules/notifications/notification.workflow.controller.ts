@@ -26,17 +26,7 @@ export class NotificationWorkflowController {
     @Param("notificationType") notificationType: string,
     @Body() requestBody: SendNotificationRequestDTO,
   ): Promise<BlankResponseDTO> {
-    if (notificationType !== NotificationWorkflowTypes.UPDATE_PAYROLL_STATUS_EVENT) {
-      await this.notificationWorkflowService.sendTransactionNotification(
-        notificationType as NotificationWorkflowTypes,
-        requestBody.transactionID,
-      );
-    } else {
-      await this.notificationWorkflowService.sendPayrollStatusUpdateNotification(
-        requestBody.payrollID,
-        requestBody.payrollStatus,
-      );
-    }
+    await this.notificationWorkflowService.sendNotification(notificationType as NotificationWorkflowTypes, requestBody);
     return {};
   }
 

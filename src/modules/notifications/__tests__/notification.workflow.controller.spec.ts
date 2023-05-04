@@ -1,7 +1,7 @@
 import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
-import { instance, verify } from "ts-mockito";
+import { deepEqual, instance, verify } from "ts-mockito";
 import { NotificationWorkflowService } from "../notification.workflow.service";
 import { NotificationWorkflowController } from "../notification.workflow.controller";
 import { getMockNotificationWorkflowServiceWithDefaults } from "../mocks/mock.notification.workflow.service";
@@ -44,9 +44,11 @@ describe("NotificationService", () => {
       });
 
       verify(
-        notificationWorflowService.sendTransactionNotification(
+        notificationWorflowService.sendNotification(
           NotificationWorkflowTypes.DEPOSIT_COMPLETED_EVENT,
-          "test",
+          deepEqual({
+            transactionID: "test",
+          }),
         ),
       ).once();
     });
@@ -57,7 +59,15 @@ describe("NotificationService", () => {
         payrollStatus: PayrollStatus.COMPLETED,
       });
 
-      verify(notificationWorflowService.sendPayrollStatusUpdateNotification("test", PayrollStatus.COMPLETED)).once();
+      verify(
+        notificationWorflowService.sendNotification(
+          NotificationWorkflowTypes.UPDATE_PAYROLL_STATUS_EVENT,
+          deepEqual({
+            payrollID: "test",
+            payrollStatus: PayrollStatus.COMPLETED,
+          }),
+        ),
+      ).once();
     });
   });
 });
