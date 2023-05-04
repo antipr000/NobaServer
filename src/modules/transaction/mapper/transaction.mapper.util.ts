@@ -38,8 +38,10 @@ export const toTransactionEventDTO = async (
     4: transactionEvent.param5,
   };
 
-  let translatedContent = i18next.t(transactionEvent.key, translationParams);
-  if (!transactionEvent.key || translatedContent === transactionEvent.key) {
+  const transactionEventKey = `TransactionEvent.${transactionEvent.key}`;
+
+  let translatedContent = i18next.t(transactionEventKey, translationParams);
+  if (!transactionEventKey || translatedContent === transactionEventKey) {
     translatedContent = "";
   }
 

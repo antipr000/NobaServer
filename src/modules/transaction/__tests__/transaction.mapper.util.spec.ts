@@ -182,6 +182,33 @@ describe("transaction.mapper.util suite", () => {
         text: translatedText,
       });
     });
+
+    describe.each(["en_us", "es_co"])("should ensure all TransactionEventKeys exist in %s", language => {
+      it.each([
+        "INSUFFICIENT_FUNDS",
+        "BANK_TRANSFER_COMPLETED",
+        "BANK_TRANSFER_CANCELLED",
+        "BANK_TRANSFER_DECLINED",
+        "INTERNAL_ERROR",
+        "DUPLICATE_TRANSACTION",
+        "COLLECTION_LINK_EXPIRED",
+      ])("should ensure %s exists in %s", async key => {
+        const transactionEvent: TransactionEvent = {
+          id: "ID_1",
+          message: "default message",
+          timestamp: new Date(),
+          transactionID: "ID",
+          internal: false,
+          details: "DETAILS",
+          key: key,
+          param1: "12345",
+        };
+
+        const translatedResult = await toTransactionEventDTO(transactionEvent, language);
+        const isEmpty = translatedResult.text === "";
+        expect(isEmpty).toBe(false);
+      });
+    });
   });
 
   describe("toTransactionFeesDTO", () => {
