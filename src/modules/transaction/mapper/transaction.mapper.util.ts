@@ -35,7 +35,6 @@ export const toTransactionEventDTO = async (
 
   await i18next.changeLanguage(normalizedLocale);
 
-  console.log(i18next.language);
   const translationParams = {
     0: transactionEvent.param1,
     1: transactionEvent.param2,
