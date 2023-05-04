@@ -6,9 +6,10 @@ import { BubbleWebhookController } from "./bubble.webhook.controller";
 import { BubbleService } from "./bubble.service";
 import { NotificationsModule } from "../notifications/notification.module";
 import { TemporalModule } from "../../infra/temporal/temporal.module";
+import { CommonModule } from "../common/common.module";
 
 @Module({
-  imports: [InfraProvidersModule, EmployeeModule, EmployerModule, NotificationsModule, TemporalModule],
+  imports: [InfraProvidersModule, EmployeeModule, EmployerModule, NotificationsModule, TemporalModule, CommonModule],
   controllers: [BubbleWebhookController],
   providers: [BubbleService],
   exports: [BubbleService],

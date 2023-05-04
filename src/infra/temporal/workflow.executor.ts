@@ -153,7 +153,7 @@ export class WorkflowExecutor {
         return await this.executeWorkflow(workflowName, workflowID, workflowParamsInOrder);
       } catch (error) {
         throw new ServiceException({
-          message: `Unable to contact workflow server`,
+          message: "Unable to contact workflow server",
           errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
         });
       }
@@ -174,5 +174,18 @@ export class WorkflowExecutor {
 
   public async executePayrollProcessingWorkflow(payrollID: string, workflowID: string): Promise<string> {
     return await this.executeWorkflowWrapper(WorkflowName.PAYROLL_PROCESSING, workflowID, [payrollID]);
+  }
+
+  public async executeBulkInviteEmployeesWorkflow(
+    employerID: string,
+    bucketName: string,
+    bucketPath: string,
+    workflowID: string,
+  ): Promise<string> {
+    return await this.executeWorkflowWrapper(WorkflowName.BULK_ADD_EMPLOYEES, workflowID, [
+      employerID,
+      bucketName,
+      bucketPath,
+    ]);
   }
 }

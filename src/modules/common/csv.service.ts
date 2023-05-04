@@ -3,6 +3,8 @@ import { stringify } from "csv-stringify";
 import fs from "fs";
 import { tmpdir } from "os";
 import { TransactionDTO } from "../transaction/dto/TransactionDTO";
+import { Readable } from "stream";
+import { parse } from "csv";
 
 // TODO: Make it generic to scale to all DTOs.
 @Injectable()
@@ -32,6 +34,21 @@ export class CsvService {
           resolve(fileName);
         });
       });
+    });
+  }
+
+  public async getHeadersFromCsvFile(buffer: Buffer): Promise<Array<string>> {
+    const parser = parse({ delimiter: "," });
+    return new Promise((resolve, reject) => {
+      const readStream = new Readable();
+      readStream.push(buffer);
+      readStream.push(null);
+      readStream
+        .pipe(parser)
+        .on("data", (headers: Array<string>) => {
+          resolve(headers); // The first line is headers so we resolve directly
+        })
+        .on("error", err => reject(err));
     });
   }
 }

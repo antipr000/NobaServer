@@ -1,3 +1,4 @@
+import { EmployeeDTO } from "src/modules/employee/dto/employee.dto";
 import { Employee } from "../../../modules/employee/domain/Employee";
 import { Employer } from "../domain/Employer";
 import { EmployerDTO } from "../dto/employer.controller.dto";
@@ -51,16 +52,20 @@ export class EmployerMapper {
 
   toEmployeesWorkflowDTO(employees: Employee[]): EmployeesWorkflowDTO {
     return {
-      employees: employees.map(employee => ({
-        id: employee.id,
-        allocationAmount: employee.allocationAmount,
-        allocationCurrency: employee.allocationCurrency,
-        employerID: employee.employerID,
-        consumerID: employee.consumerID,
-        status: employee.status,
-        ...(employee.email && { email: employee.email }),
-        ...(employee.salary && { salary: employee.salary }),
-      })),
+      employees: employees.map(employee => this.toEmployeeDTO(employee)),
+    };
+  }
+
+  toEmployeeDTO(employee: Employee): EmployeeDTO {
+    return {
+      id: employee.id,
+      allocationAmount: employee.allocationAmount,
+      allocationCurrency: employee.allocationCurrency,
+      employerID: employee.employerID,
+      consumerID: employee.consumerID,
+      status: employee.status,
+      ...(employee.email && { email: employee.email }),
+      ...(employee.salary && { salary: employee.salary }),
     };
   }
 }

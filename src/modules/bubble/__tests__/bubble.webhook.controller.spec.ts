@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { anyString, anything, capture, deepEqual, instance, when } from "ts-mockito";
+import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { BubbleWebhookController } from "../bubble.webhook.controller";
 import { BubbleService } from "../bubble.service";
 import { getMockBubbleServiceWithDefaults } from "../mocks/mock.bubble.service";
@@ -574,6 +574,19 @@ describe("BubbleWebhookControllerTests", () => {
       expect(
         bubbleWebhookController.getAllEnrichedDisbursementsForPayroll(referralID, payroll.id, null),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+  describe("sendInviteToEmployees", () => {
+    it("should invite multiple employees", async () => {
+      const employer = getRandomEmployer("Fake Employer");
+
+      const file: Express.Multer.File = {} as any;
+
+      when(bubbleService.bulkInviteEmployeesForEmployer(anyString(), anything())).thenResolve();
+
+      await bubbleWebhookController.sendInviteToEmployees(employer.referralID, file);
+
+      verify(bubbleService.bulkInviteEmployeesForEmployer(employer.referralID, deepEqual(file))).once();
     });
   });
 });

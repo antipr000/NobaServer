@@ -1,5 +1,9 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { SERVER_LOG_FILE_PATH } from "../../../config/ConfigurationUtils";
+import {
+  GENERATED_DATA_BUCKET_NAME,
+  INVITE_CSV_FOLDER_BUCKET_PATH,
+  SERVER_LOG_FILE_PATH,
+} from "../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { anyNumber, anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
@@ -23,6 +27,10 @@ import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
+import { S3Service } from "../../../modules/common/s3.service";
+import { getMockS3ServiceWithDefaults } from "../../../modules/common/mocks/mock.s3.service";
+import { CsvService } from "../../../modules/common/csv.service";
+import { getMockCsvServiceWithDefaults } from "../../../modules/common/mocks/mock.csv.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -75,15 +83,21 @@ describe("BubbleServiceTests", () => {
   let bubbleService: BubbleService;
   let notificationService: NotificationService;
   let workflowExecutor: WorkflowExecutor;
+  let s3Service: S3Service;
+  let csvService: CsvService;
 
   beforeEach(async () => {
     employerService = getMockEmployerServiceWithDefaults();
     employeeService = getMockEmployeeServiceWithDefaults();
     notificationService = getMockNotificationServiceWithDefaults();
     workflowExecutor = getMockWorkflowExecutorWithDefaults();
+    s3Service = getMockS3ServiceWithDefaults();
+    csvService = getMockCsvServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
+      [GENERATED_DATA_BUCKET_NAME]: "fake-bucket",
+      [INVITE_CSV_FOLDER_BUCKET_PATH]: "fake-path",
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
@@ -105,6 +119,14 @@ describe("BubbleServiceTests", () => {
         {
           provide: WorkflowExecutor,
           useFactory: () => instance(workflowExecutor),
+        },
+        {
+          provide: S3Service,
+          useFactory: () => instance(s3Service),
+        },
+        {
+          provide: CsvService,
+          useFactory: () => instance(csvService),
         },
         BubbleService,
       ],
@@ -780,6 +802,64 @@ describe("BubbleServiceTests", () => {
       expect(
         bubbleService.getAllEnrichedDisbursementsForPayroll(employer.referralID, payroll.id, null),
       ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
+    });
+  });
+
+  describe("bulkInviteEmployeesForEmployer", () => {
+    it("should throw ServiceException if referralID is missing", async () => {
+      expect(
+        async () => await bubbleService.bulkInviteEmployeesForEmployer(undefined, {} as any),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException if employer with referralID does not exist", async () => {
+      when(employerService.getEmployerByReferralID(anything())).thenResolve(null);
+
+      expect(
+        async () => await bubbleService.bulkInviteEmployeesForEmployer("fake-referral-id", {} as any),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
+    });
+
+    it("should throw ServiceException when CSV format is not valid", async () => {
+      const employer = getRandomEmployer();
+      const csvHeaders = ["Email", "FirstName", "LastName", "Salary"];
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(csvService.getHeadersFromCsvFile(anything())).thenResolve(csvHeaders);
+
+      expect(
+        async () =>
+          await bubbleService.bulkInviteEmployeesForEmployer(employer.referralID, {
+            buffer: Buffer.from("fake-csv"),
+          } as any),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should dispatch workflow event to invite employees", async () => {
+      const employer = getRandomEmployer();
+      const csvHeaders = ["Email", "First Name", "Last Name", "Salary"];
+      const file: Express.Multer.File = {
+        buffer: Buffer.from("fake-csv"),
+      } as any;
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(csvService.getHeadersFromCsvFile(anything())).thenResolve(csvHeaders);
+      when(s3Service.uploadToS3(anyString(), anyString(), anything())).thenResolve("fake-s3-url");
+      when(
+        workflowExecutor.executeBulkInviteEmployeesWorkflow(anyString(), anyString(), anyString(), anyString()),
+      ).thenResolve();
+
+      await bubbleService.bulkInviteEmployeesForEmployer(employer.referralID, file);
+
+      verify(s3Service.uploadToS3("fake-path", `${employer.id}.csv`, deepEqual(file.buffer))).once();
+      verify(
+        workflowExecutor.executeBulkInviteEmployeesWorkflow(
+          employer.id,
+          "fake-bucket",
+          `fake-path/${employer.id}.csv`,
+          employer.id,
+        ),
+      ).once();
     });
   });
 });
