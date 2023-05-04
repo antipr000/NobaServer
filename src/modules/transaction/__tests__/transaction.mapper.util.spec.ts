@@ -156,6 +156,8 @@ describe("transaction.mapper.util suite", () => {
     it.each([
       ["en_us", "Insufficient Funds for account 12345."],
       ["es_co", "Fondos insuficientes para la cuenta 12345."],
+      ["en", "Insufficient Funds for account 12345."],
+      ["es", "Fondos insuficientes para la cuenta 12345."],
       [undefined, "Insufficient Funds for account 12345."],
       [null, "Insufficient Funds for account 12345."],
       ["", "Insufficient Funds for account 12345."],
