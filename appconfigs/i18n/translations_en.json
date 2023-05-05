@@ -1,0 +1,11 @@
+{
+  "TransactionEvent": {
+    "INSUFFICIENT_FUNDS": "Insufficient Funds for account {{0}}.",
+    "BANK_TRANSFER_COMPLETED": "Consumer Bank transfer is successfully completed.",
+    "BANK_TRANSFER_CANCELLED": "Bank Transfer was cancelled.",
+    "BANK_TRANSFER_DECLINED": "Bank Transfer was declined.",
+    "INTERNAL_ERROR": "Unexpected error occurred.",
+    "DUPLICATE_TRANSACTION": "Duplicate transaction detected.",
+    "COLLECTION_LINK_EXPIRED": "Mono collection link has expired."
+  }
+}

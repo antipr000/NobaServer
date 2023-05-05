@@ -1753,16 +1753,14 @@ describe("AdminController", () => {
           message: "Test event",
           details: "This is a test event",
           internal: false,
-          key: "EVENT_KEY",
-          parameters: ["Param 1", "Param 2", "Param 3", "Param 4", "Param 5"],
+          text: "Test event",
           timestamp: transactionEvents[0].timestamp,
         },
         {
           message: "Test event 2",
           details: "This is a test event 2",
           internal: false,
-          key: "EVENT_KEY_2",
-          parameters: ["Param 1", "Param 2", "Param 3", "Param 4", "Param 5"],
+          text: "Test event 2",
           timestamp: transactionEvents[1].timestamp,
         },
       ];

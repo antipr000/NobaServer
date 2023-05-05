@@ -55,6 +55,13 @@ export class TransactionMappingService {
       }
     }
 
+    let transactionEventDTOs;
+    if (transactionEvents) {
+      transactionEventDTOs = await Promise.all(
+        transactionEvents.map(event => toTransactionEventDTO(event, consumer?.props.locale)),
+      );
+    }
+
     return {
       id: transaction.id,
       transactionRef: transaction.transactionRef,
@@ -70,7 +77,7 @@ export class TransactionMappingService {
       createdTimestamp: transaction.createdTimestamp,
       updatedTimestamp: transaction.updatedTimestamp,
       memo: transaction.memo,
-      transactionEvents: transactionEvents?.map(event => toTransactionEventDTO(event)),
+      transactionEvents: transactionEventDTOs,
       totalFees: getTotalFees(transaction),
       transactionFees: transaction.transactionFees?.map(fee => toTransactionFeesDTO(fee)),
       ...(monoTransaction &&

@@ -7,9 +7,17 @@ import { toTransactionEventDTO, toTransactionFeesDTO } from "./transaction.mappe
 
 @Injectable()
 export class TransactionWorkflowMapper {
-  toWorkflowTransactionDTO(transaction: Transaction, transactionEvents: TransactionEvent[]): WorkflowTransactionDTO {
+  async toWorkflowTransactionDTO(
+    transaction: Transaction,
+    transactionEvents: TransactionEvent[],
+  ): Promise<WorkflowTransactionDTO> {
     if (!transaction) {
       throw new NotFoundError({ message: "Transaction not found" });
+    }
+
+    let transactionEventDTOs;
+    if (transactionEvents) {
+      transactionEventDTOs = await Promise.all(transactionEvents.map(event => toTransactionEventDTO(event, "en")));
     }
 
     return {
@@ -25,7 +33,7 @@ export class TransactionWorkflowMapper {
       exchangeRate: transaction.exchangeRate.toString(),
       status: transaction.status,
       memo: transaction.memo,
-      transactionEvents: transactionEvents?.map(event => toTransactionEventDTO(event)),
+      transactionEvents: transactionEventDTOs,
       totalFees: getTotalFees(transaction),
       transactionFees: transaction.transactionFees?.map(fee => toTransactionFeesDTO(fee)),
     };
