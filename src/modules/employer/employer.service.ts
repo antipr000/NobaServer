@@ -143,7 +143,7 @@ export class EmployerService {
 
     const employees = await this.employeeService.getEmployeesForEmployer(employerID);
     return employees.filter(employee => {
-      return this.consumerService.isActiveConsumer(employee.consumer);
+      return employee.consumer && this.consumerService.isActiveConsumer(employee.consumer);
     });
   }
 

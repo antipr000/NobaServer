@@ -1,4 +1,4 @@
-import { createTestConsumer } from "../../../modules/consumer/test_utils/test.utils";
+import { createTestConsumer, getRandomActiveConsumer } from "../../../modules/consumer/test_utils/test.utils";
 import { createTestEmployerAndStoreInDB } from "../../../modules/employer/test_utils/test.utils";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import {
@@ -28,15 +28,17 @@ export const saveAndGetEmployee = async (prismaService: PrismaService): Promise<
 };
 
 export const getRandomEmployee = (employerID: string, consumerID?: string): Employee => {
+  const consumer = getRandomActiveConsumer("57", "CO");
   return {
     id: uuid(),
     allocationAmount: 10,
     allocationCurrency: EmployeeAllocationCurrency.COP,
     employerID: employerID,
-    consumerID: consumerID || uuid(),
+    consumerID: consumerID || consumer.props.id,
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
     status: EmployeeStatus.LINKED,
+    consumer: consumer,
   };
 };
 

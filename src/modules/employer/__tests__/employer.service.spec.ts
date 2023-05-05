@@ -53,6 +53,7 @@ import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
 import { InviteEmployeeRequestDTO } from "../dto/employer.controller.dto";
 import { AlertService } from "../../../modules/common/alerts/alert.service";
 import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { getRandomActiveConsumer } from "../../../modules/consumer/test_utils/test.utils";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -703,9 +704,9 @@ describe("EmployerServiceTests", () => {
 
       when(mockEmployeeService.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2]);
       when(mockConsumerService.isActiveConsumer(anything())).thenReturn(true);
-      const retrievedEmployer = await employerService.getAllEmployees(employer.id);
+      const retrievedEmployees = await employerService.getAllEmployees(employer.id);
 
-      expect(retrievedEmployer).toStrictEqual([employee1, employee2]);
+      expect(retrievedEmployees).toStrictEqual([employee1, employee2]);
     });
 
     it("should return no active employees for the specified employer", async () => {
@@ -715,9 +716,23 @@ describe("EmployerServiceTests", () => {
 
       when(mockEmployeeService.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2]);
       when(mockConsumerService.isActiveConsumer(anything())).thenReturn(false);
-      const retrievedEmployer = await employerService.getAllEmployees(employer.id);
+      const retrievedEmployees = await employerService.getAllEmployees(employer.id);
 
-      expect(retrievedEmployer).toStrictEqual([]);
+      expect(retrievedEmployees).toStrictEqual([]);
+    });
+
+    it("should return only employees that have a Consumer record", async () => {
+      const employer = getRandomEmployer();
+      const employee1 = getRandomEmployee(employer.id);
+      const employee2 = getRandomEmployee(employer.id);
+      delete employee2.consumerID;
+      delete employee2.consumer;
+
+      when(mockEmployeeService.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2]);
+      when(mockConsumerService.isActiveConsumer(anything())).thenReturn(true);
+      const retrievedEmployees = await employerService.getAllEmployees(employer.id);
+
+      expect(retrievedEmployees).toStrictEqual([employee1]);
     });
   });
 
