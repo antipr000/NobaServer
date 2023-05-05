@@ -425,6 +425,43 @@ describe("BubbleWebhookControllerTests", () => {
         ],
       });
     });
+    it("should get all employees for employer even if no consumer attached", async () => {
+      const employer = getRandomEmployer("Fake Employer");
+      const employee = getRandomEmployee(employer.id);
+      const consumer = getRandomActiveConsumer("57", "CO");
+
+      //employee.consumer = consumer;
+      //employee.consumerID = consumer.props.id;
+
+      when(bubbleService.getAllEmployeesForEmployer(employer.referralID, deepEqual({}))).thenResolve({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [employee],
+      });
+
+      const result = await bubbleWebhookController.getAllEmployees(employer.referralID, {});
+
+      expect(result).toStrictEqual({
+        page: 1,
+        hasNextPage: false,
+        totalPages: 1,
+        totalItems: 1,
+        items: [
+          {
+            id: employee.id,
+            allocationAmount: employee.allocationAmount,
+            allocationCurrency: employee.allocationCurrency,
+            employerID: employee.employerID,
+            consumerID: employee.consumerID,
+            salary: employee.salary,
+            email: employee.email,
+            status: employee.status,
+          },
+        ],
+      });
+    });
   });
 
   describe("createEmployee", () => {

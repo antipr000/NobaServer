@@ -32,7 +32,10 @@ import { getMockPayrollDisbursementRepoWithDefaults } from "../mocks/mock.payrol
 import { getMockPayrollRepoWithDefaults } from "../mocks/mock.payroll.repo";
 import { getRandomPayroll, getRandomPayrollDisbursement } from "../test_utils/payroll.test.utils";
 import { PayrollStatus } from "../domain/Payroll";
-import { getRandomEmployee } from "../../../modules/employee/test_utils/employee.test.utils";
+import {
+  getRandomEmployee,
+  getRandomEmployeeWithLinkedConsumer,
+} from "../../../modules/employee/test_utils/employee.test.utils";
 import { Utils } from "../../../core/utils/Utils";
 import { S3Service } from "../../common/s3.service";
 import { getMockS3ServiceWithDefaults } from "../../common/mocks/mock.s3.service";
@@ -53,6 +56,7 @@ import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
 import { InviteEmployeeRequestDTO } from "../dto/employer.controller.dto";
 import { AlertService } from "../../../modules/common/alerts/alert.service";
 import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { getRandomActiveConsumer } from "../../../modules/consumer/test_utils/test.utils";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -682,8 +686,8 @@ describe("EmployerServiceTests", () => {
   describe("getAllEmployees", () => {
     it("should throw ServiceException if no 'employerID' is specified", async () => {
       const employer = getRandomEmployer();
-      const employee1 = getRandomEmployee(employer.id);
-      const employee2 = getRandomEmployee(employer.id);
+      const employee1 = getRandomEmployeeWithLinkedConsumer(employer.id);
+      const employee2 = getRandomEmployeeWithLinkedConsumer(employer.id);
 
       when(mockEmployeeService.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2]);
 
@@ -698,26 +702,39 @@ describe("EmployerServiceTests", () => {
 
     it("should return all the employees for the specified employer", async () => {
       const employer = getRandomEmployer();
-      const employee1 = getRandomEmployee(employer.id);
-      const employee2 = getRandomEmployee(employer.id);
+      const employee1 = getRandomEmployeeWithLinkedConsumer(employer.id);
+      const employee2 = getRandomEmployeeWithLinkedConsumer(employer.id);
 
       when(mockEmployeeService.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2]);
       when(mockConsumerService.isActiveConsumer(anything())).thenReturn(true);
-      const retrievedEmployer = await employerService.getAllEmployees(employer.id);
+      const retrievedEmployees = await employerService.getAllEmployees(employer.id);
 
-      expect(retrievedEmployer).toStrictEqual([employee1, employee2]);
+      expect(retrievedEmployees).toStrictEqual([employee1, employee2]);
     });
 
     it("should return no active employees for the specified employer", async () => {
       const employer = getRandomEmployer();
-      const employee1 = getRandomEmployee(employer.id);
-      const employee2 = getRandomEmployee(employer.id);
+      const employee1 = getRandomEmployeeWithLinkedConsumer(employer.id);
+      const employee2 = getRandomEmployeeWithLinkedConsumer(employer.id);
 
       when(mockEmployeeService.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2]);
       when(mockConsumerService.isActiveConsumer(anything())).thenReturn(false);
-      const retrievedEmployer = await employerService.getAllEmployees(employer.id);
+      const retrievedEmployees = await employerService.getAllEmployees(employer.id);
 
-      expect(retrievedEmployer).toStrictEqual([]);
+      expect(retrievedEmployees).toStrictEqual([]);
+    });
+
+    it("should return only employees that have a Consumer record", async () => {
+      const employer = getRandomEmployer();
+      const employee1 = getRandomEmployeeWithLinkedConsumer(employer.id);
+      const employee2 = getRandomEmployee(employer.id);
+      delete employee2.consumerID;
+
+      when(mockEmployeeService.getEmployeesForEmployer(employer.id)).thenResolve([employee1, employee2]);
+      when(mockConsumerService.isActiveConsumer(anything())).thenReturn(true);
+      const retrievedEmployees = await employerService.getAllEmployees(employer.id);
+
+      expect(retrievedEmployees).toStrictEqual([employee1]);
     });
   });
 
@@ -1117,7 +1134,7 @@ describe("EmployerServiceTests", () => {
 
   describe("createDisbursement", () => {
     it("should create disbursement", async () => {
-      const employee = getRandomEmployee("fake-employer");
+      const employee = getRandomEmployeeWithLinkedConsumer("fake-employer");
       const { payrollDisbursement } = getRandomPayrollDisbursement("fake-payroll", employee.id);
 
       when(mockEmployeeService.getEmployeeByID(employee.id)).thenResolve(employee);
@@ -1528,8 +1545,8 @@ describe("EmployerServiceTests", () => {
       const employer = getRandomEmployer();
       const { payroll } = getRandomPayroll(employer.id);
 
-      const employee1 = getRandomEmployee(employer.id);
-      const employee2 = getRandomEmployee(employer.id);
+      const employee1 = getRandomEmployeeWithLinkedConsumer(employer.id);
+      const employee2 = getRandomEmployeeWithLinkedConsumer(employer.id);
       const consumer1 = Consumer.createConsumer({
         id: "mock-consumer-1",
         firstName: "Mock",
@@ -1798,22 +1815,10 @@ describe("EmployerServiceTests", () => {
       const { payroll } = getRandomPayroll(employer.id);
       payroll.status = PayrollStatus.RECEIPT;
 
-      const employee1 = getRandomEmployee(employer.id);
-      const employee2 = getRandomEmployee(employer.id);
-      const consumer1 = Consumer.createConsumer({
-        id: "mock-consumer-1",
-        firstName: "Mock",
-        lastName: "Consumer",
-        dateOfBirth: "1998-01-01",
-        phone: "+123456789",
-      });
-      const consumer2 = Consumer.createConsumer({
-        id: "mock-consumer-2",
-        firstName: "Mock",
-        lastName: "Consumer2",
-        dateOfBirth: "1998-01-01",
-        phone: "+123456789",
-      });
+      const employee1 = getRandomEmployeeWithLinkedConsumer(employer.id);
+      const employee2 = getRandomEmployeeWithLinkedConsumer(employer.id);
+      const consumer1 = employee1.consumer;
+      const consumer2 = employee2.consumer;
 
       when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
       when(mockEmployerRepo.getEmployerByID(employer.id)).thenResolve(employer);
@@ -1991,8 +1996,8 @@ describe("EmployerServiceTests", () => {
 
     it("should return paginated list of employees for employer", async () => {
       const employer = getRandomEmployer();
-      const employee1 = getRandomEmployee(employer.id);
-      const employee2 = getRandomEmployee(employer.id);
+      const employee1 = getRandomEmployeeWithLinkedConsumer(employer.id);
+      const employee2 = getRandomEmployeeWithLinkedConsumer(employer.id);
 
       when(mockEmployerRepo.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(
