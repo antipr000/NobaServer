@@ -21,7 +21,7 @@ export class TransactionEventDTO {
   @ApiPropertyOptional({ description: "A more detailed description of the event, in English" })
   details?: string;
 
-  @ApiPropertyOptional({ description: "A key that can be used to look up the event in a translation table" })
+  @ApiPropertyOptional({ description: "Internationalized text for display to the user" })
   text?: string;
 }
 

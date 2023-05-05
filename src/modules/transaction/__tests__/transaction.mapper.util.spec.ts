@@ -1,6 +1,8 @@
+import { readFileSync } from "fs";
 import { TransactionEvent } from "../domain/TransactionEvent";
 import { FeeType, TransactionFee } from "../domain/TransactionFee";
 import { toTransactionEventDTO, toTransactionFeesDTO } from "../mapper/transaction.mapper.util";
+import { join } from "path";
 
 describe("transaction.mapper.util suite", () => {
   jest.setTimeout(2000);
@@ -183,31 +185,17 @@ describe("transaction.mapper.util suite", () => {
       });
     });
 
-    describe.each(["en_us", "es_co"])("should ensure all TransactionEventKeys exist in %s", language => {
-      it.each([
-        "INSUFFICIENT_FUNDS",
-        "BANK_TRANSFER_COMPLETED",
-        "BANK_TRANSFER_CANCELLED",
-        "BANK_TRANSFER_DECLINED",
-        "INTERNAL_ERROR",
-        "DUPLICATE_TRANSACTION",
-        "COLLECTION_LINK_EXPIRED",
-      ])("should ensure %s exists in %s", async key => {
-        const transactionEvent: TransactionEvent = {
-          id: "ID_1",
-          message: "default message",
-          timestamp: new Date(),
-          transactionID: "ID",
-          internal: false,
-          details: "DETAILS",
-          key: key,
-          param1: "12345",
-        };
+    it("all transaction event translation files should contain english keys", () => {
+      const en = readFileSync(join(__dirname, "../../../../appconfigs/i18n/translations_en.json"), "utf8");
+      const es = readFileSync(join(__dirname, "../../../../appconfigs/i18n/translations_es.json"), "utf-8");
+      const enJSON = JSON.parse(en);
+      const esJSON = JSON.parse(es);
 
-        const translatedResult = await toTransactionEventDTO(transactionEvent, language);
-        const isEmpty = translatedResult.text === "";
-        expect(isEmpty).toBe(false);
-      });
+      const enKeys = Object.keys(enJSON["TransactionEvent"]);
+      const esKeys = Object.keys(esJSON["TransactionEvent"]);
+      console.log(esKeys);
+      console.log(enKeys);
+      expect(enKeys).toEqual(esKeys);
     });
   });
 
