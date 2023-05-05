@@ -28,13 +28,26 @@ export const saveAndGetEmployee = async (prismaService: PrismaService): Promise<
 };
 
 export const getRandomEmployee = (employerID: string, consumerID?: string): Employee => {
+  return {
+    id: uuid(),
+    allocationAmount: 10,
+    allocationCurrency: EmployeeAllocationCurrency.COP,
+    employerID: employerID,
+    consumerID: consumerID || uuid(),
+    createdTimestamp: new Date(),
+    updatedTimestamp: new Date(),
+    status: EmployeeStatus.LINKED,
+  };
+};
+
+export const getRandomEmployeeWithLinkedConsumer = (employerID: string): Employee => {
   const consumer = getRandomActiveConsumer("57", "CO");
   return {
     id: uuid(),
     allocationAmount: 10,
     allocationCurrency: EmployeeAllocationCurrency.COP,
     employerID: employerID,
-    consumerID: consumerID || consumer.props.id,
+    consumerID: consumer.props.id,
     createdTimestamp: new Date(),
     updatedTimestamp: new Date(),
     status: EmployeeStatus.LINKED,
