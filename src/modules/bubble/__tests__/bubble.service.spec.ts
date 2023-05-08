@@ -835,6 +835,54 @@ describe("BubbleServiceTests", () => {
       ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
     });
 
+    it("should throw ServiceException when CSV headers do not match employer locale", async () => {
+      const employer = getRandomEmployer();
+      const csvHeaders = ["Email", "First Name", "Last Name", "Salary"];
+      employer.locale = "es_co";
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(csvService.getHeadersFromCsvFile(anything())).thenResolve(csvHeaders);
+
+      expect(
+        async () =>
+          await bubbleService.bulkInviteEmployeesForEmployer(employer.referralID, {
+            buffer: Buffer.from("fake-csv"),
+          } as any),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException when CSV contains invalid email", async () => {
+      const employer = getRandomEmployer();
+      const csvHeaders = ["Email", "First Name", "Last Name", "Salary"];
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(csvService.getHeadersFromCsvFile(anything())).thenResolve(csvHeaders);
+      when(csvService.getAllRowsForSpecificColumn(anything(), 0)).thenResolve(["fake-email", "fake-email-2@noba.com"]);
+      expect(
+        async () =>
+          await bubbleService.bulkInviteEmployeesForEmployer(employer.referralID, {
+            buffer: Buffer.from("fake-csv"),
+          } as any),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException when salary is not integer", async () => {
+      const employer = getRandomEmployer();
+      const csvHeaders = ["Email", "First Name", "Last Name", "Salary"];
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(csvService.getHeadersFromCsvFile(anything())).thenResolve(csvHeaders);
+      when(csvService.getAllRowsForSpecificColumn(anything(), 0)).thenResolve([
+        "fake-email@noba.com",
+        "fake-email-2@noba.com",
+      ]);
+      when(csvService.getAllRowsForSpecificColumn(anything(), 3)).thenResolve(["2500", "5231.23"]);
+
+      expect(
+        async () =>
+          await bubbleService.bulkInviteEmployeesForEmployer(employer.referralID, {
+            buffer: Buffer.from("fake-csv"),
+          } as any),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
     it("should dispatch workflow event to invite employees", async () => {
       const employer = getRandomEmployer();
       const csvHeaders = ["Email", "First Name", "Last Name", "Salary"];
@@ -844,6 +892,44 @@ describe("BubbleServiceTests", () => {
 
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(csvService.getHeadersFromCsvFile(anything())).thenResolve(csvHeaders);
+      when(csvService.getAllRowsForSpecificColumn(anything(), 0)).thenResolve([
+        "fake-email@noba.com",
+        "fake-email-2@noba.com",
+      ]);
+      when(csvService.getAllRowsForSpecificColumn(anything(), 3)).thenResolve(["2500", "5231"]);
+      when(s3Service.uploadToS3(anyString(), anyString(), anything())).thenResolve("fake-s3-url");
+      when(
+        workflowExecutor.executeBulkInviteEmployeesWorkflow(anyString(), anyString(), anyString(), anyString()),
+      ).thenResolve();
+
+      await bubbleService.bulkInviteEmployeesForEmployer(employer.referralID, file);
+
+      verify(s3Service.uploadToS3("fake-path", `${employer.id}.csv`, deepEqual(file.buffer))).once();
+      verify(
+        workflowExecutor.executeBulkInviteEmployeesWorkflow(
+          employer.id,
+          "fake-bucket",
+          `fake-path/${employer.id}.csv`,
+          employer.id,
+        ),
+      ).once();
+    });
+
+    it("should dispatch workflow event to invite employees when locale is es", async () => {
+      const employer = getRandomEmployer();
+      employer.locale = "es";
+      const csvHeaders = ["Correo electrónico", "Nombre", "Apellido", "Salario"];
+      const file: Express.Multer.File = {
+        buffer: Buffer.from("fake-csv"),
+      } as any;
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(csvService.getHeadersFromCsvFile(anything())).thenResolve(csvHeaders);
+      when(csvService.getAllRowsForSpecificColumn(anything(), 0)).thenResolve([
+        "fake-email@noba.com",
+        "fake-email-2@noba.com",
+      ]);
+      when(csvService.getAllRowsForSpecificColumn(anything(), 3)).thenResolve(["2500", "5231"]);
       when(s3Service.uploadToS3(anyString(), anyString(), anything())).thenResolve("fake-s3-url");
       when(
         workflowExecutor.executeBulkInviteEmployeesWorkflow(anyString(), anyString(), anyString(), anyString()),
