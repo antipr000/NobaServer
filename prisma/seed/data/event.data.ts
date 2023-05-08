@@ -189,37 +189,98 @@ export const smsTemplateStringMap: TemplateMap = {
   },
 };
 
-export const pushEventTemplateStringMap: TemplateMap = {
+type PushEventsTemplateMap = {
+  [key: string]: {
+    title: {
+      en: string;
+      es: string;
+    };
+    body: {
+      en: string;
+      es: string;
+    };
+  };
+};
+
+export const pushEventTemplateStringMap: PushEventsTemplateMap = {
   [NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT]: {
-    en: "Successfully deposited {{amount}} {{currency}} into your Noba account",
-    es: "Se han depositado correctamente {{amount}} {{currency}} en tu cuenta de Noba",
+    title: {
+      en: "Deposit completed",
+      es: "Depósito completado",
+    },
+    body: {
+      en: "Successfully deposited {{amount}} {{currency}} into your Noba account",
+      es: "Se han depositado correctamente {{amount}} {{currency}} en tu cuenta de Noba",
+    },
   },
   [NotificationEventType.SEND_DEPOSIT_FAILED_EVENT]: {
-    en: "Failed to deposit {{amount}} {{currency}} into your Noba account",
-    es: "No se ha podido depositar {{amount}} {{currency}} en tu cuenta de Noba",
+    title: {
+      en: "Deposit failed",
+      es: "Depósito fallido",
+    },
+    body: {
+      en: "Failed to deposit {{amount}} {{currency}} into your Noba account",
+      es: "No se ha podido depositar {{amount}} {{currency}} en tu cuenta de Noba",
+    },
   },
   [NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT]: {
-    en: "Successfully withdrew {{amount}} {{currency}} from your Noba account",
-    es: "Se han retirado correctamente {{amount}} {{currency}} de tu cuenta de Noba",
+    title: {
+      en: "Withdrawal completed",
+      es: "Retiro completado",
+    },
+    body: {
+      en: "Successfully withdrew {{amount}} {{currency}} from your Noba account",
+      es: "Se han retirado correctamente {{amount}} {{currency}} de tu cuenta de Noba",
+    },
   },
   [NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT]: {
-    en: "Failed to withdraw {{amount}} {{currency}} from your Noba account",
-    es: "No se ha podido retirar {{amount}} {{currency}} de tu cuenta de Noba",
+    title: {
+      en: "Withdrawal failed",
+      es: "Retiro fallido",
+    },
+    body: {
+      en: "Failed to withdraw {{amount}} {{currency}} from your Noba account",
+      es: "No se ha podido retirar {{amount}} {{currency}} de tu cuenta de Noba",
+    },
   },
   [NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT]: {
-    en: "Successfully sent {{amount}} {{currency}} to {{receiverHandle}}",
-    es: "Se han enviado correctamente {{amount}} {{currency}} a {{receiverHandle}}",
+    title: {
+      en: "Transfer completed",
+      es: "Transferencia completada",
+    },
+    body: {
+      en: "Successfully sent {{amount}} {{currency}} to {{receiverHandle}}",
+      es: "Se han enviado correctamente {{amount}} {{currency}} a {{receiverHandle}}",
+    },
   },
   [NotificationEventType.SEND_TRANSFER_FAILED_EVENT]: {
-    en: "Failed to send {{amount}} {{currency}} to {{receiverHandle}}",
-    es: "No se ha podido enviar {{amount}} {{currency}} a {{receiverHandle}}",
+    title: {
+      en: "Transfer failed",
+      es: "Transferencia fallida",
+    },
+    body: {
+      en: "Failed to send {{amount}} {{currency}} to {{receiverHandle}}",
+      es: "No se ha podido enviar {{amount}} {{currency}} a {{receiverHandle}}",
+    },
   },
   [NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT]: {
-    en: "You received {{amount}} {{currency}} from {{senderHandle}}",
-    es: "Has recibido {{amount}} {{currency}} de {{senderHandle}}",
+    title: {
+      en: "Transfer received",
+      es: "Transferencia recibida",
+    },
+    body: {
+      en: "You received {{amount}} {{currency}} from {{senderHandle}}",
+      es: "Has recibido {{amount}} {{currency}} de {{senderHandle}}",
+    },
   },
   [NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT]: {
-    en: "Payroll deposit of amount {{amount}} {{currency}} completed for company {{companyName}}",
-    es: "Depósito de nómina de importe {{amount}} {{currency}} completado para la empresa {{companyName}}",
+    title: {
+      en: "Payroll deposit completed",
+      es: "Depósito de nómina completado",
+    },
+    body: {
+      en: "Payroll deposit of amount {{amount}} {{currency}} completed for company {{companyName}}",
+      es: "Depósito de nómina de importe {{amount}} {{currency}} completado para la empresa {{companyName}}",
+    },
   },
 };

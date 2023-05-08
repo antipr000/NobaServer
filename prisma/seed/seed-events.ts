@@ -107,7 +107,7 @@ export async function seedEventsAndTemplates(prisma: PrismaClient) {
           }
         } else if (handler === NotificationEventHandler.PUSH) {
           const pushTemplateMap = pushEventTemplateStringMap[eventType];
-          for (const locale of Object.keys(pushTemplateMap)) {
+          for (const locale of Object.keys(pushTemplateMap.body)) {
             // Check if template exists
             const template = await prisma.eventTemplate.findFirst({
               where: {
@@ -123,7 +123,7 @@ export async function seedEventsAndTemplates(prisma: PrismaClient) {
                 data: {
                   locale,
                   type: handler,
-                  templateBody: pushTemplateMap[locale as keyof typeof pushTemplateMap],
+                  templateBody: pushTemplateMap.body[locale as keyof typeof pushTemplateMap.body],
                   event: {
                     connect: {
                       id: event.id,
@@ -131,14 +131,24 @@ export async function seedEventsAndTemplates(prisma: PrismaClient) {
                   },
                 },
               });
-            } else if (template.templateBody !== pushTemplateMap[locale as keyof typeof pushTemplateMap]) {
+            } else if (template.templateBody !== pushTemplateMap.body[locale as keyof typeof pushTemplateMap.body]) {
               // Update template
               await prisma.eventTemplate.update({
                 where: {
                   id: template.id,
                 },
                 data: {
-                  templateBody: pushTemplateMap[locale as keyof typeof pushTemplateMap],
+                  templateBody: pushTemplateMap.body[locale as keyof typeof pushTemplateMap.body],
+                },
+              });
+            } else if (template.templateTitle !== pushTemplateMap.title[locale as keyof typeof pushTemplateMap.title]) {
+              // Update template
+              await prisma.eventTemplate.update({
+                where: {
+                  id: template.id,
+                },
+                data: {
+                  templateTitle: pushTemplateMap.title[locale as keyof typeof pushTemplateMap.title],
                 },
               });
             }
