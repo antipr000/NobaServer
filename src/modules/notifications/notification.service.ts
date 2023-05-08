@@ -211,14 +211,6 @@ export class NotificationService {
         validateSendInviteEmployeeEvent(payload as SendInviteEmployeeEvent);
         this.eventEmitter.emitAsync(eventName, payload);
         break;
-      case NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT:
-        validateSendRegisterNewEmployeeEvent(payload as SendRegisterNewEmployeeEvent);
-        this.eventEmitter.emitAsync(eventName, payload);
-        break;
-      case NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT:
-        validateSendUpdateEmployeeAllocationAmountEvent(payload as SendUpdateEmployeeAllocationAmountEvent);
-        this.eventEmitter.emitAsync(eventName, payload);
-        break;
       case NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT:
         validateSendUpdatePayrollStatusEvent(payload as SendUpdatePayrollStatusEvent);
         this.eventEmitter.emitAsync(eventName, payload as SendUpdatePayrollStatusEvent);

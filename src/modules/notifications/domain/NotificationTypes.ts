@@ -23,8 +23,6 @@ export enum NotificationEventType {
   SEND_COLLECTION_LINK_EVENT = "collection.link",
   SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT = "payroll.deposit.completed",
   SEND_EMPLOYER_REQUEST_EVENT = "employee.request",
-  SEND_REGISTER_NEW_EMPLOYEE_EVENT = "register.employee",
-  SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT = "update.employee.allocation.amount",
   SEND_UPDATE_PAYROLL_STATUS_EVENT = "update.payroll.status",
   SEND_INVITE_EMPLOYEE_EVENT = "invite.employee",
 }

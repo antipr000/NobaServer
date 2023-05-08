@@ -2001,6 +2001,49 @@ describe("ConsumerService", () => {
         consumerService.registerWithAnEmployer(employer.id, consumer.props.id, 100),
       ).rejects.toThrowServiceException();
     });
+
+    it.each([null, undefined, ""])(
+      "should create a new employee if passed %s for employee id",
+      async emptyEmployeeValue => {
+        const consumer = getRandomConsumer();
+        const employer = getRandomEmployer();
+        const employee = getRandomEmployee(consumer.props.id, employer);
+
+        when(
+          employeeService.createEmployee(
+            deepEqual({
+              allocationAmount: 100,
+              employerID: employer.id,
+              consumerID: consumer.props.id,
+            }),
+          ),
+        ).thenResolve(employee);
+        when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+        when(notificationService.sendNotification(anyString(), anything())).thenResolve();
+        when(employeeService.getEmployeeByID(employee.id, true)).thenResolve({
+          ...employee,
+          employer: employer,
+        });
+
+        const response = await consumerService.registerWithAnEmployer(
+          employer.id,
+          consumer.props.id,
+          100,
+          emptyEmployeeValue,
+        );
+
+        expect(response).toEqual(employee);
+        verify(
+          employeeService.createEmployee(
+            deepEqual({
+              allocationAmount: 100,
+              employerID: employer.id,
+              consumerID: consumer.props.id,
+            }),
+          ),
+        ).once();
+      },
+    );
   });
 
   describe("listLinkedEmployers", () => {
