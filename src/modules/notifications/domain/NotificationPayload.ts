@@ -25,7 +25,6 @@ import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 import { SendWithdrawalInitiatedEvent } from "../events/SendWithdrawalInitiatedEvent";
 import { Transaction } from "../../../modules/transaction/domain/Transaction";
 import { TransactionNotificationPayloadMapper } from "./TransactionNotificationParameters";
-import { Employee } from "../../../modules/employee/domain/Employee";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { Utils } from "../../../core/utils/Utils";
 import { BaseEvent } from "../events/BaseEvent";

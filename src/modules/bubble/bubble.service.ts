@@ -11,11 +11,8 @@ import {
 import { EmployerService } from "../employer/employer.service";
 import { Employer } from "../employer/domain/Employer";
 import { Payroll } from "../employer/domain/Payroll";
-import { NotificationService } from "../notifications/notification.service";
-import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { EnrichedDisbursement, PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
 import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
-import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { Employee } from "../employee/domain/Employee";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
@@ -32,7 +29,6 @@ export class BubbleService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly configService: CustomConfigService,
-    private readonly notificationService: NotificationService,
     private readonly employeeService: EmployeeService,
     private readonly employerService: EmployerService,
     private readonly workflowExecutor: WorkflowExecutor,
@@ -75,7 +71,7 @@ export class BubbleService {
     });
 
     if (request.maxAllocationPercent) {
-      const updatedEmployees = await this.employeeService.updateAllocationAmountsForNewMaxAllocationPercent(
+      await this.employeeService.updateAllocationAmountsForNewMaxAllocationPercent(
         employer.id,
         request.maxAllocationPercent,
       );
@@ -91,7 +87,7 @@ export class BubbleService {
       });
     }
 
-    const updatedEmployee = await this.employeeService.updateEmployee(employeeID, {
+    await this.employeeService.updateEmployee(employeeID, {
       salary: request.salary,
       status: request.status,
     });
