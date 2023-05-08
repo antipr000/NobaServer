@@ -72,23 +72,25 @@ export class NotificationPayloadMapper {
     };
   }
   static toDepositCompletedEvent(consumer: Consumer, transaction: Transaction): SendDepositCompletedEvent {
+    const locale = consumer.props.locale;
     return {
       email: consumer.props.email,
       firstName: consumer.props.firstName,
       handle: consumer.props.handle,
-      params: TransactionNotificationPayloadMapper.toDepositCompletedNotificationParameters(transaction),
-      locale: consumer.props.locale,
+      params: TransactionNotificationPayloadMapper.toDepositCompletedNotificationParameters(transaction, locale),
+      locale: locale,
       nobaUserID: consumer.props.id,
     };
   }
 
   static toDepositFailedEvent(consumer: Consumer, transaction: Transaction): SendDepositFailedEvent {
+    const locale = consumer.props.locale;
     return {
       email: consumer.props.email,
       firstName: consumer.props.firstName,
       handle: consumer.props.handle,
-      params: TransactionNotificationPayloadMapper.toDepositFailedNotificationParameters(transaction),
-      locale: consumer.props.locale,
+      params: TransactionNotificationPayloadMapper.toDepositFailedNotificationParameters(transaction, locale),
+      locale: locale,
       nobaUserID: consumer.props.id,
     };
   }
@@ -183,35 +185,19 @@ export class NotificationPayloadMapper {
     transaction: Transaction,
     companyName: string,
   ): SendPayrollDepositCompletedEvent {
+    const locale = consumer.props.locale;
     const payrollDepositParams = TransactionNotificationPayloadMapper.toPayrollDepositCompletedNotificationParameters(
       transaction,
       companyName,
+      locale,
     );
-
-    // set all numbers to locale
-    const locale = consumer.props.locale;
-    const creditAmount = Utils.localizeAmount(payrollDepositParams.creditAmount, locale);
-    const debitAmount = Utils.localizeAmount(payrollDepositParams.debitAmount, locale);
-    const exchangeRate = Utils.localizeAmount(payrollDepositParams.exchangeRate, locale);
-    const nobaFees = Utils.localizeAmount(payrollDepositParams.nobaFees, locale);
-    const processingFees = Utils.localizeAmount(payrollDepositParams.processingFees, locale);
-    const totalFees = Utils.localizeAmount(payrollDepositParams.totalFees, locale);
-    const params = {
-      ...payrollDepositParams,
-      creditAmount: creditAmount,
-      debitAmount: debitAmount,
-      exchangeRate: exchangeRate,
-      nobaFees: nobaFees,
-      processingFees: processingFees,
-      totalFees: totalFees,
-    };
 
     return {
       email: consumer.props.email,
       firstName: consumer.props.firstName,
       handle: consumer.props.handle,
-      params: params,
-      locale: consumer.props.locale,
+      params: payrollDepositParams,
+      locale: locale,
       nobaUserID: consumer.props.id,
     };
   }
@@ -327,34 +313,38 @@ export class NotificationPayloadMapper {
   }
 
   static toWithdrawalCompletedEvent(consumer: Consumer, transaction: Transaction): SendWithdrawalCompletedEvent {
+    const locale = consumer.props.locale;
     return {
       email: consumer.props.email,
       firstName: consumer.props.firstName,
       handle: consumer.props.handle,
-      params: TransactionNotificationPayloadMapper.toWithdrawalCompletedNotificationParameters(transaction),
-      ...(consumer.props.locale && { locale: consumer.props.locale }),
+      params: TransactionNotificationPayloadMapper.toWithdrawalCompletedNotificationParameters(transaction, locale),
+      ...(locale && { locale: locale }),
       nobaUserID: consumer.props.id,
     };
   }
 
   static toWithdrawalFailedEvent(consumer: Consumer, transaction: Transaction): SendWithdrawalFailedEvent {
+    const locale = consumer.props.locale;
     return {
       email: consumer.props.email,
       firstName: consumer.props.firstName,
       handle: consumer.props.handle,
-      params: TransactionNotificationPayloadMapper.toWithdrawalFailedNotificationParameters(transaction),
-      ...(consumer.props.locale && { locale: consumer.props.locale }),
+      params: TransactionNotificationPayloadMapper.toWithdrawalFailedNotificationParameters(transaction, locale),
+      ...(locale && { locale: locale }),
       nobaUserID: consumer.props.id,
     };
   }
 
   static toWithdrawalInitiatedEvent(consumer: Consumer, transaction: Transaction): SendWithdrawalInitiatedEvent {
+    const locale = consumer.props.locale;
+
     return {
       email: consumer.props.email,
       firstName: consumer.props.firstName,
       handle: consumer.props.handle,
-      params: TransactionNotificationPayloadMapper.toWithdrawalInitiatedNotificationParameters(transaction),
-      ...(consumer.props.locale && { locale: consumer.props.locale }),
+      params: TransactionNotificationPayloadMapper.toWithdrawalInitiatedNotificationParameters(transaction, locale),
+      ...(locale && { locale: locale }),
     };
   }
 }
