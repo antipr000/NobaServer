@@ -51,4 +51,21 @@ export class CsvService {
         .on("error", err => reject(err));
     });
   }
+
+  public async getAllRowsForSpecificColumn(buffer: Buffer, column: number): Promise<Array<string>> {
+    const parser = parse({ delimiter: ",", from_line: 2 });
+    const results = new Array<string>();
+    return new Promise((resolve, reject) => {
+      const readStream = new Readable();
+      readStream.push(buffer);
+      readStream.push(null);
+      readStream
+        .pipe(parser)
+        .on("data", (row: Array<string>) => {
+          results.push(row[column]);
+        })
+        .on("error", err => reject(err))
+        .on("end", () => resolve(results));
+    });
+  }
 }
