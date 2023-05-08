@@ -1,8 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import { NotificationEventType } from "./domain/NotificationTypes";
-import { SendRegisterNewEmployeeEvent } from "./events/SendRegisterNewEmployeeEvent";
-import { SendUpdateEmployeeAllocationAmountEvent } from "./events/SendUpdateEmployeeAllocationAmountEvent";
 import { DashboardClient } from "./dashboard/dashboard.client";
 import { SendUpdatePayrollStatusEvent } from "./events/SendUpdatePayrollStatusEvent";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -21,7 +19,7 @@ export class DashboardEventHandler {
     try {
       await this.dashboardClient.updatePayrollStatus(payload.payrollStatus, payload.nobaPayrollID);
     } catch (err) {
-      this.logger.error(`Failed to update the payroll status in dasboard, ${JSON.stringify(err)}`);
+      this.logger.error(`Failed to update the payroll status in dashboard, ${JSON.stringify(err)}`);
     }
   }
 }

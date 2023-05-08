@@ -39,14 +39,6 @@ import { SendWithdrawalFailedEvent, validateWithdrawalFailedEvent } from "./even
 import { SendEmployerRequestEvent, validateSendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
 import { SendTransferReceivedEvent, validateTransferReceivedEvent } from "./events/SendTransferReceivedEvent";
 import {
-  SendRegisterNewEmployeeEvent,
-  validateSendRegisterNewEmployeeEvent,
-} from "./events/SendRegisterNewEmployeeEvent";
-import {
-  SendUpdateEmployeeAllocationAmountEvent,
-  validateSendUpdateEmployeeAllocationAmountEvent,
-} from "./events/SendUpdateEmployeeAllocationAmountEvent";
-import {
   SendUpdatePayrollStatusEvent,
   validateSendUpdatePayrollStatusEvent,
 } from "./events/SendUpdatePayrollStatusEvent";
