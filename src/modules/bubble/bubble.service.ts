@@ -79,15 +79,6 @@ export class BubbleService {
         employer.id,
         request.maxAllocationPercent,
       );
-
-      const employeeUpdatePromises: Promise<void>[] = updatedEmployees.map(async employee =>
-        this.notificationService.sendNotification(
-          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-          NotificationPayloadMapper.toUpdateEmployeeAllocationAmountEvent(employee.id, employee.allocationAmount),
-        ),
-      );
-
-      await Promise.all(employeeUpdatePromises);
     }
   }
 
@@ -104,14 +95,6 @@ export class BubbleService {
       salary: request.salary,
       status: request.status,
     });
-
-    // If the salary update triggered a change to the allocation percent, update Bubble
-    if (updatedEmployee?.allocationAmount !== employee.allocationAmount) {
-      await this.notificationService.sendNotification(
-        NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-        NotificationPayloadMapper.toUpdateEmployeeAllocationAmountEvent(employeeID, updatedEmployee.allocationAmount),
-      );
-    }
   }
 
   async createPayroll(referralID: string, payrollDate: string): Promise<Payroll> {
