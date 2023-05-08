@@ -144,6 +144,7 @@ export class SQLEventRepo implements EventRepo {
       const eventTemplateCreateInput: Prisma.EventTemplateCreateInput = {
         ...(eventTemplate.templateBody && { templateBody: eventTemplate.templateBody }),
         ...(eventTemplate.externalKey && { externalKey: eventTemplate.externalKey }),
+        ...(eventTemplate.templateTitle && { templateTitle: eventTemplate.templateTitle }),
         type: eventTemplate.type,
         locale: eventTemplate.locale,
         event: {
@@ -172,6 +173,7 @@ export class SQLEventRepo implements EventRepo {
     try {
       const eventTemplateUpdateInput: Prisma.EventTemplateUpdateInput = {
         ...(updateRequest.templateBody && { templateBody: updateRequest.templateBody, externalKey: null }),
+        ...(updateRequest.templateTitle && { templateTitle: updateRequest.templateTitle }),
         ...(updateRequest.externalKey && { externalKey: updateRequest.externalKey, templateBody: null }),
         ...(updateRequest.type && { type: updateRequest.type }),
         ...(updateRequest.locale && { locale: updateRequest.locale }),

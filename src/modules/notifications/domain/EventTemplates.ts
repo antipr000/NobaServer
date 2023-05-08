@@ -7,6 +7,7 @@ export class EventTemplate {
   id: string;
   createdTimestamp: Date;
   updatedTimestamp: Date;
+  templateTitle?: string;
   templateBody?: string;
   externalKey?: string;
   type: EventHandlers;
@@ -16,6 +17,7 @@ export class EventTemplate {
 
 export class EventTemplateCreateRequest {
   templateBody?: string;
+  templateTitle?: string;
   externalKey?: string;
   type: EventHandlers;
   locale: string;
@@ -24,6 +26,7 @@ export class EventTemplateCreateRequest {
 
 export class EventTemplateUpdateRequest {
   templateBody?: string;
+  templateTitle?: string;
   externalKey?: string;
   type: EventHandlers;
   locale: string;
@@ -32,6 +35,7 @@ export class EventTemplateUpdateRequest {
 export const validateEventTemplateCreateRequest = (eventTemplate: EventTemplateCreateRequest) => {
   const eventTemplateJoiValidationKeys: KeysRequired<EventTemplateCreateRequest> = {
     templateBody: Joi.string().optional(),
+    templateTitle: Joi.string().optional(),
     externalKey: Joi.string().optional(),
     type: Joi.string()
       .valid(...Object.values(EventHandlers))
@@ -50,6 +54,7 @@ export const validateEventTemplateCreateRequest = (eventTemplate: EventTemplateC
 export const validateEventTemplateUpdateRequest = (eventTemplate: EventTemplateUpdateRequest) => {
   const eventTemplateJoiValidationKeys: KeysRequired<EventTemplateUpdateRequest> = {
     templateBody: Joi.string().optional(),
+    templateTitle: Joi.string().optional(),
     externalKey: Joi.string().optional(),
     type: Joi.string()
       .valid(...Object.values(EventHandlers))
@@ -66,6 +71,7 @@ export const validateEventTemplateUpdateRequest = (eventTemplate: EventTemplateU
 
 export const eventTemplateJoiValidationKeys: KeysRequired<EventTemplateUpdateRequest> = {
   templateBody: Joi.string().optional(),
+  templateTitle: Joi.string().optional(),
   externalKey: Joi.string().optional(),
   type: Joi.string()
     .valid(...Object.values(EventHandlers))
@@ -80,6 +86,7 @@ export const validateEventTemplate = (eventTemplate: EventTemplate) => {
     updatedTimestamp: Joi.date().required(),
     templateBody: Joi.string().optional(),
     externalKey: Joi.string().optional(),
+    templateTitle: Joi.string().optional(),
     type: Joi.string().valid(Object.values(EventHandlers)).required(),
     locale: Joi.string().required(),
     eventID: Joi.string().required(),
@@ -98,6 +105,7 @@ export const convertToDomainEventTemplate = (eventTemplate: PrismaEventTemplateM
     createdTimestamp: eventTemplate.createdTimestamp,
     updatedTimestamp: eventTemplate.updatedTimestamp,
     templateBody: eventTemplate.templateBody,
+    templateTitle: eventTemplate.templateTitle,
     externalKey: eventTemplate.externalKey,
     type: eventTemplate.type as EventHandlers,
     locale: eventTemplate.locale,
