@@ -21,11 +21,8 @@ import {
   getRandomPayroll,
   getRandomPayrollDisbursement,
 } from "../../../modules/employer/test_utils/payroll.test.utils";
-import { NotificationService } from "../../../modules/notifications/notification.service";
-import { getMockNotificationServiceWithDefaults } from "../../../modules/notifications/mocks/mock.notification.service";
 import { WorkflowExecutor } from "../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../infra/temporal/mocks/mock.workflow.executor";
-import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 import { S3Service } from "../../../modules/common/s3.service";
 import { getMockS3ServiceWithDefaults } from "../../../modules/common/mocks/mock.s3.service";
@@ -81,7 +78,6 @@ describe("BubbleServiceTests", () => {
   let employerService: EmployerService;
   let employeeService: EmployeeService;
   let bubbleService: BubbleService;
-  let notificationService: NotificationService;
   let workflowExecutor: WorkflowExecutor;
   let s3Service: S3Service;
   let csvService: CsvService;
@@ -89,7 +85,6 @@ describe("BubbleServiceTests", () => {
   beforeEach(async () => {
     employerService = getMockEmployerServiceWithDefaults();
     employeeService = getMockEmployeeServiceWithDefaults();
-    notificationService = getMockNotificationServiceWithDefaults();
     workflowExecutor = getMockWorkflowExecutorWithDefaults();
     s3Service = getMockS3ServiceWithDefaults();
     csvService = getMockCsvServiceWithDefaults();
@@ -111,10 +106,6 @@ describe("BubbleServiceTests", () => {
         {
           provide: EmployeeService,
           useFactory: () => instance(employeeService),
-        },
-        {
-          provide: NotificationService,
-          useFactory: () => instance(notificationService),
         },
         {
           provide: WorkflowExecutor,
@@ -348,41 +339,9 @@ describe("BubbleServiceTests", () => {
         updatedEmployee3,
       ]);
 
-      when(notificationService.sendNotification(anything(), anything())).thenResolve();
-
       await bubbleService.updateEmployerInNoba(employer.referralID, {
         maxAllocationPercent: updatedMaxAllocationPercent,
       });
-
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-          deepEqual({
-            nobaEmployeeID: updatedEmployee1.id,
-            allocationAmountInPesos: updatedEmployee1.allocationAmount,
-          }),
-        ),
-      ).once();
-
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-          deepEqual({
-            nobaEmployeeID: updatedEmployee3.id,
-            allocationAmountInPesos: updatedEmployee3.allocationAmount,
-          }),
-        ),
-      ).once();
-
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-          deepEqual({
-            nobaEmployeeID: employee2.id,
-            allocationAmountInPesos: employee2.allocationAmount,
-          }),
-        ),
-      ).never();
     });
 
     it("should update the 'payrollDays' of employer in Noba", async () => {
@@ -513,8 +472,6 @@ describe("BubbleServiceTests", () => {
       };
 
       when(employeeService.updateEmployee(anyString(), anything())).thenResolve(updatedEmployee);
-
-      when(notificationService.sendNotification(anything(), anything())).thenResolve();
 
       await bubbleService.updateEmployee(employee.id, {
         salary: newSalary, // Should cause max allocation for employee to be 25000

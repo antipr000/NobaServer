@@ -20,11 +20,7 @@ export type TransactionEventDTO = {
    */
   details?: string;
   /**
-   * A key used to identify this specific event, used for translation purposes
+   * Internationalized text for display to the user
    */
-  key?: string;
-  /**
-   * An array of parameters used to populate variables in the translated message
-   */
-  parameters?: Array<string>;
+  text?: string;
 };

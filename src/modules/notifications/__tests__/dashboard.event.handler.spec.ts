@@ -7,8 +7,6 @@ import { getMockCurrencyServiceWithDefaults } from "../../common/mocks/mock.curr
 import { DashboardClient } from "../dashboard/dashboard.client";
 import { DashboardEventHandler } from "../dashboard.event.handler";
 import { getMockDashboardClientWithDefaults } from "../mocks/mock.dashboard.client";
-import { SendRegisterNewEmployeeEvent } from "../events/SendRegisterNewEmployeeEvent";
-import { SendUpdateEmployeeAllocationAmountEvent } from "../events/SendUpdateEmployeeAllocationAmountEvent";
 import { SendUpdatePayrollStatusEvent } from "../events/SendUpdatePayrollStatusEvent";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 
@@ -44,48 +42,6 @@ describe("DashboardEventHandler", () => {
     }).compile();
 
     eventHandler = app.get<DashboardEventHandler>(DashboardEventHandler);
-  });
-
-  it("should call registerNewEmployee event", async () => {
-    const payload: SendRegisterNewEmployeeEvent = {
-      firstName: "Fake",
-      lastName: "User",
-      email: "fake+user@noba.com",
-      phone: "+1234567890",
-      employerReferralID: "fake-referral-id",
-      allocationAmountInPesos: 10000,
-      nobaEmployeeID: "fake-employee-id",
-    };
-
-    when(dashboardClient.registerNewEmployee(anything())).thenResolve();
-
-    await eventHandler.sendRegisterNewEmployee(payload);
-
-    const [data] = capture(dashboardClient.registerNewEmployee).last();
-    expect(data).toStrictEqual({
-      firstName: payload.firstName,
-      lastName: payload.lastName,
-      email: payload.email,
-      phone: payload.phone,
-      employerReferralID: payload.employerReferralID,
-      allocationAmountInPesos: payload.allocationAmountInPesos,
-      nobaEmployeeID: payload.nobaEmployeeID,
-    });
-  });
-
-  it("should call updateEmployeeAllocationAmount event", async () => {
-    const payload: SendUpdateEmployeeAllocationAmountEvent = {
-      allocationAmountInPesos: 10000,
-      nobaEmployeeID: "fake-employee-id",
-    };
-
-    when(dashboardClient.updateEmployeeAllocationAmount(anything(), anything())).thenResolve();
-
-    await eventHandler.sendUpdateEmployeeAllocationAmount(payload);
-
-    const [nobaEmployeeID, allocationAmountInPesos] = capture(dashboardClient.updateEmployeeAllocationAmount).last();
-    expect(nobaEmployeeID).toBe(payload.nobaEmployeeID);
-    expect(allocationAmountInPesos).toBe(payload.allocationAmountInPesos);
   });
 
   it("should call updatePayrollStatus event", async () => {

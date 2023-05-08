@@ -49,7 +49,7 @@ export class TransactionService {
      */
     endDate?: string;
     /**
-     * number of pages to skip, offset 0 means first page results, 1 means second page etc.
+     * Page number, offset 1 means first page results, 2 means second page etc.
      */
     pageOffset?: number;
     /**
@@ -159,7 +159,8 @@ export class TransactionService {
       | "PAYROLL_DEPOSIT"
       | "PAYROLL_PROCESSING"
       | "CARD_WITHDRAWAL"
-      | "CARD_REVERSAL";
+      | "CARD_REVERSAL"
+      | "BULK_ADD_EMPLOYEES";
     xNobaSignature?: string;
     /**
      * Timestamp in milliseconds, use: new Date().getTime().toString()

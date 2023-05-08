@@ -64,6 +64,7 @@ export type { EmployeeResponseDTO } from "./models/EmployeeResponseDTO";
 export type { EmployerDTO } from "./models/EmployerDTO";
 export type { EmployerRegisterResponseDTO } from "./models/EmployerRegisterResponseDTO";
 export type { EmployerWorkflowDTO } from "./models/EmployerWorkflowDTO";
+export type { EnrichedDisbursementDTO } from "./models/EnrichedDisbursementDTO";
 export type { ExchangeRateDTO } from "./models/ExchangeRateDTO";
 export type { ExchangeRateWorkflowDTO } from "./models/ExchangeRateWorkflowDTO";
 export type { HealthCheckResponseDTO } from "./models/HealthCheckResponseDTO";
@@ -72,6 +73,7 @@ export type { IdentificationTypeCountryDTO } from "./models/IdentificationTypeCo
 export type { IdentificationTypeDTO } from "./models/IdentificationTypeDTO";
 export type { IDVerificationURLResponseDTO } from "./models/IDVerificationURLResponseDTO";
 export type { InitiateTransactionDTO } from "./models/InitiateTransactionDTO";
+export type { InviteEmployeeRequestDTO } from "./models/InviteEmployeeRequestDTO";
 export type { KycVerificationDTO } from "./models/KycVerificationDTO";
 export type { LatestNotificationResponse } from "./models/LatestNotificationResponse";
 export type { LinkedEmployerDTO } from "./models/LinkedEmployerDTO";

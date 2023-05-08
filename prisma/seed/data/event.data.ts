@@ -28,8 +28,6 @@ export enum NotificationEventType {
   SEND_TRANSFER_RECEIVED_EVENT = "transfer.received",
   SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT = "payroll.deposit.completed",
   SEND_EMPLOYER_REQUEST_EVENT = "employee.request",
-  SEND_REGISTER_NEW_EMPLOYEE_EVENT = "register.employee",
-  SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT = "update.employee.allocation.amount",
   SEND_UPDATE_PAYROLL_STATUS_EVENT = "update.payroll.status",
   SEND_INVITE_EMPLOYEE_EVENT = "invite.employee",
 }
@@ -74,8 +72,6 @@ export const preferredNotificationMedium: PreferredMedium = {
     NotificationEventHandler.PUSH,
   ],
   [NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT]: [NotificationEventHandler.EMAIL],
-  [NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT]: [NotificationEventHandler.DASHBOARD],
-  [NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT]: [NotificationEventHandler.DASHBOARD],
   [NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT]: [NotificationEventHandler.DASHBOARD],
 };
 

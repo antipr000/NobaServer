@@ -13,8 +13,6 @@ import { validateSendOtpEvent } from "../events/SendOtpEvent";
 import { validateSendPhoneVerificationCodeEvent } from "../events/SendPhoneVerificationCodeEvent";
 import { validateSendWelcomeMessageEvent } from "../events/SendWelcomeMessageEvent";
 import { getRandomEmployee } from "../../../modules/employee/test_utils/employee.test.utils";
-import { validateSendRegisterNewEmployeeEvent } from "../events/SendRegisterNewEmployeeEvent";
-import { validateSendUpdateEmployeeAllocationAmountEvent } from "../events/SendUpdateEmployeeAllocationAmountEvent";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { validateSendUpdatePayrollStatusEvent } from "../events/SendUpdatePayrollStatusEvent";
 
@@ -559,56 +557,6 @@ describe("NotificationPayloadMapper Tests", () => {
       });
 
       validateSendEmployerRequestEvent(payload);
-    });
-  });
-
-  describe("toRegisterNewEmployeeEvent", () => {
-    it("should map parameters correctly when everything is provided", () => {
-      const consumer = getRandomActiveConsumer("1", "US");
-      const employer = getRandomEmployer("FakeEmployer");
-      const employee = getRandomEmployee(employer.id);
-      employee.employer = employer;
-      const payload = NotificationPayloadMapper.toRegisterNewEmployeeEvent(consumer, employee);
-
-      expect(payload).toStrictEqual({
-        firstName: consumer.props.firstName,
-        lastName: consumer.props.lastName,
-        email: consumer.props.email,
-        phone: consumer.props.phone,
-        employerReferralID: employer.referralID,
-        allocationAmountInPesos: employee.allocationAmount,
-        nobaEmployeeID: employee.id,
-        locale: "en_us",
-      });
-
-      validateSendRegisterNewEmployeeEvent(payload);
-    });
-  });
-
-  describe("toUpdateEmployeeAllocationAmountEvent", () => {
-    it("should map parameters correctly when everything is provided", () => {
-      const payload = NotificationPayloadMapper.toUpdateEmployeeAllocationAmountEvent("employee-id", 100);
-
-      expect(payload).toStrictEqual({
-        allocationAmountInPesos: 100,
-        nobaEmployeeID: "employee-id",
-      });
-
-      validateSendUpdateEmployeeAllocationAmountEvent(payload);
-    });
-
-    it("should throw Error when allocationAmount is missing", async () => {
-      expect(() => {
-        const payload = NotificationPayloadMapper.toUpdateEmployeeAllocationAmountEvent("employee-id", undefined);
-        validateSendUpdateEmployeeAllocationAmountEvent(payload);
-      }).toThrowError();
-    });
-
-    it("should throw Error when employeeID is missing", async () => {
-      expect(() => {
-        const payload = NotificationPayloadMapper.toUpdateEmployeeAllocationAmountEvent(undefined, 100);
-        validateSendUpdateEmployeeAllocationAmountEvent(payload);
-      }).toThrowError();
     });
   });
 

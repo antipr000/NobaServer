@@ -12,6 +12,7 @@ import type { CreateTransactionDTO } from "../models/CreateTransactionDTO";
 import type { DebitBankRequestDTO } from "../models/DebitBankRequestDTO";
 import type { EmployerWorkflowDTO } from "../models/EmployerWorkflowDTO";
 import type { ExchangeRateWorkflowDTO } from "../models/ExchangeRateWorkflowDTO";
+import type { InviteEmployeeRequestDTO } from "../models/InviteEmployeeRequestDTO";
 import type { LatestNotificationResponse } from "../models/LatestNotificationResponse";
 import type { MonoTransactionDTO } from "../models/MonoTransactionDTO";
 import type { PayrollDisbursementDTO } from "../models/PayrollDisbursementDTO";
@@ -162,6 +163,32 @@ export class WorkflowService {
       },
       errors: {
         404: `Employer is not found`,
+      },
+    });
+  }
+
+  /**
+   * Invite an employee
+   * @returns EmployerWorkflowDTO
+   * @throws ApiError
+   */
+  public static inviteEmployee({
+    employerId,
+    requestBody,
+  }: {
+    employerId: string;
+    requestBody: InviteEmployeeRequestDTO;
+  }): CancelablePromise<EmployerWorkflowDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/wf/v1/employers/{employerID}/employees/invite",
+      path: {
+        employerID: employerId,
+      },
+      body: requestBody,
+      mediaType: "application/json",
+      errors: {
+        400: `Invalid request`,
       },
     });
   }

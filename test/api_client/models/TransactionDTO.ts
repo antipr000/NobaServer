@@ -21,7 +21,8 @@ export type TransactionDTO = {
     | "PAYROLL_DEPOSIT"
     | "PAYROLL_PROCESSING"
     | "CARD_WITHDRAWAL"
-    | "CARD_REVERSAL";
+    | "CARD_REVERSAL"
+    | "BULK_ADD_EMPLOYEES";
   /**
    * The user whose account is being debited
    */
