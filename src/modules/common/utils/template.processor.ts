@@ -124,7 +124,7 @@ export class TemplateProcessor {
         if (this.formats.has(TemplateFormat.HTML)) {
           const start = Date.now();
 
-          this.s3Service.uploadToS3(
+          await this.s3Service.uploadToS3(
             this.savePath,
             `${this.saveBaseFilename}_${locale.language}.${TemplateFormat.HTML}`,
             populatedTemplate,
@@ -141,7 +141,7 @@ export class TemplateProcessor {
           );
           const start = Date.now();
 
-          this.s3Service.uploadToS3(
+          await this.s3Service.uploadToS3(
             this.savePath,
             `${this.saveBaseFilename}_${locale.language}.${TemplateFormat.PDF}`,
             pdf,

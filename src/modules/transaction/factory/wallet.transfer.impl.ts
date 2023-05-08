@@ -62,7 +62,7 @@ export class WalletTransferImpl implements IWorkflowImpl {
   }
 
   async initiateWorkflow(transaction: Transaction, options?: TransactionFlags[]): Promise<void> {
-    this.workflowExecutor.executeWalletTransferWorkflow(transaction.id, transaction.transactionRef);
+    await this.workflowExecutor.executeWalletTransferWorkflow(transaction.id, transaction.transactionRef);
   }
 
   async getTransactionQuote(

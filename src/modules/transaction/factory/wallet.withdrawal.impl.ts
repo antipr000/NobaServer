@@ -126,7 +126,7 @@ export class WalletWithdrawalImpl implements IWorkflowImpl {
       });
     }
 
-    this.workflowExecutor.executeWalletWithdrawalWorkflow(transaction.id, transaction.transactionRef);
+    await this.workflowExecutor.executeWalletWithdrawalWorkflow(transaction.id, transaction.transactionRef);
   }
 
   async getTransactionQuote(
