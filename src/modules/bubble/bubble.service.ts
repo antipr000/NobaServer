@@ -25,6 +25,7 @@ import { S3Service } from "../common/s3.service";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { GENERATED_DATA_BUCKET_NAME, INVITE_CSV_FOLDER_BUCKET_PATH } from "../../config/ConfigurationUtils";
 import { CsvService } from "../common/csv.service";
+import { CSV_HEADER_VALUES } from "./csv.header.values";
 
 @Injectable()
 export class BubbleService {
@@ -264,11 +265,28 @@ export class BubbleService {
     // Validate CSV file is or correct format
     const headers = await this.csvService.getHeadersFromCsvFile(file.buffer);
 
-    const validHeaders = ["Email", "First Name", "Last Name", "Salary"];
+    for (let i = 0; i < headers.length; i++) {
+      this.validateCsvHeaderAtPosition(i, headers[i], employer.locale);
+    }
 
-    if (validHeaders.some(header => !headers.includes(header))) {
+    // Validate emails are of correct format
+    const emails = await this.csvService.getAllRowsForSpecificColumn(file.buffer, 0);
+    const invalidEmail = emails.find(email => !/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(email));
+    if (invalidEmail) {
+      this.logger.error(`Invalid email found in CSV file: ${invalidEmail}`);
       throw new ServiceException({
-        message: "CSV file is not in the correct format",
+        message: `Invalid email found in CSV file: ${invalidEmail}`,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    // Validate salarys are integers
+    const salarys = (await this.csvService.getAllRowsForSpecificColumn(file.buffer, 3)).map(salary => Number(salary));
+    const invalidSalary = salarys.find(salary => !Number.isInteger(salary));
+    if (invalidSalary) {
+      this.logger.error(`Invalid salary found in CSV file: ${invalidSalary}`);
+      throw new ServiceException({
+        message: `Invalid salary found in CSV file: ${invalidSalary}. Salary can only be integer.`,
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
@@ -287,4 +305,29 @@ export class BubbleService {
       employer.id,
     );
   }
+
+  private validateCsvHeaderAtPosition = (position: number, header: string, locale?: string): void => {
+    let headerValue = "";
+    switch (position) {
+      case 0:
+        headerValue = CSV_HEADER_VALUES.getOrDefault(CSV_HEADER_VALUES.email, locale);
+        break;
+      case 1:
+        headerValue = CSV_HEADER_VALUES.getOrDefault(CSV_HEADER_VALUES.firstName, locale);
+        break;
+      case 2:
+        headerValue = CSV_HEADER_VALUES.getOrDefault(CSV_HEADER_VALUES.lastName, locale);
+        break;
+      case 3:
+        headerValue = CSV_HEADER_VALUES.getOrDefault(CSV_HEADER_VALUES.salary, locale);
+        break;
+    }
+
+    if (header !== headerValue) {
+      throw new ServiceException({
+        message: "CSV file is not in the correct format",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+  };
 }
