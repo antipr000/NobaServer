@@ -79,8 +79,8 @@ export class TemplateProcessor {
   private async initialize() {
     const start = Date.now();
     this.browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless"],
+      headless: "new",
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless=new"],
       executablePath: this.findChrome(this.chromePaths),
     });
     this.writeTimingLog("Browser initialized", Date.now() - start);
