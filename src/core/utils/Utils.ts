@@ -153,7 +153,8 @@ export class Utils {
       });
     }
 
-    return amount.toLocaleString(locale, {
+    const roundedAmount = this.roundTo2DecimalNumber(amount);
+    return roundedAmount.toLocaleString(locale, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });

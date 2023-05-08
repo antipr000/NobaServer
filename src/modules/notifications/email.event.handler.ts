@@ -271,8 +271,10 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT}`)
   public async sendDepositCompletedEmail(payload: SendDepositCompletedEvent) {
-    const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.creditAmount) + Utils.roundTo2DecimalNumber(payload.params.totalFees);
+    const subtotal = Utils.localizeAmount(
+      payload.params.creditAmountNumber + payload.params.totalFeesNumber,
+      payload.locale,
+    );
 
     const templateID = await this.getOrDefaultTemplateId(
       NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
@@ -285,17 +287,17 @@ export class EmailEventHandler {
       templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName,
-        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitAmount: payload.params.debitAmount,
         debitCurrency: processCurrency(payload.params.debitCurrency),
-        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditAmount: payload.params.creditAmount,
         creditCurrency: processCurrency(payload.params.creditCurrency),
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        subtotal: subtotal,
+        processingFees: payload.params.processingFees,
+        nobaFees: payload.params.nobaFees,
       },
     };
 
@@ -304,8 +306,10 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT}`)
   public async sendDepositInitiatedEmail(payload: SendDepositInitiatedEvent) {
-    const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.creditAmount) + Utils.roundTo2DecimalNumber(payload.params.totalFees);
+    const subtotal = Utils.localizeAmount(
+      payload.params.creditAmountNumber + payload.params.totalFeesNumber,
+      payload.locale,
+    );
 
     const templateID = await this.getOrDefaultTemplateId(
       NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT,
@@ -318,17 +322,17 @@ export class EmailEventHandler {
       templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName,
-        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitAmount: payload.params.debitAmount,
         debitCurrency: processCurrency(payload.params.debitCurrency),
-        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditAmount: payload.params.creditAmount,
         creditCurrency: processCurrency(payload.params.creditCurrency),
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        subtotal: subtotal,
+        processingFees: payload.params.processingFees,
+        nobaFees: payload.params.nobaFees,
       },
     };
 
@@ -337,8 +341,10 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_FAILED_EVENT}`)
   public async sendDepositFailedEmail(payload: SendDepositFailedEvent) {
-    const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.creditAmount) + Utils.roundTo2DecimalNumber(payload.params.totalFees);
+    const subtotal = Utils.localizeAmount(
+      payload.params.creditAmountNumber + payload.params.totalFeesNumber,
+      payload.locale,
+    );
 
     const templateID = await this.getOrDefaultTemplateId(
       NotificationEventType.SEND_DEPOSIT_FAILED_EVENT,
@@ -350,17 +356,17 @@ export class EmailEventHandler {
       templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName,
-        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitAmount: payload.params.debitAmount,
         debitCurrency: processCurrency(payload.params.debitCurrency),
-        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditAmount: payload.params.creditAmount,
         creditCurrency: processCurrency(payload.params.creditCurrency),
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        subtotal: subtotal,
+        processingFees: payload.params.processingFees,
+        nobaFees: payload.params.nobaFees,
         reasonDeclined: payload.params.reasonDeclined,
       },
     };
@@ -370,8 +376,10 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT}`)
   public async sendWithdrawalCompletedEmail(payload: SendWithdrawalCompletedEvent) {
-    const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.debitAmount) - Utils.roundTo2DecimalNumber(payload.params.totalFees);
+    const subtotal = Utils.localizeAmount(
+      payload.params.debitAmountNumber - payload.params.totalFeesNumber,
+      payload.locale,
+    );
 
     const templateID = await this.getOrDefaultTemplateId(
       NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
@@ -384,17 +392,17 @@ export class EmailEventHandler {
       templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName,
-        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitAmount: payload.params.debitAmount,
         debitCurrency: processCurrency(payload.params.debitCurrency),
-        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditAmount: payload.params.creditAmount,
         creditCurrency: processCurrency(payload.params.creditCurrency),
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        subtotal: subtotal,
+        processingFees: payload.params.processingFees,
+        nobaFees: payload.params.nobaFees,
       },
     };
 
@@ -403,9 +411,10 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT}`)
   public async sendWithdrawalInitiatedEmail(payload: SendWithdrawalInitiatedEvent) {
-    const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.debitAmount) - Utils.roundTo2DecimalNumber(payload.params.totalFees);
-
+    const subtotal = Utils.localizeAmount(
+      payload.params.debitAmountNumber - payload.params.totalFeesNumber,
+      payload.locale,
+    );
     const templateID = await this.getOrDefaultTemplateId(
       NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT,
       payload.locale,
@@ -417,17 +426,17 @@ export class EmailEventHandler {
       templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName,
-        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitAmount: payload.params.debitAmount,
         debitCurrency: processCurrency(payload.params.debitCurrency),
-        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditAmount: payload.params.creditAmount,
         creditCurrency: processCurrency(payload.params.creditCurrency),
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        subtotal: subtotal,
+        processingFees: payload.params.processingFees,
+        nobaFees: payload.params.nobaFees,
       },
     };
 
@@ -436,9 +445,10 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT}`)
   public async sendWithdrawalFailedEmail(payload: SendWithdrawalFailedEvent) {
-    const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.debitAmount) - Utils.roundTo2DecimalNumber(payload.params.totalFees);
-
+    const subtotal = Utils.localizeAmount(
+      payload.params.debitAmountNumber - payload.params.totalFeesNumber,
+      payload.locale,
+    );
     const templateID = await this.getOrDefaultTemplateId(
       NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT,
       payload.locale,
@@ -449,17 +459,17 @@ export class EmailEventHandler {
       templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName,
-        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitAmount: payload.params.debitAmount,
         debitCurrency: processCurrency(payload.params.debitCurrency),
-        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditAmount: payload.params.creditAmount,
         creditCurrency: processCurrency(payload.params.creditCurrency),
         handle: payload.handle,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         exchangeRate: payload.params.exchangeRate,
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        subtotal: subtotal,
+        processingFees: payload.params.processingFees,
+        nobaFees: payload.params.nobaFees,
         reasonDeclined: payload.params.reasonDeclined,
       },
     };
@@ -484,14 +494,14 @@ export class EmailEventHandler {
         debitConsumer_handle: payload.params.debitConsumer_handle,
         creditConsumer_handle: payload.params.creditConsumer_handle,
         firstName: payload.firstName,
-        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitAmount: payload.params.debitAmount,
         debitCurrency: processCurrency(payload.params.debitCurrency),
-        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditAmount: payload.params.creditAmount,
         creditCurrency: processCurrency(payload.params.creditCurrency),
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
-        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        processingFees: payload.params.processingFees,
+        nobaFees: payload.params.nobaFees,
       },
     };
 
@@ -517,14 +527,14 @@ export class EmailEventHandler {
         debitConsumer_handle: payload.params.debitConsumer_handle,
         creditConsumer_handle: payload.params.creditConsumer_handle,
         firstName: payload.firstName,
-        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitAmount: payload.params.debitAmount,
         debitCurrency: processCurrency(payload.params.debitCurrency),
-        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditAmount: payload.params.creditAmount,
         creditCurrency: processCurrency(payload.params.creditCurrency),
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
-        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        processingFees: payload.params.processingFees,
+        nobaFees: payload.params.nobaFees,
       },
     };
 
@@ -548,14 +558,14 @@ export class EmailEventHandler {
         debitConsumer_handle: payload.params.debitConsumer_handle,
         creditConsumer_handle: payload.params.creditConsumer_handle,
         firstName: payload.firstName,
-        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+        debitAmount: payload.params.debitAmount,
         debitCurrency: processCurrency(payload.params.debitCurrency),
-        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+        creditAmount: payload.params.creditAmount,
         creditCurrency: processCurrency(payload.params.creditCurrency),
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
-        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        processingFees: payload.params.processingFees,
+        nobaFees: payload.params.nobaFees,
         reasonDeclined: payload.params.reasonDeclined,
       },
     };
@@ -565,9 +575,10 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT}`)
   public async sendPayrollDepositCompletedEmail(payload: SendPayrollDepositCompletedEvent) {
-    const subtotal =
-      Utils.roundTo2DecimalNumber(payload.params.creditAmount) + Utils.roundTo2DecimalNumber(payload.params.totalFees);
-
+    const subtotal = Utils.localizeAmount(
+      payload.params.creditAmountNumber + payload.params.totalFeesNumber,
+      payload.locale,
+    );
     const templateID = await this.getOrDefaultTemplateId(
       NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
       payload.locale,
@@ -585,11 +596,11 @@ export class EmailEventHandler {
         exchangeRate: payload.params.exchangeRate,
         creditCurrency: processCurrency(payload.params.creditCurrency),
         debitCurrency: processCurrency(payload.params.debitCurrency),
-        debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
-        creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
-        subtotal: Utils.roundTo2DecimalString(subtotal),
-        processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-        nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+        debitAmount: payload.params.debitAmount,
+        creditAmount: payload.params.creditAmount,
+        subtotal: subtotal,
+        processingFees: payload.params.processingFees,
+        nobaFees: payload.params.nobaFees,
       },
     };
 

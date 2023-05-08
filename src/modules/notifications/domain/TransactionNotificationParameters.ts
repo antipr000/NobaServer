@@ -11,10 +11,13 @@ export type TransactionParameters = {
   processingFees: string;
   nobaFees: string;
   debitAmount: string;
+  debitAmountNumber: number;
   creditAmount: string;
+  creditAmountNumber: number;
   debitCurrency: string;
   creditCurrency: string;
   totalFees: string;
+  totalFeesNumber: number;
   exchangeRate?: string;
 };
 
@@ -67,14 +70,17 @@ export class TransactionNotificationParamsJoiSchema {
     return {
       transactionRef: Joi.string().required(),
       createdTimestamp: Joi.string().required(),
-      processingFees: Joi.number().required(),
+      processingFees: Joi.string().required(),
       nobaFees: Joi.number().required(),
-      debitAmount: Joi.number().required(),
-      creditAmount: Joi.number().required(),
+      debitAmount: Joi.string().required(),
+      debitAmountNumber: Joi.number().required(),
+      creditAmount: Joi.string().required(),
+      creditAmountNumber: Joi.number().required(),
       debitCurrency: Joi.string().required(),
       creditCurrency: Joi.string().required(),
-      totalFees: Joi.number().required(),
-      exchangeRate: Joi.number().optional(),
+      totalFees: Joi.string().required(),
+      totalFeesNumber: Joi.number().required(),
+      exchangeRate: Joi.string().optional(),
     };
   }
 
@@ -154,24 +160,28 @@ export class TransactionNotificationPayloadMapper {
   static toTransactionParams(transaction: Transaction, locale: string): TransactionParameters {
     const processingFee = getFee(transaction, FeeType.PROCESSING);
     const nobaFee = getFee(transaction, FeeType.NOBA);
+    const totalFeesNumber = getTotalFees(transaction);
 
     const creditAmount = Utils.localizeAmount(transaction.creditAmount, locale);
     const debitAmount = Utils.localizeAmount(transaction.debitAmount, locale);
     const exchangeRate = Utils.localizeAmount(transaction.exchangeRate, locale);
     const nobaFees = Utils.localizeAmount(nobaFee ? nobaFee.amount : 0, locale);
     const processingFees = Utils.localizeAmount(processingFee ? processingFee.amount : 0, locale);
-    const totalFees = Utils.localizeAmount(getTotalFees(transaction), locale);
+    const totalFees = Utils.localizeAmount(totalFeesNumber, locale);
     return {
       transactionRef: transaction.transactionRef,
       createdTimestamp: transaction.createdTimestamp.toUTCString(),
       processingFees: processingFees,
       nobaFees: nobaFees,
       debitAmount: debitAmount,
+      debitAmountNumber: transaction.debitAmount,
       debitCurrency: transaction.debitCurrency,
       creditAmount: creditAmount,
+      creditAmountNumber: transaction.creditAmount,
       creditCurrency: transaction.creditCurrency,
       exchangeRate: exchangeRate,
       totalFees: totalFees,
+      totalFeesNumber: totalFeesNumber,
     };
   }
 
@@ -261,7 +271,7 @@ export class TransactionNotificationPayloadMapper {
     debitConsumer: Consumer,
     creditConsumer: Consumer,
   ): TransferReceivedNotificationParameters {
-    const locale = debitConsumer.props.locale;
+    const locale = creditConsumer.props.locale;
     const transactionParams = this.toTransactionParams(transaction, locale);
     return {
       ...transactionParams,
