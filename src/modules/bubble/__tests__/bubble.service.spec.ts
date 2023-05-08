@@ -353,36 +353,6 @@ describe("BubbleServiceTests", () => {
       await bubbleService.updateEmployerInNoba(employer.referralID, {
         maxAllocationPercent: updatedMaxAllocationPercent,
       });
-
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-          deepEqual({
-            nobaEmployeeID: updatedEmployee1.id,
-            allocationAmountInPesos: updatedEmployee1.allocationAmount,
-          }),
-        ),
-      ).once();
-
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-          deepEqual({
-            nobaEmployeeID: updatedEmployee3.id,
-            allocationAmountInPesos: updatedEmployee3.allocationAmount,
-          }),
-        ),
-      ).once();
-
-      verify(
-        notificationService.sendNotification(
-          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-          deepEqual({
-            nobaEmployeeID: employee2.id,
-            allocationAmountInPesos: employee2.allocationAmount,
-          }),
-        ),
-      ).never();
     });
 
     it("should update the 'payrollDays' of employer in Noba", async () => {

@@ -2140,12 +2140,6 @@ describe("ConsumerService", () => {
           }),
         ),
       ).thenResolve(employee);
-      when(
-        notificationService.sendNotification(NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT, {
-          nobaEmployeeID: employee.id,
-          allocationAmountInPesos: 1256,
-        }),
-      ).thenResolve();
 
       const response = await consumerService.updateEmployerAllocationAmount(employer.id, "consumerID", 1256);
 
