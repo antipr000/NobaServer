@@ -725,6 +725,30 @@ describe("EmployeeServiceTests", () => {
         allocationAmount: 200,
       });
     });
+
+    it("should use salary as '0' when it is null for employee", async () => {
+      const employee1 = getRandomEmployee();
+
+      const employer = createTestEmployer();
+      employer.maxAllocationPercent = 20;
+
+      employee1.salary = null;
+      employee1.allocationAmount = 200;
+
+      when(employeeRepo.getEmployeesForEmployerWithConsumer(employer.id)).thenResolve([employee1]);
+      when(employeeRepo.updateEmployee(anything(), anything())).thenResolve();
+
+      await employeeService.updateAllocationAmountsForNewMaxAllocationPercent(employer.id, 10);
+
+      const [employeeID1, employeeUpdateRequest1] = capture(employeeRepo.updateEmployee).first();
+
+      verify(employeeRepo.updateEmployee(anything(), anything())).times(1);
+
+      expect(employeeID1).toEqual(employee1.id);
+      expect(employeeUpdateRequest1).toEqual({
+        allocationAmount: 0,
+      });
+    });
   });
 
   describe("getFilteredEmployees", () => {
