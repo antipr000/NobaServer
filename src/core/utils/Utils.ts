@@ -146,17 +146,21 @@ export class Utils {
   }
 
   static localizeAmount(amount: number, locale: string, trimFractionDigits = true): string {
-    if (amount % 1 === 0 && trimFractionDigits) {
+    if (amount % 1 === 0) {
       return amount.toLocaleString(locale, {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       });
     }
 
-    const roundedAmount = this.roundTo2DecimalNumber(amount);
-    return roundedAmount.toLocaleString(locale, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+    if (trimFractionDigits) {
+      const roundedAmount = this.roundTo2DecimalNumber(amount);
+      return roundedAmount.toLocaleString(locale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+
+    return amount.toLocaleString(locale);
   }
 }

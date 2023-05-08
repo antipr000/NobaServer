@@ -1547,45 +1547,53 @@ describe("EmailEventHandler test for languages", () => {
   });
 });
 
-function getTransactionParams(workflow: WorkflowName): TransactionParameters {
+function getTransactionParams(workflow: WorkflowName, locale: string): TransactionParameters {
   switch (workflow) {
     case WorkflowName.WALLET_DEPOSIT:
       return {
-        debitAmount: 5000,
+        debitAmount: Utils.localizeAmount(5000, locale),
+        debitAmountNumber: 5000,
         debitCurrency: "COP",
-        creditAmount: 1,
+        creditAmount: Utils.localizeAmount(1, locale),
+        creditAmountNumber: 1,
         creditCurrency: "USD",
-        exchangeRate: 0.0025,
+        exchangeRate: Utils.localizeAmount(0.0025, locale),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: 0.23,
-        nobaFees: 0.34,
-        totalFees: 0.57,
+        processingFees: Utils.localizeAmount(0.23, locale),
+        nobaFees: Utils.localizeAmount(0.34, locale),
+        totalFees: Utils.localizeAmount(0.57, locale),
+        totalFeesNumber: 0.57,
       };
 
     case WorkflowName.WALLET_WITHDRAWAL:
       return {
-        debitAmount: 1,
+        debitAmount: Utils.localizeAmount(1, locale),
+        debitAmountNumber: 1,
         debitCurrency: "USD",
-        creditAmount: 5000,
+        creditAmount: Utils.localizeAmount(5000, locale),
+        creditAmountNumber: 5000,
         creditCurrency: "COP",
-        exchangeRate: 5000,
+        exchangeRate: Utils.localizeAmount(5000, locale, false),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: 0.23,
-        nobaFees: 0.34,
-        totalFees: 0.57,
+        processingFees: Utils.localizeAmount(0.23, locale),
+        nobaFees: Utils.localizeAmount(0.34, locale),
+        totalFees: Utils.localizeAmount(0.57, locale),
+        totalFeesNumber: 0.57,
       };
     case WorkflowName.WALLET_TRANSFER:
       return {
-        debitAmount: 10,
+        debitAmount: Utils.localizeAmount(10, locale),
+        debitAmountNumber: 10,
         debitCurrency: "USD",
-        creditAmount: 9.43,
+        creditAmount: Utils.localizeAmount(9.43, locale),
+        creditAmountNumber: 9.43,
         creditCurrency: "USD",
-        exchangeRate: 0.0025,
+        exchangeRate: Utils.localizeAmount(0.0025, locale, false),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: 0.23,
+        processingFees: Utils.localizeAmount(0.23, locale),
         nobaFees: 0.34,
         totalFees: 0.57,
       };

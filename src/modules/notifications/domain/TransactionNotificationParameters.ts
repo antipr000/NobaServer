@@ -164,7 +164,7 @@ export class TransactionNotificationPayloadMapper {
 
     const creditAmount = Utils.localizeAmount(transaction.creditAmount, locale);
     const debitAmount = Utils.localizeAmount(transaction.debitAmount, locale);
-    const exchangeRate = Utils.localizeAmount(transaction.exchangeRate, locale);
+    const exchangeRate = Utils.localizeAmount(transaction.exchangeRate, locale, false);
     const nobaFees = Utils.localizeAmount(nobaFee ? nobaFee.amount : 0, locale);
     const processingFees = Utils.localizeAmount(processingFee ? processingFee.amount : 0, locale);
     const totalFees = Utils.localizeAmount(totalFeesNumber, locale);
