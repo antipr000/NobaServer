@@ -3,7 +3,7 @@ export enum PushNotificationType {
 }
 export class PushNotificationPayload {
   token: string;
-  templateKey: string;
+  title: string;
   body: string;
   notificationType: PushNotificationType;
   transferCounterPartyHandle?: string;

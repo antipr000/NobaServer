@@ -95,6 +95,7 @@ describe.each([
           id: "fake-template-id-1",
           locale: "es",
           templateBody: "Deposited {{amount}} {{currency}} to your Noba account. Message is in es",
+          templateTitle: "Deposited completed title in es",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -104,6 +105,7 @@ describe.each([
           id: "fake-template-id-2",
           locale: "en",
           templateBody: "Deposited {{amount}} {{currency}} to your Noba account. Message is in en",
+          templateTitle: "Deposited completed title in en",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -118,10 +120,10 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-1",
-          templateKey: `template_send_deposit_successful_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
           body: `Deposited ${payload.params.creditAmount} ${payload.params.creditCurrency} to your Noba account. Message is in ${expectedSuffix}`,
+          title: `Deposited completed title in ${expectedSuffix}`,
         }),
       ),
     ).once();
@@ -130,10 +132,10 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-2",
-          templateKey: `template_send_deposit_successful_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
           body: `Deposited ${payload.params.creditAmount} ${payload.params.creditCurrency} to your Noba account. Message is in ${expectedSuffix}`,
+          title: `Deposited completed title in ${expectedSuffix}`,
         }),
       ),
     ).once();
@@ -167,6 +169,7 @@ describe.each([
           id: "fake-template-id-1",
           locale: "es",
           templateBody: "Failed to deposit {{amount}} {{currency}} to your Noba account. Message is in es",
+          templateTitle: "Deposit failed title in es",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -176,6 +179,7 @@ describe.each([
           id: "fake-template-id-2",
           locale: "en",
           templateBody: "Failed to deposit {{amount}} {{currency}} to your Noba account. Message is in en",
+          templateTitle: "Deposit failed title in en",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -190,9 +194,9 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-1",
-          templateKey: `template_send_deposit_failed_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
+          title: `Deposit failed title in ${expectedSuffix}`,
           body: `Failed to deposit ${payload.params.creditAmount} ${payload.params.creditCurrency} to your Noba account. Message is in ${expectedSuffix}`,
         }),
       ),
@@ -202,9 +206,9 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-2",
-          templateKey: `template_send_deposit_failed_${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
+          title: `Deposit failed title in ${expectedSuffix}`,
           body: `Failed to deposit ${payload.params.creditAmount} ${payload.params.creditCurrency} to your Noba account. Message is in ${expectedSuffix}`,
         }),
       ),
@@ -238,6 +242,7 @@ describe.each([
           id: "fake-template-id-1",
           locale: "es",
           templateBody: "Successfully withdrawn {{amount}} {{currency}} from your Noba account. Message is in es",
+          templateTitle: "Withdrawal completed title in es",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -247,6 +252,7 @@ describe.each([
           id: "fake-template-id-2",
           locale: "en",
           templateBody: "Successfully withdrawn {{amount}} {{currency}} from your Noba account. Message is in en",
+          templateTitle: "Withdrawal completed title in en",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -261,7 +267,7 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-1",
-          templateKey: `template_send_withdrawal_successful_${expectedSuffix}`,
+          title: `Withdrawal completed title in ${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
           body: `Successfully withdrawn ${payload.params.debitAmount} ${payload.params.debitCurrency} from your Noba account. Message is in ${expectedSuffix}`,
@@ -273,7 +279,7 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-2",
-          templateKey: `template_send_withdrawal_successful_${expectedSuffix}`,
+          title: `Withdrawal completed title in ${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
           body: `Successfully withdrawn ${payload.params.debitAmount} ${payload.params.debitCurrency} from your Noba account. Message is in ${expectedSuffix}`,
@@ -310,6 +316,7 @@ describe.each([
           id: "fake-template-id-1",
           locale: "es",
           templateBody: "Failed to withdraw {{amount}} {{currency}} from your Noba account. Message is in es",
+          templateTitle: "Withdrawal failed title in es",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -319,6 +326,7 @@ describe.each([
           id: "fake-template-id-2",
           locale: "en",
           templateBody: "Failed to withdraw {{amount}} {{currency}} from your Noba account. Message is in en",
+          templateTitle: "Withdrawal failed title in en",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -333,7 +341,7 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-1",
-          templateKey: `template_send_withdrawal_failed_${expectedSuffix}`,
+          title: `Withdrawal failed title in ${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
           body: `Failed to withdraw ${payload.params.debitAmount} ${payload.params.debitCurrency} from your Noba account. Message is in ${expectedSuffix}`,
@@ -345,7 +353,7 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-2",
-          templateKey: `template_send_withdrawal_failed_${expectedSuffix}`,
+          title: `Withdrawal failed title in ${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
           body: `Failed to withdraw ${payload.params.debitAmount} ${payload.params.debitCurrency} from your Noba account. Message is in ${expectedSuffix}`,
@@ -385,6 +393,7 @@ describe.each([
           id: "fake-template-id-1",
           locale: "es",
           templateBody: "Successfully transferred {{amount}} {{currency}} to {{receiverHandle}}. Message is in es",
+          templateTitle: "Transfer completed title in es",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -394,6 +403,7 @@ describe.each([
           id: "fake-template-id-2",
           locale: "en",
           templateBody: "Successfully transferred {{amount}} {{currency}} to {{receiverHandle}}. Message is in en",
+          templateTitle: "Transfer completed title in en",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -408,7 +418,7 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-1",
-          templateKey: `template_send_transfer_successful_sender_${expectedSuffix}`,
+          title: `Transfer completed title in ${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
           body: `Successfully transferred ${payload.params.debitAmount} ${payload.params.debitCurrency} to ${payload.params.creditConsumer_handle}. Message is in ${expectedSuffix}`,
@@ -421,7 +431,7 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-2",
-          templateKey: `template_send_transfer_successful_sender_${expectedSuffix}`,
+          title: `Transfer completed title in ${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
           body: `Successfully transferred ${payload.params.debitAmount} ${payload.params.debitCurrency} to ${payload.params.creditConsumer_handle}. Message is in ${expectedSuffix}`,
@@ -463,6 +473,7 @@ describe.each([
           id: "fake-template-id-1",
           locale: "es",
           templateBody: "Failed to transfer {{amount}} {{currency}} to {{receiverHandle}}. Message is in es",
+          templateTitle: "Transfer failed title in es",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -472,6 +483,7 @@ describe.each([
           id: "fake-template-id-2",
           locale: "en",
           templateBody: "Failed to transfer {{amount}} {{currency}} to {{receiverHandle}}. Message is in en",
+          templateTitle: "Transfer failed title in en",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -486,7 +498,7 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-1",
-          templateKey: `template_send_transfer_failed_${expectedSuffix}`,
+          title: `Transfer failed title in ${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
           body: `Failed to transfer ${payload.params.debitAmount} ${payload.params.debitCurrency} to ${payload.params.creditConsumer_handle}. Message is in ${expectedSuffix}`,
@@ -499,7 +511,7 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-2",
-          templateKey: `template_send_transfer_failed_${expectedSuffix}`,
+          title: `Transfer failed title in ${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
           body: `Failed to transfer ${payload.params.debitAmount} ${payload.params.debitCurrency} to ${payload.params.creditConsumer_handle}. Message is in ${expectedSuffix}`,
@@ -542,6 +554,7 @@ describe.each([
           id: "fake-template-id-1",
           locale: "es",
           templateBody: "Received {{amount}} {{currency}} from {{senderHandle}}. Message is in es",
+          templateTitle: "Transfer received title in es",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -551,6 +564,7 @@ describe.each([
           id: "fake-template-id-2",
           locale: "en",
           templateBody: "Received {{amount}} {{currency}} from {{senderHandle}}. Message is in en",
+          templateTitle: "Transfer received title in en",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -565,7 +579,7 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-1",
-          templateKey: `template_send_transfer_successful_receiver_${expectedSuffix}`,
+          title: `Transfer received title in ${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
           body: `Received ${payload.params.creditAmount} ${payload.params.creditCurrency} from ${payload.params.debitConsumer_handle}. Message is in ${expectedSuffix}`,
@@ -578,7 +592,7 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-2",
-          templateKey: `template_send_transfer_successful_receiver_${expectedSuffix}`,
+          title: `Transfer received title in ${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
           body: `Received ${payload.params.creditAmount} ${payload.params.creditCurrency} from ${payload.params.debitConsumer_handle}. Message is in ${expectedSuffix}`,
@@ -616,6 +630,7 @@ describe.each([
           id: "fake-template-id-1",
           locale: "es",
           templateBody: "Received {{amount}} {{currency}} from {{companyName}}. Message is in es",
+          templateTitle: "Payroll deposit completed title in es",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -625,6 +640,7 @@ describe.each([
           id: "fake-template-id-2",
           locale: "en",
           templateBody: "Received {{amount}} {{currency}} from {{companyName}}. Message is in en",
+          templateTitle: "Payroll deposit completed title in en",
           createdTimestamp: new Date(),
           updatedTimestamp: new Date(),
           eventID: "fake-id",
@@ -639,7 +655,7 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-1",
-          templateKey: `template_send_payroll_deposit_completed_${expectedSuffix}`,
+          title: `Payroll deposit completed title in ${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
           body: `Received ${payload.params.debitAmount} ${payload.params.debitCurrency} from ${payload.params.companyName}. Message is in ${expectedSuffix}`,
@@ -651,7 +667,7 @@ describe.each([
       mockPushClient.sendPushNotification(
         deepEqual({
           token: "push-token-2",
-          templateKey: `template_send_payroll_deposit_completed_${expectedSuffix}`,
+          title: `Payroll deposit completed title in ${expectedSuffix}`,
           notificationType: PushNotificationType.TRANSACTION_UPDATE,
           transactionRef: payload.params.transactionRef,
           body: `Received ${payload.params.debitAmount} ${payload.params.debitCurrency} from ${payload.params.companyName}. Message is in ${expectedSuffix}`,

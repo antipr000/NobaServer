@@ -205,6 +205,33 @@ describe("EventRepoTests", () => {
       expect(updatedEvent.templates[0].externalKey).toBe(eventTemplateCreateRequest.externalKey);
     });
 
+    it("should create event template with title and body", async () => {
+      const eventCreateRequest: EventCreateRequest = {
+        name: uuid(),
+        handlers: [EventHandlers.EMAIL, EventHandlers.PUSH],
+      };
+
+      const event = await eventRepo.createEvent(eventCreateRequest);
+
+      const eventTemplateCreateRequest: EventTemplateCreateRequest = {
+        eventID: event.id,
+        type: EventHandlers.PUSH,
+        locale: "en",
+        templateBody: "Sample body with {{name}} as dynamic data",
+        templateTitle: "Sample title",
+      };
+
+      const updatedEvent = await eventRepo.createEventTemplate(eventTemplateCreateRequest);
+
+      expect(updatedEvent).toBeDefined();
+      expect(updatedEvent.id).toBe(event.id);
+      expect(updatedEvent.templates).toHaveLength(1);
+      expect(updatedEvent.templates[0].type).toBe(eventTemplateCreateRequest.type);
+      expect(updatedEvent.templates[0].locale).toBe(eventTemplateCreateRequest.locale);
+      expect(updatedEvent.templates[0].templateBody).toBe(eventTemplateCreateRequest.templateBody);
+      expect(updatedEvent.templates[0].templateTitle).toBe(eventTemplateCreateRequest.templateTitle);
+    });
+
     it("should throw RepoException if event does not exist", async () => {
       const eventTemplateCreateRequest: EventTemplateCreateRequest = {
         eventID: "INVALID_ID",
@@ -275,6 +302,7 @@ describe("EventRepoTests", () => {
         type: EventHandlers.PUSH,
         locale: "en",
         templateBody: "template body",
+        templateTitle: "template title",
       };
 
       const updatedEvent = await eventRepo.updateEventTemplate(
@@ -287,6 +315,7 @@ describe("EventRepoTests", () => {
       expect(updatedEvent.templates[0].type).toBe(eventTemplateUpdateRequest.type);
       expect(updatedEvent.templates[0].locale).toBe(eventTemplateUpdateRequest.locale);
       expect(updatedEvent.templates[0].templateBody).toBe(eventTemplateUpdateRequest.templateBody);
+      expect(updatedEvent.templates[0].templateTitle).toBe(eventTemplateUpdateRequest.templateTitle);
       expect(updatedEvent.templates[0].externalKey).toBe(null);
       expect(updatedEvent.templates[0].id).toBe(eventWithTemplate.templates[0].id);
     });
