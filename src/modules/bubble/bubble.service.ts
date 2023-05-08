@@ -25,7 +25,7 @@ import { S3Service } from "../common/s3.service";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { GENERATED_DATA_BUCKET_NAME, INVITE_CSV_FOLDER_BUCKET_PATH } from "../../config/ConfigurationUtils";
 import { CsvService } from "../common/csv.service";
-import { CSV_HEADER_VALUES } from "./csv.header.values";
+import { EMPLOYEE_LOAD_CSV_HEADER_VALUES } from "./csv.header.values";
 
 @Injectable()
 export class BubbleService {
@@ -310,16 +310,16 @@ export class BubbleService {
     let headerValue = "";
     switch (position) {
       case 0:
-        headerValue = CSV_HEADER_VALUES.getOrDefault(CSV_HEADER_VALUES.email, locale);
+        headerValue = EMPLOYEE_LOAD_CSV_HEADER_VALUES.getOrDefault(EMPLOYEE_LOAD_CSV_HEADER_VALUES.email, locale);
         break;
       case 1:
-        headerValue = CSV_HEADER_VALUES.getOrDefault(CSV_HEADER_VALUES.firstName, locale);
+        headerValue = EMPLOYEE_LOAD_CSV_HEADER_VALUES.getOrDefault(EMPLOYEE_LOAD_CSV_HEADER_VALUES.firstName, locale);
         break;
       case 2:
-        headerValue = CSV_HEADER_VALUES.getOrDefault(CSV_HEADER_VALUES.lastName, locale);
+        headerValue = EMPLOYEE_LOAD_CSV_HEADER_VALUES.getOrDefault(EMPLOYEE_LOAD_CSV_HEADER_VALUES.lastName, locale);
         break;
       case 3:
-        headerValue = CSV_HEADER_VALUES.getOrDefault(CSV_HEADER_VALUES.salary, locale);
+        headerValue = EMPLOYEE_LOAD_CSV_HEADER_VALUES.getOrDefault(EMPLOYEE_LOAD_CSV_HEADER_VALUES.salary, locale);
         break;
     }
 

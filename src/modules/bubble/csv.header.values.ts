@@ -1,4 +1,4 @@
-export const CSV_HEADER_VALUES = {
+export const EMPLOYEE_LOAD_CSV_HEADER_VALUES = {
   getOrDefault: (templateObject: object, locale: string): string => {
     locale = locale?.toLowerCase() ?? "en";
     if (templateObject[locale]) {
