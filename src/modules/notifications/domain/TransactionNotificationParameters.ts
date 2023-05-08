@@ -3,7 +3,7 @@ import { Transaction, getFee, getTotalFees } from "../../../modules/transaction/
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
-import { Utils } from "src/core/utils/Utils";
+import { Utils } from "../../../core/utils/Utils";
 
 export type TransactionParameters = {
   transactionRef: string;

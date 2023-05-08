@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID } from "crypto"; // built-in node crypto, not from npm
+import i18next from "i18next";
 import { customAlphabet } from "nanoid";
 export class Utils {
   static TEST_USER_EMAIL = "rosie@noba.com";
@@ -146,8 +147,9 @@ export class Utils {
   }
 
   static localizeAmount(amount: number, locale: string, trimFractionDigits = true): string {
+    const normalizedLocale = this.normalizeLocale(locale);
     if (amount % 1 === 0) {
-      return amount.toLocaleString(locale, {
+      return amount.toLocaleString(normalizedLocale, {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       });
@@ -155,12 +157,20 @@ export class Utils {
 
     if (trimFractionDigits) {
       const roundedAmount = this.roundTo2DecimalNumber(amount);
-      return roundedAmount.toLocaleString(locale, {
+      return roundedAmount.toLocaleString(normalizedLocale, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
     }
 
     return amount.toLocaleString(locale);
+  }
+
+  static normalizeLocale(locale: string): string {
+    if (!locale) {
+      return null;
+    }
+
+    return locale.replace("_", "-");
   }
 }

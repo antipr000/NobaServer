@@ -5,6 +5,7 @@ import { TransactionFeeDTO } from "../dto/TransactionDTO";
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 import { join } from "path";
 import FsBackend, { FsBackendOptions } from "i18next-fs-backend";
+import { Utils } from "../../../core/utils/Utils";
 
 export const toTransactionFeesDTO = (transactionFees: TransactionFee): TransactionFeeDTO => {
   return {
@@ -26,7 +27,7 @@ export const toTransactionEventDTO = async (
     },
   });
 
-  let normalizedLocale = normalizeLocale(locale);
+  let normalizedLocale = Utils.normalizeLocale(locale);
 
   await i18next.changeLanguage(normalizedLocale || "en-us");
 
@@ -52,12 +53,4 @@ export const toTransactionEventDTO = async (
     ...(transactionEvent.details !== undefined && { details: transactionEvent.details }),
     text: translatedContent,
   };
-};
-
-const normalizeLocale = (locale: string): string => {
-  if (!locale) {
-    return null;
-  }
-
-  return locale.replace("_", "-");
 };
