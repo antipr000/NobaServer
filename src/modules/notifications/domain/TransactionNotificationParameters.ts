@@ -3,18 +3,19 @@ import { Transaction, getFee, getTotalFees } from "../../../modules/transaction/
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
+import { Utils } from "src/core/utils/Utils";
 
 export type TransactionParameters = {
   transactionRef: string;
   createdTimestamp: string;
-  processingFees: number;
-  nobaFees: number;
-  debitAmount: number;
-  creditAmount: number;
+  processingFees: string;
+  nobaFees: string;
+  debitAmount: string;
+  creditAmount: string;
   debitCurrency: string;
   creditCurrency: string;
-  totalFees: number;
-  exchangeRate?: number;
+  totalFees: string;
+  exchangeRate?: string;
 };
 
 export type DepositCompletedNotificationParameters = TransactionParameters;
@@ -150,33 +151,49 @@ export class TransactionNotificationParamsJoiSchema {
 
 // TODO(jira/CRYPTO-604): Remove hardcoded values and unnecessary fields once templates are ready
 export class TransactionNotificationPayloadMapper {
-  static toTransactionParams(transaction: Transaction): TransactionParameters {
+  static toTransactionParams(transaction: Transaction, locale: string): TransactionParameters {
     const processingFee = getFee(transaction, FeeType.PROCESSING);
     const nobaFee = getFee(transaction, FeeType.NOBA);
+
+    const creditAmount = Utils.localizeAmount(transaction.creditAmount, locale);
+    const debitAmount = Utils.localizeAmount(transaction.debitAmount, locale);
+    const exchangeRate = Utils.localizeAmount(transaction.exchangeRate, locale);
+    const nobaFees = Utils.localizeAmount(nobaFee ? nobaFee.amount : 0, locale);
+    const processingFees = Utils.localizeAmount(processingFee ? processingFee.amount : 0, locale);
+    const totalFees = Utils.localizeAmount(getTotalFees(transaction), locale);
     return {
       transactionRef: transaction.transactionRef,
       createdTimestamp: transaction.createdTimestamp.toUTCString(),
-      processingFees: processingFee ? processingFee.amount : 0,
-      nobaFees: nobaFee ? nobaFee.amount : 0,
-      debitAmount: transaction.debitAmount,
+      processingFees: processingFees,
+      nobaFees: nobaFees,
+      debitAmount: debitAmount,
       debitCurrency: transaction.debitCurrency,
-      creditAmount: transaction.creditAmount,
+      creditAmount: creditAmount,
       creditCurrency: transaction.creditCurrency,
-      exchangeRate: transaction.exchangeRate,
-      totalFees: getTotalFees(transaction),
+      exchangeRate: exchangeRate,
+      totalFees: totalFees,
     };
   }
 
-  static toDepositInitiatedNotificationParameters(transaction: Transaction): DepositInitiatedNotificationParameters {
-    return this.toTransactionParams(transaction);
+  static toDepositInitiatedNotificationParameters(
+    transaction: Transaction,
+    locale: string,
+  ): DepositInitiatedNotificationParameters {
+    return this.toTransactionParams(transaction, locale);
   }
 
-  static toDepositCompletedNotificationParameters(transaction: Transaction): DepositCompletedNotificationParameters {
-    return this.toTransactionParams(transaction);
+  static toDepositCompletedNotificationParameters(
+    transaction: Transaction,
+    locale: string,
+  ): DepositCompletedNotificationParameters {
+    return this.toTransactionParams(transaction, locale);
   }
 
-  static toDepositFailedNotificationParameters(transaction: Transaction): DepositFailedNotificationParameters {
-    const transactionParams = this.toTransactionParams(transaction);
+  static toDepositFailedNotificationParameters(
+    transaction: Transaction,
+    locale: string,
+  ): DepositFailedNotificationParameters {
+    const transactionParams = this.toTransactionParams(transaction, locale);
     return {
       ...transactionParams,
       reasonDeclined: "Something went wrong", // TODO (CRYPTO-698)
@@ -185,29 +202,38 @@ export class TransactionNotificationPayloadMapper {
 
   static toWithdrawalInitiatedNotificationParameters(
     transaction: Transaction,
+    locale: string,
   ): WithdrawalIntiatedNotificationParameters {
-    return this.toTransactionParams(transaction);
+    return this.toTransactionParams(transaction, locale);
   }
 
   static toWithdrawalCompletedNotificationParameters(
     transaction: Transaction,
+    locale: string,
   ): WithdrawalCompletedNotificationParameters {
-    return this.toTransactionParams(transaction);
+    return this.toTransactionParams(transaction, locale);
   }
 
   static toPayrollDepositCompletedNotificationParameters(
     transaction: Transaction,
     companyName: string,
+    locale: string,
   ): PayrollDepositCompletedNotificationParameters {
-    const transactionParams = this.toTransactionParams(transaction);
+    const reverseExchangeRate = 1 / transaction.exchangeRate;
+    transaction.exchangeRate = reverseExchangeRate;
+    const transactionParams = this.toTransactionParams(transaction, locale);
+
     return {
       ...transactionParams,
       companyName: companyName,
     };
   }
 
-  static toWithdrawalFailedNotificationParameters(transaction: Transaction): WithdrawalFailedNotificationParameters {
-    const transactionParams = this.toTransactionParams(transaction);
+  static toWithdrawalFailedNotificationParameters(
+    transaction: Transaction,
+    locale: string,
+  ): WithdrawalFailedNotificationParameters {
+    const transactionParams = this.toTransactionParams(transaction, locale);
     return {
       ...transactionParams,
       reasonDeclined: "Something went wrong", // TODO (CRYPTO-698)
@@ -219,7 +245,8 @@ export class TransactionNotificationPayloadMapper {
     debitConsumer: Consumer,
     creditConsumer: Consumer,
   ): TransferCompletedNotificationParameters {
-    const transactionParams = this.toTransactionParams(transaction);
+    const locale = debitConsumer.props.locale;
+    const transactionParams = this.toTransactionParams(transaction, locale);
     return {
       ...transactionParams,
       creditConsumer_firstName: creditConsumer.props.firstName,
@@ -234,7 +261,8 @@ export class TransactionNotificationPayloadMapper {
     debitConsumer: Consumer,
     creditConsumer: Consumer,
   ): TransferReceivedNotificationParameters {
-    const transactionParams = this.toTransactionParams(transaction);
+    const locale = debitConsumer.props.locale;
+    const transactionParams = this.toTransactionParams(transaction, locale);
     return {
       ...transactionParams,
       creditConsumer_firstName: creditConsumer.props.firstName,
@@ -251,7 +279,8 @@ export class TransactionNotificationPayloadMapper {
     debitConsumer: Consumer,
     creditConsumer: Consumer,
   ): TransferFailedNotificationParameters {
-    const transactionParams = this.toTransactionParams(transaction);
+    const locale = debitConsumer.props.locale;
+    const transactionParams = this.toTransactionParams(transaction, locale);
     return {
       ...transactionParams,
       creditConsumer_firstName: creditConsumer.props.firstName,

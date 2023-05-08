@@ -94,12 +94,13 @@ export class NotificationPayloadMapper {
   }
 
   static toDepositInitiatedEvent(consumer: Consumer, transaction: Transaction): SendDepositInitiatedEvent {
+    const locale = consumer.props.locale;
     return {
       email: consumer.props.email,
       firstName: consumer.props.firstName,
       handle: consumer.props.handle,
-      params: TransactionNotificationPayloadMapper.toDepositInitiatedNotificationParameters(transaction),
-      locale: consumer.props.locale,
+      params: TransactionNotificationPayloadMapper.toDepositInitiatedNotificationParameters(transaction, locale),
+      locale: locale,
     };
   }
 
@@ -182,14 +183,34 @@ export class NotificationPayloadMapper {
     transaction: Transaction,
     companyName: string,
   ): SendPayrollDepositCompletedEvent {
+    const payrollDepositParams = TransactionNotificationPayloadMapper.toPayrollDepositCompletedNotificationParameters(
+      transaction,
+      companyName,
+    );
+
+    // set all numbers to locale
+    const locale = consumer.props.locale;
+    const creditAmount = Utils.localizeAmount(payrollDepositParams.creditAmount, locale);
+    const debitAmount = Utils.localizeAmount(payrollDepositParams.debitAmount, locale);
+    const exchangeRate = Utils.localizeAmount(payrollDepositParams.exchangeRate, locale);
+    const nobaFees = Utils.localizeAmount(payrollDepositParams.nobaFees, locale);
+    const processingFees = Utils.localizeAmount(payrollDepositParams.processingFees, locale);
+    const totalFees = Utils.localizeAmount(payrollDepositParams.totalFees, locale);
+    const params = {
+      ...payrollDepositParams,
+      creditAmount: creditAmount,
+      debitAmount: debitAmount,
+      exchangeRate: exchangeRate,
+      nobaFees: nobaFees,
+      processingFees: processingFees,
+      totalFees: totalFees,
+    };
+
     return {
       email: consumer.props.email,
       firstName: consumer.props.firstName,
       handle: consumer.props.handle,
-      params: TransactionNotificationPayloadMapper.toPayrollDepositCompletedNotificationParameters(
-        transaction,
-        companyName,
-      ),
+      params: params,
       locale: consumer.props.locale,
       nobaUserID: consumer.props.id,
     };

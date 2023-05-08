@@ -144,4 +144,18 @@ export class Utils {
   static getCurrentEasternTimezoneOffset(): string {
     return this.getCurrentEasternTimezone() === "EDT" ? "-04:00" : "-05:00";
   }
+
+  static localizeAmount(amount: number, locale: string, trimFractionDigits = true): string {
+    if (amount % 1 === 0 && trimFractionDigits) {
+      return amount.toLocaleString(locale, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      });
+    }
+
+    return amount.toLocaleString(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  }
 }
