@@ -22,6 +22,7 @@ import { EventRepo } from "../repos/event.repo";
 import { getMockEventRepoWithDefaults } from "../mocks/mock.event.repo";
 import { NotificationEventType } from "../domain/NotificationTypes";
 import { EventHandlers } from "../domain/EventHandlers";
+import { Utils } from "../../../core/utils/Utils";
 
 describe.each([
   ["en", "en"],
@@ -681,56 +682,68 @@ function getTransactionParams(workflow: WorkflowName): TransactionParameters {
   switch (workflow) {
     case WorkflowName.WALLET_DEPOSIT:
       return {
-        debitAmount: 5000,
+        debitAmount: Utils.localizeAmount(5000, "en"),
+        debitAmountNumber: 5000,
         debitCurrency: "COP",
-        creditAmount: 1,
+        creditAmount: Utils.localizeAmount(1, "en"),
+        creditAmountNumber: 1,
         creditCurrency: "USD",
-        exchangeRate: 0.0025,
+        exchangeRate: Utils.localizeAmount(0.0025, "en"),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: 0.23,
-        nobaFees: 0.34,
-        totalFees: 0.57,
+        processingFees: Utils.localizeAmount(0.23, "en"),
+        nobaFees: Utils.localizeAmount(0.34, "en"),
+        totalFees: Utils.localizeAmount(0.57, "en"),
+        totalFeesNumber: 0.57,
       };
 
     case WorkflowName.WALLET_WITHDRAWAL:
       return {
-        debitAmount: 1,
+        debitAmount: Utils.localizeAmount(1, "en"),
+        debitAmountNumber: 1,
         debitCurrency: "USD",
-        creditAmount: 5000,
+        creditAmount: Utils.localizeAmount(5000, "en"),
+        creditAmountNumber: 5000,
         creditCurrency: "COP",
-        exchangeRate: 5000,
+        exchangeRate: Utils.localizeAmount(5000, "en"),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: 0.23,
-        nobaFees: 0.34,
-        totalFees: 0.57,
+        processingFees: Utils.localizeAmount(0.23, "en"),
+        nobaFees: Utils.localizeAmount(0.34, "en"),
+        totalFees: Utils.localizeAmount(0.57, "en"),
+        totalFeesNumber: 0.57,
       };
     case WorkflowName.WALLET_TRANSFER:
       return {
-        debitAmount: 10,
+        debitAmount: Utils.localizeAmount(10, "en"),
+        debitAmountNumber: 10,
         debitCurrency: "USD",
-        creditAmount: 9.43,
+        creditAmount: Utils.localizeAmount(9.43, "en"),
+        creditAmountNumber: 9.43,
         creditCurrency: "USD",
-        exchangeRate: 0.0025,
+        exchangeRate: Utils.localizeAmount(0.0025, "en"),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: 0.23,
-        nobaFees: 0.34,
-        totalFees: 0.57,
+        processingFees: Utils.localizeAmount(0.23, "en"),
+        nobaFees: Utils.localizeAmount(0.34, "en"),
+        totalFees: Utils.localizeAmount(0.57, "en"),
+        totalFeesNumber: 0.57,
       };
     case WorkflowName.PAYROLL_DEPOSIT:
       return {
-        debitAmount: 5000,
+        debitAmount: Utils.localizeAmount(5000, "en"),
+        debitAmountNumber: 5000,
         debitCurrency: "COP",
-        creditAmount: 1,
+        creditAmount: Utils.localizeAmount(1, "en"),
+        creditAmountNumber: 1,
         creditCurrency: "USD",
-        exchangeRate: 0.0025,
+        exchangeRate: Utils.localizeAmount(0.0025, "en"),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: 0.23,
-        nobaFees: 0.34,
-        totalFees: 0.57,
+        processingFees: Utils.localizeAmount(0.23, "en"),
+        nobaFees: Utils.localizeAmount(0.34, "en"),
+        totalFees: Utils.localizeAmount(0.57, "en"),
+        totalFeesNumber: 0.57,
       };
   }
 }
