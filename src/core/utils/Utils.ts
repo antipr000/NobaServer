@@ -164,12 +164,12 @@ export class Utils {
       });
     }
 
-    return amount.toLocaleString(locale);
+    return amount.toLocaleString(normalizedLocale);
   }
 
   static normalizeLocale(locale: string): string {
     if (!locale) {
-      return null;
+      return "en-us";
     }
 
     const normalizedLocale = locale.replace("_", "-");
@@ -179,7 +179,7 @@ export class Utils {
       return validatedLocale.toString();
     } catch (err) {
       // should default to english?
-      throw new Error(`Invalid locale: ${locale}: ${err}`);
+      return "en-us";
     }
   }
 }

@@ -270,7 +270,10 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT}`)
   public async sendDepositCompletedEmail(payload: SendDepositCompletedEvent) {
-    const subtotal = 0;
+    const subtotal = Utils.localizeAmount(
+      payload.params.creditAmountNumber + payload.params.totalFeesNumber,
+      payload.locale,
+    );
     const templateID = await this.getOrDefaultTemplateId(
       NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
       payload.locale,
