@@ -395,7 +395,7 @@ export class AdminService {
      */
     endDate?: string;
     /**
-     * number of pages to skip, offset 0 means first page results, 1 means second page etc.
+     * Page number, offset 1 means first page results, 2 means second page etc.
      */
     pageOffset?: number;
     /**

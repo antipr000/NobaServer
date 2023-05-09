@@ -14,11 +14,9 @@ import { SendKycDeniedEvent } from "../events/SendKycDeniedEvent";
 import { SendKycPendingOrFlaggedEvent } from "../events/SendKycPendingOrFlaggedEvent";
 import { SendOtpEvent } from "../events/SendOtpEvent";
 import { SendPhoneVerificationCodeEvent } from "../events/SendPhoneVerificationCodeEvent";
-import { SendRegisterNewEmployeeEvent } from "../events/SendRegisterNewEmployeeEvent";
 import { SendTransferCompletedEvent } from "../events/SendTransferCompletedEvent";
 import { SendTransferFailedEvent } from "../events/SendTransferFailedEvent";
 import { SendTransferReceivedEvent } from "../events/SendTransferReceivedEvent";
-import { SendUpdateEmployeeAllocationAmountEvent } from "../events/SendUpdateEmployeeAllocationAmountEvent";
 import { SendUpdatePayrollStatusEvent } from "../events/SendUpdatePayrollStatusEvent";
 import { SendWalletUpdateVerificationCodeEvent } from "../events/SendWalletUpdateVerificationCodeEvent";
 import { SendWelcomeMessageEvent } from "../events/SendWelcomeMessageEvent";
@@ -27,7 +25,6 @@ import { SendWithdrawalFailedEvent } from "../events/SendWithdrawalFailedEvent";
 import { SendWithdrawalInitiatedEvent } from "../events/SendWithdrawalInitiatedEvent";
 import { Transaction } from "../../../modules/transaction/domain/Transaction";
 import { TransactionNotificationPayloadMapper } from "./TransactionNotificationParameters";
-import { Employee } from "../../../modules/employee/domain/Employee";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { Utils } from "../../../core/utils/Utils";
 import { BaseEvent } from "../events/BaseEvent";
@@ -48,11 +45,9 @@ export type NotificationPayload =
   | SendKycPendingOrFlaggedEvent
   | SendOtpEvent
   | SendPhoneVerificationCodeEvent
-  | SendRegisterNewEmployeeEvent
   | SendTransferCompletedEvent
   | SendTransferFailedEvent
   | SendTransferReceivedEvent
-  | SendUpdateEmployeeAllocationAmountEvent
   | SendUpdatePayrollStatusEvent
   | SendWalletUpdateVerificationCodeEvent
   | SendWelcomeMessageEvent
@@ -202,19 +197,6 @@ export class NotificationPayloadMapper {
     };
   }
 
-  static toRegisterNewEmployeeEvent(consumer: Consumer, employee: Employee): SendRegisterNewEmployeeEvent {
-    return {
-      ...(consumer.props.firstName && { firstName: consumer.props.firstName }),
-      ...(consumer.props.lastName && { lastName: consumer.props.lastName }),
-      ...(consumer.props.email && { email: consumer.props.email }),
-      ...(consumer.props.phone && { phone: consumer.props.phone }),
-      employerReferralID: employee.employer.referralID,
-      allocationAmountInPesos: employee.allocationAmount,
-      nobaEmployeeID: employee.id,
-      ...(consumer.props.locale && { locale: consumer.props.locale }),
-    };
-  }
-
   static toTransferCompletedEvent(
     debitConsumer: Consumer,
     creditConsumer: Consumer,
@@ -269,16 +251,6 @@ export class NotificationPayloadMapper {
       ),
       ...(creditConsumer.props.locale && { locale: creditConsumer.props.locale }),
       nobaUserID: creditConsumer.props.id,
-    };
-  }
-
-  static toUpdateEmployeeAllocationAmountEvent(
-    employeeID: string,
-    allocationAmount: number,
-  ): SendUpdateEmployeeAllocationAmountEvent {
-    return {
-      nobaEmployeeID: employeeID,
-      allocationAmountInPesos: allocationAmount,
     };
   }
 

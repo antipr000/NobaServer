@@ -1,5 +1,5 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException } from "@nestjs/common";
-import { exceptions, Logger } from "winston";
+import { Logger } from "winston";
 import { convertToHTTPException } from "../ExceptionToHTTPExceptionMap";
 import Joi from "joi";
 import { BaseException } from "../base.exception";

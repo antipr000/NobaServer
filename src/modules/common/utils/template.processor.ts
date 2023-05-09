@@ -79,8 +79,8 @@ export class TemplateProcessor {
   private async initialize() {
     const start = Date.now();
     this.browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless"],
+      headless: "new",
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--headless=new"],
       executablePath: this.findChrome(this.chromePaths),
     });
     this.writeTimingLog("Browser initialized", Date.now() - start);
@@ -124,7 +124,7 @@ export class TemplateProcessor {
         if (this.formats.has(TemplateFormat.HTML)) {
           const start = Date.now();
 
-          this.s3Service.uploadToS3(
+          await this.s3Service.uploadToS3(
             this.savePath,
             `${this.saveBaseFilename}_${locale.language}.${TemplateFormat.HTML}`,
             populatedTemplate,
@@ -141,7 +141,7 @@ export class TemplateProcessor {
           );
           const start = Date.now();
 
-          this.s3Service.uploadToS3(
+          await this.s3Service.uploadToS3(
             this.savePath,
             `${this.saveBaseFilename}_${locale.language}.${TemplateFormat.PDF}`,
             pdf,

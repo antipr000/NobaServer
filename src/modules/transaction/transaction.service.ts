@@ -398,7 +398,7 @@ export class TransactionService {
           )}`,
         );
 
-        this.addTransactionEvent(transaction.id, {
+        await this.addTransactionEvent(transaction.id, {
           message: "Transaction has been determined to be high risk",
           details: `Result: ${JSON.stringify(result.status)}`,
           internal: true,
@@ -408,7 +408,7 @@ export class TransactionService {
       }
     } catch (e) {
       if (e instanceof ServiceException) {
-        this.addTransactionEvent(transaction.id, {
+        await this.addTransactionEvent(transaction.id, {
           message: "Error performing transaction verification",
           details: e.message,
           internal: true,

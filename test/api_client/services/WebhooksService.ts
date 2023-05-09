@@ -10,6 +10,7 @@ import type { DocumentVerificationWebhookRequestDTO } from "../models/DocumentVe
 import type { EmployeeCreateRequestDTO } from "../models/EmployeeCreateRequestDTO";
 import type { EmployeeResponseDTO } from "../models/EmployeeResponseDTO";
 import type { EmployerRegisterResponseDTO } from "../models/EmployerRegisterResponseDTO";
+import type { EnrichedDisbursementDTO } from "../models/EnrichedDisbursementDTO";
 import type { PaginatedEmployeeResponseDTO } from "../models/PaginatedEmployeeResponseDTO";
 import type { PayrollDTO } from "../models/PayrollDTO";
 import type { RegisterEmployerRequestDTO } from "../models/RegisterEmployerRequestDTO";
@@ -133,7 +134,7 @@ export class WebhooksService {
     lastNameContains?: string;
     employeeEmail?: string;
     /**
-     * number of pages to skip, offset 0 means first page results, 1 means second page etc.
+     * Page number, offset 1 means first page results, 2 means second page etc.
      */
     pageOffset?: number;
     /**
@@ -191,6 +192,31 @@ export class WebhooksService {
   }
 
   /**
+   * Sends an invite to multiple employees
+   * @returns BlankResponseDTO
+   * @throws ApiError
+   */
+  public static sendInviteToEmployees({
+    referralId,
+    formData,
+  }: {
+    referralId: string;
+    formData: {
+      file?: Blob;
+    };
+  }): CancelablePromise<BlankResponseDTO> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/webhooks/bubble/employers/{referralID}/employees/invite",
+      path: {
+        referralID: referralId,
+      },
+      formData: formData,
+      mediaType: "multipart/form-data",
+    });
+  }
+
+  /**
    * Creates payroll for employer in Noba
    * @returns CreatePayrollResponseDTO
    * @throws ApiError
@@ -236,11 +262,9 @@ export class WebhooksService {
   public static getPayroll({
     referralId,
     payrollId,
-    shouldIncludeDisbursements,
   }: {
     referralId: string;
     payrollId: string;
-    shouldIncludeDisbursements: "true" | "false";
   }): CancelablePromise<Array<PayrollDTO>> {
     return __request(OpenAPI, {
       method: "GET",
@@ -248,9 +272,6 @@ export class WebhooksService {
       path: {
         referralID: referralId,
         payrollID: payrollId,
-      },
-      query: {
-        shouldIncludeDisbursements: shouldIncludeDisbursements,
       },
     });
   }
@@ -273,6 +294,60 @@ export class WebhooksService {
       path: {
         referralID: referralId,
         employeeID: employeeId,
+      },
+    });
+  }
+
+  /**
+   * Get all disbursements for payroll in Noba
+   * @returns EnrichedDisbursementDTO
+   * @throws ApiError
+   */
+  public static getAllEnrichedDisbursementsForPayroll({
+    referralId,
+    payrollId,
+    pageOffset,
+    pageLimit,
+    status,
+    sortDirection,
+    sortBy,
+  }: {
+    referralId: string;
+    payrollId: string;
+    /**
+     * Page number, offset 1 means first page results, 2 means second page etc.
+     */
+    pageOffset?: number;
+    /**
+     * number of items per page
+     */
+    pageLimit?: number;
+    /**
+     * filter by status
+     */
+    status?: "INITIATED" | "COMPLETED" | "FAILED" | "PROCESSING" | "EXPIRED";
+    /**
+     * sort direction
+     */
+    sortDirection?: "asc" | "desc";
+    /**
+     * sort options
+     */
+    sortBy?: "lastName" | "allocationAmount" | "creditAmount" | "status";
+  }): CancelablePromise<Array<EnrichedDisbursementDTO>> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/webhooks/bubble/employers/{referralID}/payrolls/{payrollID}/disbursements",
+      path: {
+        referralID: referralId,
+        payrollID: payrollId,
+      },
+      query: {
+        pageOffset: pageOffset,
+        pageLimit: pageLimit,
+        status: status,
+        sortDirection: sortDirection,
+        sortBy: sortBy,
       },
     });
   }

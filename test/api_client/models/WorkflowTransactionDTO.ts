@@ -18,7 +18,8 @@ export type WorkflowTransactionDTO = {
     | "PAYROLL_DEPOSIT"
     | "PAYROLL_PROCESSING"
     | "CARD_WITHDRAWAL"
-    | "CARD_REVERSAL";
+    | "CARD_REVERSAL"
+    | "BULK_ADD_EMPLOYEES";
   debitConsumerID?: string;
   creditConsumerID?: string;
   debitCurrency: string;

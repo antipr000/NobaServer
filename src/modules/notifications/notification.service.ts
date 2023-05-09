@@ -39,14 +39,6 @@ import { SendWithdrawalFailedEvent, validateWithdrawalFailedEvent } from "./even
 import { SendEmployerRequestEvent, validateSendEmployerRequestEvent } from "./events/SendEmployerRequestEvent";
 import { SendTransferReceivedEvent, validateTransferReceivedEvent } from "./events/SendTransferReceivedEvent";
 import {
-  SendRegisterNewEmployeeEvent,
-  validateSendRegisterNewEmployeeEvent,
-} from "./events/SendRegisterNewEmployeeEvent";
-import {
-  SendUpdateEmployeeAllocationAmountEvent,
-  validateSendUpdateEmployeeAllocationAmountEvent,
-} from "./events/SendUpdateEmployeeAllocationAmountEvent";
-import {
   SendUpdatePayrollStatusEvent,
   validateSendUpdatePayrollStatusEvent,
 } from "./events/SendUpdatePayrollStatusEvent";
@@ -209,14 +201,6 @@ export class NotificationService {
 
       case NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT:
         validateSendInviteEmployeeEvent(payload as SendInviteEmployeeEvent);
-        this.eventEmitter.emitAsync(eventName, payload);
-        break;
-      case NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT:
-        validateSendRegisterNewEmployeeEvent(payload as SendRegisterNewEmployeeEvent);
-        this.eventEmitter.emitAsync(eventName, payload);
-        break;
-      case NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT:
-        validateSendUpdateEmployeeAllocationAmountEvent(payload as SendUpdateEmployeeAllocationAmountEvent);
         this.eventEmitter.emitAsync(eventName, payload);
         break;
       case NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT:

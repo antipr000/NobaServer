@@ -667,8 +667,6 @@ export class ConsumerService {
     if (!employee.employer) {
       employee = await this.employeeService.getEmployeeByID(employee.id, true);
     }
-    const payload = NotificationPayloadMapper.toRegisterNewEmployeeEvent(consumer, employee);
-    await this.notificationService.sendNotification(NotificationEventType.SEND_REGISTER_NEW_EMPLOYEE_EVENT, payload);
 
     return employee;
   }
@@ -714,11 +712,6 @@ export class ConsumerService {
     const result: Employee = await this.employeeService.updateEmployee(employee.id, {
       allocationAmount: allocationAmountInPesos,
     });
-    // TODO: Design a way to post to Bubble efficiently without blocking end users.
-    await this.notificationService.sendNotification(
-      NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-      NotificationPayloadMapper.toUpdateEmployeeAllocationAmountEvent(employee.id, result.allocationAmount),
-    );
 
     return result;
   }

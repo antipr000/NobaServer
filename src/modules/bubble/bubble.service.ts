@@ -11,11 +11,8 @@ import {
 import { EmployerService } from "../employer/employer.service";
 import { Employer } from "../employer/domain/Employer";
 import { Payroll } from "../employer/domain/Payroll";
-import { NotificationService } from "../notifications/notification.service";
-import { NotificationEventType } from "../notifications/domain/NotificationTypes";
 import { EnrichedDisbursement, PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
 import { WorkflowExecutor } from "../../infra/temporal/workflow.executor";
-import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { Employee } from "../employee/domain/Employee";
 import { EmployeeFilterOptionsDTO } from "../employee/dto/employee.filter.options.dto";
@@ -25,13 +22,13 @@ import { S3Service } from "../common/s3.service";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { GENERATED_DATA_BUCKET_NAME, INVITE_CSV_FOLDER_BUCKET_PATH } from "../../config/ConfigurationUtils";
 import { CsvService } from "../common/csv.service";
+import { EMPLOYEE_LOAD_CSV_HEADER_VALUES } from "./csv.header.values";
 
 @Injectable()
 export class BubbleService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly configService: CustomConfigService,
-    private readonly notificationService: NotificationService,
     private readonly employeeService: EmployeeService,
     private readonly employerService: EmployerService,
     private readonly workflowExecutor: WorkflowExecutor,
@@ -74,19 +71,10 @@ export class BubbleService {
     });
 
     if (request.maxAllocationPercent) {
-      const updatedEmployees = await this.employeeService.updateAllocationAmountsForNewMaxAllocationPercent(
+      await this.employeeService.updateAllocationAmountsForNewMaxAllocationPercent(
         employer.id,
         request.maxAllocationPercent,
       );
-
-      const employeeUpdatePromises: Promise<void>[] = updatedEmployees.map(async employee =>
-        this.notificationService.sendNotification(
-          NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-          NotificationPayloadMapper.toUpdateEmployeeAllocationAmountEvent(employee.id, employee.allocationAmount),
-        ),
-      );
-
-      await Promise.all(employeeUpdatePromises);
     }
   }
 
@@ -99,18 +87,10 @@ export class BubbleService {
       });
     }
 
-    const updatedEmployee = await this.employeeService.updateEmployee(employeeID, {
+    await this.employeeService.updateEmployee(employeeID, {
       salary: request.salary,
       status: request.status,
     });
-
-    // If the salary update triggered a change to the allocation percent, update Bubble
-    if (updatedEmployee?.allocationAmount !== employee.allocationAmount) {
-      await this.notificationService.sendNotification(
-        NotificationEventType.SEND_UPDATE_EMPLOYEE_ALLOCATION_AMOUNT_EVENT,
-        NotificationPayloadMapper.toUpdateEmployeeAllocationAmountEvent(employeeID, updatedEmployee.allocationAmount),
-      );
-    }
   }
 
   async createPayroll(referralID: string, payrollDate: string): Promise<Payroll> {
@@ -264,11 +244,28 @@ export class BubbleService {
     // Validate CSV file is or correct format
     const headers = await this.csvService.getHeadersFromCsvFile(file.buffer);
 
-    const validHeaders = ["Email", "First Name", "Last Name", "Salary"];
+    for (let i = 0; i < headers.length; i++) {
+      this.validateCsvHeaderAtPosition(i, headers[i], employer.locale);
+    }
 
-    if (validHeaders.some(header => !headers.includes(header))) {
+    // Validate emails are of correct format
+    const emails = await this.csvService.getAllRowsForSpecificColumn(file.buffer, 0);
+    const invalidEmail = emails.find(email => !/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(email));
+    if (invalidEmail) {
+      this.logger.error(`Invalid email found in CSV file: ${invalidEmail}`);
       throw new ServiceException({
-        message: "CSV file is not in the correct format",
+        message: `Invalid email found in CSV file: ${invalidEmail}`,
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+
+    // Validate salarys are integers
+    const salarys = (await this.csvService.getAllRowsForSpecificColumn(file.buffer, 3)).map(salary => Number(salary));
+    const invalidSalary = salarys.find(salary => !Number.isInteger(salary));
+    if (invalidSalary) {
+      this.logger.error(`Invalid salary found in CSV file: ${invalidSalary}`);
+      throw new ServiceException({
+        message: `Invalid salary found in CSV file: ${invalidSalary}. Salary can only be integer.`,
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
       });
     }
@@ -287,4 +284,29 @@ export class BubbleService {
       employer.id,
     );
   }
+
+  private validateCsvHeaderAtPosition = (position: number, header: string, locale?: string): void => {
+    let headerValue = "";
+    switch (position) {
+      case 0:
+        headerValue = EMPLOYEE_LOAD_CSV_HEADER_VALUES.getOrDefault(EMPLOYEE_LOAD_CSV_HEADER_VALUES.email, locale);
+        break;
+      case 1:
+        headerValue = EMPLOYEE_LOAD_CSV_HEADER_VALUES.getOrDefault(EMPLOYEE_LOAD_CSV_HEADER_VALUES.firstName, locale);
+        break;
+      case 2:
+        headerValue = EMPLOYEE_LOAD_CSV_HEADER_VALUES.getOrDefault(EMPLOYEE_LOAD_CSV_HEADER_VALUES.lastName, locale);
+        break;
+      case 3:
+        headerValue = EMPLOYEE_LOAD_CSV_HEADER_VALUES.getOrDefault(EMPLOYEE_LOAD_CSV_HEADER_VALUES.salary, locale);
+        break;
+    }
+
+    if (header !== headerValue) {
+      throw new ServiceException({
+        message: "CSV file is not in the correct format",
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+      });
+    }
+  };
 }

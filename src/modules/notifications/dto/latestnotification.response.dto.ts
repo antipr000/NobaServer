@@ -27,10 +27,10 @@ export class PushData {
   token: string;
 
   @ApiProperty()
-  templateKey: string;
+  body: string;
 
   @ApiProperty()
-  body: string;
+  title: string;
 
   @ApiProperty()
   notificationType: string;
