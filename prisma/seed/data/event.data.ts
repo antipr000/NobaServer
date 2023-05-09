@@ -158,8 +158,8 @@ export const emailTemplateExternalLinkMap: TemplateMap = {
     es: "d-d806e77606f04b7fb953aaa728f8ae2a",
   },
   [NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT]: {
-    en: "d-0791ccff11c7416ca5eceaac66d430cd",
-    es: "d-4bf8f1e412034f59aef4c0265e4017c2",
+    en: "d-4adb4c910e90462788ddda3ac24d1d2c",
+    es: "d-c2f667576671406b8d7323a7b04b27f7",
   },
   [NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT]: {
     en: "d-db917173c48448fb90dadcb77259f4cc",

@@ -687,7 +687,7 @@ describe("EmailEventHandler test for languages", () => {
         email: "fake+user@noba.com",
         firstName: "First",
         handle: "fake-handle",
-        params: getTransactionParams(WorkflowName.WALLET_DEPOSIT),
+        params: getTransactionParams(WorkflowName.WALLET_DEPOSIT, locale),
         locale: locale,
       };
 
@@ -720,11 +720,8 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendDepositCompletedEmail(payload);
-      const subtotal =
-        Utils.roundTo2DecimalNumber(payload.params.creditAmount) +
-        Utils.roundTo2DecimalNumber(payload.params.processingFees) +
-        Utils.roundTo2DecimalNumber(payload.params.nobaFees);
-
+      const subtotal = Utils.localizeAmount(payload.params.creditAmountNumber + payload.params.totalFeesNumber, locale);
+      console.log(subtotal);
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
@@ -732,17 +729,17 @@ describe("EmailEventHandler test for languages", () => {
         templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
-          debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+          debitAmount: payload.params.debitAmount,
           debitCurrency: "COP",
-          creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+          creditAmount: payload.params.creditAmount,
           creditCurrency: "USDC",
           handle: payload.handle,
           transactionRef: payload.params.transactionRef,
           createdTimestamp: payload.params.createdTimestamp,
           exchangeRate: payload.params.exchangeRate,
-          subtotal: Utils.roundTo2DecimalString(subtotal),
-          processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-          nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+          subtotal: subtotal,
+          processingFees: payload.params.processingFees,
+          nobaFees: payload.params.nobaFees,
         },
       });
     });
@@ -759,7 +756,7 @@ describe("EmailEventHandler test for languages", () => {
         firstName: "First",
         handle: "fake-handle",
         params: {
-          ...getTransactionParams(WorkflowName.WALLET_DEPOSIT),
+          ...getTransactionParams(WorkflowName.WALLET_DEPOSIT, locale),
           reasonDeclined: "Failed",
         },
         locale: locale,
@@ -794,10 +791,10 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendDepositFailedEmail(payload);
-      const subtotal =
-        Utils.roundTo2DecimalNumber(payload.params.creditAmount) +
-        Utils.roundTo2DecimalNumber(payload.params.processingFees) +
-        Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+      const subtotal = Utils.localizeAmount(
+        payload.params.creditAmountNumber + payload.params.totalFeesNumber,
+        payload.locale,
+      );
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
@@ -806,17 +803,17 @@ describe("EmailEventHandler test for languages", () => {
         templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
-          debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+          debitAmount: payload.params.debitAmount,
           debitCurrency: "COP",
-          creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+          creditAmount: payload.params.creditAmount,
           creditCurrency: "USDC",
           handle: payload.handle,
           transactionRef: payload.params.transactionRef,
           createdTimestamp: payload.params.createdTimestamp,
           exchangeRate: payload.params.exchangeRate,
-          subtotal: Utils.roundTo2DecimalString(subtotal),
-          processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-          nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+          subtotal: subtotal,
+          processingFees: payload.params.processingFees,
+          nobaFees: payload.params.nobaFees,
           reasonDeclined: payload.params.reasonDeclined,
         },
       });
@@ -834,7 +831,7 @@ describe("EmailEventHandler test for languages", () => {
         firstName: "First",
         handle: "fake-handle",
         params: {
-          ...getTransactionParams(WorkflowName.WALLET_DEPOSIT),
+          ...getTransactionParams(WorkflowName.WALLET_DEPOSIT, locale),
         },
         locale: locale,
       };
@@ -868,10 +865,10 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendDepositInitiatedEmail(payload);
-      const subtotal =
-        Utils.roundTo2DecimalNumber(payload.params.creditAmount) +
-        Utils.roundTo2DecimalNumber(payload.params.processingFees) +
-        Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+      const subtotal = Utils.localizeAmount(
+        payload.params.creditAmountNumber + payload.params.totalFeesNumber,
+        payload.locale,
+      );
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
@@ -880,17 +877,17 @@ describe("EmailEventHandler test for languages", () => {
         templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
-          debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+          debitAmount: payload.params.debitAmount,
           debitCurrency: "COP",
-          creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+          creditAmount: payload.params.creditAmount,
           creditCurrency: "USDC",
           handle: payload.handle,
           transactionRef: payload.params.transactionRef,
           createdTimestamp: payload.params.createdTimestamp,
           exchangeRate: payload.params.exchangeRate,
-          subtotal: Utils.roundTo2DecimalString(subtotal),
-          processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-          nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+          subtotal: subtotal,
+          processingFees: payload.params.processingFees,
+          nobaFees: payload.params.nobaFees,
         },
       });
     });
@@ -907,7 +904,7 @@ describe("EmailEventHandler test for languages", () => {
         firstName: "First",
         handle: "fake-handle",
         params: {
-          ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
+          ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL, locale),
         },
         locale: locale,
       };
@@ -941,10 +938,7 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendWithdrawalCompletedEmail(payload);
-      const subtotal =
-        Utils.roundTo2DecimalNumber(payload.params.debitAmount) -
-        Utils.roundTo2DecimalNumber(payload.params.processingFees) -
-        Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+      const subtotal = Utils.localizeAmount(payload.params.debitAmountNumber - payload.params.totalFeesNumber, locale);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
@@ -953,17 +947,17 @@ describe("EmailEventHandler test for languages", () => {
         templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
-          debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+          debitAmount: payload.params.debitAmount,
           debitCurrency: "USDC",
-          creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+          creditAmount: payload.params.creditAmount,
           creditCurrency: "COP",
           handle: payload.handle,
           transactionRef: payload.params.transactionRef,
           createdTimestamp: payload.params.createdTimestamp,
           exchangeRate: payload.params.exchangeRate,
-          subtotal: Utils.roundTo2DecimalString(subtotal),
-          processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-          nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+          subtotal: subtotal,
+          processingFees: payload.params.processingFees,
+          nobaFees: payload.params.nobaFees,
         },
       });
     });
@@ -980,7 +974,7 @@ describe("EmailEventHandler test for languages", () => {
         firstName: "First",
         handle: "fake-handle",
         params: {
-          ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
+          ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL, locale),
         },
         locale: locale,
       };
@@ -1014,10 +1008,7 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendWithdrawalInitiatedEmail(payload);
-      const subtotal =
-        Utils.roundTo2DecimalNumber(payload.params.debitAmount) -
-        Utils.roundTo2DecimalNumber(payload.params.processingFees) -
-        Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+      const subtotal = Utils.localizeAmount(payload.params.debitAmountNumber - payload.params.totalFeesNumber, locale);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
@@ -1026,17 +1017,17 @@ describe("EmailEventHandler test for languages", () => {
         templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
-          debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+          debitAmount: payload.params.debitAmount,
           debitCurrency: "USDC",
-          creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+          creditAmount: payload.params.creditAmount,
           creditCurrency: "COP",
           handle: payload.handle,
           transactionRef: payload.params.transactionRef,
           createdTimestamp: payload.params.createdTimestamp,
           exchangeRate: payload.params.exchangeRate,
-          subtotal: Utils.roundTo2DecimalString(subtotal),
-          processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-          nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+          subtotal: subtotal,
+          processingFees: payload.params.processingFees,
+          nobaFees: payload.params.nobaFees,
         },
       });
     });
@@ -1053,7 +1044,7 @@ describe("EmailEventHandler test for languages", () => {
         firstName: "First",
         handle: "fake-handle",
         params: {
-          ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL),
+          ...getTransactionParams(WorkflowName.WALLET_WITHDRAWAL, locale),
           reasonDeclined: "Failed",
         },
         locale: locale,
@@ -1097,11 +1088,7 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendWithdrawalFailedEmail(payload);
-      const subtotal =
-        Utils.roundTo2DecimalNumber(payload.params.debitAmount) -
-        Utils.roundTo2DecimalNumber(payload.params.processingFees) -
-        Utils.roundTo2DecimalNumber(payload.params.nobaFees);
-
+      const subtotal = Utils.localizeAmount(payload.params.debitAmountNumber - payload.params.totalFeesNumber, locale);
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
@@ -1109,17 +1096,17 @@ describe("EmailEventHandler test for languages", () => {
         templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
-          debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+          debitAmount: payload.params.debitAmount,
           debitCurrency: "USDC",
-          creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+          creditAmount: payload.params.creditAmount,
           creditCurrency: "COP",
           handle: payload.handle,
           transactionRef: payload.params.transactionRef,
           createdTimestamp: payload.params.createdTimestamp,
           exchangeRate: payload.params.exchangeRate,
-          subtotal: Utils.roundTo2DecimalString(subtotal),
-          processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-          nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+          subtotal: subtotal,
+          processingFees: payload.params.processingFees,
+          nobaFees: payload.params.nobaFees,
           reasonDeclined: payload.params.reasonDeclined,
         },
       });
@@ -1137,7 +1124,7 @@ describe("EmailEventHandler test for languages", () => {
         firstName: "First",
         handle: "fake-handle",
         params: {
-          ...getTransactionParams(WorkflowName.WALLET_TRANSFER),
+          ...getTransactionParams(WorkflowName.WALLET_TRANSFER, locale),
           creditConsumer_firstName: "Justin",
           creditConsumer_lastName: "Ashworth",
           creditConsumer_handle: "justin",
@@ -1187,14 +1174,14 @@ describe("EmailEventHandler test for languages", () => {
           debitConsumer_handle: payload.params.debitConsumer_handle,
           creditConsumer_handle: payload.params.creditConsumer_handle,
           firstName: payload.firstName,
-          debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+          debitAmount: payload.params.debitAmount,
           debitCurrency: "USDC",
-          creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+          creditAmount: payload.params.creditAmount,
           creditCurrency: "USDC",
           transactionRef: payload.params.transactionRef,
           createdTimestamp: payload.params.createdTimestamp,
-          processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-          nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+          processingFees: payload.params.processingFees,
+          nobaFees: payload.params.nobaFees,
         },
       });
     });
@@ -1211,7 +1198,7 @@ describe("EmailEventHandler test for languages", () => {
         firstName: "First",
         handle: "fake-handle",
         params: {
-          ...getTransactionParams(WorkflowName.WALLET_TRANSFER),
+          ...getTransactionParams(WorkflowName.WALLET_TRANSFER, locale),
           creditConsumer_firstName: "Justin",
           creditConsumer_lastName: "Ashworth",
           creditConsumer_handle: "justin",
@@ -1283,14 +1270,14 @@ describe("EmailEventHandler test for languages", () => {
           debitConsumer_firstName: payload.params.debitConsumer_firstName,
           debitConsumer_lastName: payload.params.debitConsumer_lastName,
           firstName: payload.firstName,
-          debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+          debitAmount: payload.params.debitAmount,
           debitCurrency: "USDC",
-          creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+          creditAmount: payload.params.creditAmount,
           creditCurrency: "USDC",
           transactionRef: payload.params.transactionRef,
           createdTimestamp: payload.params.createdTimestamp,
-          processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-          nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+          processingFees: payload.params.processingFees,
+          nobaFees: payload.params.nobaFees,
         },
       });
     });
@@ -1307,7 +1294,7 @@ describe("EmailEventHandler test for languages", () => {
         firstName: "First",
         handle: "fake-handle",
         params: {
-          ...getTransactionParams(WorkflowName.WALLET_TRANSFER),
+          ...getTransactionParams(WorkflowName.WALLET_TRANSFER, locale),
           creditConsumer_firstName: "Justin",
           creditConsumer_lastName: "Ashworth",
           creditConsumer_handle: "justin",
@@ -1358,14 +1345,14 @@ describe("EmailEventHandler test for languages", () => {
           debitConsumer_handle: payload.params.debitConsumer_handle,
           creditConsumer_handle: payload.params.creditConsumer_handle,
           firstName: payload.firstName,
-          debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+          debitAmount: payload.params.debitAmount,
           debitCurrency: "USDC",
-          creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+          creditAmount: payload.params.creditAmount,
           creditCurrency: "USDC",
           transactionRef: payload.params.transactionRef,
           createdTimestamp: payload.params.createdTimestamp,
-          processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-          nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+          processingFees: payload.params.processingFees,
+          nobaFees: payload.params.nobaFees,
           reasonDeclined: "Failed transfer",
         },
       });
@@ -1383,7 +1370,7 @@ describe("EmailEventHandler test for languages", () => {
         firstName: "First",
         handle: "fake-handle",
         params: {
-          ...getTransactionParams(WorkflowName.PAYROLL_DEPOSIT),
+          ...getTransactionParams(WorkflowName.PAYROLL_DEPOSIT, locale),
           companyName: "Noba",
         },
         locale: locale,
@@ -1418,10 +1405,7 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendPayrollDepositCompletedEmail(payload);
-      const subtotal =
-        Utils.roundTo2DecimalNumber(payload.params.creditAmount) +
-        Utils.roundTo2DecimalNumber(payload.params.processingFees) +
-        Utils.roundTo2DecimalNumber(payload.params.nobaFees);
+      const subtotal = Utils.localizeAmount(payload.params.creditAmountNumber + payload.params.totalFeesNumber, locale);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
@@ -1431,17 +1415,17 @@ describe("EmailEventHandler test for languages", () => {
         dynamicTemplateData: {
           firstName: payload.firstName,
           companyName: payload.params.companyName,
-          debitAmount: Utils.roundTo2DecimalString(payload.params.debitAmount),
+          debitAmount: payload.params.debitAmount,
           debitCurrency: "COP",
-          creditAmount: Utils.roundTo2DecimalString(payload.params.creditAmount),
+          creditAmount: payload.params.creditAmount,
           creditCurrency: "USDC",
           handle: payload.handle,
           transactionRef: payload.params.transactionRef,
           executedTimestamp: payload.params.createdTimestamp,
           exchangeRate: payload.params.exchangeRate,
-          subtotal: Utils.roundTo2DecimalString(subtotal),
-          processingFees: Utils.roundTo2DecimalString(payload.params.processingFees),
-          nobaFees: Utils.roundTo2DecimalString(payload.params.nobaFees),
+          subtotal: subtotal,
+          processingFees: payload.params.processingFees,
+          nobaFees: payload.params.nobaFees,
         },
       });
     });
@@ -1547,60 +1531,72 @@ describe("EmailEventHandler test for languages", () => {
   });
 });
 
-function getTransactionParams(workflow: WorkflowName): TransactionParameters {
+function getTransactionParams(workflow: WorkflowName, locale: string): TransactionParameters {
   switch (workflow) {
     case WorkflowName.WALLET_DEPOSIT:
       return {
-        debitAmount: 5000,
+        debitAmount: Utils.localizeAmount(5000, locale),
+        debitAmountNumber: 5000,
         debitCurrency: "COP",
-        creditAmount: 1,
+        creditAmount: Utils.localizeAmount(1, locale),
+        creditAmountNumber: 1,
         creditCurrency: "USD",
-        exchangeRate: 0.0025,
+        exchangeRate: Utils.localizeAmount(0.0025, locale),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: 0.23,
-        nobaFees: 0.34,
-        totalFees: 0.57,
+        processingFees: Utils.localizeAmount(0.23, locale),
+        nobaFees: Utils.localizeAmount(0.34, locale),
+        totalFees: Utils.localizeAmount(0.57, locale),
+        totalFeesNumber: 0.57,
       };
 
     case WorkflowName.WALLET_WITHDRAWAL:
       return {
-        debitAmount: 1,
+        debitAmount: Utils.localizeAmount(1, locale),
+        debitAmountNumber: 1,
         debitCurrency: "USD",
-        creditAmount: 5000,
+        creditAmount: Utils.localizeAmount(5000, locale),
+        creditAmountNumber: 5000,
         creditCurrency: "COP",
-        exchangeRate: 5000,
+        exchangeRate: Utils.localizeAmount(5000, locale, false),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: 0.23,
-        nobaFees: 0.34,
-        totalFees: 0.57,
+        processingFees: Utils.localizeAmount(0.23, locale),
+        nobaFees: Utils.localizeAmount(0.34, locale),
+        totalFees: Utils.localizeAmount(0.57, locale),
+        totalFeesNumber: 0.57,
       };
     case WorkflowName.WALLET_TRANSFER:
       return {
-        debitAmount: 10,
+        debitAmount: Utils.localizeAmount(10, locale),
+        debitAmountNumber: 10,
         debitCurrency: "USD",
-        creditAmount: 9.43,
+        creditAmount: Utils.localizeAmount(9.43, locale),
+        creditAmountNumber: 9.43,
         creditCurrency: "USD",
-        exchangeRate: 0.0025,
+        exchangeRate: Utils.localizeAmount(0.0025, locale, false),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: 0.23,
-        nobaFees: 0.34,
-        totalFees: 0.57,
+        processingFees: Utils.localizeAmount(0.23, locale),
+        nobaFees: Utils.localizeAmount(0.34, locale),
+        totalFees: Utils.localizeAmount(0.57, locale),
+        totalFeesNumber: 0.57,
       };
     case WorkflowName.PAYROLL_DEPOSIT:
       return {
-        debitAmount: 5000,
+        debitAmount: Utils.localizeAmount(5000, locale),
+        debitAmountNumber: 5000,
         debitCurrency: "COP",
-        creditAmount: 1,
+        creditAmount: Utils.localizeAmount(1, locale),
+        creditAmountNumber: 1,
         creditCurrency: "USD",
-        exchangeRate: 0.0025,
+        exchangeRate: Utils.localizeAmount(0.0025, locale, false),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: 0.23,
-        nobaFees: 0.34,
-        totalFees: 0.57,
+        processingFees: Utils.localizeAmount(0.23, locale),
+        nobaFees: Utils.localizeAmount(0.34, locale),
+        totalFees: Utils.localizeAmount(0.57, locale),
+        totalFeesNumber: 0.57,
       };
   }
 }

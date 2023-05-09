@@ -344,4 +344,83 @@ describe("Utils", () => {
       expect(toLocaleStringSpy).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe("normalizeLocale", () => {
+    it("Should return en-us for empty locale", () => {
+      expect(Utils.normalizeLocale(null)).toEqual("en-us");
+    });
+
+    it("Should return en-us for invalid locale", () => {
+      expect(Utils.normalizeLocale("invalidlocale")).toEqual("en-us");
+    });
+
+    it.each([
+      ["en-us", "en-US"],
+      ["en", "en"],
+      ["es-co", "es-CO"],
+      ["es", "es"],
+      ["eur", "eur"],
+    ])("Should return same string for valid locale", (locale, normalizedLocale) => {
+      expect(Utils.normalizeLocale(locale)).toEqual(normalizedLocale);
+    });
+
+    it.each([
+      ["en_US", "en-US"],
+      ["en", "en"],
+      ["es_CO", "es-CO"],
+      ["es", "es"],
+    ])("Should normalize underscore in locale", (locale, normalizedLocale) => {
+      expect(Utils.normalizeLocale(locale)).toEqual(normalizedLocale);
+    });
+  });
+
+  describe("localizeAmount", () => {
+    it.each([
+      ["en-us", 1000, "1,000"],
+      ["en-us", 2000000, "2,000,000"],
+      ["en-us", 300000.0, "300,000"],
+      ["en-us", 400000000.0, "400,000,000"],
+      ["en-us", 0.0025, "0.00"],
+      ["es-co", 1000, "1.000"],
+      ["es-co", 2000000, "2.000.000"],
+      ["es-co", 300000.0, "300.000"],
+      ["es-co", 400000000.0, "400.000.000"],
+      ["es-co", 0.0025, "0,00"],
+    ])("Should return localized integer amounts with no fraction digits", (locale, amount, localizedAmount) => {
+      expect(Utils.localizeAmount(amount, locale)).toEqual(localizedAmount);
+    });
+
+    it.each([
+      ["en-us", 1000.1, "1,000.10"],
+      ["en-us", 2000000.12, "2,000,000.12"],
+      ["en-us", 300000.123, "300,000.12"],
+      ["en-us", 400000000.1234, "400,000,000.12"],
+      ["en-us", 0.0025, "0.00"],
+      ["es-co", 1000.1, "1.000,10"],
+      ["es-co", 2000000.12, "2.000.000,12"],
+      ["es-co", 300000.123, "300.000,12"],
+      ["es-co", 400000000.1234, "400.000.000,12"],
+      ["es-co", 0.0025, "0,00"],
+    ])("Should return localized decimal amounts with 2 fraction digits", (locale, amount, localizedAmount) => {
+      expect(Utils.localizeAmount(amount, locale)).toEqual(localizedAmount);
+    });
+
+    it.each([
+      ["en-us", 1000.1, "1,000.1"],
+      ["en-us", 2000000.123, "2,000,000.123"],
+      ["en-us", 300000.1234, "300,000.1234"],
+      ["en-us", 400000000.12345, "400,000,000.12345"],
+      ["en-us", 0.00000001234, "0.00000001"],
+      ["es-co", 1000.1, "1.000,1"],
+      ["es-co", 2000000.123, "2.000.000,123"],
+      ["es-co", 300000.1234, "300.000,1234"],
+      ["es-co", 400000000.12345, "400.000.000,12345"],
+      ["es-co", 0.00000001234, "0,00000001"],
+    ])(
+      "Should return localized decimal amounts with max 8 trimmed fraction digits",
+      (locale, amount, localizedAmount) => {
+        expect(Utils.localizeAmount(amount, locale, false)).toEqual(localizedAmount);
+      },
+    );
+  });
 });

@@ -144,4 +144,42 @@ export class Utils {
   static getCurrentEasternTimezoneOffset(): string {
     return this.getCurrentEasternTimezone() === "EDT" ? "-04:00" : "-05:00";
   }
+
+  static localizeAmount(amount: number, locale: string, trimFractionDigits = true): string {
+    const normalizedLocale = this.normalizeLocale(locale); // Required hyphen instead of underscore for Intl.Locale
+
+    if (amount % 1 === 0) {
+      return amount.toLocaleString(normalizedLocale, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      });
+    }
+
+    if (trimFractionDigits) {
+      const roundedAmount = this.roundTo2DecimalNumber(amount);
+      return roundedAmount.toLocaleString(normalizedLocale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+
+    return amount.toLocaleString(normalizedLocale, {
+      maximumFractionDigits: 8,
+    });
+  }
+
+  static normalizeLocale(locale: string): string {
+    if (!locale) {
+      return "en-us";
+    }
+
+    const normalizedLocale = locale.replace("_", "-");
+
+    try {
+      const validatedLocale = new Intl.Locale(normalizedLocale);
+      return validatedLocale.toString();
+    } catch (err) {
+      return "en-us";
+    }
+  }
 }
