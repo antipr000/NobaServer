@@ -146,7 +146,7 @@ export class Utils {
   }
 
   static localizeAmount(amount: number, locale: string, trimFractionDigits = true): string {
-    const normalizedLocale = this.normalizeLocale(locale);
+    const normalizedLocale = this.normalizeLocale(locale); // Required hyphen instead of underscore for Intl.Locale
 
     if (amount % 1 === 0) {
       return amount.toLocaleString(normalizedLocale, {
