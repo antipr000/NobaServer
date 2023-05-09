@@ -276,7 +276,14 @@ describe("BubbleWebhookControllerTests", () => {
       const referralID = "fake-referral";
 
       when(bubbleService.createPayroll(referralID, payroll.payrollDate)).thenResolve(payroll);
-      when(workflowExecutor.executePayrollProcessingWorkflow(payroll.id, payroll.id)).thenResolve(null);
+      when(
+        workflowExecutor.executePayrollProcessingWorkflow(
+          payroll.id,
+          "fake-employer-name",
+          payroll.payrollDate,
+          payroll.id,
+        ),
+      ).thenResolve(null);
 
       const result = await bubbleWebhookController.createPayroll(referralID, { payrollDate: payroll.payrollDate });
 

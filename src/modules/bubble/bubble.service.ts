@@ -107,7 +107,7 @@ export class BubbleService {
     }
 
     const payroll: Payroll = await this.employerService.createPayroll(employer.id, payrollDate);
-    await this.workflowExecutor.executePayrollProcessingWorkflow(payroll.id, payroll.id);
+    await this.workflowExecutor.executePayrollProcessingWorkflow(payroll.id, employer.name, payrollDate, payroll.id);
     return payroll;
   }
 
