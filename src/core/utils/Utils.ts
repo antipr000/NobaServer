@@ -178,7 +178,6 @@ export class Utils {
       const validatedLocale = new Intl.Locale(normalizedLocale);
       return validatedLocale.toString();
     } catch (err) {
-      // should default to english?
       return "en-us";
     }
   }

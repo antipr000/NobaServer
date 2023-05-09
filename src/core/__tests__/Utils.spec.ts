@@ -344,4 +344,8 @@ describe("Utils", () => {
       expect(toLocaleStringSpy).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe("normalizeLocale", () => {
+    it("Should return en-US for en", () => {});
+  });
 });

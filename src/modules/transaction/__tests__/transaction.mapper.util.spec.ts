@@ -56,7 +56,7 @@ describe("transaction.mapper.util suite", () => {
         key: "NOT_FOUND",
       };
 
-      expect(toTransactionEventDTO(transactionEvent, "test")).resolves.toEqual({
+      expect(toTransactionEventDTO(transactionEvent, "prk")).resolves.toEqual({
         timestamp: transactionEvent.timestamp,
         internal: true,
         message: "default message",
@@ -81,7 +81,7 @@ describe("transaction.mapper.util suite", () => {
         param5: "PARAM5",
       };
 
-      expect(toTransactionEventDTO(transactionEvent, "test")).resolves.toEqual({
+      expect(toTransactionEventDTO(transactionEvent, "prk")).resolves.toEqual({
         timestamp: transactionEvent.timestamp,
         internal: false,
         message: "default message",
@@ -101,7 +101,7 @@ describe("transaction.mapper.util suite", () => {
         key: "NO_PARAMS_TEST",
       };
 
-      expect(toTransactionEventDTO(transactionEvent, "test")).resolves.toEqual({
+      expect(toTransactionEventDTO(transactionEvent, "prk")).resolves.toEqual({
         timestamp: transactionEvent.timestamp,
         internal: false,
         message: "default message",
@@ -126,7 +126,7 @@ describe("transaction.mapper.util suite", () => {
         param5: "PARAM5",
       };
 
-      expect(toTransactionEventDTO(transactionEvent, "test")).resolves.toEqual({
+      expect(toTransactionEventDTO(transactionEvent, "prk")).resolves.toEqual({
         timestamp: transactionEvent.timestamp,
         internal: false,
         message: "default message",
@@ -163,7 +163,7 @@ describe("transaction.mapper.util suite", () => {
       [undefined, "Insufficient Funds for account 12345."],
       [null, "Insufficient Funds for account 12345."],
       ["", "Insufficient Funds for account 12345."],
-      ["test", "12345 Insufficient funds test."],
+      ["prk", "12345 Insufficient funds test."],
     ])("should return translated insufficient funds text with params in %s", (language, translatedText) => {
       const transactionEvent: TransactionEvent = {
         id: "ID_1",
@@ -193,8 +193,6 @@ describe("transaction.mapper.util suite", () => {
 
       const enKeys = Object.keys(enJSON["TransactionEvent"]);
       const esKeys = Object.keys(esJSON["TransactionEvent"]);
-      console.log(esKeys);
-      console.log(enKeys);
       expect(enKeys).toEqual(esKeys);
     });
   });
