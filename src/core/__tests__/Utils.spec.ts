@@ -346,6 +346,42 @@ describe("Utils", () => {
   });
 
   describe("normalizeLocale", () => {
-    it("Should return en-US for en", () => {});
+    it("Should return en-us for empty locale", () => {
+      expect(Utils.normalizeLocale(null)).toEqual("en-us");
+    });
+
+    it("Should return en-us for invalid locale", () => {
+      expect(Utils.normalizeLocale("invalidlocale")).toEqual("en-us");
+    });
+
+    it.each([
+      ["en-us", "en-US"],
+      ["en", "en"],
+      ["es-co", "es-CO"],
+      ["es", "es"],
+      ["eur", "eur"],
+    ])("Should return same string for valid locale", (locale, normalizedLocale) => {
+      expect(Utils.normalizeLocale(locale)).toEqual(normalizedLocale);
+    });
+
+    it.each([
+      ["en_US", "en-US"],
+      ["en", "en"],
+      ["es_CO", "es-CO"],
+      ["es", "es"],
+    ])("Should normalize underscore in locale", (locale, normalizedLocale) => {
+      expect(Utils.normalizeLocale(locale)).toEqual(normalizedLocale);
+    });
+  });
+
+  describe("localizeAmount", () => {
+    it.each([
+      ["en-us", 1000, "1,000"],
+      ["en-us", 2000000, "2,000,000"],
+      ["en-us", 300000.0, "300,000"],
+      ["en-us", 400000000.0, "400,000,000"],
+    ])("Should return localized integer amounts with no fraction digits", (locale, amount, localizedAmount) => {
+      expect(Utils.localizeAmount(amount, locale)).toEqual(localizedAmount);
+    });
   });
 });
