@@ -36,8 +36,7 @@ export const isStatusTransitionAllowed = (oldStatus: PayrollStatus, newStatus: P
       return (
         oldStatus !== PayrollStatus.IN_PROGRESS &&
         oldStatus !== PayrollStatus.RECEIPT &&
-        oldStatus !== PayrollStatus.COMPLETED &&
-        oldStatus !== PayrollStatus.EXPIRED
+        oldStatus !== PayrollStatus.COMPLETED
       );
     case PayrollStatus.IN_PROGRESS:
       // For in_progress we should allow status updates from FUNDED

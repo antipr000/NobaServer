@@ -18,6 +18,7 @@ import { getRandomEmployee } from "../../../modules/employee/test_utils/employee
 import { getRandomActiveConsumer } from "../../../modules/consumer/test_utils/test.utils";
 import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
 import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
+import { RegisterEmployerRequestDTO, UpdateEmployerRequestDTO } from "../dto/bubble.webhook.controller.dto";
 
 describe("BubbleWebhookControllerTests", () => {
   jest.setTimeout(20000);
@@ -78,6 +79,32 @@ describe("BubbleWebhookControllerTests", () => {
         logoURI: "logoURI",
         name: "name",
         referralID: "referralID",
+      });
+    });
+
+    it("should forwards the 'documentNumber' and 'depositMatchingName' in request to the BubbleService", async () => {
+      const requestBody: RegisterEmployerRequestDTO = {
+        bubbleID: "bubbleID",
+        logoURI: "logoURI",
+        name: "name",
+        referralID: "referralID",
+        documentNumber: "documentNumber",
+        depositMatchingName: "depositMatchingName",
+      };
+      when(bubbleService.registerEmployerInNoba(anything())).thenResolve("nobaEmployerID");
+
+      const result = await bubbleWebhookController.registerEmployer(requestBody);
+
+      expect(result.nobaEmployerID).toEqual("nobaEmployerID");
+
+      const [bubbleServiceRegisterEmployerInNobaArgs] = capture(bubbleService.registerEmployerInNoba).last();
+      expect(bubbleServiceRegisterEmployerInNobaArgs).toEqual({
+        bubbleID: "bubbleID",
+        logoURI: "logoURI",
+        name: "name",
+        referralID: "referralID",
+        documentNumber: "documentNumber",
+        depositMatchingName: "depositMatchingName",
       });
     });
 
@@ -159,11 +186,11 @@ describe("BubbleWebhookControllerTests", () => {
   describe("updateEmployer", () => {
     it("should forwards the request to the BubbleService", async () => {
       const referralID = "referralID";
-      const requestBody = {
-        bubbleID: "bubbleID",
+      const requestBody: UpdateEmployerRequestDTO = {
         logoURI: "logoURI",
-        name: "name",
         maxAllocationPercent: 10,
+        depositMatchingName: "depositMatchingName",
+        documentNumber: "documentNumber",
       };
       when(bubbleService.updateEmployerInNoba(anyString(), anything())).thenResolve();
 
@@ -172,11 +199,11 @@ describe("BubbleWebhookControllerTests", () => {
       const [bubbleServiceUpdateEmployerInNobaReferralIDArgs, bubbleServiceUpdateEmployerInNobaRequestBodyArgs] =
         capture(bubbleService.updateEmployerInNoba).last();
       expect(bubbleServiceUpdateEmployerInNobaReferralIDArgs).toEqual("referralID");
-      expect(bubbleServiceUpdateEmployerInNobaRequestBodyArgs).toEqual({
-        bubbleID: "bubbleID",
+      expect(bubbleServiceUpdateEmployerInNobaRequestBodyArgs).toStrictEqual({
         logoURI: "logoURI",
-        name: "name",
         maxAllocationPercent: 10,
+        depositMatchingName: "depositMatchingName",
+        documentNumber: "documentNumber",
       });
     });
   });

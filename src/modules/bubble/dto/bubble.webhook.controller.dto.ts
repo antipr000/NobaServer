@@ -32,6 +32,12 @@ export class RegisterEmployerRequestDTO {
 
   @ApiPropertyOptional()
   payrollDates?: string[];
+
+  @ApiPropertyOptional()
+  documentNumber?: string;
+
+  @ApiPropertyOptional()
+  depositMatchingName?: string;
 }
 
 export class UpdateEmployerRequestDTO {
@@ -52,6 +58,12 @@ export class UpdateEmployerRequestDTO {
 
   @ApiPropertyOptional()
   maxAllocationPercent?: number;
+
+  @ApiPropertyOptional()
+  documentNumber?: string;
+
+  @ApiPropertyOptional()
+  depositMatchingName?: string;
 }
 
 export class UpdateEmployeeRequestDTO {

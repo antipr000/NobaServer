@@ -10,6 +10,8 @@ export type RegisterEmployerRequest = {
   maxAllocationPercent?: number;
   payrollAccountNumber?: string;
   payrollDates?: string[];
+  documentNumber?: string;
+  depositMatchingName?: string;
 };
 
 export type UpdateNobaEmployerRequest = {
@@ -19,6 +21,8 @@ export type UpdateNobaEmployerRequest = {
   payrollDates?: string[];
   payrollAccountNumber?: string;
   maxAllocationPercent?: number;
+  documentNumber?: string;
+  depositMatchingName?: string;
 };
 
 export type UpdateNobaEmployeeRequest = {

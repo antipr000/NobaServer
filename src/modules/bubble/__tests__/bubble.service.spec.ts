@@ -162,6 +162,8 @@ describe("BubbleServiceTests", () => {
 
     it("should register an employer with specified maxAllocationPercent in Noba", async () => {
       const employer: Employer = getRandomEmployer();
+      employer.depositMatchingName = "Test Matching Name";
+      employer.documentNumber = "123456789";
       employer.maxAllocationPercent = 0.5;
 
       when(employerService.createEmployer(anything())).thenResolve(employer);
@@ -175,6 +177,8 @@ describe("BubbleServiceTests", () => {
         payrollDates: employer.payrollDates,
         payrollAccountNumber: employer.payrollAccountNumber,
         maxAllocationPercent: employer.maxAllocationPercent,
+        depositMatchingName: employer.depositMatchingName,
+        documentNumber: employer.documentNumber,
       });
 
       expect(result).toEqual(employer.id);
@@ -189,6 +193,8 @@ describe("BubbleServiceTests", () => {
         payrollDates: employer.payrollDates,
         payrollAccountNumber: employer.payrollAccountNumber,
         maxAllocationPercent: employer.maxAllocationPercent,
+        depositMatchingName: employer.depositMatchingName,
+        documentNumber: employer.documentNumber,
       });
     });
 
@@ -302,6 +308,29 @@ describe("BubbleServiceTests", () => {
 
       expect(propagatedEmployerIDToEmployeeService).toEqual(employer.id);
       expect(propagatedMaxAllocationPercentToEmployeeService).toEqual(updatedMaxAllocationPercent);
+    });
+
+    it("should update 'documentNumber' and 'depositMatchingName'", async () => {
+      const employer: Employer = getRandomEmployer();
+      const updatedDocumentNumber = "123456789";
+      const updatedDepositMatchingName = "Updated Deposit Matching Name";
+
+      when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
+      when(employerService.updateEmployer(anyString(), anything())).thenResolve();
+
+      await bubbleService.updateEmployerInNoba(employer.referralID, {
+        documentNumber: updatedDocumentNumber,
+        depositMatchingName: updatedDepositMatchingName,
+      });
+
+      const [propagatedEmployerIDToEmployerService, propagatedLeadDaysToEmployerService] = capture(
+        employerService.updateEmployer,
+      ).last();
+      expect(propagatedEmployerIDToEmployerService).toEqual(employer.id);
+      expect(propagatedLeadDaysToEmployerService).toEqual({
+        documentNumber: updatedDocumentNumber,
+        depositMatchingName: updatedDepositMatchingName,
+      });
     });
 
     it("should update Bubble if any employee salaries were reduced as a result of employer allocation reduction", async () => {

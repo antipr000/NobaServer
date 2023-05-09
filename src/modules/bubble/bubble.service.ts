@@ -47,6 +47,8 @@ export class BubbleService {
       ...(request.maxAllocationPercent && { maxAllocationPercent: request.maxAllocationPercent }),
       ...(request.leadDays && { leadDays: request.leadDays }),
       ...(request.payrollDates && { payrollDates: request.payrollDates }),
+      ...(request.documentNumber && { documentNumber: request.documentNumber }),
+      ...(request.depositMatchingName && { depositMatchingName: request.depositMatchingName }),
     });
 
     return employer.id;
@@ -68,6 +70,8 @@ export class BubbleService {
       payrollDates: request.payrollDates,
       payrollAccountNumber: request.payrollAccountNumber,
       maxAllocationPercent: request.maxAllocationPercent,
+      ...(request.documentNumber && { documentNumber: request.documentNumber }),
+      ...(request.depositMatchingName && { depositMatchingName: request.depositMatchingName }),
     });
 
     if (request.maxAllocationPercent) {
