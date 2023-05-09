@@ -1,5 +1,4 @@
 import { randomBytes, randomUUID } from "crypto"; // built-in node crypto, not from npm
-import i18next from "i18next";
 import { customAlphabet } from "nanoid";
 export class Utils {
   static TEST_USER_EMAIL = "rosie@noba.com";
