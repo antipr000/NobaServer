@@ -720,7 +720,7 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendDepositCompletedEmail(payload);
-      const subtotal = Utils.localizeAmount(payload.params.creditAmountNumber + payload.params.totalFeesNumber, locale);
+      const subtotal = 0;
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({

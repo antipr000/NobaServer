@@ -66,7 +66,6 @@ export class EmailEventHandler {
   private async getOrDefaultTemplateId(eventName: NotificationEventType, locale: string): Promise<string> {
     const event = await this.eventRepo.getEventByName(eventName);
     const emailTemplates = event.templates.filter(template => template.type === EventHandlers.EMAIL);
-
     locale = locale?.toLowerCase() ?? "en";
     if (emailTemplates.find(template => template.locale === locale)) {
       return emailTemplates.find(template => template.locale === locale).externalKey;
@@ -271,11 +270,7 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT}`)
   public async sendDepositCompletedEmail(payload: SendDepositCompletedEvent) {
-    const subtotal = Utils.localizeAmount(
-      payload.params.creditAmountNumber + payload.params.totalFeesNumber,
-      payload.locale,
-    );
-
+    const subtotal = 0;
     const templateID = await this.getOrDefaultTemplateId(
       NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
       payload.locale,

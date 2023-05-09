@@ -148,6 +148,7 @@ export class Utils {
 
   static localizeAmount(amount: number, locale: string, trimFractionDigits = true): string {
     const normalizedLocale = this.normalizeLocale(locale);
+
     if (amount % 1 === 0) {
       return amount.toLocaleString(normalizedLocale, {
         minimumFractionDigits: 0,
@@ -171,6 +172,14 @@ export class Utils {
       return null;
     }
 
-    return locale.replace("_", "-");
+    const normalizedLocale = locale.replace("_", "-");
+
+    try {
+      const validatedLocale = new Intl.Locale(normalizedLocale);
+      return validatedLocale.toString();
+    } catch (err) {
+      // should default to english?
+      throw new Error(`Invalid locale: ${locale}: ${err}`);
+    }
   }
 }
