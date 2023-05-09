@@ -21,10 +21,10 @@ export class MonoWorkflowService {
     this.monoConfigs = customConfigService.get<MonoConfigs>(MONO_CONFIG_KEY);
   }
 
-  async getNobaMonoAccountBalance(): Promise<MonoAccountBalance> {
-    const nobaBalance: BalanceDTO = await this.monoService.getBalance(this.monoConfigs.nobaAccountID);
+  async getNobaMonoAccountBalance(accountID: string): Promise<MonoAccountBalance> {
+    const nobaBalance: BalanceDTO = await this.monoService.getBalance(accountID);
     return {
-      accountID: this.monoConfigs.nobaAccountID,
+      accountID: accountID,
       amount: nobaBalance.balance,
       currency: nobaBalance.currency,
     };

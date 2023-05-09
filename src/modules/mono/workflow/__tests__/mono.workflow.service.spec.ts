@@ -51,15 +51,15 @@ describe("MonoWorkflowControllerTests", () => {
         currency: "COP",
       });
 
-      const response: MonoAccountBalanceDTO = await monoWorkflowService.getNobaMonoAccountBalance();
+      const response: MonoAccountBalanceDTO = await monoWorkflowService.getNobaMonoAccountBalance("ACCOUNT_ID");
 
       expect(response).toStrictEqual({
-        accountID: "12345678",
+        accountID: "ACCOUNT_ID",
         amount: 1000,
         currency: "COP",
       });
       const [propagatedAccountID] = capture(monoService.getBalance).last();
-      expect(propagatedAccountID).toBe("12345678");
+      expect(propagatedAccountID).toBe("ACCOUNT_ID");
     });
   });
 });

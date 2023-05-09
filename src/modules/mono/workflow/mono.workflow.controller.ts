@@ -35,12 +35,12 @@ export class MonoWorkflowController {
     return this.monoWorkflowControllerMappers.convertToMonoTransactionDTO(monoTransaction);
   }
 
-  @Get("/mono/noba/balances")
+  @Get("/mono/accounts/:accountID/balance")
   @ApiTags("Workflow")
   @ApiOperation({ summary: "Fetches the Mono Account balance for Noba account" })
   @ApiResponse({ status: HttpStatus.OK, type: MonoAccountBalanceDTO })
-  async getNobaMonoAccountBalance(): Promise<MonoAccountBalanceDTO> {
-    const monoBalance: MonoAccountBalance = await this.monoWorkflowService.getNobaMonoAccountBalance();
+  async getNobaMonoAccountBalance(@Param("accountID") accountID: string): Promise<MonoAccountBalanceDTO> {
+    const monoBalance: MonoAccountBalance = await this.monoWorkflowService.getNobaMonoAccountBalance(accountID);
     return {
       accountID: monoBalance.accountID,
       amount: monoBalance.amount,

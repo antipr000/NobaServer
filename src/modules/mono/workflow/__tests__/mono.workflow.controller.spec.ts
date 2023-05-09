@@ -117,9 +117,9 @@ describe("MonoWorkflowControllerTests", () => {
         amount: 100,
         currency: "COP",
       };
-      when(monoWorkflowService.getNobaMonoAccountBalance()).thenResolve(monoAccountBalance);
+      when(monoWorkflowService.getNobaMonoAccountBalance("ACCOUNT_ID")).thenResolve(monoAccountBalance);
 
-      const response: MonoAccountBalanceDTO = await monoWorkflowController.getNobaMonoAccountBalance();
+      const response: MonoAccountBalanceDTO = await monoWorkflowController.getNobaMonoAccountBalance("ACCOUNT_ID");
 
       expect(response).toStrictEqual({
         accountID: "ACCOUNT_ID",
