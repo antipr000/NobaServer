@@ -415,7 +415,7 @@ describe("Utils", () => {
       ["es-co", 2000000.123, "2.000.000,123"],
       ["es-co", 300000.1234, "300.000,1234"],
       ["es-co", 400000000.12345, "400.000.000,12345"],
-      ["en-co", 0.00000001234, "0,00000001"],
+      ["es-co", 0.00000001234, "0,00000001"],
     ])(
       "Should return localized decimal amounts with max 8 trimmed fraction digits",
       (locale, amount, localizedAmount) => {
