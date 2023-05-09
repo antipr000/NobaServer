@@ -224,7 +224,7 @@ describe("EmployeeServiceTests", () => {
             locale: "es",
             companyName: employer.name,
             employeeID: employee.id,
-            inviteUrl: `https://app.noba.com/app-routing/LoadingScreen/na/na/na/na/na/na/${employee.id}`,
+            inviteUrl: `https://app.noba.com/app-routing/LoadingScreen/na/companyLinking/na/na/${employer.referralID}/na/${employee.id}`,
           }),
         ),
       ).once();

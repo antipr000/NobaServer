@@ -59,7 +59,7 @@ export class EmployeeService {
     // If opted and employee status is CREATED send notification to the new Employee
 
     if (sendEmail && employee.status === EmployeeStatus.CREATED) {
-      const inviteUrl = `https://app.noba.com/app-routing/LoadingScreen/na/na/na/na/na/na/${employee.id}`;
+      const inviteUrl = `https://app.noba.com/app-routing/LoadingScreen/na/companyLinking/na/na/${employer.referralID}/na/${employee.id}`;
 
       await this.notificationService.sendNotification(
         NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT,
