@@ -164,7 +164,9 @@ export class Utils {
       });
     }
 
-    return amount.toLocaleString(normalizedLocale);
+    return amount.toLocaleString(normalizedLocale, {
+      maximumFractionDigits: 8,
+    });
   }
 
   static normalizeLocale(locale: string): string {
