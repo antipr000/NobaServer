@@ -71,6 +71,8 @@ export class BubbleWebhookController {
       payrollDates: requestBody.payrollDates,
       payrollAccountNumber: requestBody.payrollAccountNumber,
       ...(requestBody.maxAllocationPercent && { maxAllocationPercent: requestBody.maxAllocationPercent }),
+      ...(requestBody.documentNumber && { documentNumber: requestBody.documentNumber }),
+      ...(requestBody.depositMatchingName && { depositMatchingName: requestBody.depositMatchingName }),
     });
     return {
       nobaEmployerID,

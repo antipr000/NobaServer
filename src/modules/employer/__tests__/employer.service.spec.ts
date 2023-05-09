@@ -56,7 +56,6 @@ import { EmployeeStatus } from "../../../modules/employee/domain/Employee";
 import { InviteEmployeeRequestDTO } from "../dto/employer.controller.dto";
 import { AlertService } from "../../../modules/common/alerts/alert.service";
 import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
-import { getRandomActiveConsumer } from "../../../modules/consumer/test_utils/test.utils";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -938,6 +937,7 @@ describe("EmployerServiceTests", () => {
       [PayrollStatus.CREATED, PayrollStatus.EXPIRED],
       [PayrollStatus.INVOICED, PayrollStatus.EXPIRED],
       [PayrollStatus.INVESTIGATION, PayrollStatus.EXPIRED],
+      [PayrollStatus.EXPIRED, PayrollStatus.FUNDED],
     ])("should allow status to be updated from %s to %s", async (fromStatus, toStatus) => {
       const employer = getRandomEmployer();
       const employerID = employer.id;
@@ -1004,7 +1004,6 @@ describe("EmployerServiceTests", () => {
       [PayrollStatus.INVESTIGATION, PayrollStatus.IN_PROGRESS],
       [PayrollStatus.COMPLETED, PayrollStatus.FUNDED],
       [PayrollStatus.IN_PROGRESS, PayrollStatus.FUNDED],
-      [PayrollStatus.EXPIRED, PayrollStatus.FUNDED],
       [PayrollStatus.COMPLETED, PayrollStatus.INVESTIGATION],
       [PayrollStatus.PREPARED, PayrollStatus.INVESTIGATION],
       [PayrollStatus.EXPIRED, PayrollStatus.INVESTIGATION],
