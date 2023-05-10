@@ -1123,23 +1123,13 @@ describe("EmployerServiceTests", () => {
 
         when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
         when(
-          mockWorkflowExecutor.executePayrollProcessingWorkflow(
-            payroll.id,
-            "fake-employer-name",
-            payroll.payrollDate,
-            anyString(),
-          ),
+          mockWorkflowExecutor.executePayrollProcessingWorkflow(payroll.id, null, payroll.payrollDate, anyString()),
         ).thenResolve();
 
         await employerService.retryPayroll(payroll.id);
 
         verify(
-          mockWorkflowExecutor.executePayrollProcessingWorkflow(
-            payroll.id,
-            "fake-employer-name",
-            payroll.payrollDate,
-            anyString(),
-          ),
+          mockWorkflowExecutor.executePayrollProcessingWorkflow(payroll.id, null, payroll.payrollDate, anyString()),
         ).once();
       },
     );
