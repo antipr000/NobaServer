@@ -7,6 +7,7 @@ import { anyString, anything, capture, instance, when } from "ts-mockito";
 import { MonoService } from "../../public/mono.service";
 import { getMockMonoServiceWithDefaults } from "../../public/mocks/mock.mono.service";
 import { MonoWorkflowService } from "../mono.workflow.service";
+import { ServiceErrorCode } from "../../../../core/exception/service.exception";
 
 describe("MonoWorkflowControllerTests", () => {
   jest.setTimeout(20000);
@@ -60,6 +61,24 @@ describe("MonoWorkflowControllerTests", () => {
       });
       const [propagatedAccountID] = capture(monoService.getBalance).last();
       expect(propagatedAccountID).toBe("ACCOUNT_ID");
+    });
+
+    it("should throw ServiceException if 'accountID' is 'null'", async () => {
+      try {
+        await monoWorkflowService.getNobaMonoAccountBalance(null);
+      } catch (err) {
+        expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
+        expect(err.message).toEqual(expect.stringContaining("accountID"));
+      }
+    });
+
+    it("should throw ServiceException if 'accountID' is 'undefined'", async () => {
+      try {
+        await monoWorkflowService.getNobaMonoAccountBalance(undefined);
+      } catch (err) {
+        expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
+        expect(err.message).toEqual(expect.stringContaining("accountID"));
+      }
     });
   });
 });

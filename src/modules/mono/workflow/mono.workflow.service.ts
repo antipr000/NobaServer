@@ -5,9 +5,9 @@ import { MONO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { BalanceDTO } from "../../../modules/psp/dto/balance.dto";
 import { Logger } from "winston";
-import { MonoTransaction } from "../domain/Mono";
 import { MonoAccountBalance } from "../dto/mono.workflow.service.dto";
 import { MonoService } from "../public/mono.service";
+import { ServiceException, ServiceErrorCode } from "../../../core/exception/service.exception";
 
 @Injectable()
 export class MonoWorkflowService {
@@ -22,6 +22,12 @@ export class MonoWorkflowService {
   }
 
   async getNobaMonoAccountBalance(accountID: string): Promise<MonoAccountBalance> {
+    if (!accountID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "'accountID' is required.",
+      });
+    }
     const nobaBalance: BalanceDTO = await this.monoService.getBalance(accountID);
     return {
       accountID: accountID,
