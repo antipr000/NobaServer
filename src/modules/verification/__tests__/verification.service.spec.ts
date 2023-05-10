@@ -517,6 +517,7 @@ describe("VerificationService", () => {
           ...consumer.props.verificationData,
           documentVerificationStatus: DocumentVerificationStatus.APPROVED,
           documentVerificationTimestamp: new Date(),
+          riskRating: documentVerificationResult.riskRating,
         },
       };
 
@@ -564,6 +565,7 @@ describe("VerificationService", () => {
             ...consumer.props.verificationData,
             documentVerificationStatus: rejectedStatus as DocumentVerificationStatus,
             documentVerificationTimestamp: new Date(),
+            riskRating: documentVerificationResult.riskRating,
           },
         };
 
