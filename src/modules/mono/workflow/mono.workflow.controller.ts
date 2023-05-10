@@ -41,6 +41,10 @@ export class MonoWorkflowController {
   @ApiResponse({ status: HttpStatus.OK, type: MonoAccountBalanceDTO })
   async getNobaMonoAccountBalance(@Param("accountID") accountID: string): Promise<MonoAccountBalanceDTO> {
     const monoBalance: MonoAccountBalance = await this.monoWorkflowService.getNobaMonoAccountBalance(accountID);
+    if (!monoBalance) {
+      throw new NotFoundException(`Mono Account ${accountID} not found.`);
+    }
+
     return {
       accountID: monoBalance.accountID,
       amount: monoBalance.amount,

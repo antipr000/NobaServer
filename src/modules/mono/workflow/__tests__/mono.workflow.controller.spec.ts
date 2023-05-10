@@ -127,5 +127,13 @@ describe("MonoWorkflowControllerTests", () => {
         currency: "COP",
       });
     });
+
+    it("should throw NotFoundException if the account with the specified ID is not found", async () => {
+      when(monoWorkflowService.getNobaMonoAccountBalance(anyString())).thenResolve(null);
+
+      await expect(monoWorkflowController.getNobaMonoAccountBalance("ACCOUNT_ID")).rejects.toThrowError(
+        NotFoundException,
+      );
+    });
   });
 });
