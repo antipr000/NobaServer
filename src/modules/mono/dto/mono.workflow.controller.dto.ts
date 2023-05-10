@@ -56,3 +56,14 @@ export class MonoDebitRequestDTO {
   @ApiProperty()
   currency: string;
 }
+
+export class MonoAccountBalanceDTO {
+  @ApiProperty()
+  accountID: string;
+
+  @ApiProperty()
+  amount: number;
+
+  @ApiProperty()
+  currency: string;
+}

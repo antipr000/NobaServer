@@ -4,25 +4,30 @@ import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
 import { MonoWorkflowControllerMappers } from "../../workflow/mono.workflow.controller.mappers";
 import { MonoTransaction, MonoTransactionState, MonoTransactionType } from "../../domain/Mono";
-import { MonoTransactionDTO } from "../../dto/mono.workflow.controller.dto";
+import { MonoAccountBalanceDTO, MonoTransactionDTO } from "../../dto/mono.workflow.controller.dto";
 import { MonoWorkflowController } from "../../workflow/mono.workflow.controller";
 import { anyString, anything, capture, instance, when } from "ts-mockito";
 import { MonoService } from "../../public/mono.service";
 import { getMockMonoServiceWithDefaults } from "../../public/mocks/mock.mono.service";
 import { getMockMonoWorkflowControllerMappersWithDefaults } from "../mocks/mock.mono.workflow.controller.mappers";
 import { NotFoundException } from "@nestjs/common";
+import { MonoAccountBalance } from "../../dto/mono.workflow.service.dto";
+import { MonoWorkflowService } from "../mono.workflow.service";
+import { getMockMonoWorkflowServiceWithDefaults } from "../mocks/mock.mono.workflow.service";
 
 describe("MonoWorkflowControllerTests", () => {
   jest.setTimeout(20000);
 
   let monoWorkflowController: MonoWorkflowController;
   let monoService: MonoService;
+  let monoWorkflowService: MonoWorkflowService;
   let monoWorkflowControllerMappers: MonoWorkflowControllerMappers;
   let app: TestingModule;
 
   beforeEach(async () => {
     monoService = getMockMonoServiceWithDefaults();
     monoWorkflowControllerMappers = getMockMonoWorkflowControllerMappersWithDefaults();
+    monoWorkflowService = getMockMonoWorkflowServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -39,6 +44,10 @@ describe("MonoWorkflowControllerTests", () => {
         {
           provide: MonoService,
           useFactory: () => instance(monoService),
+        },
+        {
+          provide: MonoWorkflowService,
+          useFactory: () => instance(monoWorkflowService),
         },
         MonoWorkflowController,
       ],
@@ -98,6 +107,33 @@ describe("MonoWorkflowControllerTests", () => {
       await expect(
         monoWorkflowController.getMonoTransactionByNobaTransactionID("nobaTransactionID"),
       ).rejects.toThrowError(NotFoundException);
+    });
+  });
+
+  describe("getNobaMonoAccountBalance", () => {
+    it("should call the MonoWorkflowService method and map the results correctly", async () => {
+      const monoAccountBalance: MonoAccountBalance = {
+        accountID: "ACCOUNT_ID",
+        amount: 100,
+        currency: "COP",
+      };
+      when(monoWorkflowService.getNobaMonoAccountBalance("ACCOUNT_ID")).thenResolve(monoAccountBalance);
+
+      const response: MonoAccountBalanceDTO = await monoWorkflowController.getNobaMonoAccountBalance("ACCOUNT_ID");
+
+      expect(response).toStrictEqual({
+        accountID: "ACCOUNT_ID",
+        amount: 100,
+        currency: "COP",
+      });
+    });
+
+    it("should throw NotFoundException if the account with the specified ID is not found", async () => {
+      when(monoWorkflowService.getNobaMonoAccountBalance(anyString())).thenResolve(null);
+
+      await expect(monoWorkflowController.getNobaMonoAccountBalance("ACCOUNT_ID")).rejects.toThrowError(
+        NotFoundException,
+      );
     });
   });
 });
