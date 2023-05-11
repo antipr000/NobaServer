@@ -202,34 +202,13 @@ export class VerificationService {
   async getDocumentVerificationResult(consumerID: string, verificationID: string): Promise<DocumentVerificationStatus> {
     const result = await this.idvProvider.getDocumentVerificationResult(verificationID);
     const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
-    const newConsumerData: ConsumerProps = {
-      ...consumer.props,
-      verificationData: {
-        ...consumer.props.verificationData,
-        documentVerificationStatus: result.status,
-        documentVerificationTimestamp: new Date(),
-      },
-    };
-    await this.consumerService.updateConsumer(newConsumerData);
 
-    if (
-      result.status === DocumentVerificationStatus.APPROVED ||
-      result.status === DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
-    ) {
-      const payload = NotificationPayloadMapper.toKycApprovedUSEvent(consumer);
-      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, payload);
-    } else if (
-      result.status === DocumentVerificationStatus.REJECTED ||
-      result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_INVALID_SIZE_OR_TYPE ||
-      result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_POOR_QUALITY ||
-      result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_REQUIRES_RECAPTURE
-    ) {
-      const payload = NotificationPayloadMapper.toDocumentVerificationRejectedEvent(consumer);
-      await this.notificationService.sendNotification(
-        NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
-        payload,
-      );
+    // Check if the status is the same. If it is, it's a no-op so just return the status. If not, this is the first we've seen this status and we need to send an email.
+    if (consumer.props.verificationData.documentVerificationStatus === result.status) {
+      return result.status;
     }
+
+    await this.processDocumentVerificationResult(consumer, result, null);
 
     return result.status;
   }
@@ -263,6 +242,16 @@ export class VerificationService {
       documentVerificationResult.documentVerificationResult,
     );
 
+    await this.processDocumentVerificationResult(consumer, result, documentVerificationResult.data.case.sessionKey);
+
+    return result;
+  }
+
+  private async processDocumentVerificationResult(
+    consumer: Consumer,
+    result: DocumentVerificationResult,
+    sessionKey: string,
+  ) {
     const updateConsumerData: ConsumerProps = {
       ...consumer.props,
       verificationData: {
@@ -278,7 +267,7 @@ export class VerificationService {
       result.status === DocumentVerificationStatus.APPROVED ||
       result.status === DocumentVerificationStatus.LIVE_PHOTO_VERIFIED
     ) {
-      await this.idvProvider.postDocumentFeedback(documentVerificationResult.data.case.sessionKey, result);
+      if (sessionKey) await this.idvProvider.postDocumentFeedback(sessionKey, result);
       const payload = NotificationPayloadMapper.toKycApprovedUSEvent(consumer);
       await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, payload);
     } else if (
@@ -287,14 +276,13 @@ export class VerificationService {
       result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_POOR_QUALITY ||
       result.status == DocumentVerificationStatus.REJECTED_DOCUMENT_REQUIRES_RECAPTURE
     ) {
-      await this.idvProvider.postDocumentFeedback(documentVerificationResult.data.case.sessionKey, result);
+      if (sessionKey) await this.idvProvider.postDocumentFeedback(sessionKey, result);
       const payload = NotificationPayloadMapper.toDocumentVerificationRejectedEvent(consumer);
       await this.notificationService.sendNotification(
         NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
         payload,
       );
     }
-    return result;
   }
 
   async transactionVerification(
