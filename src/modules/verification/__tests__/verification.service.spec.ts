@@ -591,6 +591,34 @@ describe("VerificationService", () => {
         ).once();
       });
     });
+
+    it("should not update the consumer nor send a notification if the status hasn't changed", async () => {
+      const consumer = getFakeConsumer();
+      consumer.props.verificationData.documentVerificationStatus = DocumentVerificationStatus.APPROVED;
+      const verificationId = "fake-id";
+      const documentVerificationResult: DocumentVerificationResult = {
+        status: DocumentVerificationStatus.APPROVED,
+        riskRating: "fake-rating",
+      };
+
+      const newConsumerProps: ConsumerProps = {
+        ...consumer.props,
+        verificationData: {
+          ...consumer.props.verificationData,
+          documentVerificationStatus: DocumentVerificationStatus.APPROVED,
+          documentVerificationTimestamp: new Date(),
+          riskRating: documentVerificationResult.riskRating,
+        },
+      };
+
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(idvProvider.getDocumentVerificationResult(verificationId)).thenResolve(documentVerificationResult);
+
+      const status = await verificationService.getDocumentVerificationResult(consumer.props.id, verificationId);
+      expect(status).toBe(DocumentVerificationStatus.APPROVED);
+      verify(consumerService.updateConsumer(anything())).never();
+      verify(notificationService.sendNotification(anything(), anything())).never();
+    });
   });
 
   describe("getDocumentVerificationURL", () => {
