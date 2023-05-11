@@ -477,6 +477,10 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT}`)
   public async sendTransferCompletedEmail(payload: SendTransferCompletedEvent) {
+    const subtotal = Utils.localizeAmount(
+      payload.params.debitAmountNumber - payload.params.totalFeesNumber,
+      payload.locale,
+    );
     const templateID = await this.getOrDefaultTemplateId(
       NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
       payload.locale,
@@ -496,6 +500,7 @@ export class EmailEventHandler {
         debitCurrency: processCurrency(payload.params.debitCurrency),
         creditAmount: payload.params.creditAmount,
         creditCurrency: processCurrency(payload.params.creditCurrency),
+        subtotal: subtotal,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         processingFees: payload.params.processingFees,
@@ -508,6 +513,10 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT}`)
   public async sendTransferReceivedEvent(payload: SendTransferReceivedEvent) {
+    const subtotal = Utils.localizeAmount(
+      payload.params.debitAmountNumber - payload.params.totalFeesNumber,
+      payload.locale,
+    );
     const templateID = await this.getOrDefaultTemplateId(
       NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT,
       payload.locale,
@@ -529,6 +538,7 @@ export class EmailEventHandler {
         debitCurrency: processCurrency(payload.params.debitCurrency),
         creditAmount: payload.params.creditAmount,
         creditCurrency: processCurrency(payload.params.creditCurrency),
+        subtotal: subtotal,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         processingFees: payload.params.processingFees,
@@ -541,6 +551,10 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_TRANSFER_FAILED_EVENT}`)
   public async sendTransferFailedEmail(payload: SendTransferFailedEvent) {
+    const subtotal = Utils.localizeAmount(
+      payload.params.debitAmountNumber - payload.params.totalFeesNumber,
+      payload.locale,
+    );
     const templateID = await this.getOrDefaultTemplateId(
       NotificationEventType.SEND_TRANSFER_FAILED_EVENT,
       payload.locale,
@@ -560,6 +574,7 @@ export class EmailEventHandler {
         debitCurrency: processCurrency(payload.params.debitCurrency),
         creditAmount: payload.params.creditAmount,
         creditCurrency: processCurrency(payload.params.creditCurrency),
+        subtotal: subtotal,
         transactionRef: payload.params.transactionRef,
         createdTimestamp: payload.params.createdTimestamp,
         processingFees: payload.params.processingFees,

@@ -1162,6 +1162,7 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendTransferCompletedEmail(payload);
+      const subtotal = Utils.localizeAmount(payload.params.debitAmountNumber - payload.params.totalFeesNumber, locale);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
@@ -1178,6 +1179,7 @@ describe("EmailEventHandler test for languages", () => {
           debitCurrency: "USDC",
           creditAmount: payload.params.creditAmount,
           creditCurrency: "USDC",
+          subtotal: subtotal,
           transactionRef: payload.params.transactionRef,
           createdTimestamp: payload.params.createdTimestamp,
           processingFees: payload.params.processingFees,
@@ -1256,6 +1258,7 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendTransferReceivedEvent(payload);
+      const subtotal = Utils.localizeAmount(payload.params.debitAmountNumber - payload.params.totalFeesNumber, locale);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
@@ -1274,6 +1277,7 @@ describe("EmailEventHandler test for languages", () => {
           debitCurrency: "USDC",
           creditAmount: payload.params.creditAmount,
           creditCurrency: "USDC",
+          subtotal: subtotal,
           transactionRef: payload.params.transactionRef,
           createdTimestamp: payload.params.createdTimestamp,
           processingFees: payload.params.processingFees,
@@ -1333,6 +1337,7 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendTransferFailedEmail(payload);
+      const subtotal = Utils.localizeAmount(payload.params.debitAmountNumber - payload.params.totalFeesNumber, locale);
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
@@ -1349,6 +1354,7 @@ describe("EmailEventHandler test for languages", () => {
           debitCurrency: "USDC",
           creditAmount: payload.params.creditAmount,
           creditCurrency: "USDC",
+          subtotal: subtotal,
           transactionRef: payload.params.transactionRef,
           createdTimestamp: payload.params.createdTimestamp,
           processingFees: payload.params.processingFees,
