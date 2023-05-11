@@ -611,7 +611,12 @@ export class EmployerService {
       // We are expecting this scenario
       this.logger.info(`Picking up payroll ${payroll.id} from where it left off in status ${payroll.status}...`);
       // TODO: Add check to ensure workflow is not still running
-      await this.workflowExecutor.executePayrollProcessingWorkflow(payroll.id, `${payroll.id}:${v4()}`);
+      await this.workflowExecutor.executePayrollProcessingWorkflow(
+        payroll.id,
+        null,
+        payroll.payrollDate,
+        `${payroll.id}:${v4()}`,
+      );
       return payroll;
     } else {
       throw new ServiceException({

@@ -1122,11 +1122,15 @@ describe("EmployerServiceTests", () => {
         payroll.status = status;
 
         when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
-        when(mockWorkflowExecutor.executePayrollProcessingWorkflow(payroll.id, anyString())).thenResolve();
+        when(
+          mockWorkflowExecutor.executePayrollProcessingWorkflow(payroll.id, null, payroll.payrollDate, anyString()),
+        ).thenResolve();
 
         await employerService.retryPayroll(payroll.id);
 
-        verify(mockWorkflowExecutor.executePayrollProcessingWorkflow(payroll.id, anyString())).once();
+        verify(
+          mockWorkflowExecutor.executePayrollProcessingWorkflow(payroll.id, null, payroll.payrollDate, anyString()),
+        ).once();
       },
     );
   });
