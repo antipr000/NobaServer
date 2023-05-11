@@ -183,18 +183,4 @@ export class PayrollWorkflowController {
       status: payroll.status,
     };
   }
-
-  @Get("/payrolls/disbursements/allocationAmounts")
-  @ApiOperation({ summary: "Gets total allocationAmount for all disbursements across Payroll with Invoiced status" })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    type: PayrollDisbursementsAllocationAmount,
-  })
-  async getTotalDisbursementForInvoicedPayrolls(): Promise<PayrollDisbursementsAllocationAmount> {
-    const totalAllocationAmount = await this.employerService.getTotalAllocationAmountAcrossInvoicedPayrolls();
-
-    return {
-      totalAllocationAmount: totalAllocationAmount ?? 0,
-    };
-  }
 }

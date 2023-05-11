@@ -228,26 +228,4 @@ describe("EmployerWorkflowControllerTests", () => {
       payrollWorkflowController.createReceipt(payrollID);
     });
   });
-
-  describe("getTotalDisbursementForInvoicedPayrolls", () => {
-    it("should forwards the call to EmployerService", async () => {
-      when(mockEmployerService.getTotalAllocationAmountAcrossInvoicedPayrolls()).thenResolve(100);
-
-      const result = await payrollWorkflowController.getTotalDisbursementForInvoicedPayrolls();
-
-      expect(result).toStrictEqual({
-        totalAllocationAmount: 100,
-      });
-    });
-
-    it("should return 0 if EmployerService returns null", async () => {
-      when(mockEmployerService.getTotalAllocationAmountAcrossInvoicedPayrolls()).thenResolve(null);
-
-      const result = await payrollWorkflowController.getTotalDisbursementForInvoicedPayrolls();
-
-      expect(result).toStrictEqual({
-        totalAllocationAmount: 0,
-      });
-    });
-  });
 });

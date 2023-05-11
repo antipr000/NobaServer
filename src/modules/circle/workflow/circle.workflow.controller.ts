@@ -1,6 +1,7 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Param, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { EmployerService } from "../../../modules/employer/employer.service";
 import { Logger } from "winston";
 import {
   CircleWalletBalanceResponseDTO,
@@ -17,6 +18,7 @@ export class CircleWorkflowController {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly circleService: CircleService,
+    private readonly employerService: EmployerService,
   ) {}
 
   @Get("/wallets/consumers/:consumerID")
@@ -108,6 +110,26 @@ export class CircleWorkflowController {
       id: res.id,
       status: res.status,
       createdAt: res.createdAt,
+    };
+  }
+
+  @Get("/wallets/master/balance/post-disbursement-allocationamounts")
+  @ApiOperation({
+    summary:
+      "Gets Circle master wallet balance post allocationAmount for all disbursements across Payroll with Invoiced status",
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: CircleWalletBalanceResponseDTO,
+  })
+  async getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls(): Promise<CircleWalletBalanceResponseDTO> {
+    const totalAllocationAmount = await this.employerService.getTotalAllocationAmountAcrossInvoicedPayrolls();
+    const masterWalletID = await this.circleService.getMasterWalletID();
+    const masterWalletBalance = await this.circleService.getWalletBalance(masterWalletID);
+
+    return {
+      walletID: masterWalletID,
+      balance: (masterWalletBalance ?? 0) - (totalAllocationAmount ?? 0),
     };
   }
 }
