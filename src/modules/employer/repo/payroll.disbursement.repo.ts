@@ -21,4 +21,5 @@ export interface IPayrollDisbursementRepo {
     payrollID: string,
     filters: EnrichedDisbursementFilterOptionsDTO,
   ): Promise<PaginatedResult<EnrichedDisbursement>>;
+  getTotalDisbursementAmountForAllEmployees(): Promise<number>;
 }

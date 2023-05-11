@@ -25,6 +25,7 @@ import {
 import { PaginatedResult, SortOrder } from "../../../core/infra/PaginationTypes";
 import { createPaginator } from "../../../infra/sql/paginate/PaginationPipeline";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
+import { PayrollStatus } from "../domain/Payroll";
 
 @Injectable()
 export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
@@ -147,6 +148,27 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
     } catch (err) {
       this.logger.error(JSON.stringify(err));
       return [];
+    }
+  }
+
+  async getTotalDisbursementAmountForAllEmployees(): Promise<number> {
+    try {
+      const aggregation = await this.prismaService.payrollDisbursement.aggregate({
+        _sum: {
+          allocationAmount: true,
+        },
+        where: {
+          payroll: {
+            status: PayrollStatus.INVOICED,
+          },
+        },
+      });
+      return aggregation._sum.allocationAmount ?? 0;
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new DatabaseInternalErrorException({
+        message: `Error calculating total disbursement amount`,
+      });
     }
   }
 

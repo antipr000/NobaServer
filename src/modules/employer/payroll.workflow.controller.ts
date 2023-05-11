@@ -16,7 +16,11 @@ import {
   UpdatePayrollRequestDTO,
 } from "./dto/payroll.workflow.controller.dto";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
-import { PayrollDisbursementDTO, PayrollDisbursementDTOWrapper } from "./dto/PayrollDisbursementDTO";
+import {
+  PayrollDisbursementDTO,
+  PayrollDisbursementDTOWrapper,
+  PayrollDisbursementsAllocationAmount,
+} from "./dto/PayrollDisbursementDTO";
 import { EmployerService } from "./employer.service";
 import { Utils } from "../../core/utils/Utils";
 
@@ -177,6 +181,20 @@ export class PayrollWorkflowController {
       debitCurrency: payroll.debitCurrency,
       creditCurrency: payroll.creditCurrency,
       status: payroll.status,
+    };
+  }
+
+  @Get("/payrolls/disbursements/allocationAmounts")
+  @ApiOperation({ summary: "Gets total allocationAmount for all disbursements across Payroll with Invoiced status" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: PayrollDisbursementsAllocationAmount,
+  })
+  async getTotalDisbursementForInvoicedPayrolls(): Promise<PayrollDisbursementsAllocationAmount> {
+    const totalAllocationAmount = await this.employerService.getTotalAllocationAmountAcrossInvoicedPayrolls();
+
+    return {
+      totalAllocationAmount: totalAllocationAmount ?? 0,
     };
   }
 }

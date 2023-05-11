@@ -12,5 +12,6 @@ export function getMockPayrollDisbursementRepoWithDefaults(): IPayrollDisburseme
     new Error("Not implemented"),
   );
   when(payrollDisbursementRepo.getAllDisbursementsForPayroll(anyString())).thenReject(new Error("Not implemented"));
+  when(payrollDisbursementRepo.getTotalDisbursementAmountForAllEmployees()).thenReject(new Error("Not implemented"));
   return payrollDisbursementRepo;
 }

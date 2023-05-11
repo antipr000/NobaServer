@@ -60,7 +60,7 @@ export const saveAndGetPayroll = async (prismaService: PrismaService, employerID
       exchangeRate: 1000,
       debitCurrency: "COP",
       creditCurrency: "USD",
-      status: PayrollStatus.CREATED,
+      status: PayrollStatus.INVOICED,
       completedTimestamp: new Date(),
     },
   });

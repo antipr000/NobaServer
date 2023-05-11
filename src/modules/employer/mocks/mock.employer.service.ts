@@ -26,6 +26,9 @@ export function getMockEmployerServiceWithDefaults(): EmployerService {
   when(
     mockEmployerService.getInvoicedPayrollMatchingAmountAndEmployerDepositMatchingName(anyNumber(), anyString()),
   ).thenReject(new Error("Method not implemented"));
+  when(mockEmployerService.getTotalAllocationAmountAcrossInvoicedPayrolls()).thenReject(
+    new Error("Method not implemented"),
+  );
 
   return mockEmployerService;
 }
