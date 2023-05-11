@@ -284,7 +284,12 @@ describe("WorkflowExecutor", () => {
 
   describe("executePayrollProcessingWorkflow()", () => {
     it("Should return the workflow id", async () => {
-      const workflowID = await workflowExecutor.executePayrollProcessingWorkflow("1234", "12345");
+      const workflowID = await workflowExecutor.executePayrollProcessingWorkflow(
+        "1234",
+        "fake-company-name",
+        "fake-payroll-date",
+        "12345",
+      );
       expect(workflowID).toBe("123");
     });
 
@@ -292,7 +297,12 @@ describe("WorkflowExecutor", () => {
       const failedConns = 1;
       mockFailedConnections(failedConns);
 
-      const workflowID = await workflowExecutor.executePayrollProcessingWorkflow("1234", "12345");
+      const workflowID = await workflowExecutor.executePayrollProcessingWorkflow(
+        "1234",
+        "fake-company-name",
+        "fake-payroll-date",
+        "12345",
+      );
       expect(workflowID).toBe("123");
       expect(mockTemporalConn).toHaveBeenCalledTimes(failedConns + 1);
     });
@@ -301,7 +311,12 @@ describe("WorkflowExecutor", () => {
       const failedConns = 6;
       mockFailedConnections(failedConns);
 
-      const workflowID = await workflowExecutor.executePayrollProcessingWorkflow("1234", "12345");
+      const workflowID = await workflowExecutor.executePayrollProcessingWorkflow(
+        "1234",
+        "fake-company-name",
+        "fake-payroll-date",
+        "12345",
+      );
       expect(workflowID).toBe("123");
       expect(mockTemporalConn).toHaveBeenCalledTimes(failedConns + 1);
     });
@@ -311,7 +326,12 @@ describe("WorkflowExecutor", () => {
       mockFailedConnections(failedConns);
 
       try {
-        await workflowExecutor.executePayrollProcessingWorkflow("1234", "12345");
+        await workflowExecutor.executePayrollProcessingWorkflow(
+          "1234",
+          "fake-company-name",
+          "fake-payroll-date",
+          "12345",
+        );
         expect(true).toBe(false);
       } catch (e) {
         expect(e).toBeInstanceOf(ServiceException);

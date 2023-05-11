@@ -172,8 +172,17 @@ export class WorkflowExecutor {
     return await this.executeWorkflowWrapper(WorkflowName.WALLET_TRANSFER, workflowID, [transactionID]);
   }
 
-  public async executePayrollProcessingWorkflow(payrollID: string, workflowID: string): Promise<string> {
-    return await this.executeWorkflowWrapper(WorkflowName.PAYROLL_PROCESSING, workflowID, [payrollID]);
+  public async executePayrollProcessingWorkflow(
+    payrollID: string,
+    companyName: string,
+    payrollDate: string,
+    workflowID: string,
+  ): Promise<string> {
+    return await this.executeWorkflowWrapper(WorkflowName.PAYROLL_PROCESSING, workflowID, [
+      payrollID,
+      companyName,
+      payrollDate,
+    ]);
   }
 
   public async executeBulkInviteEmployeesWorkflow(

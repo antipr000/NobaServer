@@ -541,7 +541,9 @@ describe("BubbleServiceTests", () => {
 
       when(employerService.getEmployerByReferralID(employer.referralID)).thenResolve(employer);
       when(employerService.createPayroll(employer.id, payrollDate)).thenResolve(payroll);
-      when(workflowExecutor.executePayrollProcessingWorkflow(payroll.id, payroll.id)).thenResolve(null);
+      when(
+        workflowExecutor.executePayrollProcessingWorkflow(payroll.id, employer.name, payrollDate, payroll.id),
+      ).thenResolve(null);
 
       const response = await bubbleService.createPayroll(employer.referralID, payrollDate);
       expect(response).toStrictEqual(payroll);
