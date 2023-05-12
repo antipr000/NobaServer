@@ -179,9 +179,7 @@ export class WorkflowExecutor {
     workflowID: string,
   ): Promise<string> {
     return await this.executeWorkflowWrapper(WorkflowName.PAYROLL_PROCESSING, workflowID, [
-      payrollID,
-      companyName,
-      payrollDate,
+      { payrollID: payrollID, companyName: companyName, payrollDate: payrollDate },
     ]);
   }
 
