@@ -16,7 +16,11 @@ import {
   UpdatePayrollRequestDTO,
 } from "./dto/payroll.workflow.controller.dto";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
-import { PayrollDisbursementDTO, PayrollDisbursementDTOWrapper } from "./dto/PayrollDisbursementDTO";
+import {
+  PayrollDisbursementDTO,
+  PayrollDisbursementDTOWrapper,
+  PayrollDisbursementsAllocationAmount,
+} from "./dto/PayrollDisbursementDTO";
 import { EmployerService } from "./employer.service";
 import { Utils } from "../../core/utils/Utils";
 

@@ -130,7 +130,7 @@ describe("SqlPayrollRepo tests", () => {
         debitCurrency: payroll.debitCurrency,
         creditCurrency: payroll.creditCurrency,
         paymentMonoTransactionID: updatedTransactionID,
-        status: PayrollStatus.CREATED,
+        status: PayrollStatus.INVOICED,
         createdTimestamp: expect.any(Date),
         updatedTimestamp: expect.any(Date),
         completedTimestamp: expect.any(Date),

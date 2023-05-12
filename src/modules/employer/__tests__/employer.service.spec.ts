@@ -1988,6 +1988,16 @@ describe("EmployerServiceTests", () => {
     });
   });
 
+  describe("getPayrollMatchingAmountAndEmployerDepositMatchingName", () => {
+    it("should forward the request to the disbursementRepo", async () => {
+      when(mockPayrollDisbursementRepo.getTotalDisbursementAmountForAllEmployees()).thenResolve(1000);
+
+      const result = await employerService.getTotalAllocationAmountAcrossInvoicedPayrolls();
+
+      expect(result).toStrictEqual(1000);
+    });
+  });
+
   describe("getFilteredEmployeesForEmployer", () => {
     it("should throw ServiceException if employer with referralID does not exist", async () => {
       when(mockEmployerRepo.getEmployerByReferralID("fake-referral-id")).thenResolve(null);

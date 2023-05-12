@@ -11,7 +11,6 @@ import { TransactionRepoModule } from "../transaction/repo/transaction.repo.modu
 import { getWinstonModule } from "../../core/utils/WinstonModule";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
-import { CircleWorkflowController } from "../circle/workflow/circle.workflow.controller";
 import { BankFactoryModule } from "./factory/bank.factory.module";
 import { CardController } from "./card/card.controller";
 import { CardModule } from "./card/card.module";
@@ -54,6 +53,6 @@ export class PspModule {}
     PspModule,
     CirclePublicModule,
   ],
-  controllers: [CircleWorkflowController],
+  controllers: [],
 })
 export class PspWorkflowModule {}

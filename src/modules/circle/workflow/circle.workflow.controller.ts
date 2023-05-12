@@ -9,6 +9,7 @@ import {
 } from "../dto/circle.controller.dto";
 import { CircleDepositOrWithdrawalRequest, CircleFundsTransferRequestDTO } from "../dto/circle.workflow.controller.dto";
 import { CircleService } from "../public/circle.service";
+import { CircleWorkflowService } from "./circle.workflow.service";
 
 @Controller("wf/v1/circle") // This defines the path prefix
 @ApiBearerAuth("JWT-auth")
@@ -16,6 +17,7 @@ import { CircleService } from "../public/circle.service";
 export class CircleWorkflowController {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly circleWorkflowService: CircleWorkflowService,
     private readonly circleService: CircleService,
   ) {}
 
@@ -109,5 +111,18 @@ export class CircleWorkflowController {
       status: res.status,
       createdAt: res.createdAt,
     };
+  }
+
+  @Get("/wallets/master/balance/postdisbursementallocationamounts")
+  @ApiOperation({
+    summary:
+      "Gets Circle master wallet balance post allocationAmount for all disbursements across Payroll with Invoiced status",
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: CircleWalletBalanceResponseDTO,
+  })
+  async getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls(): Promise<CircleWalletBalanceResponseDTO> {
+    return this.circleWorkflowService.getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls();
   }
 }

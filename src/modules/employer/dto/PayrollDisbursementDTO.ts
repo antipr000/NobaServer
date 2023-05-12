@@ -20,3 +20,8 @@ export class PayrollDisbursementDTO {
 export class PayrollDisbursementDTOWrapper {
   disbursements: PayrollDisbursementDTO[];
 }
+
+export class PayrollDisbursementsAllocationAmount {
+  @ApiProperty()
+  totalAllocationAmount: number;
+}

@@ -6,13 +6,19 @@ import { CircleService } from "../../public/circle.service";
 import { getMockCircleServiceWithDefaults } from "../../public/mocks/mock.circle.service";
 import { CircleWorkflowController } from "../circle.workflow.controller";
 import { CircleWithdrawalStatus } from "../../../psp/domain/CircleTypes";
+import { ServiceErrorCode, ServiceException } from "../../../../core/exception/service.exception";
+import { CircleWorkflowService } from "../circle.workflow.service";
+import { getMockCircleWorkflowServiceWithDefaults } from "../mocks/mock.circle.workflow.service";
 
 describe("CircleWorkflowController", () => {
   let circleService: CircleService;
+  let circleWorkflowService: CircleWorkflowService;
   let circleWorkflowController: CircleWorkflowController;
 
   beforeAll(async () => {
     circleService = getMockCircleServiceWithDefaults();
+    circleWorkflowService = getMockCircleWorkflowServiceWithDefaults();
+
     const app: TestingModule = await Test.createTestingModule({
       imports: [await TestConfigModule.registerAsync({}), getTestWinstonModule()],
       providers: [
@@ -20,9 +26,14 @@ describe("CircleWorkflowController", () => {
           provide: CircleService,
           useFactory: () => instance(circleService),
         },
+        {
+          provide: CircleWorkflowService,
+          useFactory: () => instance(circleWorkflowService),
+        },
       ],
       controllers: [CircleWorkflowController],
     }).compile();
+
     circleWorkflowController = app.get<CircleWorkflowController>(CircleWorkflowController);
   });
 
@@ -93,6 +104,36 @@ describe("CircleWorkflowController", () => {
         amount: 100,
       });
       expect(result).toEqual({ id: "id", status: CircleWithdrawalStatus.PENDING, createdAt: "createdAt" });
+    });
+  });
+
+  describe("getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls", () => {
+    it("it should forward the request to the CircleWorkflowService", async () => {
+      when(circleWorkflowService.getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls()).thenResolve({
+        walletID: "MASTER_WALLET_ID",
+        balance: 89,
+      });
+
+      const result = await circleWorkflowController.getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls();
+
+      expect(result).toStrictEqual({
+        walletID: "MASTER_WALLET_ID",
+        balance: 89,
+      });
+    });
+
+    it("it should propagate the error in case CircleWorkflowService fails", async () => {
+      when(circleWorkflowService.getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls()).thenReject(
+        new ServiceException({ errorCode: ServiceErrorCode.RATE_LIMIT_EXCEEDED }),
+      );
+
+      try {
+        await circleWorkflowController.getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls();
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.errorCode).toBe(ServiceErrorCode.RATE_LIMIT_EXCEEDED);
+      }
     });
   });
 });

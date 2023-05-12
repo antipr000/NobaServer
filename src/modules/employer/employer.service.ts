@@ -764,6 +764,10 @@ export class EmployerService {
     );
   }
 
+  public async getTotalAllocationAmountAcrossInvoicedPayrolls(): Promise<number> {
+    return this.payrollDisbursementRepo.getTotalDisbursementAmountForAllEmployees();
+  }
+
   private async getEmployeeDisbursements(payrollID: string): Promise<EmployeeDisbursement[]> {
     const disbursements = await this.payrollDisbursementRepo.getAllDisbursementsForPayroll(payrollID);
 

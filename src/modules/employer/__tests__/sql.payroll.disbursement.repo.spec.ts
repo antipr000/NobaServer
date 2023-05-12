@@ -29,7 +29,7 @@ describe("SqlPayrollDisbursementRepo tests", () => {
   let app: TestingModule;
   let prismaService: PrismaService;
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
@@ -44,7 +44,7 @@ describe("SqlPayrollDisbursementRepo tests", () => {
     prismaService = app.get<PrismaService>(PrismaService);
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await prismaService.employee.deleteMany();
     await prismaService.employer.deleteMany();
   });
@@ -175,7 +175,7 @@ describe("SqlPayrollDisbursementRepo tests", () => {
       let payroll1;
       let payroll2;
 
-      beforeAll(async () => {
+      beforeEach(async () => {
         const consumerID1: string = await createTestConsumer(prismaService, "Barry", "Allen");
         const consumerID2: string = await createTestConsumer(prismaService, "Bruce", "Wayne");
         const consumerID3: string = await createTestConsumer(prismaService, "Clark", "Kent");
@@ -500,6 +500,28 @@ describe("SqlPayrollDisbursementRepo tests", () => {
       const allDisbursementsForPayroll = await payrollDisbursementRepo.getAllDisbursementsForPayroll("fake-payroll-id");
 
       expect(allDisbursementsForPayroll).toHaveLength(0);
+    });
+  });
+
+  describe("getTotalDisbursementAmountForAllEmployees", () => {
+    it("should sum all the disbursements", async () => {
+      const payrollDisbursement1 = await saveAndGetPayrollDisbursement(prismaService);
+      const payrollDisbursement2 = await saveAndGetPayrollDisbursement(prismaService);
+      const payrollDisbursement3 = await saveAndGetPayrollDisbursement(prismaService);
+
+      const totalDisbursementAmount = await payrollDisbursementRepo.getTotalDisbursementAmountForAllEmployees();
+
+      expect(totalDisbursementAmount).toBe(
+        payrollDisbursement1.allocationAmount +
+          payrollDisbursement2.allocationAmount +
+          payrollDisbursement3.allocationAmount,
+      );
+    });
+
+    it("should return 0 if there are no disbursements", async () => {
+      const totalDisbursementAmount = await payrollDisbursementRepo.getTotalDisbursementAmountForAllEmployees();
+
+      expect(totalDisbursementAmount).toBe(0);
     });
   });
 });
