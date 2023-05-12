@@ -10,6 +10,8 @@ import {
 } from "../dto/circle.controller.dto";
 import { CircleDepositOrWithdrawalRequest, CircleFundsTransferRequestDTO } from "../dto/circle.workflow.controller.dto";
 import { CircleService } from "../public/circle.service";
+import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
+import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
 
 @Controller("wf/v1/circle") // This defines the path prefix
 @ApiBearerAuth("JWT-auth")
@@ -19,6 +21,7 @@ export class CircleWorkflowController {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly circleService: CircleService,
     private readonly employerService: EmployerService,
+    private readonly exchangeRateService: ExchangeRateService,
   ) {}
 
   @Get("/wallets/consumers/:consumerID")
@@ -126,10 +129,11 @@ export class CircleWorkflowController {
     const totalAllocationAmount = await this.employerService.getTotalAllocationAmountAcrossInvoicedPayrolls();
     const masterWalletID = await this.circleService.getMasterWalletID();
     const masterWalletBalance = await this.circleService.getWalletBalance(masterWalletID);
+    const exchangeRate = await this.exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD);
 
     return {
       walletID: masterWalletID,
-      balance: (masterWalletBalance ?? 0) - (totalAllocationAmount ?? 0),
+      balance: (masterWalletBalance ?? 0) - (totalAllocationAmount ?? 0) * exchangeRate.nobaRate,
     };
   }
 }
