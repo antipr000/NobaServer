@@ -1,7 +1,6 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Param, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { EmployerService } from "../../../modules/employer/employer.service";
 import { Logger } from "winston";
 import {
   CircleWalletBalanceResponseDTO,
@@ -10,8 +9,7 @@ import {
 } from "../dto/circle.controller.dto";
 import { CircleDepositOrWithdrawalRequest, CircleFundsTransferRequestDTO } from "../dto/circle.workflow.controller.dto";
 import { CircleService } from "../public/circle.service";
-import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
-import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
+import { CircleWorkflowService } from "./circle.workflow.service";
 
 @Controller("wf/v1/circle") // This defines the path prefix
 @ApiBearerAuth("JWT-auth")
@@ -19,9 +17,8 @@ import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
 export class CircleWorkflowController {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly circleWorkflowService: CircleWorkflowService,
     private readonly circleService: CircleService,
-    private readonly employerService: EmployerService,
-    private readonly exchangeRateService: ExchangeRateService,
   ) {}
 
   @Get("/wallets/consumers/:consumerID")
@@ -116,7 +113,7 @@ export class CircleWorkflowController {
     };
   }
 
-  @Get("/wallets/master/balance/post-disbursement-allocationamounts")
+  @Get("/wallets/master/balance/postdisbursementallocationamounts")
   @ApiOperation({
     summary:
       "Gets Circle master wallet balance post allocationAmount for all disbursements across Payroll with Invoiced status",
@@ -126,14 +123,6 @@ export class CircleWorkflowController {
     type: CircleWalletBalanceResponseDTO,
   })
   async getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls(): Promise<CircleWalletBalanceResponseDTO> {
-    const totalAllocationAmount = await this.employerService.getTotalAllocationAmountAcrossInvoicedPayrolls();
-    const masterWalletID = await this.circleService.getMasterWalletID();
-    const masterWalletBalance = await this.circleService.getWalletBalance(masterWalletID);
-    const exchangeRate = await this.exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD);
-
-    return {
-      walletID: masterWalletID,
-      balance: (masterWalletBalance ?? 0) - (totalAllocationAmount ?? 0) * exchangeRate.nobaRate,
-    };
+    return this.circleWorkflowService.getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls();
   }
 }

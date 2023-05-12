@@ -6,23 +6,18 @@ import { CircleService } from "../../public/circle.service";
 import { getMockCircleServiceWithDefaults } from "../../public/mocks/mock.circle.service";
 import { CircleWorkflowController } from "../circle.workflow.controller";
 import { CircleWithdrawalStatus } from "../../../psp/domain/CircleTypes";
-import { EmployerService } from "../../../../modules/employer/employer.service";
-import { getMockEmployerServiceWithDefaults } from "../../../../modules/employer/mocks/mock.employer.service";
-import { ExchangeRateService } from "../../../../modules/exchangerate/exchangerate.service";
-import { getMockExchangeRateServiceWithDefaults } from "../../../../modules/exchangerate/mocks/mock.exchangerate.service";
-import { Currency } from "../../../../modules/transaction/domain/TransactionTypes";
 import { ServiceErrorCode, ServiceException } from "../../../../core/exception/service.exception";
+import { CircleWorkflowService } from "../circle.workflow.service";
+import { getMockCircleWorkflowServiceWithDefaults } from "../mocks/mock.circle.workflow.service";
 
 describe("CircleWorkflowController", () => {
   let circleService: CircleService;
-  let employerService: EmployerService;
+  let circleWorkflowService: CircleWorkflowService;
   let circleWorkflowController: CircleWorkflowController;
-  let exchangeRateService: ExchangeRateService;
 
   beforeAll(async () => {
     circleService = getMockCircleServiceWithDefaults();
-    employerService = getMockEmployerServiceWithDefaults();
-    exchangeRateService = getMockExchangeRateServiceWithDefaults();
+    circleWorkflowService = getMockCircleWorkflowServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [await TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -32,16 +27,13 @@ describe("CircleWorkflowController", () => {
           useFactory: () => instance(circleService),
         },
         {
-          provide: EmployerService,
-          useFactory: () => instance(employerService),
-        },
-        {
-          provide: ExchangeRateService,
-          useFactory: () => instance(exchangeRateService),
+          provide: CircleWorkflowService,
+          useFactory: () => instance(circleWorkflowService),
         },
       ],
       controllers: [CircleWorkflowController],
     }).compile();
+
     circleWorkflowController = app.get<CircleWorkflowController>(CircleWorkflowController);
   });
 
@@ -116,15 +108,10 @@ describe("CircleWorkflowController", () => {
   });
 
   describe("getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls", () => {
-    it("should deduct the allocationAmount and return the balance", async () => {
-      when(employerService.getTotalAllocationAmountAcrossInvoicedPayrolls()).thenResolve(1100);
-      when(circleService.getMasterWalletID()).thenResolve("MASTER_WALLET_ID");
-      when(circleService.getWalletBalance("MASTER_WALLET_ID")).thenResolve(100);
-      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD)).thenResolve({
-        nobaRate: 0.01,
-        bankRate: 0.01,
-        denominatorCurrency: Currency.USD,
-        numeratorCurrency: Currency.COP,
+    it("it should forward the request to the CircleWorkflowService", async () => {
+      when(circleWorkflowService.getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls()).thenResolve({
+        walletID: "MASTER_WALLET_ID",
+        balance: 89,
       });
 
       const result = await circleWorkflowController.getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls();
@@ -135,32 +122,13 @@ describe("CircleWorkflowController", () => {
       });
     });
 
-    it("should fail if the circle service failed", async () => {
-      when(employerService.getTotalAllocationAmountAcrossInvoicedPayrolls()).thenResolve(1100);
-      when(circleService.getMasterWalletID()).thenResolve("MASTER_WALLET_ID");
-      when(circleService.getWalletBalance("MASTER_WALLET_ID")).thenReject(
+    it("it should propagate the error in case CircleWorkflowService fails", async () => {
+      when(circleWorkflowService.getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls()).thenReject(
         new ServiceException({ errorCode: ServiceErrorCode.RATE_LIMIT_EXCEEDED }),
       );
 
       try {
-        const result = await circleWorkflowController.getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls();
-        expect(true).toBe(false);
-      } catch (err) {
-        expect(err).toBeInstanceOf(ServiceException);
-        expect(err.errorCode).toBe(ServiceErrorCode.RATE_LIMIT_EXCEEDED);
-      }
-    });
-
-    it("should fail if the exchangerate service failed", async () => {
-      when(employerService.getTotalAllocationAmountAcrossInvoicedPayrolls()).thenResolve(1100);
-      when(circleService.getMasterWalletID()).thenResolve("MASTER_WALLET_ID");
-      when(circleService.getWalletBalance("MASTER_WALLET_ID")).thenResolve(100);
-      when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD)).thenReject(
-        new ServiceException({ errorCode: ServiceErrorCode.RATE_LIMIT_EXCEEDED }),
-      );
-
-      try {
-        const result = await circleWorkflowController.getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls();
+        await circleWorkflowController.getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls();
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);
