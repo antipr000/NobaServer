@@ -27,6 +27,20 @@ export type CardReversalTransactionRequest = {
   memo: string;
 };
 
+export type CreditAdjustmentTransactionRequest = {
+  creditConsumerID: string;
+  creditAmount: number;
+  creditCurrency: string;
+  memo: string;
+};
+
+export type DebitAdjustmentTransactionRequest = {
+  debitConsumerID: string;
+  debitAmount: number;
+  debitCurrency: string;
+  memo: string;
+};
+
 export enum CardReversalTransactionType {
   CREDIT = "CREDIT",
   DEBIT = "DEBIT",

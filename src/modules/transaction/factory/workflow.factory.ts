@@ -21,6 +21,12 @@ export class WorkflowFactory {
   @Inject()
   private readonly payrollDepositImpl: PayrollDepositImpl;
 
+  @Inject()
+  private readonly creditAdjustmentImpl: CreditAdjustmentImpl;
+
+  @Inject()
+  private readonly debitAdjustmentImpl: DebitAdjustmentImpl;
+
   getWorkflowImplementation(workflowName: WorkflowName): IWorkflowImpl {
     switch (workflowName) {
       case WorkflowName.WALLET_DEPOSIT:
@@ -31,6 +37,10 @@ export class WorkflowFactory {
         return this.walletWithdrawalImpl;
       case WorkflowName.PAYROLL_DEPOSIT:
         return this.payrollDepositImpl;
+      case WorkflowName.CREDIT_ADJUSTMENT:
+        return this.
+      case WorkflowName.DEBIT_ADJUSTMENT:
+        return this.
       default:
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
