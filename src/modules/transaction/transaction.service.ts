@@ -43,6 +43,8 @@ import {
   CardReversalTransactionRequest,
   CardReversalTransactionType,
   CardWithdrawalTransactionRequest,
+  CreditAdjustmentTransactionRequest,
+  DebitAdjustmentTransactionRequest,
   InitiateTransactionRequest,
   PayrollDepositTransactionRequest,
   validateInitiateTransactionRequest,
@@ -91,7 +93,7 @@ export class TransactionService {
     return this.transactionRepo.getFilteredTransactions(filter);
   }
 
-  async initiateTransaction(request: InitiateTransactionRequest): Promise<Transaction> {
+  async initiateTransaction(request: InitiateTransactionRequest, executeWorkflow = false): Promise<Transaction> {
     // Should figure out a better way to check against union typed enums
     if (
       request.type !== WorkflowName.CARD_WITHDRAWAL &&
@@ -122,9 +124,23 @@ export class TransactionService {
       case WorkflowName.PAYROLL_DEPOSIT:
         inputTransaction = await this.createInputTransactionForPayrollDepositRequest(request.payrollDepositRequest);
         break;
+
+      case WorkflowName.CREDIT_ADJUSTMENT:
+        inputTransaction = await this.createInputTransactionForCreditAdjustmentRequest(request.creditAdjustmentRequest);
+        break;
+
+      case WorkflowName.DEBIT_ADJUSTMENT:
+        inputTransaction = await this.createInputTransactionForDebitAdjustmentRequest(request.debitAdjustmentRequest);
+        break;
     }
 
     const transaction: Transaction = await this.transactionRepo.createTransaction(inputTransaction);
+
+    // Refactor this with TransactionExectutor
+    if (executeWorkflow) {
+      await this.transactionFactory.getWorkflowImplementation(request.type).initiateWorkflow(transaction);
+    }
+
     return transaction;
   }
 
@@ -362,6 +378,38 @@ export class TransactionService {
       creditAmount: Utils.roundTo2DecimalNumber(payrollDisbursement.allocationAmount * payroll.exchangeRate),
       creditCurrency: Currency.USD,
       creditConsumerID: employee.consumerID,
+    };
+  }
+
+  private async createInputTransactionForCreditAdjustmentRequest(
+    request: CreditAdjustmentTransactionRequest,
+  ): Promise<InputTransaction> {
+    return {
+      workflowName: WorkflowName.CREDIT_ADJUSTMENT,
+      exchangeRate: null,
+      memo: request.memo,
+      transactionRef: Utils.generateLowercaseUUID(true),
+      transactionFees: [],
+      sessionKey: WorkflowName.CREDIT_ADJUSTMENT,
+      creditAmount: request.creditAmount,
+      creditCurrency: request.creditCurrency,
+      creditConsumerID: request.creditConsumerID,
+    };
+  }
+
+  private async createInputTransactionForDebitAdjustmentRequest(
+    request: DebitAdjustmentTransactionRequest,
+  ): Promise<InputTransaction> {
+    return {
+      workflowName: WorkflowName.DEBIT_ADJUSTMENT,
+      exchangeRate: null,
+      memo: request.memo,
+      transactionRef: Utils.generateLowercaseUUID(true),
+      transactionFees: [],
+      sessionKey: WorkflowName.DEBIT_ADJUSTMENT,
+      debitAmount: request.debitAmount,
+      debitCurrency: request.debitCurrency,
+      debitConsumerID: request.debitConsumerID,
     };
   }
 

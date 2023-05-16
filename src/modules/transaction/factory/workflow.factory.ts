@@ -6,6 +6,8 @@ import { WalletTransferImpl } from "./wallet.transfer.impl";
 import { IWorkflowImpl } from "./iworkflow.impl";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { PayrollDepositImpl } from "./payroll.deposit.impl";
+import { CreditAdjustmentImpl } from "./credit.adjustment.impl";
+import { DebitAdjustmentImpl } from "./debit.adjustment.impl";
 
 @Injectable()
 export class WorkflowFactory {

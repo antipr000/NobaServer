@@ -11,7 +11,7 @@ import { TransactionFlags } from "../domain/TransactionFlags";
 import { QuoteResponseDTO } from "../dto/QuoteResponseDTO";
 import { ProcessedTransactionDTO } from "../dto/ProcessedTransactionDTO";
 
-export class CreditAdjustmentImpl implements IWorkflowImpl {
+export class DebitAdjustmentImpl implements IWorkflowImpl {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly workflowExecutor: WorkflowExecutor,
@@ -28,7 +28,7 @@ export class CreditAdjustmentImpl implements IWorkflowImpl {
   }
 
   async initiateWorkflow(transaction: Transaction, options?: TransactionFlags[]): Promise<void> {
-    await this.workflowExecutor.executeCreditAdjustmentWorkflow(transaction.id, transaction.transactionRef);
+    await this.workflowExecutor.executeDebitAdjustmentWorkflow(transaction.id, transaction.transactionRef);
   }
 
   async getTransactionQuote(

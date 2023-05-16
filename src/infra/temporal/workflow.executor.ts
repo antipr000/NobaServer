@@ -195,4 +195,12 @@ export class WorkflowExecutor {
       bucketPath,
     ]);
   }
+
+  public async executeCreditAdjustmentWorkflow(transactionID: string, workflowID: string): Promise<string> {
+    return await this.executeWorkflowWrapper(WorkflowName.CREDIT_ADJUSTMENT, workflowID, [transactionID]);
+  }
+
+  public async executeDebitAdjustmentWorkflow(transactionID: string, workflowID: string): Promise<string> {
+    return await this.executeWorkflowWrapper(WorkflowName.DEBIT_ADJUSTMENT, workflowID, [transactionID]);
+  }
 }
