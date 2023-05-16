@@ -8,6 +8,7 @@ export type InitiateTransactionRequest = {
 
   cardWithdrawalRequest?: CardWithdrawalTransactionRequest;
   cardReversalRequest?: CardReversalTransactionRequest;
+  payrollDepositRequest?: PayrollDepositTransactionRequest;
 };
 
 export type CardWithdrawalTransactionRequest = {
@@ -25,6 +26,10 @@ export type CardReversalTransactionRequest = {
   amountInUSD: number;
   exchangeRate: number;
   memo: string;
+};
+
+export type PayrollDepositTransactionRequest = {
+  disbursementID: string;
 };
 
 export enum CardReversalTransactionType {
@@ -50,16 +55,20 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
     exchangeRate: Joi.number().required(),
     memo: Joi.string().required(),
   };
+  const payrollRequestJoiValidationKeys: KeysRequired<PayrollDepositTransactionRequest> = {
+    disbursementID: Joi.string().required(),
+  };
   const intiateTransactionRequestValidationKeys: KeysRequired<InitiateTransactionRequest> = {
     type: Joi.string()
       .required()
       .valid(...Object.values(WorkflowName)),
     cardWithdrawalRequest: Joi.object(cardWithdrawalJoiValidationKeys).optional(),
     cardReversalRequest: Joi.object(cardReversalJoiValidationKeys).optional(),
+    payrollDepositRequest: Joi.object(payrollRequestJoiValidationKeys).optional(),
   };
 
   const initiateTransactionJoiSchema = Joi.object(intiateTransactionRequestValidationKeys)
-    .xor("cardWithdrawalRequest", "cardReversalRequest")
+    .xor("cardWithdrawalRequest", "cardReversalRequest", "payrollDepositRequest")
     .options({
       allowUnknown: false,
       stripUnknown: true,

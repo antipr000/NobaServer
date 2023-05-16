@@ -33,6 +33,7 @@ import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { TransactionEvent } from "./domain/TransactionEvent";
 import { ServiceErrorCode, ServiceException } from "../../../src/core/exception/service.exception";
 import { WorkflowName } from "../../infra/temporal/workflow";
+import { InitiateTransactionRequest } from "./dto/transaction.service.dto";
 
 @Controller("wf/v1/transactions")
 @ApiBearerAuth("JWT-auth")
@@ -58,9 +59,19 @@ export class TransactionWorkflowController {
   @ApiNotFoundResponse({ description: "Requested disbursement is not found" })
   @ApiBadRequestResponse({ description: "Failed to create transaction" })
   async createTransaction(@Body() requestBody: CreateTransactionDTO): Promise<WorkflowTransactionDTO> {
-    const transaction: Transaction = await this.transactionService.deprecatedInitiateTransactionForPayrolls(
-      requestBody.disbursementID,
-    );
+    let transaction: Transaction;
+    if (requestBody.disbursementID) {
+      transaction = await this.transactionService.initiateTransaction({
+        type: WorkflowName.PAYROLL_DEPOSIT,
+        payrollDepositRequest: {
+          disbursementID: requestBody.disbursementID,
+        },
+      });
+    } else {
+      transaction = await this.transactionService.initiateTransaction(
+        this.convertToInitiateTransactionRequest(requestBody),
+      );
+    }
     return this.transactionWorkflowMapper.toWorkflowTransactionDTO(transaction, []);
   }
 
@@ -123,5 +134,17 @@ export class TransactionWorkflowController {
         throw new ConflictException(e.message);
       }
     }
+  }
+
+  private convertToInitiateTransactionRequest(request: CreateTransactionDTO): InitiateTransactionRequest {
+    return {
+      type: request.transactionType,
+      ...(request.payrollTransactionRequest && {
+        payrollDepositRequest: {
+          disbursementID: request.payrollTransactionRequest.disbursementID,
+        },
+      }),
+      ...(request.pomeloTransactionRequest && {}),
+    };
   }
 }

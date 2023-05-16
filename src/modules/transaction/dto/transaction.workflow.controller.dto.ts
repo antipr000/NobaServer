@@ -63,7 +63,25 @@ export class DebitBankRequestDTO {
   transactionID: string;
 }
 
-export class CreateTransactionDTO {
+export class PayrollTransactionRequestDTO {
   @ApiProperty()
   disbursementID: string;
+}
+
+export class PomeloTransactionRequestDTO {}
+
+export class CreateTransactionDTO {
+  // TODO: Remove it once the workflow is migrated.
+  @ApiProperty()
+  disbursementID?: string;
+
+  // TODO: Make it required once the workflow is migrated.
+  @ApiPropertyOptional({ enum: WorkflowName })
+  transactionType?: WorkflowName;
+
+  @ApiPropertyOptional()
+  payrollTransactionRequest?: PayrollTransactionRequestDTO;
+
+  @ApiPropertyOptional()
+  pomeloTransactionRequest?: PomeloTransactionRequestDTO;
 }
