@@ -38,9 +38,9 @@ export class WorkflowFactory {
       case WorkflowName.PAYROLL_DEPOSIT:
         return this.payrollDepositImpl;
       case WorkflowName.CREDIT_ADJUSTMENT:
-        return this.
+        return this.creditAdjustmentImpl;
       case WorkflowName.DEBIT_ADJUSTMENT:
-        return this.
+        return this.debitAdjustmentImpl;
       default:
         throw new ServiceException({
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,

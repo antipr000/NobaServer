@@ -8,6 +8,8 @@ export type InitiateTransactionRequest = {
 
   cardWithdrawalRequest?: CardWithdrawalTransactionRequest;
   cardReversalRequest?: CardReversalTransactionRequest;
+  creditAdjustmentRequest?: CreditAdjustmentTransactionRequest;
+  debitAdjustmentRequest?: DebitAdjustmentTransactionRequest;
 };
 
 export type CardWithdrawalTransactionRequest = {
@@ -64,16 +66,30 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
     exchangeRate: Joi.number().required(),
     memo: Joi.string().required(),
   };
+  const creditAdjustmentJoiValidationKeys: KeysRequired<CreditAdjustmentTransactionRequest> = {
+    creditConsumerID: Joi.string().required(),
+    creditAmount: Joi.number().required(),
+    creditCurrency: Joi.string().required(),
+    memo: Joi.string().required(),
+  };
+  const debitAdjustmentJoiValidationKeys: KeysRequired<DebitAdjustmentTransactionRequest> = {
+    debitConsumerID: Joi.string().required(),
+    debitAmount: Joi.number().required(),
+    debitCurrency: Joi.string().required(),
+    memo: Joi.string().required(),
+  };
   const intiateTransactionRequestValidationKeys: KeysRequired<InitiateTransactionRequest> = {
     type: Joi.string()
       .required()
       .valid(...Object.values(WorkflowName)),
     cardWithdrawalRequest: Joi.object(cardWithdrawalJoiValidationKeys).optional(),
     cardReversalRequest: Joi.object(cardReversalJoiValidationKeys).optional(),
+    creditAdjustmentRequest: Joi.object(creditAdjustmentJoiValidationKeys).optional(),
+    debitAdjustmentRequest: Joi.object(debitAdjustmentJoiValidationKeys).optional(),
   };
 
   const initiateTransactionJoiSchema = Joi.object(intiateTransactionRequestValidationKeys)
-    .xor("cardWithdrawalRequest", "cardReversalRequest")
+    .xor("cardWithdrawalRequest", "cardReversalRequest", "creditAdjustmentRequest", "debitAdjustmentRequest")
     .options({
       allowUnknown: false,
       stripUnknown: true,

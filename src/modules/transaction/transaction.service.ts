@@ -143,10 +143,16 @@ export class TransactionService {
   }
 
   async initiateTransaction(request: InitiateTransactionRequest): Promise<Transaction> {
-    if (request.type !== WorkflowName.CARD_WITHDRAWAL && request.type !== WorkflowName.CARD_REVERSAL) {
+    // Should figure out a better way to check against union typed enums
+    if (
+      request.type !== WorkflowName.CARD_WITHDRAWAL &&
+      request.type !== WorkflowName.CARD_REVERSAL &&
+      request.type !== WorkflowName.CREDIT_ADJUSTMENT &&
+      request.type !== WorkflowName.DEBIT_ADJUSTMENT
+    ) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.NOT_IMPLEMENTED,
-        message: "'initiateTransaction' only available for CARD_WITHDRAWAL as of today",
+        message: `'initiateTransaction' not implemented for workflow: ${request.type}}`,
       });
     }
 

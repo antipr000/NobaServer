@@ -48,6 +48,9 @@ export enum TransactionStatus {
 export type WorkflowName = TemporalWorkflowName;
 export const WorkflowName = { ...TemporalWorkflowName };
 
+// Find some way to support this
+export type SupportedWorkflowNames = TemporalWorkflowName.CARD_WITHDRAWAL | TemporalWorkflowName.CARD_REVERSAL;
+
 export class InputTransaction {
   id?: string;
   transactionRef: string;
