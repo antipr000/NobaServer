@@ -44,6 +44,7 @@ import {
   CardReversalTransactionType,
   CardWithdrawalTransactionRequest,
   InitiateTransactionRequest,
+  PayrollDepositTransactionRequest,
   validateInitiateTransactionRequest,
 } from "./dto/transaction.service.dto";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
@@ -90,60 +91,12 @@ export class TransactionService {
     return this.transactionRepo.getFilteredTransactions(filter);
   }
 
-  // [DEPRECATED]: use `initiateTransction` method instead.
-  async deprecatedInitiateTransactionForPayrolls(payrollDisbursementID: string) {
-    const payrollDisbursement: PayrollDisbursement = await this.employerService.getDisbursement(payrollDisbursementID);
-    if (!payrollDisbursement) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-        message: `Payroll disbursement with ID '${payrollDisbursementID}' not found.`,
-      });
-    }
-
-    const payroll: Payroll = await this.employerService.getPayrollByID(payrollDisbursement.payrollID);
-    if (!payroll) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.UNKNOWN,
-        message: `Payroll disbursement with ID '${payrollDisbursement.id}' exist but corresponding Payroll with ID '${payrollDisbursement.payrollID} not found.`,
-      });
-    }
-
-    const employer: Employer = await this.employerService.getEmployerByID(payroll.employerID);
-    if (!employer) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.UNKNOWN,
-        message: `Employer '${payroll.employerID}' for payroll ID '${payroll.id}' does not exist.`,
-      });
-    }
-
-    const employerName = employer.name;
-
-    const employee: Employee = await this.employeeService.getEmployeeByID(payrollDisbursement.employeeID);
-    if (!employee) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.UNKNOWN,
-        message: `Employee with ID '${payrollDisbursement.employeeID}' not found.`,
-      });
-    }
-
-    const transaction: InputTransaction = {
-      workflowName: WorkflowName.PAYROLL_DEPOSIT,
-      exchangeRate: payroll.exchangeRate,
-      memo: `${employerName} Payroll for ${payroll.payrollDate}`,
-      transactionRef: Utils.generateLowercaseUUID(true),
-      transactionFees: [],
-      sessionKey: "PAYROLL",
-      debitAmount: payrollDisbursement.allocationAmount,
-      debitCurrency: Currency.COP,
-      creditAmount: Utils.roundTo2DecimalNumber(payrollDisbursement.allocationAmount * payroll.exchangeRate),
-      creditCurrency: Currency.USD,
-      creditConsumerID: employee.consumerID,
-    };
-    return this.transactionRepo.createTransaction(transaction);
-  }
-
   async initiateTransaction(request: InitiateTransactionRequest): Promise<Transaction> {
-    if (request.type !== WorkflowName.CARD_WITHDRAWAL && request.type !== WorkflowName.CARD_REVERSAL) {
+    if (
+      request.type !== WorkflowName.CARD_WITHDRAWAL &&
+      request.type !== WorkflowName.CARD_REVERSAL &&
+      request.type !== WorkflowName.PAYROLL_DEPOSIT
+    ) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.NOT_IMPLEMENTED,
         message: "'initiateTransaction' only available for CARD_WITHDRAWAL as of today",
@@ -161,6 +114,10 @@ export class TransactionService {
 
       case WorkflowName.CARD_REVERSAL:
         inputTransaction = this.createInputTransactionForCardReversalRequest(request.cardReversalRequest);
+        break;
+
+      case WorkflowName.PAYROLL_DEPOSIT:
+        inputTransaction = await this.createInputTransactionForPayrollDepositRequest(request.payrollDepositRequest);
         break;
     }
 
@@ -351,6 +308,58 @@ export class TransactionService {
         transactionFees: [],
       };
     }
+  }
+
+  private async createInputTransactionForPayrollDepositRequest(
+    request: PayrollDepositTransactionRequest,
+  ): Promise<InputTransaction> {
+    const payrollDisbursement: PayrollDisbursement = await this.employerService.getDisbursement(request.disbursementID);
+    if (!payrollDisbursement) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Payroll disbursement with ID '${request.disbursementID}' not found.`,
+      });
+    }
+
+    const payroll: Payroll = await this.employerService.getPayrollByID(payrollDisbursement.payrollID);
+    if (!payroll) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: `Payroll disbursement with ID '${payrollDisbursement.id}' exist but corresponding Payroll with ID '${payrollDisbursement.payrollID} not found.`,
+      });
+    }
+
+    const employer: Employer = await this.employerService.getEmployerByID(payroll.employerID);
+    if (!employer) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: `Employer '${payroll.employerID}' for payroll ID '${payroll.id}' does not exist.`,
+      });
+    }
+
+    const employerName = employer.name;
+
+    const employee: Employee = await this.employeeService.getEmployeeByID(payrollDisbursement.employeeID);
+    if (!employee) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        message: `Employee with ID '${payrollDisbursement.employeeID}' not found.`,
+      });
+    }
+
+    return {
+      workflowName: WorkflowName.PAYROLL_DEPOSIT,
+      exchangeRate: payroll.exchangeRate,
+      memo: `${employerName} Payroll for ${payroll.payrollDate}`,
+      transactionRef: Utils.generateLowercaseUUID(true),
+      transactionFees: [],
+      sessionKey: "PAYROLL",
+      debitAmount: payrollDisbursement.allocationAmount,
+      debitCurrency: Currency.COP,
+      creditAmount: Utils.roundTo2DecimalNumber(payrollDisbursement.allocationAmount * payroll.exchangeRate),
+      creditCurrency: Currency.USD,
+      creditConsumerID: employee.consumerID,
+    };
   }
 
   private async validateForSanctions(
