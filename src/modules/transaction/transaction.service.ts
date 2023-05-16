@@ -271,6 +271,8 @@ export class TransactionService {
       debitAmount: cardWithdrawalRequest.debitAmountInUSD,
       debitCurrency: Currency.USD,
       debitConsumerID: cardWithdrawalRequest.debitConsumerID,
+      creditAmount: cardWithdrawalRequest.creditAmount,
+      creditCurrency: cardWithdrawalRequest.creditCurrency,
       memo: cardWithdrawalRequest.memo,
       exchangeRate: cardWithdrawalRequest.exchangeRate,
       sessionKey: "CARD_WITHDRAWAL",

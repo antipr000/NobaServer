@@ -152,6 +152,8 @@ export class PomeloTransactionService {
           cardWithdrawalRequest: {
             debitAmountInUSD: amountToDebitInUSD,
             debitConsumerID: nobaConsumerID,
+            creditCurrency: Currency.COP,
+            creditAmount: pomeloTransaction.localAmount,
             exchangeRate: exchangeRate,
             nobaTransactionID: pomeloTransaction.nobaTransactionID,
             memo: `Transfer of ${request.localAmount} ${request.localCurrency} to ${request.merchantName}`,

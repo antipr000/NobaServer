@@ -1,6 +1,7 @@
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 import { WorkflowName } from "../domain/Transaction";
+import { Currency } from "../domain/TransactionTypes";
 
 export type InitiateTransactionRequest = {
   // TODO: Replace `WorkflowName` with `TransactionType` enum.
@@ -15,6 +16,8 @@ export type CardWithdrawalTransactionRequest = {
   nobaTransactionID: string;
   debitConsumerID: string;
   debitAmountInUSD: number;
+  creditAmount: number;
+  creditCurrency: Currency;
   exchangeRate: number;
   memo: string;
 };
@@ -42,6 +45,10 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
     nobaTransactionID: Joi.string().required(),
     debitConsumerID: Joi.string().required(),
     debitAmountInUSD: Joi.number().required(),
+    creditAmount: Joi.number().required(),
+    creditCurrency: Joi.string()
+      .required()
+      .valid(...Object.values(Currency)),
     exchangeRate: Joi.number().required(),
     memo: Joi.string().required(),
   };

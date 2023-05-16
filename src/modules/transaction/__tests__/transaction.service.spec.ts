@@ -725,6 +725,8 @@ describe("TransactionServiceTests", () => {
           type: WorkflowName.CARD_WITHDRAWAL,
           cardWithdrawalRequest: {
             debitAmountInUSD: 100,
+            creditAmount: 100,
+            creditCurrency: Currency.COP,
             debitConsumerID: "DEBIT_CONSUMER_ID",
             exchangeRate: 1,
             memo: "MEMO",
@@ -732,21 +734,39 @@ describe("TransactionServiceTests", () => {
           },
         };
 
-        it.each(["nobaTransactionID", "debitConsumerID", "debitAmountInUSD", "exchangeRate", "memo"])(
-          "should throw error if '%s' is not specified",
-          async field => {
-            const request = JSON.parse(JSON.stringify(validInitiateTransactionRequest));
-            delete request["cardWithdrawalRequest"][field];
+        it.each([
+          "nobaTransactionID",
+          "debitConsumerID",
+          "debitAmountInUSD",
+          "exchangeRate",
+          "memo",
+          "creditCurrency",
+          "creditAmount",
+        ])("should throw error if '%s' is not specified", async field => {
+          const request = JSON.parse(JSON.stringify(validInitiateTransactionRequest));
+          delete request["cardWithdrawalRequest"][field];
 
-            try {
-              await transactionService.initiateTransaction(request);
-              expect(true).toBe(false);
-            } catch (err) {
-              expect(err.message).toEqual(expect.stringContaining("cardWithdrawalRequest"));
-              expect(err.message).toEqual(expect.stringContaining(`${field}`));
-            }
-          },
-        );
+          try {
+            await transactionService.initiateTransaction(request);
+            expect(true).toBe(false);
+          } catch (err) {
+            expect(err.message).toEqual(expect.stringContaining("cardWithdrawalRequest"));
+            expect(err.message).toEqual(expect.stringContaining(`${field}`));
+          }
+        });
+
+        it.each(["creditCurrency"])("should throw error if '%s' has INVALID value", async field => {
+          const request = JSON.parse(JSON.stringify(validInitiateTransactionRequest));
+          request["cardWithdrawalRequest"][field] = "INVALID";
+
+          try {
+            await transactionService.initiateTransaction(request);
+            expect(true).toBe(false);
+          } catch (err) {
+            expect(err.message).toEqual(expect.stringContaining("cardWithdrawalRequest"));
+            expect(err.message).toEqual(expect.stringContaining(`${field}`));
+          }
+        });
       });
 
       it("should correctly save the CARD_WITHDRAWAL transaction", async () => {
@@ -754,6 +774,8 @@ describe("TransactionServiceTests", () => {
           type: WorkflowName.CARD_WITHDRAWAL,
           cardWithdrawalRequest: {
             debitAmountInUSD: 100,
+            creditAmount: 100,
+            creditCurrency: Currency.COP,
             debitConsumerID: "DEBIT_CONSUMER_ID",
             exchangeRate: 1,
             memo: "MEMO",
@@ -767,6 +789,8 @@ describe("TransactionServiceTests", () => {
           debitAmount: 100,
           debitCurrency: Currency.USD,
           debitConsumerID: "DEBIT_CONSUMER_ID",
+          creditAmount: 100,
+          creditCurrency: Currency.COP,
           transactionFees: [],
           sessionKey: "CARD_WITHDRAWAL",
           status: TransactionStatus.INITIATED,
@@ -785,6 +809,8 @@ describe("TransactionServiceTests", () => {
           debitAmount: 100,
           debitCurrency: Currency.USD,
           debitConsumerID: "DEBIT_CONSUMER_ID",
+          creditAmount: 100,
+          creditCurrency: Currency.COP,
           memo: "MEMO",
           exchangeRate: 1,
           sessionKey: "CARD_WITHDRAWAL",
