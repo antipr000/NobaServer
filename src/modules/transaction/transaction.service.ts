@@ -40,6 +40,8 @@ import { AlertService } from "../common/alerts/alert.service";
 import { AlertKey } from "../common/alerts/alert.dto";
 import { Employer } from "../employer/domain/Employer";
 import {
+  CardCreditAdjustmentTransactionRequest,
+  CardDebitAdjustmentTransactionRequest,
   CardReversalTransactionRequest,
   CardReversalTransactionType,
   CardWithdrawalTransactionRequest,
@@ -95,7 +97,9 @@ export class TransactionService {
     if (
       request.type !== WorkflowName.CARD_WITHDRAWAL &&
       request.type !== WorkflowName.CARD_REVERSAL &&
-      request.type !== WorkflowName.PAYROLL_DEPOSIT
+      request.type !== WorkflowName.PAYROLL_DEPOSIT &&
+      request.type !== WorkflowName.CARD_CREDIT_ADJUSTMENT &&
+      request.type !== WorkflowName.CARD_DEBIT_ADJUSTMENT
     ) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.NOT_IMPLEMENTED,
@@ -118,6 +122,16 @@ export class TransactionService {
 
       case WorkflowName.PAYROLL_DEPOSIT:
         inputTransaction = await this.createInputTransactionForPayrollDepositRequest(request.payrollDepositRequest);
+        break;
+
+      case WorkflowName.CARD_CREDIT_ADJUSTMENT:
+        inputTransaction = this.createInputTransactionForCardCreditAdjustmentRequest(
+          request.cardCreditAdjustmentRequest,
+        );
+        break;
+
+      case WorkflowName.CARD_DEBIT_ADJUSTMENT:
+        inputTransaction = this.createInputTransactionForCardDebitAdjustmentRequest(request.cardDebitAdjustmentRequest);
         break;
     }
 
@@ -271,6 +285,8 @@ export class TransactionService {
       debitAmount: cardWithdrawalRequest.debitAmountInUSD,
       debitCurrency: Currency.USD,
       debitConsumerID: cardWithdrawalRequest.debitConsumerID,
+      creditAmount: cardWithdrawalRequest.creditAmount,
+      creditCurrency: cardWithdrawalRequest.creditCurrency,
       memo: cardWithdrawalRequest.memo,
       exchangeRate: cardWithdrawalRequest.exchangeRate,
       sessionKey: "CARD_WITHDRAWAL",
@@ -359,6 +375,42 @@ export class TransactionService {
       creditAmount: Utils.roundTo2DecimalNumber(payrollDisbursement.allocationAmount * payroll.exchangeRate),
       creditCurrency: Currency.USD,
       creditConsumerID: employee.consumerID,
+    };
+  }
+
+  private createInputTransactionForCardCreditAdjustmentRequest(
+    request: CardCreditAdjustmentTransactionRequest,
+  ): InputTransaction {
+    return {
+      transactionRef: Utils.generateLowercaseUUID(true),
+      workflowName: WorkflowName.CARD_CREDIT_ADJUSTMENT,
+      debitAmount: request.debitAmount,
+      debitCurrency: request.debitCurrency,
+      creditAmount: request.creditAmount,
+      creditCurrency: request.creditCurrency,
+      creditConsumerID: request.creditConsumerID,
+      memo: request.memo,
+      exchangeRate: request.exchangeRate,
+      sessionKey: "CARD_ADJUSTMENTS",
+      transactionFees: [],
+    };
+  }
+
+  private createInputTransactionForCardDebitAdjustmentRequest(
+    request: CardDebitAdjustmentTransactionRequest,
+  ): InputTransaction {
+    return {
+      transactionRef: Utils.generateLowercaseUUID(true),
+      workflowName: WorkflowName.CARD_DEBIT_ADJUSTMENT,
+      debitAmount: request.debitAmount,
+      debitCurrency: request.debitCurrency,
+      creditAmount: request.creditAmount,
+      creditCurrency: request.creditCurrency,
+      debitConsumerID: request.debitConsumerID,
+      memo: request.memo,
+      exchangeRate: request.exchangeRate,
+      sessionKey: "CARD_ADJUSTMENTS",
+      transactionFees: [],
     };
   }
 

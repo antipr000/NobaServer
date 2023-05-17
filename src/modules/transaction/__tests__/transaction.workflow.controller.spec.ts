@@ -14,6 +14,7 @@ import { TransactionWorkflowMapper } from "../mapper/transaction.workflow.mapper
 import { getMockTransactionWorkflowMapperWithDefaults } from "../mocks/mock.transaction.workflow.mapper";
 import { DebitBankRequestDTO } from "../dto/transaction.workflow.controller.dto";
 import { FeeType } from "../domain/TransactionFee";
+import { Currency } from "../domain/TransactionTypes";
 
 const getRandomTransaction = (consumerID: string): Transaction => {
   const transaction: Transaction = {
@@ -258,6 +259,86 @@ describe("Transaction Workflow Controller tests", () => {
         type: WorkflowName.PAYROLL_DEPOSIT,
         payrollDepositRequest: {
           disbursementID: payrollDisbursementID,
+        },
+      });
+    });
+
+    it("should forward the CARD_CREDIT_ADJUSTMENT transaction request to transactionService and then forward the response to transactionWorkflowMapper", async () => {
+      const transaction: Transaction = getRandomTransaction("testConsumerID");
+
+      when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
+      when(transactionWorkflowMapper.toWorkflowTransactionDTO(anything(), anything())).thenResolve(null);
+
+      await transactionWorkflowController.createTransaction({
+        transactionType: WorkflowName.CARD_CREDIT_ADJUSTMENT,
+        pomeloTransactionRequest: {
+          creditAmount: 100,
+          creditCurrency: Currency.COP,
+          debitAmount: 10,
+          debitCurrency: Currency.USD,
+          creditConsumerID: "CREDIT_CONSUMER_ID",
+          exchangeRate: 0.1,
+          memo: "MEMO",
+        },
+      });
+
+      const [propagatedTransaction, propagatedTransactionEvents] = capture(
+        transactionWorkflowMapper.toWorkflowTransactionDTO,
+      ).last();
+      expect(propagatedTransaction).toStrictEqual(transaction);
+      expect(propagatedTransactionEvents).toStrictEqual([]);
+
+      const [propagatedInitiateTransactionRequest] = capture(mockTransactionService.initiateTransaction).last();
+      expect(propagatedInitiateTransactionRequest).toStrictEqual({
+        type: WorkflowName.CARD_CREDIT_ADJUSTMENT,
+        cardCreditAdjustmentRequest: {
+          creditAmount: 100,
+          creditCurrency: Currency.COP,
+          debitAmount: 10,
+          debitCurrency: Currency.USD,
+          creditConsumerID: "CREDIT_CONSUMER_ID",
+          exchangeRate: 0.1,
+          memo: "MEMO",
+        },
+      });
+    });
+
+    it("should forward the CARD_DEBIT_ADJUSTMENT transaction request to transactionService and then forward the response to transactionWorkflowMapper", async () => {
+      const transaction: Transaction = getRandomTransaction("testConsumerID");
+
+      when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
+      when(transactionWorkflowMapper.toWorkflowTransactionDTO(anything(), anything())).thenResolve(null);
+
+      await transactionWorkflowController.createTransaction({
+        transactionType: WorkflowName.CARD_DEBIT_ADJUSTMENT,
+        pomeloTransactionRequest: {
+          creditAmount: 100,
+          creditCurrency: Currency.COP,
+          debitAmount: 10,
+          debitCurrency: Currency.USD,
+          debitConsumerID: "DEBIT_CONSUMER_ID",
+          exchangeRate: 0.1,
+          memo: "MEMO",
+        },
+      });
+
+      const [propagatedTransaction, propagatedTransactionEvents] = capture(
+        transactionWorkflowMapper.toWorkflowTransactionDTO,
+      ).last();
+      expect(propagatedTransaction).toStrictEqual(transaction);
+      expect(propagatedTransactionEvents).toStrictEqual([]);
+
+      const [propagatedInitiateTransactionRequest] = capture(mockTransactionService.initiateTransaction).last();
+      expect(propagatedInitiateTransactionRequest).toStrictEqual({
+        type: WorkflowName.CARD_DEBIT_ADJUSTMENT,
+        cardDebitAdjustmentRequest: {
+          creditAmount: 100,
+          creditCurrency: Currency.COP,
+          debitAmount: 10,
+          debitCurrency: Currency.USD,
+          debitConsumerID: "DEBIT_CONSUMER_ID",
+          exchangeRate: 0.1,
+          memo: "MEMO",
         },
       });
     });

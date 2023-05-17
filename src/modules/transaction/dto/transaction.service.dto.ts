@@ -1,6 +1,7 @@
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 import { WorkflowName } from "../domain/Transaction";
+import { Currency } from "../domain/TransactionTypes";
 
 export type InitiateTransactionRequest = {
   // TODO: Replace `WorkflowName` with `TransactionType` enum.
@@ -9,12 +10,16 @@ export type InitiateTransactionRequest = {
   cardWithdrawalRequest?: CardWithdrawalTransactionRequest;
   cardReversalRequest?: CardReversalTransactionRequest;
   payrollDepositRequest?: PayrollDepositTransactionRequest;
+  cardCreditAdjustmentRequest?: CardCreditAdjustmentTransactionRequest;
+  cardDebitAdjustmentRequest?: CardDebitAdjustmentTransactionRequest;
 };
 
 export type CardWithdrawalTransactionRequest = {
   nobaTransactionID: string;
   debitConsumerID: string;
   debitAmountInUSD: number;
+  creditAmount: number;
+  creditCurrency: Currency;
   exchangeRate: number;
   memo: string;
 };
@@ -37,11 +42,35 @@ export enum CardReversalTransactionType {
   DEBIT = "DEBIT",
 }
 
+export type CardCreditAdjustmentTransactionRequest = {
+  debitAmount: number;
+  debitCurrency: Currency;
+  creditAmount: number;
+  creditCurrency: Currency;
+  exchangeRate: number;
+  memo: string;
+  creditConsumerID: string;
+};
+
+export type CardDebitAdjustmentTransactionRequest = {
+  debitAmount: number;
+  debitCurrency: Currency;
+  creditAmount: number;
+  creditCurrency: Currency;
+  exchangeRate: number;
+  memo: string;
+  debitConsumerID: string;
+};
+
 export const validateInitiateTransactionRequest = (request: InitiateTransactionRequest) => {
   const cardWithdrawalJoiValidationKeys: KeysRequired<CardWithdrawalTransactionRequest> = {
     nobaTransactionID: Joi.string().required(),
     debitConsumerID: Joi.string().required(),
     debitAmountInUSD: Joi.number().required(),
+    creditAmount: Joi.number().required(),
+    creditCurrency: Joi.string()
+      .required()
+      .valid(...Object.values(Currency)),
     exchangeRate: Joi.number().required(),
     memo: Joi.string().required(),
   };
@@ -58,6 +87,32 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
   const payrollRequestJoiValidationKeys: KeysRequired<PayrollDepositTransactionRequest> = {
     disbursementID: Joi.string().required(),
   };
+  const cardCreditAdjustmentJoiValidationKeys: KeysRequired<CardCreditAdjustmentTransactionRequest> = {
+    creditAmount: Joi.number().required(),
+    creditCurrency: Joi.string()
+      .required()
+      .valid(...Object.values(Currency)),
+    debitAmount: Joi.number().required(),
+    debitCurrency: Joi.string()
+      .required()
+      .valid(...Object.values(Currency)),
+    exchangeRate: Joi.number().required(),
+    memo: Joi.string().required(),
+    creditConsumerID: Joi.string().required(),
+  };
+  const cardDebitAdjustmentJoiValidationKeys: KeysRequired<CardDebitAdjustmentTransactionRequest> = {
+    creditAmount: Joi.number().required(),
+    creditCurrency: Joi.string()
+      .required()
+      .valid(...Object.values(Currency)),
+    debitAmount: Joi.number().required(),
+    debitCurrency: Joi.string()
+      .required()
+      .valid(...Object.values(Currency)),
+    exchangeRate: Joi.number().required(),
+    memo: Joi.string().required(),
+    debitConsumerID: Joi.string().required(),
+  };
   const intiateTransactionRequestValidationKeys: KeysRequired<InitiateTransactionRequest> = {
     type: Joi.string()
       .required()
@@ -65,10 +120,18 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
     cardWithdrawalRequest: Joi.object(cardWithdrawalJoiValidationKeys).optional(),
     cardReversalRequest: Joi.object(cardReversalJoiValidationKeys).optional(),
     payrollDepositRequest: Joi.object(payrollRequestJoiValidationKeys).optional(),
+    cardCreditAdjustmentRequest: Joi.object(cardCreditAdjustmentJoiValidationKeys).optional(),
+    cardDebitAdjustmentRequest: Joi.object(cardDebitAdjustmentJoiValidationKeys).optional(),
   };
 
   const initiateTransactionJoiSchema = Joi.object(intiateTransactionRequestValidationKeys)
-    .xor("cardWithdrawalRequest", "cardReversalRequest", "payrollDepositRequest")
+    .xor(
+      "cardWithdrawalRequest",
+      "cardReversalRequest",
+      "payrollDepositRequest",
+      "cardCreditAdjustmentRequest",
+      "cardDebitAdjustmentRequest",
+    )
     .options({
       allowUnknown: false,
       stripUnknown: true,
