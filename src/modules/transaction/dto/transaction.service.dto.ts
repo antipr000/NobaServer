@@ -156,15 +156,11 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
 
   const initiateTransactionJoiSchema = Joi.object(intiateTransactionRequestValidationKeys)
     .xor(
-      
       "cardWithdrawalRequest",
-
       "cardReversalRequest",
-     
       "payrollDepositRequest",
       "cardCreditAdjustmentRequest",
       "cardDebitAdjustmentRequest",
-    ,
       "creditAdjustmentRequest",
       "debitAdjustmentRequest",
     )
