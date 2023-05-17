@@ -208,6 +208,32 @@ describe("Transaction Workflow Controller tests", () => {
   });
 
   describe("createTransaction", () => {
+    describe("DEPRECATED_WAY", () => {
+      it("should forward the response from initiateTransactionForPayrolls to transactionWorkflowMapper", async () => {
+        const transaction: Transaction = getRandomTransaction("testConsumerID");
+        const payrollDisbursementID = uuid();
+
+        when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
+        when(transactionWorkflowMapper.toWorkflowTransactionDTO(anything(), anything())).thenResolve(null);
+
+        await transactionWorkflowController.createTransaction({ disbursementID: payrollDisbursementID });
+
+        const [propagatedTransaction, propagatedTransactionEvents] = capture(
+          transactionWorkflowMapper.toWorkflowTransactionDTO,
+        ).last();
+        expect(propagatedTransaction).toStrictEqual(transaction);
+        expect(propagatedTransactionEvents).toStrictEqual([]);
+
+        const [propagatedInitiateTransactionRequest] = capture(mockTransactionService.initiateTransaction).last();
+        expect(propagatedInitiateTransactionRequest).toStrictEqual({
+          type: WorkflowName.PAYROLL_DEPOSIT,
+          payrollDepositRequest: {
+            disbursementID: payrollDisbursementID,
+          },
+        });
+      });
+    });
+
     it("should forward the PAYROLL_DEPOSIT transaction request to transactionService and then forward the response to transactionWorkflowMapper", async () => {
       const transaction: Transaction = getRandomTransaction("testConsumerID");
       const payrollDisbursementID = uuid();
