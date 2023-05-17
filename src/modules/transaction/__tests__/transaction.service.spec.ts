@@ -1104,6 +1104,204 @@ describe("TransactionServiceTests", () => {
         expect(propagatedTransactionToSave.sessionKey).toBe("PAYROLL");
       });
     });
+
+    describe("CARD_CREDIT_ADJUSTMENT", () => {
+      describe("validation errors", () => {
+        const validInitiateTransactionRequest: InitiateTransactionRequest = {
+          type: WorkflowName.CARD_CREDIT_ADJUSTMENT,
+          cardCreditAdjustmentRequest: {
+            creditAmount: 100,
+            creditCurrency: Currency.COP,
+            debitAmount: 10,
+            debitCurrency: Currency.USD,
+            creditConsumerID: "CREDIT_CONSUMER_ID",
+            exchangeRate: 0.1,
+            memo: "MEMO",
+          },
+        };
+
+        it.each([
+          "debitAmount",
+          "debitCurrency",
+          "creditAmount",
+          "creditCurrency",
+          "exchangeRate",
+          "memo",
+          "creditConsumerID",
+        ])("should throw error if '%s' is not specified", async field => {
+          const request = JSON.parse(JSON.stringify(validInitiateTransactionRequest));
+          delete request["cardCreditAdjustmentRequest"][field];
+
+          try {
+            await transactionService.initiateTransaction(request);
+            expect(true).toBe(false);
+          } catch (err) {
+            expect(err.message).toEqual(expect.stringContaining("cardCreditAdjustmentRequest"));
+            expect(err.message).toEqual(expect.stringContaining(`${field}`));
+          }
+        });
+
+        it.each(["creditCurrency", "debitCurrency"])("should throw error if '%s' has INVALID value", async field => {
+          const request = JSON.parse(JSON.stringify(validInitiateTransactionRequest));
+          request["cardCreditAdjustmentRequest"][field] = "INVALID";
+
+          try {
+            await transactionService.initiateTransaction(request);
+            expect(true).toBe(false);
+          } catch (err) {
+            expect(err.message).toEqual(expect.stringContaining("cardCreditAdjustmentRequest"));
+            expect(err.message).toEqual(expect.stringContaining(`${field}`));
+          }
+        });
+      });
+
+      it("should correctly save the CARD_CREDIT_ADJUSTMENT transaction", async () => {
+        const request: InitiateTransactionRequest = {
+          type: WorkflowName.CARD_CREDIT_ADJUSTMENT,
+          cardCreditAdjustmentRequest: {
+            creditAmount: 100,
+            creditCurrency: Currency.COP,
+            debitAmount: 10,
+            debitCurrency: Currency.USD,
+            creditConsumerID: "CREDIT_CONSUMER_ID",
+            exchangeRate: 0.1,
+            memo: "MEMO",
+          },
+        };
+        const transaction: Transaction = {
+          id: "NOBA_TRANSACTION_ID",
+          transactionRef: "DUMMY_REF",
+          exchangeRate: 0.1,
+          debitAmount: 10,
+          debitCurrency: Currency.USD,
+          creditConsumerID: "CREDIT_CONSUMER_ID",
+          creditAmount: 100,
+          creditCurrency: Currency.COP,
+          transactionFees: [],
+          sessionKey: "CARD_ADJUSTMENTS",
+          status: TransactionStatus.INITIATED,
+          workflowName: WorkflowName.CARD_CREDIT_ADJUSTMENT,
+        };
+        when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
+
+        const response = await transactionService.initiateTransaction(request);
+
+        expect(response).toStrictEqual(transaction);
+        const [propagatedInputTransactionArg] = capture(transactionRepo.createTransaction).last();
+        expect(propagatedInputTransactionArg).toStrictEqual({
+          transactionRef: expect.any(String),
+          workflowName: WorkflowName.CARD_CREDIT_ADJUSTMENT,
+          debitAmount: 10,
+          debitCurrency: Currency.USD,
+          creditConsumerID: "CREDIT_CONSUMER_ID",
+          creditAmount: 100,
+          creditCurrency: Currency.COP,
+          memo: "MEMO",
+          exchangeRate: 0.1,
+          sessionKey: "CARD_ADJUSTMENTS",
+          transactionFees: [],
+        });
+      });
+    });
+
+    describe("CARD_DEBIT_ADJUSTMENT", () => {
+      describe("validation errors", () => {
+        const validInitiateTransactionRequest: InitiateTransactionRequest = {
+          type: WorkflowName.CARD_DEBIT_ADJUSTMENT,
+          cardDebitAdjustmentRequest: {
+            creditAmount: 100,
+            creditCurrency: Currency.COP,
+            debitAmount: 10,
+            debitCurrency: Currency.USD,
+            debitConsumerID: "DEBIT_CONSUMER_ID",
+            exchangeRate: 0.1,
+            memo: "MEMO",
+          },
+        };
+
+        it.each([
+          "debitAmount",
+          "debitCurrency",
+          "creditAmount",
+          "creditCurrency",
+          "exchangeRate",
+          "memo",
+          "debitConsumerID",
+        ])("should throw error if '%s' is not specified", async field => {
+          const request = JSON.parse(JSON.stringify(validInitiateTransactionRequest));
+          delete request["cardDebitAdjustmentRequest"][field];
+
+          try {
+            await transactionService.initiateTransaction(request);
+            expect(true).toBe(false);
+          } catch (err) {
+            expect(err.message).toEqual(expect.stringContaining("cardDebitAdjustmentRequest"));
+            expect(err.message).toEqual(expect.stringContaining(`${field}`));
+          }
+        });
+
+        it.each(["creditCurrency", "debitCurrency"])("should throw error if '%s' has INVALID value", async field => {
+          const request = JSON.parse(JSON.stringify(validInitiateTransactionRequest));
+          request["cardDebitAdjustmentRequest"][field] = "INVALID";
+
+          try {
+            await transactionService.initiateTransaction(request);
+            expect(true).toBe(false);
+          } catch (err) {
+            expect(err.message).toEqual(expect.stringContaining("cardDebitAdjustmentRequest"));
+            expect(err.message).toEqual(expect.stringContaining(`${field}`));
+          }
+        });
+      });
+
+      it("should correctly save the CARD_DEBIT_ADJUSTMENT transaction", async () => {
+        const request: InitiateTransactionRequest = {
+          type: WorkflowName.CARD_DEBIT_ADJUSTMENT,
+          cardDebitAdjustmentRequest: {
+            creditAmount: 100,
+            creditCurrency: Currency.COP,
+            debitAmount: 10,
+            debitCurrency: Currency.USD,
+            debitConsumerID: "DEBIT_CONSUMER_ID",
+            exchangeRate: 0.1,
+            memo: "MEMO",
+          },
+        };
+        const transaction: Transaction = {
+          id: "NOBA_TRANSACTION_ID",
+          transactionRef: "DUMMY_REF",
+          exchangeRate: 0.1,
+          debitAmount: 10,
+          debitCurrency: Currency.USD,
+          creditConsumerID: "DEBIT_CONSUMER_ID",
+          creditAmount: 100,
+          creditCurrency: Currency.COP,
+          transactionFees: [],
+          sessionKey: "CARD_ADJUSTMENTS",
+          status: TransactionStatus.INITIATED,
+          workflowName: WorkflowName.CARD_DEBIT_ADJUSTMENT,
+        };
+        when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
+
+        const response = await transactionService.initiateTransaction(request);
+
+        expect(response).toStrictEqual(transaction);
+        const [propagatedInputTransactionArg] = capture(transactionRepo.createTransaction).last();
+        expect(propagatedInputTransactionArg).toStrictEqual({
+          transactionRef: expect.any(String),
+          workflowName: WorkflowName.CARD_DEBIT_ADJUSTMENT,
+          debitAmount: 10,
+          debitCurrency: Currency.USD,
+          debitConsumerID: "DEBIT_CONSUMER_ID",
+          creditAmount: 100,
+          creditCurrency: Currency.COP,
+          memo: "MEMO",
+          exchangeRate: 0.1,
+          sessionKey: "CARD_ADJUSTMENTS",
+          transactionFees: [],
+        });
+      });
+    });
   });
 
   describe("getTransactionQuote", () => {

@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { TransactionStatus, WorkflowName } from "../domain/Transaction";
+import { Currency } from "../domain/TransactionTypes";
 import { TransactionFeeDTO } from "./TransactionDTO";
 import { TransactionEventDTO } from "./TransactionEventDTO";
 
@@ -68,7 +69,31 @@ export class PayrollTransactionRequestDTO {
   disbursementID: string;
 }
 
-export class PomeloTransactionRequestDTO {}
+export class PomeloTransactionRequestDTO {
+  @ApiProperty()
+  creditAmount: number;
+
+  @ApiProperty({ enum: Currency })
+  creditCurrency: Currency;
+
+  @ApiProperty()
+  debitAmount: number;
+
+  @ApiProperty({ enum: Currency })
+  debitCurrency: Currency;
+
+  @ApiProperty()
+  exchangeRate: number;
+
+  @ApiProperty()
+  memo: string;
+
+  @ApiPropertyOptional()
+  debitConsumerID?: string;
+
+  @ApiPropertyOptional()
+  creditConsumerID?: string;
+}
 
 export class CreateTransactionDTO {
   @ApiPropertyOptional({ enum: WorkflowName })

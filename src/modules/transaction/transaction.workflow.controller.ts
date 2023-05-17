@@ -134,7 +134,30 @@ export class TransactionWorkflowController {
           disbursementID: request.payrollTransactionRequest.disbursementID,
         },
       }),
-      ...(request.pomeloTransactionRequest && {}),
+      ...(request.pomeloTransactionRequest && {
+        ...(request.pomeloTransactionRequest.creditConsumerID && {
+          cardCreditAdjustmentRequest: {
+            creditAmount: request.pomeloTransactionRequest.creditAmount,
+            creditCurrency: request.pomeloTransactionRequest.creditCurrency,
+            debitAmount: request.pomeloTransactionRequest.debitAmount,
+            debitCurrency: request.pomeloTransactionRequest.debitCurrency,
+            exchangeRate: request.pomeloTransactionRequest.exchangeRate,
+            memo: request.pomeloTransactionRequest.memo,
+            creditConsumerID: request.pomeloTransactionRequest.creditConsumerID,
+          },
+        }),
+        ...(request.pomeloTransactionRequest.debitConsumerID && {
+          cardDebitAdjustmentRequest: {
+            creditAmount: request.pomeloTransactionRequest.creditAmount,
+            creditCurrency: request.pomeloTransactionRequest.creditCurrency,
+            debitAmount: request.pomeloTransactionRequest.debitAmount,
+            debitCurrency: request.pomeloTransactionRequest.debitCurrency,
+            exchangeRate: request.pomeloTransactionRequest.exchangeRate,
+            memo: request.pomeloTransactionRequest.memo,
+            debitConsumerID: request.pomeloTransactionRequest.debitConsumerID,
+          },
+        }),
+      }),
     };
   }
 }
