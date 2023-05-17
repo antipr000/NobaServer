@@ -398,7 +398,7 @@ export class PomeloTransactionService {
   ): Promise<Transaction> {
     let nobaTransaction: Transaction;
     try {
-      nobaTransaction = await this.transactionService.initiateTransaction(request);
+      nobaTransaction = await this.transactionService.validateAndSaveTransaction(request);
     } catch (err) {
       nobaTransaction = await this.transactionService.getTransactionByTransactionID(nobaTransactionID);
       if (nobaTransaction === null) {

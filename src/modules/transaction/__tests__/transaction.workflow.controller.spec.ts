@@ -212,7 +212,7 @@ describe("Transaction Workflow Controller tests", () => {
         const transaction: Transaction = getRandomTransaction("testConsumerID");
         const payrollDisbursementID = uuid();
 
-        when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
+        when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(transaction);
         when(transactionWorkflowMapper.toWorkflowTransactionDTO(anything(), anything())).thenResolve(null);
 
         await transactionWorkflowController.createTransaction({ disbursementID: payrollDisbursementID });
@@ -223,7 +223,9 @@ describe("Transaction Workflow Controller tests", () => {
         expect(propagatedTransaction).toStrictEqual(transaction);
         expect(propagatedTransactionEvents).toStrictEqual([]);
 
-        const [propagatedInitiateTransactionRequest] = capture(mockTransactionService.initiateTransaction).last();
+        const [propagatedInitiateTransactionRequest] = capture(
+          mockTransactionService.validateAndSaveTransaction,
+        ).last();
         expect(propagatedInitiateTransactionRequest).toStrictEqual({
           type: WorkflowName.PAYROLL_DEPOSIT,
           payrollDepositRequest: {
@@ -237,7 +239,7 @@ describe("Transaction Workflow Controller tests", () => {
       const transaction: Transaction = getRandomTransaction("testConsumerID");
       const payrollDisbursementID = uuid();
 
-      when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
+      when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(transaction);
       when(transactionWorkflowMapper.toWorkflowTransactionDTO(anything(), anything())).thenResolve(null);
 
       await transactionWorkflowController.createTransaction({
@@ -253,7 +255,7 @@ describe("Transaction Workflow Controller tests", () => {
       expect(propagatedTransaction).toStrictEqual(transaction);
       expect(propagatedTransactionEvents).toStrictEqual([]);
 
-      const [propagatedInitiateTransactionRequest] = capture(mockTransactionService.initiateTransaction).last();
+      const [propagatedInitiateTransactionRequest] = capture(mockTransactionService.validateAndSaveTransaction).last();
       expect(propagatedInitiateTransactionRequest).toStrictEqual({
         type: WorkflowName.PAYROLL_DEPOSIT,
         payrollDepositRequest: {

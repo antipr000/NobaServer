@@ -93,7 +93,15 @@ export class TransactionService {
     return this.transactionRepo.getFilteredTransactions(filter);
   }
 
-  async initiateTransaction(request: InitiateTransactionRequest, executeWorkflow = false): Promise<Transaction> {
+  async initiateTransaction(request: InitiateTransactionRequest): Promise<Transaction> {
+    const transaction = await this.validateAndSaveTransaction(request);
+    const workflowImpl = this.transactionFactory.getWorkflowImplementation(request.type);
+    await workflowImpl.initiateWorkflow(transaction);
+
+    return transaction;
+  }
+
+  async validateAndSaveTransaction(request: InitiateTransactionRequest): Promise<Transaction> {
     // Should figure out a better way to check against union typed enums
     if (
       request.type !== WorkflowName.CARD_WITHDRAWAL &&
@@ -104,7 +112,7 @@ export class TransactionService {
     ) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.NOT_IMPLEMENTED,
-        message: `'initiateTransaction' not implemented for workflow: ${request.type}}`,
+        message: `'validateAndSaveTransaction' not implemented for workflow: ${request.type}}`,
       });
     }
 
@@ -135,12 +143,6 @@ export class TransactionService {
     }
 
     const transaction: Transaction = await this.transactionRepo.createTransaction(inputTransaction);
-
-    // Refactor this with TransactionExectutor
-    if (executeWorkflow) {
-      await this.transactionFactory.getWorkflowImplementation(request.type).initiateWorkflow(transaction);
-    }
-
     return transaction;
   }
 

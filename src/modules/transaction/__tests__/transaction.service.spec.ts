@@ -697,7 +697,7 @@ describe("TransactionServiceTests", () => {
       WorkflowName.WALLET_TRANSFER,
     ])("should throw error if 'type' is '%s'", async workflow => {
       try {
-        await transactionService.initiateTransaction({ type: workflow });
+        await transactionService.validateAndSaveTransaction({ type: workflow });
         expect(true).toBe(false);
       } catch (err) {
         expect(err).toBeInstanceOf(ServiceException);
@@ -710,7 +710,7 @@ describe("TransactionServiceTests", () => {
         type: WorkflowName.CARD_WITHDRAWAL,
       };
       try {
-        await transactionService.initiateTransaction(request);
+        await transactionService.validateAndSaveTransaction(request);
         expect(true).toBe(false);
       } catch (err) {
         expect(err.message).toEqual(expect.stringContaining("at least one of"));
@@ -739,7 +739,7 @@ describe("TransactionServiceTests", () => {
             delete request["cardWithdrawalRequest"][field];
 
             try {
-              await transactionService.initiateTransaction(request);
+              await transactionService.validateAndSaveTransaction(request);
               expect(true).toBe(false);
             } catch (err) {
               expect(err.message).toEqual(expect.stringContaining("cardWithdrawalRequest"));
@@ -774,7 +774,7 @@ describe("TransactionServiceTests", () => {
         };
         when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
 
-        const response = await transactionService.initiateTransaction(request);
+        const response = await transactionService.validateAndSaveTransaction(request);
 
         expect(response).toStrictEqual(transaction);
         const [propagatedInputTransactionArg] = capture(transactionRepo.createTransaction).last();
@@ -825,7 +825,7 @@ describe("TransactionServiceTests", () => {
             delete request["cardReversalRequest"][field];
 
             try {
-              await transactionService.initiateTransaction(request);
+              await transactionService.validateAndSaveTransaction(request);
               expect(true).toBe(false);
             } catch (err) {
               expect(err.message).toEqual(expect.stringContaining("cardReversalRequest"));
@@ -839,7 +839,7 @@ describe("TransactionServiceTests", () => {
           request["cardReversalRequest"]["type"] = "INVALID";
 
           try {
-            await transactionService.initiateTransaction(request);
+            await transactionService.validateAndSaveTransaction(request);
             expect(true).toBe(false);
           } catch (err) {
             expect(err.message).toEqual(expect.stringContaining("cardReversalRequest"));
@@ -865,7 +865,7 @@ describe("TransactionServiceTests", () => {
           };
           when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
 
-          const response = await transactionService.initiateTransaction(request);
+          const response = await transactionService.validateAndSaveTransaction(request);
 
           expect(response).toStrictEqual(transaction);
           const [propagatedInputTransactionArg] = capture(transactionRepo.createTransaction).last();
@@ -899,7 +899,7 @@ describe("TransactionServiceTests", () => {
           };
           when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
 
-          const response = await transactionService.initiateTransaction(request);
+          const response = await transactionService.validateAndSaveTransaction(request);
 
           expect(response).toStrictEqual(transaction);
           const [propagatedInputTransactionArg] = capture(transactionRepo.createTransaction).last();
@@ -933,7 +933,7 @@ describe("TransactionServiceTests", () => {
           delete request["payrollDepositRequest"][field];
 
           try {
-            await transactionService.initiateTransaction(request);
+            await transactionService.validateAndSaveTransaction(request);
             expect(true).toBe(false);
           } catch (err) {
             expect(err.message).toEqual(expect.stringContaining("payrollDepositRequest"));
@@ -947,7 +947,7 @@ describe("TransactionServiceTests", () => {
         when(employerService.getDisbursement(payrollDisbursementID)).thenResolve(null);
 
         try {
-          await transactionService.initiateTransaction({
+          await transactionService.validateAndSaveTransaction({
             type: WorkflowName.PAYROLL_DEPOSIT,
             payrollDepositRequest: {
               disbursementID: payrollDisbursementID,
@@ -973,7 +973,7 @@ describe("TransactionServiceTests", () => {
         when(employerService.getPayrollByID(payroll.id)).thenResolve(null);
 
         try {
-          await transactionService.initiateTransaction({
+          await transactionService.validateAndSaveTransaction({
             type: WorkflowName.PAYROLL_DEPOSIT,
             payrollDepositRequest: {
               disbursementID: payrollDisbursement.id,
@@ -1000,7 +1000,7 @@ describe("TransactionServiceTests", () => {
         when(employerService.getEmployerByID(employer.id)).thenResolve(null);
 
         try {
-          await transactionService.initiateTransaction({
+          await transactionService.validateAndSaveTransaction({
             type: WorkflowName.PAYROLL_DEPOSIT,
             payrollDepositRequest: {
               disbursementID: payrollDisbursement.id,
@@ -1028,7 +1028,7 @@ describe("TransactionServiceTests", () => {
         when(employeeService.getEmployeeByID(employee.id)).thenResolve(null);
 
         try {
-          await transactionService.initiateTransaction({
+          await transactionService.validateAndSaveTransaction({
             type: WorkflowName.PAYROLL_DEPOSIT,
             payrollDepositRequest: {
               disbursementID: payrollDisbursement.id,
@@ -1056,7 +1056,7 @@ describe("TransactionServiceTests", () => {
         when(employeeService.getEmployeeByID(employee.id)).thenResolve(employee);
         when(transactionRepo.createTransaction(anything())).thenResolve(null);
 
-        await transactionService.initiateTransaction({
+        await transactionService.validateAndSaveTransaction({
           type: WorkflowName.PAYROLL_DEPOSIT,
           payrollDepositRequest: {
             disbursementID: payrollDisbursement.id,

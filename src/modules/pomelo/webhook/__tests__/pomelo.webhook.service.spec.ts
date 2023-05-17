@@ -396,7 +396,7 @@ describe("PomeloTransactionServiceTests", () => {
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
         when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
-        when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
+        when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(transaction);
         when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
           debitWalletResponse,
         );
@@ -435,7 +435,7 @@ describe("PomeloTransactionServiceTests", () => {
           merchantName: "MERCHANT_NAME",
           merchantMCC: "MCC",
         });
-        const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
+        const [createNobaTransactionRequestParams] = capture(mockTransactionService.validateAndSaveTransaction).last();
         expect(createNobaTransactionRequestParams).toStrictEqual({
           type: WorkflowName.CARD_WITHDRAWAL,
           cardWithdrawalRequest: {
@@ -459,7 +459,7 @@ describe("PomeloTransactionServiceTests", () => {
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
         when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
-        when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
+        when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(transaction);
         when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
           debitWalletResponse,
         );
@@ -501,7 +501,7 @@ describe("PomeloTransactionServiceTests", () => {
           merchantName: "MERCHANT_NAME",
           merchantMCC: "MCC",
         });
-        const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
+        const [createNobaTransactionRequestParams] = capture(mockTransactionService.validateAndSaveTransaction).last();
         expect(createNobaTransactionRequestParams).toStrictEqual({
           type: WorkflowName.CARD_WITHDRAWAL,
           cardWithdrawalRequest: {
@@ -580,7 +580,7 @@ describe("PomeloTransactionServiceTests", () => {
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
         when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
-        when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
+        when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(transaction);
         when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
           debitWalletResponse,
         );
@@ -621,7 +621,7 @@ describe("PomeloTransactionServiceTests", () => {
           merchantMCC: "MCC",
         });
 
-        const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
+        const [createNobaTransactionRequestParams] = capture(mockTransactionService.validateAndSaveTransaction).last();
         expect(createNobaTransactionRequestParams).toStrictEqual({
           type: WorkflowName.CARD_WITHDRAWAL,
           cardWithdrawalRequest: {
@@ -660,7 +660,7 @@ describe("PomeloTransactionServiceTests", () => {
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
         when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
-        when(mockTransactionService.initiateTransaction(anything())).thenReject(new Error("Already Exists"));
+        when(mockTransactionService.validateAndSaveTransaction(anything())).thenReject(new Error("Already Exists"));
         when(mockTransactionService.getTransactionByTransactionID("NOBA_TRANSACTION_ID")).thenResolve(transaction);
         when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
           debitWalletResponse,
@@ -702,7 +702,7 @@ describe("PomeloTransactionServiceTests", () => {
           merchantMCC: "MCC",
         });
 
-        const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
+        const [createNobaTransactionRequestParams] = capture(mockTransactionService.validateAndSaveTransaction).last();
         expect(createNobaTransactionRequestParams).toStrictEqual({
           type: WorkflowName.CARD_WITHDRAWAL,
           cardWithdrawalRequest: {
@@ -795,7 +795,7 @@ describe("PomeloTransactionServiceTests", () => {
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
         when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
-        when(mockTransactionService.initiateTransaction(anything())).thenReject(new Error("Internal Error"));
+        when(mockTransactionService.validateAndSaveTransaction(anything())).thenReject(new Error("Internal Error"));
         when(mockTransactionService.getTransactionByTransactionID(anyString())).thenReject(new Error("Internal Error"));
 
         const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
@@ -815,7 +815,7 @@ describe("PomeloTransactionServiceTests", () => {
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
         when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
-        when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
+        when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(transaction);
         when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenReject(
           new Error("Internal Error"),
         );
@@ -837,7 +837,7 @@ describe("PomeloTransactionServiceTests", () => {
         when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
         when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
         when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
-        when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
+        when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(transaction);
         when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve({
           ...debitWalletResponse,
           status: CircleWithdrawalStatus.FAILURE,
@@ -1142,7 +1142,7 @@ describe("PomeloTransactionServiceTests", () => {
             nobaConsumerID,
           );
           when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
-          when(mockTransactionService.initiateTransaction(anything())).thenResolve(creditTransaction);
+          when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(creditTransaction);
           when(mockCircleService.creditWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 49)).thenResolve(
             debitOrCreditWalletResponse,
           );
@@ -1184,7 +1184,9 @@ describe("PomeloTransactionServiceTests", () => {
             merchantName: "MERCHANT_NAME",
             merchantMCC: "MCC",
           });
-          const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
+          const [createNobaTransactionRequestParams] = capture(
+            mockTransactionService.validateAndSaveTransaction,
+          ).last();
           expect(createNobaTransactionRequestParams).toStrictEqual({
             type: WorkflowName.CARD_REVERSAL,
             cardReversalRequest: {
@@ -1210,7 +1212,7 @@ describe("PomeloTransactionServiceTests", () => {
             nobaConsumerID,
           );
           when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
-          when(mockTransactionService.initiateTransaction(anything())).thenResolve(creditTransaction);
+          when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(creditTransaction);
           when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance - 0.01);
           when(mockCircleService.creditWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
             debitOrCreditWalletResponse,
@@ -1254,7 +1256,9 @@ describe("PomeloTransactionServiceTests", () => {
             merchantMCC: "MCC",
           });
 
-          const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
+          const [createNobaTransactionRequestParams] = capture(
+            mockTransactionService.validateAndSaveTransaction,
+          ).last();
           expect(createNobaTransactionRequestParams).toStrictEqual({
             type: WorkflowName.CARD_REVERSAL,
             cardReversalRequest: {
@@ -1285,7 +1289,7 @@ describe("PomeloTransactionServiceTests", () => {
           );
           when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
           when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
-          when(mockTransactionService.initiateTransaction(anything())).thenResolve(debitTransaction);
+          when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(debitTransaction);
           when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 49.55)).thenResolve(
             debitOrCreditWalletResponse,
           );
@@ -1327,7 +1331,9 @@ describe("PomeloTransactionServiceTests", () => {
             merchantName: "MERCHANT_NAME",
             merchantMCC: "MCC",
           });
-          const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
+          const [createNobaTransactionRequestParams] = capture(
+            mockTransactionService.validateAndSaveTransaction,
+          ).last();
           expect(createNobaTransactionRequestParams).toStrictEqual({
             type: WorkflowName.CARD_REVERSAL,
             cardReversalRequest: {
@@ -1358,7 +1364,7 @@ describe("PomeloTransactionServiceTests", () => {
           );
           when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
           when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
-          when(mockTransactionService.initiateTransaction(anything())).thenResolve(debitTransaction);
+          when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(debitTransaction);
           when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 49.99)).thenResolve(
             debitOrCreditWalletResponse,
           );
@@ -1400,7 +1406,9 @@ describe("PomeloTransactionServiceTests", () => {
             merchantName: "MERCHANT_NAME",
             merchantMCC: "MCC",
           });
-          const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
+          const [createNobaTransactionRequestParams] = capture(
+            mockTransactionService.validateAndSaveTransaction,
+          ).last();
           expect(createNobaTransactionRequestParams).toStrictEqual({
             type: WorkflowName.CARD_REVERSAL,
             cardReversalRequest: {
@@ -1494,7 +1502,7 @@ describe("PomeloTransactionServiceTests", () => {
           );
           when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
           when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
-          when(mockTransactionService.initiateTransaction(anything())).thenResolve(debitTransaction);
+          when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(debitTransaction);
           when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve(
             debitOrCreditWalletResponse,
           );
@@ -1537,7 +1545,9 @@ describe("PomeloTransactionServiceTests", () => {
             merchantMCC: "MCC",
           });
 
-          const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
+          const [createNobaTransactionRequestParams] = capture(
+            mockTransactionService.validateAndSaveTransaction,
+          ).last();
           expect(createNobaTransactionRequestParams).toStrictEqual({
             type: WorkflowName.CARD_REVERSAL,
             cardReversalRequest: {
@@ -1584,7 +1594,7 @@ describe("PomeloTransactionServiceTests", () => {
           );
           when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
           when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
-          when(mockTransactionService.initiateTransaction(anything())).thenReject(new Error("Already Exists"));
+          when(mockTransactionService.validateAndSaveTransaction(anything())).thenReject(new Error("Already Exists"));
           when(mockTransactionService.getTransactionByTransactionID("NOBA_TRANSACTION_ID")).thenResolve(
             creditTransaction,
           );
@@ -1630,7 +1640,9 @@ describe("PomeloTransactionServiceTests", () => {
             merchantMCC: "MCC",
           });
 
-          const [createNobaTransactionRequestParams] = capture(mockTransactionService.initiateTransaction).last();
+          const [createNobaTransactionRequestParams] = capture(
+            mockTransactionService.validateAndSaveTransaction,
+          ).last();
           expect(createNobaTransactionRequestParams).toStrictEqual({
             type: WorkflowName.CARD_REVERSAL,
             cardReversalRequest: {
@@ -1766,7 +1778,7 @@ describe("PomeloTransactionServiceTests", () => {
           );
           when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
           when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
-          when(mockTransactionService.initiateTransaction(anything())).thenReject(new Error("Internal Error"));
+          when(mockTransactionService.validateAndSaveTransaction(anything())).thenReject(new Error("Internal Error"));
           when(mockTransactionService.getTransactionByTransactionID(anyString())).thenReject(
             new Error("Internal Error"),
           );
@@ -1795,7 +1807,7 @@ describe("PomeloTransactionServiceTests", () => {
           );
           when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
           when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
-          when(mockTransactionService.initiateTransaction(anything())).thenResolve(debitTransaction);
+          when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(debitTransaction);
           when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenReject(
             new Error("Internal Error"),
           );
@@ -1824,7 +1836,7 @@ describe("PomeloTransactionServiceTests", () => {
           );
           when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
           when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
-          when(mockTransactionService.initiateTransaction(anything())).thenResolve(debitTransaction);
+          when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(debitTransaction);
           when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve({
             ...debitOrCreditWalletResponse,
             status: CircleWithdrawalStatus.FAILURE,
