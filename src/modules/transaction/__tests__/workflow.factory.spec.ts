@@ -62,6 +62,14 @@ describe("WorkflowFactory Tests", () => {
           provide: PayrollDepositImpl,
           useFactory: () => payrollDepositImpl,
         },
+        {
+          provide: CreditAdjustmentImpl,
+          useFactory: () => creditAdjustmentImpl,
+        },
+        {
+          provide: DebitAdjustmentImpl,
+          useFactory: () => debitAdjustmentImpl,
+        },
         WorkflowFactory,
       ],
     }).compile();
@@ -92,6 +100,16 @@ describe("WorkflowFactory Tests", () => {
     it("should return PayrollDepositImpl when workflowName is PAYROLL_DEPOSIT", () => {
       const workflow = workflowFactory.getWorkflowImplementation(WorkflowName.PAYROLL_DEPOSIT);
       expect(workflow).toBe(payrollDepositImpl);
+    });
+
+    it("should return CreditAdjustmentImpl when workflowName is CREDIT_ADJUSTMENT", () => {
+      const workflow = workflowFactory.getWorkflowImplementation(WorkflowName.CREDIT_ADJUSTMENT);
+      expect(workflow).toBe(creditAdjustmentImpl);
+    });
+
+    it("should return DebitAdjustmentImpl when workflowName is DEBIT_ADJUSTMENT", () => {
+      const workflow = workflowFactory.getWorkflowImplementation(WorkflowName.DEBIT_ADJUSTMENT);
+      expect(workflow).toBe(debitAdjustmentImpl);
     });
   });
 });
