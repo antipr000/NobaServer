@@ -268,7 +268,7 @@ describe("Transaction Workflow Controller tests", () => {
     it("should forward the CARD_CREDIT_ADJUSTMENT transaction request to transactionService and then forward the response to transactionWorkflowMapper", async () => {
       const transaction: Transaction = getRandomTransaction("testConsumerID");
 
-      when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
+      when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(transaction);
       when(transactionWorkflowMapper.toWorkflowTransactionDTO(anything(), anything())).thenResolve(null);
 
       await transactionWorkflowController.createTransaction({
@@ -290,7 +290,7 @@ describe("Transaction Workflow Controller tests", () => {
       expect(propagatedTransaction).toStrictEqual(transaction);
       expect(propagatedTransactionEvents).toStrictEqual([]);
 
-      const [propagatedInitiateTransactionRequest] = capture(mockTransactionService.initiateTransaction).last();
+      const [propagatedInitiateTransactionRequest] = capture(mockTransactionService.validateAndSaveTransaction).last();
       expect(propagatedInitiateTransactionRequest).toStrictEqual({
         type: WorkflowName.CARD_CREDIT_ADJUSTMENT,
         cardCreditAdjustmentRequest: {
@@ -308,7 +308,7 @@ describe("Transaction Workflow Controller tests", () => {
     it("should forward the CARD_DEBIT_ADJUSTMENT transaction request to transactionService and then forward the response to transactionWorkflowMapper", async () => {
       const transaction: Transaction = getRandomTransaction("testConsumerID");
 
-      when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
+      when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(transaction);
       when(transactionWorkflowMapper.toWorkflowTransactionDTO(anything(), anything())).thenResolve(null);
 
       await transactionWorkflowController.createTransaction({
@@ -330,7 +330,7 @@ describe("Transaction Workflow Controller tests", () => {
       expect(propagatedTransaction).toStrictEqual(transaction);
       expect(propagatedTransactionEvents).toStrictEqual([]);
 
-      const [propagatedInitiateTransactionRequest] = capture(mockTransactionService.initiateTransaction).last();
+      const [propagatedInitiateTransactionRequest] = capture(mockTransactionService.validateAndSaveTransaction).last();
       expect(propagatedInitiateTransactionRequest).toStrictEqual({
         type: WorkflowName.CARD_DEBIT_ADJUSTMENT,
         cardDebitAdjustmentRequest: {

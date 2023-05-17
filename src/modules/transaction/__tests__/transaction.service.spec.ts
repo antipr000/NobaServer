@@ -1184,7 +1184,7 @@ describe("TransactionServiceTests", () => {
         };
         when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
 
-        const response = await transactionService.initiateTransaction(request);
+        const response = await transactionService.validateAndSaveTransaction(request);
 
         expect(response).toStrictEqual(transaction);
         const [propagatedInputTransactionArg] = capture(transactionRepo.createTransaction).last();
@@ -1283,7 +1283,7 @@ describe("TransactionServiceTests", () => {
         };
         when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
 
-        const response = await transactionService.initiateTransaction(request);
+        const response = await transactionService.validateAndSaveTransaction(request);
 
         expect(response).toStrictEqual(transaction);
         const [propagatedInputTransactionArg] = capture(transactionRepo.createTransaction).last();
