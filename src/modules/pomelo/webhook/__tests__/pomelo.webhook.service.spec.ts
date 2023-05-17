@@ -378,6 +378,8 @@ describe("PomeloTransactionServiceTests", () => {
         debitConsumerID: "NOBA_CONSUMER_ID",
         debitAmount: 50,
         debitCurrency: Currency.USD,
+        creditAmount: 5000,
+        creditCurrency: Currency.COP,
         memo: "",
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
@@ -440,6 +442,8 @@ describe("PomeloTransactionServiceTests", () => {
           type: WorkflowName.CARD_WITHDRAWAL,
           cardWithdrawalRequest: {
             debitAmountInUSD: 50,
+            creditCurrency: Currency.COP,
+            creditAmount: 5000,
             debitConsumerID: "NOBA_CONSUMER_ID",
             exchangeRate: 0.01,
             nobaTransactionID: "NOBA_TRANSACTION_ID",
@@ -506,6 +510,8 @@ describe("PomeloTransactionServiceTests", () => {
           type: WorkflowName.CARD_WITHDRAWAL,
           cardWithdrawalRequest: {
             debitAmountInUSD: 49.25,
+            creditCurrency: Currency.COP,
+            creditAmount: 4924.9,
             debitConsumerID: "NOBA_CONSUMER_ID",
             exchangeRate: 0.01,
             nobaTransactionID: "NOBA_TRANSACTION_ID",
@@ -626,6 +632,8 @@ describe("PomeloTransactionServiceTests", () => {
           type: WorkflowName.CARD_WITHDRAWAL,
           cardWithdrawalRequest: {
             debitAmountInUSD: 50,
+            creditCurrency: Currency.COP,
+            creditAmount: 5000,
             debitConsumerID: "NOBA_CONSUMER_ID",
             exchangeRate: 0.01,
             nobaTransactionID: "NOBA_TRANSACTION_ID",
@@ -707,6 +715,8 @@ describe("PomeloTransactionServiceTests", () => {
           type: WorkflowName.CARD_WITHDRAWAL,
           cardWithdrawalRequest: {
             debitAmountInUSD: 50,
+            creditCurrency: Currency.COP,
+            creditAmount: 5000,
             debitConsumerID: "NOBA_CONSUMER_ID",
             exchangeRate: 0.01,
             nobaTransactionID: "NOBA_TRANSACTION_ID",
