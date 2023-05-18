@@ -157,12 +157,6 @@ nobaWorkflow:
   connectionTimeoutInMs: 1000
   namespace: "awsdev.h4n3l"
 
-dependencies:
-  emailClient: "SENDGRID"
-  smsClient: "TWILIO"
-  dashboardClient: "BUBBLE"
-  pushClient: "EXPO"
-
 mono:
   bearerToken: ""
   awsSecretNameForBearerToken: "TEST_MONO_BEARER_TOKEN"
@@ -189,6 +183,19 @@ bubble:
   awsSecretNameForBearerToken: "TEST_BUBBLE_BEARER_TOKEN"
   baseURL: ""
   awsSecretNameForBaseURL: "TEST_BUBBLE_BASE_URL"
+
+meta:
+  pixelID: ""
+  awsSecretNameForPixelID: "TEST_META_PIXEL_ID"
+  accessToken: ""
+  awsSecretNameForAccessToken: "TEST_META_ACCESS_TOKEN"
+  testEventCode: "TEST85967"
+
+dependencies:
+  emailClient: "SENDGRID"
+  smsClient: "TWILIO"
+  dashboardClient: "BUBBLE"
+  pushClient: "EXPO"
 
 locationDataFileName: "countries+states.json"
 identificationTypesFileName: "identification-types.json"
