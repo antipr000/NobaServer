@@ -103,7 +103,7 @@ export class SQLReminderScheduleRepo implements ReminderScheduleRepo {
       this.logger.error(`Failed to get reminder schedule by ID: ${e}`);
       throw new RepoException({
         message: "Failed to get reminder schedule by ID",
-        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        errorCode: RepoErrorCode.NOT_FOUND,
       });
     }
   }
@@ -121,7 +121,7 @@ export class SQLReminderScheduleRepo implements ReminderScheduleRepo {
       this.logger.error(`Failed to get reminder schedule by event ID: ${e}`);
       throw new RepoException({
         message: "Failed to get reminder schedule by event ID",
-        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        errorCode: RepoErrorCode.NOT_FOUND,
       });
     }
   }

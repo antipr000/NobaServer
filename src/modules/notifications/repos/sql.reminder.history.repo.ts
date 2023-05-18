@@ -105,7 +105,7 @@ export class SQLReminderHistoryRepo implements ReminderHistoryRepo {
       this.logger.error(`Failed to get reminder history by ID: ${e}`);
       throw new RepoException({
         message: "Failed to get reminder history by ID",
-        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        errorCode: RepoErrorCode.NOT_FOUND,
       });
     }
   }
@@ -128,10 +128,7 @@ export class SQLReminderHistoryRepo implements ReminderHistoryRepo {
       return convertToDomainReminderHistory(returnedReminderHistory);
     } catch (e) {
       this.logger.error(`Failed to get reminder history by reminder schedule ID and consumer ID: ${e}`);
-      throw new RepoException({
-        message: "Failed to get reminder history by reminder schedule ID and consumer ID",
-        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
-      });
+      return null;
     }
   }
 
@@ -149,10 +146,7 @@ export class SQLReminderHistoryRepo implements ReminderHistoryRepo {
       return convertToDomainReminderHistory(returnedReminderHistory);
     } catch (e) {
       this.logger.error(`Failed to get latest reminder history for consumer: ${e}`);
-      throw new RepoException({
-        message: "Failed to get latest reminder history for consumer",
-        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
-      });
+      return null;
     }
   }
 }
