@@ -123,7 +123,7 @@ describe("ReminderScheduleRepoTests", () => {
       expect(fetchedReminderSchedule.eventID).toEqual(reminderSchedule.eventID);
     });
 
-    it("throws error if reminder schedule does not exist", async () => {
+    it("throws RepoException if reminder schedule does not exist", async () => {
       await expect(
         reminderScheduleRepo.getReminderScheduleByID("reminder-schedule-does-not-exist"),
       ).rejects.toThrowRepoException(RepoErrorCode.NOT_FOUND);
@@ -144,7 +144,7 @@ describe("ReminderScheduleRepoTests", () => {
       expect(fetchedReminderSchedule.eventID).toEqual(reminderSchedule.eventID);
     });
 
-    it("throws error if reminder schedule does not exist", async () => {
+    it("throws RepoException if reminder schedule does not exist", async () => {
       await expect(
         reminderScheduleRepo.getReminderScheduleByEventID("reminder-schedule-does-not-exist"),
       ).rejects.toThrowRepoException(RepoErrorCode.NOT_FOUND);
