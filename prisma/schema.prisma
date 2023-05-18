@@ -56,6 +56,7 @@ model Consumer {
   nobaCards            NobaCard[]
   identifications      Identification[]
   configurations       ConsumerConfiguration[]
+  reminderHistory      ReminderHistory[]
 
   @@index([referredByID])
 }
@@ -512,13 +513,39 @@ model Identification {
   @@unique([consumerID, type, countryCode])
 }
 
+model ReminderHistory {
+  id                 String           @id @default(uuid())
+  createdTimestamp   DateTime?        @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp   DateTime?        @updatedAt // Marking optional so we don't need to set in tests
+  reminderScheduleID String
+  reminderSchedule   ReminderSchedule @relation(fields: [reminderScheduleID], references: [id], onDelete: Cascade)
+  consumerID         String
+  consumer           Consumer         @relation(fields: [consumerID], references: [id], onDelete: Cascade)
+  lastSentTimestamp  DateTime
+
+  @@unique([reminderScheduleID, consumerID])
+  @@index([lastSentTimestamp])
+}
+
+model ReminderSchedule {
+  id               String            @id @default(uuid())
+  createdTimestamp DateTime?         @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime?         @updatedAt // Marking optional so we don't need to set in tests
+  eventID          String            @unique()
+  event            Event             @relation(fields: [eventID], references: [id], onDelete: Cascade)
+  query            String
+  groupKey         String
+  reminderHistory  ReminderHistory[]
+}
+
 model Event {
-  id               String          @id @default(uuid())
-  name             String          @unique
-  createdTimestamp DateTime?       @default(now()) // Marking optional so we don't need to set in tests
-  updatedTimestamp DateTime?       @updatedAt // Marking optional so we don't need to set in tests
+  id               String            @id @default(uuid())
+  name             String            @unique
+  createdTimestamp DateTime?         @default(now()) // Marking optional so we don't need to set in tests
+  updatedTimestamp DateTime?         @updatedAt // Marking optional so we don't need to set in tests
   handlers         String[]
   templates        EventTemplate[]
+  reminderSchedule ReminderSchedule?
 }
 
 model EventTemplate {
