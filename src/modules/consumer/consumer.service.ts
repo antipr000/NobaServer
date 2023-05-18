@@ -314,11 +314,10 @@ export class ConsumerService {
   }
 
   private async completeSignup(consumer: Consumer) {
-    this.logger.info(`User email updated for first time sending welcome note, Consumer ID: ${consumer.props.id}`);
+    this.logger.info(`Sending welcome note to Consumer ID: ${consumer.props.id}`);
     const payload = NotificationPayloadMapper.toWelcomeMessageEvent(consumer);
     await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, payload);
 
-    // TODO: Notify Meta about new consumer
     await this.metaService.raiseEvent({
       eventName: MetaEventName.COMPLETE_REGISTRATION,
       userData: {
