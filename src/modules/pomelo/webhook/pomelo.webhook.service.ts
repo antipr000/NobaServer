@@ -167,19 +167,31 @@ export class PomeloTransactionService {
         circleWalletID,
         nobaTransaction.debitAmount,
       );
-      // TODO: Return more granular status from Circle service and return an appropriate error.
-      if (fundTransferStatus.status === CircleTransferStatus.FAILURE) {
-        await this.pomeloRepo.updatePomeloTransactionStatus(
-          pomeloTransaction.pomeloTransactionID,
-          PomeloTransactionStatus.INSUFFICIENT_FUNDS,
-        );
-        return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS);
-      } else {
-        await this.pomeloRepo.updatePomeloTransactionStatus(
-          pomeloTransaction.pomeloTransactionID,
-          PomeloTransactionStatus.APPROVED,
-        );
-        return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.APPROVED);
+
+      switch (fundTransferStatus.status) {
+        case CircleTransferStatus.INSUFFICIENT_FUNDS:
+          await this.pomeloRepo.updatePomeloTransactionStatus(
+            pomeloTransaction.pomeloTransactionID,
+            PomeloTransactionStatus.INSUFFICIENT_FUNDS,
+          );
+          return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS);
+
+        case CircleTransferStatus.TRANSFER_FAILED:
+          await this.pomeloRepo.updatePomeloTransactionStatus(
+            pomeloTransaction.pomeloTransactionID,
+            PomeloTransactionStatus.SYSTEM_ERROR,
+          );
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+            message: "Circle Transfer failed.",
+          });
+
+        case CircleTransferStatus.SUCCESS:
+          await this.pomeloRepo.updatePomeloTransactionStatus(
+            pomeloTransaction.pomeloTransactionID,
+            PomeloTransactionStatus.APPROVED,
+          );
+          return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.APPROVED);
       }
     } catch (err) {
       this.logger.error(err.toString());
@@ -304,13 +316,17 @@ export class PomeloTransactionService {
           break;
       }
 
-      // TODO: Return more granular status from Circle service and return an appropriate error.
-      if (fundTransferStatus.status === CircleTransferStatus.FAILURE) {
+      if (fundTransferStatus.status === CircleTransferStatus.INSUFFICIENT_FUNDS) {
         await this.pomeloRepo.updatePomeloTransactionStatus(
           pomeloTransaction.pomeloTransactionID,
           PomeloTransactionStatus.INSUFFICIENT_FUNDS,
         );
         return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS);
+      } else if (fundTransferStatus.status === CircleTransferStatus.TRANSFER_FAILED) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+          message: "Circle Transfer failed.",
+        });
       } else {
         await this.pomeloRepo.updatePomeloTransactionStatus(
           pomeloTransaction.pomeloTransactionID,
