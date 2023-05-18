@@ -184,7 +184,9 @@ export class MonoWebhookService {
 
     this.alertService.raiseAlert({
       key: AlertKey.UNMATCHED_ACCOUNT_CREDITED_MONO_EVENT,
-      message: `Unmatched event: "${JSON.stringify(event)}"`,
+      message: `Unmatched event: "${JSON.stringify(event)}". Matching criteria: amount=${
+        event.amount
+      }, documentNumber=${event.payerDocumentNumber}, name=${event.payerName}`,
     });
   }
 }

@@ -148,7 +148,7 @@ describe("MonoWebhookMapperTest", () => {
         ),
       ).toEqual({
         accountID: "acc_223RxfTSugBz8KfLSWoEnT",
-        amount: 11110000,
+        amount: 111100.0,
         currency: "COP",
         collectionLinkID: "clink_70sjVsmvrCGIiG4q8SixH7",
         monoTransactionID: "3062160",
@@ -313,7 +313,7 @@ describe("MonoWebhookMapperTest", () => {
         monoWebhookMappers.convertBankTransferApproved(bankTransferApprovedWebhookEvent, webhookResponseSignature),
       ).toEqual({
         accountID: "acc_16ktUqSO7G0qTHDz8I3qrG",
-        amount: 1600000,
+        amount: 16000.0,
         currency: "COP",
         batchID: "bat_2DpSchlriwoCuyGMOoIuwp",
         transferID: "trn_2PVWOx9dZKJMBZw7opjrrs",
@@ -477,7 +477,7 @@ describe("MonoWebhookMapperTest", () => {
         monoWebhookMappers.convertBankTransferRejected(bankTransferRejectedWebhookEvent, webhookResponseSignature),
       ).toEqual({
         accountID: "acc_16ktUqSO7G0qTHDz8I3qrG",
-        amount: 1600000,
+        amount: 16000.0,
         currency: "COP",
         batchID: "bat_2DpSchlriwoCuyGMOoIuwp",
         transferID: "trn_2PVWOx9dZKJMBZw7opjrrs",
@@ -699,7 +699,7 @@ describe("MonoWebhookMapperTest", () => {
       expect(response).toStrictEqual({
         accountID: "acc_7gIagLj2uJPHBqcoidGQGi",
         accountNumber: "095000809",
-        amount: 69300000,
+        amount: 693000.0,
         currency: MonoCurrency.COP,
         transactionID: "tx_4jxOSQGZBbFWV672igXiIM",
         payerDocumentNumber: "901492363",
