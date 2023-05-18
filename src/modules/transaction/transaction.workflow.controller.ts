@@ -27,12 +27,11 @@ import {
   DebitBankRequestDTO,
   WorkflowTransactionDTO,
 } from "./dto/transaction.workflow.controller.dto";
-import { DebitBankResponse, Transaction, TransactionStatus } from "./domain/Transaction";
+import { DebitBankResponse, Transaction, TransactionStatus, WorkflowName } from "./domain/Transaction";
 import { TransactionWorkflowMapper } from "./mapper/transaction.workflow.mapper";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { TransactionEvent } from "./domain/TransactionEvent";
 import { ServiceErrorCode, ServiceException } from "../../../src/core/exception/service.exception";
-import { WorkflowName } from "../../infra/temporal/workflow";
 import { InitiateTransactionRequest } from "./dto/transaction.service.dto";
 
 @Controller("wf/v1/transactions")

@@ -104,7 +104,6 @@ export class TransactionService {
   }
 
   async validateAndSaveTransaction(request: InitiateTransactionRequest): Promise<Transaction> {
-    // Should figure out a better way to check against union typed enums
     if (
       request.type !== WorkflowName.CARD_WITHDRAWAL &&
       request.type !== WorkflowName.CARD_REVERSAL &&

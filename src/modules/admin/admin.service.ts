@@ -22,6 +22,7 @@ import { Transaction } from "../transaction/domain/Transaction";
 import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { TransactionEvent } from "../transaction/domain/TransactionEvent";
 import { CircleService } from "../circle/public/circle.service";
+import { InitiateTransactionRequest } from "../transaction/dto/transaction.service.dto";
 
 @Injectable()
 export class AdminService {
@@ -261,6 +262,10 @@ export class AdminService {
 
   async getTransactionEvents(transactionID: string, includeInternalEvents: boolean): Promise<TransactionEvent[]> {
     return this.transactionService.getTransactionEvents(transactionID, includeInternalEvents);
+  }
+
+  async initiateTransaction(request: InitiateTransactionRequest): Promise<Transaction> {
+    return this.transactionService.initiateTransaction(request);
   }
 
   private shouldUpdateField(newValue: any, oldValue: any): boolean {
