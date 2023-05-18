@@ -132,13 +132,17 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
   const creditAdjustmentJoiValidationKeys: KeysRequired<CreditAdjustmentTransactionRequest> = {
     creditConsumerID: Joi.string().required(),
     creditAmount: Joi.number().required(),
-    creditCurrency: Joi.string().required(),
+    creditCurrency: Joi.string()
+      .required()
+      .valid(...Object.values(Currency)),
     memo: Joi.string().required(),
   };
   const debitAdjustmentJoiValidationKeys: KeysRequired<DebitAdjustmentTransactionRequest> = {
     debitConsumerID: Joi.string().required(),
     debitAmount: Joi.number().required(),
-    debitCurrency: Joi.string().required(),
+    debitCurrency: Joi.string()
+      .required()
+      .valid(...Object.values(Currency)),
     memo: Joi.string().required(),
   };
   const intiateTransactionRequestValidationKeys: KeysRequired<InitiateTransactionRequest> = {

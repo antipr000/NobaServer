@@ -74,6 +74,10 @@ import { getMockExchangeRateServiceWithDefaults } from "../../../modules/exchang
 import { ExchangeRateDTO } from "../../../modules/exchangerate/dto/exchangerate.dto";
 import { MonoService } from "../../../modules/mono/public/mono.service";
 import { getMockMonoServiceWithDefaults } from "../../../modules/mono/public/mocks/mock.mono.service";
+import { CreditAdjustmentImpl } from "../factory/credit.adjustment.impl";
+import { getMockCreditAdjustmentImplWithDefaults } from "../mocks/mock.credit.adjustment.impl";
+import { getMockDebitAdjustmentImplWithDefaults } from "../mocks/mock.dedit.adjustment.impl";
+import { DebitAdjustmentImpl } from "../factory/debit.adjustment.impl";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -88,6 +92,8 @@ describe("TransactionServiceTests", () => {
   let walletTransferImpl: WalletTransferImpl;
   let walletWithdrawalImpl: WalletWithdrawalImpl;
   let walletDepositImpl: WalletDepositImpl;
+  let creditAdjustmentImpl: CreditAdjustmentImpl;
+  let debitAdjustmentImpl: DebitAdjustmentImpl;
   let bankFactory: BankFactory;
   let monoService: MonoService;
   let withdrawalDetailsRepo: IWithdrawalDetailsRepo;
@@ -105,6 +111,8 @@ describe("TransactionServiceTests", () => {
     walletTransferImpl = getMockWalletTransferImplWithDefaults();
     walletWithdrawalImpl = getMockWalletWithdrawalImplWithDefaults();
     walletDepositImpl = getMockWalletDepositImplWithDefaults();
+    creditAdjustmentImpl = getMockCreditAdjustmentImplWithDefaults();
+    debitAdjustmentImpl = getMockDebitAdjustmentImplWithDefaults();
     bankFactory = getMockBankFactoryWithDefaults();
     monoService = getMockMonoServiceWithDefaults();
     withdrawalDetailsRepo = getMockWithdrawalDetailsRepoWithDefaults();
@@ -690,6 +698,184 @@ describe("TransactionServiceTests", () => {
   });
 
   describe("initiateTransaction", () => {
+    describe("CREDIT_ADJUSTMENT", () => {
+      describe("validation errors", () => {
+        const validateAndSaveTransactionRequest: InitiateTransactionRequest = {
+          type: WorkflowName.CREDIT_ADJUSTMENT,
+          creditAdjustmentRequest: {
+            creditAmount: 100,
+            creditCurrency: Currency.COP,
+            creditConsumerID: "CREDIT_CONSUMER_ID",
+            memo: "MEMO",
+          },
+        };
+
+        it.each(["creditAmount", "creditCurrency", "creditConsumerID", "memo"])(
+          "should throw error if '%s' is not specified",
+          async field => {
+            const request = JSON.parse(JSON.stringify(validateAndSaveTransactionRequest));
+            delete request["creditAdjustmentRequest"][field];
+
+            try {
+              await transactionService.initiateTransaction(request);
+              expect(true).toBe(false);
+            } catch (err) {
+              expect(err.message).toEqual(expect.stringContaining("creditAdjustmentRequest"));
+              expect(err.message).toEqual(expect.stringContaining(`${field}`));
+            }
+          },
+        );
+
+        it.each(["creditCurrency"])("should throw error if '%s' has INVALID value", async field => {
+          const request = JSON.parse(JSON.stringify(validateAndSaveTransactionRequest));
+          request["creditAdjustmentRequest"][field] = "INVALID";
+
+          try {
+            await transactionService.initiateTransaction(request);
+            expect(true).toBe(false);
+          } catch (err) {
+            expect(err.message).toEqual(expect.stringContaining("creditAdjustmentRequest"));
+            expect(err.message).toEqual(expect.stringContaining(`${field}`));
+          }
+        });
+      });
+
+      it("should correctly save the CREDIT_ADJUSTMENT transaction", async () => {
+        const request: InitiateTransactionRequest = {
+          type: WorkflowName.CREDIT_ADJUSTMENT,
+          creditAdjustmentRequest: {
+            creditAmount: 100,
+            creditCurrency: Currency.COP,
+            creditConsumerID: "CREDIT_CONSUMER_ID",
+            memo: "MEMO",
+          },
+        };
+        const transaction: Transaction = {
+          id: "NOBA_TRANSACTION_ID",
+          transactionRef: "DUMMY_REF",
+          creditAmount: 100,
+          creditCurrency: Currency.COP,
+          creditConsumerID: "CREDIT_CONSUMER_ID",
+          transactionFees: [],
+          exchangeRate: null,
+          sessionKey: WorkflowName.CREDIT_ADJUSTMENT,
+          status: TransactionStatus.INITIATED,
+          workflowName: WorkflowName.CREDIT_ADJUSTMENT,
+        };
+        when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
+        when(workflowFactory.getWorkflowImplementation(WorkflowName.CREDIT_ADJUSTMENT)).thenReturn(
+          instance(creditAdjustmentImpl),
+        );
+        when(creditAdjustmentImpl.initiateWorkflow(deepEqual(transaction))).thenResolve();
+
+        const response = await transactionService.initiateTransaction(request);
+
+        expect(response).toStrictEqual(transaction);
+        const [propagatedInputTransactionArg] = capture(transactionRepo.createTransaction).last();
+        expect(propagatedInputTransactionArg).toStrictEqual({
+          transactionRef: expect.any(String),
+          workflowName: WorkflowName.CREDIT_ADJUSTMENT,
+          creditAmount: 100,
+          creditCurrency: Currency.COP,
+          creditConsumerID: "CREDIT_CONSUMER_ID",
+          memo: "MEMO",
+          sessionKey: WorkflowName.CREDIT_ADJUSTMENT,
+          exchangeRate: null,
+          transactionFees: [],
+        });
+      });
+    });
+
+    describe("DEBIT_ADJUSTMENT", () => {
+      describe("validation errors", () => {
+        const validateAndSaveTransactionRequest: InitiateTransactionRequest = {
+          type: WorkflowName.DEBIT_ADJUSTMENT,
+          debitAdjustmentRequest: {
+            debitAmount: 100,
+            debitCurrency: Currency.COP,
+            debitConsumerID: "DEBIT_CONSUMER_ID",
+            memo: "MEMO",
+          },
+        };
+
+        it.each(["debitAmount", "debitCurrency", "debitConsumerID", "memo"])(
+          "should throw error if '%s' is not specified",
+          async field => {
+            const request = JSON.parse(JSON.stringify(validateAndSaveTransactionRequest));
+            delete request["debitAdjustmentRequest"][field];
+
+            try {
+              await transactionService.initiateTransaction(request);
+              expect(true).toBe(false);
+            } catch (err) {
+              expect(err.message).toEqual(expect.stringContaining("debitAdjustmentRequest"));
+              expect(err.message).toEqual(expect.stringContaining(`${field}`));
+            }
+          },
+        );
+
+        it.each(["debitCurrency"])("should throw error if '%s' has INVALID value", async field => {
+          const request = JSON.parse(JSON.stringify(validateAndSaveTransactionRequest));
+          request["debitAdjustmentRequest"][field] = "INVALID";
+
+          try {
+            await transactionService.initiateTransaction(request);
+            expect(true).toBe(false);
+          } catch (err) {
+            expect(err.message).toEqual(expect.stringContaining("debitAdjustmentRequest"));
+            expect(err.message).toEqual(expect.stringContaining(`${field}`));
+          }
+        });
+      });
+
+      it("should correctly save the DEBIT_ADJUSTMENT transaction", async () => {
+        const request: InitiateTransactionRequest = {
+          type: WorkflowName.DEBIT_ADJUSTMENT,
+          debitAdjustmentRequest: {
+            debitAmount: 100,
+            debitCurrency: Currency.COP,
+            debitConsumerID: "DEBIT_CONSUMER_ID",
+            memo: "MEMO",
+          },
+        };
+        const transaction: Transaction = {
+          id: "NOBA_TRANSACTION_ID",
+          transactionRef: "DUMMY_REF",
+          debitAmount: 100,
+          debitCurrency: Currency.COP,
+          debitConsumerID: "DEBIT_CONSUMER_ID",
+          transactionFees: [],
+          exchangeRate: null,
+          sessionKey: WorkflowName.DEBIT_ADJUSTMENT,
+          status: TransactionStatus.INITIATED,
+          workflowName: WorkflowName.DEBIT_ADJUSTMENT,
+        };
+        when(transactionRepo.createTransaction(anything())).thenResolve(transaction);
+        when(workflowFactory.getWorkflowImplementation(WorkflowName.DEBIT_ADJUSTMENT)).thenReturn(
+          instance(debitAdjustmentImpl),
+        );
+        when(debitAdjustmentImpl.initiateWorkflow(deepEqual(transaction))).thenResolve();
+
+        const response = await transactionService.initiateTransaction(request);
+
+        expect(response).toStrictEqual(transaction);
+        const [propagatedInputTransactionArg] = capture(transactionRepo.createTransaction).last();
+        expect(propagatedInputTransactionArg).toStrictEqual({
+          transactionRef: expect.any(String),
+          workflowName: WorkflowName.DEBIT_ADJUSTMENT,
+          debitAmount: 100,
+          debitCurrency: Currency.COP,
+          debitConsumerID: "DEBIT_CONSUMER_ID",
+          memo: "MEMO",
+          sessionKey: WorkflowName.DEBIT_ADJUSTMENT,
+          exchangeRate: null,
+          transactionFees: [],
+        });
+      });
+    });
+  });
+
+  describe("validateAndSaveTransaction", () => {
     it.each([
       WorkflowName.PAYROLL_PROCESSING,
       WorkflowName.WALLET_DEPOSIT,
@@ -721,7 +907,7 @@ describe("TransactionServiceTests", () => {
     // TODO: This tests should be moved along with the introduction of Inheritance hierarchy.
     describe("CARD_WITHDRAWAL", () => {
       describe("validation errors", () => {
-        const validInitiateTransactionRequest: InitiateTransactionRequest = {
+        const validateAndSaveTransactionRequest: InitiateTransactionRequest = {
           type: WorkflowName.CARD_WITHDRAWAL,
           cardWithdrawalRequest: {
             debitAmountInUSD: 100,
@@ -743,7 +929,7 @@ describe("TransactionServiceTests", () => {
           "creditCurrency",
           "creditAmount",
         ])("should throw error if '%s' is not specified", async field => {
-          const request = JSON.parse(JSON.stringify(validInitiateTransactionRequest));
+          const request = JSON.parse(JSON.stringify(validateAndSaveTransactionRequest));
           delete request["cardWithdrawalRequest"][field];
 
           try {
@@ -756,7 +942,7 @@ describe("TransactionServiceTests", () => {
         });
 
         it.each(["creditCurrency"])("should throw error if '%s' has INVALID value", async field => {
-          const request = JSON.parse(JSON.stringify(validInitiateTransactionRequest));
+          const request = JSON.parse(JSON.stringify(validateAndSaveTransactionRequest));
           request["cardWithdrawalRequest"][field] = "INVALID";
 
           try {
@@ -947,7 +1133,7 @@ describe("TransactionServiceTests", () => {
 
     describe("PAYROLL_DEPOSIT", () => {
       describe("validation errors", () => {
-        const validInitiateTransactionRequest: InitiateTransactionRequest = {
+        const validateAndSaveTransactionRequest: InitiateTransactionRequest = {
           type: WorkflowName.PAYROLL_DEPOSIT,
           payrollDepositRequest: {
             disbursementID: "DISBURSEMENT_ID",
@@ -955,7 +1141,7 @@ describe("TransactionServiceTests", () => {
         };
 
         it.each(["disbursementID"])("should throw error if '%s' is not specified", async field => {
-          const request = JSON.parse(JSON.stringify(validInitiateTransactionRequest));
+          const request = JSON.parse(JSON.stringify(validateAndSaveTransactionRequest));
           delete request["payrollDepositRequest"][field];
 
           try {
@@ -1107,7 +1293,7 @@ describe("TransactionServiceTests", () => {
 
     describe("CARD_CREDIT_ADJUSTMENT", () => {
       describe("validation errors", () => {
-        const validInitiateTransactionRequest: InitiateTransactionRequest = {
+        const validateAndSaveTransactionRequest: InitiateTransactionRequest = {
           type: WorkflowName.CARD_CREDIT_ADJUSTMENT,
           cardCreditAdjustmentRequest: {
             creditAmount: 100,
@@ -1129,11 +1315,11 @@ describe("TransactionServiceTests", () => {
           "memo",
           "creditConsumerID",
         ])("should throw error if '%s' is not specified", async field => {
-          const request = JSON.parse(JSON.stringify(validInitiateTransactionRequest));
+          const request = JSON.parse(JSON.stringify(validateAndSaveTransactionRequest));
           delete request["cardCreditAdjustmentRequest"][field];
 
           try {
-            await transactionService.initiateTransaction(request);
+            await transactionService.validateAndSaveTransaction(request);
             expect(true).toBe(false);
           } catch (err) {
             expect(err.message).toEqual(expect.stringContaining("cardCreditAdjustmentRequest"));
@@ -1142,11 +1328,11 @@ describe("TransactionServiceTests", () => {
         });
 
         it.each(["creditCurrency", "debitCurrency"])("should throw error if '%s' has INVALID value", async field => {
-          const request = JSON.parse(JSON.stringify(validInitiateTransactionRequest));
+          const request = JSON.parse(JSON.stringify(validateAndSaveTransactionRequest));
           request["cardCreditAdjustmentRequest"][field] = "INVALID";
 
           try {
-            await transactionService.initiateTransaction(request);
+            await transactionService.validateAndSaveTransaction(request);
             expect(true).toBe(false);
           } catch (err) {
             expect(err.message).toEqual(expect.stringContaining("cardCreditAdjustmentRequest"));
@@ -1206,7 +1392,7 @@ describe("TransactionServiceTests", () => {
 
     describe("CARD_DEBIT_ADJUSTMENT", () => {
       describe("validation errors", () => {
-        const validInitiateTransactionRequest: InitiateTransactionRequest = {
+        const validateAndSaveTransactionRequest: InitiateTransactionRequest = {
           type: WorkflowName.CARD_DEBIT_ADJUSTMENT,
           cardDebitAdjustmentRequest: {
             creditAmount: 100,
@@ -1228,11 +1414,11 @@ describe("TransactionServiceTests", () => {
           "memo",
           "debitConsumerID",
         ])("should throw error if '%s' is not specified", async field => {
-          const request = JSON.parse(JSON.stringify(validInitiateTransactionRequest));
+          const request = JSON.parse(JSON.stringify(validateAndSaveTransactionRequest));
           delete request["cardDebitAdjustmentRequest"][field];
 
           try {
-            await transactionService.initiateTransaction(request);
+            await transactionService.validateAndSaveTransaction(request);
             expect(true).toBe(false);
           } catch (err) {
             expect(err.message).toEqual(expect.stringContaining("cardDebitAdjustmentRequest"));
@@ -1241,13 +1427,14 @@ describe("TransactionServiceTests", () => {
         });
 
         it.each(["creditCurrency", "debitCurrency"])("should throw error if '%s' has INVALID value", async field => {
-          const request = JSON.parse(JSON.stringify(validInitiateTransactionRequest));
+          const request = JSON.parse(JSON.stringify(validateAndSaveTransactionRequest));
           request["cardDebitAdjustmentRequest"][field] = "INVALID";
 
           try {
-            await transactionService.initiateTransaction(request);
+            await transactionService.validateAndSaveTransaction(request);
             expect(true).toBe(false);
           } catch (err) {
+            console.log(err);
             expect(err.message).toEqual(expect.stringContaining("cardDebitAdjustmentRequest"));
             expect(err.message).toEqual(expect.stringContaining(`${field}`));
           }
