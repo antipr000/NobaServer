@@ -43,7 +43,6 @@ import { IdentificationTypeCountryDTO } from "./modules/common/dto/identificatio
 import { CircleService } from "./modules/circle/public/circle.service";
 import { ExchangeRateDTO } from "./modules/exchangerate/dto/exchangerate.dto";
 import { ExchangeRateService } from "./modules/exchangerate/exchangerate.service";
-import { EventRequest, ServerEvent, UserData } from "facebook-nodejs-business-sdk";
 
 @Controller("v1")
 @ApiHeaders(getCommonHeaders())
@@ -88,39 +87,6 @@ export class AppController {
       monoStatus: monoHealth.status,
       temporalStatus: temporalHealth.status,
     };
-  }
-
-  @Public()
-  @Get("testfb")
-  @ApiOperation({ summary: "Tests facebook integration" })
-  @ApiResponse({
-    status: HttpStatus.OK,
-  })
-  @ApiTags("Assets")
-  async fbtest(): Promise<void> {
-    const accessToken =
-      "EAADFWYkwrZBkBAED54OnFXbYmHb53r54Q39qtDTs7Msemd0eXrRbXi9I5Y5cZA6tdtp05HI4FWtseb45okXWgZCFyZAFAvzZBUJ1a4TALHFSXDn7ZAYbUw6L8ijdLpvNfiLpVf5izRulW4pFWrZAvgHPHuakXfbOrkCt4onNChNZB3aWZAYQquu7fZCBhYFiqjoioZD";
-    //const api = FacebookAdsApi.init(accessToken);
-    //const pixelID = "247989897735553";
-    const pixelID = "1270469597200036";
-
-    const userData = new UserData().setEmail("justin@noba.com").setPhone("+13606905933");
-    const serverEvent = new ServerEvent()
-      .setEventName("CompleteRegistration")
-      .setEventTime(Math.round(Date.now() / 1000))
-      .setActionSource("website")
-      .setUserData(userData);
-    const eventsData = [serverEvent];
-    const eventRequest = new EventRequest(accessToken, pixelID).setEvents(eventsData).setTestEventCode("TEST20688");
-
-    eventRequest.execute().then(
-      res => {
-        console.log(res);
-      },
-      err => {
-        console.log(err);
-      },
-    );
   }
 
   @Public()
