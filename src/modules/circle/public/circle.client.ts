@@ -1,4 +1,14 @@
-import { Circle, CircleEnvironments, CreateWalletResponse, TransferErrorCode } from "@circle-fin/circle-sdk";
+import {
+  Circle,
+  CircleEnvironments,
+  CreateTransferResponse,
+  TransferDestinationWalletLocation,
+  CreateWalletResponse,
+  Transfer,
+  TransferErrorCode,
+  TransferStatusEnum,
+  TransferSourceWalletLocation,
+} from "@circle-fin/circle-sdk";
 import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { CircleConfigs } from "../../../config/configtypes/CircleConfigs";
@@ -6,11 +16,7 @@ import { CIRCLE_CONFIG_KEY, NOBA_CONFIG_KEY } from "../../../config/Configuratio
 import { CustomConfigService } from "../../../core/utils/AppConfigModule";
 import { Logger } from "winston";
 import { AxiosRequestConfig, AxiosResponse } from "axios";
-import {
-  CircleWithdrawalRequest,
-  CircleWithdrawalResponse,
-  CircleWithdrawalStatusMap,
-} from "../../psp/domain/CircleTypes";
+import { CircleTransferStatus, TransferRequest, TransferResponse } from "../../psp/domain/CircleTypes";
 import { fromString as convertToUUIDv4 } from "uuidv4";
 import { Utils } from "../../../core/utils/Utils";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
@@ -125,9 +131,9 @@ export class CircleClient implements IClient {
     }
   }
 
-  async transfer(request: CircleWithdrawalRequest): Promise<CircleWithdrawalResponse> {
+  async transfer(request: TransferRequest): Promise<TransferResponse> {
     try {
-      const transferResponse = await this.circleApi.transfers.createTransfer(
+      const transferResponse: AxiosResponse<CreateTransferResponse> = await this.circleApi.transfers.createTransfer(
         {
           idempotencyKey: convertToUUIDv4(request.idempotencyKey),
           source: { id: request.sourceWalletID, type: "wallet" },
@@ -137,40 +143,43 @@ export class CircleClient implements IClient {
         this.axiosConfig,
       );
 
-      const transferData = transferResponse.data.data;
-      if (transferData.status !== "failed") {
-        return {
-          id: transferData.id,
-          status: CircleWithdrawalStatusMap[transferData.status],
-          createdAt: transferData.createDate,
-        };
+      if (transferResponse.status !== 201) {
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.UNKNOWN,
+          message: `Circle Transfer request failed.`,
+        });
       }
 
-      switch (transferData.errorCode) {
-        case TransferErrorCode.TransferFailed:
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.UNKNOWN,
-            message: `Transfer failed for idempotency key: ${request.idempotencyKey}`,
-            retry: true,
-          });
-        case TransferErrorCode.TransferDenied:
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.UNKNOWN,
-            message: `Transfer denied for idempotency key: ${request.idempotencyKey}`,
-            retry: true,
-          });
-        case TransferErrorCode.BlockchainError:
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.UNKNOWN,
-            message: `Blockchain error for idempotency key: ${request.idempotencyKey}`,
-            retry: true,
-          });
-        case TransferErrorCode.InsufficientFunds:
-          throw new ServiceException({
-            errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
-            message: `Insufficient idempotency key: ${request.idempotencyKey}`,
-          });
+      const transferData: Transfer = transferResponse.data.data;
+      const response: TransferResponse = {
+        transferID: transferData.id,
+        status: CircleTransferStatus.SUCCESS,
+        createdAt: transferData.createDate,
+        amount: Number(transferData.amount.amount),
+        destinationWalletID: (transferData.destination as TransferDestinationWalletLocation).id,
+        sourceWalletID: (transferData.source as TransferSourceWalletLocation).id,
+      };
+
+      if (transferData.status === TransferStatusEnum.Failed) {
+        switch (transferData.errorCode) {
+          case TransferErrorCode.TransferFailed:
+            response.status = CircleTransferStatus.TRANSFER_FAILED;
+            break;
+
+          case TransferErrorCode.TransferDenied:
+            response.status = CircleTransferStatus.TRANSFER_FAILED;
+            break;
+
+          case TransferErrorCode.BlockchainError:
+            response.status = CircleTransferStatus.TRANSFER_FAILED;
+            break;
+
+          case TransferErrorCode.InsufficientFunds:
+            response.status = CircleTransferStatus.INSUFFICIENT_FUNDS;
+            break;
+        }
       }
+      return response;
     } catch (err) {
       this.logger.error(`Error while transferring funds: ${JSON.stringify(err.response?.data)}`);
       if (err instanceof ServiceException) {

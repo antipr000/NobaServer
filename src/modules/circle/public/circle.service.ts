@@ -9,6 +9,9 @@ import { UpdateWalletBalanceServiceDTO } from "../../../modules/psp/domain/Updat
 import { DebitBankFactoryRequest, DebitBankFactoryResponse } from "../../../modules/psp/domain/BankFactoryTypes";
 import { BalanceDTO } from "../../../modules/psp/dto/balance.dto";
 import { IBank } from "../../../modules/psp/factory/ibank";
+import { CircleTransferStatus, TransferResponse } from "../../../modules/psp/domain/CircleTypes";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { AlertKey } from "../../../modules/common/alerts/alert.dto";
 
 @Injectable()
 export class CircleService implements IBank {
@@ -20,6 +23,9 @@ export class CircleService implements IBank {
 
   @Inject()
   private readonly circleClient: CircleClient;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   public async checkCircleHealth(): Promise<HealthCheckResponse> {
     return this.circleClient.getHealth();
@@ -109,7 +115,7 @@ export class CircleService implements IBank {
     });
 
     return {
-      id: response.id,
+      id: response.transferID,
       status: response.status,
       createdAt: response.createdAt,
     };
@@ -154,7 +160,7 @@ export class CircleService implements IBank {
     });
 
     return {
-      id: response.id,
+      id: response.transferID,
       status: response.status,
       createdAt: response.createdAt,
     };
@@ -204,7 +210,7 @@ export class CircleService implements IBank {
     });
 
     return {
-      id: response.id,
+      id: response.transferID,
       status: response.status,
       createdAt: response.createdAt,
     };
@@ -215,6 +221,42 @@ export class CircleService implements IBank {
       balance: await this.getWalletBalance(accountID),
       currency: "USD",
     };
+  }
+
+  public async getTransferStatus(
+    idempotencyKey: string,
+    sourceWalletID: string,
+    destinationWalletID: string,
+    amount: number,
+  ): Promise<CircleTransferStatus> {
+    const masterWalletID: string = await this.getMasterWalletID();
+    const transferResponse: TransferResponse = await this.circleClient.transfer({
+      idempotencyKey: idempotencyKey,
+      sourceWalletID: masterWalletID,
+      destinationWalletID: masterWalletID,
+      amount: 1,
+    });
+
+    if (
+      transferResponse.sourceWalletID === masterWalletID &&
+      transferResponse.destinationWalletID === masterWalletID &&
+      transferResponse.amount === 1
+    ) {
+      return CircleTransferStatus.TRANSFER_FAILED;
+    }
+    if (
+      transferResponse.sourceWalletID === sourceWalletID &&
+      transferResponse.destinationWalletID === destinationWalletID &&
+      transferResponse.amount === amount
+    ) {
+      return transferResponse.status;
+    }
+
+    this.alertService.raiseAlert({
+      key: AlertKey.UNEXPECTED_TRANSFER_CHECK,
+      message: `Unexpected 'getTransferStatus' requested ('${idempotencyKey}', '${sourceWalletID}', '${destinationWalletID}', '${amount}')`,
+    });
+    return CircleTransferStatus.TRANSFER_FAILED;
   }
 
   debit(request: DebitBankFactoryRequest): Promise<DebitBankFactoryResponse> {

@@ -27,7 +27,7 @@ import { WorkflowName } from "../../../infra/temporal/workflow";
 import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
 import { Transaction } from "../../../modules/transaction/domain/Transaction";
 import { UpdateWalletBalanceServiceDTO } from "../../../modules/psp/domain/UpdateWalletBalanceServiceDTO";
-import { CircleWithdrawalStatus } from "../../../modules/psp/domain/CircleTypes";
+import { CircleTransferStatus } from "../../../modules/psp/domain/CircleTypes";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { Utils } from "../../../core/utils/Utils";
 import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
@@ -168,7 +168,7 @@ export class PomeloTransactionService {
         nobaTransaction.debitAmount,
       );
       // TODO: Return more granular status from Circle service and return an appropriate error.
-      if (fundTransferStatus.status === CircleWithdrawalStatus.FAILURE) {
+      if (fundTransferStatus.status === CircleTransferStatus.FAILURE) {
         await this.pomeloRepo.updatePomeloTransactionStatus(
           pomeloTransaction.pomeloTransactionID,
           PomeloTransactionStatus.INSUFFICIENT_FUNDS,
@@ -305,7 +305,7 @@ export class PomeloTransactionService {
       }
 
       // TODO: Return more granular status from Circle service and return an appropriate error.
-      if (fundTransferStatus.status === CircleWithdrawalStatus.FAILURE) {
+      if (fundTransferStatus.status === CircleTransferStatus.FAILURE) {
         await this.pomeloRepo.updatePomeloTransactionStatus(
           pomeloTransaction.pomeloTransactionID,
           PomeloTransactionStatus.INSUFFICIENT_FUNDS,

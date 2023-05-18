@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
-import { anyString, deepEqual, instance, when } from "ts-mockito";
+import { anyString, anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { CircleClient } from "../circle.client";
 import { CircleService } from "../circle.service";
 import { getMockCircleClientWithDefaults } from "../mocks/mock.circle.client";
@@ -11,18 +11,23 @@ import { Result } from "../../../../core/logic/Result";
 import { getMockCircleRepoWithDefaults } from "../../repos/mocks/mock.circle.repo";
 import { ICircleRepo } from "../../repos/circle.repo";
 import { Circle } from "../../../../modules/psp/domain/Circle";
-import { CircleWithdrawalStatus } from "../../../../modules/psp/domain/CircleTypes";
+import { CircleTransferStatus, TransferResponse } from "../../../../modules/psp/domain/CircleTypes";
+import { AlertService } from "../../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../../modules/common/mocks/mock.alert.service";
+import { AlertKey } from "../../../../modules/common/alerts/alert.dto";
 
 describe("CircleService", () => {
   let circleService: CircleService;
   let mockCircleClient: CircleClient;
   let mockCircleRepo: ICircleRepo;
+  let mockAlertService: AlertService;
 
   jest.setTimeout(30000);
 
   beforeEach(async () => {
     mockCircleClient = getMockCircleClientWithDefaults();
     mockCircleRepo = getMockCircleRepoWithDefaults();
+    mockAlertService = getMockAlertServiceWithDefaults();
 
     const CircleRepoProvider = {
       provide: "CircleRepo",
@@ -36,6 +41,10 @@ describe("CircleService", () => {
         {
           provide: CircleClient,
           useFactory: () => instance(mockCircleClient),
+        },
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
         },
         CircleRepoProvider,
         CircleService,
@@ -125,7 +134,7 @@ describe("CircleService", () => {
     it("should debit a wallet balance", async () => {
       const circleResponse = {
         id: "transferID",
-        status: CircleWithdrawalStatus.SUCCESS,
+        status: CircleTransferStatus.SUCCESS,
         createdAt: "dateNow",
       };
 
@@ -141,8 +150,11 @@ describe("CircleService", () => {
           }),
         ),
       ).thenResolve({
-        id: "transferID",
-        status: CircleWithdrawalStatus.SUCCESS,
+        transferID: "transferID",
+        amount: 100,
+        sourceWalletID: "walletID",
+        destinationWalletID: "masterWalletID",
+        status: CircleTransferStatus.SUCCESS,
         createdAt: "dateNow",
       });
       const walletBalanceResponse = await circleService.debitWalletBalance("workflowID", "walletID", 100);
@@ -195,7 +207,7 @@ describe("CircleService", () => {
     it("should credit a wallet balance", async () => {
       const circleResponse = {
         id: "transferID",
-        status: CircleWithdrawalStatus.SUCCESS,
+        status: CircleTransferStatus.SUCCESS,
         createdAt: "dateNow",
       };
 
@@ -211,8 +223,11 @@ describe("CircleService", () => {
           }),
         ),
       ).thenResolve({
-        id: "transferID",
-        status: CircleWithdrawalStatus.SUCCESS,
+        transferID: "transferID",
+        amount: 100,
+        sourceWalletID: "walletID",
+        destinationWalletID: "masterWalletID",
+        status: CircleTransferStatus.SUCCESS,
         createdAt: "dateNow",
       });
       const walletBalanceResponse = await circleService.creditWalletBalance("workflowID", "walletID", 100);
@@ -332,8 +347,11 @@ describe("CircleService", () => {
           }),
         ),
       ).thenResolve({
-        id: "transferID",
-        status: CircleWithdrawalStatus.SUCCESS,
+        transferID: "transferID",
+        amount: 100,
+        sourceWalletID: "sourceWalletID",
+        destinationWalletID: "destinationWalletID",
+        status: CircleTransferStatus.SUCCESS,
         createdAt: "dateNow",
       });
       const transferResponse = await circleService.transferFunds(
@@ -344,7 +362,7 @@ describe("CircleService", () => {
       );
       expect(transferResponse).toEqual({
         id: "transferID",
-        status: CircleWithdrawalStatus.SUCCESS,
+        status: CircleTransferStatus.SUCCESS,
         createdAt: "dateNow",
       });
     });
@@ -367,5 +385,128 @@ describe("CircleService", () => {
       );
       expect(circleService.getBalance("walletID")).rejects.toThrowServiceException(ServiceErrorCode.UNKNOWN);
     });
+  });
+
+  describe("getTransferStatus", () => {
+    it("should return FAILED if the original transaction 'never' went through and proxy txn succeeds", async () => {
+      when(mockCircleClient.getMasterWalletID()).thenResolve("MASTER_WALLET_ID");
+      when(mockCircleClient.transfer(anything())).thenResolve({
+        transferID: "TRANSFER_ID",
+        status: CircleTransferStatus.SUCCESS,
+        createdAt: Date.now().toLocaleString(),
+        amount: 1,
+        destinationWalletID: "MASTER_WALLET_ID",
+        sourceWalletID: "MASTER_WALLET_ID",
+      });
+
+      const response: CircleTransferStatus = await circleService.getTransferStatus(
+        "IDEMPOTENCY_KEY",
+        "SOURCE_WALLET_ID",
+        "DESTINATION_WALLET_ID",
+        11,
+      );
+
+      expect(response).toBe(CircleTransferStatus.TRANSFER_FAILED);
+      const [propagatedCircleTransferRequest] = capture(mockCircleClient.transfer).last();
+      expect(propagatedCircleTransferRequest).toStrictEqual({
+        idempotencyKey: "IDEMPOTENCY_KEY",
+        sourceWalletID: "MASTER_WALLET_ID",
+        destinationWalletID: "MASTER_WALLET_ID",
+        amount: 1,
+      });
+    });
+
+    it("should return FAILED if the original transaction went through but was failed", async () => {
+      when(mockCircleClient.getMasterWalletID()).thenResolve("MASTER_WALLET_ID");
+      when(mockCircleClient.transfer(anything())).thenResolve({
+        transferID: "TRANSFER_ID",
+        status: CircleTransferStatus.TRANSFER_FAILED,
+        createdAt: Date.now().toLocaleString(),
+        amount: 11,
+        destinationWalletID: "DESTINATION_WALLET_ID",
+        sourceWalletID: "SOURCE_WALLET_ID",
+      });
+
+      const response: CircleTransferStatus = await circleService.getTransferStatus(
+        "IDEMPOTENCY_KEY",
+        "SOURCE_WALLET_ID",
+        "DESTINATION_WALLET_ID",
+        11,
+      );
+
+      expect(response).toBe(CircleTransferStatus.TRANSFER_FAILED);
+      const [propagatedCircleTransferRequest] = capture(mockCircleClient.transfer).last();
+      expect(propagatedCircleTransferRequest).toStrictEqual({
+        idempotencyKey: "IDEMPOTENCY_KEY",
+        sourceWalletID: "MASTER_WALLET_ID",
+        destinationWalletID: "MASTER_WALLET_ID",
+        amount: 1,
+      });
+    });
+
+    it("should return SUCCESS if the original transaction went through and was successful", async () => {
+      when(mockCircleClient.getMasterWalletID()).thenResolve("MASTER_WALLET_ID");
+      when(mockCircleClient.transfer(anything())).thenResolve({
+        transferID: "TRANSFER_ID",
+        status: CircleTransferStatus.SUCCESS,
+        createdAt: Date.now().toLocaleString(),
+        amount: 11,
+        destinationWalletID: "DESTINATION_WALLET_ID",
+        sourceWalletID: "SOURCE_WALLET_ID",
+      });
+
+      const response: CircleTransferStatus = await circleService.getTransferStatus(
+        "IDEMPOTENCY_KEY",
+        "SOURCE_WALLET_ID",
+        "DESTINATION_WALLET_ID",
+        11,
+      );
+
+      expect(response).toBe(CircleTransferStatus.SUCCESS);
+      const [propagatedCircleTransferRequest] = capture(mockCircleClient.transfer).last();
+      expect(propagatedCircleTransferRequest).toStrictEqual({
+        idempotencyKey: "IDEMPOTENCY_KEY",
+        sourceWalletID: "MASTER_WALLET_ID",
+        destinationWalletID: "MASTER_WALLET_ID",
+        amount: 1,
+      });
+    });
+
+    it.each(["sourceWalletID", "destinationWalletID"])(
+      "should return FAILED and raise an Alert if the executed transaction '%s' doesn't match with the input details",
+      async field => {
+        when(mockCircleClient.getMasterWalletID()).thenResolve("MASTER_WALLET_ID");
+        when(mockAlertService.raiseAlert(anything())).thenResolve();
+
+        const circleResponse: TransferResponse = {
+          transferID: "TRANSFER_ID",
+          status: CircleTransferStatus.SUCCESS,
+          createdAt: Date.now().toLocaleString(),
+          amount: 11,
+          destinationWalletID: "DESTINATION_WALLET_ID",
+          sourceWalletID: "SOURCE_WALLET_ID",
+        };
+        circleResponse[field] = "INVALID_ONE";
+        when(mockCircleClient.transfer(anything())).thenResolve(circleResponse);
+
+        const response: CircleTransferStatus = await circleService.getTransferStatus(
+          "IDEMPOTENCY_KEY",
+          "SOURCE_WALLET_ID",
+          "DESTINATION_WALLET_ID",
+          11,
+        );
+
+        expect(response).toBe(CircleTransferStatus.TRANSFER_FAILED);
+        const [propagatedCircleTransferRequest] = capture(mockCircleClient.transfer).last();
+        const [propagatedAlertPayload] = capture(mockAlertService.raiseAlert).last();
+        expect(propagatedCircleTransferRequest).toStrictEqual({
+          idempotencyKey: "IDEMPOTENCY_KEY",
+          sourceWalletID: "MASTER_WALLET_ID",
+          destinationWalletID: "MASTER_WALLET_ID",
+          amount: 1,
+        });
+        expect(propagatedAlertPayload.key).toBe(AlertKey.UNEXPECTED_TRANSFER_CHECK);
+      },
+    );
   });
 });

@@ -5,7 +5,7 @@ import { instance, when } from "ts-mockito";
 import { CircleService } from "../../public/circle.service";
 import { getMockCircleServiceWithDefaults } from "../../public/mocks/mock.circle.service";
 import { CircleWorkflowController } from "../circle.workflow.controller";
-import { CircleWithdrawalStatus } from "../../../psp/domain/CircleTypes";
+import { CircleTransferStatus } from "../../../psp/domain/CircleTypes";
 import { ServiceErrorCode, ServiceException } from "../../../../core/exception/service.exception";
 import { CircleWorkflowService } from "../circle.workflow.service";
 import { getMockCircleWorkflowServiceWithDefaults } from "../mocks/mock.circle.workflow.service";
@@ -65,14 +65,14 @@ describe("CircleWorkflowController", () => {
     it("should debit a wallet", async () => {
       when(circleService.debitWalletBalance("workflowID", "walletID", 100)).thenResolve({
         id: "id",
-        status: CircleWithdrawalStatus.PENDING,
+        status: CircleTransferStatus.PENDING,
         createdAt: "createdAt",
       });
       const result = await circleWorkflowController.debitWalletBalance("walletID", {
         workflowID: "workflowID",
         amount: 100,
       });
-      expect(result).toEqual({ id: "id", status: CircleWithdrawalStatus.PENDING, createdAt: "createdAt" });
+      expect(result).toEqual({ id: "id", status: CircleTransferStatus.PENDING, createdAt: "createdAt" });
     });
   });
 
@@ -80,14 +80,14 @@ describe("CircleWorkflowController", () => {
     it("should credit a wallet", async () => {
       when(circleService.creditWalletBalance("workflowID", "walletID", 100)).thenResolve({
         id: "id",
-        status: CircleWithdrawalStatus.PENDING,
+        status: CircleTransferStatus.PENDING,
         createdAt: "createdAt",
       });
       const result = await circleWorkflowController.creditWalletBalance("walletID", {
         workflowID: "workflowID",
         amount: 100,
       });
-      expect(result).toEqual({ id: "id", status: CircleWithdrawalStatus.PENDING, createdAt: "createdAt" });
+      expect(result).toEqual({ id: "id", status: CircleTransferStatus.PENDING, createdAt: "createdAt" });
     });
   });
 
@@ -95,7 +95,7 @@ describe("CircleWorkflowController", () => {
     it("should transfer funds between wallets", async () => {
       when(circleService.transferFunds("workflowID", "fromWalletID", "toWalletID", 100)).thenResolve({
         id: "id",
-        status: CircleWithdrawalStatus.PENDING,
+        status: CircleTransferStatus.PENDING,
         createdAt: "createdAt",
       });
       const result = await circleWorkflowController.transferFunds("fromWalletID", {
@@ -103,7 +103,7 @@ describe("CircleWorkflowController", () => {
         workflowID: "workflowID",
         amount: 100,
       });
-      expect(result).toEqual({ id: "id", status: CircleWithdrawalStatus.PENDING, createdAt: "createdAt" });
+      expect(result).toEqual({ id: "id", status: CircleTransferStatus.PENDING, createdAt: "createdAt" });
     });
   });
 
