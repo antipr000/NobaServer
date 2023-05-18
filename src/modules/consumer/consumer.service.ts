@@ -38,6 +38,8 @@ import { UpdateIdentificationDTO } from "./dto/update.identification.dto";
 import { IdentificationService } from "../common/identification.service";
 import { PushTokenService } from "../notifications/push.token.service";
 import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
+import { MetaService } from "../marketing/public/meta.service";
+import { MetaEvent, MetaEventName } from "../marketing/dto/meta.service.dto";
 
 @Injectable()
 export class ConsumerService {
@@ -64,6 +66,9 @@ export class ConsumerService {
 
   @Inject()
   private readonly identificationService: IdentificationService;
+
+  @Inject()
+  private readonly metaService: MetaService;
 
   @Inject()
   private readonly consumerMapper: ConsumerMapper;
@@ -147,7 +152,7 @@ export class ConsumerService {
     }
   }
 
-  // get's consumer object if consumer already exists, otherwise creates a new consumer, with optional details if passed
+  // gets consumer object if consumer already exists, otherwise creates a new consumer, with optional details if passed
   async getOrCreateConsumerConditionally(emailOrPhone: string): Promise<Consumer> {
     const isEmail = Utils.isEmail(emailOrPhone);
     const email = isEmail ? emailOrPhone : null;
@@ -163,9 +168,9 @@ export class ConsumerService {
 
       const result = await this.consumerRepo.createConsumer(newConsumer);
       if (isEmail) {
-        const payload = NotificationPayloadMapper.toWelcomeMessageEvent(result);
-        await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, payload);
+        await this.completeSignup(result);
       }
+
       return result;
     }
 
@@ -302,12 +307,28 @@ export class ConsumerService {
 
     if (!consumer.props.email) {
       //email being added for the first time
-      this.logger.info(`User email updated for first time sending welcome note, userId: ${consumer.props.id}`);
-      const payload = NotificationPayloadMapper.toWelcomeMessageEvent(updatedConsumer);
-      await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, payload);
+      await this.completeSignup(updatedConsumer);
     }
 
     return updatedConsumer;
+  }
+
+  private async completeSignup(consumer: Consumer) {
+    this.logger.info(`Sending welcome note to Consumer ID: ${consumer.props.id}`);
+    const payload = NotificationPayloadMapper.toWelcomeMessageEvent(consumer);
+    await this.notificationService.sendNotification(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT, payload);
+
+    await this.metaService.raiseEvent({
+      eventName: MetaEventName.COMPLETE_REGISTRATION,
+      userData: {
+        id: consumer.props.id,
+        country: consumer.props.address?.countryCode ?? undefined,
+        email: consumer.props.email ?? undefined,
+        phone: consumer.props.phone ?? undefined,
+        firstName: consumer.props.firstName ?? undefined,
+        lastName: consumer.props.lastName ?? undefined,
+      },
+    });
   }
 
   async findConsumersByContactInfo(contactInfoList: ContactConsumerRequestDTO[]): Promise<Consumer[]> {

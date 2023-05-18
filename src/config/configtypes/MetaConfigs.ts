@@ -1,0 +1,15 @@
+import {
+  META_PIXEL_ID,
+  META_AWS_SECRET_KEY_FOR_PIXEL_ID,
+  META_ACCESS_TOKEN,
+  META_AWS_SECRET_KEY_FOR_ACCESS_TOKEN,
+  META_TEST_EVENT_CODE,
+} from "../ConfigurationUtils";
+
+export interface MetaConfigs {
+  [META_PIXEL_ID]: string;
+  [META_AWS_SECRET_KEY_FOR_PIXEL_ID]: string;
+  [META_ACCESS_TOKEN]: string;
+  [META_AWS_SECRET_KEY_FOR_ACCESS_TOKEN]: string;
+  [META_TEST_EVENT_CODE]: string;
+}

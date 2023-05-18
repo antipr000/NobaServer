@@ -230,6 +230,13 @@ export const BUBBLE_AWS_SECRET_KEY_FOR_BEARER_TOKEN = "awsSecretNameForBearerTok
 export const BUBBLE_BASE_URL = "baseURL";
 export const BUBBLE_AWS_SECRET_KEY_FOR_BASE_URL = "awsSecretNameForBaseURL";
 
+export const META_CONFIG_KEY = "meta";
+export const META_PIXEL_ID = "pixelID";
+export const META_AWS_SECRET_KEY_FOR_PIXEL_ID = "awsSecretNameForPixelID";
+export const META_ACCESS_TOKEN = "accessToken";
+export const META_AWS_SECRET_KEY_FOR_ACCESS_TOKEN = "awsSecretNameForAccessToken";
+export const META_TEST_EVENT_CODE = "testEventCode";
+
 export const appConfigsJoiValidationSchema = Joi.object({
   [AWS_REGION_ATTR]: Joi.string().required(),
   [AWS_DEFAULT_REGION_ATTR]: Joi.string().required(),

@@ -8,9 +8,17 @@ import { NotificationsModule } from "../notifications/notification.module";
 import { ConsumerRepoModule } from "./repos/consumer.repo.module";
 import { ConsumerMapper } from "./mappers/ConsumerMapper";
 import { EmployeeModule } from "../employee/employee.module";
+import { MetaPublicModule } from "../marketing/public/meta.public.module";
 
 @Module({
-  imports: [InfraProvidersModule, CommonModule, NotificationsModule, ConsumerRepoModule, EmployeeModule],
+  imports: [
+    InfraProvidersModule,
+    CommonModule,
+    NotificationsModule,
+    ConsumerRepoModule,
+    EmployeeModule,
+    MetaPublicModule,
+  ],
   controllers: [ConsumerController],
   providers: [ConsumerService, SanctionedCryptoWalletService, ConsumerMapper],
   exports: [ConsumerService, ConsumerMapper],

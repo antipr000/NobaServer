@@ -193,6 +193,13 @@ bubble:
   baseURL: ""
   awsSecretNameForBaseURL: "TEST_BUBBLE_BASE_URL"
 
+meta:
+  pixelID: "1270469597200036"
+  awsSecretNameForPixelID: ""
+  accessToken: "EAADFWYkwrZBkBAED54OnFXbYmHb53r54Q39qtDTs7Msemd0eXrRbXi9I5Y5cZA6tdtp05HI4FWtseb45okXWgZCFyZAFAvzZBUJ1a4TALHFSXDn7ZAYbUw6L8ijdLpvNfiLpVf5izRulW4pFWrZAvgHPHuakXfbOrkCt4onNChNZB3aWZAYQquu7fZCBhYFiqjoioZD"
+  awsSecretNameForAccessToken: ""
+  testEventCode: "TEST85967"
+
 dependencies:
   emailClient: "SENDGRID"
   smsClient: "TWILIO"
