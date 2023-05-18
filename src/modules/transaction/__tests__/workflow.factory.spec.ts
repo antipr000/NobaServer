@@ -13,6 +13,10 @@ import { getMockWalletWithdrawalImplWithDefaults } from "../mocks/mock.wallet.wi
 import { WorkflowName } from "../domain/Transaction";
 import { PayrollDepositImpl } from "../factory/payroll.deposit.impl";
 import { getMockPayrollDepositImplWithDefaults } from "../mocks/mock.payroll.deposit.impl";
+import { DebitAdjustmentImpl } from "../factory/debit.adjustment.impl";
+import { CreditAdjustmentImpl } from "../factory/credit.adjustment.impl";
+import { getMockCreditAdjustmentImplWithDefaults } from "../mocks/mock.credit.adjustment.impl";
+import { getMockDebitAdjustmentImplWithDefaults } from "../mocks/mock.dedit.adjustment.impl";
 
 describe("WorkflowFactory Tests", () => {
   jest.setTimeout(20000);
@@ -22,6 +26,8 @@ describe("WorkflowFactory Tests", () => {
   let walletTransferImpl: WalletTransferImpl;
   let walletWithdrawalImpl: WalletWithdrawalImpl;
   let payrollDepositImpl: PayrollDepositImpl;
+  let creditAdjustmentImpl: CreditAdjustmentImpl;
+  let debitAdjustmentImpl: DebitAdjustmentImpl;
   let workflowFactory: WorkflowFactory;
 
   beforeAll(async () => {
@@ -29,6 +35,8 @@ describe("WorkflowFactory Tests", () => {
     walletTransferImpl = instance(getMockWalletTransferImplWithDefaults());
     walletWithdrawalImpl = instance(getMockWalletWithdrawalImplWithDefaults());
     payrollDepositImpl = instance(getMockPayrollDepositImplWithDefaults());
+    creditAdjustmentImpl = instance(getMockCreditAdjustmentImplWithDefaults());
+    debitAdjustmentImpl = instance(getMockDebitAdjustmentImplWithDefaults());
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -53,6 +61,14 @@ describe("WorkflowFactory Tests", () => {
         {
           provide: PayrollDepositImpl,
           useFactory: () => payrollDepositImpl,
+        },
+        {
+          provide: CreditAdjustmentImpl,
+          useFactory: () => creditAdjustmentImpl,
+        },
+        {
+          provide: DebitAdjustmentImpl,
+          useFactory: () => debitAdjustmentImpl,
         },
         WorkflowFactory,
       ],
@@ -84,6 +100,16 @@ describe("WorkflowFactory Tests", () => {
     it("should return PayrollDepositImpl when workflowName is PAYROLL_DEPOSIT", () => {
       const workflow = workflowFactory.getWorkflowImplementation(WorkflowName.PAYROLL_DEPOSIT);
       expect(workflow).toBe(payrollDepositImpl);
+    });
+
+    it("should return CreditAdjustmentImpl when workflowName is CREDIT_ADJUSTMENT", () => {
+      const workflow = workflowFactory.getWorkflowImplementation(WorkflowName.CREDIT_ADJUSTMENT);
+      expect(workflow).toBe(creditAdjustmentImpl);
+    });
+
+    it("should return DebitAdjustmentImpl when workflowName is DEBIT_ADJUSTMENT", () => {
+      const workflow = workflowFactory.getWorkflowImplementation(WorkflowName.DEBIT_ADJUSTMENT);
+      expect(workflow).toBe(debitAdjustmentImpl);
     });
   });
 });

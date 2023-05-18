@@ -12,6 +12,8 @@ export type InitiateTransactionRequest = {
   payrollDepositRequest?: PayrollDepositTransactionRequest;
   cardCreditAdjustmentRequest?: CardCreditAdjustmentTransactionRequest;
   cardDebitAdjustmentRequest?: CardDebitAdjustmentTransactionRequest;
+  creditAdjustmentRequest?: CreditAdjustmentTransactionRequest;
+  debitAdjustmentRequest?: DebitAdjustmentTransactionRequest;
 };
 
 export type CardWithdrawalTransactionRequest = {
@@ -35,6 +37,20 @@ export type CardReversalTransactionRequest = {
 
 export type PayrollDepositTransactionRequest = {
   disbursementID: string;
+};
+
+export type CreditAdjustmentTransactionRequest = {
+  creditConsumerID: string;
+  creditAmount: number;
+  creditCurrency: string;
+  memo: string;
+};
+
+export type DebitAdjustmentTransactionRequest = {
+  debitConsumerID: string;
+  debitAmount: number;
+  debitCurrency: string;
+  memo: string;
 };
 
 export enum CardReversalTransactionType {
@@ -113,6 +129,22 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
     memo: Joi.string().required(),
     debitConsumerID: Joi.string().required(),
   };
+  const creditAdjustmentJoiValidationKeys: KeysRequired<CreditAdjustmentTransactionRequest> = {
+    creditConsumerID: Joi.string().required(),
+    creditAmount: Joi.number().required(),
+    creditCurrency: Joi.string()
+      .required()
+      .valid(...Object.values(Currency)),
+    memo: Joi.string().required(),
+  };
+  const debitAdjustmentJoiValidationKeys: KeysRequired<DebitAdjustmentTransactionRequest> = {
+    debitConsumerID: Joi.string().required(),
+    debitAmount: Joi.number().required(),
+    debitCurrency: Joi.string()
+      .required()
+      .valid(...Object.values(Currency)),
+    memo: Joi.string().required(),
+  };
   const intiateTransactionRequestValidationKeys: KeysRequired<InitiateTransactionRequest> = {
     type: Joi.string()
       .required()
@@ -122,6 +154,8 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
     payrollDepositRequest: Joi.object(payrollRequestJoiValidationKeys).optional(),
     cardCreditAdjustmentRequest: Joi.object(cardCreditAdjustmentJoiValidationKeys).optional(),
     cardDebitAdjustmentRequest: Joi.object(cardDebitAdjustmentJoiValidationKeys).optional(),
+    creditAdjustmentRequest: Joi.object(creditAdjustmentJoiValidationKeys).optional(),
+    debitAdjustmentRequest: Joi.object(debitAdjustmentJoiValidationKeys).optional(),
   };
 
   const initiateTransactionJoiSchema = Joi.object(intiateTransactionRequestValidationKeys)
@@ -131,6 +165,8 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
       "payrollDepositRequest",
       "cardCreditAdjustmentRequest",
       "cardDebitAdjustmentRequest",
+      "creditAdjustmentRequest",
+      "debitAdjustmentRequest",
     )
     .options({
       allowUnknown: false,

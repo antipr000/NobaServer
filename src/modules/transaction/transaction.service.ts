@@ -45,6 +45,8 @@ import {
   CardReversalTransactionRequest,
   CardReversalTransactionType,
   CardWithdrawalTransactionRequest,
+  CreditAdjustmentTransactionRequest,
+  DebitAdjustmentTransactionRequest,
   InitiateTransactionRequest,
   PayrollDepositTransactionRequest,
   validateInitiateTransactionRequest,
@@ -94,16 +96,27 @@ export class TransactionService {
   }
 
   async initiateTransaction(request: InitiateTransactionRequest): Promise<Transaction> {
+    const transaction = await this.validateAndSaveTransaction(request);
+    const workflowImpl = this.transactionFactory.getWorkflowImplementation(request.type);
+    await workflowImpl.initiateWorkflow(transaction);
+
+    return transaction;
+  }
+
+  async validateAndSaveTransaction(request: InitiateTransactionRequest): Promise<Transaction> {
+    // Should figure out a better way to check against union typed enums
     if (
       request.type !== WorkflowName.CARD_WITHDRAWAL &&
       request.type !== WorkflowName.CARD_REVERSAL &&
       request.type !== WorkflowName.PAYROLL_DEPOSIT &&
       request.type !== WorkflowName.CARD_CREDIT_ADJUSTMENT &&
-      request.type !== WorkflowName.CARD_DEBIT_ADJUSTMENT
+      request.type !== WorkflowName.CARD_DEBIT_ADJUSTMENT &&
+      request.type !== WorkflowName.CREDIT_ADJUSTMENT &&
+      request.type !== WorkflowName.DEBIT_ADJUSTMENT
     ) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.NOT_IMPLEMENTED,
-        message: "'initiateTransaction' only available for CARD_WITHDRAWAL as of today",
+        message: `'validateAndSaveTransaction' not implemented for workflow: ${request.type}}`,
       });
     }
 
@@ -132,6 +145,14 @@ export class TransactionService {
 
       case WorkflowName.CARD_DEBIT_ADJUSTMENT:
         inputTransaction = this.createInputTransactionForCardDebitAdjustmentRequest(request.cardDebitAdjustmentRequest);
+        break;
+
+      case WorkflowName.CREDIT_ADJUSTMENT:
+        inputTransaction = await this.createInputTransactionForCreditAdjustmentRequest(request.creditAdjustmentRequest);
+        break;
+
+      case WorkflowName.DEBIT_ADJUSTMENT:
+        inputTransaction = await this.createInputTransactionForDebitAdjustmentRequest(request.debitAdjustmentRequest);
         break;
     }
 
@@ -411,6 +432,38 @@ export class TransactionService {
       exchangeRate: request.exchangeRate,
       sessionKey: "CARD_ADJUSTMENTS",
       transactionFees: [],
+    };
+  }
+
+  private async createInputTransactionForCreditAdjustmentRequest(
+    request: CreditAdjustmentTransactionRequest,
+  ): Promise<InputTransaction> {
+    return {
+      workflowName: WorkflowName.CREDIT_ADJUSTMENT,
+      exchangeRate: null,
+      memo: request.memo,
+      transactionRef: Utils.generateLowercaseUUID(true),
+      transactionFees: [],
+      sessionKey: WorkflowName.CREDIT_ADJUSTMENT,
+      creditAmount: request.creditAmount,
+      creditCurrency: request.creditCurrency,
+      creditConsumerID: request.creditConsumerID,
+    };
+  }
+
+  private async createInputTransactionForDebitAdjustmentRequest(
+    request: DebitAdjustmentTransactionRequest,
+  ): Promise<InputTransaction> {
+    return {
+      workflowName: WorkflowName.DEBIT_ADJUSTMENT,
+      exchangeRate: null,
+      memo: request.memo,
+      transactionRef: Utils.generateLowercaseUUID(true),
+      transactionFees: [],
+      sessionKey: WorkflowName.DEBIT_ADJUSTMENT,
+      debitAmount: request.debitAmount,
+      debitCurrency: request.debitCurrency,
+      debitConsumerID: request.debitConsumerID,
     };
   }
 

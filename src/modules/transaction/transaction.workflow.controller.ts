@@ -61,14 +61,14 @@ export class TransactionWorkflowController {
   async createTransaction(@Body() requestBody: CreateTransactionDTO): Promise<WorkflowTransactionDTO> {
     let transaction: Transaction;
     if (requestBody.disbursementID) {
-      transaction = await this.transactionService.initiateTransaction({
+      transaction = await this.transactionService.validateAndSaveTransaction({
         type: WorkflowName.PAYROLL_DEPOSIT,
         payrollDepositRequest: {
           disbursementID: requestBody.disbursementID,
         },
       });
     } else {
-      transaction = await this.transactionService.initiateTransaction(
+      transaction = await this.transactionService.validateAndSaveTransaction(
         this.convertToInitiateTransactionRequest(requestBody),
       );
     }
