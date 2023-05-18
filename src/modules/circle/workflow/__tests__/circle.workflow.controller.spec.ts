@@ -65,14 +65,14 @@ describe("CircleWorkflowController", () => {
     it("should debit a wallet", async () => {
       when(circleService.debitWalletBalance("workflowID", "walletID", 100)).thenResolve({
         id: "id",
-        status: CircleTransferStatus.PENDING,
+        status: CircleTransferStatus.SUCCESS,
         createdAt: "createdAt",
       });
       const result = await circleWorkflowController.debitWalletBalance("walletID", {
         workflowID: "workflowID",
         amount: 100,
       });
-      expect(result).toEqual({ id: "id", status: CircleTransferStatus.PENDING, createdAt: "createdAt" });
+      expect(result).toEqual({ id: "id", status: CircleTransferStatus.SUCCESS, createdAt: "createdAt" });
     });
   });
 
@@ -80,14 +80,14 @@ describe("CircleWorkflowController", () => {
     it("should credit a wallet", async () => {
       when(circleService.creditWalletBalance("workflowID", "walletID", 100)).thenResolve({
         id: "id",
-        status: CircleTransferStatus.PENDING,
+        status: CircleTransferStatus.SUCCESS,
         createdAt: "createdAt",
       });
       const result = await circleWorkflowController.creditWalletBalance("walletID", {
         workflowID: "workflowID",
         amount: 100,
       });
-      expect(result).toEqual({ id: "id", status: CircleTransferStatus.PENDING, createdAt: "createdAt" });
+      expect(result).toEqual({ id: "id", status: CircleTransferStatus.SUCCESS, createdAt: "createdAt" });
     });
   });
 
@@ -95,7 +95,7 @@ describe("CircleWorkflowController", () => {
     it("should transfer funds between wallets", async () => {
       when(circleService.transferFunds("workflowID", "fromWalletID", "toWalletID", 100)).thenResolve({
         id: "id",
-        status: CircleTransferStatus.PENDING,
+        status: CircleTransferStatus.SUCCESS,
         createdAt: "createdAt",
       });
       const result = await circleWorkflowController.transferFunds("fromWalletID", {
@@ -103,7 +103,7 @@ describe("CircleWorkflowController", () => {
         workflowID: "workflowID",
         amount: 100,
       });
-      expect(result).toEqual({ id: "id", status: CircleTransferStatus.PENDING, createdAt: "createdAt" });
+      expect(result).toEqual({ id: "id", status: CircleTransferStatus.SUCCESS, createdAt: "createdAt" });
     });
   });
 
