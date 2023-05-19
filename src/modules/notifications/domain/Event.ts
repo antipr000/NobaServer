@@ -42,6 +42,18 @@ export const validateEventCreateRequest = (event: EventCreateRequest) => {
   Joi.attempt(event, eventJoiSchema);
 };
 
+export const eventJoiValidationKeys: KeysRequired<Event> = {
+  id: Joi.string().required(),
+  name: Joi.string().required(),
+  createdTimestamp: Joi.date().required(),
+  updatedTimestamp: Joi.date().required(),
+  handlers: Joi.array()
+    .items(Joi.string().valid(...Object.values(EventHandlers)))
+    .min(1)
+    .required(),
+  templates: Joi.array().items(Joi.object(eventTemplateJoiValidationKeys)).required(),
+};
+
 export const validateEventUpdateRequest = (event: EventUpdateRequest) => {
   const eventJoiValidationKeys: KeysRequired<EventUpdateRequest> = {
     handlers: Joi.array()
@@ -58,18 +70,6 @@ export const validateEventUpdateRequest = (event: EventUpdateRequest) => {
 };
 
 export const validateEvent = (event: Event) => {
-  const eventJoiValidationKeys: KeysRequired<Event> = {
-    id: Joi.string().required(),
-    name: Joi.string().required(),
-    createdTimestamp: Joi.date().required(),
-    updatedTimestamp: Joi.date().required(),
-    handlers: Joi.array()
-      .items(Joi.string().valid(...Object.values(EventHandlers)))
-      .min(1)
-      .required(),
-    templates: Joi.array().items(Joi.object(eventTemplateJoiValidationKeys)).required(),
-  };
-
   const eventJoiSchema = Joi.object(eventJoiValidationKeys).options({
     allowUnknown: false,
     stripUnknown: true,
