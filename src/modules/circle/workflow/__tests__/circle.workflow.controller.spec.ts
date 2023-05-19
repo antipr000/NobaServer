@@ -136,4 +136,23 @@ describe("CircleWorkflowController", () => {
       }
     });
   });
+
+  describe("checkTransferStatus", () => {
+    it("should forward the request to CircleClient correctly and forwards the response", async () => {
+      when(
+        circleService.getTransferStatus("IDEMPOTENCY_KEY", "SOURCE_WALLET_ID", "DESTINATION_WALLET_ID", 111),
+      ).thenResolve(CircleTransferStatus.TRANSFER_FAILED);
+
+      const response = await circleWorkflowController.checkTransferStatus(
+        "IDEMPOTENCY_KEY",
+        "SOURCE_WALLET_ID",
+        "DESTINATION_WALLET_ID",
+        111,
+      );
+
+      expect(response).toStrictEqual({
+        status: CircleTransferStatus.TRANSFER_FAILED,
+      });
+    });
+  });
 });

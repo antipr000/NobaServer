@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Param, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -7,7 +7,11 @@ import {
   CircleTransactionDTO,
   CircleWalletResponseDTO,
 } from "../dto/circle.controller.dto";
-import { CircleDepositOrWithdrawalRequest, CircleFundsTransferRequestDTO } from "../dto/circle.workflow.controller.dto";
+import {
+  CircleDepositOrWithdrawalRequest,
+  CircleFundsTransferRequestDTO,
+  CircleTransferCheckResponseDTO,
+} from "../dto/circle.workflow.controller.dto";
 import { CircleService } from "../public/circle.service";
 import { CircleWorkflowService } from "./circle.workflow.service";
 
@@ -124,5 +128,24 @@ export class CircleWorkflowController {
   })
   async getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls(): Promise<CircleWalletBalanceResponseDTO> {
     return this.circleWorkflowService.getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls();
+  }
+
+  @Get("/transfers/check")
+  @ApiOperation({
+    summary: "Check the Transfer status of a Circle Transfer (or credit/debit from master Wallet)",
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: CircleTransferCheckResponseDTO,
+  })
+  async checkTransferStatus(
+    @Query("idempotencyKey") idempotencyKey: string,
+    @Query("sourceWalletID") sourceWalletID: string,
+    @Query("destinationWalletID") destinationWalletID: string,
+    @Query("amount") amount: number,
+  ): Promise<CircleTransferCheckResponseDTO> {
+    return {
+      status: await this.circleService.getTransferStatus(idempotencyKey, sourceWalletID, destinationWalletID, amount),
+    };
   }
 }

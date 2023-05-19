@@ -13,6 +13,9 @@ export function getMockCircleServiceWithDefaults(): CircleService {
   when(circleService.getMasterWalletID()).thenReject(new Error("Not implemented!"));
   when(circleService.getOrCreateWallet(anyString())).thenReject(new Error("Not implemented!"));
   when(circleService.getWalletBalance(anyString())).thenReject(new Error("Not implemented!"));
+  when(circleService.getTransferStatus(anyString(), anyString(), anyString(), anyNumber())).thenReject(
+    new Error("Not implemented!"),
+  );
 
   return circleService;
 }
