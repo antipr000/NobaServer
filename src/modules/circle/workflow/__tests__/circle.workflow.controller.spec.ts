@@ -55,7 +55,7 @@ describe("CircleWorkflowController", () => {
 
   describe("/wallets/master", () => {
     it("should return a master wallet ID", async () => {
-      when(circleService.getMasterWalletID()).thenResolve("walletID");
+      when(circleService.getMasterWalletID()).thenReturn("walletID");
       const result = await circleWorkflowController.getMasterWalletID();
       expect(result).toEqual({ walletID: "walletID" });
     });

@@ -39,7 +39,7 @@ export class CircleWorkflowController {
   @ApiOperation({ summary: "Get master wallet ID" })
   @ApiResponse({ status: HttpStatus.OK, type: CircleWalletResponseDTO })
   async getMasterWalletID(): Promise<CircleWalletResponseDTO> {
-    const res = await this.circleService.getMasterWalletID();
+    const res = this.circleService.getMasterWalletID();
     return {
       walletID: res,
     };

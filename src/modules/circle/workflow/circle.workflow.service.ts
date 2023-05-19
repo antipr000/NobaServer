@@ -18,7 +18,7 @@ export class CircleWorkflowService {
 
   async getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls(): Promise<CircleWalletBalanceResponseDTO> {
     const totalAllocationAmount = await this.employerService.getTotalAllocationAmountAcrossInvoicedPayrolls();
-    const masterWalletID = await this.circleService.getMasterWalletID();
+    const masterWalletID = this.circleService.getMasterWalletID();
     const masterWalletBalance = await this.circleService.getWalletBalance(masterWalletID);
     const exchangeRate = await this.exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD);
 

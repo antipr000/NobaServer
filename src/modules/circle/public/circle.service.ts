@@ -59,8 +59,8 @@ export class CircleService implements IBank {
     return circleWalletID;
   }
 
-  public async getMasterWalletID(): Promise<string> {
-    const masterWalletID = await this.circleClient.getMasterWalletID();
+  public getMasterWalletID(): string {
+    const masterWalletID = this.circleClient.getMasterWalletID();
     if (!masterWalletID) {
       throw new ServiceException({ errorCode: ServiceErrorCode.DOES_NOT_EXIST, message: "Master Wallet not found" });
     }
@@ -106,7 +106,7 @@ export class CircleService implements IBank {
       });
     }
 
-    const masterWalletID = await this.getMasterWalletID();
+    const masterWalletID = this.getMasterWalletID();
     const response = await this.circleClient.transfer({
       idempotencyKey: idempotencyKey,
       sourceWalletID: walletID,
@@ -140,7 +140,7 @@ export class CircleService implements IBank {
       });
     }
 
-    const masterWalletID = await this.getMasterWalletID();
+    const masterWalletID = this.getMasterWalletID();
     const masterWalletBalance = await this.getWalletBalance(masterWalletID);
     if (masterWalletBalance < amount) {
       this.logger.error(`Insufficient funds in master wallet (have: ${masterWalletBalance}, need: ${amount})`);
@@ -229,7 +229,7 @@ export class CircleService implements IBank {
     destinationWalletID: string,
     amount: number,
   ): Promise<CircleTransferStatus> {
-    const masterWalletID: string = await this.getMasterWalletID();
+    const masterWalletID: string = this.getMasterWalletID();
     const transferResponse: TransferResponse = await this.circleClient.transfer({
       idempotencyKey: idempotencyKey,
       sourceWalletID: masterWalletID,

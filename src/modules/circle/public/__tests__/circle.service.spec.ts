@@ -107,14 +107,20 @@ describe("CircleService", () => {
 
   describe("getMasterWalletID", () => {
     it("should return a master wallet id", async () => {
-      when(mockCircleClient.getMasterWalletID()).thenResolve("masterWalletID");
-      const masterWalletID = await circleService.getMasterWalletID();
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
+      const masterWalletID = circleService.getMasterWalletID();
       expect(masterWalletID).toEqual("masterWalletID");
     });
 
     it("should throw an error when consumerID is empty", async () => {
-      when(mockCircleClient.getMasterWalletID()).thenResolve("");
-      expect(circleService.getMasterWalletID()).rejects.toThrowServiceException();
+      when(mockCircleClient.getMasterWalletID()).thenReturn("");
+      try {
+        circleService.getMasterWalletID();
+        expect(true).toBe(false);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ServiceException);
+        expect(err.errorCode).toBe(ServiceErrorCode.DOES_NOT_EXIST);
+      }
     });
   });
 
@@ -138,7 +144,7 @@ describe("CircleService", () => {
         createdAt: "dateNow",
       };
 
-      when(mockCircleClient.getMasterWalletID()).thenResolve("masterWalletID");
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
       when(mockCircleClient.getWalletBalance("walletID")).thenResolve(200);
       when(
         mockCircleClient.transfer(
@@ -179,7 +185,7 @@ describe("CircleService", () => {
     });
 
     it("should throw an error when transfer fails", async () => {
-      when(mockCircleClient.getMasterWalletID()).thenResolve("masterWalletID");
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
       when(mockCircleClient.getWalletBalance("walletID")).thenResolve(200);
       when(
         mockCircleClient.transfer(
@@ -211,7 +217,7 @@ describe("CircleService", () => {
         createdAt: "dateNow",
       };
 
-      when(mockCircleClient.getMasterWalletID()).thenResolve("masterWalletID");
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
       when(mockCircleClient.getWalletBalance("masterWalletID")).thenResolve(200);
       when(
         mockCircleClient.transfer(
@@ -247,7 +253,7 @@ describe("CircleService", () => {
     });
 
     it("should throw an error when transfer fails", async () => {
-      when(mockCircleClient.getMasterWalletID()).thenResolve("masterWalletID");
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
       when(mockCircleClient.getWalletBalance("masterWalletID")).thenResolve(200);
       when(
         mockCircleClient.transfer(
@@ -263,7 +269,7 @@ describe("CircleService", () => {
     });
 
     it("should throw an error when master wallet doesn't have enough funds", async () => {
-      when(mockCircleClient.getMasterWalletID()).thenResolve("masterWalletID");
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
       when(mockCircleClient.getWalletBalance("masterWalletID")).thenResolve(1);
       when(
         mockCircleClient.transfer(
@@ -389,7 +395,7 @@ describe("CircleService", () => {
 
   describe("getTransferStatus", () => {
     it("should return FAILED if the original transaction 'never' went through and proxy txn succeeds", async () => {
-      when(mockCircleClient.getMasterWalletID()).thenResolve("MASTER_WALLET_ID");
+      when(mockCircleClient.getMasterWalletID()).thenReturn("MASTER_WALLET_ID");
       when(mockCircleClient.transfer(anything())).thenResolve({
         transferID: "TRANSFER_ID",
         status: CircleTransferStatus.SUCCESS,
@@ -417,7 +423,7 @@ describe("CircleService", () => {
     });
 
     it("should return FAILED if the original transaction went through but was failed", async () => {
-      when(mockCircleClient.getMasterWalletID()).thenResolve("MASTER_WALLET_ID");
+      when(mockCircleClient.getMasterWalletID()).thenReturn("MASTER_WALLET_ID");
       when(mockCircleClient.transfer(anything())).thenResolve({
         transferID: "TRANSFER_ID",
         status: CircleTransferStatus.TRANSFER_FAILED,
@@ -445,7 +451,7 @@ describe("CircleService", () => {
     });
 
     it("should return SUCCESS if the original transaction went through and was successful", async () => {
-      when(mockCircleClient.getMasterWalletID()).thenResolve("MASTER_WALLET_ID");
+      when(mockCircleClient.getMasterWalletID()).thenReturn("MASTER_WALLET_ID");
       when(mockCircleClient.transfer(anything())).thenResolve({
         transferID: "TRANSFER_ID",
         status: CircleTransferStatus.SUCCESS,
@@ -475,7 +481,7 @@ describe("CircleService", () => {
     it.each(["sourceWalletID", "destinationWalletID"])(
       "should return FAILED and raise an Alert if the executed transaction '%s' doesn't match with the input details",
       async field => {
-        when(mockCircleClient.getMasterWalletID()).thenResolve("MASTER_WALLET_ID");
+        when(mockCircleClient.getMasterWalletID()).thenReturn("MASTER_WALLET_ID");
         when(mockAlertService.raiseAlert(anything())).thenResolve();
 
         const circleResponse: TransferResponse = {

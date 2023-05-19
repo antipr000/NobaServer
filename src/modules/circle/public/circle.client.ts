@@ -66,7 +66,7 @@ export class CircleClient implements IClient {
     }
   }
 
-  async getMasterWalletID(): Promise<string> {
+  getMasterWalletID(): string {
     return this.masterWalletID;
   }
 
