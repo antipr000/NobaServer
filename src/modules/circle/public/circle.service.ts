@@ -229,6 +229,9 @@ export class CircleService implements IBank {
     destinationWalletID: string,
     amount: number,
   ): Promise<CircleTransferStatus> {
+    // Trying out same transfer but with Noba Master Wallet IDs in credit & debit side.
+    // This will help avoid the scenario where the original txn never reached Circle before
+    // and this status check call actually lead to a txn on the user's wallet.
     const masterWalletID: string = this.getMasterWalletID();
     const transferResponse: TransferResponse = await this.circleClient.transfer({
       idempotencyKey: idempotencyKey,
@@ -237,6 +240,7 @@ export class CircleService implements IBank {
       amount: 1,
     });
 
+    // If txn happend with Noba IDs then it is a brand new txn and previous txn never reached Circle.
     if (
       transferResponse.sourceWalletID === masterWalletID &&
       transferResponse.destinationWalletID === masterWalletID &&
@@ -244,6 +248,8 @@ export class CircleService implements IBank {
     ) {
       return CircleTransferStatus.TRANSFER_FAILED;
     }
+    // The previous txn reached circle and hence the data doesn't match the one sent in the request.
+    // Therefore, the status would be the one specified in the response.
     if (
       transferResponse.sourceWalletID === sourceWalletID &&
       transferResponse.destinationWalletID === destinationWalletID &&
