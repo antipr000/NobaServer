@@ -9,6 +9,9 @@ import { UpdateWalletBalanceServiceDTO } from "../../../modules/psp/domain/Updat
 import { DebitBankFactoryRequest, DebitBankFactoryResponse } from "../../../modules/psp/domain/BankFactoryTypes";
 import { BalanceDTO } from "../../../modules/psp/dto/balance.dto";
 import { IBank } from "../../../modules/psp/factory/ibank";
+import { CircleTransferStatus, TransferResponse } from "../../../modules/psp/domain/CircleTypes";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { AlertKey } from "../../../modules/common/alerts/alert.dto";
 
 @Injectable()
 export class CircleService implements IBank {
@@ -20,6 +23,9 @@ export class CircleService implements IBank {
 
   @Inject()
   private readonly circleClient: CircleClient;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   public async checkCircleHealth(): Promise<HealthCheckResponse> {
     return this.circleClient.getHealth();
@@ -53,8 +59,8 @@ export class CircleService implements IBank {
     return circleWalletID;
   }
 
-  public async getMasterWalletID(): Promise<string> {
-    const masterWalletID = await this.circleClient.getMasterWalletID();
+  public getMasterWalletID(): string {
+    const masterWalletID = this.circleClient.getMasterWalletID();
     if (!masterWalletID) {
       throw new ServiceException({ errorCode: ServiceErrorCode.DOES_NOT_EXIST, message: "Master Wallet not found" });
     }
@@ -100,7 +106,7 @@ export class CircleService implements IBank {
       });
     }
 
-    const masterWalletID = await this.getMasterWalletID();
+    const masterWalletID = this.getMasterWalletID();
     const response = await this.circleClient.transfer({
       idempotencyKey: idempotencyKey,
       sourceWalletID: walletID,
@@ -109,7 +115,7 @@ export class CircleService implements IBank {
     });
 
     return {
-      id: response.id,
+      id: response.transferID,
       status: response.status,
       createdAt: response.createdAt,
     };
@@ -134,7 +140,7 @@ export class CircleService implements IBank {
       });
     }
 
-    const masterWalletID = await this.getMasterWalletID();
+    const masterWalletID = this.getMasterWalletID();
     const masterWalletBalance = await this.getWalletBalance(masterWalletID);
     if (masterWalletBalance < amount) {
       this.logger.error(`Insufficient funds in master wallet (have: ${masterWalletBalance}, need: ${amount})`);
@@ -154,7 +160,7 @@ export class CircleService implements IBank {
     });
 
     return {
-      id: response.id,
+      id: response.transferID,
       status: response.status,
       createdAt: response.createdAt,
     };
@@ -204,7 +210,7 @@ export class CircleService implements IBank {
     });
 
     return {
-      id: response.id,
+      id: response.transferID,
       status: response.status,
       createdAt: response.createdAt,
     };
@@ -215,6 +221,48 @@ export class CircleService implements IBank {
       balance: await this.getWalletBalance(accountID),
       currency: "USD",
     };
+  }
+
+  public async getTransferStatus(
+    idempotencyKey: string,
+    sourceWalletID: string,
+    destinationWalletID: string,
+    amount: number,
+  ): Promise<CircleTransferStatus> {
+    // Trying out same transfer but with Noba Master Wallet IDs in credit & debit side.
+    // This will help avoid the scenario where the original txn never reached Circle before
+    // and this status check call actually lead to a txn on the user's wallet.
+    const masterWalletID: string = this.getMasterWalletID();
+    const transferResponse: TransferResponse = await this.circleClient.transfer({
+      idempotencyKey: idempotencyKey,
+      sourceWalletID: masterWalletID,
+      destinationWalletID: masterWalletID,
+      amount: 1,
+    });
+
+    // If txn happend with Noba IDs then it is a brand new txn and previous txn never reached Circle.
+    if (
+      transferResponse.sourceWalletID === masterWalletID &&
+      transferResponse.destinationWalletID === masterWalletID &&
+      transferResponse.amount === 1
+    ) {
+      return CircleTransferStatus.TRANSFER_FAILED;
+    }
+    // The previous txn reached circle and hence the data doesn't match the one sent in the request.
+    // Therefore, the status would be the one specified in the response.
+    if (
+      transferResponse.sourceWalletID === sourceWalletID &&
+      transferResponse.destinationWalletID === destinationWalletID &&
+      transferResponse.amount === amount
+    ) {
+      return transferResponse.status;
+    }
+
+    this.alertService.raiseAlert({
+      key: AlertKey.UNEXPECTED_TRANSFER_CHECK,
+      message: `Unexpected 'getTransferStatus' requested ('${idempotencyKey}', '${sourceWalletID}', '${destinationWalletID}', '${amount}')`,
+    });
+    return CircleTransferStatus.TRANSFER_FAILED;
   }
 
   debit(request: DebitBankFactoryRequest): Promise<DebitBankFactoryResponse> {

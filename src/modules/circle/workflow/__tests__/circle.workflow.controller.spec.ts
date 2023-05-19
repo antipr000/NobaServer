@@ -5,7 +5,7 @@ import { instance, when } from "ts-mockito";
 import { CircleService } from "../../public/circle.service";
 import { getMockCircleServiceWithDefaults } from "../../public/mocks/mock.circle.service";
 import { CircleWorkflowController } from "../circle.workflow.controller";
-import { CircleWithdrawalStatus } from "../../../psp/domain/CircleTypes";
+import { CircleTransferStatus } from "../../../psp/domain/CircleTypes";
 import { ServiceErrorCode, ServiceException } from "../../../../core/exception/service.exception";
 import { CircleWorkflowService } from "../circle.workflow.service";
 import { getMockCircleWorkflowServiceWithDefaults } from "../mocks/mock.circle.workflow.service";
@@ -55,7 +55,7 @@ describe("CircleWorkflowController", () => {
 
   describe("/wallets/master", () => {
     it("should return a master wallet ID", async () => {
-      when(circleService.getMasterWalletID()).thenResolve("walletID");
+      when(circleService.getMasterWalletID()).thenReturn("walletID");
       const result = await circleWorkflowController.getMasterWalletID();
       expect(result).toEqual({ walletID: "walletID" });
     });
@@ -65,14 +65,14 @@ describe("CircleWorkflowController", () => {
     it("should debit a wallet", async () => {
       when(circleService.debitWalletBalance("workflowID", "walletID", 100)).thenResolve({
         id: "id",
-        status: CircleWithdrawalStatus.PENDING,
+        status: CircleTransferStatus.SUCCESS,
         createdAt: "createdAt",
       });
       const result = await circleWorkflowController.debitWalletBalance("walletID", {
         workflowID: "workflowID",
         amount: 100,
       });
-      expect(result).toEqual({ id: "id", status: CircleWithdrawalStatus.PENDING, createdAt: "createdAt" });
+      expect(result).toEqual({ id: "id", status: CircleTransferStatus.SUCCESS, createdAt: "createdAt" });
     });
   });
 
@@ -80,14 +80,14 @@ describe("CircleWorkflowController", () => {
     it("should credit a wallet", async () => {
       when(circleService.creditWalletBalance("workflowID", "walletID", 100)).thenResolve({
         id: "id",
-        status: CircleWithdrawalStatus.PENDING,
+        status: CircleTransferStatus.SUCCESS,
         createdAt: "createdAt",
       });
       const result = await circleWorkflowController.creditWalletBalance("walletID", {
         workflowID: "workflowID",
         amount: 100,
       });
-      expect(result).toEqual({ id: "id", status: CircleWithdrawalStatus.PENDING, createdAt: "createdAt" });
+      expect(result).toEqual({ id: "id", status: CircleTransferStatus.SUCCESS, createdAt: "createdAt" });
     });
   });
 
@@ -95,7 +95,7 @@ describe("CircleWorkflowController", () => {
     it("should transfer funds between wallets", async () => {
       when(circleService.transferFunds("workflowID", "fromWalletID", "toWalletID", 100)).thenResolve({
         id: "id",
-        status: CircleWithdrawalStatus.PENDING,
+        status: CircleTransferStatus.SUCCESS,
         createdAt: "createdAt",
       });
       const result = await circleWorkflowController.transferFunds("fromWalletID", {
@@ -103,7 +103,7 @@ describe("CircleWorkflowController", () => {
         workflowID: "workflowID",
         amount: 100,
       });
-      expect(result).toEqual({ id: "id", status: CircleWithdrawalStatus.PENDING, createdAt: "createdAt" });
+      expect(result).toEqual({ id: "id", status: CircleTransferStatus.SUCCESS, createdAt: "createdAt" });
     });
   });
 
@@ -134,6 +134,25 @@ describe("CircleWorkflowController", () => {
         expect(err).toBeInstanceOf(ServiceException);
         expect(err.errorCode).toBe(ServiceErrorCode.RATE_LIMIT_EXCEEDED);
       }
+    });
+  });
+
+  describe("checkTransferStatus", () => {
+    it("should forward the request to CircleClient correctly and forwards the response", async () => {
+      when(
+        circleService.getTransferStatus("IDEMPOTENCY_KEY", "SOURCE_WALLET_ID", "DESTINATION_WALLET_ID", 111),
+      ).thenResolve(CircleTransferStatus.TRANSFER_FAILED);
+
+      const response = await circleWorkflowController.checkTransferStatus(
+        "IDEMPOTENCY_KEY",
+        "SOURCE_WALLET_ID",
+        "DESTINATION_WALLET_ID",
+        111,
+      );
+
+      expect(response).toStrictEqual({
+        status: CircleTransferStatus.TRANSFER_FAILED,
+      });
     });
   });
 });

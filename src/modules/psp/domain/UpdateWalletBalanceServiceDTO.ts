@@ -1,7 +1,7 @@
-import { CircleWithdrawalStatus } from "./CircleTypes";
+import { CircleTransferStatus } from "./CircleTypes";
 
 export type UpdateWalletBalanceServiceDTO = {
   id: string;
-  status: CircleWithdrawalStatus;
+  status: CircleTransferStatus;
   createdAt: string;
 };
