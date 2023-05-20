@@ -23,6 +23,13 @@ import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mo
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { Employer } from "../../../modules/employer/domain/Employer";
 import { NotificationPayloadMapper } from "../domain/NotificationPayload";
+import { ReminderScheduleRepo } from "../repos/reminder.schedule.repo";
+import { ReminderHistoryRepo } from "../repos/reminder.history.repo";
+import { EventRepo } from "../repos/event.repo";
+import { getMockReminderScheduleRepoWithDefaults } from "../mocks/mock.reminder.schedule.repo";
+import { getMockReminderHistoryRepoWithDefaults } from "../mocks/mock.reminder.history.repo";
+import { getMockEventRepoWithDefaults } from "../mocks/mock.event.repo";
+import { ReminderSchedule } from "../domain/ReminderSchedule";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -31,6 +38,9 @@ describe("NotificationService", () => {
   let consumerService: ConsumerService;
   let transactionNotificationMapper: TransactionNotificationPayloadMapper;
   let employerService: EmployerService;
+  let mockReminderScheduleRepo: ReminderScheduleRepo;
+  let mockReminderHistoryRepo: ReminderHistoryRepo;
+  let mockEventRepo: EventRepo;
 
   jest.setTimeout(30000);
 
@@ -45,6 +55,9 @@ describe("NotificationService", () => {
     consumerService = getMockConsumerServiceWithDefaults();
     transactionNotificationMapper = new TransactionNotificationPayloadMapper();
     employerService = getMockEmployerServiceWithDefaults();
+    mockReminderScheduleRepo = getMockReminderScheduleRepoWithDefaults();
+    mockReminderHistoryRepo = getMockReminderHistoryRepoWithDefaults();
+    mockEventRepo = getMockEventRepoWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -66,6 +79,18 @@ describe("NotificationService", () => {
         {
           provide: EmployerService,
           useFactory: () => instance(employerService),
+        },
+        {
+          provide: "ReminderScheduleRepo",
+          useFactory: () => instance(mockReminderScheduleRepo),
+        },
+        {
+          provide: "ReminderHistoryRepo",
+          useFactory: () => instance(mockReminderHistoryRepo),
+        },
+        {
+          provide: "EventRepo",
+          useFactory: () => instance(mockEventRepo),
         },
       ],
     }).compile();
@@ -493,6 +518,52 @@ describe("NotificationService", () => {
           transactionID: null,
         }),
       ).rejects.toThrowError(ServiceException);
+    });
+  });
+  describe("getAllReminderSchedulesForGroup", () => {
+    it("should get all reminder schedules for a group", async () => {
+      const reminderSchedule: ReminderSchedule = {
+        id: "fake-id",
+        groupKey: "fake-group-id",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        eventID: "fake-event-id",
+        query: "fake-query",
+      };
+
+      when(mockReminderScheduleRepo.getAllReminderSchedulesForGroup("fake-group-id")).thenResolve([reminderSchedule]);
+
+      const result = await notificationWorflowService.getAllReminderSchedulesForGroup("fake-group-id");
+
+      expect(result).toStrictEqual([reminderSchedule]);
+    });
+  });
+
+  describe("getAllConsumerIDsForReminder", () => {
+    it("should get all consumer ids selected by query", async () => {
+      const reminderSchedule: ReminderSchedule = {
+        id: "fake-id",
+        groupKey: "fake-group-id",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        eventID: "fake-event-id",
+        query: "select * from consumers",
+      };
+
+      when(mockReminderScheduleRepo.getReminderScheduleByID("fake-id")).thenResolve(reminderSchedule);
+      when(consumerService.executeRawQuery(reminderSchedule.query)).thenResolve([{ id: "fake-consumer-id" }]);
+
+      const result = await notificationWorflowService.getAllConsumerIDsForReminder("fake-id");
+
+      expect(result).toStrictEqual(["fake-consumer-id"]);
+    });
+
+    it("should throw ServiceException if reminderSchedule with ID does not exist", async () => {
+      when(mockReminderScheduleRepo.getReminderScheduleByID("fake-id")).thenResolve(null);
+
+      await expect(notificationWorflowService.getAllConsumerIDsForReminder("fake-id")).rejects.toThrowError(
+        ServiceException,
+      );
     });
   });
 });
