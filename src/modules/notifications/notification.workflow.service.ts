@@ -13,6 +13,10 @@ import { EmployerService } from "../employer/employer.service";
 import { LatestNotificationResponse } from "./dto/latestnotification.response.dto";
 import { SendNotificationRequestDTO } from "./dto/SendNotificationRequestDTO";
 import { Transaction } from "../transaction/domain/Transaction";
+import { ReminderScheduleRepo } from "./repos/reminder.schedule.repo";
+import { ReminderHistoryRepo } from "./repos/reminder.history.repo";
+import { ReminderSchedule } from "./domain/ReminderSchedule";
+import { EventRepo } from "./repos/event.repo";
 
 @Injectable()
 export class NotificationWorkflowService {
@@ -31,9 +35,46 @@ export class NotificationWorkflowService {
   @Inject()
   private readonly employerService: EmployerService;
 
+  @Inject("ReminderScheduleRepo")
+  private readonly reminderScheduleRepo: ReminderScheduleRepo;
+
+  @Inject("ReminderHistoryRepo")
+  private readonly reminderHistoryRepo: ReminderHistoryRepo;
+
+  @Inject("EventRepo")
+  private readonly eventRepo: EventRepo;
+
   private readonly transactionNotificationPayloadMapper: TransactionNotificationPayloadMapper;
   constructor() {
     this.transactionNotificationPayloadMapper = new TransactionNotificationPayloadMapper();
+  }
+
+  async getAllReminderSchedulesForGroup(groupKey: string): Promise<ReminderSchedule[]> {
+    return this.reminderScheduleRepo.getAllReminderSchedulesForGroup(groupKey);
+  }
+
+  async getAllConsumerIDsForReminder(reminderID: string): Promise<string[]> {
+    const reminderSchedule = await this.reminderScheduleRepo.getReminderScheduleByID(reminderID);
+    if (!reminderSchedule) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Reminder schedule with ID ${reminderID} not found`,
+      });
+    }
+
+    const consumers = await this.consumerService.executeRawQuery(reminderSchedule.query);
+
+    return consumers.map(consumer => consumer.id);
+  }
+
+  async sendEvent(eventID: string): Promise<void> {
+    const event = await this.eventRepo.getEventByID(eventID);
+    if (!event) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Event with ID ${eventID} not found`,
+      });
+    }
   }
 
   async sendNotification(

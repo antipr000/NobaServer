@@ -39,7 +39,8 @@ import { IdentificationService } from "../common/identification.service";
 import { PushTokenService } from "../notifications/push.token.service";
 import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
 import { MetaService } from "../marketing/public/meta.service";
-import { MetaEvent, MetaEventName } from "../marketing/dto/meta.service.dto";
+import { MetaEventName } from "../marketing/dto/meta.service.dto";
+import { ConsumerRaw } from "./domain/ConsumerRaw";
 
 @Injectable()
 export class ConsumerService {
@@ -926,6 +927,10 @@ export class ConsumerService {
     }
 
     await this.consumerRepo.deleteIdentification(identificationID);
+  }
+
+  async executeRawQuery(query: string): Promise<ConsumerRaw[]> {
+    return this.consumerRepo.executeRawQuery(query);
   }
 
   getVerificationStatus(consumer: Consumer): UserVerificationStatus {

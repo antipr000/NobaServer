@@ -40,9 +40,15 @@ import {
   validateCreateConsumerConfigurationRequest,
   validateUpdateConsumerConfigurationRequest,
 } from "../domain/ConsumerConfiguration";
+import { ConsumerRaw } from "../domain/ConsumerRaw";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { Logger } from "winston";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
+  @Inject(WINSTON_MODULE_PROVIDER)
+  private readonly logger: Logger;
+
   @Inject()
   private readonly prisma: PrismaService;
 
@@ -687,6 +693,16 @@ export class SQLConsumerRepo implements IConsumerRepo {
         errorCode: RepoErrorCode.NOT_FOUND,
         message: `Configuration with id ${id} not found!`,
       });
+    }
+  }
+
+  async executeRawQuery(query: string): Promise<ConsumerRaw[]> {
+    try {
+      const consumers = await this.prisma.$queryRawUnsafe<ConsumerRaw[]>(query);
+      return consumers;
+    } catch (e) {
+      this.logger.error(`Error executing raw query: ${query}`, e);
+      return [];
     }
   }
 }
