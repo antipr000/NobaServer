@@ -2,7 +2,7 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { NotificationService } from "../notification.service";
-import { deepEqual, instance, verify, when } from "ts-mockito";
+import { anything, deepEqual, instance, verify, when } from "ts-mockito";
 import { NotificationWorkflowService } from "../notification.workflow.service";
 import { TransactionService } from "../../../modules/transaction/transaction.service";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
@@ -16,7 +16,7 @@ import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { NotificationEventType, NotificationWorkflowTypes } from "../domain/NotificationTypes";
 import { TransactionNotificationPayloadMapper } from "../domain/TransactionNotificationParameters";
-import { ServiceException } from "../../../core/exception/service.exception";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { FeeType } from "../../../modules/transaction/domain/TransactionFee";
 import { EmployerService } from "../../../modules/employer/employer.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
@@ -564,6 +564,66 @@ describe("NotificationService", () => {
       await expect(notificationWorflowService.getAllConsumerIDsForReminder("fake-id")).rejects.toThrowError(
         ServiceException,
       );
+    });
+  });
+
+  describe("createReminderSchedule", () => {
+    it("should throw ServiceException when eventID is missing", async () => {
+      await expect(
+        notificationWorflowService.createReminderSchedule({
+          groupKey: "fake-group-id",
+          query: "select * from consumers",
+        } as any),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException when groupKey is missing", async () => {
+      await expect(
+        notificationWorflowService.createReminderSchedule({
+          eventID: "fake-event-id",
+          query: "select * from consumers",
+        } as any),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException when query is missing", async () => {
+      await expect(
+        notificationWorflowService.createReminderSchedule({
+          eventID: "fake-event-id",
+          groupKey: "fake-group-id",
+        } as any),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should create reminder schedule", async () => {
+      const reminderSchedule: ReminderSchedule = {
+        id: "fake-id",
+        groupKey: "fake-group-id",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        eventID: "fake-event-id",
+        query: "select * from consumers",
+      };
+
+      when(mockReminderScheduleRepo.createReminderSchedule(anything())).thenResolve(reminderSchedule);
+
+      const result = await notificationWorflowService.createReminderSchedule({
+        eventID: "fake-event-id",
+        groupKey: "fake-group-id",
+        query: "select * from consumers",
+      });
+
+      expect(result).toStrictEqual(reminderSchedule);
+
+      verify(
+        mockReminderScheduleRepo.createReminderSchedule(
+          deepEqual({
+            eventID: "fake-event-id",
+            groupKey: "fake-group-id",
+            query: "select * from consumers",
+          }),
+        ),
+      ).once();
     });
   });
 });

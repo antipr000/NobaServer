@@ -8,7 +8,7 @@ import { getMockNotificationWorkflowServiceWithDefaults } from "../mocks/mock.no
 import { NotificationWorkflowTypes } from "../domain/NotificationTypes";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 
-describe("NotificationService", () => {
+describe("NotificationWorkflowController Tests", () => {
   let notificationWorkflowController: NotificationWorkflowController;
   let notificationWorflowService: NotificationWorkflowService;
 

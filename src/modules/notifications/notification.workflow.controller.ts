@@ -8,7 +8,7 @@ import { SendNotificationRequestDTO } from "./dto/SendNotificationRequestDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { LatestNotificationResponse } from "./dto/latestnotification.response.dto";
 import { isE2ETestEnvironment } from "../../config/ConfigurationUtils";
-import { ReminderScheduleDTO } from "./dto/notification.workflow.controller.dto";
+import { CreateReminderScheduleDTO, ReminderScheduleDTO } from "./dto/notification.workflow.controller.dto";
 
 @Controller("wf/v1/notification")
 @ApiBearerAuth("JWT-auth")
@@ -29,6 +29,22 @@ export class NotificationWorkflowController {
   ): Promise<BlankResponseDTO> {
     await this.notificationWorkflowService.sendNotification(notificationType as NotificationWorkflowTypes, requestBody);
     return {};
+  }
+
+  @Post("/reminder")
+  @ApiOperation({ summary: "Create a reminder schedule" })
+  @ApiResponse({ status: HttpStatus.CREATED, type: ReminderScheduleDTO })
+  async createReminderSchedule(@Body() requestBody: CreateReminderScheduleDTO): Promise<ReminderScheduleDTO> {
+    const reminderSchedule = await this.notificationWorkflowService.createReminderSchedule(requestBody);
+
+    return {
+      id: reminderSchedule.id,
+      createdTimestamp: reminderSchedule.createdTimestamp,
+      updatedTimestamp: reminderSchedule.updatedTimestamp,
+      eventID: reminderSchedule.eventID,
+      query: reminderSchedule.query,
+      groupKey: reminderSchedule.groupKey,
+    };
   }
 
   @Get("/reminder/:groupKey")

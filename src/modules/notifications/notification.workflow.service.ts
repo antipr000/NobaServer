@@ -17,6 +17,7 @@ import { ReminderScheduleRepo } from "./repos/reminder.schedule.repo";
 import { ReminderHistoryRepo } from "./repos/reminder.history.repo";
 import { ReminderSchedule } from "./domain/ReminderSchedule";
 import { EventRepo } from "./repos/event.repo";
+import { CreateReminderScheduleDTO } from "./dto/notification.workflow.controller.dto";
 
 @Injectable()
 export class NotificationWorkflowService {
@@ -47,6 +48,35 @@ export class NotificationWorkflowService {
   private readonly transactionNotificationPayloadMapper: TransactionNotificationPayloadMapper;
   constructor() {
     this.transactionNotificationPayloadMapper = new TransactionNotificationPayloadMapper();
+  }
+
+  async createReminderSchedule(reminderSchedule: CreateReminderScheduleDTO): Promise<ReminderSchedule> {
+    if (!reminderSchedule.eventID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Event ID is required",
+      });
+    }
+
+    if (!reminderSchedule.query) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Query is required",
+      });
+    }
+
+    if (!reminderSchedule.groupKey) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Group key is required",
+      });
+    }
+
+    return this.reminderScheduleRepo.createReminderSchedule({
+      eventID: reminderSchedule.eventID,
+      query: reminderSchedule.query,
+      groupKey: reminderSchedule.groupKey,
+    });
   }
 
   async getAllReminderSchedulesForGroup(groupKey: string): Promise<ReminderSchedule[]> {
