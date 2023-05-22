@@ -37,4 +37,8 @@ export enum NotificationWorkflowTypes {
   TRANSFER_FAILED_EVENT = "transferFailedEvent",
   PAYROLL_DEPOSIT_COMPLETED_EVENT = "payrollDepositCompletedEvent",
   UPDATE_PAYROLL_STATUS_EVENT = "updatePayrollStatusEvent",
+  CREDIT_ADJUSTMENT_COMPLETED_EVENT = "creditAdjustmentCompletedEvent",
+  CREDIT_ADJUSTENT_FAILED_EVENT = "creditAdjustmentFailedEvent",
+  DEBIT_ADJUSTMENT_COMPLETED_EVENT = "debitAdjustmentCompletedEvent",
+  DEBIT_ADJUSTMENT_FAILED_EVENT = "debitAdjustmentFailedEvent",
 }

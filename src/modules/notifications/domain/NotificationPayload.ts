@@ -261,6 +261,10 @@ export class NotificationPayloadMapper {
     };
   }
 
+  static toCreditAdjustmentCompletedEvent(consumer: Consumer, transaction: Transaction): SendTransferCompletedEvent {
+    return {};
+  }
+
   static toWalletUpdateVerificationCodeEvent(
     consumer: Consumer,
     otp: string,
