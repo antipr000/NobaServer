@@ -154,6 +154,12 @@ import {
   EXCHANGERATEIO_CONFIG_KEY,
   EXCHANGERATEIO_AWS_SECRET_KEY_FOR_API_KEY,
   EXCHANGERATEIO_API_KEY,
+  META_CONFIG_KEY,
+  META_PIXEL_ID,
+  META_AWS_SECRET_KEY_FOR_PIXEL_ID,
+  META_ACCESS_TOKEN,
+  META_AWS_SECRET_KEY_FOR_ACCESS_TOKEN,
+  META_TEST_EVENT_CODE,
 } from "./ConfigurationUtils";
 import fs from "fs";
 
@@ -180,6 +186,7 @@ import { MonoConfigs } from "./configtypes/MonoConfig";
 import { SecretProvider } from "./SecretProvider";
 import { BubbleConfigs } from "./configtypes/BubbleConfigs";
 import { PomeloConfigs } from "./configtypes/PomeloConfigs";
+import { MetaConfigs } from "./configtypes/MetaConfigs";
 import { ExchangeRateIOConfigs } from "./configtypes/exchangerateio.configs";
 
 const envNameToPropertyFileNameMap = {
@@ -354,6 +361,7 @@ async function configureAllVendorCredentials(
     configureMonoCredentials,
     configureExchangeRateIOCredentials,
     configureBubbleCredentials,
+    configureMetaConfigurations,
   ];
   for (let i = 0; i < vendorCredentialConfigurators.length; i++) {
     configs = await vendorCredentialConfigurators[i](environment, configs);
@@ -964,6 +972,30 @@ async function configureCircleConfigurations(
   }
 
   configs[CIRCLE_CONFIG_KEY] = circleConfigs;
+  return configs;
+}
+
+async function configureMetaConfigurations(
+  environment: AppEnvironment,
+  configs: Record<string, any>,
+): Promise<Record<string, any>> {
+  const metaConfigs: MetaConfigs = configs[META_CONFIG_KEY];
+
+  if (metaConfigs === undefined) {
+    const errorMessage =
+      "\n'Meta' configurations are required. Please configure the Meta configurations in 'appconfigs/<ENV>.yaml' file.\n" +
+      `You should configure the key "${META_CONFIG_KEY}" and populate ` +
+      `("${META_PIXEL_ID}" or "${META_AWS_SECRET_KEY_FOR_PIXEL_ID}") ` +
+      `("${META_ACCESS_TOKEN}" or "${META_AWS_SECRET_KEY_FOR_ACCESS_TOKEN}") ` +
+      "based on whether you want to fetch the value from AWS Secrets Manager or provide it manually respectively.\n";
+
+    throw Error(errorMessage);
+  }
+
+  metaConfigs.pixelID = await getParameterValue(metaConfigs.awsSecretNameForPixelID, metaConfigs.pixelID);
+  metaConfigs.accessToken = await getParameterValue(metaConfigs.awsSecretNameForAccessToken, metaConfigs.accessToken);
+
+  configs[META_CONFIG_KEY] = metaConfigs;
   return configs;
 }
 

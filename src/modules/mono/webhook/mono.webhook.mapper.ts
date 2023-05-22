@@ -68,7 +68,7 @@ export class MonoWebhookMappers {
 
     return {
       accountID: webhookData.event.data.account_id,
-      amount: webhookData.event.data.amount.amount,
+      amount: this.convertMonoWebhookAmount(webhookData.event.data.amount.amount),
       currency: webhookData.event.data.amount.currency as MonoCurrency,
       collectionLinkID: webhookData.event.data.collection_link_id,
       monoTransactionID: webhookData.event.data.payment.transaction_id,
@@ -104,7 +104,7 @@ export class MonoWebhookMappers {
 
     return {
       accountID: webhookData.event.data.batch.account_id,
-      amount: webhookData.event.data.amount.amount,
+      amount: this.convertMonoWebhookAmount(webhookData.event.data.amount.amount),
       currency: webhookData.event.data.amount.currency as MonoCurrency,
       batchID: webhookData.event.data.batch.id,
       transferID: webhookData.event.data.id,
@@ -138,7 +138,7 @@ export class MonoWebhookMappers {
 
     return {
       accountID: webhookData.event.data.batch.account_id,
-      amount: webhookData.event.data.amount.amount,
+      amount: this.convertMonoWebhookAmount(webhookData.event.data.amount.amount),
       currency: webhookData.event.data.amount.currency as MonoCurrency,
       batchID: webhookData.event.data.batch.id,
       transferID: webhookData.event.data.id,
@@ -168,7 +168,7 @@ export class MonoWebhookMappers {
     return {
       accountID: webhookData.event.data.account.id,
       accountNumber: webhookData.event.data.account.number,
-      amount: webhookData.event.data.amount.amount,
+      amount: this.convertMonoWebhookAmount(webhookData.event.data.amount.amount),
       currency: webhookData.event.data.amount.currency as MonoCurrency,
       transactionID: webhookData.event.data.id,
       payerDocumentNumber: webhookData.event.data.payer.document_number,
@@ -212,5 +212,12 @@ export class MonoWebhookMappers {
       stripUnknown: true,
     });
     Joi.attempt(webhookData, joiSchema);
+  }
+
+  // Mono webhook amounts do not have a decimal, so add it here. Not using division to avoid floating point errors
+  private convertMonoWebhookAmount(amount: number): number {
+    const amountString = amount.toString();
+    // Add decimal point 2 places from the right
+    return parseFloat(amountString.slice(0, -2) + "." + amountString.slice(-2));
   }
 }

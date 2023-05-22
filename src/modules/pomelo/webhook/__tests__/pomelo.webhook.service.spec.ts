@@ -42,7 +42,7 @@ import { Currency } from "../../../../modules/transaction/domain/TransactionType
 import { Transaction, TransactionStatus } from "../../../../modules/transaction/domain/Transaction";
 import { WorkflowName } from "../../../../infra/temporal/workflow";
 import { UpdateWalletBalanceServiceDTO } from "../../../../modules/psp/domain/UpdateWalletBalanceServiceDTO";
-import { CircleWithdrawalStatus } from "../../../../modules/psp/domain/CircleTypes";
+import { CircleTransferStatus } from "../../../../modules/psp/domain/CircleTypes";
 import { ExchangeRateService } from "../../../../modules/exchangerate/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../../modules/exchangerate/mocks/mock.exchangerate.service";
 import { ExchangeRateDTO } from "../../../../modules/exchangerate/dto/exchangerate.dto";
@@ -386,7 +386,7 @@ describe("PomeloTransactionServiceTests", () => {
       };
       const debitWalletResponse: UpdateWalletBalanceServiceDTO = {
         id: uuid(),
-        status: CircleWithdrawalStatus.SUCCESS,
+        status: CircleTransferStatus.SUCCESS,
         createdAt: Date.now().toString(),
       };
 
@@ -850,7 +850,7 @@ describe("PomeloTransactionServiceTests", () => {
         when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(transaction);
         when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve({
           ...debitWalletResponse,
-          status: CircleWithdrawalStatus.FAILURE,
+          status: CircleTransferStatus.INSUFFICIENT_FUNDS,
         });
         when(
           mockPomeloRepo.updatePomeloTransactionStatus(
@@ -863,6 +863,32 @@ describe("PomeloTransactionServiceTests", () => {
 
         expect(response).toStrictEqual({
           detailedStatus: PomeloTransactionAuthzDetailStatus.INSUFFICIENT_FUNDS,
+          summaryStatus: PomeloTransactionAuthzSummaryStatus.REJECTED,
+          message: "",
+        });
+      });
+
+      it("should reject the transaction with SYSTEM_ERROR if Circle returns TRANSFER_FAILED", async () => {
+        when(mockPomeloRepo.createPomeloTransaction(anything())).thenResolve(pomeloTransaction);
+        when(mockPomeloRepo.getNobaConsumerIDHoldingPomeloCard("POMELO_CARD_ID", "POMELO_USER_ID")).thenResolve(
+          nobaConsumerID,
+        );
+        when(mockCircleService.getOrCreateWallet("NOBA_CONSUMER_ID")).thenResolve(circleWalletID);
+        when(mockCircleService.getWalletBalance("CIRCLE_WALLET_ID")).thenResolve(circleWalletBalance);
+        when(mockExchangeRateService.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(exchangeRate);
+        when(mockTransactionService.initiateTransaction(anything())).thenResolve(transaction);
+        when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve({
+          ...debitWalletResponse,
+          status: CircleTransferStatus.TRANSFER_FAILED,
+        });
+        when(
+          mockPomeloRepo.updatePomeloTransactionStatus("POMELO_TRANSACTION_ID", PomeloTransactionStatus.SYSTEM_ERROR),
+        ).thenResolve();
+
+        const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
+
+        expect(response).toStrictEqual({
+          detailedStatus: PomeloTransactionAuthzDetailStatus.SYSTEM_ERROR,
           summaryStatus: PomeloTransactionAuthzSummaryStatus.REJECTED,
           message: "",
         });
@@ -1133,7 +1159,7 @@ describe("PomeloTransactionServiceTests", () => {
       };
       const debitOrCreditWalletResponse: UpdateWalletBalanceServiceDTO = {
         id: uuid(),
-        status: CircleWithdrawalStatus.SUCCESS,
+        status: CircleTransferStatus.SUCCESS,
         createdAt: Date.now().toString(),
       };
 
@@ -1849,7 +1875,7 @@ describe("PomeloTransactionServiceTests", () => {
           when(mockTransactionService.validateAndSaveTransaction(anything())).thenResolve(debitTransaction);
           when(mockCircleService.debitWalletBalance("NOBA_TRANSACTION_ID", "CIRCLE_WALLET_ID", 50)).thenResolve({
             ...debitOrCreditWalletResponse,
-            status: CircleWithdrawalStatus.FAILURE,
+            status: CircleTransferStatus.INSUFFICIENT_FUNDS,
           });
           when(
             mockPomeloRepo.updatePomeloTransactionStatus(

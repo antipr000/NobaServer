@@ -184,6 +184,13 @@ bubble:
   baseURL: ""
   awsSecretNameForBaseURL: "TEST_BUBBLE_BASE_URL"
 
+meta:
+  pixelID: ""
+  awsSecretNameForPixelID: "TEST_META_PIXEL_ID"
+  accessToken: ""
+  awsSecretNameForAccessToken: "TEST_META_ACCESS_TOKEN"
+  testEventCode: ""
+
 dependencies:
   emailClient: "SENDGRID"
   smsClient: "TWILIO"

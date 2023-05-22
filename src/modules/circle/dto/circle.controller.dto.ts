@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { CircleWithdrawalStatus } from "../../psp/domain/CircleTypes";
+import { CircleTransferStatus } from "../../psp/domain/CircleTypes";
 
 export class CircleWalletResponseDTO {
   @ApiProperty()
@@ -18,8 +18,8 @@ export class CircleTransactionDTO {
   @ApiProperty()
   id: string;
 
-  @ApiProperty({ enum: CircleWithdrawalStatus })
-  status: CircleWithdrawalStatus;
+  @ApiProperty({ enum: CircleTransferStatus })
+  status: CircleTransferStatus;
 
   @ApiProperty()
   createdAt: string;

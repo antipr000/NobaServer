@@ -49,7 +49,7 @@ describe("CircleWorkflowService", () => {
   describe("getCircleBalanceAfterPayingAllDisbursementForInvoicedPayrolls", () => {
     it("should deduct the allocationAmount and return the balance", async () => {
       when(employerService.getTotalAllocationAmountAcrossInvoicedPayrolls()).thenResolve(1100);
-      when(circleService.getMasterWalletID()).thenResolve("MASTER_WALLET_ID");
+      when(circleService.getMasterWalletID()).thenReturn("MASTER_WALLET_ID");
       when(circleService.getWalletBalance("MASTER_WALLET_ID")).thenResolve(100);
       when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD)).thenResolve({
         nobaRate: 0.01,
@@ -68,7 +68,7 @@ describe("CircleWorkflowService", () => {
 
     it("should fail if the circle service failed", async () => {
       when(employerService.getTotalAllocationAmountAcrossInvoicedPayrolls()).thenResolve(1100);
-      when(circleService.getMasterWalletID()).thenResolve("MASTER_WALLET_ID");
+      when(circleService.getMasterWalletID()).thenReturn("MASTER_WALLET_ID");
       when(circleService.getWalletBalance("MASTER_WALLET_ID")).thenReject(
         new ServiceException({ errorCode: ServiceErrorCode.RATE_LIMIT_EXCEEDED }),
       );
@@ -84,7 +84,7 @@ describe("CircleWorkflowService", () => {
 
     it("should fail if the exchangerate service failed", async () => {
       when(employerService.getTotalAllocationAmountAcrossInvoicedPayrolls()).thenResolve(1100);
-      when(circleService.getMasterWalletID()).thenResolve("MASTER_WALLET_ID");
+      when(circleService.getMasterWalletID()).thenReturn("MASTER_WALLET_ID");
       when(circleService.getWalletBalance("MASTER_WALLET_ID")).thenResolve(100);
       when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD)).thenReject(
         new ServiceException({ errorCode: ServiceErrorCode.RATE_LIMIT_EXCEEDED }),

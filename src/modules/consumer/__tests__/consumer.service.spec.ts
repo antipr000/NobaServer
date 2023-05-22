@@ -66,6 +66,9 @@ import { IdentificationService } from "../../../modules/common/identification.se
 import { getMockIdentificationServiceWithDefaults } from "../../../modules/common/mocks/mock.identification.service";
 import { PushTokenService } from "../../../modules/notifications/push.token.service";
 import { getMockPushTokenServiceWithDefaults } from "../../../modules/notifications/mocks/mock.pushtoken.service";
+import { MetaService } from "../../../modules/marketing/public/meta.service";
+import { getMockMetaServiceWithDefaults } from "../../../modules/marketing/public/mocks/mock.meta.service";
+import { MetaEventName } from "../../../modules/marketing/dto/meta.service.dto";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -125,6 +128,7 @@ describe("ConsumerService", () => {
   let mockKMSService: KmsService;
   let mockIdentificationService: IdentificationService;
   let mockPushTokenService: PushTokenService;
+  let mockMetaService: MetaService;
 
   jest.setTimeout(30000);
 
@@ -144,6 +148,7 @@ describe("ConsumerService", () => {
     mockKMSService = getMockKMSServiceWithDefaults();
     mockIdentificationService = getMockIdentificationServiceWithDefaults();
     mockPushTokenService = getMockPushTokenServiceWithDefaults();
+    mockMetaService = getMockMetaServiceWithDefaults();
 
     const ConsumerRepoProvider = {
       provide: "ConsumerRepo",
@@ -221,14 +226,18 @@ describe("ConsumerService", () => {
           provide: PushTokenService,
           useFactory: () => instance(mockPushTokenService),
         },
+        {
+          provide: MetaService,
+          useFactory: () => instance(mockMetaService),
+        },
       ],
     }).compile();
 
     consumerService = app.get<ConsumerService>(ConsumerService);
   });
 
-  describe("createConsumerIfFirstTimeLogin", () => {
-    it("should create user if not present, setting default values as expected", async () => {
+  describe("getOrCreateConsumerConditionally", () => {
+    it("should create user from email if not present, setting default values as expected", async () => {
       const email = "mock-user@noba.com";
 
       const consumer = Consumer.createConsumer({
@@ -241,6 +250,18 @@ describe("ConsumerService", () => {
 
       when(mockConsumerRepo.getConsumerByEmail(email)).thenResolve(Result.fail("not found!"));
       when(mockConsumerRepo.createConsumer(anything())).thenResolve(consumer);
+      const metaRegistrationEvent = {
+        eventName: MetaEventName.COMPLETE_REGISTRATION,
+        userData: {
+          id: consumer.props.id,
+          email: email.toLowerCase(),
+          phone: undefined,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          country: undefined,
+        },
+      };
+      when(mockMetaService.raiseEvent(deepEqual(metaRegistrationEvent))).thenResolve();
 
       const response = await consumerService.getOrCreateConsumerConditionally(email);
       expect(response).toStrictEqual(consumer);
@@ -252,6 +273,27 @@ describe("ConsumerService", () => {
           }),
         ),
       ).once();
+      verify(mockMetaService.raiseEvent(deepEqual(metaRegistrationEvent))).once();
+    });
+
+    it("should create user from phone if not present, setting default values as expected", async () => {
+      const phone = "+12345678901";
+
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        phone: phone,
+      });
+
+      expect(consumer.props.locale).toBe("en_us"); // Gets set from phone prefix
+      expect(consumer.props.referralCode).not.toBe(null);
+
+      when(mockConsumerRepo.getConsumerByPhone(phone)).thenResolve(Result.fail("not found!"));
+      when(mockConsumerRepo.createConsumer(anything())).thenResolve(consumer);
+
+      const response = await consumerService.getOrCreateConsumerConditionally(phone);
+      expect(response).toStrictEqual(consumer);
+      verify(notificationService.sendNotification(anything(), anything())).never();
+      verify(mockMetaService.raiseEvent(anything())).never();
     });
   });
 
@@ -1634,6 +1676,9 @@ describe("ConsumerService", () => {
         firstName: "Mock",
         lastName: "Consumer",
         phone: phone,
+        address: {
+          countryCode: "US",
+        },
       });
 
       const emailUpdateRequest: UserEmailUpdateRequest = {
@@ -1670,6 +1715,19 @@ describe("ConsumerService", () => {
         }),
       ).thenResolve();
 
+      const metaRegistrationEvent = {
+        eventName: MetaEventName.COMPLETE_REGISTRATION,
+        userData: {
+          id: consumer.props.id,
+          email: email.toLowerCase(),
+          phone: phone,
+          firstName: consumer.props.firstName,
+          lastName: consumer.props.lastName,
+          country: consumer.props.address.countryCode,
+        },
+      };
+      when(mockMetaService.raiseEvent(deepEqual(metaRegistrationEvent))).thenResolve();
+
       // update consumer
       const updateConsumerResponse = await consumerService.updateConsumerEmail(consumer, emailUpdateRequest);
 
@@ -1692,6 +1750,7 @@ describe("ConsumerService", () => {
       //update consumer again, this time notification shouldn't be sent
       await consumerService.updateConsumerEmail(updateConsumerResponse, emailUpdateRequest);
       verify(notificationService.sendNotification(anything(), anything())).once(); //already called above
+      verify(mockMetaService.raiseEvent(deepEqual(metaRegistrationEvent))).once();
     });
 
     it("doesn't update user if identifier already exists", async () => {
