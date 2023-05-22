@@ -334,6 +334,7 @@ describe("PomeloTransactionServiceTests", () => {
       const pomeloTransaction: PomeloTransaction = {
         id: uuid(),
         pomeloTransactionID: "POMELO_TRANSACTION_ID",
+        settlementDate: "2023-03-28",
         parentPomeloTransactionID: null,
         localAmount: 5000,
         localCurrency: PomeloCurrency.COP,
@@ -416,6 +417,7 @@ describe("PomeloTransactionServiceTests", () => {
         const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
+          settlementDate: "2023-03-28",
           parentPomeloTransactionID: null,
           localAmount: 5000,
           localCurrency: "COP",
@@ -484,6 +486,7 @@ describe("PomeloTransactionServiceTests", () => {
         const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
+          settlementDate: "2023-03-28",
           parentPomeloTransactionID: null,
           localAmount: 4924.9,
           localCurrency: "COP",
@@ -546,6 +549,7 @@ describe("PomeloTransactionServiceTests", () => {
         const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
+          settlementDate: "2023-03-28",
           parentPomeloTransactionID: null,
           localAmount: 5000,
           localCurrency: "COP",
@@ -605,6 +609,7 @@ describe("PomeloTransactionServiceTests", () => {
         const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
+          settlementDate: "2023-03-28",
           parentPomeloTransactionID: null,
           localAmount: 5000,
           localCurrency: "COP",
@@ -688,6 +693,7 @@ describe("PomeloTransactionServiceTests", () => {
         const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
         expect(createPomeloTransactionRequestParams).toStrictEqual({
           pomeloTransactionID: "POMELO_TRANSACTION_ID",
+          settlementDate: "2023-03-28",
           parentPomeloTransactionID: null,
           localAmount: 5000,
           localCurrency: "COP",
@@ -905,7 +911,7 @@ describe("PomeloTransactionServiceTests", () => {
           endpoint: "/transactions/adjustments/credit",
           rawBodyBuffer: getRawTransactionAdjustmentBodyBuffer(),
           rawSignature: transactionAdjustmentCreditValidSignature,
-          timestamp: transactionAdjustmentValidTimestamp,
+          unixTimestampSeconds: transactionAdjustmentValidTimestamp,
           idempotencyKey: "IDEMPOTENCY_KEY",
 
           adjustmentType: PomeloAdjustmentType.CREDIT,
@@ -945,7 +951,7 @@ describe("PomeloTransactionServiceTests", () => {
       describe("should reject with OTHER status if 'signature' mismatched", () => {
         it("should return REJECTED if 'timestamp' differs by a few milliseconds", async () => {
           let request: PomeloTransactionAdjustmentRequest = validRequest;
-          request.timestamp = "1681145220";
+          request.unixTimestampSeconds = "1681145220";
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(request);
 
@@ -993,7 +999,7 @@ describe("PomeloTransactionServiceTests", () => {
         endpoint: "/transactions/adjustments/credit",
         rawBodyBuffer: getRawTransactionAdjustmentBodyBuffer(),
         rawSignature: transactionAdjustmentCreditValidSignature,
-        timestamp: transactionAdjustmentValidTimestamp,
+        unixTimestampSeconds: transactionAdjustmentValidTimestamp,
         idempotencyKey: "POMELO_IDEMPOTENCY_KEY",
 
         adjustmentType: PomeloAdjustmentType.CREDIT,
@@ -1020,7 +1026,7 @@ describe("PomeloTransactionServiceTests", () => {
         endpoint: "/transactions/adjustments/debit",
         rawBodyBuffer: getRawTransactionAdjustmentBodyBuffer(),
         rawSignature: transactionAdjustmentDebitValidSignature,
-        timestamp: transactionAdjustmentValidTimestamp,
+        unixTimestampSeconds: transactionAdjustmentValidTimestamp,
         idempotencyKey: "POMELO_IDEMPOTENCY_KEY",
 
         adjustmentType: PomeloAdjustmentType.DEBIT,
@@ -1046,6 +1052,7 @@ describe("PomeloTransactionServiceTests", () => {
       const pomeloTransaction: PomeloTransaction = {
         id: uuid(),
         pomeloTransactionID: "POMELO_TRANSACTION_ID",
+        settlementDate: "2023-04-10",
         parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
         localAmount: 5000,
         localCurrency: PomeloCurrency.COP,
@@ -1073,6 +1080,7 @@ describe("PomeloTransactionServiceTests", () => {
       const parentPomeloTransaction: PomeloTransaction = {
         id: uuid(),
         pomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
+        settlementDate: "2023-04-10",
         parentPomeloTransactionID: null,
         localAmount: 5000,
         localCurrency: PomeloCurrency.COP,
@@ -1199,6 +1207,7 @@ describe("PomeloTransactionServiceTests", () => {
           const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
+            settlementDate: "2023-04-10",
             parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
             localAmount: 5000,
             localCurrency: "COP",
@@ -1270,6 +1279,7 @@ describe("PomeloTransactionServiceTests", () => {
           const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
+            settlementDate: "2023-04-10",
             parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
             localAmount: 5000,
             localCurrency: "COP",
@@ -1346,6 +1356,7 @@ describe("PomeloTransactionServiceTests", () => {
           const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
+            settlementDate: "2023-04-10",
             parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
             localAmount: 5000,
             localCurrency: "COP",
@@ -1421,6 +1432,7 @@ describe("PomeloTransactionServiceTests", () => {
           const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
+            settlementDate: "2023-04-10",
             parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
             localAmount: 4924.9,
             localCurrency: "COP",
@@ -1493,6 +1505,7 @@ describe("PomeloTransactionServiceTests", () => {
           const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
+            settlementDate: "2023-04-10",
             parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
             localAmount: 5000,
             localCurrency: "COP",
@@ -1559,6 +1572,7 @@ describe("PomeloTransactionServiceTests", () => {
           const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
+            settlementDate: "2023-04-10",
             parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
             localAmount: 5000,
             localCurrency: "COP",
@@ -1654,6 +1668,7 @@ describe("PomeloTransactionServiceTests", () => {
           const [createPomeloTransactionRequestParams] = capture(mockPomeloRepo.createPomeloTransaction).last();
           expect(createPomeloTransactionRequestParams).toStrictEqual({
             pomeloTransactionID: "POMELO_TRANSACTION_ID",
+            settlementDate: "2023-04-10",
             parentPomeloTransactionID: "PARENT_POMELO_TRANSACTION_ID",
             localAmount: 5000,
             localCurrency: "COP",

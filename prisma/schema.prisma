@@ -396,6 +396,7 @@ model PomeloTransaction {
   childPomeloTransactions   PomeloTransaction[] @relation("parentPomeloTransaction")
   nobaTransactionID         String              @unique() // Note that this is not linked to "Transaction" model intentionally.
   pomeloIdempotencyKey      String              @unique()
+  settlementDate            String
   status                    String
   pomeloCardID              String
   pomeloCard                PomeloCard          @relation(fields: [pomeloCardID], references: [pomeloCardID], onDelete: Cascade)

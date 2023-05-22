@@ -680,6 +680,7 @@ describe("SqlPomeloRepoTests", () => {
       const completeRequest: PomeloTransactionSaveRequest = {
         pomeloIdempotencyKey: uuid(),
         pomeloTransactionID: uuid(),
+        settlementDate: "2023-05-22",
         parentPomeloTransactionID: null,
         nobaTransactionID: uuid(),
         pomeloCardID: uuid(),
@@ -703,6 +704,7 @@ describe("SqlPomeloRepoTests", () => {
 
       const requiredFields = [
         "pomeloTransactionID",
+        "settlementDate",
         "nobaTransactionID",
         "pomeloCardID",
         "pomeloUserID",
@@ -778,6 +780,7 @@ describe("SqlPomeloRepoTests", () => {
         validRequest = {
           pomeloIdempotencyKey: uuid(),
           pomeloTransactionID: uuid(),
+          settlementDate: "2022-05-22",
           parentPomeloTransactionID: null,
           nobaTransactionID: uuid(),
           pomeloCardID: pomeloCard.pomeloCardID,
@@ -862,6 +865,7 @@ describe("SqlPomeloRepoTests", () => {
         validRequestWithoutParentTransaction = {
           pomeloIdempotencyKey: uuid(),
           pomeloTransactionID: uuid(),
+          settlementDate: "2022-05-22",
           parentPomeloTransactionID: null,
           nobaTransactionID: uuid(),
           pomeloCardID: pomeloCard.pomeloCardID,
@@ -903,6 +907,7 @@ describe("SqlPomeloRepoTests", () => {
           pomeloCardID: request1.pomeloCardID,
           pomeloIdempotencyKey: request1.pomeloIdempotencyKey,
           pomeloTransactionID: request1.pomeloTransactionID,
+          settlementDate: "2022-05-22",
           parentPomeloTransactionID: null,
           nobaTransactionID: request1.nobaTransactionID,
           amountInUSD: request1.amountInUSD,
@@ -930,6 +935,7 @@ describe("SqlPomeloRepoTests", () => {
           pomeloCardID: request2.pomeloCardID,
           pomeloIdempotencyKey: request2.pomeloIdempotencyKey,
           pomeloTransactionID: request2.pomeloTransactionID,
+          settlementDate: "2022-05-22",
           parentPomeloTransactionID: request1.pomeloTransactionID,
           nobaTransactionID: request2.nobaTransactionID,
           amountInUSD: request2.amountInUSD,
@@ -968,6 +974,7 @@ describe("SqlPomeloRepoTests", () => {
           pomeloCardID: request.pomeloCardID,
           pomeloIdempotencyKey: request.pomeloIdempotencyKey,
           pomeloTransactionID: request.pomeloTransactionID,
+          settlementDate: "2022-05-22",
           parentPomeloTransactionID: null,
           nobaTransactionID: request.nobaTransactionID,
           amountInUSD: request.amountInUSD,
@@ -1024,6 +1031,7 @@ describe("SqlPomeloRepoTests", () => {
         pomeloUser.pomeloID,
         nobaTransactionID1,
         null,
+        {},
         prismaService,
       );
 
@@ -1039,6 +1047,7 @@ describe("SqlPomeloRepoTests", () => {
         pomeloUser.pomeloID,
         nobaTransactionID2,
         null,
+        {},
         prismaService,
       );
 
@@ -1077,6 +1086,7 @@ describe("SqlPomeloRepoTests", () => {
         pomeloUser.pomeloID,
         nobaTransactionID,
         null,
+        {},
         prismaService,
       );
 
@@ -1101,6 +1111,7 @@ describe("SqlPomeloRepoTests", () => {
         pomeloUser.pomeloID,
         nobaTransactionID1,
         null,
+        {},
         prismaService,
       );
 
@@ -1116,6 +1127,7 @@ describe("SqlPomeloRepoTests", () => {
         pomeloUser.pomeloID,
         nobaTransactionID2,
         null,
+        {},
         prismaService,
       );
 
@@ -1141,6 +1153,7 @@ describe("SqlPomeloRepoTests", () => {
         pomeloUser.pomeloID,
         nobaTransactionID,
         null,
+        {},
         prismaService,
       );
 
@@ -1165,6 +1178,7 @@ describe("SqlPomeloRepoTests", () => {
         pomeloUser.pomeloID,
         nobaTransactionID1,
         null,
+        {},
         prismaService,
       );
 
@@ -1180,6 +1194,7 @@ describe("SqlPomeloRepoTests", () => {
         pomeloUser.pomeloID,
         nobaTransactionID2,
         null,
+        {},
         prismaService,
       );
 
@@ -1207,6 +1222,7 @@ describe("SqlPomeloRepoTests", () => {
         pomeloUser.pomeloID,
         nobaTransactionID,
         null,
+        {},
         prismaService,
       );
 
@@ -1231,6 +1247,7 @@ describe("SqlPomeloRepoTests", () => {
         pomeloUser.pomeloID,
         nobaTransactionID1,
         null,
+        {},
         prismaService,
       );
 
@@ -1246,6 +1263,7 @@ describe("SqlPomeloRepoTests", () => {
         pomeloUser.pomeloID,
         nobaTransactionID2,
         null,
+        {},
         prismaService,
       );
 
