@@ -91,7 +91,7 @@ describe("EventRepoTests", () => {
     });
   });
 
-  describe("getEventByID", () => {
+  describe("getEventByIDOrName", () => {
     it("should return Event if Event exists", async () => {
       const eventCreateRequest: EventCreateRequest = {
         name: uuid(),
@@ -100,7 +100,7 @@ describe("EventRepoTests", () => {
 
       const event = await eventRepo.createEvent(eventCreateRequest);
 
-      const eventByID = await eventRepo.getEventByID(event.id);
+      const eventByID = await eventRepo.getEventByIDOrName(event.id);
 
       expect(eventByID).toBeDefined();
       expect(eventByID.id).toEqual(event.id);
@@ -108,12 +108,6 @@ describe("EventRepoTests", () => {
       expect(eventByID.handlers).toStrictEqual(event.handlers);
     });
 
-    it("should throw RepoException if Event does not exist", async () => {
-      await expect(eventRepo.getEventByID("INVALID_ID")).rejects.toThrow(RepoException);
-    });
-  });
-
-  describe("getEventByName", () => {
     it("should return Event if Event exists", async () => {
       const eventCreateRequest: EventCreateRequest = {
         name: uuid(),
@@ -122,7 +116,7 @@ describe("EventRepoTests", () => {
 
       const event = await eventRepo.createEvent(eventCreateRequest);
 
-      const eventByName = await eventRepo.getEventByName(event.name);
+      const eventByName = await eventRepo.getEventByIDOrName(event.name);
 
       expect(eventByName).toBeDefined();
       expect(eventByName.id).toEqual(event.id);
@@ -131,7 +125,7 @@ describe("EventRepoTests", () => {
     });
 
     it("should throw RepoException if Event does not exist", async () => {
-      await expect(eventRepo.getEventByName("INVALID_NAME")).rejects.toThrow(RepoException);
+      await expect(eventRepo.getEventByIDOrName("INVALID_ID")).rejects.toThrow(RepoException);
     });
   });
 

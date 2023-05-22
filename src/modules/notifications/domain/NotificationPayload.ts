@@ -33,6 +33,7 @@ import { SendCreditAdjustmentCompletedEvent } from "../events/SendCreditAdjustme
 import { SendDebitAdjustmentCompletedEvent } from "../events/SendDebitAdjustmentCompletedEvent";
 import { SendDebitAdjustmentFailedEvent } from "../events/SendDebitAdjustmentFailedEvent";
 import { SendCreditAdjustmentFailedEvent } from "../events/SendCreditAdjustmentFailedEvent";
+import { SendScheduledReminderEvent } from "../events/SendScheduledReminderEvent";
 
 export type NotificationPayload =
   | SendDepositCompletedEvent
@@ -62,7 +63,8 @@ export type NotificationPayload =
   | SendCreditAdjustmentCompletedEvent
   | SendCreditAdjustmentFailedEvent
   | SendDebitAdjustmentCompletedEvent
-  | SendDebitAdjustmentFailedEvent;
+  | SendDebitAdjustmentFailedEvent
+  | SendScheduledReminderEvent;
 
 export class NotificationPayloadMapper {
   private static getBaseParams(consumer: Consumer): BaseEvent {
@@ -384,6 +386,21 @@ export class NotificationPayloadMapper {
       firstName: consumer.props.firstName,
       handle: consumer.props.handle,
       params: TransactionNotificationPayloadMapper.toWithdrawalInitiatedNotificationParameters(transaction, locale),
+      ...(locale && { locale: locale }),
+    };
+  }
+
+  static toScheduledReminderEvent(consumer: Consumer, eventID: string): SendScheduledReminderEvent {
+    const locale = consumer.props.locale;
+
+    return {
+      email: consumer.props.email,
+      firstName: consumer.props.firstName,
+      handle: consumer.props.handle,
+      lastName: consumer.props.lastName,
+      nobaUserID: consumer.props.id,
+      phone: consumer.props.phone,
+      eventID: eventID,
       ...(locale && { locale: locale }),
     };
   }

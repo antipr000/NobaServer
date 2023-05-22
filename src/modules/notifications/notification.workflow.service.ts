@@ -98,7 +98,7 @@ export class NotificationWorkflowService {
   }
 
   async sendEvent(eventID: string): Promise<void> {
-    const event = await this.eventRepo.getEventByID(eventID);
+    const event = await this.eventRepo.getEventByIDOrName(eventID);
     if (!event) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,

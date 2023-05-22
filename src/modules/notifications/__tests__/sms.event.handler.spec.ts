@@ -67,7 +67,7 @@ describe("SMSEventHandler", () => {
       handle: "fake-handle",
     };
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_OTP_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_OTP_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_OTP_EVENT,
       handlers: [EventHandlers.SMS],
@@ -103,7 +103,7 @@ describe("SMSEventHandler", () => {
       handle: "fake-handle",
     };
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_OTP_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_OTP_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_OTP_EVENT,
       handlers: [EventHandlers.SMS],
@@ -148,7 +148,7 @@ describe("SMSEventHandler", () => {
       handle: "fake-handle",
     };
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_OTP_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_OTP_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_OTP_EVENT,
       handlers: [EventHandlers.SMS],
@@ -196,7 +196,9 @@ describe("SMSEventHandler", () => {
       nobaUserID: "fake-noba-user-id",
     };
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT)).thenResolve({
+    when(
+      mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT),
+    ).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
       handlers: [EventHandlers.SMS],
@@ -241,7 +243,7 @@ describe("SMSEventHandler", () => {
       handle: "fake-handle",
     };
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT,
       handlers: [EventHandlers.SMS],

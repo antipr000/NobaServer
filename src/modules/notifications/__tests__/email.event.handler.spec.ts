@@ -142,7 +142,7 @@ describe("EmailEventHandler test for languages", () => {
         handle: "fake-handle",
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_OTP_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_OTP_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_OTP_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -198,7 +198,9 @@ describe("EmailEventHandler test for languages", () => {
       nobaUserID: "fake-noba-user-id",
     };
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT)).thenResolve({
+    when(
+      mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT),
+    ).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_WALLET_UPDATE_VERIFICATION_CODE_EVENT,
       handlers: [EventHandlers.EMAIL],
@@ -256,7 +258,7 @@ describe("EmailEventHandler test for languages", () => {
         nobaUserID: "fake-noba-user-id",
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_WELCOME_MESSAGE_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_WELCOME_MESSAGE_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -310,7 +312,7 @@ describe("EmailEventHandler test for languages", () => {
         nobaUserID: "fake-noba-user-id",
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_KYC_APPROVED_US_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_KYC_APPROVED_US_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -361,7 +363,7 @@ describe("EmailEventHandler test for languages", () => {
       nobaUserID: "fake-noba-user-id",
     };
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
       handlers: [EventHandlers.EMAIL],
@@ -417,7 +419,7 @@ describe("EmailEventHandler test for languages", () => {
         nobaUserID: "fake-noba-user-id",
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_KYC_DENIED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_KYC_DENIED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_KYC_DENIED_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -473,7 +475,7 @@ describe("EmailEventHandler test for languages", () => {
         nobaUserID: "fake-noba-user-id",
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -529,7 +531,9 @@ describe("EmailEventHandler test for languages", () => {
         nobaUserID: "fake-noba-user-id",
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT)).thenResolve({
+      when(
+        mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT),
+      ).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -585,7 +589,9 @@ describe("EmailEventHandler test for languages", () => {
         nobaUserID: "fake-noba-user-id",
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT)).thenResolve({
+      when(
+        mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT),
+      ).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_DOCUMENT_VERIFICATION_REJECTED_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -633,7 +639,7 @@ describe("EmailEventHandler test for languages", () => {
       };
 
       when(
-        mockEventRepo.getEventByName(NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT),
+        mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT),
       ).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_DOCUMENT_VERIFICATION_TECHNICAL_FAILURE_EVENT,
@@ -691,7 +697,7 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -762,7 +768,7 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_DEPOSIT_FAILED_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -836,7 +842,7 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -909,7 +915,7 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -979,7 +985,7 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -1050,7 +1056,7 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT,
         handlers: [EventHandlers.EMAIL, EventHandlers.PUSH],
@@ -1133,7 +1139,7 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -1211,7 +1217,7 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -1308,7 +1314,7 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_FAILED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_TRANSFER_FAILED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_TRANSFER_FAILED_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -1382,7 +1388,7 @@ describe("EmailEventHandler test for languages", () => {
         locale: locale,
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -1446,7 +1452,7 @@ describe("EmailEventHandler test for languages", () => {
         lastName: "Last",
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT,
         handlers: [EventHandlers.EMAIL],
@@ -1491,7 +1497,7 @@ describe("EmailEventHandler test for languages", () => {
         companyName: "Fake Company",
       };
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT,
         handlers: [EventHandlers.EMAIL],

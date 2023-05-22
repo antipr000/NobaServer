@@ -34,6 +34,7 @@ import { SendInviteEmployeeEvent } from "./events/SendInviteEmployeeEvent";
 import { QRService } from "../common/qrcode.service";
 import { S3Service } from "../common/s3.service";
 import { QR_CODES_BASE_URL, QR_CODES_FOLDER_BUCKET_PATH } from "../../config/ConfigurationUtils";
+import { SendScheduledReminderEvent } from "./events/SendScheduledReminderEvent";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -63,8 +64,8 @@ export class EmailEventHandler {
     @Inject("EmailClient") private readonly emailClient: EmailClient,
   ) {}
 
-  private async getOrDefaultTemplateId(eventName: NotificationEventType, locale: string): Promise<string> {
-    const event = await this.eventRepo.getEventByName(eventName);
+  private async getOrDefaultTemplateId(eventIDOrName: string, locale: string): Promise<string> {
+    const event = await this.eventRepo.getEventByIDOrName(eventIDOrName);
     const emailTemplates = event.templates.filter(template => template.type === EventHandlers.EMAIL);
     locale = locale?.toLowerCase() ?? "en";
     if (emailTemplates.find(template => template.locale === locale)) {
@@ -665,6 +666,20 @@ export class EmailEventHandler {
         companyName: payload.companyName,
         qrCodeImageUrl: desinationPath,
       },
+    };
+
+    await this.emailClient.sendEmail(msg);
+  }
+
+  @OnEvent(`email.${NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT}`)
+  public async sendScheduledReminderEvent(payload: SendScheduledReminderEvent) {
+    const templateID = await this.getOrDefaultTemplateId(payload.eventID, payload.locale);
+
+    const msg = {
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: templateID,
+      dynamicTemplateData: {},
     };
 
     await this.emailClient.sendEmail(msg);

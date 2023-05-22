@@ -87,7 +87,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -161,7 +161,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_DEPOSIT_FAILED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -234,7 +234,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -308,7 +308,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -385,7 +385,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -465,7 +465,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_FAILED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_TRANSFER_FAILED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_TRANSFER_FAILED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -546,7 +546,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -622,7 +622,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
