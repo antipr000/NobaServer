@@ -24,7 +24,7 @@ import { TransactionEvent } from "../transaction/domain/TransactionEvent";
 import { CircleService } from "../circle/public/circle.service";
 import { InitiateTransactionRequest } from "../transaction/dto/transaction.service.dto";
 import { InitiateTransactionDTO } from "../transaction/dto/CreateTransactionDTO";
-import { ConsumerWorkflowName } from "src/infra/temporal/workflow";
+import { ConsumerWorkflowName } from "../../infra/temporal/workflow";
 
 @Injectable()
 export class AdminService {
