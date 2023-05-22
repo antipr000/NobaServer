@@ -57,6 +57,8 @@ export class NotificationWorkflowService {
         return this.sendPayrollDepositCompletedEventNotification(request.transactionID);
       case NotificationWorkflowTypes.UPDATE_PAYROLL_STATUS_EVENT:
         return this.sendPayrollStatusUpdateNotification(request.payrollID, request.payrollStatus);
+      case NotificationWorkflowTypes.CREDIT_ADJUSTMENT_COMPLETED_EVENT:
+        return this.sendCreditAdjustmentCompletedEventNotification(request.transactionID);
       default:
         this.logger.error("Failed to send notification from workflow. Reason: Invalid notification type");
         throw new ServiceException({
@@ -176,6 +178,14 @@ export class NotificationWorkflowService {
     const payload = NotificationPayloadMapper.toUpdatePayrollStatusEvent(payroll.id, status);
 
     await this.notificationService.sendNotification(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT, payload);
+  }
+
+  private async sendCreditAdjustmentCompletedEventNotification(transactionID: string): Promise<void> {
+    const transaction = await this.validateAndGetTransactionFromID(transactionID);
+    const consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
+    const creditConsumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
+    const payload = NotificationPayloadMapper.(consumer, creditConsumer, transaction);
+    await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_FAILED_EVENT, payload);
   }
 
   async getPreviousNotifications(): Promise<LatestNotificationResponse> {
