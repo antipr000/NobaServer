@@ -30,6 +30,9 @@ import { Utils } from "../../../core/utils/Utils";
 import { BaseEvent } from "../events/BaseEvent";
 import { SendInviteEmployeeEvent } from "../events/SendInviteEmployeeEvent";
 import { SendCreditAdjustmentCompletedEvent } from "../events/SendCreditAdjustmentCompletedEvent";
+import { SendDebitAdjustmentCompletedEvent } from "../events/SendDebitAdjustmentCompletedEvent";
+import { SendDebitAdjustmentFailedEvent } from "../events/SendDebitAdjustmentFailedEvent";
+import { SendCreditAdjustmentFailedEvent } from "../events/SendCreditAdjustmentFailedEvent";
 
 export type NotificationPayload =
   | SendDepositCompletedEvent
@@ -55,7 +58,11 @@ export type NotificationPayload =
   | SendWithdrawalCompletedEvent
   | SendWithdrawalFailedEvent
   | SendWithdrawalInitiatedEvent
-  | SendInviteEmployeeEvent;
+  | SendInviteEmployeeEvent
+  | SendCreditAdjustmentCompletedEvent
+  | SendCreditAdjustmentFailedEvent
+  | SendDebitAdjustmentCompletedEvent
+  | SendDebitAdjustmentFailedEvent;
 
 export class NotificationPayloadMapper {
   private static getBaseParams(consumer: Consumer): BaseEvent {

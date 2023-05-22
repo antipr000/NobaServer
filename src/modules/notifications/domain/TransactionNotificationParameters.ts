@@ -165,6 +165,18 @@ export class TransactionNotificationParamsJoiSchema {
   static getCreditAdjustmentCompletedNotificationParamsSchema() {
     return this.getTransactionParamsSchema();
   }
+
+  static getCreditAdjustmentFailedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
+  }
+
+  static getDebitAdjustmentCompletedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
+  }
+
+  static getDebitAdjustmentFailedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
+  }
 }
 
 // TODO(jira/CRYPTO-604): Remove hardcoded values and unnecessary fields once templates are ready
