@@ -38,7 +38,7 @@ export class PomeloWebhookMapper {
 
     const response: PomeloTransactionAuthzRequest = {
       endpoint: headers["x-endpoint"],
-      timestamp: headers["x-timestamp"],
+      unixTimestampSeconds: headers["x-timestamp"],
       rawSignature: headers["x-signature"],
       idempotencyKey: headers["x-idempotency-key"],
       rawBodyBuffer: null, // will be the responsibility of the controller layer.

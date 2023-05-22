@@ -24,7 +24,7 @@ export enum PomeloTransactionAuthzSummaryStatus {
 export type PomeloTransactionAuthzRequest = {
   // request validation parameters.
   endpoint: string;
-  timestamp: string;
+  unixTimestampSeconds: string;
   rawSignature: string;
   rawBodyBuffer: Buffer;
   idempotencyKey: string;

@@ -226,7 +226,7 @@ describe("PomeloTransactionServiceTests", () => {
           endpoint: "/transactions/authorizations",
           rawBodyBuffer: getRawTransactionAuthzBodyBuffer(),
           rawSignature: transactionAuthzValidSignature,
-          timestamp: transactionAuthzValidTimestamp,
+          unixTimestampSeconds: transactionAuthzValidTimestamp,
           idempotencyKey: "IDEMPOTENCY_KEY",
 
           localAmount: 5000,
@@ -266,7 +266,7 @@ describe("PomeloTransactionServiceTests", () => {
       describe("should reject with OTHER status if 'signature' mismatched", () => {
         it("should return REJECTED if 'timestamp' differs by a few milliseconds", async () => {
           let request: PomeloTransactionAuthzRequest = validRequest;
-          request.timestamp = "1680024225";
+          request.unixTimestampSeconds = "1680024225";
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
 
@@ -310,7 +310,7 @@ describe("PomeloTransactionServiceTests", () => {
         endpoint: "/transactions/authorizations",
         rawBodyBuffer: getRawTransactionAuthzBodyBuffer(),
         rawSignature: transactionAuthzValidSignature,
-        timestamp: transactionAuthzValidTimestamp,
+        unixTimestampSeconds: transactionAuthzValidTimestamp,
         idempotencyKey: "POMELO_IDEMPOTENCY_KEY",
 
         localAmount: 5000,
