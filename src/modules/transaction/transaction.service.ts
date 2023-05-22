@@ -437,9 +437,10 @@ export class TransactionService {
   private async createInputTransactionForCreditAdjustmentRequest(
     request: CreditAdjustmentTransactionRequest,
   ): Promise<InputTransaction> {
+    console.log(request);
     return {
       workflowName: WorkflowName.CREDIT_ADJUSTMENT,
-      exchangeRate: null,
+      exchangeRate: 1,
       memo: request.memo,
       transactionRef: Utils.generateLowercaseUUID(true),
       transactionFees: [],
@@ -455,7 +456,7 @@ export class TransactionService {
   ): Promise<InputTransaction> {
     return {
       workflowName: WorkflowName.DEBIT_ADJUSTMENT,
-      exchangeRate: null,
+      exchangeRate: 1,
       memo: request.memo,
       transactionRef: Utils.generateLowercaseUUID(true),
       transactionFees: [],

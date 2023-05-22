@@ -3,6 +3,7 @@ import { Currency } from "../domain/TransactionTypes";
 import { WorkflowName } from "../domain/Transaction";
 import { WithdrawalDTO } from "./WithdrawalDTO";
 import { TransactionFlags } from "../domain/TransactionFlags";
+import { ConsumerWorkflowName } from "../../../infra/temporal/workflow";
 
 export class InitiateTransactionDTO {
   @ApiPropertyOptional()
@@ -11,8 +12,8 @@ export class InitiateTransactionDTO {
   @ApiPropertyOptional()
   creditConsumerIDOrTag?: string;
 
-  @ApiProperty({ enum: WorkflowName })
-  workflowName: WorkflowName;
+  @ApiProperty({ enum: ConsumerWorkflowName })
+  workflowName: ConsumerWorkflowName;
 
   @ApiPropertyOptional({ enum: Currency })
   debitCurrency?: Currency;

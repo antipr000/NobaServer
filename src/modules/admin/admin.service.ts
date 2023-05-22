@@ -23,6 +23,8 @@ import { PaginatedResult } from "../../core/infra/PaginationTypes";
 import { TransactionEvent } from "../transaction/domain/TransactionEvent";
 import { CircleService } from "../circle/public/circle.service";
 import { InitiateTransactionRequest } from "../transaction/dto/transaction.service.dto";
+import { InitiateTransactionDTO } from "../transaction/dto/CreateTransactionDTO";
+import { ConsumerWorkflowName } from "src/infra/temporal/workflow";
 
 @Injectable()
 export class AdminService {
@@ -264,7 +266,49 @@ export class AdminService {
     return this.transactionService.getTransactionEvents(transactionID, includeInternalEvents);
   }
 
-  async initiateTransaction(request: InitiateTransactionRequest): Promise<Transaction> {
+  async initiateTransaction(transaction: InitiateTransactionDTO): Promise<Transaction> {
+    let request: InitiateTransactionRequest = {
+      type: transaction.workflowName,
+    };
+    switch (transaction.workflowName) {
+      case ConsumerWorkflowName.CREDIT_ADJUSTMENT:
+        request.creditAdjustmentRequest = {
+          creditConsumerID: transaction.creditConsumerIDOrTag,
+          creditAmount: transaction.creditAmount,
+          creditCurrency: transaction.creditCurrency,
+          memo: transaction.memo,
+        };
+        break;
+      case ConsumerWorkflowName.DEBIT_ADJUSTMENT:
+        request.debitAdjustmentRequest = {
+          debitConsumerID: transaction.debitConsumerIDOrTag,
+          debitAmount: transaction.debitAmount,
+          debitCurrency: transaction.debitCurrency,
+          memo: transaction.memo,
+        };
+        break;
+      case ConsumerWorkflowName.WALLET_TRANSFER:
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.NOT_IMPLEMENTED,
+          message: "Wallet transfer is not a supported workflow yet.",
+        });
+      case ConsumerWorkflowName.WALLET_WITHDRAWAL:
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.NOT_IMPLEMENTED,
+          message: "Wallet withdrawal is not a supported workflow yet.",
+        });
+      case ConsumerWorkflowName.WALLET_DEPOSIT:
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.NOT_IMPLEMENTED,
+          message: "Wallet deposit is not a supported workflow yet.",
+        });
+      default:
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+          message: `Invalid workflow name: ${transaction.workflowName}`,
+        });
+    }
+
     return this.transactionService.initiateTransaction(request);
   }
 
