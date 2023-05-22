@@ -184,7 +184,7 @@ export class NotificationWorkflowService {
     const transaction = await this.validateAndGetTransactionFromID(transactionID);
     const consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
     const creditConsumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
-    const payload = NotificationPayloadMapper.(consumer, creditConsumer, transaction);
+    const payload = NotificationPayloadMapper.toCreditAdjustmentCompletedEvent(consumer, transaction);
     await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_FAILED_EVENT, payload);
   }
 

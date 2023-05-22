@@ -37,6 +37,14 @@ export interface WithdrawalFailedNotificationParameters extends TransactionParam
   reasonDeclined: string;
 }
 
+export type CreditAdjustmentCompletedNotificationParameters = TransactionParameters;
+
+export type CreditAdjustmentFailedNotificationParameters = TransactionParameters;
+
+export type DebitAdjustmentCompletedNotificationParameters = TransactionParameters;
+
+export type DebitAdjustmentFailedNotificationParameters = TransactionParameters;
+
 export interface TransferCompletedNotificationParameters extends TransactionParameters {
   creditConsumer_firstName: string;
   creditConsumer_lastName: string;
@@ -152,6 +160,10 @@ export class TransactionNotificationParamsJoiSchema {
       ...this.getTransactionParamsSchema(),
       companyName: Joi.string().required(),
     };
+  }
+
+  static getCreditAdjustmentCompletedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
   }
 }
 
@@ -299,5 +311,12 @@ export class TransactionNotificationPayloadMapper {
       debitConsumer_handle: debitConsumer.props.handle,
       reasonDeclined: "Something went wrong", // TODO (CRYPTO-698)
     };
+  }
+
+  static toCreditAdjustmentCompletedNotificationParameters(
+    transaction: Transaction,
+    locale: string,
+  ): CreditAdjustmentCompletedNotificationParameters {
+    return this.toTransactionParams(transaction, locale);
   }
 }

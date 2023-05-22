@@ -29,6 +29,7 @@ import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { Utils } from "../../../core/utils/Utils";
 import { BaseEvent } from "../events/BaseEvent";
 import { SendInviteEmployeeEvent } from "../events/SendInviteEmployeeEvent";
+import { SendCreditAdjustmentCompletedEvent } from "../events/SendCreditAdjustmentCompletedEvent";
 
 export type NotificationPayload =
   | SendDepositCompletedEvent
@@ -261,8 +262,22 @@ export class NotificationPayloadMapper {
     };
   }
 
-  static toCreditAdjustmentCompletedEvent(consumer: Consumer, transaction: Transaction): SendTransferCompletedEvent {
-    return {};
+  static toCreditAdjustmentCompletedEvent(
+    consumer: Consumer,
+    transaction: Transaction,
+  ): SendCreditAdjustmentCompletedEvent {
+    const locale = consumer.props.locale;
+    return {
+      email: consumer.props.email,
+      firstName: consumer.props.firstName,
+      handle: consumer.props.handle,
+      params: TransactionNotificationPayloadMapper.toCreditAdjustmentCompletedNotificationParameters(
+        transaction,
+        locale,
+      ),
+      ...(consumer.props.locale && { locale: consumer.props.locale }),
+      nobaUserID: consumer.props.id,
+    };
   }
 
   static toWalletUpdateVerificationCodeEvent(
