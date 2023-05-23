@@ -101,7 +101,7 @@ export class PomeloTransactionService {
     try {
       const pomeloTransaction: PomeloTransaction = await this.getOrCreatePomeloTransaction({
         pomeloTransactionID: request.pomeloTransactionID,
-        settlementDate: this.convertToColumbianDate(request.unixTimestampSeconds),
+        settlementDate: Utils.convertToColumbianDate(request.unixTimestampSeconds),
         parentPomeloTransactionID: null,
         localAmount: request.localAmount,
         localCurrency: request.localCurrency,
@@ -226,7 +226,7 @@ export class PomeloTransactionService {
     try {
       const pomeloTransaction: PomeloTransaction = await this.getOrCreatePomeloTransaction({
         pomeloTransactionID: request.pomeloTransactionID,
-        settlementDate: this.convertToColumbianDate(request.unixTimestampSeconds),
+        settlementDate: Utils.convertToColumbianDate(request.unixTimestampSeconds),
         parentPomeloTransactionID: request.pomeloOriginalTransactionID,
         localAmount: request.localAmount,
         localCurrency: request.localCurrency,
@@ -410,32 +410,6 @@ export class PomeloTransactionService {
     }
 
     return pomeloTransaction;
-  }
-
-  private convertToColumbianDate(unixTimestampSeconds: string): string {
-    const unixTimestampInMillis: number = Number(unixTimestampSeconds) * 1000;
-    const date = new Date(unixTimestampInMillis);
-
-    // Specify the time zone as "America/Bogota" for the Colombian Standard Timezone
-    const options = {
-      timeZone: "America/Bogota",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    } as Intl.DateTimeFormatOptions;
-
-    // Format the date using the specified time zone and desired format
-    const formatter = new Intl.DateTimeFormat("en-US", options);
-    const parts = formatter.formatToParts(date);
-
-    // Extract the year, month, and day from the parts
-    const year = parts.find(part => part.type === "year").value;
-    const month = parts.find(part => part.type === "month").value;
-    const day = parts.find(part => part.type === "day").value;
-
-    // Assemble the formatted date - "YYYY-MM-DD" format.
-    const formattedColumbianDate = `${year}-${month}-${day}`;
-    return formattedColumbianDate;
   }
 
   private async getOrCreateCardWithdrawalNobaTransaction(
