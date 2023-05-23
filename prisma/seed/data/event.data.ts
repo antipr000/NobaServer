@@ -300,8 +300,8 @@ export const pushEventTemplateStringMap: PushEventsTemplateMap = {
       es: "Ajuste de crédito completado",
     },
     body: {
-      en: "Credit adjustment of amount {{amount}} {{currency}} completed for company {{companyName}}",
-      es: "Ajuste de crédito de importe {{amount}} {{currency}} completado para la empresa {{companyName}}",
+      en: "Credit adjustment of amount {{amount}} {{currency}} completed.",
+      es: "Ajuste de crédito de importe {{amount}} {{currency}} completado.",
     },
   },
 };

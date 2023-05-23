@@ -1,5 +1,5 @@
 import { TestingModule, Test } from "@nestjs/testing";
-import { anything, capture, instance, when } from "ts-mockito";
+import { anything, capture, deepEqual, instance, when } from "ts-mockito";
 import { AdminService } from "../admin.service";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { IAdminRepo } from "../repos/transactions/sql.admin.repo";
@@ -29,6 +29,10 @@ import { ConsumerInternalDTO } from "../../../modules/consumer/dto/ConsumerInter
 import { Gender } from "../../../modules/consumer/domain/ExternalStates";
 import { TransactionService } from "../../../modules/transaction/transaction.service";
 import { CircleService } from "../../../modules/circle/public/circle.service";
+import { getMockTransactionServiceWithDefaults } from "../../../modules/transaction/mocks/mock.transaction.service";
+import { ConsumerWorkflowName } from "../../../infra/temporal/workflow";
+import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
+import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
 
 describe("AdminService", () => {
   jest.setTimeout(5000);
@@ -40,6 +44,7 @@ describe("AdminService", () => {
   let consumerMapper: ConsumerMapper;
   let circleService: CircleService;
   let employeeService: EmployeeService;
+  let transactionService: TransactionService;
 
   beforeEach(async () => {
     adminRepo = getMockAdminRepoWithDefaults();
@@ -48,6 +53,7 @@ describe("AdminService", () => {
     consumerMapper = getMockConsumerMapperWithDefaults();
     circleService = getMockCircleServiceWithDefaults();
     employeeService = getMockEmployeeServiceWithDefaults();
+    transactionService = getMockTransactionServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -79,7 +85,7 @@ describe("AdminService", () => {
         },
         {
           provide: TransactionService,
-          useFactory: () => instance(TransactionService),
+          useFactory: () => instance(transactionService),
         },
         AdminMapper,
       ],
@@ -697,6 +703,122 @@ describe("AdminService", () => {
           },
         ],
       });
+    });
+  });
+
+  describe("initiateTransaction", () => {
+    it("should initiate a CREDIT_ADJUSTMENT transaction", async () => {
+      const transaction = {
+        id: "transaction-id-1",
+        creditConsumerID: "consumer-id-1",
+        creditAmount: 100,
+        creditCurrency: "USD",
+        memo: "memo",
+        exchangeRate: 1,
+        sessionKey: ConsumerWorkflowName.CREDIT_ADJUSTMENT,
+        transactionRef: "transaction-ref-1",
+        workflowName: ConsumerWorkflowName.CREDIT_ADJUSTMENT,
+        status: TransactionStatus.COMPLETED,
+        transactionFees: [],
+      };
+      when(
+        transactionService.initiateTransaction(
+          deepEqual({
+            type: ConsumerWorkflowName.CREDIT_ADJUSTMENT,
+            creditAdjustmentRequest: {
+              creditConsumerID: "consumer-id-1",
+              creditAmount: 100,
+              creditCurrency: Currency.USD,
+              memo: "memo",
+            },
+          }),
+        ),
+      ).thenResolve(transaction);
+
+      expect(
+        adminService.initiateTransaction({
+          workflowName: ConsumerWorkflowName.CREDIT_ADJUSTMENT,
+          creditConsumerIDOrTag: "consumer-id-1",
+          creditAmount: 100,
+          creditCurrency: Currency.USD,
+          memo: "memo",
+        }),
+      ).resolves.toStrictEqual(transaction);
+    });
+
+    it("should initiate a DEBIT_ADJUSTMENT transaction", async () => {
+      const transaction = {
+        id: "transaction-id-1",
+        debitConsumerID: "consumer-id-1",
+        debitAmount: 100,
+        debitCurrency: "USD",
+        memo: "memo",
+        exchangeRate: 1,
+        sessionKey: ConsumerWorkflowName.DEBIT_ADJUSTMENT,
+        transactionRef: "transaction-ref-1",
+        workflowName: ConsumerWorkflowName.DEBIT_ADJUSTMENT,
+        status: TransactionStatus.COMPLETED,
+        transactionFees: [],
+      };
+      when(
+        transactionService.initiateTransaction(
+          deepEqual({
+            type: ConsumerWorkflowName.DEBIT_ADJUSTMENT,
+            debitAdjustmentRequest: {
+              debitConsumerID: "consumer-id-1",
+              debitAmount: 100,
+              debitCurrency: Currency.USD,
+              memo: "memo",
+            },
+          }),
+        ),
+      ).thenResolve(transaction);
+
+      expect(
+        adminService.initiateTransaction({
+          workflowName: ConsumerWorkflowName.DEBIT_ADJUSTMENT,
+          debitConsumerIDOrTag: "consumer-id-1",
+          debitAmount: 100,
+          debitCurrency: Currency.USD,
+          memo: "memo",
+        }),
+      ).resolves.toStrictEqual(transaction);
+    });
+
+    it("should fail to initiate a WALLET_WITHDRAWAL transaction", async () => {
+      expect(
+        adminService.initiateTransaction({
+          workflowName: ConsumerWorkflowName.WALLET_WITHDRAWAL,
+          debitConsumerIDOrTag: "consumer-id-1",
+          debitAmount: 100,
+          debitCurrency: Currency.USD,
+          memo: "memo",
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.NOT_IMPLEMENTED);
+    });
+
+    it("should fail to initiate a WALLET_DEPOSIT transaction", async () => {
+      expect(
+        adminService.initiateTransaction({
+          workflowName: ConsumerWorkflowName.WALLET_DEPOSIT,
+          creditConsumerIDOrTag: "consumer-id-1",
+          creditAmount: 100,
+          creditCurrency: Currency.USD,
+          memo: "memo",
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.NOT_IMPLEMENTED);
+    });
+
+    it("should fail to initiate a WALLET_TRANSFER transaction", async () => {
+      expect(
+        adminService.initiateTransaction({
+          workflowName: ConsumerWorkflowName.WALLET_TRANSFER,
+          debitConsumerIDOrTag: "consumer-id-1",
+          debitAmount: 100,
+          debitCurrency: Currency.USD,
+          memo: "memo",
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.NOT_IMPLEMENTED);
     });
   });
 });

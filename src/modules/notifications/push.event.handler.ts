@@ -16,6 +16,7 @@ import { StubPushClient } from "./push/stub.push.client";
 import { EventRepo } from "./repos/event.repo";
 import { EventHandlers } from "./domain/EventHandlers";
 import { TemplateProcessor } from "../common/utils/template.processor";
+import { SendCreditAdjustmentCompletedEvent } from "./events/SendCreditAdjustmentCompletedEvent";
 
 @Injectable()
 export class PushEventHandler {
@@ -275,6 +276,34 @@ export class PushEventHandler {
       amount: payload.params.debitAmount,
       currency: payload.params.debitCurrency,
       companyName: payload.params.companyName,
+    });
+
+    const promises = pushTokens.map(
+      async pushToken =>
+        await this.pushClient.sendPushNotification({
+          token: pushToken,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
+          body,
+          title: templateData.title,
+        }),
+    );
+
+    await Promise.all(promises);
+  }
+
+  @OnEvent(`push.${NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT}`)
+  async sendCreditAdjustmentCompletedEvent(payload: SendCreditAdjustmentCompletedEvent) {
+    const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
+
+    const templateData = await this.getOrDefaultTemplateData(
+      NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT,
+      payload.locale,
+    );
+
+    const body = TemplateProcessor.parseTemplateString(templateData.body, {
+      amount: payload.params.creditAmount,
+      currency: payload.params.creditCurrency,
     });
 
     const promises = pushTokens.map(
