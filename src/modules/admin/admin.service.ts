@@ -309,8 +309,6 @@ export class AdminService {
         });
     }
 
-    console.log(this.transactionService);
-
     return this.transactionService.initiateTransaction(request);
   }
 

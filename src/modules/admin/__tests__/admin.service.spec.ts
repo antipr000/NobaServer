@@ -820,5 +820,17 @@ describe("AdminService", () => {
         }),
       ).rejects.toThrowServiceException(ServiceErrorCode.NOT_IMPLEMENTED);
     });
+
+    it("should fail to initiate a null workflow", async () => {
+      expect(
+        adminService.initiateTransaction({
+          workflowName: null,
+          debitConsumerIDOrTag: "consumer-id-1",
+          debitAmount: 100,
+          debitCurrency: Currency.USD,
+          memo: "memo",
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
   });
 });
