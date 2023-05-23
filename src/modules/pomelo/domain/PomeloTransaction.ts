@@ -8,6 +8,7 @@ export class PomeloTransaction {
   parentPomeloTransactionID: string;
   pomeloIdempotencyKey: string;
   nobaTransactionID: string;
+  settlementDate: string;
   pomeloCardID: string;
   pomeloUserID: string;
   amountInUSD: number;
@@ -93,6 +94,7 @@ export enum PomeloSource {
 
 export class PomeloTransactionSaveRequest {
   pomeloTransactionID: string;
+  settlementDate: string;
   parentPomeloTransactionID: string;
   pomeloIdempotencyKey: string;
   nobaTransactionID: string;
@@ -118,6 +120,7 @@ export class PomeloTransactionSaveRequest {
 export const validateSavePomeloTransactionRequest = (request: PomeloTransactionSaveRequest) => {
   const pomeloTransactionsJoiValidationKeys: KeysRequired<PomeloTransactionSaveRequest> = {
     pomeloTransactionID: Joi.string().required(),
+    settlementDate: Joi.string().required(),
     parentPomeloTransactionID: Joi.string().required().allow(null),
     pomeloIdempotencyKey: Joi.string().required(),
     nobaTransactionID: Joi.string().required(),
@@ -169,6 +172,7 @@ export const validatePomeloTransaction = (pomeloTransaction: PomeloTransaction) 
     id: Joi.string().required(),
     pomeloTransactionID: Joi.string().required(),
     parentPomeloTransactionID: Joi.string().required().allow(null),
+    settlementDate: Joi.string().required(),
     pomeloIdempotencyKey: Joi.string().required(),
     nobaTransactionID: Joi.string().required(),
     pomeloCardID: Joi.string().required(),
@@ -227,6 +231,7 @@ export const convertToDomainPomeloTransaction = (
     pomeloUserID: pomeloTransaction.pomeloUserID,
     pomeloTransactionID: pomeloTransaction.pomeloTransactionID,
     parentPomeloTransactionID: pomeloTransaction.parentPomeloTransactionID,
+    settlementDate: pomeloTransaction.settlementDate,
     pomeloIdempotencyKey: pomeloTransaction.pomeloIdempotencyKey,
     nobaTransactionID: pomeloTransaction.nobaTransactionID,
     amountInUSD: pomeloTransaction.amountInUSD,

@@ -308,6 +308,7 @@ export class SQLPomeloRepo implements PomeloRepo {
         },
         pomeloIdempotencyKey: request.pomeloIdempotencyKey,
         pomeloTransactionID: request.pomeloTransactionID,
+        settlementDate: request.settlementDate,
         nobaTransactionID: request.nobaTransactionID,
         amountInUSD: request.amountInUSD,
         localAmount: request.localAmount,

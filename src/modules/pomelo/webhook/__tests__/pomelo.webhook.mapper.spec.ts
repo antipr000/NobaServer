@@ -743,7 +743,7 @@ describe("PomeloWebhookMapperService", () => {
 
       expect(response).toStrictEqual({
         endpoint: "ENDPOINT",
-        timestamp: "999999999",
+        unixTimestampSeconds: "999999999",
         rawSignature: "SIGNATURE",
         rawBodyBuffer: null,
         idempotencyKey: "IDEMPOTENCY_KEY",
@@ -1575,7 +1575,7 @@ describe("PomeloWebhookMapperService", () => {
 
       expect(response).toStrictEqual({
         endpoint: "ENDPOINT",
-        timestamp: "999999999",
+        unixTimestampSeconds: "999999999",
         rawSignature: "SIGNATURE",
         rawBodyBuffer: null,
         idempotencyKey: "IDEMPOTENCY_KEY",
