@@ -287,6 +287,48 @@ export class NotificationPayloadMapper {
     };
   }
 
+  static toCreditAdjustmentFailedEvent(consumer: Consumer, transaction: Transaction): SendCreditAdjustmentFailedEvent {
+    const locale = consumer.props.locale;
+    return {
+      email: consumer.props.email,
+      firstName: consumer.props.firstName,
+      handle: consumer.props.handle,
+      params: TransactionNotificationPayloadMapper.toCreditAdjustmentFailedNotificationParameters(transaction, locale),
+      ...(consumer.props.locale && { locale: consumer.props.locale }),
+      nobaUserID: consumer.props.id,
+    };
+  }
+
+  static toDebitAdjustmentCompletedEvent(
+    consumer: Consumer,
+    transaction: Transaction,
+  ): SendDebitAdjustmentCompletedEvent {
+    const locale = consumer.props.locale;
+    return {
+      email: consumer.props.email,
+      firstName: consumer.props.firstName,
+      handle: consumer.props.handle,
+      params: TransactionNotificationPayloadMapper.toDebitAdjustmentCompletedNotificationParameters(
+        transaction,
+        locale,
+      ),
+      ...(consumer.props.locale && { locale: consumer.props.locale }),
+      nobaUserID: consumer.props.id,
+    };
+  }
+
+  static toDebitAdjustmentFailedEvent(consumer: Consumer, transaction: Transaction): SendDebitAdjustmentFailedEvent {
+    const locale = consumer.props.locale;
+    return {
+      email: consumer.props.email,
+      firstName: consumer.props.firstName,
+      handle: consumer.props.handle,
+      params: TransactionNotificationPayloadMapper.toDebitAdjustmentFailedNotificationParameters(transaction, locale),
+      ...(consumer.props.locale && { locale: consumer.props.locale }),
+      nobaUserID: consumer.props.id,
+    };
+  }
+
   static toWalletUpdateVerificationCodeEvent(
     consumer: Consumer,
     otp: string,

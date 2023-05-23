@@ -331,4 +331,25 @@ export class TransactionNotificationPayloadMapper {
   ): CreditAdjustmentCompletedNotificationParameters {
     return this.toTransactionParams(transaction, locale);
   }
+
+  static toCreditAdjustmentFailedNotificationParameters(
+    transaction: Transaction,
+    locale: string,
+  ): CreditAdjustmentFailedNotificationParameters {
+    return this.toTransactionParams(transaction, locale);
+  }
+
+  static toDebitAdjustmentCompletedNotificationParameters(
+    transaction: Transaction,
+    locale: string,
+  ): DebitAdjustmentCompletedNotificationParameters {
+    return this.toTransactionParams(transaction, locale);
+  }
+
+  static toDebitAdjustmentFailedNotificationParameters(
+    transaction: Transaction,
+    locale: string,
+  ): DebitAdjustmentFailedNotificationParameters {
+    return this.toTransactionParams(transaction, locale);
+  }
 }

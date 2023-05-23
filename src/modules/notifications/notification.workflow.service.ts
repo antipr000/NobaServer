@@ -59,6 +59,12 @@ export class NotificationWorkflowService {
         return this.sendPayrollStatusUpdateNotification(request.payrollID, request.payrollStatus);
       case NotificationWorkflowTypes.CREDIT_ADJUSTMENT_COMPLETED_EVENT:
         return this.sendCreditAdjustmentCompletedEventNotification(request.transactionID);
+      case NotificationWorkflowTypes.CREDIT_ADJUSTENT_FAILED_EVENT:
+        return this.sendCreditAdjustmentFailedEventNotification(request.transactionID);
+      case NotificationWorkflowTypes.DEBIT_ADJUSTMENT_COMPLETED_EVENT:
+        return this.sendDebitAdjustmentCompletedEventNotification(request.transactionID);
+      case NotificationWorkflowTypes.DEBIT_ADJUSTMENT_FAILED_EVENT:
+        return this.sendDebitAdjustmentFailedEventNotification(request.transactionID);
       default:
         this.logger.error("Failed to send notification from workflow. Reason: Invalid notification type");
         throw new ServiceException({
@@ -183,9 +189,35 @@ export class NotificationWorkflowService {
   private async sendCreditAdjustmentCompletedEventNotification(transactionID: string): Promise<void> {
     const transaction = await this.validateAndGetTransactionFromID(transactionID);
     const consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
-    const creditConsumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
     const payload = NotificationPayloadMapper.toCreditAdjustmentCompletedEvent(consumer, transaction);
-    await this.notificationService.sendNotification(NotificationEventType.SEND_TRANSFER_FAILED_EVENT, payload);
+    await this.notificationService.sendNotification(
+      NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT,
+      payload,
+    );
+  }
+
+  private async sendCreditAdjustmentFailedEventNotification(transactionID: string): Promise<void> {
+    const transaction = await this.validateAndGetTransactionFromID(transactionID);
+    const consumer = await this.consumerService.getConsumer(transaction.creditConsumerID);
+    const payload = NotificationPayloadMapper.toCreditAdjustmentFailedEvent(consumer, transaction);
+    await this.notificationService.sendNotification(NotificationEventType.SEND_CREDIT_ADJUSTMENT_FAILED_EVENT, payload);
+  }
+
+  private async sendDebitAdjustmentCompletedEventNotification(transactionID: string): Promise<void> {
+    const transaction = await this.validateAndGetTransactionFromID(transactionID);
+    const consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+    const payload = NotificationPayloadMapper.toDebitAdjustmentCompletedEvent(consumer, transaction);
+    await this.notificationService.sendNotification(
+      NotificationEventType.SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT,
+      payload,
+    );
+  }
+
+  private async sendDebitAdjustmentFailedEventNotification(transactionID: string): Promise<void> {
+    const transaction = await this.validateAndGetTransactionFromID(transactionID);
+    const consumer = await this.consumerService.getConsumer(transaction.debitConsumerID);
+    const payload = NotificationPayloadMapper.toDebitAdjustmentFailedEvent(consumer, transaction);
+    await this.notificationService.sendNotification(NotificationEventType.SEND_DEBIT_ADJUSTMENT_FAILED_EVENT, payload);
   }
 
   async getPreviousNotifications(): Promise<LatestNotificationResponse> {

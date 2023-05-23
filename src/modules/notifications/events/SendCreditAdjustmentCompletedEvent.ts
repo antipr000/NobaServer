@@ -10,7 +10,7 @@ export class SendCreditAdjustmentCompletedEvent extends BaseEvent {
   params: CreditAdjustmentCompletedNotificationParameters;
 }
 
-export const validateCreditAdjustmentCompletedEvent = (event: SendCreditAdjustmentCompletedEvent) => {
+export const validateSendCreditAdjustmentCompletedEvent = (event: SendCreditAdjustmentCompletedEvent) => {
   const creditAdjustmentCompletedEventJoiValidationKeys: KeysRequired<SendCreditAdjustmentCompletedEvent> = {
     email: Joi.string().email().required(),
     firstName: Joi.string().optional(),

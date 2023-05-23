@@ -10,7 +10,7 @@ export class SendDebitAdjustmentFailedEvent extends BaseEvent {
   params: DebitAdjustmentFailedNotificationParameters;
 }
 
-export const validateDebitAdjustmentFailedEvent = (event: SendDebitAdjustmentFailedEvent) => {
+export const validateSendDebitAdjustmentFailedEvent = (event: SendDebitAdjustmentFailedEvent) => {
   const debitAdjustmentFailedEventJoiValidationKeys: KeysRequired<SendDebitAdjustmentFailedEvent> = {
     email: Joi.string().email().required(),
     firstName: Joi.string().optional(),

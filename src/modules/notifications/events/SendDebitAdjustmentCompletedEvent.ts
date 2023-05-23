@@ -10,7 +10,7 @@ export class SendDebitAdjustmentCompletedEvent extends BaseEvent {
   params: DebitAdjustmentCompletedNotificationParameters;
 }
 
-export const validateDebitAdjustmentCompletedEvent = (event: SendDebitAdjustmentCompletedEvent) => {
+export const validateSendDebitAdjustmentCompletedEvent = (event: SendDebitAdjustmentCompletedEvent) => {
   const debitAdjustmentCompletedEventJoiValidationKeys: KeysRequired<SendDebitAdjustmentCompletedEvent> = {
     email: Joi.string().email().required(),
     firstName: Joi.string().optional(),
