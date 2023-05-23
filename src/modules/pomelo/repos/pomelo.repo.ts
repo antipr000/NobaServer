@@ -19,6 +19,7 @@ export interface PomeloRepo {
   getPomeloTransactionByNobaTransactionID(nobaTransactionID: string): Promise<PomeloTransaction>;
   getPomeloTransactionByPomeloTransactionID(pomeloTransactionID: string): Promise<PomeloTransaction>;
   getPomeloTransactionByPomeloIdempotencyKey(pomeloIdempotencyKey: string): Promise<PomeloTransaction>;
+  // `settlementDate` should be in "YYYY-MM-DD" format
   getPomeloUserTransactionsForSettlementDate(
     pomeloUserID: string,
     settlementDate: string,
