@@ -452,4 +452,27 @@ export class SQLPomeloRepo implements PomeloRepo {
       });
     }
   }
+
+  async getPomeloUserTransactionsForSettlementDate(
+    pomeloUserID: string,
+    settlementDate: string,
+  ): Promise<PomeloTransaction[]> {
+    try {
+      const returnedPomeloTransactions: PrismaPomeloTransactionModel[] =
+        await this.prismaService.pomeloTransaction.findMany({
+          where: {
+            pomeloUserID: pomeloUserID,
+            settlementDate: settlementDate,
+          },
+        });
+
+      return returnedPomeloTransactions.map(txn => convertToDomainPomeloTransaction(txn));
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: `Error getting all the PomeloTransactions for pomeloUserID '${pomeloUserID}' & settlementDate '${settlementDate}'.`,
+      });
+    }
+  }
 }

@@ -78,4 +78,28 @@ describe("PomeloWorkflowServiceTests", () => {
       expect(response).toStrictEqual(pomeloTransaction);
     });
   });
+
+  describe("getPomeloUserTransactionsForSettlementDate", () => {
+    const POMELO_CARD_ID = "POMELO_CARD_ID";
+    const POMELO_USER_ID = "POMELO_USER_ID";
+    const NOBA_TRANSACTION_ID = "NOBA_TRANSACTION_ID";
+    const pomeloTransaction: PomeloTransaction = getRandomPomeloTransaction(
+      POMELO_CARD_ID,
+      POMELO_USER_ID,
+      NOBA_TRANSACTION_ID,
+    );
+
+    it("should forwards the response as-is from the repo layer", async () => {
+      when(mockPomeloRepo.getPomeloUserTransactionsForSettlementDate(POMELO_USER_ID, "2023-05-23")).thenResolve([
+        pomeloTransaction,
+      ]);
+
+      const response: PomeloTransaction[] = await workflowService.getPomeloUserTransactionsForSettlementDate(
+        POMELO_USER_ID,
+        "2023-05-23",
+      );
+
+      expect(response).toStrictEqual([pomeloTransaction]);
+    });
+  });
 });

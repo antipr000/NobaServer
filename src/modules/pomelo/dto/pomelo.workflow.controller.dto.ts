@@ -85,3 +85,8 @@ export class PomeloTransactionDTO {
   @ApiProperty()
   updatedTimestamp: Date;
 }
+
+export class PomeloTransactionsDTO {
+  @ApiProperty()
+  transactions: PomeloTransactionDTO[];
+}

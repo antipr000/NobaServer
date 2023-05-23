@@ -1274,4 +1274,134 @@ describe("SqlPomeloRepoTests", () => {
       expect(response).toStrictEqual(pomeloTransaction2);
     });
   });
+
+  describe("getPomeloUserTransactionsForSettlementDate", () => {
+    it("should return empty array when matching 'pomeloUserID' exists but there is no matching 'settlementDate'", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const pomeloUser = await createPomeloUser(consumerID, prismaService);
+      const nobaCard: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUser.pomeloID,
+        nobaCard.id,
+        prismaService,
+      );
+      const pomeloTransaction1: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard.pomeloCardID,
+        pomeloUser.pomeloID,
+        uuid(),
+        null,
+        { settlementDate: "2023-05-23" },
+        prismaService,
+      );
+      const pomeloTransaction2: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard.pomeloCardID,
+        pomeloUser.pomeloID,
+        uuid(),
+        null,
+        { settlementDate: "2023-05-24" },
+        prismaService,
+      );
+
+      const response = await pomeloRepo.getPomeloUserTransactionsForSettlementDate(pomeloUser.pomeloID, "2023-05-20");
+
+      expect(response).toStrictEqual([]);
+    });
+
+    it("should return empty array when matching 'settlementDate' exists but there is no matching 'pomeloUserID'", async () => {
+      const consumerID = await createTestConsumer(prismaService);
+      const pomeloUser = await createPomeloUser(consumerID, prismaService);
+      const nobaCard: NobaCard = await createNobaCard(consumerID, CardProvider.POMELO, prismaService);
+      const pomeloCard: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUser.pomeloID,
+        nobaCard.id,
+        prismaService,
+      );
+      const pomeloTransaction1: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard.pomeloCardID,
+        pomeloUser.pomeloID,
+        uuid(),
+        null,
+        { settlementDate: "2023-05-23" },
+        prismaService,
+      );
+      const pomeloTransaction2: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard.pomeloCardID,
+        pomeloUser.pomeloID,
+        uuid(),
+        null,
+        { settlementDate: "2023-05-23" },
+        prismaService,
+      );
+
+      const response = await pomeloRepo.getPomeloUserTransactionsForSettlementDate(uuid(), "2023-05-23");
+
+      expect(response).toStrictEqual([]);
+    });
+
+    it("should return all matching PomeloTransaction with the matching 'pomeloUserID' & 'settlementDate'", async () => {
+      const consumerID1 = await createTestConsumer(prismaService);
+      const pomeloUser1 = await createPomeloUser(consumerID1, prismaService);
+      const nobaCard1: NobaCard = await createNobaCard(consumerID1, CardProvider.POMELO, prismaService);
+      const pomeloCard1: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUser1.pomeloID,
+        nobaCard1.id,
+        prismaService,
+      );
+      const pomeloTransaction11: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard1.pomeloCardID,
+        pomeloUser1.pomeloID,
+        uuid(),
+        null,
+        { settlementDate: "2023-05-23" },
+        prismaService,
+      );
+      const pomeloTransaction12: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard1.pomeloCardID,
+        pomeloUser1.pomeloID,
+        uuid(),
+        null,
+        { settlementDate: "2023-05-24" },
+        prismaService,
+      );
+
+      const consumerID2 = await createTestConsumer(prismaService);
+      const pomeloUser2 = await createPomeloUser(consumerID2, prismaService);
+      const nobaCard2: NobaCard = await createNobaCard(consumerID2, CardProvider.POMELO, prismaService);
+      const pomeloCard2: PomeloCard = await createPomeloCardWithPredefinedPomeloUser(
+        pomeloUser2.pomeloID,
+        nobaCard2.id,
+        prismaService,
+      );
+      const pomeloTransaction21: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard2.pomeloCardID,
+        pomeloUser2.pomeloID,
+        uuid(),
+        null,
+        { settlementDate: "2023-05-24" },
+        prismaService,
+      );
+      const pomeloTransaction22: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard2.pomeloCardID,
+        pomeloUser2.pomeloID,
+        uuid(),
+        null,
+        { settlementDate: "2023-05-26" },
+        prismaService,
+      );
+      const pomeloTransaction23: PomeloTransaction = await createPomeloTransaction(
+        pomeloCard2.pomeloCardID,
+        pomeloUser2.pomeloID,
+        uuid(),
+        null,
+        { settlementDate: "2023-05-24" },
+        prismaService,
+      );
+
+      const response = await pomeloRepo.getPomeloUserTransactionsForSettlementDate(pomeloUser2.pomeloID, "2023-05-24");
+
+      expect(response).toHaveLength(2);
+      expect(response).toContainEqual(pomeloTransaction21);
+      expect(response).toContainEqual(pomeloTransaction23);
+    });
+  });
 });

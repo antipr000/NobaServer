@@ -423,4 +423,35 @@ describe("Utils", () => {
       },
     );
   });
+
+  describe("convertToColumbianDate", () => {
+    // IST is 10:30 hr ahead of Columbian time.
+    it("should return date in YYYY-MM-DD format even if month and day has single digit", () => {
+      // Wednesday, 5 April 2023 11:00:00 GMT+05:30
+      const epochTimestampInSeconds = "1680672600";
+
+      expect(Utils.convertToColumbianDate(epochTimestampInSeconds)).toBe("2023-04-05");
+    });
+
+    it("should return previous date if time is < 10:30 hr in IST", () => {
+      // Wednesday, 5 April 2023 10:00:00 GMT+05:30
+      const epochTimestampInSeconds = "1680669000";
+
+      expect(Utils.convertToColumbianDate(epochTimestampInSeconds)).toBe("2023-04-04");
+    });
+
+    it("should return current date if time is exactly at 00:00 in Columbia", () => {
+      // Wednesday, 5 April 2023 10:30:00 GMT+05:30
+      const epochTimestampInSeconds = "1680670800";
+
+      expect(Utils.convertToColumbianDate(epochTimestampInSeconds)).toBe("2023-04-05");
+    });
+
+    it("should return previous date correctly, 'if time is < 10:30 hr in IST' AND 'today is 1st date of the month'", () => {
+      // Sunday, 1 October 2023 10:00:00 GMT+05:30
+      const epochTimestampInSeconds = "1696134600";
+
+      expect(Utils.convertToColumbianDate(epochTimestampInSeconds)).toBe("2023-09-30");
+    });
+  });
 });
