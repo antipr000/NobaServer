@@ -78,6 +78,7 @@ import { CreditAdjustmentImpl } from "../factory/credit.adjustment.impl";
 import { getMockCreditAdjustmentImplWithDefaults } from "../mocks/mock.credit.adjustment.impl";
 import { getMockDebitAdjustmentImplWithDefaults } from "../mocks/mock.dedit.adjustment.impl";
 import { DebitAdjustmentImpl } from "../factory/debit.adjustment.impl";
+import { ConsumerWorkflowName } from "src/infra/temporal/workflow";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -757,7 +758,7 @@ describe("TransactionServiceTests", () => {
           creditCurrency: Currency.COP,
           creditConsumerID: "CREDIT_CONSUMER_ID",
           transactionFees: [],
-          exchangeRate: null,
+          exchangeRate: 1,
           sessionKey: WorkflowName.CREDIT_ADJUSTMENT,
           status: TransactionStatus.INITIATED,
           workflowName: WorkflowName.CREDIT_ADJUSTMENT,
@@ -780,7 +781,7 @@ describe("TransactionServiceTests", () => {
           creditConsumerID: "CREDIT_CONSUMER_ID",
           memo: "MEMO",
           sessionKey: WorkflowName.CREDIT_ADJUSTMENT,
-          exchangeRate: null,
+          exchangeRate: 1,
           transactionFees: [],
         });
       });
@@ -845,7 +846,7 @@ describe("TransactionServiceTests", () => {
           debitCurrency: Currency.COP,
           debitConsumerID: "DEBIT_CONSUMER_ID",
           transactionFees: [],
-          exchangeRate: null,
+          exchangeRate: 1,
           sessionKey: WorkflowName.DEBIT_ADJUSTMENT,
           status: TransactionStatus.INITIATED,
           workflowName: WorkflowName.DEBIT_ADJUSTMENT,
@@ -868,7 +869,7 @@ describe("TransactionServiceTests", () => {
           debitConsumerID: "DEBIT_CONSUMER_ID",
           memo: "MEMO",
           sessionKey: WorkflowName.DEBIT_ADJUSTMENT,
-          exchangeRate: null,
+          exchangeRate: 1,
           transactionFees: [],
         });
       });
@@ -1908,7 +1909,7 @@ const getRandomConsumer = (consumerID: string): Consumer => {
 const getRandomTransaction = (
   debitConsumerID: string,
   creditConsumerID: string,
-  workflowName: WorkflowName = WorkflowName.WALLET_TRANSFER,
+  workflowName: ConsumerWorkflowName = WorkflowName.WALLET_TRANSFER,
 ): { transaction: Transaction; transactionDTO: InitiateTransactionDTO; inputTransaction: InputTransaction } => {
   let exchangeRate;
   let debitCurrency;
@@ -1972,7 +1973,7 @@ const getRandomTransaction = (
   };
 
   const transactionDTO: InitiateTransactionDTO = {
-    workflowName: transaction.workflowName,
+    workflowName: workflowName,
     memo: transaction.memo,
     ...(withdrawalData && { withdrawalData }),
   };

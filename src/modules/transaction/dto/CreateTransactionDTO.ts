@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Currency } from "../domain/TransactionTypes";
-import { WorkflowName } from "../domain/Transaction";
 import { WithdrawalDTO } from "./WithdrawalDTO";
 import { TransactionFlags } from "../domain/TransactionFlags";
 import { ConsumerWorkflowName } from "../../../infra/temporal/workflow";
