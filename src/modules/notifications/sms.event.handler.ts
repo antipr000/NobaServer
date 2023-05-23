@@ -8,6 +8,7 @@ import { StubSMSClient } from "./sms/stub.sms.client";
 import { EventRepo } from "./repos/event.repo";
 import { EventHandlers } from "./domain/EventHandlers";
 import { TemplateProcessor } from "../common/utils/template.processor";
+import { SendScheduledReminderEvent } from "./events/SendScheduledReminderEvent";
 
 @Injectable()
 export class SMSEventHandler {
@@ -69,6 +70,22 @@ export class SMSEventHandler {
 
     const body = TemplateProcessor.parseTemplateString(templateBody, {
       otp: payload.otp,
+    });
+
+    await this.smsClient.sendSMS(payload.phone, body);
+  }
+
+  @OnEvent(`sms.${NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT}`)
+  public async sendScheduledReminderEvent(payload: SendScheduledReminderEvent) {
+    const templateBody = await this.getOrDefaultTemplateBody(
+      NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT,
+      payload.locale,
+    );
+
+    const body = TemplateProcessor.parseTemplateString(templateBody, {
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      handle: payload.handle,
     });
 
     await this.smsClient.sendSMS(payload.phone, body);

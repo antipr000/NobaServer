@@ -17,7 +17,12 @@ import { ReminderScheduleRepo } from "./repos/reminder.schedule.repo";
 import { ReminderHistoryRepo } from "./repos/reminder.history.repo";
 import { ReminderSchedule } from "./domain/ReminderSchedule";
 import { EventRepo } from "./repos/event.repo";
-import { CreateReminderScheduleDTO } from "./dto/notification.workflow.controller.dto";
+import {
+  CreateReminderHistoryDTO,
+  CreateReminderScheduleDTO,
+  SendEventRequestDTO,
+} from "./dto/notification.workflow.controller.dto";
+import { ReminderHistory } from "./domain/ReminderHistory";
 
 @Injectable()
 export class NotificationWorkflowService {
@@ -79,6 +84,49 @@ export class NotificationWorkflowService {
     });
   }
 
+  async createOrUpdateReminderScheduleHistory(
+    reminderID: string,
+    body: CreateReminderHistoryDTO,
+  ): Promise<ReminderHistory> {
+    if (!reminderID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Reminder ID is required",
+      });
+    }
+
+    if (!body.consumerID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Consumer ID is required",
+      });
+    }
+
+    if (!body.lastSentTimestamp) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Last sent timestamp is required",
+      });
+    }
+
+    const reminderHistory = await this.reminderHistoryRepo.getReminderHistoryByReminderScheduleIDAndConsumerID(
+      reminderID,
+      body.consumerID,
+    );
+
+    if (!reminderHistory) {
+      return this.reminderHistoryRepo.createReminderHistory({
+        consumerID: body.consumerID,
+        reminderScheduleID: reminderID,
+        lastSentTimestamp: body.lastSentTimestamp,
+      });
+    } else {
+      return this.reminderHistoryRepo.updateReminderHistory(reminderHistory.id, {
+        lastSentTimestamp: body.lastSentTimestamp,
+      });
+    }
+  }
+
   async getAllReminderSchedulesForGroup(groupKey: string): Promise<ReminderSchedule[]> {
     return this.reminderScheduleRepo.getAllReminderSchedulesForGroup(groupKey);
   }
@@ -97,7 +145,7 @@ export class NotificationWorkflowService {
     return consumers.map(consumer => consumer.id);
   }
 
-  async sendEvent(eventID: string): Promise<void> {
+  async sendEvent(eventID: string, requestBody: SendEventRequestDTO): Promise<void> {
     const event = await this.eventRepo.getEventByIDOrName(eventID);
     if (!event) {
       throw new ServiceException({
@@ -105,6 +153,28 @@ export class NotificationWorkflowService {
         message: `Event with ID ${eventID} not found`,
       });
     }
+
+    if (!requestBody.consumerID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Consumer ID is required",
+      });
+    }
+    const consumer = await this.consumerService.getConsumer(requestBody.consumerID);
+
+    if (!consumer) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Consumer with ID ${requestBody.consumerID} not found`,
+      });
+    }
+
+    const notificationPayload = NotificationPayloadMapper.toScheduledReminderEvent(consumer, eventID);
+
+    await this.notificationService.sendNotification(
+      NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT,
+      notificationPayload,
+    );
   }
 
   async sendNotification(

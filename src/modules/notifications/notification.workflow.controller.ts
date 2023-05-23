@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, ForbiddenException, Get, HttpStatus, Inject, Param, Post } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  HttpStatus,
+  Inject,
+  Param,
+  Patch,
+  Post,
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
@@ -8,7 +19,12 @@ import { SendNotificationRequestDTO } from "./dto/SendNotificationRequestDTO";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { LatestNotificationResponse } from "./dto/latestnotification.response.dto";
 import { isE2ETestEnvironment } from "../../config/ConfigurationUtils";
-import { CreateReminderScheduleDTO, ReminderScheduleDTO } from "./dto/notification.workflow.controller.dto";
+import {
+  CreateReminderHistoryDTO,
+  CreateReminderScheduleDTO,
+  ReminderScheduleDTO,
+  SendEventRequestDTO,
+} from "./dto/notification.workflow.controller.dto";
 
 @Controller("wf/v1/notification")
 @ApiBearerAuth("JWT-auth")
@@ -47,6 +63,17 @@ export class NotificationWorkflowController {
     };
   }
 
+  @Patch("/reminder/:reminderID/history")
+  @ApiOperation({ summary: "Updates a reminder history" })
+  @ApiResponse({ status: HttpStatus.OK, type: BlankResponseDTO })
+  async createReminderHistory(
+    @Param("reminderID") reminderID: string,
+    @Body() request: CreateReminderHistoryDTO,
+  ): Promise<BlankResponseDTO> {
+    await this.notificationWorkflowService.createOrUpdateReminderScheduleHistory(reminderID, request);
+    return {};
+  }
+
   @Get("/reminder/:groupKey")
   @ApiOperation({ summary: "Get all reminders for a groupKey" })
   @ApiResponse({ status: HttpStatus.OK, type: Array<ReminderScheduleDTO> })
@@ -74,8 +101,11 @@ export class NotificationWorkflowController {
   @Post("/event/:eventID")
   @ApiOperation({ summary: "Send event based on event id" })
   @ApiResponse({ status: HttpStatus.ACCEPTED, type: BlankResponseDTO })
-  async sendEvent(@Param("eventID") eventID: string): Promise<BlankResponseDTO> {
-    await this.notificationWorkflowService.sendEvent(eventID);
+  async sendEvent(
+    @Param("eventID") eventID: string,
+    @Body() requestBody: SendEventRequestDTO,
+  ): Promise<BlankResponseDTO> {
+    await this.notificationWorkflowService.sendEvent(eventID, requestBody);
     return {};
   }
 

@@ -30,3 +30,16 @@ export class CreateReminderScheduleDTO {
   @ApiProperty()
   groupKey: string;
 }
+
+export class CreateReminderHistoryDTO {
+  @ApiProperty()
+  consumerID: string;
+
+  @ApiProperty()
+  lastSentTimestamp: Date;
+}
+
+export class SendEventRequestDTO {
+  @ApiProperty()
+  consumerID: string;
+}

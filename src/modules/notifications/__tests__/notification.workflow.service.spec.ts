@@ -2,7 +2,7 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { NotificationService } from "../notification.service";
-import { anything, deepEqual, instance, verify, when } from "ts-mockito";
+import { anyString, anything, deepEqual, instance, verify, when } from "ts-mockito";
 import { NotificationWorkflowService } from "../notification.workflow.service";
 import { TransactionService } from "../../../modules/transaction/transaction.service";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
@@ -30,6 +30,8 @@ import { getMockReminderScheduleRepoWithDefaults } from "../mocks/mock.reminder.
 import { getMockReminderHistoryRepoWithDefaults } from "../mocks/mock.reminder.history.repo";
 import { getMockEventRepoWithDefaults } from "../mocks/mock.event.repo";
 import { ReminderSchedule } from "../domain/ReminderSchedule";
+import { ReminderHistory } from "../domain/ReminderHistory";
+import { Event } from "../domain/Event";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -624,6 +626,208 @@ describe("NotificationService", () => {
           }),
         ),
       ).once();
+    });
+  });
+
+  describe("createOrUpdateReminderScheduleHistory", () => {
+    it("should create reminder schedule history", async () => {
+      const reminderID = "fake-reminder-id";
+      const consumerID = "fake-consumer-id";
+      const lastSentTimestamp = new Date();
+
+      when(
+        mockReminderHistoryRepo.getReminderHistoryByReminderScheduleIDAndConsumerID(reminderID, consumerID),
+      ).thenResolve(null);
+
+      const reminderHistory: ReminderHistory = {
+        id: "fake-id",
+        reminderScheduleID: reminderID,
+        consumerID: consumerID,
+        lastSentTimestamp: lastSentTimestamp,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+      };
+
+      when(mockReminderHistoryRepo.createReminderHistory(anything())).thenResolve(reminderHistory);
+
+      const result = await notificationWorflowService.createOrUpdateReminderScheduleHistory(reminderID, {
+        consumerID: consumerID,
+        lastSentTimestamp: lastSentTimestamp,
+      });
+
+      expect(result).toStrictEqual(reminderHistory);
+      verify(
+        mockReminderHistoryRepo.createReminderHistory(
+          deepEqual({
+            reminderScheduleID: reminderID,
+            consumerID: consumerID,
+            lastSentTimestamp: lastSentTimestamp,
+          }),
+        ),
+      ).once();
+      verify(mockReminderHistoryRepo.updateReminderHistory(anyString(), anything())).never();
+    });
+
+    it("should update reminder schedule history", async () => {
+      const reminderID = "fake-reminder-id-2";
+      const consumerID = "fake-consumer-id-2";
+      const lastSentTimestamp = new Date();
+
+      const reminderHistory: ReminderHistory = {
+        id: "fake-id",
+        reminderScheduleID: reminderID,
+        consumerID: consumerID,
+        lastSentTimestamp: lastSentTimestamp,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+      };
+
+      when(
+        mockReminderHistoryRepo.getReminderHistoryByReminderScheduleIDAndConsumerID(reminderID, consumerID),
+      ).thenResolve(reminderHistory);
+
+      when(mockReminderHistoryRepo.updateReminderHistory(anyString(), anything())).thenResolve(reminderHistory);
+
+      const result = await notificationWorflowService.createOrUpdateReminderScheduleHistory(reminderID, {
+        consumerID: consumerID,
+        lastSentTimestamp: lastSentTimestamp,
+      });
+
+      expect(result).toStrictEqual(reminderHistory);
+      verify(
+        mockReminderHistoryRepo.createReminderHistory({
+          reminderScheduleID: reminderID,
+          consumerID: consumerID,
+          lastSentTimestamp: lastSentTimestamp,
+        }),
+      ).never();
+      verify(
+        mockReminderHistoryRepo.updateReminderHistory(
+          reminderHistory.id,
+          deepEqual({
+            lastSentTimestamp: lastSentTimestamp,
+          }),
+        ),
+      ).once();
+    });
+
+    it("should throw ServiceException if reminderID is null", async () => {
+      await expect(
+        notificationWorflowService.createOrUpdateReminderScheduleHistory(null, {
+          consumerID: "fake-consumer-id",
+          lastSentTimestamp: new Date(),
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException if consumerID is null", async () => {
+      await expect(
+        notificationWorflowService.createOrUpdateReminderScheduleHistory("fake-reminder-id", {
+          consumerID: null,
+          lastSentTimestamp: new Date(),
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException if lastSentTimestamp is null", async () => {
+      await expect(
+        notificationWorflowService.createOrUpdateReminderScheduleHistory("fake-reminder-id", {
+          consumerID: "fake-consumer-id",
+          lastSentTimestamp: null,
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+  });
+
+  describe("sendEvent", () => {
+    it("should send event", async () => {
+      const eventID = "fake-event-id";
+      const event: Event = {
+        id: eventID,
+        name: "Fake Name",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        handlers: [],
+        templates: [],
+      };
+
+      const consumer = getRandomConsumer("fake-consumer-id");
+
+      when(mockEventRepo.getEventByIDOrName(eventID)).thenResolve(event);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(notificationService.sendNotification(anything(), anything())).thenResolve();
+
+      await notificationWorflowService.sendEvent(eventID, {
+        consumerID: consumer.props.id,
+      });
+
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT,
+          deepEqual({
+            email: consumer.props.email,
+            firstName: consumer.props.firstName,
+            handle: consumer.props.handle,
+            lastName: consumer.props.lastName,
+            nobaUserID: consumer.props.id,
+            phone: consumer.props.phone,
+            eventID: eventID,
+            locale: consumer.props.locale,
+          }),
+        ),
+      ).once();
+    });
+
+    it("should throw ServiceException if eventID does not exist", async () => {
+      const eventID = "fake-event-id";
+
+      when(mockEventRepo.getEventByIDOrName(eventID)).thenResolve(null);
+
+      await expect(
+        notificationWorflowService.sendEvent(eventID, {
+          consumerID: "fake-consumer-id",
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
+    });
+
+    it("should throw ServiceException if consumerID is null", async () => {
+      const eventID = "fake-event-id";
+      const event: Event = {
+        id: eventID,
+        name: "Fake Name",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        handlers: [],
+        templates: [],
+      };
+
+      when(mockEventRepo.getEventByIDOrName(eventID)).thenResolve(event);
+      await expect(
+        notificationWorflowService.sendEvent("fake-event-id", {
+          consumerID: null,
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException if consumerID does not exist", async () => {
+      const eventID = "fake-event-id";
+      const event: Event = {
+        id: eventID,
+        name: "Fake Name",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        handlers: [],
+        templates: [],
+      };
+
+      when(mockEventRepo.getEventByIDOrName(eventID)).thenResolve(event);
+      when(consumerService.getConsumer("fake-consumer-id")).thenResolve(null);
+
+      await expect(
+        notificationWorflowService.sendEvent("fake-event-id", {
+          consumerID: "fake-consumer-id",
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
     });
   });
 });
