@@ -24,7 +24,6 @@ import { NotificationEventType } from "../domain/NotificationTypes";
 import { EventHandlers } from "../domain/EventHandlers";
 import { Utils } from "../../../core/utils/Utils";
 import { SendCreditAdjustmentCompletedEvent } from "../events/SendCreditAdjustmentCompletedEvent";
-import { SendDebitAdjustmentCompletedEvent } from "../events/SendDebitAdjustmentCompletedEvent";
 
 describe.each([
   ["en", "en"],
@@ -695,7 +694,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],

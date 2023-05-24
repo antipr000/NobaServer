@@ -78,7 +78,7 @@ describe("NotificationService", () => {
   it("should create email event for otp event when phone is missing", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_OTP_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_OTP_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_OTP_EVENT,
       handlers: [EventHandlers.EMAIL],
@@ -104,7 +104,7 @@ describe("NotificationService", () => {
   it("should create sms event for otp event when phone is present", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_OTP_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_OTP_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_OTP_EVENT,
       handlers: [EventHandlers.SMS],
@@ -129,7 +129,7 @@ describe("NotificationService", () => {
 
   it("should emit SMS event for 'SEND_PHONE_VERIFICATION_CODE_EVENT'", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT,
       handlers: [EventHandlers.SMS],
@@ -161,7 +161,7 @@ describe("NotificationService", () => {
   it("should not emit any event for 'SEND_PHONE_VERIFICATION_CODE_EVENT' when phone is missing", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_PHONE_VERIFICATION_CODE_EVENT,
       handlers: [EventHandlers.SMS],
@@ -191,7 +191,7 @@ describe("NotificationService", () => {
 
   it("should emit Email event for 'SEND_KYC_APPROVED_US_EVENT'", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_KYC_APPROVED_US_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_KYC_APPROVED_US_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_KYC_APPROVED_US_EVENT,
       handlers: [EventHandlers.EMAIL],
@@ -224,7 +224,7 @@ describe("NotificationService", () => {
   it("should emit Email event for 'SEND_KYC_APPROVED_NON_US_EVENT'", async () => {
     when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_KYC_APPROVED_NON_US_EVENT,
       handlers: [EventHandlers.EMAIL],
@@ -274,7 +274,7 @@ describe("NotificationService", () => {
     it(`should emit Email event for '${event}'`, async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-      when(mockEventRepo.getEventByName(event)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(event)).thenResolve({
         id: "fake-id",
         name: event,
         handlers: [EventHandlers.EMAIL],
@@ -303,7 +303,7 @@ describe("NotificationService", () => {
     it("should emit 'SEND_UPDATE_PAYROLL_STATUS_EVENT' event in dashboard", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT,
         handlers: [EventHandlers.DASHBOARD],
@@ -332,7 +332,7 @@ describe("NotificationService", () => {
     it("should emit push event for DEPOSIT_COMPLETED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
         handlers: [EventHandlers.PUSH],
@@ -357,7 +357,7 @@ describe("NotificationService", () => {
 
     it("should emit push event for DEPOSIT_FAILED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_DEPOSIT_FAILED_EVENT,
         handlers: [EventHandlers.PUSH],
@@ -383,7 +383,7 @@ describe("NotificationService", () => {
     it("should emit push event for WITHDRAWAL_COMPLETED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
         handlers: [EventHandlers.PUSH],
@@ -410,7 +410,7 @@ describe("NotificationService", () => {
     it("should emit push event for WITHDRAWAL_FAILED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT,
         handlers: [EventHandlers.PUSH],
@@ -436,7 +436,7 @@ describe("NotificationService", () => {
     it("should emit push event for TRANSFER_COMPLETED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
         handlers: [EventHandlers.PUSH],
@@ -462,7 +462,7 @@ describe("NotificationService", () => {
     it("should emit push event for TRANSFER_FAILED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_FAILED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_TRANSFER_FAILED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_TRANSFER_FAILED_EVENT,
         handlers: [EventHandlers.PUSH],
@@ -487,7 +487,7 @@ describe("NotificationService", () => {
 
     it("should emit push event for TRANSFER_RECEIVED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT,
         handlers: [EventHandlers.PUSH],
@@ -513,7 +513,7 @@ describe("NotificationService", () => {
     it("should emit push event for PAYROLL_DEPOSIT_COMPLETED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
         handlers: [EventHandlers.PUSH],

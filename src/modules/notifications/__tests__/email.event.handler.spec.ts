@@ -46,6 +46,7 @@ import { QRService } from "../../../modules/common/qrcode.service";
 import { getMockS3ServiceWithDefaults } from "../../../modules/common/mocks/mock.s3.service";
 import { getMockQRServiceWithDefaults } from "../../../modules/common/mocks/mock.qr.service";
 import { SendInviteEmployeeEvent } from "../events/SendInviteEmployeeEvent";
+import { SendScheduledReminderEvent } from "../events/SendScheduledReminderEvent";
 
 describe("EmailEventHandler test for languages", () => {
   let currencyService: CurrencyService;
@@ -1537,6 +1538,65 @@ describe("EmailEventHandler test for languages", () => {
         dynamicTemplateData: {
           companyName: payload.companyName,
           qrCodeImageUrl: "https://qrcodes.noba.com/lowers/qr_codes/employee_fake-employee-id.png",
+        },
+      });
+    });
+  });
+
+  describe.each([
+    ["en", "en"],
+    ["es_co", "es"],
+  ])("sendScheduledReminderEvent", (locale, expectedLocale) => {
+    it(`should send Scheduled Reminder Email with ${expectedLocale} template when locale is ${locale}`, async () => {
+      const payload: SendScheduledReminderEvent = {
+        eventID: "fake-event-id",
+        firstName: "First",
+        lastName: "Last",
+        email: "fake+email@noba.com",
+        locale: locale,
+      };
+
+      when(mockEventRepo.getEventByIDOrName(payload.eventID)).thenResolve({
+        id: "fake-event-id",
+        name: "Some Fake Event",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        handlers: [EventHandlers.EMAIL],
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-event-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-event-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
+      when(emailClient.sendEmail(anything())).thenResolve();
+
+      await eventHandler.sendScheduledReminderEvent(payload);
+
+      const [emailRequest] = capture(emailClient.sendEmail).last();
+      expect(emailRequest).toStrictEqual({
+        to: payload.email,
+        from: SENDER_EMAIL,
+        templateId: `${expectedLocale}-template`,
+        dynamicTemplateData: {
+          firstName: payload.firstName,
+          lastName: payload.lastName,
+          handle: payload.handle,
         },
       });
     });

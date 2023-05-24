@@ -77,10 +77,7 @@ export class SMSEventHandler {
 
   @OnEvent(`sms.${NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT}`)
   public async sendScheduledReminderEvent(payload: SendScheduledReminderEvent) {
-    const templateBody = await this.getOrDefaultTemplateBody(
-      NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT,
-      payload.locale,
-    );
+    const templateBody = await this.getOrDefaultTemplateBody(payload.eventID, payload.locale);
 
     const body = TemplateProcessor.parseTemplateString(templateBody, {
       firstName: payload.firstName,

@@ -679,7 +679,11 @@ export class EmailEventHandler {
       to: payload.email,
       from: SENDER_EMAIL,
       templateId: templateID,
-      dynamicTemplateData: {},
+      dynamicTemplateData: {
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        handle: payload.handle,
+      },
     };
 
     await this.emailClient.sendEmail(msg);

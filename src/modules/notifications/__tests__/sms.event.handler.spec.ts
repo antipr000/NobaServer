@@ -14,6 +14,7 @@ import { EventRepo } from "../repos/event.repo";
 import { getMockEventRepoWithDefaults } from "../mocks/mock.event.repo";
 import { NotificationEventType } from "../domain/NotificationTypes";
 import { EventHandlers } from "../domain/EventHandlers";
+import { SendScheduledReminderEvent } from "../events/SendScheduledReminderEvent";
 
 describe("SMSEventHandler", () => {
   let currencyService: CurrencyService;
@@ -275,5 +276,41 @@ describe("SMSEventHandler", () => {
     const [recipientPhoneNumber, body] = capture(smsClient.sendSMS).last();
     expect(recipientPhoneNumber).toBe(payload.phone);
     expect(body).toStrictEqual("123456 is your one-time password to verify your phone number with Noba.");
+  });
+
+  it("should call smsClient with some scheduled reminder event", async () => {
+    const payload: SendScheduledReminderEvent = {
+      eventID: "fake-event-id",
+      firstName: "First",
+      lastName: "Last",
+      phone: "+1234567890",
+      locale: "en",
+      nobaUserID: "fake-noba-user-id",
+    };
+
+    when(mockEventRepo.getEventByIDOrName(payload.eventID)).thenResolve({
+      id: "fake-id",
+      name: "Scheduled Reminder",
+      handlers: [EventHandlers.SMS],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [
+        {
+          id: "fake-template-id-2",
+          locale: "en",
+          templateBody: "Some text",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.SMS,
+        },
+      ],
+    });
+
+    when(smsClient.sendSMS(anyString(), anyString())).thenResolve();
+    await eventHandler.sendScheduledReminderEvent(payload);
+    const [recipientPhoneNumber, body] = capture(smsClient.sendSMS).last();
+    expect(recipientPhoneNumber).toBe(payload.phone);
+    expect(body).toStrictEqual("Some text");
   });
 });

@@ -25,14 +25,11 @@ export enum NotificationEventType {
   SEND_EMPLOYER_REQUEST_EVENT = "employee.request",
   SEND_UPDATE_PAYROLL_STATUS_EVENT = "update.payroll.status",
   SEND_INVITE_EMPLOYEE_EVENT = "invite.employee",
-<<<<<<< HEAD
   SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT = "credit.adjustment.completed",
   SEND_CREDIT_ADJUSTMENT_FAILED_EVENT = "credit.adjustment.failed",
   SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT = "debit.adjustment.completed",
   SEND_DEBIT_ADJUSTMENT_FAILED_EVENT = "debit.adjustment.failed",
-=======
   SEND_SCHEDULED_REMINDER_EVENT = "scheduled.reminder",
->>>>>>> 4b050baa (Fixed event handlers and tests)
 }
 
 export enum NotificationWorkflowTypes {
