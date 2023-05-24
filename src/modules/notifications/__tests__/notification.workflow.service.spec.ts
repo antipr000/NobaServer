@@ -329,6 +329,48 @@ describe("NotificationService", () => {
       ).rejects.toThrowError(ServiceException);
     });
   });
+
+  describe("SendCreditAdjustmentCompletedNotification", () => {
+    it("should send credit adjustment notification", async () => {
+      const consumerID = uuid();
+      const consumer = getRandomConsumer(consumerID);
+      consumer.props.locale = "en_us";
+      const transaction = getRandomTransaction(consumerID, null, WorkflowName.CREDIT_ADJUSTMENT);
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
+
+      await notificationWorflowService.sendNotification(NotificationWorkflowTypes.CREDIT_ADJUSTMENT_COMPLETED_EVENT, {
+        transactionID: transaction.id,
+      });
+
+      const notificationPayload = NotificationPayloadMapper.toCreditAdjustmentCompletedEvent(consumer, transaction);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT,
+          deepEqual(notificationPayload),
+        ),
+      ).once();
+    });
+
+    it("should throw 'ServiceException' when transaction is not found", async () => {
+      const transactionID = uuid();
+      when(transactionService.getTransactionByTransactionID(transactionID)).thenResolve(null);
+
+      await expect(
+        notificationWorflowService.sendNotification(NotificationWorkflowTypes.CREDIT_ADJUSTMENT_COMPLETED_EVENT, {
+          transactionID: transactionID,
+        }),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw 'ServiceException' when transactionID is null", async () => {
+      await expect(
+        notificationWorflowService.sendNotification(NotificationWorkflowTypes.CREDIT_ADJUSTMENT_COMPLETED_EVENT, {
+          transactionID: null,
+        }),
+      ).rejects.toThrowError(ServiceException);
+    });
+  });
 });
 
 function getRandomTransaction(
@@ -385,6 +427,16 @@ function getRandomTransaction(
       transaction.debitAmount = 100;
       transaction.debitCurrency = Currency.COP;
       transaction.creditConsumerID = consumerID2;
+      break;
+    case WorkflowName.CREDIT_ADJUSTMENT:
+      transaction.creditAmount = 100;
+      transaction.creditCurrency = Currency.COP;
+      transaction.creditConsumerID = consumerID;
+      break;
+    case WorkflowName.DEBIT_ADJUSTMENT:
+      transaction.debitAmount = 100;
+      transaction.debitCurrency = Currency.COP;
+      transaction.debitConsumerID = consumerID;
       break;
   }
   return transaction;

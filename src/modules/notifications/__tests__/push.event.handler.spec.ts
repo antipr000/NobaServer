@@ -23,6 +23,8 @@ import { getMockEventRepoWithDefaults } from "../mocks/mock.event.repo";
 import { NotificationEventType } from "../domain/NotificationTypes";
 import { EventHandlers } from "../domain/EventHandlers";
 import { Utils } from "../../../core/utils/Utils";
+import { SendCreditAdjustmentCompletedEvent } from "../events/SendCreditAdjustmentCompletedEvent";
+import { SendDebitAdjustmentCompletedEvent } from "../events/SendDebitAdjustmentCompletedEvent";
 
 describe.each([
   ["en", "en"],
@@ -676,6 +678,85 @@ describe.each([
       ),
     ).once();
   });
+
+  it(`should call PushClient with Credit adjustment completed event and ${locale} locale`, async () => {
+    const payload: SendCreditAdjustmentCompletedEvent = {
+      email: "fake+user@noba.com",
+      firstName: "First",
+      handle: "fake-handle",
+      params: {
+        ...getTransactionParams(WorkflowName.CREDIT_ADJUSTMENT),
+      },
+      locale: locale,
+    };
+
+    when(mockPushTokenService.getPushTokensForConsumer(payload.nobaUserID)).thenResolve([
+      "push-token-1",
+      "push-token-2",
+    ]);
+
+    when(mockEventRepo.getEventByName(NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT)).thenResolve({
+      id: "fake-id",
+      name: NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT,
+      handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
+      createdTimestamp: new Date(),
+      updatedTimestamp: new Date(),
+      templates: [
+        {
+          id: "fake-template-id-1",
+          locale: "es",
+          templateBody: "{{amount}} {{currency}} was added to your Noba account. Message is in es",
+          templateTitle: "Credit adjustment completed title in es",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+        {
+          id: "fake-template-id-2",
+          locale: "en",
+          templateBody: "{{amount}} {{currency}} was added to your Noba account. Message is in en",
+          templateTitle: "Credit adjustment completed title in en",
+          createdTimestamp: new Date(),
+          updatedTimestamp: new Date(),
+          eventID: "fake-id",
+          type: EventHandlers.PUSH,
+        },
+      ],
+    });
+
+    await eventHandler.sendCreditAdjustmentCompletedEvent(payload);
+    console.log({
+      token: "push-token-1",
+      title: `Credit adjustment completed title in ${expectedSuffix}`,
+      notificationType: PushNotificationType.TRANSACTION_UPDATE,
+      transactionRef: payload.params.transactionRef,
+      body: `${payload.params.creditAmount} ${payload.params.creditCurrency} was added to your Noba account. Message is in ${expectedSuffix}`,
+    });
+    verify(
+      mockPushClient.sendPushNotification(
+        deepEqual({
+          token: "push-token-1",
+          title: `Credit adjustment completed title in ${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
+          body: `${payload.params.creditAmount} ${payload.params.creditCurrency} was added to your Noba account. Message is in ${expectedSuffix}`,
+        }),
+      ),
+    ).once();
+
+    verify(
+      mockPushClient.sendPushNotification(
+        deepEqual({
+          token: "push-token-2",
+          title: `Credit adjustment completed title in ${expectedSuffix}`,
+          notificationType: PushNotificationType.TRANSACTION_UPDATE,
+          transactionRef: payload.params.transactionRef,
+          body: `${payload.params.creditAmount} ${payload.params.creditCurrency} was added to your Noba account. Message is in ${expectedSuffix}`,
+        }),
+      ),
+    ).once();
+  });
 });
 
 function getTransactionParams(workflow: WorkflowName): TransactionParameters {
@@ -744,6 +825,22 @@ function getTransactionParams(workflow: WorkflowName): TransactionParameters {
         nobaFees: Utils.localizeAmount(0.34, "en"),
         totalFees: Utils.localizeAmount(0.57, "en"),
         totalFeesNumber: 0.57,
+      };
+    case WorkflowName.CREDIT_ADJUSTMENT:
+      return {
+        creditAmount: Utils.localizeAmount(5000, "en"),
+        creditAmountNumber: 5000,
+        creditCurrency: "COP",
+        debitAmount: null,
+        debitAmountNumber: null,
+        debitCurrency: null,
+        exchangeRate: Utils.localizeAmount(1, "en"),
+        transactionRef: "transaction-1",
+        createdTimestamp: "2023-02-02T17:54:37.601Z",
+        processingFees: null,
+        nobaFees: null,
+        totalFees: null,
+        totalFeesNumber: null,
       };
   }
 }
