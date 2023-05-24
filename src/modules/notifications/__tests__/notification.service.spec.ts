@@ -29,6 +29,7 @@ import { getMockEventRepoWithDefaults } from "../mocks/mock.event.repo";
 import { EventHandlers } from "../domain/EventHandlers";
 import { SendInviteEmployeeEvent } from "../events/SendInviteEmployeeEvent";
 import { Utils } from "../../../core/utils/Utils";
+import { SendCreditAdjustmentCompletedEvent } from "../events/SendCreditAdjustmentCompletedEvent";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -855,6 +856,25 @@ function getNotificationPayload(event: NotificationEventType): NotificationPaylo
         companyName: "Fake Company",
         inviteUrl: "https://fake-invite.noba.com",
       } as SendInviteEmployeeEvent;
+    case NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT:
+      return  {
+        email: "fake+employee@noba.com",
+        firstName: "Fake",
+        handle: "fake-1234",
+        params: {
+          transactionRef: "transaction-123",
+          createdTimestamp: "2020-01-01T00:00:00.000Z",
+          debitAmount: Utils.localizeAmount(5000, "en-us"),
+          debitAmountNumber: 5000,
+          creditAmount: Utils.localizeAmount(1, "en-us"),
+          creditAmountNumber: 1,
+          debitCurrency: "COP",
+          creditCurrency: "USD",
+          exchangeRate: Utils.localizeAmount(1, "en-us"),
+        },
+        locale: "en",
+        nobaUserID: "fake-id-1234",
+      } as SendCreditAdjustmentCompletedEvent;
       break;
   }
 

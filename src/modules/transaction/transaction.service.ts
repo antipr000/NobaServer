@@ -437,7 +437,6 @@ export class TransactionService {
   private async createInputTransactionForCreditAdjustmentRequest(
     request: CreditAdjustmentTransactionRequest,
   ): Promise<InputTransaction> {
-    console.log(request);
     return {
       workflowName: WorkflowName.CREDIT_ADJUSTMENT,
       exchangeRate: 1,
@@ -448,6 +447,8 @@ export class TransactionService {
       creditAmount: request.creditAmount,
       creditCurrency: request.creditCurrency,
       creditConsumerID: request.creditConsumerID,
+      debitAmount: request.creditAmount,
+      debitCurrency: request.creditCurrency,
     };
   }
 
@@ -464,6 +465,8 @@ export class TransactionService {
       debitAmount: request.debitAmount,
       debitCurrency: request.debitCurrency,
       debitConsumerID: request.debitConsumerID,
+      creditAmount: request.debitAmount,
+      creditCurrency: request.debitCurrency,
     };
   }
 
