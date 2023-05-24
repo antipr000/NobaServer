@@ -535,7 +535,33 @@ describe("NotificationService", () => {
       ).once();
     });
 
-    it("should emit push event for INVITE_EMPLOYEE_EVENT", async () => {
+    it("should emit push event for CREDIT_ADJUSTMENT_COMPLETED_EVENT", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT,
+        handlers: [EventHandlers.PUSH],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
+      const payload: NotificationPayload = getNotificationPayload(
+        NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT,
+      );
+
+      await notificationService.sendNotification(NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT, payload);
+
+      verify(
+        eventEmitter.emitAsync(
+          `push.${NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT}`,
+          deepEqual({
+            ...payload,
+          }),
+        ),
+      ).once();
+    });
   });
 });
 
@@ -857,7 +883,7 @@ function getNotificationPayload(event: NotificationEventType): NotificationPaylo
         inviteUrl: "https://fake-invite.noba.com",
       } as SendInviteEmployeeEvent;
     case NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT:
-      return  {
+      return {
         email: "fake+employee@noba.com",
         firstName: "Fake",
         handle: "fake-1234",
@@ -871,11 +897,14 @@ function getNotificationPayload(event: NotificationEventType): NotificationPaylo
           debitCurrency: "COP",
           creditCurrency: "USD",
           exchangeRate: Utils.localizeAmount(1, "en-us"),
+          processingFees: Utils.localizeAmount(0, "en-us"),
+          nobaFees: Utils.localizeAmount(0, "en-us"),
+          totalFees: Utils.localizeAmount(0, "en-us"),
+          totalFeesNumber: 0,
         },
         locale: "en",
         nobaUserID: "fake-id-1234",
       } as SendCreditAdjustmentCompletedEvent;
-      break;
   }
 
   return data;

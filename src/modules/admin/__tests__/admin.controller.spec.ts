@@ -2175,5 +2175,36 @@ describe("AdminController", () => {
         await adminController.createTransaction({ user: { entity: requestingAdmin } }, initiateTransactionDTO),
       ).toBe(transactionDTO);
     });
+
+    it("should throw 'ForbiddenException' if requesting user is not Admin", async () => {
+      const consumer = getRandomConsumer("fake-consumer-1234");
+
+      expect(async () => {
+        await adminController.createTransaction({ user: { entity: consumer } }, null);
+      }).rejects.toThrow(ForbiddenException);
+    });
+
+    it("should throw 'BadRequestException' if failed to create transaction", async () => {
+      const requestingAdmin = Admin.createAdmin({
+        id: "fake-admin-1234",
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const initiateTransactionDTO: InitiateTransactionDTO = {
+        workflowName: ConsumerWorkflowName.CREDIT_ADJUSTMENT,
+        creditConsumerIDOrTag: "testConsumerID",
+        creditAmount: 100,
+        creditCurrency: Currency.USD,
+        memo: "Test memo",
+      };
+
+      when(mockAdminService.initiateTransaction(anything())).thenResolve(null);
+
+      expect(
+        async () =>
+          await adminController.createTransaction({ user: { entity: requestingAdmin } }, initiateTransactionDTO),
+      ).rejects.toThrow(BadRequestException);
+    });
   });
 });

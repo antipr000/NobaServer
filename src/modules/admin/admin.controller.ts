@@ -519,7 +519,7 @@ export class AdminController {
     }
 
     const createdTransaction = await this.adminService.initiateTransaction(transaction);
-    if (createdTransaction == null) {
+    if (!createdTransaction) {
       throw new BadRequestException("Unable to create transaction");
     }
 
