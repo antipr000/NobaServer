@@ -371,6 +371,130 @@ describe("NotificationService", () => {
       ).rejects.toThrowError(ServiceException);
     });
   });
+
+  describe("SendDebitAdjustmentCompletedNotification", () => {
+    it("should send debit adjustment notification", async () => {
+      const consumerID = uuid();
+      const consumer = getRandomConsumer(consumerID);
+      consumer.props.locale = "en_us";
+      const transaction = getRandomTransaction(consumerID, null, WorkflowName.DEBIT_ADJUSTMENT);
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
+
+      await notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEBIT_ADJUSTMENT_COMPLETED_EVENT, {
+        transactionID: transaction.id,
+      });
+
+      const notificationPayload = NotificationPayloadMapper.toDebitAdjustmentCompletedEvent(consumer, transaction);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT,
+          deepEqual(notificationPayload),
+        ),
+      ).once();
+    });
+
+    it("should throw 'ServiceException' when transaction is not found", async () => {
+      const transactionID = uuid();
+      when(transactionService.getTransactionByTransactionID(transactionID)).thenResolve(null);
+
+      await expect(
+        notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEBIT_ADJUSTMENT_COMPLETED_EVENT, {
+          transactionID: transactionID,
+        }),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw 'ServiceException' when transactionID is null", async () => {
+      await expect(
+        notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEBIT_ADJUSTMENT_COMPLETED_EVENT, {
+          transactionID: null,
+        }),
+      ).rejects.toThrowError(ServiceException);
+    });
+  });
+
+  describe("SendCreditAdjustmentFailedNotification", () => {
+    it("should send credit adjustment failed notification", async () => {
+      const consumerID = uuid();
+      const consumer = getRandomConsumer(consumerID);
+      const transaction = getRandomTransaction(consumerID, null, WorkflowName.CREDIT_ADJUSTMENT);
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
+
+      await notificationWorflowService.sendNotification(NotificationWorkflowTypes.CREDIT_ADJUSTMENT_FAILED_EVENT, {
+        transactionID: transaction.id,
+      });
+
+      const notificationPayload = NotificationPayloadMapper.toCreditAdjustmentFailedEvent(consumer, transaction);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_CREDIT_ADJUSTMENT_FAILED_EVENT,
+          deepEqual(notificationPayload),
+        ),
+      ).once();
+    });
+
+    it("should throw 'ServiceException' when transaction is not found", async () => {
+      const transactionID = uuid();
+      when(transactionService.getTransactionByTransactionID(transactionID)).thenResolve(null);
+
+      await expect(
+        notificationWorflowService.sendNotification(NotificationWorkflowTypes.CREDIT_ADJUSTMENT_FAILED_EVENT, {
+          transactionID: transactionID,
+        }),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw 'ServiceException' when transactionID is null", async () => {
+      await expect(
+        notificationWorflowService.sendNotification(NotificationWorkflowTypes.CREDIT_ADJUSTMENT_FAILED_EVENT, {
+          transactionID: null,
+        }),
+      ).rejects.toThrowError(ServiceException);
+    });
+  });
+
+  describe("SendDebitAdjustmentFailedNotification", () => {
+    it("should send debit adjustment failed notification", async () => {
+      const consumerID = uuid();
+      const consumer = getRandomConsumer(consumerID);
+      const transaction = getRandomTransaction(consumerID, null, WorkflowName.DEBIT_ADJUSTMENT);
+      when(consumerService.getConsumer(consumerID)).thenResolve(consumer);
+      when(transactionService.getTransactionByTransactionID(transaction.id)).thenResolve(transaction);
+
+      await notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEBIT_ADJUSTMENT_FAILED_EVENT, {
+        transactionID: transaction.id,
+      });
+
+      const notificationPayload = NotificationPayloadMapper.toDebitAdjustmentFailedEvent(consumer, transaction);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_DEBIT_ADJUSTMENT_FAILED_EVENT,
+          deepEqual(notificationPayload),
+        ),
+      ).once();
+    });
+
+    it("should throw 'ServiceException' when transaction is not found", async () => {
+      const transactionID = uuid();
+      when(transactionService.getTransactionByTransactionID(transactionID)).thenResolve(null);
+
+      await expect(
+        notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEBIT_ADJUSTMENT_FAILED_EVENT, {
+          transactionID: transactionID,
+        }),
+      ).rejects.toThrowError(ServiceException);
+    });
+
+    it("should throw 'ServiceException' when transactionID is null", async () => {
+      await expect(
+        notificationWorflowService.sendNotification(NotificationWorkflowTypes.DEBIT_ADJUSTMENT_FAILED_EVENT, {
+          transactionID: null,
+        }),
+      ).rejects.toThrowError(ServiceException);
+    });
+  });
 });
 
 function getRandomTransaction(

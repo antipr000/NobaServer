@@ -59,7 +59,7 @@ export class NotificationWorkflowService {
         return this.sendPayrollStatusUpdateNotification(request.payrollID, request.payrollStatus);
       case NotificationWorkflowTypes.CREDIT_ADJUSTMENT_COMPLETED_EVENT:
         return this.sendCreditAdjustmentCompletedEventNotification(request.transactionID);
-      case NotificationWorkflowTypes.CREDIT_ADJUSTENT_FAILED_EVENT:
+      case NotificationWorkflowTypes.CREDIT_ADJUSTMENT_FAILED_EVENT:
         return this.sendCreditAdjustmentFailedEventNotification(request.transactionID);
       case NotificationWorkflowTypes.DEBIT_ADJUSTMENT_COMPLETED_EVENT:
         return this.sendDebitAdjustmentCompletedEventNotification(request.transactionID);
