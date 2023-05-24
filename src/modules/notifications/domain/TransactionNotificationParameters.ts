@@ -186,12 +186,12 @@ export class TransactionNotificationPayloadMapper {
     const nobaFee = getFee(transaction, FeeType.NOBA);
     const totalFeesNumber = getTotalFees(transaction);
 
-    const creditAmount = Utils.localizeAmount(transaction.creditAmount, locale);
-    const debitAmount = Utils.localizeAmount(transaction.debitAmount, locale);
-    const exchangeRate = Utils.localizeAmount(transaction.exchangeRate, locale, false);
+    const creditAmount = Utils.localizeAmount(transaction.creditAmount ?? 0, locale);
+    const debitAmount = Utils.localizeAmount(transaction.debitAmount ?? 0, locale);
+    const exchangeRate = Utils.localizeAmount(transaction.exchangeRate ?? 0, locale, false);
     const nobaFees = Utils.localizeAmount(nobaFee ? nobaFee.amount : 0, locale);
     const processingFees = Utils.localizeAmount(processingFee ? processingFee.amount : 0, locale);
-    const totalFees = Utils.localizeAmount(totalFeesNumber, locale);
+    const totalFees = Utils.localizeAmount(totalFeesNumber ?? 0, locale);
     return {
       transactionRef: transaction.transactionRef,
       createdTimestamp: transaction.createdTimestamp.toUTCString(),

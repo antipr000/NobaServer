@@ -783,6 +783,8 @@ describe("TransactionServiceTests", () => {
           sessionKey: WorkflowName.CREDIT_ADJUSTMENT,
           exchangeRate: 1,
           transactionFees: [],
+          debitAmount: 100,
+          debitCurrency: Currency.COP,
         });
       });
     });
@@ -871,6 +873,8 @@ describe("TransactionServiceTests", () => {
           sessionKey: WorkflowName.DEBIT_ADJUSTMENT,
           exchangeRate: 1,
           transactionFees: [],
+          creditAmount: 100,
+          creditCurrency: Currency.COP,
         });
       });
     });
