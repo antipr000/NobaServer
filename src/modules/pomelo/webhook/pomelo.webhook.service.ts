@@ -88,7 +88,7 @@ export class PomeloTransactionService {
     }
 
     const expectedSignature = this.computeSignature(
-      request.timestamp,
+      request.unixTimestampSeconds,
       this.transactionAuthzEndpoint,
       request.rawBodyBuffer,
     );
@@ -100,6 +100,7 @@ export class PomeloTransactionService {
     try {
       const pomeloTransaction: PomeloTransaction = await this.getOrCreatePomeloTransaction({
         pomeloTransactionID: request.pomeloTransactionID,
+        settlementDate: Utils.convertToColumbianDate(request.unixTimestampSeconds),
         parentPomeloTransactionID: null,
         localAmount: request.localAmount,
         localCurrency: request.localCurrency,
@@ -212,7 +213,7 @@ export class PomeloTransactionService {
     }
 
     const expectedSignature = this.computeSignature(
-      request.timestamp,
+      request.unixTimestampSeconds,
       expectedAdjustmentEndpoint,
       request.rawBodyBuffer,
     );
@@ -224,6 +225,7 @@ export class PomeloTransactionService {
     try {
       const pomeloTransaction: PomeloTransaction = await this.getOrCreatePomeloTransaction({
         pomeloTransactionID: request.pomeloTransactionID,
+        settlementDate: Utils.convertToColumbianDate(request.unixTimestampSeconds),
         parentPomeloTransactionID: request.pomeloOriginalTransactionID,
         localAmount: request.localAmount,
         localCurrency: request.localCurrency,

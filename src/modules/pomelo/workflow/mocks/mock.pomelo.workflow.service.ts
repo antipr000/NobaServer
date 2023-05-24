@@ -7,6 +7,9 @@ export function getMockPomeloWorkflowServiceWithDefaults(): PomeloWorkflowServic
   when(mockPomeloWorkflowService.getPomeloTransactionByPomeloTransactionID(anyString())).thenReject(
     new Error("Not implemented"),
   );
+  when(mockPomeloWorkflowService.getPomeloUserTransactionsForSettlementDate(anyString(), anyString())).thenReject(
+    new Error("Not implemented"),
+  );
 
   return mockPomeloWorkflowService;
 }

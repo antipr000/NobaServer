@@ -70,7 +70,7 @@ describe("PomeloTransactionServiceTests", () => {
       const parsedRequest: PomeloTransactionAuthzRequest = {
         endpoint: "ENDPOINT",
         rawBodyBuffer: Buffer.from("RAW_REQUEST_BODY"),
-        timestamp: Date.now().toString(),
+        unixTimestampSeconds: Date.now().toString(),
         rawSignature: "INPUT_SIGNATURE",
         idempotencyKey: "IDEMPOTENCY_KEY",
 
@@ -185,7 +185,7 @@ describe("PomeloTransactionServiceTests", () => {
       const parsedRequest: PomeloTransactionAdjustmentRequest = {
         endpoint: "ENDPOINT",
         rawBodyBuffer: Buffer.from("RAW_REQUEST_BODY"),
-        timestamp: Date.now().toString(),
+        unixTimestampSeconds: Date.now().toString(),
         rawSignature: "INPUT_SIGNATURE",
         idempotencyKey: "IDEMPOTENCY_KEY",
 

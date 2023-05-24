@@ -308,6 +308,7 @@ export class SQLPomeloRepo implements PomeloRepo {
         },
         pomeloIdempotencyKey: request.pomeloIdempotencyKey,
         pomeloTransactionID: request.pomeloTransactionID,
+        settlementDate: request.settlementDate,
         nobaTransactionID: request.nobaTransactionID,
         amountInUSD: request.amountInUSD,
         localAmount: request.localAmount,
@@ -448,6 +449,29 @@ export class SQLPomeloRepo implements PomeloRepo {
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting the Pomelo Transaction with pomeloTransactionID: '${pomeloTransactionID}'`,
+      });
+    }
+  }
+
+  async getPomeloUserTransactionsForSettlementDate(
+    pomeloUserID: string,
+    settlementDate: string,
+  ): Promise<PomeloTransaction[]> {
+    try {
+      const returnedPomeloTransactions: PrismaPomeloTransactionModel[] =
+        await this.prismaService.pomeloTransaction.findMany({
+          where: {
+            pomeloUserID: pomeloUserID,
+            settlementDate: settlementDate,
+          },
+        });
+
+      return returnedPomeloTransactions.map(txn => convertToDomainPomeloTransaction(txn));
+    } catch (err) {
+      this.logger.error(JSON.stringify(err));
+      throw new RepoException({
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+        message: `Error getting all the PomeloTransactions for pomeloUserID '${pomeloUserID}' & settlementDate '${settlementDate}'.`,
       });
     }
   }

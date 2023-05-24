@@ -44,6 +44,7 @@ describe("PomeloWorkflowMapperTests", () => {
     it("should map all the fields correctly", async () => {
       const pomeloTransaction: PomeloTransaction = {
         id: "NOBA_ID",
+        settlementDate: "2023-05-22",
         pomeloCardID: "POMELO_CARD_ID",
         pomeloTransactionID: "POMELO_TRANSACTION_ID",
         pomeloUserID: "POMELO_USER_ID",

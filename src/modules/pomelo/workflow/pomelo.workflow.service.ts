@@ -14,4 +14,11 @@ export class PomeloWorkflowService {
   async getPomeloTransactionByPomeloTransactionID(pomeloTransactionID: string): Promise<PomeloTransaction> {
     return this.pomeloRepo.getPomeloTransactionByPomeloTransactionID(pomeloTransactionID);
   }
+
+  async getPomeloUserTransactionsForSettlementDate(
+    pomeloUserID: string,
+    settlementDate: string,
+  ): Promise<PomeloTransaction[]> {
+    return this.pomeloRepo.getPomeloUserTransactionsForSettlementDate(pomeloUserID, settlementDate);
+  }
 }
