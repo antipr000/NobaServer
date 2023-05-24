@@ -30,6 +30,9 @@ import { EventHandlers } from "../domain/EventHandlers";
 import { SendInviteEmployeeEvent } from "../events/SendInviteEmployeeEvent";
 import { Utils } from "../../../core/utils/Utils";
 import { SendCreditAdjustmentCompletedEvent } from "../events/SendCreditAdjustmentCompletedEvent";
+import { SendCreditAdjustmentFailedEvent } from "../events/SendCreditAdjustmentFailedEvent";
+import { SendDebitAdjustmentCompletedEvent } from "../events/SendDebitAdjustmentCompletedEvent";
+import { SendDebitAdjustmentFailedEvent } from "../events/SendDebitAdjustmentFailedEvent";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -562,6 +565,90 @@ describe("NotificationService", () => {
         ),
       ).once();
     });
+
+    it("should emit push event for CREDIT_ADJUSTMENT_FAILED_EVENT", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_CREDIT_ADJUSTMENT_FAILED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_CREDIT_ADJUSTMENT_FAILED_EVENT,
+        handlers: [EventHandlers.PUSH],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
+      const payload: NotificationPayload = getNotificationPayload(
+        NotificationEventType.SEND_CREDIT_ADJUSTMENT_FAILED_EVENT,
+      );
+
+      await notificationService.sendNotification(NotificationEventType.SEND_CREDIT_ADJUSTMENT_FAILED_EVENT, payload);
+
+      verify(
+        eventEmitter.emitAsync(
+          `push.${NotificationEventType.SEND_CREDIT_ADJUSTMENT_FAILED_EVENT}`,
+          deepEqual({
+            ...payload,
+          }),
+        ),
+      ).once();
+    });
+
+    it("should emit push event for DEBIT_ADJUSTMENT_COMPLETED_EVENT", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT,
+        handlers: [EventHandlers.PUSH],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
+      const payload: NotificationPayload = getNotificationPayload(
+        NotificationEventType.SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT,
+      );
+
+      await notificationService.sendNotification(NotificationEventType.SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT, payload);
+
+      verify(
+        eventEmitter.emitAsync(
+          `push.${NotificationEventType.SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT}`,
+          deepEqual({
+            ...payload,
+          }),
+        ),
+      ).once();
+    });
+
+    it("should emit push event for DEBIT_ADJUSTMENT_FAILED_EVENT", async () => {
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
+
+      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEBIT_ADJUSTMENT_FAILED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_DEBIT_ADJUSTMENT_FAILED_EVENT,
+        handlers: [EventHandlers.PUSH],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
+      const payload: NotificationPayload = getNotificationPayload(
+        NotificationEventType.SEND_DEBIT_ADJUSTMENT_FAILED_EVENT,
+      );
+
+      await notificationService.sendNotification(NotificationEventType.SEND_DEBIT_ADJUSTMENT_FAILED_EVENT, payload);
+
+      verify(
+        eventEmitter.emitAsync(
+          `push.${NotificationEventType.SEND_DEBIT_ADJUSTMENT_FAILED_EVENT}`,
+          deepEqual({
+            ...payload,
+          }),
+        ),
+      ).once();
+    });
   });
 });
 
@@ -890,6 +977,29 @@ function getNotificationPayload(event: NotificationEventType): NotificationPaylo
         params: {
           transactionRef: "transaction-123",
           createdTimestamp: "2020-01-01T00:00:00.000Z",
+          debitAmount: Utils.localizeAmount(1, "en-us"),
+          debitAmountNumber: 1,
+          creditAmount: Utils.localizeAmount(1, "en-us"),
+          creditAmountNumber: 1,
+          debitCurrency: "COP",
+          creditCurrency: "USD",
+          exchangeRate: Utils.localizeAmount(1, "en-us"),
+          processingFees: Utils.localizeAmount(0, "en-us"),
+          nobaFees: Utils.localizeAmount(0, "en-us"),
+          totalFees: Utils.localizeAmount(0, "en-us"),
+          totalFeesNumber: 0,
+        },
+        locale: "en",
+        nobaUserID: "fake-id-1234",
+      } as SendCreditAdjustmentCompletedEvent;
+    case NotificationEventType.SEND_CREDIT_ADJUSTMENT_FAILED_EVENT:
+      return {
+        email: "fake+employee@noba.com",
+        firstName: "Fake",
+        handle: "fake-1234",
+        params: {
+          transactionRef: "transaction-123",
+          createdTimestamp: "2020-01-01T00:00:00.000Z",
           debitAmount: Utils.localizeAmount(5000, "en-us"),
           debitAmountNumber: 5000,
           creditAmount: Utils.localizeAmount(1, "en-us"),
@@ -904,7 +1014,54 @@ function getNotificationPayload(event: NotificationEventType): NotificationPaylo
         },
         locale: "en",
         nobaUserID: "fake-id-1234",
-      } as SendCreditAdjustmentCompletedEvent;
+      } as SendCreditAdjustmentFailedEvent;
+    case NotificationEventType.SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT:
+      return {
+        email: "fake+employee@noba.com",
+        firstName: "Fake",
+        handle: "fake-1234",
+        params: {
+          transactionRef: "transaction-123",
+          createdTimestamp: "2020-01-01T00:00:00.000Z",
+          debitAmount: Utils.localizeAmount(1, "en-us"),
+          debitAmountNumber: 1,
+          creditAmount: Utils.localizeAmount(1, "en-us"),
+          creditAmountNumber: 1,
+          debitCurrency: "COP",
+          creditCurrency: "USD",
+          exchangeRate: Utils.localizeAmount(1, "en-us"),
+          processingFees: Utils.localizeAmount(0, "en-us"),
+          nobaFees: Utils.localizeAmount(0, "en-us"),
+          totalFees: Utils.localizeAmount(0, "en-us"),
+          totalFeesNumber: 0,
+        },
+        locale: "en",
+        nobaUserID: "fake-id-1234",
+      } as SendDebitAdjustmentCompletedEvent;
+    case NotificationEventType.SEND_DEBIT_ADJUSTMENT_FAILED_EVENT:
+      return {
+        email: "fake+employee@noba.com",
+        firstName: "Fake",
+        handle: "fake-1234",
+        params: {
+          transactionRef: "transaction-123",
+
+          createdTimestamp: "2020-01-01T00:00:00.000Z",
+          debitAmount: Utils.localizeAmount(1, "en-us"),
+          debitAmountNumber: 1,
+          creditAmount: Utils.localizeAmount(1, "en-us"),
+          creditAmountNumber: 1,
+          debitCurrency: "COP",
+          creditCurrency: "USD",
+          exchangeRate: Utils.localizeAmount(1, "en-us"),
+          processingFees: Utils.localizeAmount(0, "en-us"),
+          nobaFees: Utils.localizeAmount(0, "en-us"),
+          totalFees: Utils.localizeAmount(0, "en-us"),
+          totalFeesNumber: 0,
+        },
+        locale: "en",
+        nobaUserID: "fake-id-1234",
+      } as SendDebitAdjustmentFailedEvent;
   }
 
   return data;

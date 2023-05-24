@@ -422,6 +422,15 @@ describe("Utils", () => {
         expect(Utils.localizeAmount(amount, locale, false)).toEqual(localizedAmount);
       },
     );
+
+    it.each([
+      ["en-us", null],
+      ["en-us", undefined],
+      ["es-co", null],
+      ["es-co", undefined],
+    ])("Should throw error for null or undefined amount", (locale, amount) => {
+      expect(() => Utils.localizeAmount(amount, locale)).toThrowError();
+    });
   });
 
   describe("convertToColumbianDate", () => {

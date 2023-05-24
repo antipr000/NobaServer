@@ -146,8 +146,8 @@ export class Utils {
   }
 
   static localizeAmount(amount: number, locale: string, trimFractionDigits = true): string {
-    if (!amount) {
-      return null;
+    if (amount === undefined || amount === null) {
+      throw new Error("Amount is required to localize.");
     }
 
     const normalizedLocale = this.normalizeLocale(locale); // Required hyphen instead of underscore for Intl.Locale
