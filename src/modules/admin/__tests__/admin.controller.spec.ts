@@ -45,6 +45,9 @@ import { Gender } from "../../../modules/consumer/domain/ExternalStates";
 import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../modules/exchangerate/mocks/mock.exchangerate.service";
 import { ExchangeRateDTO } from "../../../modules/exchangerate/dto/exchangerate.dto";
+import { ConsumerWorkflowName } from "../../../infra/temporal/workflow";
+import { InitiateTransactionDTO } from "../../../modules/transaction/dto/CreateTransactionDTO";
+import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
 
 const EXISTING_ADMIN_EMAIL = "abc@noba.com";
 const NEW_ADMIN_EMAIL = "xyz@noba.com";
@@ -2022,7 +2025,7 @@ describe("AdminController", () => {
     });
   });
 
-  describe("getExchangeRates()", () => {
+  describe("getExchangeRate", () => {
     it("should return the requested exchange rate", async () => {
       const requestingAdmin = Admin.createAdmin({
         id: "fake-admin-1234",
@@ -2111,6 +2114,66 @@ describe("AdminController", () => {
       expect(async () => {
         await adminController.getExchangeRate("USD", "COP", { user: { entity: consumer } });
       }).rejects.toThrow(ForbiddenException);
+    });
+  });
+
+  describe("createTransaction", () => {
+    it("should create a transaction", async () => {
+      const requestingAdmin = Admin.createAdmin({
+        id: "fake-admin-1234",
+        email: "admin@noba.com",
+        role: NOBA_ADMIN_ROLE_TYPES.ADMIN,
+      });
+
+      const consumerID = "testConsumerID";
+      const consumer = getRandomConsumer(consumerID);
+
+      const transaction: Transaction = getRandomTransaction("fake-consumer-1234");
+
+      when(mockAdminService.initiateTransaction(anything())).thenResolve(transaction);
+      const transactionDTO: TransactionDTO = {
+        id: transaction.id,
+        transactionRef: transaction.transactionRef,
+        workflowName: transaction.workflowName,
+        debitConsumer: {
+          id: consumer.props.id,
+          firstName: consumer.props.firstName,
+          handle: consumer.props.handle,
+          lastName: consumer.props.lastName,
+        },
+        creditConsumer: null,
+        debitCurrency: transaction.debitCurrency,
+        creditCurrency: transaction.creditCurrency,
+        debitAmount: transaction.debitAmount,
+        creditAmount: transaction.creditAmount,
+        exchangeRate: transaction.exchangeRate.toString(),
+        status: transaction.status,
+        createdTimestamp: transaction.createdTimestamp,
+        updatedTimestamp: transaction.updatedTimestamp,
+        memo: transaction.memo,
+        transactionEvents: [],
+        transactionFees: [
+          {
+            amount: 10,
+            currency: "USD",
+            type: FeeType.NOBA,
+          },
+        ],
+        totalFees: 10,
+      };
+      when(mockTransactionMappingService.toTransactionDTO(transaction)).thenResolve(transactionDTO);
+
+      const initiateTransactionDTO: InitiateTransactionDTO = {
+        workflowName: ConsumerWorkflowName.CREDIT_ADJUSTMENT,
+        creditConsumerIDOrTag: consumerID,
+        creditAmount: 100,
+        creditCurrency: Currency.USD,
+        memo: "Test memo",
+      };
+
+      expect(
+        await adminController.createTransaction({ user: { entity: requestingAdmin } }, initiateTransactionDTO),
+      ).toBe(transactionDTO);
     });
   });
 });
