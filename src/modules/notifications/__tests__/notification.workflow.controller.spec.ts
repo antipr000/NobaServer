@@ -110,6 +110,7 @@ describe("NotificationWorkflowController Tests", () => {
         updatedTimestamp: new Date(),
         reminderScheduleID: "fake-schedule",
         consumerID: "fake-consumer",
+        eventID: "fake-event",
         lastSentTimestamp: requestBody.lastSentTimestamp,
       };
 
