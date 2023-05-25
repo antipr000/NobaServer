@@ -316,8 +316,8 @@ export const pushEventTemplateStringMap: PushEventsTemplateMap = {
   },
   [NotificationEventType.DEPOSIT_FUNDS_REMINDER_EVENT]: {
     title: {
-      en: "Deposit funds",
-      es: "Depositar fondos",
+      en: "Congratulations on joining Noba!",
+      es: "¡Felicitaciones por unirte a Noba! ",
     },
     body: {
       en: "Congratulations on joining Noba! You are on your way to financial freedom. Deposit pesos to start saving in digital dollars.",
@@ -326,8 +326,8 @@ export const pushEventTemplateStringMap: PushEventsTemplateMap = {
   },
   [NotificationEventType.REQUEST_EMPLOYER_REMINDER_EVENT]: {
     title: {
-      en: "Invite your employer",
-      es: "Invita a tu empresa",
+      en: "Want to be paid in dollars?",
+      es: "¿Quieres que te paguen en dólares?",
     },
     body: {
       en: "Did you know that you can get paid in digital dollars by your employer? Tap to learn more.",
@@ -336,8 +336,8 @@ export const pushEventTemplateStringMap: PushEventsTemplateMap = {
   },
   [NotificationEventType.REFER_A_FRIEND_REMINDER_EVENT]: {
     title: {
-      en: "Refer a friend",
-      es: "Recomienda a un amigo",
+      en: "Refer and earn!",
+      es: "¡Refiere y gana dólares!",
     },
     body: {
       en: "Noba is more fun with friends! Earn $5 when a friend joins Noba using your code.",
@@ -346,8 +346,8 @@ export const pushEventTemplateStringMap: PushEventsTemplateMap = {
   },
   [NotificationEventType.DOLLAR_VALUE_DROP_REMINDER_EVENT]: {
     title: {
-      en: "Dollar value just dropped",
-      es: "El valor del dólar acaba de bajar",
+      en: "The value of the dollar dropped.",
+      es: "¡El valor del dólar bajó!",
     },
     body: {
       en: "The value of the dollar dropped. Now is a good time to increase your savings with Noba.",
@@ -356,8 +356,8 @@ export const pushEventTemplateStringMap: PushEventsTemplateMap = {
   },
   [NotificationEventType.SEND_MONEY_REMINDER_EVENT]: {
     title: {
-      en: "Send money for zero fees",
-      es: "Envía dinero sin comisiones",
+      en: "Send money with zero fees.",
+      es: "Envía dinero sin comisiones.",
     },
     body: {
       en: "Send money to other Noba users instantly for zero fees.",
