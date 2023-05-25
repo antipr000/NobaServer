@@ -28,13 +28,13 @@ export const reminderScheduleMap: ReminderScheduleMap = {
     groupKey: "reminder_group_3",
     query: eventID =>
       'select * from "Consumer" where EXISTS (select 1 from "ExchangeRate" where "bankRate" < 4500 and "numeratorCurrency" = \'USD\' and "denominatorCurrency" = \'COP\')' +
-      `AND id not in (select DISTINCT("consumerID") from "ReminderHistory" where "eventID" = '${eventID}' AND "updatedTimestamp" <= NOW() - INTERVAL \'1 day\');`,
+      `AND id not in (select DISTINCT("consumerID") from "ReminderHistory" where "eventID" = '${eventID}' AND "lastSentTimestamp" <= NOW() - INTERVAL \'1 day\');`,
   },
   [NotificationEventType.SEND_MONEY_REMINDER_EVENT]: {
     // Send on 1st day of month to all Consumers
     groupKey: "reminder_group_4",
     query: eventID =>
       "SELECT * from \"Consumer\" WHERE DATE_PART('day', CURRENT_DATE) = 1 AND id not in " +
-      `(select DISTINCT("consumerID") from "ReminderHistory" where "eventID" = '${eventID}' AND "updatedTimestamp" <= NOW() - INTERVAL \'27 days\');`,
+      `(select DISTINCT("consumerID") from "ReminderHistory" where "eventID" = '${eventID}' AND "lastSentTimestamp" <= NOW() - INTERVAL \'27 days\');`,
   },
 };
