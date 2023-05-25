@@ -13,28 +13,40 @@ export const reminderScheduleMap: ReminderScheduleMap = {
     // 3 days post sign-up if no employer
     groupKey: "reminder_group_1",
     query: eventID =>
-      'select * from "Consumer" where "createdTimestamp" <= NOW() - INTERVAL \'3 days\' and id not in ' +
-      `(select DISTINCT("consumerID") from "Employee" UNION select DISTINCT("consumerID") from "ReminderHistory" where "eventID" = '${eventID}');`,
+      'SELECT C.* FROM "Consumer" C LEFT JOIN ' +
+      '(SELECT DISTINCT "consumerID" as cid FROM "Employee" UNION ' +
+      `SELECT DISTINCT "consumerID" as cid FROM "ReminderHistory" WHERE "eventID" = '${eventID}') ` +
+      "EH ON C.id = EH.cid WHERE C.\"createdTimestamp\" <= NOW() - INTERVAL '3 days' AND EH.cid IS NULL;",
   },
   [NotificationEventType.REFER_A_FRIEND_REMINDER_EVENT]: {
     // 5 days post sign-up if no referrals
     groupKey: "reminder_group_2",
     query: eventID =>
-      'select * from "Consumer" where "createdTimestamp" <= NOW() - INTERVAL \'5 days\' and id not in ' +
-      `(select DISTINCT("referredByID") from "Consumer" UNION select DISTINCT("consumerID") from "ReminderHistory" where "eventID" = '${eventID}');`,
+      'SELECT C.* FROM "Consumer" C LEFT JOIN ' +
+      '(SELECT DISTINCT "referredByID" as cid FROM "Consumer" ' +
+      `UNION SELECT DISTINCT "consumerID" as cid FROM "ReminderHistory" WHERE "eventID" = '${eventID}') R ON C.id = R.cid ` +
+      "WHERE C.\"createdTimestamp\" <= NOW() - INTERVAL '5 days' AND R.cid IS NULL;",
   },
   [NotificationEventType.DOLLAR_VALUE_DROP_REMINDER_EVENT]: {
     // Anytime the value of the peso goes below 4,500 and do not repeat within 1 day
     groupKey: "reminder_group_3",
     query: eventID =>
-      'select * from "Consumer" where EXISTS (select 1 from "ExchangeRate" where "bankRate" < 4500 and "numeratorCurrency" = \'USD\' and "denominatorCurrency" = \'COP\')' +
-      `AND id not in (select DISTINCT("consumerID") from "ReminderHistory" where "eventID" = '${eventID}' AND "lastSentTimestamp" <= NOW() - INTERVAL \'1 day\');`,
+      'SELECT C.* FROM "Consumer" C LEFT JOIN ' +
+      `(SELECT DISTINCT "consumerID" FROM "ReminderHistory" WHERE "eventID" = '${eventID}' ` +
+      'AND "lastSentTimestamp" <= NOW() - INTERVAL \'1 day\') RH ON C.id = RH."consumerID" WHERE C.id is NOT NULL ' +
+      'AND EXISTS (SELECT 1 from "ExchangeRate" where "bankRate" < 4500 and "numeratorCurrency" = \'USD\' and "denominatorCurrency" = \'COP\' ' +
+      'AND "createdTimestamp" = (SELECT MAX("createdTimestamp") from "ExchangeRate"));',
   },
   [NotificationEventType.SEND_MONEY_REMINDER_EVENT]: {
     // Send on 1st day of month to all Consumers
     groupKey: "reminder_group_4",
     query: eventID =>
-      "SELECT * from \"Consumer\" WHERE DATE_PART('day', CURRENT_DATE) = 1 AND id not in " +
-      `(select DISTINCT("consumerID") from "ReminderHistory" where "eventID" = '${eventID}' AND "lastSentTimestamp" <= NOW() - INTERVAL \'27 days\');`,
+      'SELECT C.* FROM "Consumer" C LEFT JOIN ' +
+      `(SELECT DISTINCT \"consumerID\"
+        FROM "ReminderHistory"
+        WHERE "eventID" = '${eventID}'
+          AND "updatedTimestamp" <= NOW() - INTERVAL '27 days'
+      ) RH ON C."id" = RH."consumerID"
+      WHERE RH."consumerID" IS NULL;`,
   },
 };

@@ -59,6 +59,7 @@ model Consumer {
   reminderHistory      ReminderHistory[]
 
   @@index([referredByID])
+  @@index([createdTimestamp])
 }
 
 model Address {
@@ -477,6 +478,7 @@ model ExchangeRate {
   expirationTimestamp DateTime
 
   @@index([numeratorCurrency, denominatorCurrency])
+  @@index([createdTimestamp])
 }
 
 model WithdrawalDetails {
@@ -527,7 +529,7 @@ model ReminderHistory {
   event              Event            @relation(fields: [eventID], references: [id], onDelete: Cascade)
 
   @@unique([reminderScheduleID, consumerID])
-  @@index([lastSentTimestamp])
+  @@index([eventID, lastSentTimestamp])
 }
 
 model ReminderSchedule {
