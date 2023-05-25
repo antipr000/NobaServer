@@ -23,9 +23,8 @@ import {
   CardReversalTransactionType,
   InitiateTransactionRequest,
 } from "../../../modules/transaction/dto/transaction.service.dto";
-import { WorkflowName } from "../../../infra/temporal/workflow";
 import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
-import { Transaction } from "../../../modules/transaction/domain/Transaction";
+import { Transaction, WorkflowName } from "../../../modules/transaction/domain/Transaction";
 import { UpdateWalletBalanceServiceDTO } from "../../../modules/psp/domain/UpdateWalletBalanceServiceDTO";
 import { CircleTransferStatus } from "../../../modules/psp/domain/CircleTypes";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";

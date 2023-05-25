@@ -289,7 +289,7 @@ const getRandomTransaction = (
   };
 
   const transactionDTO: InitiateTransactionDTO = {
-    workflowName: transaction.workflowName,
+    workflowName: WorkflowName.WALLET_WITHDRAWAL,
     memo: transaction.memo,
     withdrawalData: {
       accountNumber: "123456789",

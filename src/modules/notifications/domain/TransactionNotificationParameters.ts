@@ -37,6 +37,14 @@ export interface WithdrawalFailedNotificationParameters extends TransactionParam
   reasonDeclined: string;
 }
 
+export type CreditAdjustmentCompletedNotificationParameters = TransactionParameters;
+
+export type CreditAdjustmentFailedNotificationParameters = TransactionParameters;
+
+export type DebitAdjustmentCompletedNotificationParameters = TransactionParameters;
+
+export type DebitAdjustmentFailedNotificationParameters = TransactionParameters;
+
 export interface TransferCompletedNotificationParameters extends TransactionParameters {
   creditConsumer_firstName: string;
   creditConsumer_lastName: string;
@@ -153,6 +161,22 @@ export class TransactionNotificationParamsJoiSchema {
       companyName: Joi.string().required(),
     };
   }
+
+  static getCreditAdjustmentCompletedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
+  }
+
+  static getCreditAdjustmentFailedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
+  }
+
+  static getDebitAdjustmentCompletedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
+  }
+
+  static getDebitAdjustmentFailedNotificationParamsSchema() {
+    return this.getTransactionParamsSchema();
+  }
 }
 
 // TODO(jira/CRYPTO-604): Remove hardcoded values and unnecessary fields once templates are ready
@@ -162,12 +186,12 @@ export class TransactionNotificationPayloadMapper {
     const nobaFee = getFee(transaction, FeeType.NOBA);
     const totalFeesNumber = getTotalFees(transaction);
 
-    const creditAmount = Utils.localizeAmount(transaction.creditAmount, locale);
-    const debitAmount = Utils.localizeAmount(transaction.debitAmount, locale);
-    const exchangeRate = Utils.localizeAmount(transaction.exchangeRate, locale, false);
+    const creditAmount = Utils.localizeAmount(transaction.creditAmount ?? 0, locale);
+    const debitAmount = Utils.localizeAmount(transaction.debitAmount ?? 0, locale);
+    const exchangeRate = Utils.localizeAmount(transaction.exchangeRate ?? 0, locale, false);
     const nobaFees = Utils.localizeAmount(nobaFee ? nobaFee.amount : 0, locale);
     const processingFees = Utils.localizeAmount(processingFee ? processingFee.amount : 0, locale);
-    const totalFees = Utils.localizeAmount(totalFeesNumber, locale);
+    const totalFees = Utils.localizeAmount(totalFeesNumber ?? 0, locale);
     return {
       transactionRef: transaction.transactionRef,
       createdTimestamp: transaction.createdTimestamp.toUTCString(),
@@ -299,5 +323,33 @@ export class TransactionNotificationPayloadMapper {
       debitConsumer_handle: debitConsumer.props.handle,
       reasonDeclined: "Something went wrong", // TODO (CRYPTO-698)
     };
+  }
+
+  static toCreditAdjustmentCompletedNotificationParameters(
+    transaction: Transaction,
+    locale: string,
+  ): CreditAdjustmentCompletedNotificationParameters {
+    return this.toTransactionParams(transaction, locale);
+  }
+
+  static toCreditAdjustmentFailedNotificationParameters(
+    transaction: Transaction,
+    locale: string,
+  ): CreditAdjustmentFailedNotificationParameters {
+    return this.toTransactionParams(transaction, locale);
+  }
+
+  static toDebitAdjustmentCompletedNotificationParameters(
+    transaction: Transaction,
+    locale: string,
+  ): DebitAdjustmentCompletedNotificationParameters {
+    return this.toTransactionParams(transaction, locale);
+  }
+
+  static toDebitAdjustmentFailedNotificationParameters(
+    transaction: Transaction,
+    locale: string,
+  ): DebitAdjustmentFailedNotificationParameters {
+    return this.toTransactionParams(transaction, locale);
   }
 }

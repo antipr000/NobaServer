@@ -29,6 +29,10 @@ import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { Utils } from "../../../core/utils/Utils";
 import { BaseEvent } from "../events/BaseEvent";
 import { SendInviteEmployeeEvent } from "../events/SendInviteEmployeeEvent";
+import { SendCreditAdjustmentCompletedEvent } from "../events/SendCreditAdjustmentCompletedEvent";
+import { SendDebitAdjustmentCompletedEvent } from "../events/SendDebitAdjustmentCompletedEvent";
+import { SendDebitAdjustmentFailedEvent } from "../events/SendDebitAdjustmentFailedEvent";
+import { SendCreditAdjustmentFailedEvent } from "../events/SendCreditAdjustmentFailedEvent";
 
 export type NotificationPayload =
   | SendDepositCompletedEvent
@@ -54,7 +58,11 @@ export type NotificationPayload =
   | SendWithdrawalCompletedEvent
   | SendWithdrawalFailedEvent
   | SendWithdrawalInitiatedEvent
-  | SendInviteEmployeeEvent;
+  | SendInviteEmployeeEvent
+  | SendCreditAdjustmentCompletedEvent
+  | SendCreditAdjustmentFailedEvent
+  | SendDebitAdjustmentCompletedEvent
+  | SendDebitAdjustmentFailedEvent;
 
 export class NotificationPayloadMapper {
   private static getBaseParams(consumer: Consumer): BaseEvent {
@@ -258,6 +266,66 @@ export class NotificationPayloadMapper {
     return {
       nobaPayrollID: payrollID,
       payrollStatus: payrollStatus,
+    };
+  }
+
+  static toCreditAdjustmentCompletedEvent(
+    consumer: Consumer,
+    transaction: Transaction,
+  ): SendCreditAdjustmentCompletedEvent {
+    const locale = consumer.props.locale;
+    return {
+      email: consumer.props.email,
+      firstName: consumer.props.firstName,
+      handle: consumer.props.handle,
+      params: TransactionNotificationPayloadMapper.toCreditAdjustmentCompletedNotificationParameters(
+        transaction,
+        locale,
+      ),
+      ...(consumer.props.locale && { locale: consumer.props.locale }),
+      nobaUserID: consumer.props.id,
+    };
+  }
+
+  static toCreditAdjustmentFailedEvent(consumer: Consumer, transaction: Transaction): SendCreditAdjustmentFailedEvent {
+    const locale = consumer.props.locale;
+    return {
+      email: consumer.props.email,
+      firstName: consumer.props.firstName,
+      handle: consumer.props.handle,
+      params: TransactionNotificationPayloadMapper.toCreditAdjustmentFailedNotificationParameters(transaction, locale),
+      ...(consumer.props.locale && { locale: consumer.props.locale }),
+      nobaUserID: consumer.props.id,
+    };
+  }
+
+  static toDebitAdjustmentCompletedEvent(
+    consumer: Consumer,
+    transaction: Transaction,
+  ): SendDebitAdjustmentCompletedEvent {
+    const locale = consumer.props.locale;
+    return {
+      email: consumer.props.email,
+      firstName: consumer.props.firstName,
+      handle: consumer.props.handle,
+      params: TransactionNotificationPayloadMapper.toDebitAdjustmentCompletedNotificationParameters(
+        transaction,
+        locale,
+      ),
+      ...(consumer.props.locale && { locale: consumer.props.locale }),
+      nobaUserID: consumer.props.id,
+    };
+  }
+
+  static toDebitAdjustmentFailedEvent(consumer: Consumer, transaction: Transaction): SendDebitAdjustmentFailedEvent {
+    const locale = consumer.props.locale;
+    return {
+      email: consumer.props.email,
+      firstName: consumer.props.firstName,
+      handle: consumer.props.handle,
+      params: TransactionNotificationPayloadMapper.toDebitAdjustmentFailedNotificationParameters(transaction, locale),
+      ...(consumer.props.locale && { locale: consumer.props.locale }),
+      nobaUserID: consumer.props.id,
     };
   }
 

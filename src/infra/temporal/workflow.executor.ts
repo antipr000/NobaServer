@@ -5,12 +5,12 @@ import { WorkflowClient, TLSConfig, Connection } from "@temporalio/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { NOBA_WORKFLOW_CONFIG_KEY } from "../../config/ConfigurationUtils";
-import { WorkflowName } from "./workflow";
 import { AlertKey } from "../../modules/common/alerts/alert.dto";
 import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 import { HealthCheckResponse, HealthCheckStatus } from "../../core/domain/HealthCheckTypes";
 import { Utils } from "../../core/utils/Utils";
 import { AlertService } from "../../modules/common/alerts/alert.service";
+import { WorkflowName } from "../../modules/transaction/domain/Transaction";
 
 @Injectable()
 export class WorkflowExecutor {

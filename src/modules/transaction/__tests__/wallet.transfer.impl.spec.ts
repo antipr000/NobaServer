@@ -163,7 +163,7 @@ const getRandomTransaction = (
   };
 
   const transactionDTO: InitiateTransactionDTO = {
-    workflowName: transaction.workflowName,
+    workflowName: WorkflowName.WALLET_TRANSFER,
     memo: transaction.memo,
   };
 

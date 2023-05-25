@@ -30,6 +30,10 @@ export enum NotificationEventType {
   SEND_EMPLOYER_REQUEST_EVENT = "employee.request",
   SEND_UPDATE_PAYROLL_STATUS_EVENT = "update.payroll.status",
   SEND_INVITE_EMPLOYEE_EVENT = "invite.employee",
+  SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT = "credit.adjustment.completed",
+  SEND_CREDIT_ADJUSTMENT_FAILED_EVENT = "credit.adjustment.failed",
+  SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT = "debit.adjustment.completed",
+  SEND_DEBIT_ADJUSTMENT_FAILED_EVENT = "debit.adjustment.failed",
 }
 
 type PreferredMedium = {
@@ -73,6 +77,13 @@ export const preferredNotificationMedium: PreferredMedium = {
   ],
   [NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT]: [NotificationEventHandler.EMAIL],
   [NotificationEventType.SEND_UPDATE_PAYROLL_STATUS_EVENT]: [NotificationEventHandler.DASHBOARD],
+  [NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT]: [
+    NotificationEventHandler.EMAIL,
+    NotificationEventHandler.PUSH,
+  ],
+  [NotificationEventType.SEND_CREDIT_ADJUSTMENT_FAILED_EVENT]: [],
+  [NotificationEventType.SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT]: [],
+  [NotificationEventType.SEND_DEBIT_ADJUSTMENT_FAILED_EVENT]: [],
 };
 
 type TemplateMap = {
@@ -167,6 +178,10 @@ export const emailTemplateExternalLinkMap: TemplateMap = {
   [NotificationEventType.SEND_INVITE_EMPLOYEE_EVENT]: {
     en: "d-d0cee49e89d34a479394d84d01656f84",
     es: "d-1b01521028054dcbb9739a554bc38b0a",
+  },
+  [NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT]: {
+    en: "d-e6e867f8c351446291f0c108f3cd0a1d",
+    es: "d-4a113a4b22014c68ab9ea05a8497c94f",
   },
 };
 
@@ -277,6 +292,16 @@ export const pushEventTemplateStringMap: PushEventsTemplateMap = {
     body: {
       en: "Payroll deposit of amount {{amount}} {{currency}} completed for company {{companyName}}",
       es: "Depósito de nómina de importe {{amount}} {{currency}} completado para la empresa {{companyName}}",
+    },
+  },
+  [NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT]: {
+    title: {
+      en: "Credit adjustment completed",
+      es: "Ajuste de crédito completado",
+    },
+    body: {
+      en: "Credit adjustment of amount {{amount}} {{currency}} completed.",
+      es: "Ajuste de crédito de importe {{amount}} {{currency}} completado.",
     },
   },
 };

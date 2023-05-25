@@ -25,6 +25,10 @@ export enum NotificationEventType {
   SEND_EMPLOYER_REQUEST_EVENT = "employee.request",
   SEND_UPDATE_PAYROLL_STATUS_EVENT = "update.payroll.status",
   SEND_INVITE_EMPLOYEE_EVENT = "invite.employee",
+  SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT = "credit.adjustment.completed",
+  SEND_CREDIT_ADJUSTMENT_FAILED_EVENT = "credit.adjustment.failed",
+  SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT = "debit.adjustment.completed",
+  SEND_DEBIT_ADJUSTMENT_FAILED_EVENT = "debit.adjustment.failed",
 }
 
 export enum NotificationWorkflowTypes {
@@ -37,4 +41,8 @@ export enum NotificationWorkflowTypes {
   TRANSFER_FAILED_EVENT = "transferFailedEvent",
   PAYROLL_DEPOSIT_COMPLETED_EVENT = "payrollDepositCompletedEvent",
   UPDATE_PAYROLL_STATUS_EVENT = "updatePayrollStatusEvent",
+  CREDIT_ADJUSTMENT_COMPLETED_EVENT = "creditAdjustmentCompletedEvent",
+  CREDIT_ADJUSTMENT_FAILED_EVENT = "creditAdjustmentFailedEvent",
+  DEBIT_ADJUSTMENT_COMPLETED_EVENT = "debitAdjustmentCompletedEvent",
+  DEBIT_ADJUSTMENT_FAILED_EVENT = "debitAdjustmentFailedEvent",
 }

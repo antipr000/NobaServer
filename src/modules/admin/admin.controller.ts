@@ -60,6 +60,7 @@ import { IncludeEventTypes } from "../transaction/dto/TransactionEventDTO";
 import { TransactionEvent } from "../transaction/domain/TransactionEvent";
 import { ExchangeRateService } from "../exchangerate/exchangerate.service";
 import { ExchangeRateDTO } from "../exchangerate/dto/exchangerate.dto";
+import { InitiateTransactionDTO } from "../transaction/dto/CreateTransactionDTO";
 
 @Roles(Role.NOBA_ADMIN)
 @Controller("v1/admins")
@@ -501,5 +502,27 @@ export class AdminController {
     }
 
     return exchangeRate;
+  }
+
+  @Post("/transactions")
+  @ApiOperation({ summary: "Creates a new transaction" })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: TransactionDTO,
+  })
+  @ApiForbiddenResponse({ description: "User forbidden from creating a new transaction" })
+  @ApiBadRequestResponse({ description: "Invalid request parameters" })
+  async createTransaction(@Request() request, @Body() transaction: InitiateTransactionDTO): Promise<TransactionDTO> {
+    const authenticatedUser: Admin = request.user.entity;
+    if (!(authenticatedUser instanceof Admin)) {
+      throw new ForbiddenException("User is forbidden from calling this API.");
+    }
+
+    const createdTransaction = await this.adminService.initiateTransaction(transaction);
+    if (!createdTransaction) {
+      throw new BadRequestException("Unable to create transaction");
+    }
+
+    return this.transactionMapper.toTransactionDTO(createdTransaction);
   }
 }

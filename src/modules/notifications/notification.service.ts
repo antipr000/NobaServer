@@ -56,6 +56,22 @@ import { EventRepo } from "./repos/event.repo";
 import { Event } from "./domain/Event";
 import { EventHandlers } from "./domain/EventHandlers";
 import { SendInviteEmployeeEvent, validateSendInviteEmployeeEvent } from "./events/SendInviteEmployeeEvent";
+import {
+  SendCreditAdjustmentCompletedEvent,
+  validateSendCreditAdjustmentCompletedEvent,
+} from "./events/SendCreditAdjustmentCompletedEvent";
+import {
+  SendCreditAdjustmentFailedEvent,
+  validateSendCreditAdjustmentFailedEvent,
+} from "./events/SendCreditAdjustmentFailedEvent";
+import {
+  SendDebitAdjustmentCompletedEvent,
+  validateSendDebitAdjustmentCompletedEvent,
+} from "./events/SendDebitAdjustmentCompletedEvent";
+import {
+  SendDebitAdjustmentFailedEvent,
+  validateSendDebitAdjustmentFailedEvent,
+} from "./events/SendDebitAdjustmentFailedEvent";
 
 @Injectable()
 export class NotificationService {
@@ -207,6 +223,24 @@ export class NotificationService {
         validateSendUpdatePayrollStatusEvent(payload as SendUpdatePayrollStatusEvent);
         this.eventEmitter.emitAsync(eventName, payload as SendUpdatePayrollStatusEvent);
         break;
+
+      case NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT:
+        validateSendCreditAdjustmentCompletedEvent(payload as SendCreditAdjustmentCompletedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
+        break;
+      case NotificationEventType.SEND_CREDIT_ADJUSTMENT_FAILED_EVENT:
+        validateSendCreditAdjustmentFailedEvent(payload as SendCreditAdjustmentFailedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
+        break;
+      case NotificationEventType.SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT:
+        validateSendDebitAdjustmentCompletedEvent(payload as SendDebitAdjustmentCompletedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
+        break;
+      case NotificationEventType.SEND_DEBIT_ADJUSTMENT_FAILED_EVENT:
+        validateSendDebitAdjustmentFailedEvent(payload as SendDebitAdjustmentFailedEvent);
+        this.eventEmitter.emitAsync(eventName, payload);
+        break;
+
       default:
         this.logger.error(`Unknown Notification event type: ${eventType}`);
         break;

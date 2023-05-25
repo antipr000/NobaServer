@@ -10,7 +10,7 @@ import {
   inputTransactionFeeJoiValidationKeys,
   transactionFeeJoiValidationKeys,
 } from "./TransactionFee";
-import { WorkflowName as TemporalWorkflowName } from "../../../infra/temporal/workflow";
+import { ConsumerWorkflowName, InternalWorkflowName } from "../../../infra/temporal/workflow";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 
 export class Transaction {
@@ -44,12 +44,8 @@ export enum TransactionStatus {
   EXPIRED = "EXPIRED",
 }
 
-// This basically aliases the Transaction's WorkflowName to TemporalWorkflowName
-export type WorkflowName = TemporalWorkflowName;
-export const WorkflowName = { ...TemporalWorkflowName };
-
-// Find some way to support this
-export type SupportedWorkflowNames = TemporalWorkflowName.CARD_WITHDRAWAL | TemporalWorkflowName.CARD_REVERSAL;
+export const WorkflowName = { ...ConsumerWorkflowName, ...InternalWorkflowName };
+export type WorkflowName = (typeof WorkflowName)[keyof typeof WorkflowName];
 
 export class InputTransaction {
   id?: string;

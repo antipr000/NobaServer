@@ -104,7 +104,6 @@ export class TransactionService {
   }
 
   async validateAndSaveTransaction(request: InitiateTransactionRequest): Promise<Transaction> {
-    // Should figure out a better way to check against union typed enums
     if (
       request.type !== WorkflowName.CARD_WITHDRAWAL &&
       request.type !== WorkflowName.CARD_REVERSAL &&
@@ -440,7 +439,7 @@ export class TransactionService {
   ): Promise<InputTransaction> {
     return {
       workflowName: WorkflowName.CREDIT_ADJUSTMENT,
-      exchangeRate: null,
+      exchangeRate: 1,
       memo: request.memo,
       transactionRef: Utils.generateLowercaseUUID(true),
       transactionFees: [],
@@ -448,6 +447,8 @@ export class TransactionService {
       creditAmount: request.creditAmount,
       creditCurrency: request.creditCurrency,
       creditConsumerID: request.creditConsumerID,
+      debitAmount: request.creditAmount,
+      debitCurrency: request.creditCurrency,
     };
   }
 
@@ -456,7 +457,7 @@ export class TransactionService {
   ): Promise<InputTransaction> {
     return {
       workflowName: WorkflowName.DEBIT_ADJUSTMENT,
-      exchangeRate: null,
+      exchangeRate: 1,
       memo: request.memo,
       transactionRef: Utils.generateLowercaseUUID(true),
       transactionFees: [],
@@ -464,6 +465,8 @@ export class TransactionService {
       debitAmount: request.debitAmount,
       debitCurrency: request.debitCurrency,
       debitConsumerID: request.debitConsumerID,
+      creditAmount: request.debitAmount,
+      creditCurrency: request.debitCurrency,
     };
   }
 
