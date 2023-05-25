@@ -33,7 +33,7 @@ export const reminderScheduleMap: ReminderScheduleMap = {
     query: eventID =>
       'SELECT C.* FROM "Consumer" C LEFT JOIN ' +
       `(SELECT DISTINCT "consumerID" FROM "ReminderHistory" WHERE "eventID" = '${eventID}' ` +
-      'AND "lastSentTimestamp" <= NOW() - INTERVAL \'1 day\') RH ON C.id = RH."consumerID" WHERE C.id is NOT NULL ' +
+      'AND "lastSentTimestamp" <= NOW() - INTERVAL \'1 day\') RH ON C.id = RH."consumerID" WHERE RH."consumerID" is NULL ' +
       'AND EXISTS (SELECT 1 from "ExchangeRate" where "bankRate" < 4500 and "numeratorCurrency" = \'USD\' and "denominatorCurrency" = \'COP\' ' +
       'AND "createdTimestamp" = (SELECT MAX("createdTimestamp") from "ExchangeRate"));',
   },
