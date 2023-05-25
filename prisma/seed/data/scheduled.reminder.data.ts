@@ -45,7 +45,7 @@ export const reminderScheduleMap: ReminderScheduleMap = {
       `(SELECT DISTINCT \"consumerID\"
         FROM "ReminderHistory"
         WHERE "eventID" = '${eventID}'
-          AND "updatedTimestamp" <= NOW() - INTERVAL '27 days'
+          AND "lastSentTimestamp" <= NOW() - INTERVAL '27 days'
       ) RH ON C."id" = RH."consumerID"
       WHERE RH."consumerID" IS NULL;`,
   },
