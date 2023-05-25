@@ -78,7 +78,7 @@ import { CreditAdjustmentImpl } from "../factory/credit.adjustment.impl";
 import { getMockCreditAdjustmentImplWithDefaults } from "../mocks/mock.credit.adjustment.impl";
 import { getMockDebitAdjustmentImplWithDefaults } from "../mocks/mock.dedit.adjustment.impl";
 import { DebitAdjustmentImpl } from "../factory/debit.adjustment.impl";
-import { ConsumerWorkflowName } from "src/infra/temporal/workflow";
+import { ConsumerWorkflowName } from "../../../infra/temporal/workflow";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
