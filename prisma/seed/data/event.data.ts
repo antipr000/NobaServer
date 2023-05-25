@@ -34,6 +34,11 @@ export enum NotificationEventType {
   SEND_CREDIT_ADJUSTMENT_FAILED_EVENT = "credit.adjustment.failed",
   SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT = "debit.adjustment.completed",
   SEND_DEBIT_ADJUSTMENT_FAILED_EVENT = "debit.adjustment.failed",
+  DEPOSIT_FUNDS_REMINDER_EVENT = "deposit.funds.reminder",
+  REQUEST_EMPLOYER_REMINDER_EVENT = "request.employer.reminder",
+  REFER_A_FRIEND_REMINDER_EVENT = "refer.a.friend",
+  DOLLAR_VALUE_DROP_REMINDER_EVENT = "dollar.value.drop",
+  SEND_MONEY_REMINDER_EVENT = "send.money.reminder",
 }
 
 type PreferredMedium = {
@@ -84,6 +89,11 @@ export const preferredNotificationMedium: PreferredMedium = {
   [NotificationEventType.SEND_CREDIT_ADJUSTMENT_FAILED_EVENT]: [],
   [NotificationEventType.SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT]: [],
   [NotificationEventType.SEND_DEBIT_ADJUSTMENT_FAILED_EVENT]: [],
+  [NotificationEventType.DEPOSIT_FUNDS_REMINDER_EVENT]: [NotificationEventHandler.PUSH],
+  [NotificationEventType.REQUEST_EMPLOYER_REMINDER_EVENT]: [NotificationEventHandler.PUSH],
+  [NotificationEventType.REFER_A_FRIEND_REMINDER_EVENT]: [NotificationEventHandler.PUSH],
+  [NotificationEventType.DOLLAR_VALUE_DROP_REMINDER_EVENT]: [NotificationEventHandler.PUSH],
+  [NotificationEventType.SEND_MONEY_REMINDER_EVENT]: [NotificationEventHandler.PUSH],
 };
 
 type TemplateMap = {
@@ -302,6 +312,56 @@ export const pushEventTemplateStringMap: PushEventsTemplateMap = {
     body: {
       en: "Credit adjustment of amount {{amount}} {{currency}} completed.",
       es: "Ajuste de crédito de importe {{amount}} {{currency}} completado.",
+    },
+  },
+  [NotificationEventType.DEPOSIT_FUNDS_REMINDER_EVENT]: {
+    title: {
+      en: "Deposit funds",
+      es: "Depositar fondos",
+    },
+    body: {
+      en: "Congratulations on joining Noba! You are on your way to financial freedom. Deposit pesos to start saving in digital dollars.",
+      es: "¡Felicitaciones por unirte a Noba! Estás en camino a la libertad financiera. Deposita pesos para empezar a ahorrar en dólares digitales.",
+    },
+  },
+  [NotificationEventType.REQUEST_EMPLOYER_REMINDER_EVENT]: {
+    title: {
+      en: "Invite your employer",
+      es: "Invita a tu empresa",
+    },
+    body: {
+      en: "Did you know that you can get paid in digital dollars by your employer? Tap to learn more.",
+      es: "¿Sabías que tu empresa puede pagarte en dólares digitales? Pulsa aquí para saber más.",
+    },
+  },
+  [NotificationEventType.REFER_A_FRIEND_REMINDER_EVENT]: {
+    title: {
+      en: "Refer a friend",
+      es: "Recomienda a un amigo",
+    },
+    body: {
+      en: "Noba is more fun with friends! Earn $5 when a friend joins Noba using your code.",
+      es: "¡Noba es más divertido con amigos! Gana $5 dólares cuando un amigo se una a Noba usando tu código.",
+    },
+  },
+  [NotificationEventType.DOLLAR_VALUE_DROP_REMINDER_EVENT]: {
+    title: {
+      en: "Dollar value just dropped",
+      es: "El valor del dólar acaba de bajar",
+    },
+    body: {
+      en: "The value of the dollar dropped. Now is a good time to increase your savings with Noba.",
+      es: "¡El valor del dólar bajó! Ahora es un buen momento para aumentar tus ahorros con Noba.",
+    },
+  },
+  [NotificationEventType.SEND_MONEY_REMINDER_EVENT]: {
+    title: {
+      en: "Send money for zero fees",
+      es: "Envía dinero sin comisiones",
+    },
+    body: {
+      en: "Send money to other Noba users instantly for zero fees.",
+      es: "Envía dinero a otros usuarios de Noba al instante sin comisiones.",
     },
   },
 };

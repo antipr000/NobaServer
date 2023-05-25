@@ -109,6 +109,15 @@ export class NotificationWorkflowService {
       });
     }
 
+    const reminder = await this.reminderScheduleRepo.getReminderScheduleByID(reminderID);
+
+    if (!reminder) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Reminder schedule with ID ${reminderID} not found`,
+      });
+    }
+
     const reminderHistory = await this.reminderHistoryRepo.getReminderHistoryByReminderScheduleIDAndConsumerID(
       reminderID,
       body.consumerID,
@@ -118,6 +127,7 @@ export class NotificationWorkflowService {
       return this.reminderHistoryRepo.createReminderHistory({
         consumerID: body.consumerID,
         reminderScheduleID: reminderID,
+        eventID: reminder.eventID,
         lastSentTimestamp: body.lastSentTimestamp,
       });
     } else {

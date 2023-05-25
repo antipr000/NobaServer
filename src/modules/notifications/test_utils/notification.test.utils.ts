@@ -32,6 +32,7 @@ export const createAndSaveReminderSchedule = (
 export const createAndSaveReminderHistory = async (
   reminderScheduleID: string,
   consumerID: string,
+  eventID: string,
   lastSentTimestamp: Date,
   prismaService: PrismaService,
 ): Promise<ReminderHistory> => {
@@ -40,6 +41,11 @@ export const createAndSaveReminderHistory = async (
       consumer: {
         connect: {
           id: consumerID,
+        },
+      },
+      event: {
+        connect: {
+          id: eventID,
         },
       },
       reminderSchedule: {

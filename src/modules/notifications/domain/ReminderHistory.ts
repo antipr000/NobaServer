@@ -7,12 +7,14 @@ export class ReminderHistory {
   createdTimestamp: Date;
   updatedTimestamp: Date;
   reminderScheduleID: string;
+  eventID: string;
   consumerID: string;
   lastSentTimestamp: Date;
 }
 
 export class ReminderHistoryCreateRequest {
   reminderScheduleID: string;
+  eventID: string;
   consumerID: string;
   lastSentTimestamp: Date;
 }
@@ -26,6 +28,7 @@ export const validateReminderHistoryCreateRequest = (payload: ReminderHistoryCre
     reminderScheduleID: Joi.string().required(),
     consumerID: Joi.string().required(),
     lastSentTimestamp: Joi.date().required(),
+    eventID: Joi.string().required(),
   };
 
   const reminderHistoryJoiSchema = Joi.object(reminderHistoryJoiValidationKeys).options({
@@ -53,6 +56,7 @@ export const validateReminderHistory = (reminderHistory: ReminderHistory) => {
     createdTimestamp: Joi.date().required(),
     updatedTimestamp: Joi.date().required(),
     reminderScheduleID: Joi.string().required(),
+    eventID: Joi.string().required(),
     consumerID: Joi.string().required(),
     lastSentTimestamp: Joi.date().required(),
   };
@@ -70,6 +74,7 @@ export const convertToDomainReminderHistory = (reminderHistory: PrismaReminderHi
     createdTimestamp: reminderHistory.createdTimestamp,
     updatedTimestamp: reminderHistory.updatedTimestamp,
     reminderScheduleID: reminderHistory.reminderScheduleID,
+    eventID: reminderHistory.eventID,
     consumerID: reminderHistory.consumerID,
     lastSentTimestamp: reminderHistory.lastSentTimestamp,
   };

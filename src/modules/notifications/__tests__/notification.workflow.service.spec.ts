@@ -635,6 +635,17 @@ describe("NotificationService", () => {
       const consumerID = "fake-consumer-id";
       const lastSentTimestamp = new Date();
 
+      const reminder: ReminderSchedule = {
+        id: reminderID,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        eventID: "fake-event-id",
+        query: "random query",
+        groupKey: "group-123",
+      };
+
+      when(mockReminderScheduleRepo.getReminderScheduleByID(reminderID)).thenResolve(reminder);
+
       when(
         mockReminderHistoryRepo.getReminderHistoryByReminderScheduleIDAndConsumerID(reminderID, consumerID),
       ).thenResolve(null);
@@ -643,6 +654,7 @@ describe("NotificationService", () => {
         id: "fake-id",
         reminderScheduleID: reminderID,
         consumerID: consumerID,
+        eventID: reminder.eventID,
         lastSentTimestamp: lastSentTimestamp,
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
@@ -661,6 +673,7 @@ describe("NotificationService", () => {
           deepEqual({
             reminderScheduleID: reminderID,
             consumerID: consumerID,
+            eventID: reminder.eventID,
             lastSentTimestamp: lastSentTimestamp,
           }),
         ),
@@ -673,14 +686,26 @@ describe("NotificationService", () => {
       const consumerID = "fake-consumer-id-2";
       const lastSentTimestamp = new Date();
 
+      const reminder: ReminderSchedule = {
+        id: reminderID,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        eventID: "fake-event-id",
+        query: "random query",
+        groupKey: "group-123",
+      };
+
       const reminderHistory: ReminderHistory = {
         id: "fake-id",
         reminderScheduleID: reminderID,
         consumerID: consumerID,
+        eventID: reminder.eventID,
         lastSentTimestamp: lastSentTimestamp,
         createdTimestamp: new Date(),
         updatedTimestamp: new Date(),
       };
+
+      when(mockReminderScheduleRepo.getReminderScheduleByID(reminderID)).thenResolve(reminder);
 
       when(
         mockReminderHistoryRepo.getReminderHistoryByReminderScheduleIDAndConsumerID(reminderID, consumerID),
@@ -698,6 +723,7 @@ describe("NotificationService", () => {
         mockReminderHistoryRepo.createReminderHistory({
           reminderScheduleID: reminderID,
           consumerID: consumerID,
+          eventID: reminder.eventID,
           lastSentTimestamp: lastSentTimestamp,
         }),
       ).never();
@@ -736,6 +762,21 @@ describe("NotificationService", () => {
           lastSentTimestamp: null,
         }),
       ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException if reminder schedule is not found", async () => {
+      const reminderID = "fake-reminder-id-3";
+      const consumerID = "fake-consumer-id-3";
+      const lastSentTimestamp = new Date();
+
+      when(mockReminderScheduleRepo.getReminderScheduleByID(reminderID)).thenResolve(null);
+
+      await expect(
+        notificationWorflowService.createOrUpdateReminderScheduleHistory(reminderID, {
+          consumerID: consumerID,
+          lastSentTimestamp: lastSentTimestamp,
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
     });
   });
 

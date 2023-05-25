@@ -523,6 +523,8 @@ model ReminderHistory {
   consumerID         String
   consumer           Consumer         @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   lastSentTimestamp  DateTime
+  eventID            String
+  event              Event            @relation(fields: [eventID], references: [id], onDelete: Cascade)
 
   @@unique([reminderScheduleID, consumerID])
   @@index([lastSentTimestamp])
@@ -547,6 +549,7 @@ model Event {
   handlers         String[]
   templates        EventTemplate[]
   reminderSchedule ReminderSchedule?
+  ReminderHistory  ReminderHistory[]
 }
 
 model EventTemplate {

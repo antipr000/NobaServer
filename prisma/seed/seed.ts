@@ -5,6 +5,7 @@ import { seedConsumers } from "./seed-consumers";
 import { seedEmployers } from "./seed-employers";
 import { seedEventsAndTemplates } from "./seed-events";
 import { seedEmployees } from "./seed-employees";
+import { seedScheduledReminders } from "./seed-scheduled-reminders";
 
 const prisma = new PrismaClient();
 
@@ -22,6 +23,7 @@ async function main() {
   }
 
   await seedEventsAndTemplates(prisma); // Events and templates needs to be seeded in all environments
+  await seedScheduledReminders(prisma);
 }
 
 main()

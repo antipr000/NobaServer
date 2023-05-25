@@ -30,6 +30,11 @@ export class SQLReminderHistoryRepo implements ReminderHistoryRepo {
     try {
       const reminderHistoryCreateRequest: Prisma.ReminderHistoryCreateInput = {
         lastSentTimestamp: reminderHistory.lastSentTimestamp,
+        event: {
+          connect: {
+            id: reminderHistory.eventID,
+          },
+        },
         reminderSchedule: {
           connect: {
             id: reminderHistory.reminderScheduleID,
