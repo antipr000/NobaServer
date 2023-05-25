@@ -27,7 +27,7 @@ export const reminderScheduleMap: ReminderScheduleMap = {
     // Anytime the value of the peso goes below 4,500 and do not repeat within 1 day
     groupKey: "reminder_group_3",
     query: eventID =>
-      'select * from "Consumer" where NOT EXISTS (select 1 from "ExchangeRate" where "bankRate" < 4500 and "numeratorCurrency" = \'USD\' and "denominatorCurrency" = \'COP\')' +
+      'select * from "Consumer" where EXISTS (select 1 from "ExchangeRate" where "bankRate" < 4500 and "numeratorCurrency" = \'USD\' and "denominatorCurrency" = \'COP\')' +
       `AND id not in (select DISTINCT("consumerID") from "ReminderHistory" where "eventID" = '${eventID}' AND "updatedTimestamp" <= NOW() - INTERVAL \'1 day\');`,
   },
   [NotificationEventType.SEND_MONEY_REMINDER_EVENT]: {
