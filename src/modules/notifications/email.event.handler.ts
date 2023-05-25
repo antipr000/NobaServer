@@ -671,7 +671,8 @@ export class EmailEventHandler {
     await this.emailClient.sendEmail(msg);
   }
 
-  @OnEvent(`email.${NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT}`)
+  // Disabling this from handling reminder events, will uncomment when we will use it
+  // @OnEvent(`email.${NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT}`)
   public async sendScheduledReminderEvent(payload: SendScheduledReminderEvent) {
     const templateID = await this.getOrDefaultTemplateId(payload.eventID, payload.locale);
 
