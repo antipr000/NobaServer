@@ -88,12 +88,14 @@ export class Utils {
     );
   }
 
-  static stripSpaces(value: string): string {
+  static stripNonPhoneChars(value: string): string {
     if (value === undefined || value === null) {
       return value;
     }
 
-    return value.replace(/\s/g, "");
+    const regex = /[^0-9+]/g;
+
+    return value.replace(regex, "");
   }
 
   static getCodeTypeFromCardScheme(scheme: string): string {

@@ -84,7 +84,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
 
   async createConsumer(consumer: Consumer): Promise<Consumer> {
     if (consumer.props.phone) {
-      consumer.props.phone = Utils.stripSpaces(consumer.props.phone);
+      consumer.props.phone = Utils.stripNonPhoneChars(consumer.props.phone);
     }
 
     if (consumer.props.handle && (await this.isHandleTaken(consumer.props.handle))) {
@@ -260,7 +260,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
   async getConsumerByPhone(phone: string): Promise<Result<Consumer>> {
     try {
       const consumerProps = await this.prisma.consumer.findUnique({
-        where: { phone: Utils.stripSpaces(phone) },
+        where: { phone: Utils.stripNonPhoneChars(phone) },
         include: { address: true, verificationData: true },
       });
       if (consumerProps) {
@@ -300,7 +300,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
     const handle = filter.handle && filter.handle.startsWith("$") ? filter.handle.substring(1).trim() : filter.handle;
 
     filter.email = filter.email && filter.email.toLowerCase();
-    filter.phone = filter.phone && Utils.stripSpaces(filter.phone);
+    filter.phone = filter.phone && Utils.stripNonPhoneChars(filter.phone);
 
     let firstName;
     let lastName;

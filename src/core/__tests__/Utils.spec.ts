@@ -221,17 +221,33 @@ describe("Utils", () => {
     });
   });
 
-  describe("stripSpaces()", () => {
-    it("It should strip spaces from a string", () => {
-      expect(Utils.stripSpaces(" A B CDEFG HI")).toEqual("ABCDEFGHI");
+  describe("stripNonPhoneChars()", () => {
+    it("It should strip spaces from phone number", () => {
+      expect(Utils.stripNonPhoneChars("+ 1 2 34567 8910")).toEqual("+12345678910");
+    });
+
+    it("It should strip dashes from phone number", () => {
+      expect(Utils.stripNonPhoneChars("+1-234-567-8910")).toEqual("+12345678910");
+    });
+
+    it("It should strip parentheses from phone number", () => {
+      expect(Utils.stripNonPhoneChars("+1(234)5678910")).toEqual("+12345678910");
+    });
+
+    it("It should strip periods from phone number", () => {
+      expect(Utils.stripNonPhoneChars("+1.234.567.8910")).toEqual("+12345678910");
+    });
+
+    it("It should strip spaces, dashes, parentheses, and periods from phone number", () => {
+      expect(Utils.stripNonPhoneChars("+ 1-(234)567.8910")).toEqual("+12345678910");
     });
 
     it("It should return input value for undefined input", () => {
-      expect(Utils.stripSpaces(undefined)).toEqual(undefined);
+      expect(Utils.stripNonPhoneChars(undefined)).toEqual(undefined);
     });
 
     it("It should return input value for null input", () => {
-      expect(Utils.stripSpaces(null)).toEqual(null);
+      expect(Utils.stripNonPhoneChars(null)).toEqual(null);
     });
   });
 
