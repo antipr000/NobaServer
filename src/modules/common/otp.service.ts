@@ -21,7 +21,7 @@ export class OTPService {
 
   async saveOTP(otpIdentifier: string, identityType: IdentityType, otp: number): Promise<void> {
     // Clean existing otps for identifier if any
-    await this.otpRepo.deleteAllOTPsForIdentifier(otpIdentifier, identityType);
+    await this.otpRepo.deleteAllOTPsForIdentifier(Utils.stripNonPhoneChars(otpIdentifier), identityType);
     await this.otpRepo.saveOTP(Utils.stripNonPhoneChars(otpIdentifier), otp, identityType);
   }
 }
