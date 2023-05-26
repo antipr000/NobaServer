@@ -10,6 +10,7 @@ import { CryptoWallet, CryptoWalletProps } from "../domain/CryptoWallet";
 import { Identification, IdentificationCreateRequest, IdentificationUpdateRequest } from "../domain/Identification";
 import { PaymentMethod, PaymentMethodProps } from "../domain/PaymentMethod";
 import { FindConsumerByStructuredFieldsDTO } from "../dto/consumer.search.dto";
+import { ConsumerRaw } from "../domain/ConsumerRaw";
 
 export interface IConsumerRepo {
   getConsumer(consumerID: string): Promise<Consumer>;
@@ -45,4 +46,5 @@ export interface IConsumerRepo {
   ): Promise<ConsumerConfiguration>;
   getAllConfigurationsForConsumer(consumerID: string): Promise<ConsumerConfiguration[]>;
   deleteConsumerConfiguration(id: string): Promise<void>;
+  executeRawQuery(query: string): Promise<ConsumerRaw[]>;
 }

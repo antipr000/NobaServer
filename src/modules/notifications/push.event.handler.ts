@@ -17,6 +17,7 @@ import { EventRepo } from "./repos/event.repo";
 import { EventHandlers } from "./domain/EventHandlers";
 import { TemplateProcessor } from "../common/utils/template.processor";
 import { SendCreditAdjustmentCompletedEvent } from "./events/SendCreditAdjustmentCompletedEvent";
+import { SendScheduledReminderEvent } from "./events/SendScheduledReminderEvent";
 
 @Injectable()
 export class PushEventHandler {
@@ -30,13 +31,13 @@ export class PushEventHandler {
   private readonly eventRepo: EventRepo;
 
   private async getOrDefaultTemplateData(
-    eventName: NotificationEventType,
+    eventIDOrName: string,
     locale: string,
   ): Promise<{
     title: string;
     body: string;
   }> {
-    const event = await this.eventRepo.getEventByName(eventName);
+    const event = await this.eventRepo.getEventByIDOrName(eventIDOrName);
     const pushTemplates = event.templates.filter(template => template.type === EventHandlers.PUSH);
 
     locale = locale?.toLowerCase() ?? "en";
@@ -62,6 +63,28 @@ export class PushEventHandler {
       title: template.templateTitle,
       body: template.templateBody,
     };
+  }
+
+  @OnEvent(`push.${NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT}`)
+  async sendScheduledReminderEvent(payload: SendScheduledReminderEvent) {
+    const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
+
+    const templateData = await this.getOrDefaultTemplateData(payload.eventID, payload.locale);
+
+    const body = TemplateProcessor.parseTemplateString(templateData.body, {
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      handle: payload.handle,
+    });
+
+    for (const pushToken of pushTokens) {
+      await this.pushClient.sendPushNotification({
+        token: pushToken,
+        notificationType: PushNotificationType.SCHEDULED_REMINDER,
+        body,
+        title: templateData.title,
+      });
+    }
   }
 
   @OnEvent(`push.${NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT}`)

@@ -67,11 +67,18 @@ export class SQLEventRepo implements EventRepo {
     }
   }
 
-  async getEventByID(id: string): Promise<Event> {
+  async getEventByIDOrName(idOrName: string): Promise<Event> {
     try {
-      const event: EventModel = await this.prismaService.event.findUnique({
+      const event: EventModel = await this.prismaService.event.findFirst({
         where: {
-          id: id,
+          OR: [
+            {
+              id: idOrName,
+            },
+            {
+              name: idOrName,
+            },
+          ],
         },
         include: {
           templates: true,
@@ -83,27 +90,6 @@ export class SQLEventRepo implements EventRepo {
       this.logger.error(`Failed to get event by id: ${e}`);
       throw new RepoException({
         message: "Failed to get event by id",
-        errorCode: RepoErrorCode.NOT_FOUND,
-      });
-    }
-  }
-
-  async getEventByName(name: string): Promise<Event> {
-    try {
-      const event: EventModel = await this.prismaService.event.findUnique({
-        where: {
-          name: name,
-        },
-        include: {
-          templates: true,
-        },
-      });
-
-      return convertToDomainEvent(event);
-    } catch (e) {
-      this.logger.error(`Failed to get event by name: ${e}`);
-      throw new RepoException({
-        message: "Failed to get event by name",
         errorCode: RepoErrorCode.NOT_FOUND,
       });
     }
@@ -158,7 +144,7 @@ export class SQLEventRepo implements EventRepo {
         data: eventTemplateCreateInput,
       });
 
-      return this.getEventByID(eventTemplate.eventID);
+      return this.getEventByIDOrName(eventTemplate.eventID);
     } catch (e) {
       this.logger.error(`Failed to create event template: ${e}`);
       throw new RepoException({
@@ -186,7 +172,7 @@ export class SQLEventRepo implements EventRepo {
         data: eventTemplateUpdateInput,
       });
 
-      return this.getEventByID(eventTemplate.eventID);
+      return this.getEventByIDOrName(eventTemplate.eventID);
     } catch (e) {
       this.logger.error(`Failed to update event template: ${e}`);
       throw new RepoException({

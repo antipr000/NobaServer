@@ -29,6 +29,7 @@ export enum NotificationEventType {
   SEND_CREDIT_ADJUSTMENT_FAILED_EVENT = "credit.adjustment.failed",
   SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT = "debit.adjustment.completed",
   SEND_DEBIT_ADJUSTMENT_FAILED_EVENT = "debit.adjustment.failed",
+  SEND_SCHEDULED_REMINDER_EVENT = "scheduled.reminder",
 }
 
 export enum NotificationWorkflowTypes {

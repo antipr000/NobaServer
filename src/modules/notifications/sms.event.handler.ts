@@ -17,8 +17,8 @@ export class SMSEventHandler {
   @Inject("EventRepo")
   private readonly eventRepo: EventRepo;
 
-  private async getOrDefaultTemplateBody(eventName: NotificationEventType, locale: string): Promise<string> {
-    const event = await this.eventRepo.getEventByName(eventName);
+  private async getOrDefaultTemplateBody(eventIDOrName: string, locale: string): Promise<string> {
+    const event = await this.eventRepo.getEventByIDOrName(eventIDOrName);
     const pushTemplates = event.templates.filter(template => template.type === EventHandlers.SMS);
 
     locale = locale?.toLowerCase() ?? "en";

@@ -1323,6 +1323,34 @@ describe("ConsumerRepoTests", () => {
       expect(consumerRepo.deleteConsumerConfiguration("fake-id")).rejects.toThrowRepoException(RepoErrorCode.NOT_FOUND);
     });
   });
+
+  describe("executeRawQuery", () => {
+    it("should execute raw query", async () => {
+      const firstName = uuid();
+      const consumerID1 = await createTestConsumer(prismaService, firstName);
+      const consumerID2 = await createTestConsumer(prismaService, firstName);
+      await createTestConsumer(prismaService, "Fake");
+
+      const response = await consumerRepo.executeRawQuery(
+        `SELECT * from "Consumer" where "firstName" = '${firstName}'`,
+      );
+
+      expect(response).toHaveLength(2);
+      expect(response).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: consumerID1 }),
+          expect.objectContaining({ id: consumerID2 }),
+        ]),
+      );
+    });
+
+    it("should return empty list if no record matches the query", async () => {
+      const response = await consumerRepo.executeRawQuery(
+        'SELECT * from "Consumer" where "firstName" = \'Not Present\'',
+      );
+      expect(response).toHaveLength(0);
+    });
+  });
 });
 
 const getRandomUser = (firstName?: string, lastName?: string): Consumer => {

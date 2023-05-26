@@ -2522,4 +2522,24 @@ describe("ConsumerService", () => {
       expect(consumerService.isActiveConsumer(consumer)).toBe(false);
     });
   });
+
+  describe("executeRawQuery", () => {
+    it("should execute raw queries and return 'ConsumerRaw' for consumers", async () => {
+      const query = "SELECT * FROM consumer WHERE id = 'fake-id'";
+
+      when(mockConsumerRepo.executeRawQuery(query)).thenResolve([
+        {
+          id: "fake-id",
+        },
+      ]);
+
+      const response = await consumerService.executeRawQuery(query);
+
+      expect(response).toStrictEqual([
+        {
+          id: "fake-id",
+        },
+      ]);
+    });
+  });
 });

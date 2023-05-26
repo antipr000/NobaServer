@@ -53,7 +53,6 @@ import {
 } from "./events/SendPhoneVerificationCodeEvent";
 import { LatestNotificationResponse } from "./dto/latestnotification.response.dto";
 import { EventRepo } from "./repos/event.repo";
-import { Event } from "./domain/Event";
 import { EventHandlers } from "./domain/EventHandlers";
 import { SendInviteEmployeeEvent, validateSendInviteEmployeeEvent } from "./events/SendInviteEmployeeEvent";
 import {
@@ -72,6 +71,7 @@ import {
   SendDebitAdjustmentFailedEvent,
   validateSendDebitAdjustmentFailedEvent,
 } from "./events/SendDebitAdjustmentFailedEvent";
+import { SendScheduledReminderEvent, validateSendScheduledReminderEvent } from "./events/SendScheduledReminderEvent";
 
 @Injectable()
 export class NotificationService {
@@ -82,7 +82,8 @@ export class NotificationService {
 
   constructor(private readonly eventEmitter: EventEmitter2) {}
 
-  private getNotificationMedium(event: Event, payload: NotificationPayload): EventHandlers[] {
+  private async getNotificationMedium(eventIDOrName: string, payload: NotificationPayload): Promise<EventHandlers[]> {
+    const event = await this.eventRepo.getEventByIDOrName(eventIDOrName);
     let notificationMedium = event.handlers;
     if (notificationMedium.indexOf(EventHandlers.EMAIL) > -1 && !payload.email) {
       notificationMedium = notificationMedium.filter(medium => medium !== EventHandlers.EMAIL);
@@ -99,11 +100,16 @@ export class NotificationService {
   }
 
   async sendNotification(eventType: NotificationEventType, payload: NotificationPayload): Promise<void> {
-    const event = await this.eventRepo.getEventByName(eventType);
+    let eventIDOrName: string;
 
+    if (eventType === NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT) {
+      eventIDOrName = (payload as SendScheduledReminderEvent).eventID;
+    } else {
+      eventIDOrName = eventType;
+    }
     const notificationEvent = {
       notificationEventType: eventType,
-      notificationEventHandler: this.getNotificationMedium(event, payload),
+      notificationEventHandler: await this.getNotificationMedium(eventIDOrName, payload),
     };
 
     if (notificationEvent.notificationEventHandler.length === 0) {
@@ -241,6 +247,10 @@ export class NotificationService {
         this.eventEmitter.emitAsync(eventName, payload);
         break;
 
+      case NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT:
+        validateSendScheduledReminderEvent(payload as SendScheduledReminderEvent);
+        this.eventEmitter.emitAsync(eventName, payload as SendScheduledReminderEvent);
+        break;
       default:
         this.logger.error(`Unknown Notification event type: ${eventType}`);
         break;

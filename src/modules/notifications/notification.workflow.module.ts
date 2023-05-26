@@ -6,9 +6,17 @@ import { NotificationWorkflowService } from "./notification.workflow.service";
 import { ConfigModule } from "@nestjs/config";
 import { NotificationsModule } from "./notification.module";
 import { EmployerModule } from "../employer/employer.module";
+import { NotificationRepoModule } from "./repos/notification.repo.module";
 
 @Module({
-  imports: [ConfigModule, NotificationsModule, ConsumerModule, TransactionModule, EmployerModule],
+  imports: [
+    ConfigModule,
+    NotificationsModule,
+    ConsumerModule,
+    TransactionModule,
+    EmployerModule,
+    NotificationRepoModule,
+  ],
   controllers: [NotificationWorkflowController],
   providers: [NotificationWorkflowService],
 })

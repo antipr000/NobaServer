@@ -2,7 +2,7 @@ import { TestingModule, Test } from "@nestjs/testing";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { NotificationService } from "../notification.service";
-import { deepEqual, instance, verify, when } from "ts-mockito";
+import { anyString, anything, deepEqual, instance, verify, when } from "ts-mockito";
 import { NotificationWorkflowService } from "../notification.workflow.service";
 import { TransactionService } from "../../../modules/transaction/transaction.service";
 import { ConsumerService } from "../../../modules/consumer/consumer.service";
@@ -16,13 +16,22 @@ import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
 import { Consumer, ConsumerProps } from "../../../modules/consumer/domain/Consumer";
 import { NotificationEventType, NotificationWorkflowTypes } from "../domain/NotificationTypes";
 import { TransactionNotificationPayloadMapper } from "../domain/TransactionNotificationParameters";
-import { ServiceException } from "../../../core/exception/service.exception";
+import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { FeeType } from "../../../modules/transaction/domain/TransactionFee";
 import { EmployerService } from "../../../modules/employer/employer.service";
 import { getMockEmployerServiceWithDefaults } from "../../../modules/employer/mocks/mock.employer.service";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { Employer } from "../../../modules/employer/domain/Employer";
 import { NotificationPayloadMapper } from "../domain/NotificationPayload";
+import { ReminderScheduleRepo } from "../repos/reminder.schedule.repo";
+import { ReminderHistoryRepo } from "../repos/reminder.history.repo";
+import { EventRepo } from "../repos/event.repo";
+import { getMockReminderScheduleRepoWithDefaults } from "../mocks/mock.reminder.schedule.repo";
+import { getMockReminderHistoryRepoWithDefaults } from "../mocks/mock.reminder.history.repo";
+import { getMockEventRepoWithDefaults } from "../mocks/mock.event.repo";
+import { ReminderSchedule } from "../domain/ReminderSchedule";
+import { ReminderHistory } from "../domain/ReminderHistory";
+import { Event } from "../domain/Event";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -31,6 +40,9 @@ describe("NotificationService", () => {
   let consumerService: ConsumerService;
   let transactionNotificationMapper: TransactionNotificationPayloadMapper;
   let employerService: EmployerService;
+  let mockReminderScheduleRepo: ReminderScheduleRepo;
+  let mockReminderHistoryRepo: ReminderHistoryRepo;
+  let mockEventRepo: EventRepo;
 
   jest.setTimeout(30000);
 
@@ -45,6 +57,9 @@ describe("NotificationService", () => {
     consumerService = getMockConsumerServiceWithDefaults();
     transactionNotificationMapper = new TransactionNotificationPayloadMapper();
     employerService = getMockEmployerServiceWithDefaults();
+    mockReminderScheduleRepo = getMockReminderScheduleRepoWithDefaults();
+    mockReminderHistoryRepo = getMockReminderHistoryRepoWithDefaults();
+    mockEventRepo = getMockEventRepoWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
@@ -66,6 +81,18 @@ describe("NotificationService", () => {
         {
           provide: EmployerService,
           useFactory: () => instance(employerService),
+        },
+        {
+          provide: "ReminderScheduleRepo",
+          useFactory: () => instance(mockReminderScheduleRepo),
+        },
+        {
+          provide: "ReminderHistoryRepo",
+          useFactory: () => instance(mockReminderHistoryRepo),
+        },
+        {
+          provide: "EventRepo",
+          useFactory: () => instance(mockEventRepo),
         },
       ],
     }).compile();
@@ -493,6 +520,355 @@ describe("NotificationService", () => {
           transactionID: null,
         }),
       ).rejects.toThrowError(ServiceException);
+    });
+  });
+  describe("getAllReminderSchedulesForGroup", () => {
+    it("should get all reminder schedules for a group", async () => {
+      const reminderSchedule: ReminderSchedule = {
+        id: "fake-id",
+        groupKey: "fake-group-id",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        eventID: "fake-event-id",
+        query: "fake-query",
+      };
+
+      when(mockReminderScheduleRepo.getAllReminderSchedulesForGroup("fake-group-id")).thenResolve([reminderSchedule]);
+
+      const result = await notificationWorflowService.getAllReminderSchedulesForGroup("fake-group-id");
+
+      expect(result).toStrictEqual([reminderSchedule]);
+    });
+  });
+
+  describe("getAllConsumerIDsForReminder", () => {
+    it("should get all consumer ids selected by query", async () => {
+      const reminderSchedule: ReminderSchedule = {
+        id: "fake-id",
+        groupKey: "fake-group-id",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        eventID: "fake-event-id",
+        query: "select * from consumers",
+      };
+
+      when(mockReminderScheduleRepo.getReminderScheduleByID("fake-id")).thenResolve(reminderSchedule);
+      when(consumerService.executeRawQuery(reminderSchedule.query)).thenResolve([{ id: "fake-consumer-id" }]);
+
+      const result = await notificationWorflowService.getAllConsumerIDsForReminder("fake-id");
+
+      expect(result).toStrictEqual(["fake-consumer-id"]);
+    });
+
+    it("should throw ServiceException if reminderSchedule with ID does not exist", async () => {
+      when(mockReminderScheduleRepo.getReminderScheduleByID("fake-id")).thenResolve(null);
+
+      await expect(notificationWorflowService.getAllConsumerIDsForReminder("fake-id")).rejects.toThrowError(
+        ServiceException,
+      );
+    });
+  });
+
+  describe("createReminderSchedule", () => {
+    it("should throw ServiceException when eventID is missing", async () => {
+      await expect(
+        notificationWorflowService.createReminderSchedule({
+          groupKey: "fake-group-id",
+          query: "select * from consumers",
+        } as any),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException when groupKey is missing", async () => {
+      await expect(
+        notificationWorflowService.createReminderSchedule({
+          eventID: "fake-event-id",
+          query: "select * from consumers",
+        } as any),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException when query is missing", async () => {
+      await expect(
+        notificationWorflowService.createReminderSchedule({
+          eventID: "fake-event-id",
+          groupKey: "fake-group-id",
+        } as any),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should create reminder schedule", async () => {
+      const reminderSchedule: ReminderSchedule = {
+        id: "fake-id",
+        groupKey: "fake-group-id",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        eventID: "fake-event-id",
+        query: "select * from consumers",
+      };
+
+      when(mockReminderScheduleRepo.createReminderSchedule(anything())).thenResolve(reminderSchedule);
+
+      const result = await notificationWorflowService.createReminderSchedule({
+        eventID: "fake-event-id",
+        groupKey: "fake-group-id",
+        query: "select * from consumers",
+      });
+
+      expect(result).toStrictEqual(reminderSchedule);
+
+      verify(
+        mockReminderScheduleRepo.createReminderSchedule(
+          deepEqual({
+            eventID: "fake-event-id",
+            groupKey: "fake-group-id",
+            query: "select * from consumers",
+          }),
+        ),
+      ).once();
+    });
+  });
+
+  describe("createOrUpdateReminderScheduleHistory", () => {
+    it("should create reminder schedule history", async () => {
+      const reminderID = "fake-reminder-id";
+      const consumerID = "fake-consumer-id";
+      const lastSentTimestamp = new Date();
+
+      const reminder: ReminderSchedule = {
+        id: reminderID,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        eventID: "fake-event-id",
+        query: "random query",
+        groupKey: "group-123",
+      };
+
+      when(mockReminderScheduleRepo.getReminderScheduleByID(reminderID)).thenResolve(reminder);
+
+      when(
+        mockReminderHistoryRepo.getReminderHistoryByReminderScheduleIDAndConsumerID(reminderID, consumerID),
+      ).thenResolve(null);
+
+      const reminderHistory: ReminderHistory = {
+        id: "fake-id",
+        reminderScheduleID: reminderID,
+        consumerID: consumerID,
+        eventID: reminder.eventID,
+        lastSentTimestamp: lastSentTimestamp,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+      };
+
+      when(mockReminderHistoryRepo.createReminderHistory(anything())).thenResolve(reminderHistory);
+
+      const result = await notificationWorflowService.createOrUpdateReminderScheduleHistory(reminderID, {
+        consumerID: consumerID,
+        lastSentTimestamp: lastSentTimestamp,
+      });
+
+      expect(result).toStrictEqual(reminderHistory);
+      verify(
+        mockReminderHistoryRepo.createReminderHistory(
+          deepEqual({
+            reminderScheduleID: reminderID,
+            consumerID: consumerID,
+            eventID: reminder.eventID,
+            lastSentTimestamp: lastSentTimestamp,
+          }),
+        ),
+      ).once();
+      verify(mockReminderHistoryRepo.updateReminderHistory(anyString(), anything())).never();
+    });
+
+    it("should update reminder schedule history", async () => {
+      const reminderID = "fake-reminder-id-2";
+      const consumerID = "fake-consumer-id-2";
+      const lastSentTimestamp = new Date();
+
+      const reminder: ReminderSchedule = {
+        id: reminderID,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        eventID: "fake-event-id",
+        query: "random query",
+        groupKey: "group-123",
+      };
+
+      const reminderHistory: ReminderHistory = {
+        id: "fake-id",
+        reminderScheduleID: reminderID,
+        consumerID: consumerID,
+        eventID: reminder.eventID,
+        lastSentTimestamp: lastSentTimestamp,
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+      };
+
+      when(mockReminderScheduleRepo.getReminderScheduleByID(reminderID)).thenResolve(reminder);
+
+      when(
+        mockReminderHistoryRepo.getReminderHistoryByReminderScheduleIDAndConsumerID(reminderID, consumerID),
+      ).thenResolve(reminderHistory);
+
+      when(mockReminderHistoryRepo.updateReminderHistory(anyString(), anything())).thenResolve(reminderHistory);
+
+      const result = await notificationWorflowService.createOrUpdateReminderScheduleHistory(reminderID, {
+        consumerID: consumerID,
+        lastSentTimestamp: lastSentTimestamp,
+      });
+
+      expect(result).toStrictEqual(reminderHistory);
+      verify(
+        mockReminderHistoryRepo.createReminderHistory({
+          reminderScheduleID: reminderID,
+          consumerID: consumerID,
+          eventID: reminder.eventID,
+          lastSentTimestamp: lastSentTimestamp,
+        }),
+      ).never();
+      verify(
+        mockReminderHistoryRepo.updateReminderHistory(
+          reminderHistory.id,
+          deepEqual({
+            lastSentTimestamp: lastSentTimestamp,
+          }),
+        ),
+      ).once();
+    });
+
+    it("should throw ServiceException if reminderID is null", async () => {
+      await expect(
+        notificationWorflowService.createOrUpdateReminderScheduleHistory(null, {
+          consumerID: "fake-consumer-id",
+          lastSentTimestamp: new Date(),
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException if consumerID is null", async () => {
+      await expect(
+        notificationWorflowService.createOrUpdateReminderScheduleHistory("fake-reminder-id", {
+          consumerID: null,
+          lastSentTimestamp: new Date(),
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException if lastSentTimestamp is null", async () => {
+      await expect(
+        notificationWorflowService.createOrUpdateReminderScheduleHistory("fake-reminder-id", {
+          consumerID: "fake-consumer-id",
+          lastSentTimestamp: null,
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException if reminder schedule is not found", async () => {
+      const reminderID = "fake-reminder-id-3";
+      const consumerID = "fake-consumer-id-3";
+      const lastSentTimestamp = new Date();
+
+      when(mockReminderScheduleRepo.getReminderScheduleByID(reminderID)).thenResolve(null);
+
+      await expect(
+        notificationWorflowService.createOrUpdateReminderScheduleHistory(reminderID, {
+          consumerID: consumerID,
+          lastSentTimestamp: lastSentTimestamp,
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
+    });
+  });
+
+  describe("sendEvent", () => {
+    it("should send event", async () => {
+      const eventID = "fake-event-id";
+      const event: Event = {
+        id: eventID,
+        name: "Fake Name",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        handlers: [],
+        templates: [],
+      };
+
+      const consumer = getRandomConsumer("fake-consumer-id");
+
+      when(mockEventRepo.getEventByIDOrName(eventID)).thenResolve(event);
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(notificationService.sendNotification(anything(), anything())).thenResolve();
+
+      await notificationWorflowService.sendEvent(eventID, {
+        consumerID: consumer.props.id,
+      });
+
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT,
+          deepEqual({
+            email: consumer.props.email,
+            firstName: consumer.props.firstName,
+            handle: consumer.props.handle,
+            lastName: consumer.props.lastName,
+            nobaUserID: consumer.props.id,
+            phone: consumer.props.phone,
+            eventID: eventID,
+            locale: consumer.props.locale,
+          }),
+        ),
+      ).once();
+    });
+
+    it("should throw ServiceException if eventID does not exist", async () => {
+      const eventID = "fake-event-id";
+
+      when(mockEventRepo.getEventByIDOrName(eventID)).thenResolve(null);
+
+      await expect(
+        notificationWorflowService.sendEvent(eventID, {
+          consumerID: "fake-consumer-id",
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
+    });
+
+    it("should throw ServiceException if consumerID is null", async () => {
+      const eventID = "fake-event-id";
+      const event: Event = {
+        id: eventID,
+        name: "Fake Name",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        handlers: [],
+        templates: [],
+      };
+
+      when(mockEventRepo.getEventByIDOrName(eventID)).thenResolve(event);
+      await expect(
+        notificationWorflowService.sendEvent("fake-event-id", {
+          consumerID: null,
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+    });
+
+    it("should throw ServiceException if consumerID does not exist", async () => {
+      const eventID = "fake-event-id";
+      const event: Event = {
+        id: eventID,
+        name: "Fake Name",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        handlers: [],
+        templates: [],
+      };
+
+      when(mockEventRepo.getEventByIDOrName(eventID)).thenResolve(event);
+      when(consumerService.getConsumer("fake-consumer-id")).thenResolve(null);
+
+      await expect(
+        notificationWorflowService.sendEvent("fake-event-id", {
+          consumerID: "fake-consumer-id",
+        }),
+      ).rejects.toThrowServiceException(ServiceErrorCode.DOES_NOT_EXIST);
     });
   });
 });

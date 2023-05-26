@@ -49,6 +49,7 @@ describe("ReminderHistoryRepoTests", () => {
       const reminderHistory = await reminderHistoryRepo.createReminderHistory({
         consumerID,
         reminderScheduleID: reminderSchedule.id,
+        eventID: event.id,
         lastSentTimestamp: new Date(),
       });
 
@@ -57,6 +58,7 @@ describe("ReminderHistoryRepoTests", () => {
       expect(reminderHistory.consumerID).toEqual(consumerID);
       expect(reminderHistory.reminderScheduleID).toEqual(reminderSchedule.id);
       expect(reminderHistory.lastSentTimestamp).toBeDefined();
+      expect(reminderHistory.eventID).toEqual(event.id);
     });
 
     it("should throw RepoException if consumer does not exist", async () => {
@@ -67,6 +69,7 @@ describe("ReminderHistoryRepoTests", () => {
         reminderHistoryRepo.createReminderHistory({
           consumerID: "fake-id",
           reminderScheduleID: reminderSchedule.id,
+          eventID: event.id,
           lastSentTimestamp: new Date(),
         }),
       ).rejects.toThrowRepoException(RepoErrorCode.DATABASE_INTERNAL_ERROR);
@@ -79,6 +82,7 @@ describe("ReminderHistoryRepoTests", () => {
         reminderHistoryRepo.createReminderHistory({
           consumerID,
           reminderScheduleID: "fake-id",
+          eventID: "fake-id",
           lastSentTimestamp: new Date(),
         }),
       ).rejects.toThrowRepoException(RepoErrorCode.DATABASE_INTERNAL_ERROR);
@@ -92,6 +96,7 @@ describe("ReminderHistoryRepoTests", () => {
       await reminderHistoryRepo.createReminderHistory({
         consumerID,
         reminderScheduleID: reminderSchedule.id,
+        eventID: event.id,
         lastSentTimestamp: new Date(),
       });
 
@@ -99,6 +104,7 @@ describe("ReminderHistoryRepoTests", () => {
         reminderHistoryRepo.createReminderHistory({
           consumerID,
           reminderScheduleID: reminderSchedule.id,
+          eventID: event.id,
           lastSentTimestamp: new Date(),
         }),
       ).rejects.toThrowRepoException(RepoErrorCode.DATABASE_INTERNAL_ERROR);
@@ -109,6 +115,7 @@ describe("ReminderHistoryRepoTests", () => {
         reminderHistoryRepo.createReminderHistory({
           consumerID: "fake-id",
           reminderScheduleID: "fake-id",
+          eventID: "fake-id",
           lastSentTimestamp: 1234 as any,
         }),
       ).rejects.toThrowError();
@@ -123,6 +130,7 @@ describe("ReminderHistoryRepoTests", () => {
       const reminderHistory = await createAndSaveReminderHistory(
         reminderSchedule.id,
         consumerID,
+        event.id,
         new Date(),
         prismaService,
       );
@@ -155,6 +163,7 @@ describe("ReminderHistoryRepoTests", () => {
       const reminderHistory = await createAndSaveReminderHistory(
         reminderSchedule.id,
         consumerID,
+        event.id,
         new Date(),
         prismaService,
       );
@@ -183,6 +192,7 @@ describe("ReminderHistoryRepoTests", () => {
       const reminderHistory = await createAndSaveReminderHistory(
         reminderSchedule.id,
         consumerID,
+        event.id,
         new Date(),
         prismaService,
       );
@@ -218,11 +228,18 @@ describe("ReminderHistoryRepoTests", () => {
       const event2 = await createAndSaveEvent(prismaService);
       const reminderSchedule2 = await createAndSaveReminderSchedule(event2, prismaService);
 
-      await createAndSaveReminderHistory(reminderSchedule1.id, consumerID, new Date("2020-01-01"), prismaService);
+      await createAndSaveReminderHistory(
+        reminderSchedule1.id,
+        consumerID,
+        event1.id,
+        new Date("2020-01-01"),
+        prismaService,
+      );
 
       const reminderHistory2 = await createAndSaveReminderHistory(
         reminderSchedule2.id,
         consumerID,
+        event2.id,
         new Date("2020-01-02"),
         prismaService,
       );

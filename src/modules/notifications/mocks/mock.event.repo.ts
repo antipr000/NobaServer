@@ -5,8 +5,7 @@ import { SQLEventRepo } from "../repos/sql.event.repo";
 export function getMockEventRepoWithDefaults(): EventRepo {
   const mockEventRepo = mock(SQLEventRepo);
 
-  when(mockEventRepo.getEventByName(anyString())).thenReject(new Error("Not implemented."));
-  when(mockEventRepo.getEventByID(anyString())).thenReject(new Error("Not implemented."));
+  when(mockEventRepo.getEventByIDOrName(anyString())).thenReject(new Error("Not implemented."));
 
   return mockEventRepo;
 }

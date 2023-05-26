@@ -13,6 +13,16 @@ import { EmployerService } from "../employer/employer.service";
 import { LatestNotificationResponse } from "./dto/latestnotification.response.dto";
 import { SendNotificationRequestDTO } from "./dto/SendNotificationRequestDTO";
 import { Transaction } from "../transaction/domain/Transaction";
+import { ReminderScheduleRepo } from "./repos/reminder.schedule.repo";
+import { ReminderHistoryRepo } from "./repos/reminder.history.repo";
+import { ReminderSchedule } from "./domain/ReminderSchedule";
+import { EventRepo } from "./repos/event.repo";
+import {
+  CreateReminderHistoryDTO,
+  CreateReminderScheduleDTO,
+  SendEventRequestDTO,
+} from "./dto/notification.workflow.controller.dto";
+import { ReminderHistory } from "./domain/ReminderHistory";
 
 @Injectable()
 export class NotificationWorkflowService {
@@ -31,9 +41,150 @@ export class NotificationWorkflowService {
   @Inject()
   private readonly employerService: EmployerService;
 
+  @Inject("ReminderScheduleRepo")
+  private readonly reminderScheduleRepo: ReminderScheduleRepo;
+
+  @Inject("ReminderHistoryRepo")
+  private readonly reminderHistoryRepo: ReminderHistoryRepo;
+
+  @Inject("EventRepo")
+  private readonly eventRepo: EventRepo;
+
   private readonly transactionNotificationPayloadMapper: TransactionNotificationPayloadMapper;
   constructor() {
     this.transactionNotificationPayloadMapper = new TransactionNotificationPayloadMapper();
+  }
+
+  async createReminderSchedule(reminderSchedule: CreateReminderScheduleDTO): Promise<ReminderSchedule> {
+    if (!reminderSchedule.eventID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Event ID is required",
+      });
+    }
+
+    if (!reminderSchedule.query) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Query is required",
+      });
+    }
+
+    if (!reminderSchedule.groupKey) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Group key is required",
+      });
+    }
+
+    return this.reminderScheduleRepo.createReminderSchedule({
+      eventID: reminderSchedule.eventID,
+      query: reminderSchedule.query,
+      groupKey: reminderSchedule.groupKey,
+    });
+  }
+
+  async createOrUpdateReminderScheduleHistory(
+    reminderID: string,
+    body: CreateReminderHistoryDTO,
+  ): Promise<ReminderHistory> {
+    if (!reminderID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Reminder ID is required",
+      });
+    }
+
+    if (!body.consumerID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Consumer ID is required",
+      });
+    }
+
+    if (!body.lastSentTimestamp) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Last sent timestamp is required",
+      });
+    }
+
+    const reminder = await this.reminderScheduleRepo.getReminderScheduleByID(reminderID);
+
+    if (!reminder) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Reminder schedule with ID ${reminderID} not found`,
+      });
+    }
+
+    const reminderHistory = await this.reminderHistoryRepo.getReminderHistoryByReminderScheduleIDAndConsumerID(
+      reminderID,
+      body.consumerID,
+    );
+
+    if (!reminderHistory) {
+      return this.reminderHistoryRepo.createReminderHistory({
+        consumerID: body.consumerID,
+        reminderScheduleID: reminderID,
+        eventID: reminder.eventID,
+        lastSentTimestamp: body.lastSentTimestamp,
+      });
+    } else {
+      return this.reminderHistoryRepo.updateReminderHistory(reminderHistory.id, {
+        lastSentTimestamp: body.lastSentTimestamp,
+      });
+    }
+  }
+
+  async getAllReminderSchedulesForGroup(groupKey: string): Promise<ReminderSchedule[]> {
+    return this.reminderScheduleRepo.getAllReminderSchedulesForGroup(groupKey);
+  }
+
+  async getAllConsumerIDsForReminder(reminderID: string): Promise<string[]> {
+    const reminderSchedule = await this.reminderScheduleRepo.getReminderScheduleByID(reminderID);
+    if (!reminderSchedule) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Reminder schedule with ID ${reminderID} not found`,
+      });
+    }
+
+    const consumers = await this.consumerService.executeRawQuery(reminderSchedule.query);
+
+    return consumers.map(consumer => consumer.id);
+  }
+
+  async sendEvent(eventID: string, requestBody: SendEventRequestDTO): Promise<void> {
+    const event = await this.eventRepo.getEventByIDOrName(eventID);
+    if (!event) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Event with ID ${eventID} not found`,
+      });
+    }
+
+    if (!requestBody.consumerID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Consumer ID is required",
+      });
+    }
+    const consumer = await this.consumerService.getConsumer(requestBody.consumerID);
+
+    if (!consumer) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
+        message: `Consumer with ID ${requestBody.consumerID} not found`,
+      });
+    }
+
+    const notificationPayload = NotificationPayloadMapper.toScheduledReminderEvent(consumer, eventID);
+
+    await this.notificationService.sendNotification(
+      NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT,
+      notificationPayload,
+    );
   }
 
   async sendNotification(

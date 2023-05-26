@@ -24,7 +24,7 @@ import { NotificationEventType } from "../domain/NotificationTypes";
 import { EventHandlers } from "../domain/EventHandlers";
 import { Utils } from "../../../core/utils/Utils";
 import { SendCreditAdjustmentCompletedEvent } from "../events/SendCreditAdjustmentCompletedEvent";
-import { SendDebitAdjustmentCompletedEvent } from "../events/SendDebitAdjustmentCompletedEvent";
+import { SendScheduledReminderEvent } from "../events/SendScheduledReminderEvent";
 
 describe.each([
   ["en", "en"],
@@ -87,7 +87,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -161,7 +161,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_DEPOSIT_FAILED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_DEPOSIT_FAILED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -234,7 +234,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -308,7 +308,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -385,7 +385,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -465,7 +465,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_FAILED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_TRANSFER_FAILED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_TRANSFER_FAILED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -546,7 +546,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -622,7 +622,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -695,7 +695,7 @@ describe.each([
       "push-token-2",
     ]);
 
-    when(mockEventRepo.getEventByName(NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT)).thenResolve({
+    when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT)).thenResolve({
       id: "fake-id",
       name: NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT,
       handlers: [EventHandlers.PUSH, EventHandlers.EMAIL],
@@ -756,6 +756,80 @@ describe.each([
         }),
       ),
     ).once();
+  });
+
+  describe("sendScheduledReminderEvent", () => {
+    it(`should send Scheduled Reminder Email with ${expectedSuffix} template when locale is ${locale}`, async () => {
+      const payload: SendScheduledReminderEvent = {
+        eventID: "fake-event-id",
+        firstName: "First",
+        lastName: "Last",
+        email: "fake+email@noba.com",
+        locale: locale,
+        nobaUserID: "fake-noba-user-id",
+      };
+
+      when(mockPushTokenService.getPushTokensForConsumer(payload.nobaUserID)).thenResolve([
+        "push-token-1",
+        "push-token-2",
+      ]);
+
+      when(mockEventRepo.getEventByIDOrName(payload.eventID)).thenResolve({
+        id: "fake-event-id",
+        name: "Some Fake Event",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        handlers: [EventHandlers.EMAIL],
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            templateTitle: "Scheduled reminder title in en",
+            templateBody: "Scheduled reminder body in en",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-event-id",
+            type: EventHandlers.PUSH,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            templateTitle: "Scheduled reminder title in es",
+            templateBody: "Scheduled reminder body in es",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-event-id",
+            type: EventHandlers.PUSH,
+          },
+        ],
+      });
+
+      when(mockPushClient.sendPushNotification(anything())).thenResolve();
+
+      await eventHandler.sendScheduledReminderEvent(payload);
+
+      verify(
+        mockPushClient.sendPushNotification(
+          deepEqual({
+            token: "push-token-1",
+            title: `Scheduled reminder title in ${expectedSuffix}`,
+            notificationType: PushNotificationType.SCHEDULED_REMINDER,
+            body: `Scheduled reminder body in ${expectedSuffix}`,
+          }),
+        ),
+      ).once();
+
+      verify(
+        mockPushClient.sendPushNotification(
+          deepEqual({
+            token: "push-token-2",
+            title: `Scheduled reminder title in ${expectedSuffix}`,
+            notificationType: PushNotificationType.SCHEDULED_REMINDER,
+            body: `Scheduled reminder body in ${expectedSuffix}`,
+          }),
+        ),
+      ).once();
+    });
   });
 });
 
