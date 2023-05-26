@@ -541,7 +541,7 @@ describe("NotificationService", () => {
     it("should emit push event for CREDIT_ADJUSTMENT_COMPLETED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT,
         handlers: [EventHandlers.PUSH],
@@ -569,7 +569,7 @@ describe("NotificationService", () => {
     it("should emit push event for CREDIT_ADJUSTMENT_FAILED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_CREDIT_ADJUSTMENT_FAILED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_CREDIT_ADJUSTMENT_FAILED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_CREDIT_ADJUSTMENT_FAILED_EVENT,
         handlers: [EventHandlers.PUSH],
@@ -597,7 +597,7 @@ describe("NotificationService", () => {
     it("should emit push event for DEBIT_ADJUSTMENT_COMPLETED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_DEBIT_ADJUSTMENT_COMPLETED_EVENT,
         handlers: [EventHandlers.PUSH],
@@ -625,7 +625,7 @@ describe("NotificationService", () => {
     it("should emit push event for DEBIT_ADJUSTMENT_FAILED_EVENT", async () => {
       when(eventEmitter.emitAsync(anyString(), anything())).thenResolve();
 
-      when(mockEventRepo.getEventByName(NotificationEventType.SEND_DEBIT_ADJUSTMENT_FAILED_EVENT)).thenResolve({
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_DEBIT_ADJUSTMENT_FAILED_EVENT)).thenResolve({
         id: "fake-id",
         name: NotificationEventType.SEND_DEBIT_ADJUSTMENT_FAILED_EVENT,
         handlers: [EventHandlers.PUSH],
