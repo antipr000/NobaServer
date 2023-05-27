@@ -114,6 +114,13 @@ export class CircleService implements IBank {
       amount: amount,
     });
 
+    if (
+      response.status !== CircleTransferStatus.TRANSFER_FAILED &&
+      response.status !== CircleTransferStatus.INSUFFICIENT_FUNDS
+    ) {
+      await this.circleRepo.updateCurrentBalance(walletID, balance - amount);
+    }
+
     return {
       id: response.transferID,
       status: response.status,
@@ -158,6 +165,11 @@ export class CircleService implements IBank {
       destinationWalletID: walletID,
       amount: amount,
     });
+
+    if (response.status !== CircleTransferStatus.TRANSFER_FAILED) {
+      const currentBalance = await this.circleClient.getWalletBalance(walletID);
+      await this.circleRepo.updateCurrentBalance(walletID, currentBalance);
+    }
 
     return {
       id: response.transferID,
@@ -209,6 +221,16 @@ export class CircleService implements IBank {
       amount: amount,
     });
 
+    if (
+      response.status !== CircleTransferStatus.TRANSFER_FAILED &&
+      response.status !== CircleTransferStatus.INSUFFICIENT_FUNDS
+    ) {
+      await this.circleRepo.updateCurrentBalance(sourceWalletID, balance - amount);
+
+      const destinationCurrentBalance = await this.circleClient.getWalletBalance(destinationWalletID);
+      await this.circleRepo.updateCurrentBalance(destinationWalletID, destinationCurrentBalance);
+    }
+
     return {
       id: response.transferID,
       status: response.status,
@@ -216,9 +238,19 @@ export class CircleService implements IBank {
     };
   }
 
-  public async getBalance(accountID: string): Promise<BalanceDTO> {
+  public async getBalance(walletID: string, cached = false): Promise<BalanceDTO> {
+    if (cached) {
+      const balance = await this.circleRepo.getCircleBalance(walletID);
+      if (balance !== null) {
+        return {
+          balance: balance,
+          currency: "USD",
+        };
+      }
+    }
+
     return {
-      balance: await this.getWalletBalance(accountID),
+      balance: await this.getWalletBalance(walletID),
       currency: "USD",
     };
   }
