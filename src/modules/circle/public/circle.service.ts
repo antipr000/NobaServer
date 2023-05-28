@@ -118,7 +118,14 @@ export class CircleService implements IBank {
       response.status !== CircleTransferStatus.TRANSFER_FAILED &&
       response.status !== CircleTransferStatus.INSUFFICIENT_FUNDS
     ) {
-      await this.circleRepo.updateCurrentBalance(walletID, balance - amount);
+      try {
+        await this.circleRepo.updateCurrentBalance(walletID, balance - amount);
+      } catch (e) {
+        this.alertService.raiseAlert({
+          key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
+          message: `Could not update balance for wallet ${walletID}. Reason: ${JSON.stringify(e)}`,
+        });
+      }
     }
 
     return {
@@ -167,8 +174,15 @@ export class CircleService implements IBank {
     });
 
     if (response.status !== CircleTransferStatus.TRANSFER_FAILED) {
-      const currentBalance = await this.circleClient.getWalletBalance(walletID);
-      await this.circleRepo.updateCurrentBalance(walletID, currentBalance);
+      try {
+        const currentBalance = await this.circleClient.getWalletBalance(walletID);
+        await this.circleRepo.updateCurrentBalance(walletID, currentBalance);
+      } catch (e) {
+        this.alertService.raiseAlert({
+          key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
+          message: `Could not update balance for wallet ${walletID}. Reason: ${JSON.stringify(e)}`,
+        });
+      }
     }
 
     return {
@@ -225,10 +239,19 @@ export class CircleService implements IBank {
       response.status !== CircleTransferStatus.TRANSFER_FAILED &&
       response.status !== CircleTransferStatus.INSUFFICIENT_FUNDS
     ) {
-      await this.circleRepo.updateCurrentBalance(sourceWalletID, balance - amount);
+      try {
+        await this.circleRepo.updateCurrentBalance(sourceWalletID, balance - amount);
 
-      const destinationCurrentBalance = await this.circleClient.getWalletBalance(destinationWalletID);
-      await this.circleRepo.updateCurrentBalance(destinationWalletID, destinationCurrentBalance);
+        const destinationCurrentBalance = await this.circleClient.getWalletBalance(destinationWalletID);
+        await this.circleRepo.updateCurrentBalance(destinationWalletID, destinationCurrentBalance);
+      } catch (e) {
+        this.alertService.raiseAlert({
+          key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
+          message: `Could not update balance for wallet ${sourceWalletID} or ${destinationWalletID}. Reason: ${JSON.stringify(
+            e,
+          )}`,
+        });
+      }
     }
 
     return {
