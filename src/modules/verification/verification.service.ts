@@ -47,14 +47,14 @@ export class VerificationService {
     return this.idvProvider.getHealth();
   }
 
-  async verifyConsumerInformationForLogin(consumerID: string, sessionKey: string): Promise<KYCStatus> {
+  async verifyConsumerInformationForLogin(consumerID: string, sessionKey: string): Promise<void> {
     const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
     if (
       !consumer.props.verificationData?.kycCheckStatus ||
       consumer.props.verificationData.kycCheckStatus === KYCStatus.NOT_SUBMITTED
     ) {
       // Don't call login checkpoint if user hasn't gone through KYC flow yet
-      return KYCStatus.NOT_SUBMITTED;
+      return;
     }
 
     try {
@@ -67,12 +67,14 @@ export class VerificationService {
       } else {
         // No-op
       }
-      return status;
+      return;
     } catch (e) {
-      this.logger.error(`Error verifying consumer information for login: ${e.message}`);
+      this.logger.error(
+        `Error verifying consumer information for login: ${e.message}. Consumer ID: ${consumerID}, sessionKey: ${sessionKey}.`,
+      );
     }
-
-    return KYCStatus.NOT_SUBMITTED; // should this be a different status?
+    // We don't do anything with the return value (status) here, but the consumer data has been updated and when the caller (app)
+    // gets the consumer data it will see that the user is blocked.
   }
 
   async verifyConsumerInformation(consumerID: string, sessionKey: string): Promise<KYCStatus> {

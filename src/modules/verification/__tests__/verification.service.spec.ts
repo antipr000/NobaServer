@@ -414,12 +414,11 @@ describe("VerificationService", () => {
         idvProvider.postConsumerFeedback(sessionKey, consumer.props.id, consumerVerificationResult.status),
       ).thenResolve();
 
-      const result = await verificationService.verifyConsumerInformationForLogin(consumer.props.id, sessionKey);
-      expect(result).toStrictEqual(consumerVerificationResult.status);
+      await verificationService.verifyConsumerInformationForLogin(consumer.props.id, sessionKey);
       verify(notificationService.sendNotification(anything(), anything())).never();
     });
 
-    it("should return REJECTED status when Sardine marks consumerInformation as high risk upon login", async () => {
+    it("should set REJECTED status when Sardine marks consumerInformation as high risk upon login", async () => {
       const consumer = getFakeConsumer();
       consumer.props.verificationData.kycCheckStatus = KYCStatus.APPROVED;
       const consumerInformation = getFakeConsumerInformation(consumer);
@@ -457,12 +456,11 @@ describe("VerificationService", () => {
         idvProvider.postConsumerFeedback(sessionKey, consumer.props.id, consumerVerificationResult.status),
       ).thenResolve();
 
-      const result = await verificationService.verifyConsumerInformationForLogin(consumer.props.id, sessionKey);
-      expect(result).toStrictEqual(consumerVerificationResult.status);
+      await verificationService.verifyConsumerInformationForLogin(consumer.props.id, sessionKey);
       verify(notificationService.sendNotification(anything(), anything())).never();
     });
 
-    it("should return PENDING status when Sardine marks consumerInformation as medium risk upon login", async () => {
+    it("should set PENDING status when Sardine marks consumerInformation as medium risk upon login", async () => {
       const consumer = getFakeConsumer();
       consumer.props.verificationData.kycCheckStatus = KYCStatus.APPROVED;
       const consumerInformation = getFakeConsumerInformation(consumer);
@@ -496,8 +494,45 @@ describe("VerificationService", () => {
       ).thenResolve(consumerVerificationResult);
 
       when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
-      const result = await verificationService.verifyConsumerInformationForLogin(consumer.props.id, sessionKey);
-      expect(result).toStrictEqual(consumerVerificationResult.status);
+      await verificationService.verifyConsumerInformationForLogin(consumer.props.id, sessionKey);
+      verify(notificationService.sendNotification(anything(), anything())).never();
+    });
+
+    it("should not catch exception when Sardine throws error", async () => {
+      const consumer = getFakeConsumer();
+      consumer.props.verificationData.kycCheckStatus = KYCStatus.APPROVED;
+      const consumerInformation = getFakeConsumerInformation(consumer);
+
+      const sessionKey = "fake-session";
+
+      const consumerVerificationResult: ConsumerVerificationResult = {
+        status: KYCStatus.NOT_SUBMITTED,
+        idvProviderRiskLevel: "fake-risk-rating",
+      };
+
+      const newConsumerData: ConsumerProps = {
+        ...consumer.props,
+        address: consumerInformation.address,
+        firstName: consumerInformation.firstName,
+        lastName: consumerInformation.lastName,
+        dateOfBirth: consumerInformation.dateOfBirth,
+        phone: consumerInformation.phoneNumber,
+        verificationData: {
+          ...consumer.props.verificationData,
+          kycCheckStatus: KYCStatus.APPROVED,
+          kycVerificationTimestamp: new Date(),
+          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+          riskRating: consumerVerificationResult.idvProviderRiskLevel,
+        },
+      };
+
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(
+        idvProvider.verifyConsumerInformation(sessionKey, deepEqual(consumerInformation), deepEqual([KYCFlow.LOGIN])),
+      ).thenThrow(new BadRequestException("fake-error"));
+
+      when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
+      await verificationService.verifyConsumerInformationForLogin(consumer.props.id, sessionKey);
       verify(notificationService.sendNotification(anything(), anything())).never();
     });
   });
