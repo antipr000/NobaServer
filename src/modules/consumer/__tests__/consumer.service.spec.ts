@@ -1516,6 +1516,17 @@ describe("ConsumerService", () => {
       expect(consumers).toEqual(expectedConsumers);
     });
 
+    it("should return empty if search term is 'na'", async () => {
+      const expectedConsumers = [];
+
+      when(mockConsumerRepo.findConsumersByPublicInfo("na", 3)).thenResolve(
+        Result.ok<Array<Consumer>>(expectedConsumers),
+      );
+
+      const consumers = await consumerService.findConsumersByPublicInfo("na", 3);
+      expect(consumers).toEqual(expectedConsumers);
+    });
+
     it("should only find active consumers by public info", async () => {
       const consumer = Consumer.createConsumer({
         id: "mockConsumer",
