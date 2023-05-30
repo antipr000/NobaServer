@@ -1,4 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { CircleTransferStatus } from "../../psp/domain/CircleTypes";
 
 export class CircleWalletResponseDTO {
@@ -23,4 +23,9 @@ export class CircleTransactionDTO {
 
   @ApiProperty()
   createdAt: string;
+}
+
+export class GetCircleBalanceRequestDTO {
+  @ApiPropertyOptional()
+  forceRefresh?: boolean;
 }

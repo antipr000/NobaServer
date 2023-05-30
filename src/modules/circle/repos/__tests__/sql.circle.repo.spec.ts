@@ -68,6 +68,7 @@ describe("CircleRepoTests", () => {
       const result = await circleRepo.addConsumerCircleWalletID(consumerID, walletID);
       expect(result.props.consumerID).toEqual(consumerID);
       expect(result.props.walletID).toEqual(walletID);
+      expect(result.props.currentBalance).toBe(0);
       const circleResult = await circleRepo.getCircleWalletID(consumerID);
       expect(circleResult.isSuccess).toBe(true);
       expect(circleResult.getValue()).toEqual(walletID);
@@ -84,6 +85,11 @@ describe("CircleRepoTests", () => {
 
     it("should fail to add a consumer circle wallet id", async () => {
       expect(circleRepo.addConsumerCircleWalletID(null, null)).rejects.toThrow();
+    });
+
+    it("should fail if consumer does not exist", async () => {
+      const walletID = Math.random().toString(36).substring(7);
+      expect(circleRepo.addConsumerCircleWalletID("does-not-exist", walletID)).rejects.toThrow();
     });
   });
 
@@ -149,6 +155,23 @@ describe("CircleRepoTests", () => {
 
     it("should return null if consumerOrWallet id does not exist", async () => {
       await expect(circleRepo.getCircleBalance("fake-wallet")).resolves.toBeNull();
+    });
+
+    it("should return null when balance is not populated", async () => {
+      const consumer = getRandomUser();
+      const createdConsumer = await createConsumer(prismaService, consumer);
+      const consumerID = createdConsumer.props.id;
+      const walletID = Math.random().toString(36).substring(7);
+
+      await prismaService.circle.create({
+        data: {
+          id: v4(),
+          consumerID: consumerID,
+          walletID: walletID,
+        },
+      });
+
+      await expect(circleRepo.getCircleBalance(consumerID)).resolves.toBeNull();
     });
   });
 });

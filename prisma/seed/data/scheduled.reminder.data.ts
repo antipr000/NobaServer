@@ -55,7 +55,7 @@ export const reminderScheduleMap: ReminderScheduleMap = {
       'SELECT * FROM "Consumer" c JOIN "Circle" cir ON c.id = cir.consumerID' +
       `LEFT JOIN "ReminderHistory" rh ON c.id = rh.consumerID AND rh.eventID = ${eventID}` +
       "WHERE c.createdTimestamp <= NOW() - INTERVAL '24 hours'" +
-      "AND cir.balance = 0" +
+      "cir.balance IS NOT NULL AND cir.balance = 0" +
       "AND rh.id IS NULL;",
   },
 };

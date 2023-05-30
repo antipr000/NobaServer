@@ -1,5 +1,5 @@
 -- AlterTable
-ALTER TABLE "Circle" ADD COLUMN     "currentBalance" DOUBLE PRECISION NOT NULL DEFAULT 0;
+ALTER TABLE "Circle" ADD COLUMN     "currentBalance" DOUBLE PRECISION;
 
 -- CreateIndex
 CREATE INDEX "Circle_currentBalance_idx" ON "Circle"("currentBalance");

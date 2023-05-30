@@ -9,7 +9,7 @@ const circleDataValidationJoiKeys: KeysRequired<CircleProps> = {
   id: Joi.string().min(10).required(),
   walletID: Joi.string().required(),
   consumerID: Joi.string().required(),
-  currentBalance: Joi.number().required(),
+  currentBalance: Joi.number().optional(),
 };
 
 export const circleJoiSchema = Joi.object(circleDataValidationJoiKeys).options({
@@ -24,7 +24,6 @@ export class Circle extends AggregateRoot<CircleProps> {
 
   public static createCircle(circleProps: Partial<CircleProps>): Circle {
     if (!circleProps.id) circleProps.id = Entity.getNewID();
-    if (!circleProps.currentBalance) circleProps.currentBalance = 0;
 
     return new Circle(Joi.attempt(circleProps, circleJoiSchema));
   }

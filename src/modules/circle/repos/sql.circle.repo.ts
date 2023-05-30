@@ -17,7 +17,16 @@ export class SQLCircleRepo implements ICircleRepo {
 
   async addConsumerCircleWalletID(consumerID: string, circleWalletID: string): Promise<Circle> {
     const circle: Circle = Circle.createCircle({ consumerID: consumerID, walletID: circleWalletID });
-    const circlePrisma: Prisma.CircleUncheckedCreateInput = { ...circle.props };
+    const circlePrisma: Prisma.CircleCreateInput = {
+      id: circle.props.id,
+      walletID: circle.props.walletID,
+      consumer: {
+        connect: {
+          id: circle.props.consumerID,
+        },
+      },
+      currentBalance: 0,
+    };
     const circleProps = await this.prisma.circle.create({ data: circlePrisma });
     return Circle.createCircle(circleProps);
   }

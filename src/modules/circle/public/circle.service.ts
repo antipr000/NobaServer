@@ -261,10 +261,19 @@ export class CircleService implements IBank {
     };
   }
 
-  public async getBalance(walletID: string, cached = false): Promise<BalanceDTO> {
-    if (cached) {
-      const balance = await this.circleRepo.getCircleBalance(walletID);
+  public async getBalance(walletID: string, forceRefresh = false): Promise<BalanceDTO> {
+    if (!walletID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Wallet ID must not be empty",
+      });
+    }
+
+    let balance: number;
+    if (!forceRefresh) {
+      balance = await this.circleRepo.getCircleBalance(walletID);
       if (balance !== null) {
+        // It is cached, return it
         return {
           balance: balance,
           currency: "USD",
@@ -272,8 +281,21 @@ export class CircleService implements IBank {
       }
     }
 
+    // It is not cached or force refresh is requested, fetch it from Circle
+    balance = await this.circleClient.getWalletBalance(walletID);
+
+    // Cache it
+    try {
+      await this.circleRepo.updateCurrentBalance(walletID, balance);
+    } catch (e) {
+      this.alertService.raiseAlert({
+        key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
+        message: `Could not update balance for wallet ${walletID}. Reason: ${JSON.stringify(e)}`,
+      });
+    }
+
     return {
-      balance: await this.getWalletBalance(walletID),
+      balance: balance,
       currency: "USD",
     };
   }

@@ -237,7 +237,7 @@ model Circle {
   walletID         String    @unique()
   consumer         Consumer  @relation(fields: [consumerID], references: [id], onDelete: Cascade)
   consumerID       String    @unique()
-  currentBalance   Float     @default(0)
+  currentBalance   Float?
 
   @@index([currentBalance])
 }

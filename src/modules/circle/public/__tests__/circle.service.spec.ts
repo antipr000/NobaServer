@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
-import { anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
+import { anyNumber, anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { CircleClient } from "../circle.client";
 import { CircleService } from "../circle.service";
 import { getMockCircleClientWithDefaults } from "../mocks/mock.circle.client";
@@ -647,29 +647,35 @@ describe("CircleService", () => {
   });
 
   describe("getBalance", () => {
-    it("should get balance", async () => {
-      when(mockCircleClient.getWalletBalance("walletID")).thenResolve(200);
+    it("should get balance from repo", async () => {
+      when(mockCircleRepo.getCircleBalance("walletID")).thenResolve(200);
       const balance = await circleService.getBalance("walletID");
       expect(balance).toEqual({ balance: 200, currency: "USD" });
+      verify(mockCircleClient.getWalletBalance("walletID")).never();
     });
 
-    it("should get cached balance", async () => {
-      when(mockCircleRepo.getCircleBalance("cached-walletID")).thenResolve(200);
+    it("should call circle client when forceRefresh", async () => {
+      when(mockCircleClient.getWalletBalance(anyString())).thenResolve(200);
+      when(mockCircleRepo.updateCurrentBalance(anyString(), anyNumber())).thenResolve();
       const balance = await circleService.getBalance("cached-walletID", true);
       expect(balance).toEqual({ balance: 200, currency: "USD" });
-      verify(mockCircleClient.getWalletBalance("cached-walletID")).never();
-    });
-
-    it("should call circle client to get balance if cached is true and it doesn't exist in repo", async () => {
-      when(mockCircleRepo.getCircleBalance("cached-walletID")).thenResolve(null);
-      when(mockCircleClient.getWalletBalance("cached-walletID")).thenResolve(200);
-      const balance = await circleService.getBalance("cached-walletID", true);
-      expect(balance).toEqual({ balance: 200, currency: "USD" });
-      verify(mockCircleRepo.getCircleBalance("cached-walletID")).once();
       verify(mockCircleClient.getWalletBalance("cached-walletID")).once();
+      verify(mockCircleRepo.updateCurrentBalance("cached-walletID", 200)).once();
+    });
+
+    it("should call circle client to get balance if balance doesn't exist in repo", async () => {
+      when(mockCircleRepo.getCircleBalance("not-cached-id")).thenResolve(null);
+      when(mockCircleClient.getWalletBalance(anyString())).thenResolve(300);
+      when(mockCircleRepo.updateCurrentBalance(anyString(), anyNumber())).thenResolve();
+      const balance = await circleService.getBalance("not-cached-id");
+      expect(balance).toEqual({ balance: 300, currency: "USD" });
+      verify(mockCircleRepo.getCircleBalance("not-cached-id")).once();
+      verify(mockCircleClient.getWalletBalance("not-cached-id")).once();
+      verify(mockCircleRepo.updateCurrentBalance("not-cached-id", 300)).once();
     });
 
     it("should throw an error when walletID is empty", async () => {
+      when(mockCircleRepo.getCircleBalance("")).thenResolve(null);
       expect(circleService.getBalance("")).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
     });
 
@@ -677,7 +683,7 @@ describe("CircleService", () => {
       when(mockCircleClient.getWalletBalance("walletID")).thenThrow(
         new ServiceException({ errorCode: ServiceErrorCode.UNKNOWN }),
       );
-      expect(circleService.getBalance("walletID")).rejects.toThrowServiceException(ServiceErrorCode.UNKNOWN);
+      expect(circleService.getBalance("walletID", true)).rejects.toThrowServiceException(ServiceErrorCode.UNKNOWN);
     });
   });
 
