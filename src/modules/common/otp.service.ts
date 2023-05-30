@@ -10,7 +10,7 @@ export class OTPService {
   private readonly otpRepo: IOTPRepo;
 
   async checkIfOTPIsValidAndCleanup(otpIdentifier: string, identityType: IdentityType, otp: number): Promise<boolean> {
-    const otpRecord = await this.otpRepo.getOTP(Utils.stripSpaces(otpIdentifier), identityType);
+    const otpRecord = await this.otpRepo.getOTP(Utils.stripNonPhoneChars(otpIdentifier), identityType);
     if (!otpRecord || otpRecord.props.otp !== otp || isAfter(new Date(), otpRecord.props.otpExpirationTimestamp)) {
       return false;
     }
@@ -21,7 +21,7 @@ export class OTPService {
 
   async saveOTP(otpIdentifier: string, identityType: IdentityType, otp: number): Promise<void> {
     // Clean existing otps for identifier if any
-    await this.otpRepo.deleteAllOTPsForIdentifier(otpIdentifier, identityType);
-    await this.otpRepo.saveOTP(Utils.stripSpaces(otpIdentifier), otp, identityType);
+    await this.otpRepo.deleteAllOTPsForIdentifier(Utils.stripNonPhoneChars(otpIdentifier), identityType);
+    await this.otpRepo.saveOTP(Utils.stripNonPhoneChars(otpIdentifier), otp, identityType);
   }
 }
