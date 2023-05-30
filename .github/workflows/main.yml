@@ -9,7 +9,7 @@ on:
   # Only deploy the changes on push to main branch
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+[0-9]?"
       - "*-partner"
       - "*-staging"
       - "sandbox"
