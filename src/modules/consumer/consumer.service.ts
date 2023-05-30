@@ -357,7 +357,7 @@ export class ConsumerService {
   }
 
   async findConsumersByPublicInfo(searchString: string, limit: number): Promise<Consumer[]> {
-    if (searchString === "na") {
+    if (searchString === "$na") {
       // URL is malformed, so return empty list
       return [];
     }
