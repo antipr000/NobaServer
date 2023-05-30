@@ -358,8 +358,12 @@ export class ConsumerService {
 
   async findConsumersByPublicInfo(searchString: string, limit: number): Promise<Consumer[]> {
     if (searchString === "$na") {
-      // URL is malformed, so return empty list
-      return [];
+      // URL is malformed, so return error
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.UNKNOWN,
+        error: "Malformed search term",
+        message: "Malformed search term",
+      });
     }
 
     const consumerResultList = await this.consumerRepo.findConsumersByPublicInfo(searchString, limit);
