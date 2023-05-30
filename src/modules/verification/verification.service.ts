@@ -57,16 +57,22 @@ export class VerificationService {
       return KYCStatus.NOT_SUBMITTED;
     }
 
-    const verifiedConsumerData = await this.verifyConsumerInformationInternal(consumer, sessionKey, [KYCFlow.LOGIN]);
+    try {
+      const verifiedConsumerData = await this.verifyConsumerInformationInternal(consumer, sessionKey, [KYCFlow.LOGIN]);
 
-    const status = verifiedConsumerData.verificationData.kycCheckStatus;
-    if (status === KYCStatus.REJECTED) {
-      await this.consumerService.updateConsumer(verifiedConsumerData);
-      //await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
-    } else {
-      // No-op
+      const status = verifiedConsumerData.verificationData.kycCheckStatus;
+      if (status === KYCStatus.REJECTED) {
+        await this.consumerService.updateConsumer(verifiedConsumerData);
+        //await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
+      } else {
+        // No-op
+      }
+      return status;
+    } catch (e) {
+      this.logger.error(`Error verifying consumer information for login: ${e.message}`);
     }
-    return status;
+
+    return KYCStatus.NOT_SUBMITTED; // should this be a different status?
   }
 
   async verifyConsumerInformation(consumerID: string, sessionKey: string): Promise<KYCStatus> {
