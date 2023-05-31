@@ -190,8 +190,9 @@ export class ConsumerService {
     const consumer = await this.getConsumer(updateConsumerProps.id);
     // If we don't have a handle, but we do have a first name, then we can generate a handle.
     // Else if the handle is being set NOW, we need to validate it.
-    updateConsumerProps.firstName = updateConsumerProps.firstName?.trim();
-    updateConsumerProps.lastName = updateConsumerProps.lastName?.trim();
+
+    updateConsumerProps = this.trimConsumerProps(updateConsumerProps);
+
     if (!consumer.props.handle && consumer.props.firstName && consumer.props.lastName) {
       updateConsumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
       let counter = 0;
@@ -224,7 +225,12 @@ export class ConsumerService {
     }
 
     // This is just for JOI validation
-    Consumer.createConsumer(consumerPropsWithUpdatedData);
+    Consumer.createConsumer({
+      ...consumer.props,
+      ...updateConsumerProps,
+    });
+
+    console.log(updateConsumerProps);
 
     try {
       return await this.consumerRepo.updateConsumer(consumer.props.id, updateConsumerProps);
@@ -960,6 +966,7 @@ export class ConsumerService {
     const { dial_code } = findFlag(countryCode);
     return dial_code + digits;
   }
+
   private removeAllUnsupportedHandleCharacters(text: string): string {
     if (text === undefined || text === null) return "user-";
 
@@ -974,5 +981,56 @@ export class ConsumerService {
     while (result.length < 3) result += "-";
 
     return result.substring(0, 16);
+  }
+
+  private trimConsumerProps(consumerProps: Partial<ConsumerProps>): Partial<ConsumerProps> {
+    const trimmedConsumerProps = { ...consumerProps };
+    console.log(trimmedConsumerProps);
+
+    if (trimmedConsumerProps.firstName) {
+      trimmedConsumerProps.firstName = trimmedConsumerProps.firstName.trim();
+    }
+
+    if (trimmedConsumerProps.lastName) {
+      trimmedConsumerProps.lastName = trimmedConsumerProps.lastName.trim();
+    }
+
+    if (trimmedConsumerProps.dateOfBirth) {
+      trimmedConsumerProps.dateOfBirth = trimmedConsumerProps.dateOfBirth.trim();
+    }
+
+    if (trimmedConsumerProps.socialSecurityNumber) {
+      trimmedConsumerProps.socialSecurityNumber = trimmedConsumerProps.socialSecurityNumber.trim();
+    }
+
+    if (trimmedConsumerProps.address) {
+      if (trimmedConsumerProps.address.streetLine1) {
+        trimmedConsumerProps.address.streetLine1 = trimmedConsumerProps.address.streetLine1.trim();
+      }
+
+      if (trimmedConsumerProps.address.streetLine2) {
+        trimmedConsumerProps.address.streetLine2 = trimmedConsumerProps.address.streetLine2.trim();
+      }
+
+      if (trimmedConsumerProps.address.city) {
+        trimmedConsumerProps.address.city = trimmedConsumerProps.address.city.trim();
+      }
+
+      if (trimmedConsumerProps.address.regionCode) {
+        trimmedConsumerProps.address.regionCode = trimmedConsumerProps.address.regionCode.trim();
+      }
+
+      if (trimmedConsumerProps.address.postalCode) {
+        trimmedConsumerProps.address.postalCode = trimmedConsumerProps.address.postalCode.trim();
+      }
+
+      if (trimmedConsumerProps.address.countryCode) {
+        trimmedConsumerProps.address.countryCode = trimmedConsumerProps.address.countryCode.trim();
+      }
+    }
+
+    console.log(trimmedConsumerProps);
+
+    return trimmedConsumerProps;
   }
 }
