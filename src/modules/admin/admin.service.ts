@@ -25,6 +25,7 @@ import { CircleService } from "../circle/public/circle.service";
 import { InitiateTransactionRequest } from "../transaction/dto/transaction.service.dto";
 import { InitiateTransactionDTO } from "../transaction/dto/CreateTransactionDTO";
 import { ConsumerWorkflowName } from "../../infra/temporal/workflow";
+import { Utils } from "../../core/utils/Utils";
 
 @Injectable()
 export class AdminService {
@@ -322,15 +323,6 @@ export class AdminService {
   }
 
   private cleanValue(value: any): any {
-    if (value === undefined || value === null) {
-      return value;
-    }
-
-    if (typeof value === "string") {
-      // Convert empty strings to null
-      return value.trim() === "" ? null : value.trim();
-    } else {
-      return value;
-    }
+    return Utils.cleanValue(value);
   }
 }
