@@ -222,10 +222,7 @@ export class ConsumerService {
     }
 
     // This is just for JOI validation
-    Consumer.createConsumer({
-      ...consumer.props,
-      ...updateConsumerProps,
-    });
+    const validConsumer = Consumer.createConsumer(consumerPropsWithUpdatedData);
 
     try {
       return await this.consumerRepo.updateConsumer(consumer.props.id, updateConsumerProps);

@@ -101,9 +101,6 @@ export class Consumer extends AggregateRoot<ConsumerProps> {
       // we could get stuck with a default locale of en_us that would not be correct.
     }
 
-    consumerProps.firstName = consumerProps.firstName?.trim();
-    consumerProps.lastName = consumerProps.lastName?.trim();
-
     return new Consumer(Joi.attempt(consumerProps, consumerJoiSchema));
   }
 
