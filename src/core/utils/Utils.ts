@@ -88,6 +88,14 @@ export class Utils {
     );
   }
 
+  static stripSpaces(value: string): string {
+    if (value === undefined || value === null) {
+      return value;
+    }
+
+    return value.replace(/\s/g, "");
+  }
+
   static stripNonPhoneChars(value: string): string {
     if (value === undefined || value === null) {
       return value;

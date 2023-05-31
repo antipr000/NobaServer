@@ -8,5 +8,6 @@ export function getMockOTPRepoWithDefaults(): IOTPRepo {
   when(mockOTPRepo.saveOTP(anyString(), anyNumber(), anything())).thenReject(new Error("Method not implemented"));
   when(mockOTPRepo.deleteOTP(anyString())).thenReject(new Error("Method not implemented"));
   when(mockOTPRepo.deleteAllOTPsForIdentifier(anyString(), anything())).thenReject(new Error("Method not implemented"));
+  when(mockOTPRepo.deleteAllExpiredOTPs()).thenReject(new Error("Method not implemented"));
   return mockOTPRepo;
 }
