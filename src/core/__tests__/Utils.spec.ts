@@ -251,6 +251,20 @@ describe("Utils", () => {
     });
   });
 
+  describe("stripSpaces()", () => {
+    it("It should strip spaces from string", () => {
+      expect(Utils.stripSpaces(" a b c ")).toEqual("abc");
+    });
+
+    it("It should return input value for undefined input", () => {
+      expect(Utils.stripSpaces(undefined)).toEqual(undefined);
+    });
+
+    it("It should return input value for null input", () => {
+      expect(Utils.stripSpaces(null)).toEqual(null);
+    });
+  });
+
   describe("getAlphaNanoID", () => {
     it("should return a 10-character nanoID", () => {
       const id = Utils.getAlphaNanoID(10);
