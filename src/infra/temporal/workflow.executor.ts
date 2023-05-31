@@ -79,7 +79,7 @@ export class WorkflowExecutor {
           await Utils.sleep(WorkflowExecutor.RETRY_INTERVAL);
           attemptCount++;
         } else {
-          this.alertService.raiseAlert({
+          this.alertService.raiseCriticalAlert({
             key: AlertKey.TEMPORAL_DOWN,
             message: `Failed to connect to Temporal for workflow ${workflowName} with error: ${error}`,
           });
@@ -110,7 +110,7 @@ export class WorkflowExecutor {
         if (healthResponse.status == 1) return { status: HealthCheckStatus.OK };
       }
     } catch (error) {
-      this.logger.error("Temporal health check failed with response: " + JSON.stringify(healthResponse));
+      this.alertService.raiseError("Temporal health check failed with response: " + JSON.stringify(healthResponse));
     }
 
     return { status: HealthCheckStatus.UNAVAILABLE };

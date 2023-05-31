@@ -38,7 +38,7 @@ export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
         messageToBeLogged = originalException;
       }
 
-      this.logger.error(messageToBeLogged, {
+      this.logger.warn(messageToBeLogged, {
         timestamp,
       });
     }
