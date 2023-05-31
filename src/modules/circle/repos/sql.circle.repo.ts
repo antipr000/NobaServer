@@ -54,7 +54,7 @@ export class SQLCircleRepo implements ICircleRepo {
 
       return Circle.createCircle(circleProps);
     } catch (e) {
-      this.logger.error(`Failed to update circle balance. Reason: ${JSON.stringify(e)}`);
+      this.logger.error(`Failed to update circle balance for wallet id ${walletID}. Reason: ${JSON.stringify(e)}`);
       throw new RepoException({
         message: "Failed to update circle balance",
         errorCode: RepoErrorCode.NOT_FOUND,
