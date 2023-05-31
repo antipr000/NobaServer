@@ -1,14 +1,15 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import axios, { AxiosResponse } from "axios";
 import { createHmac } from "crypto";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { EllipticConfigs } from "../../config/configtypes/EllipticConfig";
-import { ELLIPTIC_CONFIG_KEY, isProductionEnvironment } from "../../config/ConfigurationUtils";
+import { ELLIPTIC_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { Transaction } from "../transaction/domain/Transaction";
 import { CurrencyService } from "./currency.service";
 import { WalletExposureResponse } from "./domain/WalletExposureResponse";
+import { AlertService } from "./alerts/alert.service";
 
 @Injectable()
 export class EllipticService {
@@ -17,6 +18,9 @@ export class EllipticService {
   private apiKey: string;
   private secretKey: string;
   private baseUrl: string;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   constructor(private readonly configService: CustomConfigService, private readonly currencyService: CurrencyService) {
     this.apiKey = this.configService.get<EllipticConfigs>(ELLIPTIC_CONFIG_KEY).apiKey;
@@ -46,7 +50,7 @@ export class EllipticService {
       const response = await axios.post(url, requestBody, headers);
       return response;
     } catch (e) {
-      this.logger.error(
+      this.alertService.raiseError(
         `Error with Elliptic POST ${requestPath} API call with payload ${JSON.stringify(requestBody)}. ${JSON.stringify(
           e,
         )}`,

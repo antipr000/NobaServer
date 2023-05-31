@@ -7,6 +7,7 @@ import { BINReportDetails, BINValidity } from "../dto/CreditCardDTO";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { CreditCardBinDataRepoMapper } from "../mappers/CreditCardBinDataRepoMapper";
 import { Prisma } from "@prisma/client";
+import { AlertService } from "../alerts/alert.service";
 
 @Injectable()
 export class SQLCreditCardBinDataRepo implements CreditCardBinDataRepo {
@@ -18,6 +19,9 @@ export class SQLCreditCardBinDataRepo implements CreditCardBinDataRepo {
 
   private readonly repoMapper: CreditCardBinDataRepoMapper;
 
+  @Inject()
+  private readonly alertService: AlertService;
+
   constructor() {
     this.repoMapper = new CreditCardBinDataRepoMapper();
   }
@@ -28,7 +32,7 @@ export class SQLCreditCardBinDataRepo implements CreditCardBinDataRepo {
       const creditCardBinDataProps = await this.prismaService.creditCardBIN.create({ data: binDataInput });
       return CreditCardBinData.createCreditCardBinDataObject(creditCardBinDataProps);
     } catch (e) {
-      this.logger.error(`Failed to create CreditCardBinData. ${JSON.stringify(e)}`);
+      this.alertService.raiseError(`Failed to create CreditCardBinData. ${JSON.stringify(e)}`);
       return null;
     }
   }
@@ -41,7 +45,7 @@ export class SQLCreditCardBinDataRepo implements CreditCardBinDataRepo {
       });
       return CreditCardBinData.createCreditCardBinDataObject(result);
     } catch (e) {
-      this.logger.error(`Failed to update CreditCardBinData. ${JSON.stringify(e)}`);
+      this.alertService.raiseError(`Failed to update CreditCardBinData. ${JSON.stringify(e)}`);
       return null;
     }
   }
@@ -60,7 +64,7 @@ export class SQLCreditCardBinDataRepo implements CreditCardBinDataRepo {
       if (!creditCardBinDataProps) return null;
       return CreditCardBinData.createCreditCardBinDataObject(creditCardBinDataProps);
     } catch (e) {
-      this.logger.error(`Failed to find CreditCardBinData with id ${id}. ${JSON.stringify(e)}`);
+      this.alertService.raiseError(`Failed to find CreditCardBinData with id ${id}. ${JSON.stringify(e)}`);
       return null;
     }
   }
