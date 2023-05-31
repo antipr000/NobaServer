@@ -83,8 +83,8 @@ export class Utils {
     const date = new Date(Date.now()); // Use this instead of new Date() so we can mock Date.now() in tests
     return Number(
       date.getFullYear().toString().substring(2, 4) +
-        (date.getMonth() + 1).toString().padStart(2, "0") +
-        date.getDate().toString().padStart(2, "0"),
+      (date.getMonth() + 1).toString().padStart(2, "0") +
+      date.getDate().toString().padStart(2, "0"),
     );
   }
 
@@ -124,12 +124,12 @@ export class Utils {
       return value;
     }
 
-    // Some callers cannot pass actual nulls so this is a bit of a hacky workaround
-    if (value == "null") {
-      return null;
-    }
-
     if (typeof value === "string") {
+      // Some callers cannot pass actual nulls so this is a bit of a hacky workaround
+      if (value === "null") {
+        return null;
+      }
+
       // Convert empty strings to null
       return value.trim() === "" ? null : value.trim();
     } else {
