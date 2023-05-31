@@ -479,4 +479,36 @@ describe("Utils", () => {
       expect(Utils.convertToColumbianDate(epochTimestampInSeconds)).toBe("2023-09-30");
     });
   });
+
+  describe("cleanValue", () => {
+    it("should return undefined if value is undefined", () => {
+      expect(Utils.cleanValue(undefined)).toBe(undefined);
+    });
+
+    it("should return null if value is null", () => {
+      expect(Utils.cleanValue(null)).toBe(null);
+    });
+
+    it('should return null if value is "null"', () => {
+      expect(Utils.cleanValue("null")).toBe(null);
+    });
+
+    it("should return null if value is an empty string", () => {
+      expect(Utils.cleanValue("")).toBe(null);
+    });
+
+    it("should return null if value is a whitespace string", () => {
+      expect(Utils.cleanValue("   ")).toBe(null);
+    });
+
+    it("should return the trimmed string if value is a non-empty string", () => {
+      expect(Utils.cleanValue("  hello  ")).toBe("hello");
+    });
+
+    it("should return the value unchanged if it is not a string", () => {
+      expect(Utils.cleanValue(123)).toBe(123);
+      expect(Utils.cleanValue(true)).toBe(true);
+      expect(Utils.cleanValue({ key: "value" })).toEqual({ key: "value" });
+    });
+  });
 });

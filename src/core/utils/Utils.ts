@@ -119,6 +119,24 @@ export class Utils {
     }
   }
 
+  static cleanValue(value: any): any {
+    if (value === undefined || value === null) {
+      return value;
+    }
+
+    // Some callers cannot pass actual nulls so this is a bit of a hacky workaround
+    if (value == "null") {
+      return null;
+    }
+
+    if (typeof value === "string") {
+      // Convert empty strings to null
+      return value.trim() === "" ? null : value.trim();
+    } else {
+      return value;
+    }
+  }
+
   static enumFromValue = <T extends Record<string, string>>(val: string, _enum: T) => {
     if (val === undefined) return undefined;
     const enumName = (Object.keys(_enum) as Array<keyof T>).find(k => _enum[k] === val);
