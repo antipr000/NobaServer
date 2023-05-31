@@ -188,6 +188,7 @@ export class ConsumerService {
 
   async updateConsumer(updateConsumerProps: Partial<ConsumerProps>, isAdmin = false): Promise<Consumer> {
     const consumer = await this.getConsumer(updateConsumerProps.id);
+    // Only perform trimming here
     // If we don't have a handle, but we do have a first name, then we can generate a handle.
     // Else if the handle is being set NOW, we need to validate it.
     if (!consumer.props.handle && consumer.props.firstName && consumer.props.lastName) {
@@ -222,7 +223,7 @@ export class ConsumerService {
     }
 
     // This is just for JOI validation
-    const validConsumer = Consumer.createConsumer(consumerPropsWithUpdatedData);
+    Consumer.createConsumer(consumerPropsWithUpdatedData);
 
     try {
       return await this.consumerRepo.updateConsumer(consumer.props.id, updateConsumerProps);
