@@ -230,8 +230,6 @@ export class ConsumerService {
       ...updateConsumerProps,
     });
 
-    console.log(updateConsumerProps);
-
     try {
       return await this.consumerRepo.updateConsumer(consumer.props.id, updateConsumerProps);
     } catch (e) {
@@ -985,7 +983,6 @@ export class ConsumerService {
 
   private trimConsumerProps(consumerProps: Partial<ConsumerProps>): Partial<ConsumerProps> {
     const trimmedConsumerProps = { ...consumerProps };
-    console.log(trimmedConsumerProps);
 
     if (trimmedConsumerProps.firstName) {
       trimmedConsumerProps.firstName = trimmedConsumerProps.firstName.trim();
@@ -1028,8 +1025,6 @@ export class ConsumerService {
         trimmedConsumerProps.address.countryCode = trimmedConsumerProps.address.countryCode.trim();
       }
     }
-
-    console.log(trimmedConsumerProps);
 
     return trimmedConsumerProps;
   }
