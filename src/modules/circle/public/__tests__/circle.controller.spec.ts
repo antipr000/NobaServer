@@ -53,8 +53,8 @@ describe("CircleController", () => {
       });
 
       when(circleService.getOrCreateWallet(consumer.props.id)).thenResolve("walletID");
-      when(circleService.getWalletBalance("walletID")).thenResolve(100);
-      const result = await circleController.getConsumerWalletBalance(consumer);
+      when(circleService.getBalance("walletID", false)).thenResolve({ balance: 100, currency: "USD" });
+      const result = await circleController.getConsumerWalletBalance(consumer, {});
       expect(result.balance).toEqual(100);
     });
   });

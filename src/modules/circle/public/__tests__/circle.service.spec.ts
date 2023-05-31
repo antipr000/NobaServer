@@ -1,7 +1,7 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
-import { anyString, anything, capture, deepEqual, instance, when } from "ts-mockito";
+import { anyNumber, anyString, anything, capture, deepEqual, instance, verify, when } from "ts-mockito";
 import { CircleClient } from "../circle.client";
 import { CircleService } from "../circle.service";
 import { getMockCircleClientWithDefaults } from "../mocks/mock.circle.client";
@@ -10,11 +10,12 @@ import { ServiceErrorCode, ServiceException } from "../../../../core/exception/s
 import { Result } from "../../../../core/logic/Result";
 import { getMockCircleRepoWithDefaults } from "../../repos/mocks/mock.circle.repo";
 import { ICircleRepo } from "../../repos/circle.repo";
-import { Circle } from "../../../../modules/psp/domain/Circle";
+import { Circle } from "../../domain/Circle";
 import { CircleTransferStatus, TransferResponse } from "../../../../modules/psp/domain/CircleTypes";
 import { AlertService } from "../../../../modules/common/alerts/alert.service";
 import { getMockAlertServiceWithDefaults } from "../../../../modules/common/mocks/mock.alert.service";
 import { AlertKey } from "../../../../modules/common/alerts/alert.dto";
+import { RepoErrorCode, RepoException } from "../../../../core/exception/repo.exception";
 
 describe("CircleService", () => {
   let circleService: CircleService;
@@ -163,8 +164,11 @@ describe("CircleService", () => {
         status: CircleTransferStatus.SUCCESS,
         createdAt: "dateNow",
       });
+      when(mockCircleRepo.updateCurrentBalance("walletID", anything())).thenResolve();
       const walletBalanceResponse = await circleService.debitWalletBalance("workflowID", "walletID", 100);
       expect(walletBalanceResponse).toEqual(circleResponse);
+
+      verify(mockCircleRepo.updateCurrentBalance("walletID", 100)).once();
     });
 
     it("should throw an error when walletID is empty", async () => {
@@ -198,6 +202,7 @@ describe("CircleService", () => {
         ),
       ).thenThrow(new ServiceException({ errorCode: ServiceErrorCode.UNKNOWN }));
       expect(circleService.debitWalletBalance("workflowID", "walletID", 100)).rejects.toThrowServiceException();
+      verify(mockCircleRepo.updateCurrentBalance(anyString(), anything())).never();
     });
 
     it("should throw an error when master wallet id is empty", async () => {
@@ -206,6 +211,87 @@ describe("CircleService", () => {
         new ServiceException({ errorCode: ServiceErrorCode.DOES_NOT_EXIST }),
       );
       expect(circleService.debitWalletBalance("workflowID", "walletID", 100)).rejects.toThrowServiceException();
+      verify(mockCircleRepo.updateCurrentBalance(anyString(), anything())).never();
+    });
+
+    it("should not update cached balance when transfer fails", async () => {
+      const circleResponse = {
+        id: "transferID",
+        status: CircleTransferStatus.TRANSFER_FAILED,
+        createdAt: "dateNow",
+      };
+
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
+      when(mockCircleClient.getWalletBalance("walletID")).thenResolve(200);
+      when(
+        mockCircleClient.transfer(
+          deepEqual({
+            idempotencyKey: "workflowID",
+            sourceWalletID: "walletID",
+            destinationWalletID: "masterWalletID",
+            amount: 100,
+          }),
+        ),
+      ).thenResolve({
+        transferID: "transferID",
+        amount: 100,
+        sourceWalletID: "walletID",
+        destinationWalletID: "masterWalletID",
+        status: CircleTransferStatus.TRANSFER_FAILED,
+        createdAt: "dateNow",
+      });
+
+      const walletBalanceResponse = await circleService.debitWalletBalance("workflowID", "walletID", 100);
+      expect(walletBalanceResponse).toEqual(circleResponse);
+
+      verify(mockCircleRepo.updateCurrentBalance("walletID", anything())).never();
+    });
+
+    it("should raise alert but not throw when updating cached balance fails", async () => {
+      const circleResponse = {
+        id: "transferID",
+        status: CircleTransferStatus.SUCCESS,
+        createdAt: "dateNow",
+      };
+
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
+      when(mockCircleClient.getWalletBalance("walletID")).thenResolve(200);
+      when(
+        mockCircleClient.transfer(
+          deepEqual({
+            idempotencyKey: "workflowID",
+            sourceWalletID: "walletID",
+            destinationWalletID: "masterWalletID",
+            amount: 100,
+          }),
+        ),
+      ).thenResolve({
+        transferID: "transferID",
+        amount: 100,
+        sourceWalletID: "walletID",
+        destinationWalletID: "masterWalletID",
+        status: CircleTransferStatus.SUCCESS,
+        createdAt: "dateNow",
+      });
+      when(mockCircleRepo.updateCurrentBalance("walletID", anything())).thenReject(
+        new RepoException({
+          errorCode: RepoErrorCode.NOT_FOUND,
+          message: "not found",
+        }),
+      );
+      when(mockAlertService.raiseAlert(anything())).thenResolve();
+      const walletBalanceResponse = await circleService.debitWalletBalance("workflowID", "walletID", 100);
+      expect(walletBalanceResponse).toEqual(circleResponse);
+
+      verify(mockCircleRepo.updateCurrentBalance("walletID", 100)).once();
+      verify(
+        mockAlertService.raiseAlert(
+          deepEqual({
+            key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
+            message: anyString(),
+          }),
+        ),
+      ).once();
     });
   });
 
@@ -236,8 +322,13 @@ describe("CircleService", () => {
         status: CircleTransferStatus.SUCCESS,
         createdAt: "dateNow",
       });
+
+      when(mockCircleRepo.updateCurrentBalance("walletID", anything())).thenResolve();
+      when(mockCircleClient.getWalletBalance("walletID")).thenResolve(300);
       const walletBalanceResponse = await circleService.creditWalletBalance("workflowID", "walletID", 100);
       expect(walletBalanceResponse).toEqual(circleResponse);
+
+      verify(mockCircleRepo.updateCurrentBalance("walletID", 300)).once();
     });
 
     it("should throw an error when walletID is empty", async () => {
@@ -266,6 +357,7 @@ describe("CircleService", () => {
         ),
       ).thenThrow(new ServiceException({ errorCode: ServiceErrorCode.UNKNOWN }));
       expect(circleService.creditWalletBalance("workflowID", "walletID", 100)).rejects.toThrowServiceException();
+      verify(mockCircleRepo.updateCurrentBalance(anyString(), anything())).never();
     });
 
     it("should throw an error when master wallet doesn't have enough funds", async () => {
@@ -289,6 +381,89 @@ describe("CircleService", () => {
         new ServiceException({ errorCode: ServiceErrorCode.DOES_NOT_EXIST }),
       );
       expect(circleService.creditWalletBalance("workflowID", "walletID", 100)).rejects.toThrowServiceException();
+    });
+
+    it("should not update cached balance when transfer fails", async () => {
+      const circleResponse = {
+        id: "transferID",
+        status: CircleTransferStatus.TRANSFER_FAILED,
+        createdAt: "dateNow",
+      };
+
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
+      when(mockCircleClient.getWalletBalance("masterWalletID")).thenResolve(200);
+      when(
+        mockCircleClient.transfer(
+          deepEqual({
+            idempotencyKey: "workflowID",
+            sourceWalletID: "masterWalletID",
+            destinationWalletID: "walletID",
+            amount: 100,
+          }),
+        ),
+      ).thenResolve({
+        transferID: "transferID",
+        amount: 100,
+        sourceWalletID: "walletID",
+        destinationWalletID: "masterWalletID",
+        status: CircleTransferStatus.TRANSFER_FAILED,
+        createdAt: "dateNow",
+      });
+
+      when(mockCircleRepo.updateCurrentBalance("walletID", anything())).thenResolve();
+      const walletBalanceResponse = await circleService.creditWalletBalance("workflowID", "walletID", 100);
+      expect(walletBalanceResponse).toEqual(circleResponse);
+
+      verify(mockCircleRepo.updateCurrentBalance("walletID", anything())).never();
+    });
+
+    it("should raise alert and not fail the flow when updating cached balance fails", async () => {
+      const circleResponse = {
+        id: "transferID",
+        status: CircleTransferStatus.SUCCESS,
+        createdAt: "dateNow",
+      };
+
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
+      when(mockCircleClient.getWalletBalance("masterWalletID")).thenResolve(200);
+      when(
+        mockCircleClient.transfer(
+          deepEqual({
+            idempotencyKey: "workflowID",
+            sourceWalletID: "masterWalletID",
+            destinationWalletID: "walletID",
+            amount: 100,
+          }),
+        ),
+      ).thenResolve({
+        transferID: "transferID",
+        amount: 100,
+        sourceWalletID: "walletID",
+        destinationWalletID: "masterWalletID",
+        status: CircleTransferStatus.SUCCESS,
+        createdAt: "dateNow",
+      });
+
+      when(mockCircleRepo.updateCurrentBalance("walletID", anything())).thenReject(
+        new RepoException({
+          errorCode: RepoErrorCode.NOT_FOUND,
+          message: "Wallet not found",
+        }),
+      );
+      when(mockCircleClient.getWalletBalance("walletID")).thenResolve(300);
+      when(mockAlertService.raiseAlert(anything())).thenResolve();
+      const walletBalanceResponse = await circleService.creditWalletBalance("workflowID", "walletID", 100);
+      expect(walletBalanceResponse).toEqual(circleResponse);
+
+      verify(mockCircleRepo.updateCurrentBalance("walletID", 300)).once();
+      verify(
+        mockAlertService.raiseAlert(
+          deepEqual({
+            key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
+            message: anyString(),
+          }),
+        ),
+      ).once();
     });
   });
 
@@ -339,6 +514,8 @@ describe("CircleService", () => {
       expect(
         circleService.transferFunds("idempotency-key", "sourceWalletID", "destinationWalletID", 100),
       ).rejects.toThrowServiceException();
+
+      verify(mockCircleRepo.updateCurrentBalance(anyString(), anything())).never();
     });
 
     it("should transfer funds", async () => {
@@ -360,6 +537,10 @@ describe("CircleService", () => {
         status: CircleTransferStatus.SUCCESS,
         createdAt: "dateNow",
       });
+
+      when(mockCircleClient.getWalletBalance("destinationWalletID")).thenResolve(200);
+
+      when(mockCircleRepo.updateCurrentBalance(anyString(), anything())).thenResolve();
       const transferResponse = await circleService.transferFunds(
         "idempotency-key",
         "sourceWalletID",
@@ -371,17 +552,130 @@ describe("CircleService", () => {
         status: CircleTransferStatus.SUCCESS,
         createdAt: "dateNow",
       });
+
+      verify(mockCircleRepo.updateCurrentBalance("sourceWalletID", 100)).once();
+      verify(mockCircleRepo.updateCurrentBalance("destinationWalletID", 200)).once();
+    });
+
+    it("should not update cached balance when transfer fails", async () => {
+      when(mockCircleClient.getWalletBalance("sourceWalletID")).thenResolve(200);
+      when(
+        mockCircleClient.transfer(
+          deepEqual({
+            idempotencyKey: "idempotency-key",
+            sourceWalletID: "sourceWalletID",
+            destinationWalletID: "destinationWalletID",
+            amount: 100,
+          }),
+        ),
+      ).thenResolve({
+        transferID: "transferID",
+        amount: 100,
+        sourceWalletID: "sourceWalletID",
+        destinationWalletID: "destinationWalletID",
+        status: CircleTransferStatus.TRANSFER_FAILED,
+        createdAt: "dateNow",
+      });
+
+      when(mockCircleClient.getWalletBalance("destinationWalletID")).thenResolve(200);
+
+      when(mockCircleRepo.updateCurrentBalance(anyString(), 100)).thenResolve();
+      const transferResponse = await circleService.transferFunds(
+        "idempotency-key",
+        "sourceWalletID",
+        "destinationWalletID",
+        100,
+      );
+      expect(transferResponse).toEqual({
+        id: "transferID",
+        status: CircleTransferStatus.TRANSFER_FAILED,
+        createdAt: "dateNow",
+      });
+
+      verify(mockCircleRepo.updateCurrentBalance("sourceWalletID", 100)).never();
+      verify(mockCircleRepo.updateCurrentBalance("destinationWalletID", 200)).never();
+    });
+
+    it("should raise alert and not fail when update balance fails", async () => {
+      when(mockCircleClient.getWalletBalance("sourceWalletID")).thenResolve(200);
+      when(
+        mockCircleClient.transfer(
+          deepEqual({
+            idempotencyKey: "idempotency-key",
+            sourceWalletID: "sourceWalletID",
+            destinationWalletID: "destinationWalletID",
+            amount: 100,
+          }),
+        ),
+      ).thenResolve({
+        transferID: "transferID",
+        amount: 100,
+        sourceWalletID: "sourceWalletID",
+        destinationWalletID: "destinationWalletID",
+        status: CircleTransferStatus.SUCCESS,
+        createdAt: "dateNow",
+      });
+
+      when(mockCircleClient.getWalletBalance("destinationWalletID")).thenResolve(200);
+
+      when(mockCircleRepo.updateCurrentBalance("sourceWalletID", anything())).thenResolve();
+      when(mockCircleRepo.updateCurrentBalance("destinationWalletID", anything())).thenReject(new Error("error"));
+      when(mockAlertService.raiseAlert(anything())).thenResolve();
+      const transferResponse = await circleService.transferFunds(
+        "idempotency-key",
+        "sourceWalletID",
+        "destinationWalletID",
+        100,
+      );
+      expect(transferResponse).toEqual({
+        id: "transferID",
+        status: CircleTransferStatus.SUCCESS,
+        createdAt: "dateNow",
+      });
+
+      verify(mockCircleRepo.updateCurrentBalance("sourceWalletID", 100)).once();
+      verify(mockCircleRepo.updateCurrentBalance("destinationWalletID", 200)).once();
+      verify(
+        mockAlertService.raiseAlert(
+          deepEqual({
+            key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
+            message: anyString(),
+          }),
+        ),
+      ).once();
     });
   });
 
   describe("getBalance", () => {
-    it("should get balance", async () => {
-      when(mockCircleClient.getWalletBalance("walletID")).thenResolve(200);
+    it("should get balance from repo", async () => {
+      when(mockCircleRepo.getCircleBalance("walletID")).thenResolve(200);
       const balance = await circleService.getBalance("walletID");
       expect(balance).toEqual({ balance: 200, currency: "USD" });
+      verify(mockCircleClient.getWalletBalance("walletID")).never();
+    });
+
+    it("should call circle client when forceRefresh", async () => {
+      when(mockCircleClient.getWalletBalance(anyString())).thenResolve(200);
+      when(mockCircleRepo.updateCurrentBalance(anyString(), anyNumber())).thenResolve();
+      const balance = await circleService.getBalance("cached-walletID", true);
+      expect(balance).toEqual({ balance: 200, currency: "USD" });
+      verify(mockCircleClient.getWalletBalance("cached-walletID")).once();
+      verify(mockCircleRepo.updateCurrentBalance("cached-walletID", 200)).once();
+    });
+
+    it("should call circle client to get balance if balance doesn't exist in repo", async () => {
+      when(mockCircleRepo.getCircleBalance("not-cached-id")).thenResolve(null);
+      when(mockCircleClient.getWalletBalance(anyString())).thenResolve(300);
+      when(mockCircleRepo.updateCurrentBalance(anyString(), anyNumber())).thenResolve();
+      const balance = await circleService.getBalance("not-cached-id");
+      expect(balance).toEqual({ balance: 300, currency: "USD" });
+      verify(mockCircleRepo.getCircleBalance("not-cached-id")).once();
+      verify(mockCircleClient.getWalletBalance("not-cached-id")).once();
+      verify(mockCircleRepo.updateCurrentBalance("not-cached-id", 300)).once();
     });
 
     it("should throw an error when walletID is empty", async () => {
+      when(mockCircleRepo.getCircleBalance("")).thenResolve(null);
       expect(circleService.getBalance("")).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
     });
 
@@ -389,7 +683,7 @@ describe("CircleService", () => {
       when(mockCircleClient.getWalletBalance("walletID")).thenThrow(
         new ServiceException({ errorCode: ServiceErrorCode.UNKNOWN }),
       );
-      expect(circleService.getBalance("walletID")).rejects.toThrowServiceException(ServiceErrorCode.UNKNOWN);
+      expect(circleService.getBalance("walletID", true)).rejects.toThrowServiceException(ServiceErrorCode.UNKNOWN);
     });
   });
 

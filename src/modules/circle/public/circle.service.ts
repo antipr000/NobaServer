@@ -114,6 +114,20 @@ export class CircleService implements IBank {
       amount: amount,
     });
 
+    if (
+      response.status !== CircleTransferStatus.TRANSFER_FAILED &&
+      response.status !== CircleTransferStatus.INSUFFICIENT_FUNDS
+    ) {
+      try {
+        await this.circleRepo.updateCurrentBalance(walletID, balance - amount);
+      } catch (e) {
+        this.alertService.raiseAlert({
+          key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
+          message: `Could not update balance for wallet ${walletID}. Reason: ${JSON.stringify(e)}`,
+        });
+      }
+    }
+
     return {
       id: response.transferID,
       status: response.status,
@@ -158,6 +172,18 @@ export class CircleService implements IBank {
       destinationWalletID: walletID,
       amount: amount,
     });
+
+    if (response.status !== CircleTransferStatus.TRANSFER_FAILED) {
+      try {
+        const currentBalance = await this.circleClient.getWalletBalance(walletID);
+        await this.circleRepo.updateCurrentBalance(walletID, currentBalance);
+      } catch (e) {
+        this.alertService.raiseAlert({
+          key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
+          message: `Could not update balance for wallet ${walletID}. Reason: ${JSON.stringify(e)}`,
+        });
+      }
+    }
 
     return {
       id: response.transferID,
@@ -209,6 +235,25 @@ export class CircleService implements IBank {
       amount: amount,
     });
 
+    if (
+      response.status !== CircleTransferStatus.TRANSFER_FAILED &&
+      response.status !== CircleTransferStatus.INSUFFICIENT_FUNDS
+    ) {
+      try {
+        await this.circleRepo.updateCurrentBalance(sourceWalletID, balance - amount);
+
+        const destinationCurrentBalance = await this.circleClient.getWalletBalance(destinationWalletID);
+        await this.circleRepo.updateCurrentBalance(destinationWalletID, destinationCurrentBalance);
+      } catch (e) {
+        this.alertService.raiseAlert({
+          key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
+          message: `Could not update balance for wallet ${sourceWalletID} or ${destinationWalletID}. Reason: ${JSON.stringify(
+            e,
+          )}`,
+        });
+      }
+    }
+
     return {
       id: response.transferID,
       status: response.status,
@@ -216,9 +261,41 @@ export class CircleService implements IBank {
     };
   }
 
-  public async getBalance(accountID: string): Promise<BalanceDTO> {
+  public async getBalance(walletID: string, forceRefresh = false): Promise<BalanceDTO> {
+    if (!walletID) {
+      throw new ServiceException({
+        errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+        message: "Wallet ID must not be empty",
+      });
+    }
+
+    let balance: number;
+    if (!forceRefresh) {
+      balance = await this.circleRepo.getCircleBalance(walletID);
+      if (balance !== null) {
+        // It is cached, return it
+        return {
+          balance: balance,
+          currency: "USD",
+        };
+      }
+    }
+
+    // It is not cached or force refresh is requested, fetch it from Circle
+    balance = await this.circleClient.getWalletBalance(walletID);
+
+    // Cache it
+    try {
+      await this.circleRepo.updateCurrentBalance(walletID, balance);
+    } catch (e) {
+      this.alertService.raiseAlert({
+        key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
+        message: `Could not update balance for wallet ${walletID}. Reason: ${JSON.stringify(e)}`,
+      });
+    }
+
     return {
-      balance: await this.getWalletBalance(accountID),
+      balance: balance,
       currency: "USD",
     };
   }

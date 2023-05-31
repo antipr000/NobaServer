@@ -1,6 +1,6 @@
 import Joi from "joi";
 import { Circle as CircleProps } from "@prisma/client";
-import { KeysRequired } from "../../../modules/common/domain/Types";
+import { KeysRequired } from "../../common/domain/Types";
 import { Entity, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
 import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 
@@ -9,6 +9,7 @@ const circleDataValidationJoiKeys: KeysRequired<CircleProps> = {
   id: Joi.string().min(10).required(),
   walletID: Joi.string().required(),
   consumerID: Joi.string().required(),
+  currentBalance: Joi.number().optional(),
 };
 
 export const circleJoiSchema = Joi.object(circleDataValidationJoiKeys).options({

@@ -1,9 +1,13 @@
-import { Controller, Get, HttpStatus, Inject, Post } from "@nestjs/common";
+import { Controller, Get, HttpStatus, Inject, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiForbiddenResponse, ApiHeaders, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
 import { CircleService } from "./circle.service";
-import { CircleWalletBalanceResponseDTO, CircleWalletResponseDTO } from "../dto/circle.controller.dto";
+import {
+  CircleWalletBalanceResponseDTO,
+  CircleWalletResponseDTO,
+  GetCircleBalanceRequestDTO,
+} from "../dto/circle.controller.dto";
 import { AuthUser } from "../../../modules/auth/auth.decorator";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import { getCommonHeaders } from "../../../core/utils/CommonHeaders";
@@ -36,12 +40,15 @@ export class CircleController {
   @ApiOperation({ summary: "Get current consumer's circle wallet balance" })
   @ApiResponse({ status: HttpStatus.OK, type: CircleWalletBalanceResponseDTO })
   @ApiForbiddenResponse({ description: "Logged-in user is not a Consumer" })
-  async getConsumerWalletBalance(@AuthUser() consumer: Consumer): Promise<CircleWalletBalanceResponseDTO> {
+  async getConsumerWalletBalance(
+    @AuthUser() consumer: Consumer,
+    @Query() query: GetCircleBalanceRequestDTO,
+  ): Promise<CircleWalletBalanceResponseDTO> {
     const walletID = await this.circleService.getOrCreateWallet(consumer.props.id);
-    const walletBalance = await this.circleService.getWalletBalance(walletID);
+    const walletBalanceDTO = await this.circleService.getBalance(walletID, query.forceRefresh ?? false);
     return {
       walletID: walletID,
-      balance: walletBalance,
+      balance: walletBalanceDTO.balance,
     };
   }
 }
