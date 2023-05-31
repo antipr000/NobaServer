@@ -188,9 +188,10 @@ export class ConsumerService {
 
   async updateConsumer(updateConsumerProps: Partial<ConsumerProps>, isAdmin = false): Promise<Consumer> {
     const consumer = await this.getConsumer(updateConsumerProps.id);
-    // Only perform trimming here
     // If we don't have a handle, but we do have a first name, then we can generate a handle.
     // Else if the handle is being set NOW, we need to validate it.
+    updateConsumerProps.firstName = updateConsumerProps.firstName?.trim();
+    updateConsumerProps.lastName = updateConsumerProps.lastName?.trim();
     if (!consumer.props.handle && consumer.props.firstName && consumer.props.lastName) {
       updateConsumerProps.handle = this.generateDefaultHandle(consumer.props.firstName, consumer.props.lastName);
       let counter = 0;
