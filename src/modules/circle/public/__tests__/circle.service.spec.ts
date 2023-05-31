@@ -279,13 +279,13 @@ describe("CircleService", () => {
           message: "not found",
         }),
       );
-      when(mockAlertService.raiseAlert(anything())).thenResolve();
+      when(mockAlertService.raiseCriticalAlert(anything())).thenResolve();
       const walletBalanceResponse = await circleService.debitWalletBalance("workflowID", "walletID", 100);
       expect(walletBalanceResponse).toEqual(circleResponse);
 
       verify(mockCircleRepo.updateCurrentBalance("walletID", 100)).once();
       verify(
-        mockAlertService.raiseAlert(
+        mockAlertService.raiseCriticalAlert(
           deepEqual({
             key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
             message: anyString(),
@@ -451,13 +451,13 @@ describe("CircleService", () => {
         }),
       );
       when(mockCircleClient.getWalletBalance("walletID")).thenResolve(300);
-      when(mockAlertService.raiseAlert(anything())).thenResolve();
+      when(mockAlertService.raiseCriticalAlert(anything())).thenResolve();
       const walletBalanceResponse = await circleService.creditWalletBalance("workflowID", "walletID", 100);
       expect(walletBalanceResponse).toEqual(circleResponse);
 
       verify(mockCircleRepo.updateCurrentBalance("walletID", 300)).once();
       verify(
-        mockAlertService.raiseAlert(
+        mockAlertService.raiseCriticalAlert(
           deepEqual({
             key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
             message: anyString(),
@@ -620,7 +620,7 @@ describe("CircleService", () => {
 
       when(mockCircleRepo.updateCurrentBalance("sourceWalletID", anything())).thenResolve();
       when(mockCircleRepo.updateCurrentBalance("destinationWalletID", anything())).thenReject(new Error("error"));
-      when(mockAlertService.raiseAlert(anything())).thenResolve();
+      when(mockAlertService.raiseCriticalAlert(anything())).thenResolve();
       const transferResponse = await circleService.transferFunds(
         "idempotency-key",
         "sourceWalletID",
@@ -636,7 +636,7 @@ describe("CircleService", () => {
       verify(mockCircleRepo.updateCurrentBalance("sourceWalletID", 100)).once();
       verify(mockCircleRepo.updateCurrentBalance("destinationWalletID", 200)).once();
       verify(
-        mockAlertService.raiseAlert(
+        mockAlertService.raiseCriticalAlert(
           deepEqual({
             key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
             message: anyString(),
@@ -776,7 +776,7 @@ describe("CircleService", () => {
       "should return FAILED and raise an Alert if the executed transaction '%s' doesn't match with the input details",
       async field => {
         when(mockCircleClient.getMasterWalletID()).thenReturn("MASTER_WALLET_ID");
-        when(mockAlertService.raiseAlert(anything())).thenResolve();
+        when(mockAlertService.raiseCriticalAlert(anything())).thenResolve();
 
         const circleResponse: TransferResponse = {
           transferID: "TRANSFER_ID",
@@ -798,7 +798,7 @@ describe("CircleService", () => {
 
         expect(response).toBe(CircleTransferStatus.TRANSFER_FAILED);
         const [propagatedCircleTransferRequest] = capture(mockCircleClient.transfer).last();
-        const [propagatedAlertPayload] = capture(mockAlertService.raiseAlert).last();
+        const [propagatedAlertPayload] = capture(mockAlertService.raiseCriticalAlert).last();
         expect(propagatedCircleTransferRequest).toStrictEqual({
           idempotencyKey: "IDEMPOTENCY_KEY",
           sourceWalletID: "MASTER_WALLET_ID",

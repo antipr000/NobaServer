@@ -819,7 +819,7 @@ describe("VerificationService", () => {
 
     it("should raise an alert if the consumer cannot be found", async () => {
       when(consumerService.getConsumer(anyString())).thenResolve(null);
-      when(alertService.raiseAlert(anything())).thenResolve();
+      when(alertService.raiseCriticalAlert(anything())).thenResolve();
 
       const result = await verificationService.processDocumentVerificationWebhookResult({
         data: {
@@ -831,7 +831,7 @@ describe("VerificationService", () => {
 
       expect(result).toBeNull();
 
-      const [alertCall] = capture(alertService.raiseAlert).last();
+      const [alertCall] = capture(alertService.raiseCriticalAlert).last();
       expect(alertCall).toEqual(expect.objectContaining({ key: "WEBHOOK_CONSUMER_NOT_FOUND" }));
     });
   });

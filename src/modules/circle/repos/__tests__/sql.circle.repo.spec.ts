@@ -9,6 +9,9 @@ import { Consumer, ConsumerProps } from "../../../consumer/domain/Consumer";
 import { v4 } from "uuid";
 import { Utils } from "../../../../core/utils/Utils";
 import { RepoErrorCode } from "../../../../core/exception/repo.exception";
+import { AlertService } from "../../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 describe("CircleRepoTests", () => {
   jest.setTimeout(20000);
@@ -16,8 +19,10 @@ describe("CircleRepoTests", () => {
   let circleRepo: ICircleRepo;
   let app: TestingModule;
   let prismaService: PrismaService;
+  let mockAlertService: AlertService;
 
   beforeAll(async () => {
+    mockAlertService = getMockAlertServiceWithDefaults();
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
@@ -25,7 +30,14 @@ describe("CircleRepoTests", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SQLCircleRepo],
+      providers: [
+        PrismaService,
+        SQLCircleRepo,
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
+      ],
     }).compile();
 
     circleRepo = app.get<SQLCircleRepo>(SQLCircleRepo);

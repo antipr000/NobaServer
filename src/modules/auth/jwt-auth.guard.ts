@@ -16,6 +16,7 @@ import { Admin } from "../admin/domain/Admin";
 import { Role } from "./role.enum";
 import { ROLES_KEY } from "./roles.decorator";
 import { AuthenticatedUser } from "./domain/AuthenticatedUser";
+import { AlertService } from "../common/alerts/alert.service";
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard("jwt") {
@@ -24,6 +25,9 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
 
   @Inject()
   private readonly configService: CustomConfigService;
+
+  @Inject()
+  private readonly alertSerivce: AlertService;
 
   constructor(private reflector: Reflector) {
     super();
@@ -49,7 +53,7 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
       );
       return true;
     } catch (e) {
-      this.logger.error(`Failed to validate headers. Reason: ${e.message}`);
+      this.alertSerivce.raiseError(`Failed to validate headers. Reason: ${e.message}`);
       return false;
     }
   }

@@ -137,7 +137,7 @@ export class ExchangeRateService {
     }
 
     if (errorMessages.length > 0) {
-      this.alertService.raiseAlert({
+      this.alertService.raiseCriticalAlert({
         key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED,
         message: errorMessages.join("\n"),
       });
@@ -162,7 +162,7 @@ export class ExchangeRateService {
 
       if (rate == null) {
         rate = await this.exchangeRateRepo.getExchangeRateForCurrencyPair(numeratorCurrency, denominatorCurrency);
-        this.alertService.raiseAlert({
+        this.alertService.raiseCriticalAlert({
           key: AlertKey.STALE_FX_RATES,
           message: `No exchange rate found for currency pair "${numeratorCurrency}-${denominatorCurrency}" that is not expired. Using rate that expired on ${rate.expirationTimestamp.toISOString()} with values of: bankRate=${
             rate.bankRate

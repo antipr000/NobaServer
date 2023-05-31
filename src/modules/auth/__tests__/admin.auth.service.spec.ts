@@ -17,6 +17,8 @@ import { OTPService } from "../../../modules/common/otp.service";
 import { getMockOTPServiceWithDefaults } from "../../common/mocks/mock.otp.service";
 import { VerificationService } from "../../../modules/verification/verification.service";
 import { getMockVerificationServiceWithDefaults } from "../../../modules/verification/mocks/mock.verification.service";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
 
 describe("AdminAuthService", () => {
   jest.setTimeout(5000);
@@ -27,6 +29,7 @@ describe("AdminAuthService", () => {
   let mockTokenRepo: ITokenRepo;
   let mockVerificationService: VerificationService;
   let adminAuthService: AdminAuthService;
+  let mockAlertService: AlertService;
 
   const testJwtSecret = "TEST_SECRET";
   const identityType = nobaAdminIdentityIdentifier;
@@ -39,6 +42,7 @@ describe("AdminAuthService", () => {
     mockNotificationService = getMockNotificationServiceWithDefaults();
     mockTokenRepo = getMockTokenRepoWithDefaults();
     mockVerificationService = getMockVerificationServiceWithDefaults();
+    mockAlertService = getMockAlertServiceWithDefaults();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [
@@ -70,6 +74,10 @@ describe("AdminAuthService", () => {
         {
           provide: VerificationService,
           useFactory: () => instance(mockVerificationService),
+        },
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
         },
         AdminAuthService,
       ],

@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class SQLCircleRepo implements ICircleRepo {
@@ -14,6 +15,9 @@ export class SQLCircleRepo implements ICircleRepo {
 
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   async addConsumerCircleWalletID(consumerID: string, circleWalletID: string): Promise<Circle> {
     const circle: Circle = Circle.createCircle({ consumerID: consumerID, walletID: circleWalletID });
@@ -54,7 +58,9 @@ export class SQLCircleRepo implements ICircleRepo {
 
       return Circle.createCircle(circleProps);
     } catch (e) {
-      this.logger.error(`Failed to update circle balance for wallet id ${walletID}. Reason: ${JSON.stringify(e)}`);
+      this.alertService.raiseError(
+        `Failed to update circle balance for wallet id ${walletID}. Reason: ${JSON.stringify(e)}`,
+      );
       throw new RepoException({
         message: "Failed to update circle balance",
         errorCode: RepoErrorCode.NOT_FOUND,
@@ -79,7 +85,7 @@ export class SQLCircleRepo implements ICircleRepo {
 
       return circleProps.currentBalance;
     } catch (e) {
-      this.logger.error(
+      this.alertService.raiseError(
         `Failed to fetch circle balance for consumerOrWallerID: ${consumerOrWalletID}. Reason: ${JSON.stringify(e)}`,
       );
       return null;

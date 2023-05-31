@@ -239,7 +239,7 @@ export class VerificationService {
     const consumerID = documentVerificationResult.data.case.customerID;
     const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
     if (!consumer) {
-      this.alertService.raiseAlert({
+      this.alertService.raiseCriticalAlert({
         key: AlertKey.WEBHOOK_CONSUMER_NOT_FOUND,
         message: `Failed to find consumer with ID ${consumerID}`,
       });

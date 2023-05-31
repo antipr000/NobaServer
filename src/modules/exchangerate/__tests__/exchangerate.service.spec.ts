@@ -291,7 +291,7 @@ describe("ExchangeRateService", () => {
 
       when(exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "COP", deepEqual(new Date()))).thenResolve(null);
       when(exchangeRateRepo.getExchangeRateForCurrencyPair("USD", "COP")).thenResolve(expiredExchangeRate);
-      when(alertService.raiseAlert(anything())).thenResolve();
+      when(alertService.raiseCriticalAlert(anything())).thenResolve();
 
       const returnExchangeRate = await exchangeRateService.getExchangeRateForCurrencyPair("USD", "COP");
 
@@ -304,7 +304,7 @@ describe("ExchangeRateService", () => {
       };
       expect(returnExchangeRate).toStrictEqual(expectedExchangeRateDTO);
 
-      const [alertCall] = capture(alertService.raiseAlert).last();
+      const [alertCall] = capture(alertService.raiseCriticalAlert).last();
       expect(alertCall).toEqual(expect.objectContaining({ key: "STALE_FX_RATES" }));
     });
 
@@ -377,7 +377,7 @@ describe("ExchangeRateService", () => {
       when(exchangeRateClientFactory.getExchangeRateClientByCurrencyPair("COP", "USD")).thenReturn(null);
 
       when(
-        alertService.raiseAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
+        alertService.raiseCriticalAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
       ).thenResolve();
 
       const returnExchangeRate = await exchangeRateService.createExchangeRateFromProvider();
@@ -414,7 +414,7 @@ describe("ExchangeRateService", () => {
 
       when(exchangeRateRepo.createExchangeRate(deepEqual(exchangeRateDTO))).thenResolve(exchangeRate);
       when(
-        alertService.raiseAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
+        alertService.raiseCriticalAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
       ).thenResolve();
 
       const returnExchangeRate = await exchangeRateService.createExchangeRateFromProvider();
@@ -440,7 +440,7 @@ describe("ExchangeRateService", () => {
       );
 
       when(
-        alertService.raiseAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
+        alertService.raiseCriticalAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
       ).thenResolve();
 
       const returnExchangeRate = await exchangeRateService.createExchangeRateFromProvider();
@@ -462,7 +462,7 @@ describe("ExchangeRateService", () => {
       when(returnedExchangeRateClient.getExchangeRate("COP", "USD")).thenResolve(undefined);
 
       when(
-        alertService.raiseAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
+        alertService.raiseCriticalAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
       ).thenResolve();
 
       const returnExchangeRate = await exchangeRateService.createExchangeRateFromProvider();
@@ -505,7 +505,7 @@ describe("ExchangeRateService", () => {
       });
 
       when(
-        alertService.raiseAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
+        alertService.raiseCriticalAlert(deepEqual({ key: AlertKey.EXCHANGE_RATE_UPDATE_FAILED, message: anyString() })),
       ).thenResolve();
 
       const returnExchangeRate = await exchangeRateService.createExchangeRateFromProvider();

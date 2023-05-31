@@ -573,7 +573,7 @@ export class EmployerService {
       } else if (request.status === PayrollStatus.EXPIRED) {
         // We want to alert in this case as it means manual intervention is required
         const employer = await this.employerRepo.getEmployerByID(payroll.employerID);
-        this.alertService.raiseAlert({
+        this.alertService.raiseCriticalAlert({
           key: AlertKey.PAYROLL_EXPIRED,
           message: `Payroll ${payrollID} for ${employer.name} has expired`,
         });

@@ -281,7 +281,7 @@ export class TransactionService {
     }
 
     if (transactionDetails.status !== undefined && transactionDetails.status === TransactionStatus.FAILED) {
-      this.alertService.raiseAlert({
+      this.alertService.raiseCriticalAlert({
         key: AlertKey.TRANSACTION_FAILED,
         message: `Transaction with ID '${transactionID}' is transitioned to 'FAILED' state.`,
       });

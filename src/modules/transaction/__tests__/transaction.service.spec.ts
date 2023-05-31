@@ -1733,7 +1733,7 @@ describe("TransactionServiceTests", () => {
     it("should update the status 'AND' raise the alert if transaction is transition to 'FAILED' status", async () => {
       const { transaction } = getRandomTransaction("consumerID", "consumerID2");
       when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(transaction);
-      when(alertService.raiseAlert(anything())).thenResolve();
+      when(alertService.raiseCriticalAlert(anything())).thenResolve();
 
       const updateTransactionDTO: UpdateTransactionDTO = {
         status: TransactionStatus.FAILED,
@@ -1752,7 +1752,7 @@ describe("TransactionServiceTests", () => {
 
       expect(updatedTransaction.status).toEqual(updateTransactionDTO.status);
 
-      const [alertCall] = capture(alertService.raiseAlert).last();
+      const [alertCall] = capture(alertService.raiseCriticalAlert).last();
       expect(alertCall).toEqual(expect.objectContaining({ key: "TRANSACTION_FAILED" }));
       expect(alertCall).toEqual(expect.objectContaining({ message: expect.stringContaining(transaction.id) }));
     });
