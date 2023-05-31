@@ -35,7 +35,7 @@ describe("OTPService", () => {
 
   describe("OTP Service tests", () => {
     describe("checkIfOTPIsValidAndCleanup", () => {
-      it("should return false if no otp record found", async () => {
+      it("should return false if no phone otp record found", async () => {
         when(mockOTPRepo.getOTP("+1234567890", IdentityType.CONSUMER)).thenResolve(null);
 
         const result = await otpService.checkIfOTPIsValidAndCleanup("+1234567890", IdentityType.CONSUMER, 123456);
@@ -43,7 +43,7 @@ describe("OTPService", () => {
         expect(result).toBe(false);
       });
 
-      it("should return false if otp record found but does not match", async () => {
+      it("should return false if phone otp record found but does not match", async () => {
         const otp = OTP.createOtp({
           otpIdentifier: "+1234567890",
           identityType: IdentityType.CONSUMER,
@@ -59,7 +59,7 @@ describe("OTPService", () => {
         expect(result).toBe(false);
       });
 
-      it("should return true if otp record found and matches", async () => {
+      it("should return true if phone otp record found and matches", async () => {
         const randomUUID = v4();
         const otp = OTP.createOtp({
           id: randomUUID,
@@ -77,7 +77,7 @@ describe("OTPService", () => {
         expect(result).toBe(true);
       });
 
-      it("should return false if otp record found and matches but expired", async () => {
+      it("should return false if phone otp record found and matches but expired", async () => {
         const otp = OTP.createOtp({
           otpIdentifier: "+1234567890",
           identityType: IdentityType.CONSUMER,
@@ -93,7 +93,7 @@ describe("OTPService", () => {
         expect(result).toBe(false);
       });
 
-      it("should strip non phone chars from otpIdentifier", async () => {
+      it("should strip non phone chars from phone otpIdentifier", async () => {
         const otp = OTP.createOtp({
           otpIdentifier: "+12345678901",
           identityType: IdentityType.CONSUMER,
@@ -109,22 +109,43 @@ describe("OTPService", () => {
           otpService.checkIfOTPIsValidAndCleanup("+1-(234) 567-8901", IdentityType.CONSUMER, 123456),
         ).resolves.toBe(true);
       });
+
+      it("should return false if no email otp record found", async () => {});
     });
 
     describe("saveOTP", () => {
-      it("should save otp", async () => {
-        when(mockOTPRepo.saveOTP("+1234567890", 123456, IdentityType.CONSUMER)).thenResolve();
-        when(mockOTPRepo.deleteAllOTPsForIdentifier("+1234567890", IdentityType.CONSUMER)).thenResolve();
+      it("should save phone otp", async () => {
+        const phone = "+1234567890";
 
-        expect(otpService.saveOTP("+1234567890", IdentityType.CONSUMER, 123456)).resolves.toBeUndefined();
+        when(mockOTPRepo.saveOTP(phone, 123456, IdentityType.CONSUMER)).thenResolve();
+        when(mockOTPRepo.deleteAllOTPsForIdentifier(phone, IdentityType.CONSUMER)).thenResolve();
+
+        expect(otpService.saveOTP(phone, IdentityType.CONSUMER, 123456)).resolves.toBeUndefined();
       });
 
-      it("should strip non phone chars from otpIdentifier", async () => {
-        when(mockOTPRepo.saveOTP("+1234567890", 123456, IdentityType.CONSUMER)).thenResolve();
-        when(mockOTPRepo.deleteAllOTPsForIdentifier("+1234567890", IdentityType.CONSUMER)).thenResolve();
+      it("should strip non phone chars from phone otpIdentifier", async () => {
+        const phone = "+1234567890";
+        when(mockOTPRepo.saveOTP(phone, 123456, IdentityType.CONSUMER)).thenResolve();
+        when(mockOTPRepo.deleteAllOTPsForIdentifier(phone, IdentityType.CONSUMER)).thenResolve();
 
         expect(otpService.saveOTP("+1-(234) 567-890", IdentityType.CONSUMER, 123456)).resolves.toBeUndefined();
       });
+    });
+
+    it("should save email otp", async () => {
+      const email = "fake@fake.com";
+      when(mockOTPRepo.saveOTP(email, 123456, IdentityType.CONSUMER)).thenResolve();
+      when(mockOTPRepo.deleteAllOTPsForIdentifier(email, IdentityType.CONSUMER)).thenResolve();
+
+      expect(otpService.saveOTP(email, IdentityType.CONSUMER, 123456)).resolves.toBeUndefined();
+    });
+
+    it("should strip spaces from email otpIdentifier", async () => {
+      const email = "fake@fake.com";
+      when(mockOTPRepo.saveOTP(email, 123456, IdentityType.CONSUMER)).thenResolve();
+      when(mockOTPRepo.deleteAllOTPsForIdentifier(email, IdentityType.CONSUMER)).thenResolve();
+
+      expect(otpService.saveOTP("   fake@fake.com  ", IdentityType.CONSUMER, 123456)).resolves.toBeUndefined();
     });
   });
 });
