@@ -81,8 +81,6 @@ export abstract class AuthService {
         );
       } else {
         await this.verificationService.verifyConsumerInformationForLogin(consumerID, sessionKey);
-        // We don't do anything with the return value (status) here, but the consumer data has been updated and when the caller (app)
-        // gets the consumer data it will see that the user is blocked.
       }
     }
 
