@@ -736,12 +736,33 @@ describe("ConsumerService", () => {
       const consumer = Consumer.createConsumer({
         id: "mock-consumer-1",
         email: "fake@mock.com",
-        firstName: "  First  ",
-        lastName: "  Last  ",
       });
 
-      expect(consumer.props.firstName).toBe("First");
-      expect(consumer.props.lastName).toBe("Last");
+      const updatedConsumerData = Consumer.createConsumer({
+        ...consumer.props,
+        firstName: "First",
+        lastName: "Last",
+      });
+
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(
+        mockConsumerRepo.updateConsumer(
+          consumer.props.id,
+          deepEqual({
+            id: consumer.props.id,
+            firstName: updatedConsumerData.props.firstName,
+            lastName: updatedConsumerData.props.lastName,
+          }),
+        ),
+      ).thenResolve(updatedConsumerData);
+
+      expect(
+        consumerService.updateConsumer({
+          id: consumer.props.id,
+          firstName: "  First  ",
+          lastName: "  Last  ",
+        }),
+      ).resolves.toStrictEqual(updatedConsumerData);
     });
   });
 
