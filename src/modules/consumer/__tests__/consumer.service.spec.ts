@@ -731,6 +731,18 @@ describe("ConsumerService", () => {
     it("should throw error if whitespace exists in phone number", async () => {
       expect(() => Consumer.createConsumer({ id: "mock-consumer-1", phone: "123 456 7890" })).toThrowError();
     });
+
+    it("should trim spaces from first and last name", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        email: "fake@mock.com",
+        firstName: "  First  ",
+        lastName: "  Last  ",
+      });
+
+      expect(consumer.props.firstName).toBe("First");
+      expect(consumer.props.lastName).toBe("Last");
+    });
   });
 
   describe("generateDefaultHandle", () => {
