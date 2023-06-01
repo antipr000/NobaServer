@@ -87,6 +87,8 @@ export class SQLReminderHistoryRepo implements ReminderHistoryRepo {
         data: reminderHistoryUpdateRequest,
       });
 
+      if (!returnedReminderHistory) return null;
+
       return convertToDomainReminderHistory(returnedReminderHistory);
     } catch (e) {
       this.logger.error(`Failed to update reminder history: ${e}`);
@@ -104,6 +106,8 @@ export class SQLReminderHistoryRepo implements ReminderHistoryRepo {
           id: id,
         },
       });
+
+      if (!returnedReminderHistory) return null;
 
       return convertToDomainReminderHistory(returnedReminderHistory);
     } catch (e) {
@@ -130,6 +134,8 @@ export class SQLReminderHistoryRepo implements ReminderHistoryRepo {
         },
       });
 
+      if (!returnedReminderHistory) return null;
+
       return convertToDomainReminderHistory(returnedReminderHistory);
     } catch (e) {
       this.logger.error(`Failed to get reminder history by reminder schedule ID and consumer ID: ${e}`);
@@ -147,6 +153,8 @@ export class SQLReminderHistoryRepo implements ReminderHistoryRepo {
           lastSentTimestamp: "desc",
         },
       });
+
+      if (!returnedReminderHistory) return null;
 
       return convertToDomainReminderHistory(returnedReminderHistory);
     } catch (e) {
