@@ -33,6 +33,8 @@ import { SendCreditAdjustmentCompletedEvent } from "../events/SendCreditAdjustme
 import { SendCreditAdjustmentFailedEvent } from "../events/SendCreditAdjustmentFailedEvent";
 import { SendDebitAdjustmentCompletedEvent } from "../events/SendDebitAdjustmentCompletedEvent";
 import { SendDebitAdjustmentFailedEvent } from "../events/SendDebitAdjustmentFailedEvent";
+import { SendScheduledReminderEvent } from "../events/SendScheduledReminderEvent";
+import { ServiceErrorCode } from "../../../core/exception/service.exception";
 
 describe("NotificationService", () => {
   let notificationService: NotificationService;
@@ -650,6 +652,66 @@ describe("NotificationService", () => {
       ).once();
     });
   });
+
+  describe("SendScheduledReminderEvent", () => {
+    it("should send scheduled reminder event", async () => {
+      const payload: SendScheduledReminderEvent = getNotificationPayload(
+        NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT,
+      ) as SendScheduledReminderEvent;
+
+      when(mockEventRepo.getEventByIDOrName(payload.eventID)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT,
+        handlers: [EventHandlers.PUSH],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve([true]);
+
+      await notificationService.sendNotification(NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT, payload);
+
+      verify(
+        eventEmitter.emitAsync(
+          `push.${NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT}`,
+          deepEqual({
+            ...payload,
+          }),
+        ),
+      ).once();
+    });
+
+    it("should throw ServiceException when sends to fail ScheduledReminder", async () => {
+      const payload: SendScheduledReminderEvent = getNotificationPayload(
+        NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT,
+      ) as SendScheduledReminderEvent;
+
+      when(mockEventRepo.getEventByIDOrName(payload.eventID)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT,
+        handlers: [EventHandlers.PUSH],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [],
+      });
+
+      when(eventEmitter.emitAsync(anyString(), anything())).thenResolve([false]);
+
+      await expect(
+        notificationService.sendNotification(NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT, payload),
+      ).rejects.toThrowServiceException(ServiceErrorCode.SEMANTIC_VALIDATION);
+
+      verify(
+        eventEmitter.emitAsync(
+          `push.${NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT}`,
+          deepEqual({
+            ...payload,
+          }),
+        ),
+      ).once();
+    });
+  });
 });
 
 function getNotificationPayload(event: NotificationEventType): NotificationPayload {
@@ -1062,6 +1124,14 @@ function getNotificationPayload(event: NotificationEventType): NotificationPaylo
         locale: "en",
         nobaUserID: "fake-id-1234",
       } as SendDebitAdjustmentFailedEvent;
+    case NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT:
+      return {
+        email: null,
+        phone: null,
+        locale: "en",
+        nobaUserID: "fake-id-1234",
+        eventID: "fake-event-id",
+      } as SendScheduledReminderEvent;
   }
 
   return data;

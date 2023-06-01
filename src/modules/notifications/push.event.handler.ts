@@ -66,8 +66,12 @@ export class PushEventHandler {
   }
 
   @OnEvent(`push.${NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT}`)
-  async sendScheduledReminderEvent(payload: SendScheduledReminderEvent) {
+  async sendScheduledReminderEvent(payload: SendScheduledReminderEvent): Promise<boolean> {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
+
+    if (pushTokens.length === 0) {
+      return false;
+    }
 
     const templateData = await this.getOrDefaultTemplateData(payload.eventID, payload.locale);
 
@@ -85,6 +89,7 @@ export class PushEventHandler {
         title: templateData.title,
       });
     }
+    return true;
   }
 
   @OnEvent(`push.${NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT}`)
