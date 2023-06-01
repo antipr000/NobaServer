@@ -1,14 +1,14 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class ReminderScheduleDTO {
   @ApiProperty()
   id: string;
 
-  @ApiProperty()
-  createdTimestamp: Date;
+  @ApiPropertyOptional()
+  createdTimestamp?: Date;
 
-  @ApiProperty()
-  updatedTimestamp: Date;
+  @ApiPropertyOptional()
+  updatedTimestamp?: Date;
 
   @ApiProperty()
   eventID: string;
@@ -18,6 +18,16 @@ export class ReminderScheduleDTO {
 
   @ApiProperty()
   groupKey: string;
+}
+
+export class AllScheduledRemindersDTO {
+  @ApiProperty()
+  reminders: ReminderScheduleDTO[];
+}
+
+export class AllConsumersDTO {
+  @ApiProperty()
+  consumerIDs: string[];
 }
 
 export class CreateReminderScheduleDTO {
