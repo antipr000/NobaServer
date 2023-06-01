@@ -9,5 +9,7 @@ export function getMockCircleRepoWithDefaults(): ICircleRepo {
     new Error("Method not implemented"),
   );
   when(mockCircleRepo.getCircleWalletID(anyString())).thenReject(new Error("Method not implemented"));
+  when(mockCircleRepo.updateCurrentBalance(anyString(), anything())).thenReject(new Error("Method not implemented"));
+  when(mockCircleRepo.getCircleBalance(anyString())).thenReject(new Error("Method not implemented"));
   return mockCircleRepo;
 }

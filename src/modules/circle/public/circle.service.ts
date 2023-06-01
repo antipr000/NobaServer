@@ -12,6 +12,7 @@ import { IBank } from "../../../modules/psp/factory/ibank";
 import { CircleTransferStatus, TransferResponse } from "../../../modules/psp/domain/CircleTypes";
 import { AlertService } from "../../../modules/common/alerts/alert.service";
 import { AlertKey } from "../../../modules/common/alerts/alert.dto";
+import { Utils } from "../../../core/utils/Utils";
 
 @Injectable()
 export class CircleService implements IBank {
@@ -119,7 +120,7 @@ export class CircleService implements IBank {
       response.status !== CircleTransferStatus.INSUFFICIENT_FUNDS
     ) {
       try {
-        await this.circleRepo.updateCurrentBalance(walletID, balance - amount);
+        await this.circleRepo.updateCurrentBalance(walletID, Utils.roundTo2DecimalNumber(balance - amount));
       } catch (e) {
         this.alertService.raiseAlert({
           key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
@@ -176,7 +177,7 @@ export class CircleService implements IBank {
     if (response.status !== CircleTransferStatus.TRANSFER_FAILED) {
       try {
         const currentBalance = await this.circleClient.getWalletBalance(walletID);
-        await this.circleRepo.updateCurrentBalance(walletID, currentBalance);
+        await this.circleRepo.updateCurrentBalance(walletID, Utils.roundTo2DecimalNumber(currentBalance));
       } catch (e) {
         this.alertService.raiseAlert({
           key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
@@ -240,10 +241,13 @@ export class CircleService implements IBank {
       response.status !== CircleTransferStatus.INSUFFICIENT_FUNDS
     ) {
       try {
-        await this.circleRepo.updateCurrentBalance(sourceWalletID, balance - amount);
+        await this.circleRepo.updateCurrentBalance(sourceWalletID, Utils.roundTo2DecimalNumber(balance - amount));
 
         const destinationCurrentBalance = await this.circleClient.getWalletBalance(destinationWalletID);
-        await this.circleRepo.updateCurrentBalance(destinationWalletID, destinationCurrentBalance);
+        await this.circleRepo.updateCurrentBalance(
+          destinationWalletID,
+          Utils.roundTo2DecimalNumber(destinationCurrentBalance),
+        );
       } catch (e) {
         this.alertService.raiseAlert({
           key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
@@ -286,7 +290,7 @@ export class CircleService implements IBank {
 
     // Cache it
     try {
-      await this.circleRepo.updateCurrentBalance(walletID, balance);
+      await this.circleRepo.updateCurrentBalance(walletID, Utils.roundTo2DecimalNumber(balance));
     } catch (e) {
       this.alertService.raiseAlert({
         key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,

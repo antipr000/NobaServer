@@ -171,6 +171,42 @@ describe("CircleService", () => {
       verify(mockCircleRepo.updateCurrentBalance("walletID", 100)).once();
     });
 
+    it.each([
+      [200.101, 100.151, 99.95],
+      [200.105, 100.155, 99.95],
+      [200.11, 100.16, 99.95],
+      [200.129, 100.161, 99.97],
+    ])("should debit a wallet and round circle balance", async (balance, amount, roundedAmount) => {
+      const circleResponse = {
+        id: "transferID",
+        status: CircleTransferStatus.SUCCESS,
+        createdAt: "dateNow",
+      };
+
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
+      when(mockCircleClient.getWalletBalance("walletID")).thenResolve(balance);
+      when(
+        mockCircleClient.transfer(
+          deepEqual({
+            idempotencyKey: "workflowID",
+            sourceWalletID: "walletID",
+            destinationWalletID: "masterWalletID",
+            amount: amount,
+          }),
+        ),
+      ).thenResolve({
+        transferID: "transferID",
+        amount: amount,
+        sourceWalletID: "walletID",
+        destinationWalletID: "masterWalletID",
+        status: CircleTransferStatus.SUCCESS,
+        createdAt: "dateNow",
+      });
+      when(mockCircleRepo.updateCurrentBalance("walletID", roundedAmount)).thenResolve();
+      const walletBalanceResponse = await circleService.debitWalletBalance("workflowID", "walletID", amount);
+      expect(walletBalanceResponse).toEqual(circleResponse);
+    });
+
     it("should throw an error when walletID is empty", async () => {
       expect(circleService.debitWalletBalance("workflowID", "", 100)).rejects.toThrowServiceException();
     });
@@ -661,6 +697,19 @@ describe("CircleService", () => {
       expect(balance).toEqual({ balance: 200, currency: "USD" });
       verify(mockCircleClient.getWalletBalance("cached-walletID")).once();
       verify(mockCircleRepo.updateCurrentBalance("cached-walletID", 200)).once();
+    });
+
+    it.each([
+      [200.101, 200.1],
+      [200.105, 200.1],
+      [200.11, 200.1],
+      [200.129, 200.13],
+    ])("should round updated circle balance", async (balance, roundedBalance) => {
+      when(mockCircleClient.getWalletBalance(anyString())).thenResolve(balance);
+      when(mockCircleRepo.updateCurrentBalance(anyString(), roundedBalance)).thenResolve();
+      expect(circleService.getBalance("cached-walletID", true)).toEqual({ balance: roundedBalance, currency: "USD" });
+      verify(mockCircleClient.getWalletBalance("cached-walletID")).once();
+      verify(mockCircleRepo.updateCurrentBalance("cached-walletID", roundedBalance)).once();
     });
 
     it("should call circle client to get balance if balance doesn't exist in repo", async () => {
