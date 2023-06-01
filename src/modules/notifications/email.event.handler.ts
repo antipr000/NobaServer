@@ -35,6 +35,7 @@ import { QRService } from "../common/qrcode.service";
 import { S3Service } from "../common/s3.service";
 import { QR_CODES_BASE_URL, QR_CODES_FOLDER_BUCKET_PATH } from "../../config/ConfigurationUtils";
 import { SendScheduledReminderEvent } from "./events/SendScheduledReminderEvent";
+import { SendCreditAdjustmentCompletedEvent } from "./events/SendCreditAdjustmentCompletedEvent";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -622,7 +623,7 @@ export class EmailEventHandler {
   }
 
   @OnEvent(`email.${NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT}`)
-  public async sendCreditAdjustmentCompletedEmail(payload: SendPayrollDepositCompletedEvent) {
+  public async sendCreditAdjustmentCompletedEmail(payload: SendCreditAdjustmentCompletedEvent) {
     const templateID = await this.getOrDefaultTemplateId(
       NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT,
       payload.locale,

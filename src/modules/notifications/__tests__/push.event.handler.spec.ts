@@ -902,9 +902,9 @@ function getTransactionParams(workflow: WorkflowName): TransactionParameters {
       };
     case WorkflowName.CREDIT_ADJUSTMENT:
       return {
-        creditAmount: Utils.localizeAmount(5000, "en"),
-        creditAmountNumber: 5000,
-        creditCurrency: "COP",
+        creditAmount: Utils.localizeAmount(1, "en"),
+        creditAmountNumber: 1,
+        creditCurrency: "USD",
         debitAmount: null,
         debitAmountNumber: null,
         debitCurrency: null,
