@@ -72,6 +72,7 @@ import {
   validateSendDebitAdjustmentFailedEvent,
 } from "./events/SendDebitAdjustmentFailedEvent";
 import { SendScheduledReminderEvent, validateSendScheduledReminderEvent } from "./events/SendScheduledReminderEvent";
+import { ServiceErrorCode, ServiceException } from "../../core/exception/service.exception";
 
 @Injectable()
 export class NotificationService {
@@ -117,10 +118,10 @@ export class NotificationService {
       return;
     }
 
-    notificationEvent.notificationEventHandler.forEach(eventHandler => {
+    for (const eventHandler of notificationEvent.notificationEventHandler) {
       const eventName = `${eventHandler}.${eventType}`;
-      this.createEvent(eventName, eventType, payload);
-    });
+      await this.createEvent(eventName, eventType, payload);
+    }
   }
 
   private async createEvent(eventName: string, eventType: NotificationEventType, payload: NotificationPayload) {
@@ -249,7 +250,14 @@ export class NotificationService {
 
       case NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT:
         validateSendScheduledReminderEvent(payload as SendScheduledReminderEvent);
-        this.eventEmitter.emitAsync(eventName, payload as SendScheduledReminderEvent);
+        const eventResponse = await this.eventEmitter.emitAsync(eventName, payload as SendScheduledReminderEvent);
+        const isSuccessful: boolean = eventResponse[0];
+        if (!isSuccessful) {
+          throw new ServiceException({
+            errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
+            message: "Failed to send scheduled reminder",
+          });
+        }
         break;
       default:
         this.logger.error(`Unknown Notification event type: ${eventType}`);
