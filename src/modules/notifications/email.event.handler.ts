@@ -621,6 +621,32 @@ export class EmailEventHandler {
     await this.emailClient.sendEmail(msg);
   }
 
+  @OnEvent(`email.${NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT}`)
+  public async sendCreditAdjustmentCompletedEmail(payload: SendPayrollDepositCompletedEvent) {
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT,
+      payload.locale,
+    );
+
+    const msg = {
+      to: payload.email,
+      from: SENDER_EMAIL,
+      subject: "Credit Adjustment Completed",
+      templateId: templateID,
+      dynamicTemplateData: {
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        creditAmount: payload.params.creditAmount,
+        creditCurrency: payload.params.creditCurrency,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        handle: payload.handle,
+      },
+    };
+
+    await this.emailClient.sendEmail(msg);
+  }
+
   @OnEvent(`email.${NotificationEventType.SEND_EMPLOYER_REQUEST_EVENT}`)
   public async sendEmployerRequestEmail(payload: SendEmployerRequestEvent) {
     const templateID = await this.getOrDefaultTemplateId(

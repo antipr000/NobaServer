@@ -1670,5 +1670,21 @@ function getTransactionParams(workflow: WorkflowName, locale: string): Transacti
         totalFees: Utils.localizeAmount(0.57, locale),
         totalFeesNumber: 0.57,
       };
+    case WorkflowName.CREDIT_ADJUSTMENT:
+      return {
+        debitAmount: Utils.localizeAmount(5000, locale),
+        debitAmountNumber: 5000,
+        debitCurrency: "COP",
+        creditAmount: Utils.localizeAmount(1, locale),
+        creditAmountNumber: 1,
+        creditCurrency: "USD",
+        exchangeRate: Utils.localizeAmount(0.0025, locale, false),
+        transactionRef: "transaction-1",
+        createdTimestamp: "2023-02-02T17:54:37.601Z",
+        processingFees: Utils.localizeAmount(0.23, locale),
+        nobaFees: Utils.localizeAmount(0.34, locale),
+        totalFees: Utils.localizeAmount(0.57, locale),
+        totalFeesNumber: 0.57,
+      };
   }
 }
