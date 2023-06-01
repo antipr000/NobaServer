@@ -728,6 +728,27 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendDepositCompletedEmail(payload);
+      const subtotal = Utils.localizeAmount(payload.params.creditAmountNumber + payload.params.totalFeesNumber, locale);
+      const [emailRequest] = capture(emailClient.sendEmail).last();
+      expect(emailRequest).toStrictEqual({
+        to: payload.email,
+        from: SENDER_EMAIL,
+        templateId: `${templateLocale}-template`,
+        dynamicTemplateData: {
+          firstName: payload.firstName,
+          debitAmount: payload.params.debitAmount,
+          debitCurrency: "COP",
+          creditAmount: payload.params.creditAmount,
+          creditCurrency: "USDC",
+          handle: payload.handle,
+          transactionRef: payload.params.transactionRef,
+          createdTimestamp: payload.params.createdTimestamp,
+          exchangeRate: payload.params.exchangeRate,
+          subtotal: subtotal,
+          processingFees: payload.params.processingFees,
+          nobaFees: payload.params.nobaFees,
+        },
+      });
     });
   });
 
