@@ -457,6 +457,8 @@ describe("AdminService", () => {
       when(consumerMapper.toConsumerInternalDTO(consumer2)).thenReturn({ ...consumer2.props, gender: Gender.FEMALE });
       when(circleService.getOrCreateWallet(consumer1.props.id)).thenResolve("wallet-id-1");
       when(circleService.getOrCreateWallet(consumer2.props.id)).thenResolve("wallet-id-2");
+      when(circleService.getBalance("wallet-id-1")).thenResolve({ currency: Currency.USD, balance: 100 });
+      when(circleService.getBalance("wallet-id-2")).thenResolve({ currency: Currency.USD, balance: 200 });
       when(employeeService.getEmployeesForConsumerID(consumer1.props.id, true)).thenResolve([employee1Details]);
       when(employeeService.getEmployeesForConsumerID(consumer2.props.id, true)).thenResolve([employee2Details]);
 
@@ -472,6 +474,7 @@ describe("AdminService", () => {
             {
               walletProvider: "Circle",
               walletID: "wallet-id-1",
+              currentBalance: 100,
             },
           ],
           employeeDetails: [
@@ -496,6 +499,7 @@ describe("AdminService", () => {
             {
               walletProvider: "Circle",
               walletID: "wallet-id-2",
+              currentBalance: 200,
             },
           ],
           employeeDetails: [
@@ -562,6 +566,7 @@ describe("AdminService", () => {
 
       when(consumerMapper.toConsumerInternalDTO(anything())).thenReturn(consumerInternalDTO);
       when(circleService.getOrCreateWallet(consumer1.props.id)).thenResolve("wallet-id-1");
+      when(circleService.getBalance("wallet-id-1")).thenResolve({ currency: Currency.USD, balance: 100 });
       when(employeeService.getEmployeesForConsumerID(consumer1.props.id, true)).thenResolve([]);
 
       const updatedConsumer = await adminService.updateConsumer(consumer1.props.id, updateRequest);
@@ -581,6 +586,7 @@ describe("AdminService", () => {
           {
             walletProvider: "Circle",
             walletID: "wallet-id-1",
+            currentBalance: 100,
           },
         ],
       });
@@ -684,6 +690,7 @@ describe("AdminService", () => {
 
       when(consumerMapper.toConsumerInternalDTO(anything())).thenReturn(consumerInternalDTO);
       when(circleService.getOrCreateWallet(consumer1.props.id)).thenResolve("wallet-id-1");
+      when(circleService.getBalance("wallet-id-1")).thenResolve({ currency: Currency.USD, balance: 100 });
       when(employeeService.getEmployeesForConsumerID(consumer1.props.id, true)).thenResolve([]);
 
       const updatedConsumer = await adminService.updateConsumer(consumer1.props.id, updateRequest);
@@ -700,6 +707,7 @@ describe("AdminService", () => {
           {
             walletProvider: "Circle",
             walletID: "wallet-id-1",
+            currentBalance: 100,
           },
         ],
       });
