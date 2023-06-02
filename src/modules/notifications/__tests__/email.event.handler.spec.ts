@@ -1492,7 +1492,6 @@ describe("EmailEventHandler test for languages", () => {
       expect(emailRequest).toStrictEqual({
         to: payload.email,
         from: SENDER_EMAIL,
-        subject: "Credit Adjustment Completed",
         templateId: `${templateLocale}-template`,
         dynamicTemplateData: {
           firstName: payload.firstName,
