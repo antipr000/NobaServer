@@ -298,7 +298,6 @@ export class CircleService implements IBank {
       });
     }
 
-    console.log(`Balance for wallet ${walletID} is ${roundedBalance}`);
     return {
       balance: roundedBalance,
       currency: "USD",
