@@ -31,29 +31,16 @@ import { DebitBankResponse } from "./domain/Transaction";
 import { BankFactory } from "../psp/factory/bank.factory";
 import { Utils } from "../../core/utils/Utils";
 import { ProcessedTransactionDTO } from "./dto/ProcessedTransactionDTO";
-import { EmployerService } from "../employer/employer.service";
-import { PayrollDisbursement } from "../employer/domain/PayrollDisbursement";
-import { Payroll } from "../employer/domain/Payroll";
-import { EmployeeService } from "../employee/employee.service";
-import { Employee } from "../employee/domain/Employee";
 import { AlertService } from "../common/alerts/alert.service";
 import { AlertKey } from "../common/alerts/alert.dto";
-import { Employer } from "../employer/domain/Employer";
-import {
-  CardCreditAdjustmentTransactionRequest,
-  CardDebitAdjustmentTransactionRequest,
-  CardReversalTransactionRequest,
-  CardReversalTransactionType,
-  CardWithdrawalTransactionRequest,
-  CreditAdjustmentTransactionRequest,
-  DebitAdjustmentTransactionRequest,
-  InitiateTransactionRequest,
-  PayrollDepositTransactionRequest,
-  validateInitiateTransactionRequest,
-} from "./dto/transaction.service.dto";
+import { InitiateTransactionRequest, validateInitiateTransactionRequest } from "./dto/transaction.service.dto";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 import { KmsService } from "../common/kms.service";
 import { TransactionPreprocessorFactory } from "./factory/preprocessors/transaction.preprocessor.factory";
+import {
+  TransactionPreprocessor,
+  TransactionPreprocessorRequest,
+} from "./factory/preprocessors/transaction.preprocessor";
 
 @Injectable()
 export class TransactionService {
@@ -65,8 +52,6 @@ export class TransactionService {
     private readonly verificationService: VerificationService,
     private readonly transactionFactory: WorkflowFactory,
     private readonly bankFactory: BankFactory,
-    private readonly employerService: EmployerService,
-    private readonly employeeService: EmployeeService,
     private readonly alertService: AlertService,
     private readonly kmsService: KmsService,
     private readonly transactionPreprocessorFactory: TransactionPreprocessorFactory,
@@ -121,41 +106,14 @@ export class TransactionService {
       });
     }
 
-    // TODO: Refactor to a 'TransactionExecutor' class after cleaning up iWorkflowImpl
     validateInitiateTransactionRequest(request);
 
-    let inputTransaction: InputTransaction;
-    switch (request.type) {
-      case WorkflowName.CARD_WITHDRAWAL:
-        inputTransaction = this.createInputTransactionForCardWithdrawalRequest(request.cardWithdrawalRequest);
-        break;
+    const preprocessorRequest: TransactionPreprocessorRequest =
+      this.transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+    const preprocessor: TransactionPreprocessor = this.transactionPreprocessorFactory.getPreprocessor(request.type);
 
-      case WorkflowName.CARD_REVERSAL:
-        inputTransaction = this.createInputTransactionForCardReversalRequest(request.cardReversalRequest);
-        break;
-
-      case WorkflowName.PAYROLL_DEPOSIT:
-        inputTransaction = await this.createInputTransactionForPayrollDepositRequest(request.payrollDepositRequest);
-        break;
-
-      case WorkflowName.CARD_CREDIT_ADJUSTMENT:
-        inputTransaction = this.createInputTransactionForCardCreditAdjustmentRequest(
-          request.cardCreditAdjustmentRequest,
-        );
-        break;
-
-      case WorkflowName.CARD_DEBIT_ADJUSTMENT:
-        inputTransaction = this.createInputTransactionForCardDebitAdjustmentRequest(request.cardDebitAdjustmentRequest);
-        break;
-
-      case WorkflowName.CREDIT_ADJUSTMENT:
-        inputTransaction = await this.createInputTransactionForCreditAdjustmentRequest(request.creditAdjustmentRequest);
-        break;
-
-      case WorkflowName.DEBIT_ADJUSTMENT:
-        inputTransaction = await this.createInputTransactionForDebitAdjustmentRequest(request.debitAdjustmentRequest);
-        break;
-    }
+    await preprocessor.validate(preprocessorRequest);
+    const inputTransaction: InputTransaction = await preprocessor.convertToRepoInputTransaction(preprocessorRequest);
 
     const transaction: Transaction = await this.transactionRepo.createTransaction(inputTransaction);
     return transaction;
@@ -295,181 +253,6 @@ export class TransactionService {
     };
 
     return await this.transactionRepo.updateTransactionByTransactionID(transactionID, transactionUpdate);
-  }
-
-  private createInputTransactionForCardWithdrawalRequest(
-    cardWithdrawalRequest: CardWithdrawalTransactionRequest,
-  ): InputTransaction {
-    return {
-      id: cardWithdrawalRequest.nobaTransactionID,
-      transactionRef: Utils.generateLowercaseUUID(true),
-      workflowName: WorkflowName.CARD_WITHDRAWAL,
-      debitAmount: cardWithdrawalRequest.debitAmountInUSD,
-      debitCurrency: Currency.USD,
-      debitConsumerID: cardWithdrawalRequest.debitConsumerID,
-      creditAmount: cardWithdrawalRequest.creditAmount,
-      creditCurrency: cardWithdrawalRequest.creditCurrency,
-      memo: cardWithdrawalRequest.memo,
-      exchangeRate: cardWithdrawalRequest.exchangeRate,
-      sessionKey: "CARD_WITHDRAWAL",
-      transactionFees: [],
-    };
-  }
-
-  private createInputTransactionForCardReversalRequest(
-    cardReversalRequest: CardReversalTransactionRequest,
-  ): InputTransaction {
-    if (cardReversalRequest.type === CardReversalTransactionType.CREDIT) {
-      return {
-        id: cardReversalRequest.nobaTransactionID,
-        transactionRef: Utils.generateLowercaseUUID(true),
-        workflowName: WorkflowName.CARD_REVERSAL,
-        creditAmount: cardReversalRequest.amountInUSD,
-        creditCurrency: Currency.USD,
-        creditConsumerID: cardReversalRequest.consumerID,
-        memo: cardReversalRequest.memo,
-        exchangeRate: cardReversalRequest.exchangeRate,
-        sessionKey: "CARD_REVERSAL",
-        transactionFees: [],
-      };
-    } else {
-      return {
-        id: cardReversalRequest.nobaTransactionID,
-        transactionRef: Utils.generateLowercaseUUID(true),
-        workflowName: WorkflowName.CARD_REVERSAL,
-        debitAmount: cardReversalRequest.amountInUSD,
-        debitCurrency: Currency.USD,
-        debitConsumerID: cardReversalRequest.consumerID,
-        memo: cardReversalRequest.memo,
-        exchangeRate: cardReversalRequest.exchangeRate,
-        sessionKey: "CARD_REVERSAL",
-        transactionFees: [],
-      };
-    }
-  }
-
-  private async createInputTransactionForPayrollDepositRequest(
-    request: PayrollDepositTransactionRequest,
-  ): Promise<InputTransaction> {
-    const payrollDisbursement: PayrollDisbursement = await this.employerService.getDisbursement(request.disbursementID);
-    if (!payrollDisbursement) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.DOES_NOT_EXIST,
-        message: `Payroll disbursement with ID '${request.disbursementID}' not found.`,
-      });
-    }
-
-    const payroll: Payroll = await this.employerService.getPayrollByID(payrollDisbursement.payrollID);
-    if (!payroll) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.UNKNOWN,
-        message: `Payroll disbursement with ID '${payrollDisbursement.id}' exist but corresponding Payroll with ID '${payrollDisbursement.payrollID} not found.`,
-      });
-    }
-
-    const employer: Employer = await this.employerService.getEmployerByID(payroll.employerID);
-    if (!employer) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.UNKNOWN,
-        message: `Employer '${payroll.employerID}' for payroll ID '${payroll.id}' does not exist.`,
-      });
-    }
-
-    const employerName = employer.name;
-
-    const employee: Employee = await this.employeeService.getEmployeeByID(payrollDisbursement.employeeID);
-    if (!employee) {
-      throw new ServiceException({
-        errorCode: ServiceErrorCode.UNKNOWN,
-        message: `Employee with ID '${payrollDisbursement.employeeID}' not found.`,
-      });
-    }
-
-    return {
-      workflowName: WorkflowName.PAYROLL_DEPOSIT,
-      exchangeRate: payroll.exchangeRate,
-      memo: `${employerName} Payroll for ${payroll.payrollDate}`,
-      transactionRef: Utils.generateLowercaseUUID(true),
-      transactionFees: [],
-      sessionKey: "PAYROLL",
-      debitAmount: payrollDisbursement.allocationAmount,
-      debitCurrency: Currency.COP,
-      creditAmount: Utils.roundTo2DecimalNumber(payrollDisbursement.allocationAmount * payroll.exchangeRate),
-      creditCurrency: Currency.USD,
-      creditConsumerID: employee.consumerID,
-    };
-  }
-
-  private createInputTransactionForCardCreditAdjustmentRequest(
-    request: CardCreditAdjustmentTransactionRequest,
-  ): InputTransaction {
-    return {
-      transactionRef: Utils.generateLowercaseUUID(true),
-      workflowName: WorkflowName.CARD_CREDIT_ADJUSTMENT,
-      debitAmount: request.debitAmount,
-      debitCurrency: request.debitCurrency,
-      creditAmount: request.creditAmount,
-      creditCurrency: request.creditCurrency,
-      creditConsumerID: request.creditConsumerID,
-      memo: request.memo,
-      exchangeRate: request.exchangeRate,
-      sessionKey: "CARD_ADJUSTMENTS",
-      transactionFees: [],
-    };
-  }
-
-  private createInputTransactionForCardDebitAdjustmentRequest(
-    request: CardDebitAdjustmentTransactionRequest,
-  ): InputTransaction {
-    return {
-      transactionRef: Utils.generateLowercaseUUID(true),
-      workflowName: WorkflowName.CARD_DEBIT_ADJUSTMENT,
-      debitAmount: request.debitAmount,
-      debitCurrency: request.debitCurrency,
-      creditAmount: request.creditAmount,
-      creditCurrency: request.creditCurrency,
-      debitConsumerID: request.debitConsumerID,
-      memo: request.memo,
-      exchangeRate: request.exchangeRate,
-      sessionKey: "CARD_ADJUSTMENTS",
-      transactionFees: [],
-    };
-  }
-
-  private async createInputTransactionForCreditAdjustmentRequest(
-    request: CreditAdjustmentTransactionRequest,
-  ): Promise<InputTransaction> {
-    return {
-      workflowName: WorkflowName.CREDIT_ADJUSTMENT,
-      exchangeRate: 1,
-      memo: request.memo,
-      transactionRef: Utils.generateLowercaseUUID(true),
-      transactionFees: [],
-      sessionKey: WorkflowName.CREDIT_ADJUSTMENT,
-      creditAmount: request.creditAmount,
-      creditCurrency: request.creditCurrency,
-      creditConsumerID: request.creditConsumerID,
-      debitAmount: request.creditAmount,
-      debitCurrency: request.creditCurrency,
-    };
-  }
-
-  private async createInputTransactionForDebitAdjustmentRequest(
-    request: DebitAdjustmentTransactionRequest,
-  ): Promise<InputTransaction> {
-    return {
-      workflowName: WorkflowName.DEBIT_ADJUSTMENT,
-      exchangeRate: 1,
-      memo: request.memo,
-      transactionRef: Utils.generateLowercaseUUID(true),
-      transactionFees: [],
-      sessionKey: WorkflowName.DEBIT_ADJUSTMENT,
-      debitAmount: request.debitAmount,
-      debitCurrency: request.debitCurrency,
-      debitConsumerID: request.debitConsumerID,
-      creditAmount: request.debitAmount,
-      creditCurrency: request.debitCurrency,
-    };
   }
 
   private async validateForSanctions(
