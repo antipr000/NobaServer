@@ -287,10 +287,10 @@ export class CircleService implements IBank {
 
     // It is not cached or force refresh is requested, fetch it from Circle
     balance = await this.circleClient.getWalletBalance(walletID);
-
     // Cache it
+    const roundedBalance = Utils.roundTo2DecimalNumber(balance);
     try {
-      await this.circleRepo.updateCurrentBalance(walletID, Utils.roundTo2DecimalNumber(balance));
+      await this.circleRepo.updateCurrentBalance(walletID, roundedBalance);
     } catch (e) {
       this.alertService.raiseAlert({
         key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
@@ -298,8 +298,9 @@ export class CircleService implements IBank {
       });
     }
 
+    console.log(`Balance for wallet ${walletID} is ${roundedBalance}`);
     return {
-      balance: balance,
+      balance: roundedBalance,
       currency: "USD",
     };
   }
