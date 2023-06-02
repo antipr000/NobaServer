@@ -35,6 +35,7 @@ import { QRService } from "../common/qrcode.service";
 import { S3Service } from "../common/s3.service";
 import { QR_CODES_BASE_URL, QR_CODES_FOLDER_BUCKET_PATH } from "../../config/ConfigurationUtils";
 import { SendScheduledReminderEvent } from "./events/SendScheduledReminderEvent";
+import { SendCreditAdjustmentCompletedEvent } from "./events/SendCreditAdjustmentCompletedEvent";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -615,6 +616,31 @@ export class EmailEventHandler {
         subtotal: subtotal,
         processingFees: payload.params.processingFees,
         nobaFees: payload.params.nobaFees,
+      },
+    };
+
+    await this.emailClient.sendEmail(msg);
+  }
+
+  @OnEvent(`email.${NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT}`)
+  public async sendCreditAdjustmentCompletedEmail(payload: SendCreditAdjustmentCompletedEvent) {
+    const templateID = await this.getOrDefaultTemplateId(
+      NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT,
+      payload.locale,
+    );
+
+    const msg = {
+      to: payload.email,
+      from: SENDER_EMAIL,
+      templateId: templateID,
+      dynamicTemplateData: {
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        creditAmount: payload.params.creditAmount,
+        creditCurrency: payload.params.creditCurrency,
+        transactionRef: payload.params.transactionRef,
+        createdTimestamp: payload.params.createdTimestamp,
+        handle: payload.handle,
       },
     };
 
