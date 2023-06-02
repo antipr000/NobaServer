@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
-import { CommonModule } from "src/modules/common/common.module";
-import { EmployeeModule } from "src/modules/employee/employee.module";
-import { EmployerModule } from "src/modules/employer/employer.module";
+import { CommonModule } from "../../../../modules/common/common.module";
+import { EmployeeModule } from "../../../../modules/employee/employee.module";
+import { EmployerModule } from "../../../../modules/employer/employer.module";
 import { CardCreditAdjustmentPreprocessor } from "./implementations/card.credit.adjustment.preprocessor";
 import { CardDebitAdjustmentPreprocessor } from "./implementations/card.debit.adjustment.preprocessor";
 import { CardReversalPreprocessor } from "./implementations/card.reversal.preprocessor";
