@@ -20,6 +20,8 @@ import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { LatestNotificationResponse } from "./dto/latestnotification.response.dto";
 import { isE2ETestEnvironment } from "../../config/ConfigurationUtils";
 import {
+  AllConsumersDTO,
+  AllScheduledRemindersDTO,
   CreateReminderHistoryDTO,
   CreateReminderScheduleDTO,
   ReminderScheduleDTO,
@@ -76,26 +78,26 @@ export class NotificationWorkflowController {
 
   @Get("/reminder/:groupKey")
   @ApiOperation({ summary: "Get all reminders for a groupKey" })
-  @ApiResponse({ status: HttpStatus.OK, type: Array<ReminderScheduleDTO> })
-  async getReminderSchedules(@Param("groupKey") groupKey: string): Promise<ReminderScheduleDTO[]> {
+  @ApiResponse({ status: HttpStatus.OK, type: AllScheduledRemindersDTO })
+  async getReminderSchedules(@Param("groupKey") groupKey: string): Promise<AllScheduledRemindersDTO> {
     const reminderSchedules = await this.notificationWorkflowService.getAllReminderSchedulesForGroup(groupKey);
-    return reminderSchedules.map(reminderSchedule => {
-      return {
+    return {
+      reminders: reminderSchedules.map(reminderSchedule => ({
         id: reminderSchedule.id,
-        createdTimestamp: reminderSchedule.createdTimestamp,
-        updatedTimestamp: reminderSchedule.updatedTimestamp,
         eventID: reminderSchedule.eventID,
         query: reminderSchedule.query,
         groupKey: reminderSchedule.groupKey,
-      };
-    });
+      })),
+    };
   }
 
   @Get("/reminder/:reminderID/consumers")
   @ApiOperation({ summary: "Get all consumer ids for a reminder" })
-  @ApiResponse({ status: HttpStatus.OK, type: Array<string> })
-  async getReminderConsumers(@Param("reminderID") reminderID: string): Promise<string[]> {
-    return this.notificationWorkflowService.getAllConsumerIDsForReminder(reminderID);
+  @ApiResponse({ status: HttpStatus.OK, type: AllConsumersDTO })
+  async getReminderConsumers(@Param("reminderID") reminderID: string): Promise<AllConsumersDTO> {
+    return {
+      consumerIDs: await this.notificationWorkflowService.getAllConsumerIDsForReminder(reminderID),
+    };
   }
 
   @Post("/event/:eventID")

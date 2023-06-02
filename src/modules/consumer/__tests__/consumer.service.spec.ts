@@ -731,6 +731,70 @@ describe("ConsumerService", () => {
     it("should throw error if whitespace exists in phone number", async () => {
       expect(() => Consumer.createConsumer({ id: "mock-consumer-1", phone: "123 456 7890" })).toThrowError();
     });
+
+    it("should trim spaces from consumer props", async () => {
+      const consumer = Consumer.createConsumer({
+        id: "mock-consumer-1",
+        email: "fake@mock.com",
+      });
+
+      const updatedConsumerData = Consumer.createConsumer({
+        ...consumer.props,
+        firstName: "First",
+        lastName: "Last",
+        dateOfBirth: "1990-01-01",
+        socialSecurityNumber: "123456789",
+        address: {
+          streetLine1: "123 Fake St",
+          streetLine2: "Apt 1",
+          countryCode: "US",
+          city: "Fake City",
+          regionCode: "NY",
+          postalCode: "12345",
+        },
+      });
+
+      when(mockConsumerRepo.getConsumer(consumer.props.id)).thenResolve(consumer);
+      when(
+        mockConsumerRepo.updateConsumer(
+          consumer.props.id,
+          deepEqual({
+            id: consumer.props.id,
+            firstName: updatedConsumerData.props.firstName,
+            lastName: updatedConsumerData.props.lastName,
+            dateOfBirth: updatedConsumerData.props.dateOfBirth,
+            socialSecurityNumber: updatedConsumerData.props.socialSecurityNumber,
+            address: deepEqual({
+              streetLine1: updatedConsumerData.props.address.streetLine1,
+              streetLine2: updatedConsumerData.props.address.streetLine2,
+              countryCode: updatedConsumerData.props.address.countryCode,
+              city: updatedConsumerData.props.address.city,
+              regionCode: updatedConsumerData.props.address.regionCode,
+              postalCode: updatedConsumerData.props.address.postalCode,
+            }),
+            locale: "en_us",
+          }),
+        ),
+      ).thenResolve(updatedConsumerData);
+
+      expect(
+        consumerService.updateConsumer({
+          id: consumer.props.id,
+          firstName: "  First  ",
+          lastName: "  Last  ",
+          dateOfBirth: "  1990-01-01  ",
+          socialSecurityNumber: "  123456789  ",
+          address: {
+            streetLine1: "  123 Fake St  ",
+            streetLine2: "  Apt 1  ",
+            countryCode: "  US  ",
+            city: "  Fake City  ",
+            regionCode: "  NY  ",
+            postalCode: "  12345  ",
+          },
+        }),
+      ).resolves.toStrictEqual(updatedConsumerData);
+    });
   });
 
   describe("generateDefaultHandle", () => {
