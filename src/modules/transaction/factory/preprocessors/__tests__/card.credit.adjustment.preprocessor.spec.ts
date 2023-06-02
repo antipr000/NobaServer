@@ -37,23 +37,6 @@ describe("CardCreditAdjustmentPreprocessor", () => {
     await app.close();
   });
 
-  const VALID_CREDIT_REQUEST: CardReversalTransactionRequest = {
-    type: CardReversalTransactionType.CREDIT,
-    amountInUSD: 100,
-    consumerID: "CREDIT_CONSUMER_ID",
-    exchangeRate: 1,
-    memo: "MEMO",
-    nobaTransactionID: "NOBA_TRANSACTION_ID",
-  };
-  const VALID_DEBIT_REQUEST: CardReversalTransactionRequest = {
-    type: CardReversalTransactionType.DEBIT,
-    amountInUSD: 100,
-    consumerID: "DEBIT_CONSUMER_ID",
-    exchangeRate: 1,
-    memo: "MEMO",
-    nobaTransactionID: "NOBA_TRANSACTION_ID",
-  };
-
   describe("validate()", () => {
     describe("Static validations", () => {
       const VALID_REQUEST: CardCreditAdjustmentTransactionRequest = {
