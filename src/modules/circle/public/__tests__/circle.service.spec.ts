@@ -798,7 +798,7 @@ describe("CircleService", () => {
       const cachedWalletID = "cached-walletID";
       when(mockCircleClient.getWalletBalance(cachedWalletID)).thenResolve(balance);
       when(mockCircleRepo.updateCurrentBalance(cachedWalletID, roundedBalance)).thenResolve();
-      expect(circleService.getBalance(cachedWalletID, true)).resolves.toEqual({
+      await expect(circleService.getBalance(cachedWalletID, true)).resolves.toEqual({
         balance: roundedBalance,
         currency: "USD",
       });
