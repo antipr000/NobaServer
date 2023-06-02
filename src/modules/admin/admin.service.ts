@@ -148,12 +148,15 @@ export class AdminService {
   async decorateConsumer(consumer: Consumer): Promise<ConsumerInternalDTO> {
     // Convert to internal DTO
     const internalConsumer = this.consumerMapper.toConsumerInternalDTO(consumer);
+    const walletID = await this.circleService.getOrCreateWallet(consumer.props.id);
+    const currentBalance = await this.circleService.getBalance(walletID);
 
     // Decorate with wallet details
     internalConsumer.walletDetails = [
       {
         walletProvider: "Circle",
-        walletID: await this.circleService.getOrCreateWallet(consumer.props.id),
+        walletID: walletID,
+        currentBalance: currentBalance?.balance ?? 0,
       },
     ];
 

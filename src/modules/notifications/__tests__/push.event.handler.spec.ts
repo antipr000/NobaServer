@@ -806,7 +806,8 @@ describe.each([
 
       when(mockPushClient.sendPushNotification(anything())).thenResolve();
 
-      await eventHandler.sendScheduledReminderEvent(payload);
+      const response = await eventHandler.sendScheduledReminderEvent(payload);
+      expect(response).toBeTruthy();
 
       verify(
         mockPushClient.sendPushNotification(
@@ -829,6 +830,54 @@ describe.each([
           }),
         ),
       ).once();
+    });
+
+    it("should return false when no push tokens exist", async () => {
+      const payload: SendScheduledReminderEvent = {
+        eventID: "fake-event-id",
+        firstName: "First",
+        lastName: "Last",
+        email: "fake+email@noba.com",
+        locale: locale,
+        nobaUserID: "fake-noba-user-id",
+      };
+
+      when(mockPushTokenService.getPushTokensForConsumer(payload.nobaUserID)).thenResolve([]);
+
+      when(mockEventRepo.getEventByIDOrName(payload.eventID)).thenResolve({
+        id: "fake-event-id",
+        name: "Some Fake Event",
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        handlers: [EventHandlers.EMAIL],
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            templateTitle: "Scheduled reminder title in en",
+            templateBody: "Scheduled reminder body in en",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-event-id",
+            type: EventHandlers.PUSH,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            templateTitle: "Scheduled reminder title in es",
+            templateBody: "Scheduled reminder body in es",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-event-id",
+            type: EventHandlers.PUSH,
+          },
+        ],
+      });
+
+      when(mockPushClient.sendPushNotification(anything())).thenResolve();
+
+      const response = await eventHandler.sendScheduledReminderEvent(payload);
+      expect(response).toBeFalsy();
     });
   });
 });
@@ -902,9 +951,9 @@ function getTransactionParams(workflow: WorkflowName): TransactionParameters {
       };
     case WorkflowName.CREDIT_ADJUSTMENT:
       return {
-        creditAmount: Utils.localizeAmount(5000, "en"),
-        creditAmountNumber: 5000,
-        creditCurrency: "COP",
+        creditAmount: Utils.localizeAmount(1, "en"),
+        creditAmountNumber: 1,
+        creditCurrency: "USD",
         debitAmount: null,
         debitAmountNumber: null,
         debitCurrency: null,

@@ -58,19 +58,9 @@ export class TransactionWorkflowController {
   @ApiNotFoundResponse({ description: "Requested disbursement is not found" })
   @ApiBadRequestResponse({ description: "Failed to create transaction" })
   async createTransaction(@Body() requestBody: CreateTransactionDTO): Promise<WorkflowTransactionDTO> {
-    let transaction: Transaction;
-    if (requestBody.disbursementID) {
-      transaction = await this.transactionService.validateAndSaveTransaction({
-        type: WorkflowName.PAYROLL_DEPOSIT,
-        payrollDepositRequest: {
-          disbursementID: requestBody.disbursementID,
-        },
-      });
-    } else {
-      transaction = await this.transactionService.validateAndSaveTransaction(
-        this.convertToInitiateTransactionRequest(requestBody),
-      );
-    }
+    const transaction: Transaction = await this.transactionService.validateAndSaveTransaction(
+      this.convertToInitiateTransactionRequest(requestBody),
+    );
 
     return this.transactionWorkflowMapper.toWorkflowTransactionDTO(transaction, []);
   }

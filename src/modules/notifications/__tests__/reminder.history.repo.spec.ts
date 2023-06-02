@@ -177,10 +177,9 @@ describe("ReminderHistoryRepoTests", () => {
       expect(fetchedReminderHistory.lastSentTimestamp.valueOf()).toBe(reminderHistory.lastSentTimestamp.valueOf());
     });
 
-    it("should throw RepoException if reminder history does not exist", async () => {
-      await expect(reminderHistoryRepo.getReminderHistoryByID("fake-id")).rejects.toThrowRepoException(
-        RepoErrorCode.NOT_FOUND,
-      );
+    it("should return null if reminder history does not exist", async () => {
+      const fetchedReminderHistory = await reminderHistoryRepo.getReminderHistoryByID("fake-id");
+      expect(fetchedReminderHistory).toBeNull();
     });
   });
 

@@ -1,4 +1,3 @@
-import { getRandomEmployer } from "../../../modules/employer/test_utils/employer.test.utils";
 import { getRandomActiveConsumer } from "../../../modules/consumer/test_utils/test.utils";
 import { NotificationPayloadMapper } from "../domain/NotificationPayload";
 import { validateDocumentVerificationPendingEvent } from "../events/SendDocumentVerificationPendingEvent";
@@ -12,9 +11,9 @@ import { validateSendKycPendingOrFlaggedEvent } from "../events/SendKycPendingOr
 import { validateSendOtpEvent } from "../events/SendOtpEvent";
 import { validateSendPhoneVerificationCodeEvent } from "../events/SendPhoneVerificationCodeEvent";
 import { validateSendWelcomeMessageEvent } from "../events/SendWelcomeMessageEvent";
-import { getRandomEmployee } from "../../../modules/employee/test_utils/employee.test.utils";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
 import { validateSendUpdatePayrollStatusEvent } from "../events/SendUpdatePayrollStatusEvent";
+import { validateSendScheduledReminderEvent } from "../events/SendScheduledReminderEvent";
 
 describe("NotificationPayloadMapper Tests", () => {
   describe("toOtpEvent", () => {
@@ -585,6 +584,56 @@ describe("NotificationPayloadMapper Tests", () => {
         const payload = NotificationPayloadMapper.toUpdatePayrollStatusEvent(undefined, PayrollStatus.COMPLETED);
 
         validateSendUpdatePayrollStatusEvent(payload);
+      }).toThrowError();
+    });
+  });
+
+  describe("SendScheduledReminderEvent", () => {
+    it("should not throw Error when email is null", () => {
+      const consumer = getRandomActiveConsumer("1", "US");
+      consumer.props.email = null;
+      const payload = NotificationPayloadMapper.toScheduledReminderEvent(consumer, "fake-event");
+
+      expect(payload).toStrictEqual({
+        email: null,
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        locale: consumer.props.locale,
+        nobaUserID: consumer.props.id,
+        eventID: "fake-event",
+        handle: consumer.props.handle,
+        phone: consumer.props.phone,
+      });
+
+      validateSendScheduledReminderEvent(payload);
+    });
+
+    it("should not throw Error when optional fields are null", () => {
+      const consumer = getRandomActiveConsumer("1", "US");
+      consumer.props.email = null;
+      consumer.props.phone = null;
+      consumer.props.handle = null;
+      consumer.props.locale = null;
+      const payload = NotificationPayloadMapper.toScheduledReminderEvent(consumer, "fake-event");
+
+      expect(payload).toStrictEqual({
+        email: null,
+        firstName: consumer.props.firstName,
+        lastName: consumer.props.lastName,
+        nobaUserID: consumer.props.id,
+        eventID: "fake-event",
+        handle: null,
+        phone: null,
+      });
+
+      validateSendScheduledReminderEvent(payload);
+    });
+
+    it("should throw Error when eventID is null", () => {
+      const consumer = getRandomActiveConsumer("1", "US");
+      expect(() => {
+        const payload = NotificationPayloadMapper.toScheduledReminderEvent(consumer, null);
+        validateSendScheduledReminderEvent(payload);
       }).toThrowError();
     });
   });

@@ -141,7 +141,16 @@ describe("NotificationWorkflowController Tests", () => {
       when(notificationWorflowService.getAllReminderSchedulesForGroup(anything())).thenResolve(reminders);
 
       const response = await notificationWorkflowController.getReminderSchedules("group-key");
-      expect(response).toStrictEqual(reminders);
+      expect(response).toStrictEqual({
+        reminders: reminders.map(reminder => {
+          return {
+            id: reminder.id,
+            eventID: reminder.eventID,
+            query: reminder.query,
+            groupKey: reminder.groupKey,
+          };
+        }),
+      });
       verify(notificationWorflowService.getAllReminderSchedulesForGroup("group-key")).once();
     });
   });
@@ -153,7 +162,9 @@ describe("NotificationWorkflowController Tests", () => {
       when(notificationWorflowService.getAllConsumerIDsForReminder(anything())).thenResolve(consumers);
 
       const response = await notificationWorkflowController.getReminderConsumers("fake-schedule");
-      expect(response).toStrictEqual(consumers);
+      expect(response).toStrictEqual({
+        consumerIDs: consumers,
+      });
       verify(notificationWorflowService.getAllConsumerIDsForReminder("fake-schedule")).once();
     });
   });

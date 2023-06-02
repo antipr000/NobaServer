@@ -69,6 +69,11 @@ export const validateReminderHistory = (reminderHistory: ReminderHistory) => {
 };
 
 export const convertToDomainReminderHistory = (reminderHistory: PrismaReminderHistoryModel): ReminderHistory => {
+  // This should be done in the caller, but add here as well so the method takes care of itself
+  if (!reminderHistory) {
+    return null;
+  }
+
   return {
     id: reminderHistory.id,
     createdTimestamp: reminderHistory.createdTimestamp,
