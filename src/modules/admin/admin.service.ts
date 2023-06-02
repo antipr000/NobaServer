@@ -149,7 +149,7 @@ export class AdminService {
     // Convert to internal DTO
     const internalConsumer = this.consumerMapper.toConsumerInternalDTO(consumer);
     const walletID = await this.circleService.getOrCreateWallet(consumer.props.id);
-    let currentBalance = await this.circleService.getBalance(walletID);
+    const currentBalance = await this.circleService.getBalance(walletID);
 
     // Decorate with wallet details
     internalConsumer.walletDetails = [
