@@ -96,12 +96,7 @@ export class PomeloTransactionRequestDTO {
 }
 
 export class CreateTransactionDTO {
-  // TODO: Remove it once the workflow is migrated.
-  @ApiProperty()
-  disbursementID?: string;
-
-  // TODO: Make it required once the workflow is migrated.
-  @ApiPropertyOptional({ enum: WorkflowName })
+  @ApiProperty({ enum: WorkflowName })
   transactionType?: WorkflowName;
 
   @ApiPropertyOptional()
