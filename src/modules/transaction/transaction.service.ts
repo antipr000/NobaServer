@@ -53,6 +53,7 @@ import {
 } from "./dto/transaction.service.dto";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 import { KmsService } from "../common/kms.service";
+import { TransactionPreprocessorFactory } from "./factory/preprocessors/transaction.preprocessor.factory";
 
 @Injectable()
 export class TransactionService {
@@ -68,6 +69,7 @@ export class TransactionService {
     private readonly employeeService: EmployeeService,
     private readonly alertService: AlertService,
     private readonly kmsService: KmsService,
+    private readonly transactionPreprocessorFactory: TransactionPreprocessorFactory,
   ) {}
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID?: string): Promise<Transaction> {

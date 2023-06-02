@@ -18,6 +18,7 @@ import { EmployerModule } from "../employer/employer.module";
 import { EmployeeModule } from "../employee/employee.module";
 import { CirclePublicModule } from "../circle/public/circle.public.module";
 import { MonoPublicModule } from "../mono/public/mono.public.module";
+import { TransactionPreprocessorModule } from "./factory/preprocessors/transaction.preprocessor.module";
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { MonoPublicModule } from "../mono/public/mono.public.module";
     EmployerModule,
     EmployeeModule,
     CirclePublicModule,
+    TransactionPreprocessorModule,
   ],
   controllers: [TransactionController, TransactionWorkflowController],
   providers: [
@@ -59,6 +61,7 @@ export class TransactionModule {}
     EmployerModule,
     EmployeeModule,
     CirclePublicModule,
+    TransactionPreprocessorModule,
   ],
   providers: [TransactionWorkflowMapper],
   controllers: [TransactionWorkflowController],
