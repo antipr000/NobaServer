@@ -632,7 +632,6 @@ export class EmailEventHandler {
     const msg = {
       to: payload.email,
       from: SENDER_EMAIL,
-      subject: "Credit Adjustment Completed",
       templateId: templateID,
       dynamicTemplateData: {
         firstName: payload.firstName,
