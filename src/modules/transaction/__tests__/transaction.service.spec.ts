@@ -79,6 +79,8 @@ import { getMockCreditAdjustmentImplWithDefaults } from "../mocks/mock.credit.ad
 import { getMockDebitAdjustmentImplWithDefaults } from "../mocks/mock.dedit.adjustment.impl";
 import { DebitAdjustmentImpl } from "../factory/debit.adjustment.impl";
 import { ConsumerWorkflowName } from "../../../infra/temporal/workflow";
+import { TransactionPreprocessorFactory } from "../factory/preprocessors/transaction.preprocessor.factory";
+import { getMockTransactionPreprocessorFactoryWithDefaults } from "../factory/preprocessors/mocks/mock.transaction.preprocessor.factory";
 
 describe("TransactionServiceTests", () => {
   jest.setTimeout(20000);
@@ -102,6 +104,7 @@ describe("TransactionServiceTests", () => {
   let employerService: EmployerService;
   let alertService: AlertService;
   let kmsService: KmsService;
+  let transactionPreprocessorFactory: TransactionPreprocessorFactory;
 
   beforeEach(async () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
@@ -121,6 +124,7 @@ describe("TransactionServiceTests", () => {
     employerService = getMockEmployerServiceWithDefaults();
     alertService = getMockAlertServiceWithDefaults();
     kmsService = getMockKMSServiceWithDefaults();
+    transactionPreprocessorFactory = getMockTransactionPreprocessorFactoryWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -180,6 +184,10 @@ describe("TransactionServiceTests", () => {
         {
           provide: KmsService,
           useFactory: () => instance(kmsService),
+        },
+        {
+          provide: TransactionPreprocessorFactory,
+          useFactory: () => instance(transactionPreprocessorFactory),
         },
         TransactionService,
       ],
