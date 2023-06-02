@@ -808,6 +808,13 @@ describe("AdminController", () => {
       when(mockAdminService.updateConsumer(consumerProps.id, anything())).thenResolve({
         ...updatedConsumerObj.props,
         gender: Gender.FEMALE,
+        walletDetails: [
+          {
+            walletID: "wallet-1234",
+            walletProvider: "Circle",
+            currentBalance: 100,
+          },
+        ],
       });
 
       const result = await adminController.updateConsumer(
@@ -826,6 +833,13 @@ describe("AdminController", () => {
       expect(result.id).toBe(consumerProps.id);
       expect(result.verificationData.kycCheckStatus).toBe(KYCStatus.APPROVED);
       expect(result.verificationData.documentVerificationStatus).toBe(DocumentVerificationStatus.APPROVED);
+      expect(result.walletDetails).toEqual([
+        {
+          walletID: "wallet-1234",
+          walletProvider: "Circle",
+          currentBalance: 100,
+        },
+      ]);
     });
   });
 
