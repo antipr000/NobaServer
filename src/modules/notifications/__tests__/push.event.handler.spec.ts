@@ -22,9 +22,9 @@ import { EventRepo } from "../repos/event.repo";
 import { getMockEventRepoWithDefaults } from "../mocks/mock.event.repo";
 import { NotificationEventType } from "../domain/NotificationTypes";
 import { EventHandlers } from "../domain/EventHandlers";
-import { Utils } from "../../../core/utils/Utils";
 import { SendCreditAdjustmentCompletedEvent } from "../events/SendCreditAdjustmentCompletedEvent";
 import { SendScheduledReminderEvent } from "../events/SendScheduledReminderEvent";
+import { LocaleUtils } from "../../../core/utils/LocaleUtils";
 
 describe.each([
   ["en", "en"],
@@ -886,78 +886,78 @@ function getTransactionParams(workflow: WorkflowName): TransactionParameters {
   switch (workflow) {
     case WorkflowName.WALLET_DEPOSIT:
       return {
-        debitAmount: Utils.localizeAmount(5000, "en"),
+        debitAmount: LocaleUtils.localizeAmount(5000, "en"),
         debitAmountNumber: 5000,
         debitCurrency: "COP",
-        creditAmount: Utils.localizeAmount(1, "en"),
+        creditAmount: LocaleUtils.localizeAmount(1, "en"),
         creditAmountNumber: 1,
         creditCurrency: "USD",
-        exchangeRate: Utils.localizeAmount(0.0025, "en"),
+        exchangeRate: LocaleUtils.localizeAmount(0.0025, "en"),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: Utils.localizeAmount(0.23, "en"),
-        nobaFees: Utils.localizeAmount(0.34, "en"),
-        totalFees: Utils.localizeAmount(0.57, "en"),
+        processingFees: LocaleUtils.localizeAmount(0.23, "en"),
+        nobaFees: LocaleUtils.localizeAmount(0.34, "en"),
+        totalFees: LocaleUtils.localizeAmount(0.57, "en"),
         totalFeesNumber: 0.57,
       };
 
     case WorkflowName.WALLET_WITHDRAWAL:
       return {
-        debitAmount: Utils.localizeAmount(1, "en"),
+        debitAmount: LocaleUtils.localizeAmount(1, "en"),
         debitAmountNumber: 1,
         debitCurrency: "USD",
-        creditAmount: Utils.localizeAmount(5000, "en"),
+        creditAmount: LocaleUtils.localizeAmount(5000, "en"),
         creditAmountNumber: 5000,
         creditCurrency: "COP",
-        exchangeRate: Utils.localizeAmount(5000, "en"),
+        exchangeRate: LocaleUtils.localizeAmount(5000, "en"),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: Utils.localizeAmount(0.23, "en"),
-        nobaFees: Utils.localizeAmount(0.34, "en"),
-        totalFees: Utils.localizeAmount(0.57, "en"),
+        processingFees: LocaleUtils.localizeAmount(0.23, "en"),
+        nobaFees: LocaleUtils.localizeAmount(0.34, "en"),
+        totalFees: LocaleUtils.localizeAmount(0.57, "en"),
         totalFeesNumber: 0.57,
       };
     case WorkflowName.WALLET_TRANSFER:
       return {
-        debitAmount: Utils.localizeAmount(10, "en"),
+        debitAmount: LocaleUtils.localizeAmount(10, "en"),
         debitAmountNumber: 10,
         debitCurrency: "USD",
-        creditAmount: Utils.localizeAmount(9.43, "en"),
+        creditAmount: LocaleUtils.localizeAmount(9.43, "en"),
         creditAmountNumber: 9.43,
         creditCurrency: "USD",
-        exchangeRate: Utils.localizeAmount(0.0025, "en"),
+        exchangeRate: LocaleUtils.localizeAmount(0.0025, "en"),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: Utils.localizeAmount(0.23, "en"),
-        nobaFees: Utils.localizeAmount(0.34, "en"),
-        totalFees: Utils.localizeAmount(0.57, "en"),
+        processingFees: LocaleUtils.localizeAmount(0.23, "en"),
+        nobaFees: LocaleUtils.localizeAmount(0.34, "en"),
+        totalFees: LocaleUtils.localizeAmount(0.57, "en"),
         totalFeesNumber: 0.57,
       };
     case WorkflowName.PAYROLL_DEPOSIT:
       return {
-        debitAmount: Utils.localizeAmount(5000, "en"),
+        debitAmount: LocaleUtils.localizeAmount(5000, "en"),
         debitAmountNumber: 5000,
         debitCurrency: "COP",
-        creditAmount: Utils.localizeAmount(1, "en"),
+        creditAmount: LocaleUtils.localizeAmount(1, "en"),
         creditAmountNumber: 1,
         creditCurrency: "USD",
-        exchangeRate: Utils.localizeAmount(0.0025, "en"),
+        exchangeRate: LocaleUtils.localizeAmount(0.0025, "en"),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: Utils.localizeAmount(0.23, "en"),
-        nobaFees: Utils.localizeAmount(0.34, "en"),
-        totalFees: Utils.localizeAmount(0.57, "en"),
+        processingFees: LocaleUtils.localizeAmount(0.23, "en"),
+        nobaFees: LocaleUtils.localizeAmount(0.34, "en"),
+        totalFees: LocaleUtils.localizeAmount(0.57, "en"),
         totalFeesNumber: 0.57,
       };
     case WorkflowName.CREDIT_ADJUSTMENT:
       return {
-        creditAmount: Utils.localizeAmount(1, "en"),
+        creditAmount: LocaleUtils.localizeAmount(1, "en"),
         creditAmountNumber: 1,
         creditCurrency: "USD",
         debitAmount: null,
         debitAmountNumber: null,
         debitCurrency: null,
-        exchangeRate: Utils.localizeAmount(1, "en"),
+        exchangeRate: LocaleUtils.localizeAmount(1, "en"),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
         processingFees: null,

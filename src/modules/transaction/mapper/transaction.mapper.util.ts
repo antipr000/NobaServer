@@ -1,11 +1,7 @@
-import i18next from "i18next";
 import { TransactionEvent } from "../domain/TransactionEvent";
 import { TransactionFee } from "../domain/TransactionFee";
 import { TransactionFeeDTO } from "../dto/TransactionDTO";
 import { TransactionEventDTO } from "../dto/TransactionEventDTO";
-import { join } from "path";
-import FsBackend, { FsBackendOptions } from "i18next-fs-backend";
-import { Utils } from "../../../core/utils/Utils";
 import { LocaleUtils } from "../../../core/utils/LocaleUtils";
 
 export const toTransactionFeesDTO = (transactionFees: TransactionFee): TransactionFeeDTO => {

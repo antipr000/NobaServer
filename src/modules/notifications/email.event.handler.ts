@@ -36,6 +36,7 @@ import { S3Service } from "../common/s3.service";
 import { QR_CODES_BASE_URL, QR_CODES_FOLDER_BUCKET_PATH } from "../../config/ConfigurationUtils";
 import { SendScheduledReminderEvent } from "./events/SendScheduledReminderEvent";
 import { SendCreditAdjustmentCompletedEvent } from "./events/SendCreditAdjustmentCompletedEvent";
+import { LocaleUtils } from "../../core/utils/LocaleUtils";
 
 const SUPPORT_URL = "help.noba.com";
 const SENDER_EMAIL = "Noba <no-reply@noba.com>";
@@ -272,7 +273,7 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT}`)
   public async sendDepositCompletedEmail(payload: SendDepositCompletedEvent) {
-    const subtotal = Utils.localizeAmount(
+    const subtotal = LocaleUtils.localizeAmount(
       payload.params.creditAmountNumber + payload.params.totalFeesNumber,
       payload.locale,
     );
@@ -306,7 +307,7 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_INITIATED_EVENT}`)
   public async sendDepositInitiatedEmail(payload: SendDepositInitiatedEvent) {
-    const subtotal = Utils.localizeAmount(
+    const subtotal = LocaleUtils.localizeAmount(
       payload.params.creditAmountNumber + payload.params.totalFeesNumber,
       payload.locale,
     );
@@ -341,7 +342,7 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_DEPOSIT_FAILED_EVENT}`)
   public async sendDepositFailedEmail(payload: SendDepositFailedEvent) {
-    const subtotal = Utils.localizeAmount(
+    const subtotal = LocaleUtils.localizeAmount(
       payload.params.creditAmountNumber + payload.params.totalFeesNumber,
       payload.locale,
     );
@@ -376,7 +377,7 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_WITHDRAWAL_COMPLETED_EVENT}`)
   public async sendWithdrawalCompletedEmail(payload: SendWithdrawalCompletedEvent) {
-    const subtotal = Utils.localizeAmount(
+    const subtotal = LocaleUtils.localizeAmount(
       payload.params.debitAmountNumber - payload.params.totalFeesNumber,
       payload.locale,
     );
@@ -411,7 +412,7 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_WITHDRAWAL_INITIATED_EVENT}`)
   public async sendWithdrawalInitiatedEmail(payload: SendWithdrawalInitiatedEvent) {
-    const subtotal = Utils.localizeAmount(
+    const subtotal = LocaleUtils.localizeAmount(
       payload.params.debitAmountNumber - payload.params.totalFeesNumber,
       payload.locale,
     );
@@ -445,7 +446,7 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_WITHDRAWAL_FAILED_EVENT}`)
   public async sendWithdrawalFailedEmail(payload: SendWithdrawalFailedEvent) {
-    const subtotal = Utils.localizeAmount(
+    const subtotal = LocaleUtils.localizeAmount(
       payload.params.debitAmountNumber - payload.params.totalFeesNumber,
       payload.locale,
     );
@@ -479,7 +480,7 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_TRANSFER_COMPLETED_EVENT}`)
   public async sendTransferCompletedEmail(payload: SendTransferCompletedEvent) {
-    const subtotal = Utils.localizeAmount(
+    const subtotal = LocaleUtils.localizeAmount(
       payload.params.debitAmountNumber - payload.params.totalFeesNumber,
       payload.locale,
     );
@@ -515,7 +516,7 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_TRANSFER_RECEIVED_EVENT}`)
   public async sendTransferReceivedEvent(payload: SendTransferReceivedEvent) {
-    const subtotal = Utils.localizeAmount(
+    const subtotal = LocaleUtils.localizeAmount(
       payload.params.debitAmountNumber - payload.params.totalFeesNumber,
       payload.locale,
     );
@@ -553,7 +554,7 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_TRANSFER_FAILED_EVENT}`)
   public async sendTransferFailedEmail(payload: SendTransferFailedEvent) {
-    const subtotal = Utils.localizeAmount(
+    const subtotal = LocaleUtils.localizeAmount(
       payload.params.debitAmountNumber - payload.params.totalFeesNumber,
       payload.locale,
     );
@@ -590,7 +591,7 @@ export class EmailEventHandler {
 
   @OnEvent(`email.${NotificationEventType.SEND_PAYROLL_DEPOSIT_COMPLETED_EVENT}`)
   public async sendPayrollDepositCompletedEmail(payload: SendPayrollDepositCompletedEvent) {
-    const subtotal = Utils.localizeAmount(
+    const subtotal = LocaleUtils.localizeAmount(
       payload.params.creditAmountNumber + payload.params.totalFeesNumber,
       payload.locale,
     );

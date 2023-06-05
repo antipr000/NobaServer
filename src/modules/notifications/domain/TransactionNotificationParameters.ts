@@ -3,7 +3,6 @@ import { Transaction, getFee, getTotalFees } from "../../../modules/transaction/
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
-import { Utils } from "../../../core/utils/Utils";
 import { LocaleUtils } from "../../../core/utils/LocaleUtils";
 
 export type TransactionParameters = {
@@ -187,12 +186,12 @@ export class TransactionNotificationPayloadMapper {
     const nobaFee = getFee(transaction, FeeType.NOBA);
     const totalFeesNumber = getTotalFees(transaction);
 
-    const creditAmount = Utils.localizeAmount(transaction.creditAmount ?? 0, locale);
-    const debitAmount = Utils.localizeAmount(transaction.debitAmount ?? 0, locale);
-    const exchangeRate = Utils.localizeAmount(transaction.exchangeRate ?? 0, locale, false);
-    const nobaFees = Utils.localizeAmount(nobaFee ? nobaFee.amount : 0, locale);
-    const processingFees = Utils.localizeAmount(processingFee ? processingFee.amount : 0, locale);
-    const totalFees = Utils.localizeAmount(totalFeesNumber ?? 0, locale);
+    const creditAmount = LocaleUtils.localizeAmount(transaction.creditAmount ?? 0, locale);
+    const debitAmount = LocaleUtils.localizeAmount(transaction.debitAmount ?? 0, locale);
+    const exchangeRate = LocaleUtils.localizeAmount(transaction.exchangeRate ?? 0, locale, false);
+    const nobaFees = LocaleUtils.localizeAmount(nobaFee ? nobaFee.amount : 0, locale);
+    const processingFees = LocaleUtils.localizeAmount(processingFee ? processingFee.amount : 0, locale);
+    const totalFees = LocaleUtils.localizeAmount(totalFeesNumber ?? 0, locale);
     return {
       transactionRef: transaction.transactionRef,
       createdTimestamp: transaction.createdTimestamp.toUTCString(),
