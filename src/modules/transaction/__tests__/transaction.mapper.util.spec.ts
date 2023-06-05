@@ -184,17 +184,6 @@ describe("transaction.mapper.util suite", () => {
         text: translatedText,
       });
     });
-
-    it("all transaction event translation files should contain english keys", () => {
-      const en = readFileSync(join(__dirname, "../../../../appconfigs/i18n/translations_en.json"), "utf8");
-      const es = readFileSync(join(__dirname, "../../../../appconfigs/i18n/translations_es.json"), "utf-8");
-      const enJSON = JSON.parse(en);
-      const esJSON = JSON.parse(es);
-
-      const enKeys = Object.keys(enJSON["TransactionEvent"]);
-      const esKeys = Object.keys(esJSON["TransactionEvent"]);
-      expect(enKeys).toEqual(esKeys);
-    });
   });
 
   describe("toTransactionFeesDTO", () => {

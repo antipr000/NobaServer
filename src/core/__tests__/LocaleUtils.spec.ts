@@ -1,4 +1,6 @@
+import { readFileSync } from "fs";
 import { LocaleUtils } from "../utils/LocaleUtils";
+import { join } from "path";
 
 describe("Utils", () => {
   jest.setTimeout(2000);
@@ -123,6 +125,78 @@ describe("Utils", () => {
       const epochTimestampInSeconds = "1696134600";
 
       expect(LocaleUtils.convertToColumbianDate(epochTimestampInSeconds)).toBe("2023-09-30");
+    });
+  });
+
+  describe("getTranslatedContent", () => {
+    it("should return empty if translation key is empty", () => {
+      expect(
+        LocaleUtils.getTranslatedContent({
+          locale: "en-us",
+          translationDomain: "General",
+          translationKey: "",
+        }),
+      ).toBe("");
+    });
+
+    it("should return empty if translation domain is not found", () => {
+      expect(
+        LocaleUtils.getTranslatedContent({
+          locale: "en-us",
+          translationDomain: "TRANSLATION_DOMAIN_NOT_FOUND",
+          translationKey: "TRANSLATION_KEY_NOT_FOUND",
+        }),
+      ).toBe("");
+    });
+
+    it("should return empty if translation key is not found in translation domain", () => {
+      expect(
+        LocaleUtils.getTranslatedContent({
+          locale: "en-us",
+          translationDomain: "General",
+          translationKey: "TRANSLATION_KEY_NOT_FOUND",
+        }),
+      ).toBe("");
+    });
+
+    it("should return translated content if translation key is found in translation domain", () => {
+      expect(
+        LocaleUtils.getTranslatedContent({
+          locale: "en-us",
+          translationDomain: "General",
+          translationKey: "TRANSACTION_FAILED",
+        }),
+      ).toBe("Transaction failed.");
+    });
+
+    it("should return translated transaction event text with params but ignore them", () => {
+      expect(
+        LocaleUtils.getTranslatedContent({
+          locale: "prk",
+          translationDomain: "TestDomain",
+          translationKey: "NO_PARAMS_TEST",
+          translationParams: {
+            0: "PARAM1",
+            1: "PARAM2",
+            2: "PARAM3",
+            3: "PARAM4",
+            4: "PARAM5",
+          },
+        }),
+      ).toBe("No Params.");
+    });
+
+    it("should return translated transaction event text with params", () => {});
+
+    it("all transaction event translation files should contain english keys", () => {
+      const en = readFileSync(join(__dirname, "../../../appconfigs/i18n/translations_en.json"), "utf8");
+      const es = readFileSync(join(__dirname, "../../../appconfigs/i18n/translations_es.json"), "utf-8");
+      const enJSON = JSON.parse(en);
+      const esJSON = JSON.parse(es);
+
+      const enKeys = Object.keys(enJSON["TransactionEvent"]);
+      const esKeys = Object.keys(esJSON["TransactionEvent"]);
+      expect(enKeys).toEqual(esKeys);
     });
   });
 });
