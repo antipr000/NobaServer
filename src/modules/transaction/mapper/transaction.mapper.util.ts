@@ -27,10 +27,10 @@ export const toTransactionEventDTO = async (
     3: transactionEvent.param4,
     4: transactionEvent.param5,
   };
-  const translatedContent = await TranslationUtils.getTranslatedContent({
+  const translatedContent = TranslationUtils.getTranslatedContent({
     locale: locale,
     translationDomain: "TransactionEvent",
-    translationKey: transactionEvent.message,
+    translationKey: transactionEvent.key,
     translationParams: translationParams,
   });
 

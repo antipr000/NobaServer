@@ -12,7 +12,7 @@ export interface ITranslationParams {
 }
 
 export class TranslationUtils {
-  static async getTranslatedContent({
+  static getTranslatedContent({
     locale,
     translationDomain,
     translationKey,
@@ -24,16 +24,15 @@ export class TranslationUtils {
     translationParams: ITranslationParams;
   }) {
     let normalizedLocale = Utils.normalizeLocale(locale);
-    await i18next.use(FsBackend).init<FsBackendOptions>({
+
+    i18next.use(FsBackend).init<FsBackendOptions>({
       initImmediate: false,
       fallbackLng: "en-us",
       lng: normalizedLocale,
       backend: {
-        loadPath: join(__dirname, "../../../../appconfigs/i18n/translations_{{lng}}.json"),
+        loadPath: join(__dirname, "../../../appconfigs/i18n/translations_{{lng}}.json"),
       },
     });
-
-    await i18next.changeLanguage(normalizedLocale || "en-us");
 
     const transactionEventKey = `${translationDomain}.${translationKey}`;
 
