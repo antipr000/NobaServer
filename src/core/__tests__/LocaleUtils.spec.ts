@@ -169,10 +169,23 @@ describe("Utils", () => {
       ).toBe("Transaction failed.");
     });
 
+    it.each([[""], ["test"], ["fake-locale"], [null], [undefined]])(
+      "should default to english if locale is not found",
+      locale => {
+        expect(
+          LocaleUtils.getTranslatedContent({
+            locale: locale,
+            translationDomain: "General",
+            translationKey: "TRANSACTION_FAILED",
+          }),
+        ).toBe("Transaction failed.");
+      },
+    );
+
     it("should return translated transaction event text with no params", () => {
       expect(
         LocaleUtils.getTranslatedContent({
-          locale: "en-us",
+          locale: "prk",
           translationDomain: "TestDomain",
           translationKey: "NO_PARAMS_TEST",
         }),

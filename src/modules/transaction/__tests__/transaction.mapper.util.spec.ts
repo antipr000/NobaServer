@@ -1,8 +1,6 @@
-import { readFileSync } from "fs";
 import { TransactionEvent } from "../domain/TransactionEvent";
 import { FeeType, TransactionFee } from "../domain/TransactionFee";
 import { toTransactionEventDTO, toTransactionFeesDTO } from "../mapper/transaction.mapper.util";
-import { join } from "path";
 
 describe("transaction.mapper.util suite", () => {
   jest.setTimeout(2000);
