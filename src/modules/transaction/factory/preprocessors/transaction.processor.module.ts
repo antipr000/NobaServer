@@ -1,4 +1,6 @@
 import { Module } from "@nestjs/common";
+import { ConsumerModule } from "../../../../modules/consumer/consumer.module";
+import { ExchangeRateModule } from "../../../../modules/exchangerate/exchangerate.module";
 import { CommonModule } from "../../../common/common.module";
 import { EmployeeModule } from "../../../employee/employee.module";
 import { EmployerModule } from "../../../employer/employer.module";
@@ -13,7 +15,7 @@ import { WalletDepositProcessor } from "./implementations/wallet.deposit.process
 import { TransactionProcessorFactory } from "./transaction.processor.factory";
 
 @Module({
-  imports: [CommonModule, EmployeeModule, EmployerModule],
+  imports: [CommonModule, EmployeeModule, EmployerModule, ExchangeRateModule, ConsumerModule],
   providers: [
     TransactionProcessorFactory,
     // Preprocessors
