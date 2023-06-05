@@ -169,6 +169,16 @@ describe("Utils", () => {
       ).toBe("Transaction failed.");
     });
 
+    it("should return translated transaction event text with no params", () => {
+      expect(
+        LocaleUtils.getTranslatedContent({
+          locale: "en-us",
+          translationDomain: "TestDomain",
+          translationKey: "NO_PARAMS_TEST",
+        }),
+      ).toBe("No Params.");
+    });
+
     it("should return translated transaction event text with params but ignore them", () => {
       expect(
         LocaleUtils.getTranslatedContent({
@@ -186,7 +196,22 @@ describe("Utils", () => {
       ).toBe("No Params.");
     });
 
-    it("should return translated transaction event text with params", () => {});
+    it("should return translated transaction event text with params", () => {
+      expect(
+        LocaleUtils.getTranslatedContent({
+          locale: "prk",
+          translationDomain: "TestDomain",
+          translationKey: "PARAMS_TEST",
+          translationParams: {
+            0: "PARAM1",
+            1: "PARAM2",
+            2: "PARAM3",
+            3: "PARAM4",
+            4: "PARAM5",
+          },
+        }),
+      ).toBe("Param 1:PARAM1, Param 2:PARAM2, Param 3:PARAM3, Param 4:PARAM4, Param 5:PARAM5");
+    });
 
     it("all transaction event translation files should contain english keys", () => {
       const en = readFileSync(join(__dirname, "../../../appconfigs/i18n/translations_en.json"), "utf8");
