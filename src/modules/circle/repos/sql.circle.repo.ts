@@ -25,7 +25,6 @@ export class SQLCircleRepo implements ICircleRepo {
           id: circle.props.consumerID,
         },
       },
-      currentBalance: 0,
     };
     const circleProps = await this.prisma.circle.create({ data: circlePrisma });
     return Circle.createCircle(circleProps);
