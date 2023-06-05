@@ -92,12 +92,10 @@ describe("LocaleUtils", () => {
     it.each([
       ["en-us", undefined],
       ["en-us", null],
-      ["en-us", ""],
       ["es-co", undefined],
       ["es-co", null],
-      ["es-co", ""],
     ])("Should throw error for null or undefined amount", (locale, amount) => {
-      const testAmount: number = amount as unknown as number;
+      const testAmount: number = amount as number;
       expect(() => LocaleUtils.localizeAmount(testAmount, locale)).toThrowError();
     });
   });

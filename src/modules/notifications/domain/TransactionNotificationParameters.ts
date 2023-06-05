@@ -179,7 +179,6 @@ export class TransactionNotificationParamsJoiSchema {
   }
 }
 
-// TODO(jira/CRYPTO-604): Remove hardcoded values and unnecessary fields once templates are ready
 export class TransactionNotificationPayloadMapper {
   static toTransactionParams(transaction: Transaction, locale: string): TransactionParameters {
     const processingFee = getFee(transaction, FeeType.PROCESSING);
