@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
-import { CommonModule } from "../../../../modules/common/common.module";
-import { EmployeeModule } from "../../../../modules/employee/employee.module";
-import { EmployerModule } from "../../../../modules/employer/employer.module";
+import { CommonModule } from "../../../common/common.module";
+import { EmployeeModule } from "../../../employee/employee.module";
+import { EmployerModule } from "../../../employer/employer.module";
 import { CardCreditAdjustmentPreprocessor } from "./implementations/card.credit.adjustment.preprocessor";
 import { CardDebitAdjustmentPreprocessor } from "./implementations/card.debit.adjustment.preprocessor";
 import { CardReversalPreprocessor } from "./implementations/card.reversal.preprocessor";
@@ -9,12 +9,13 @@ import { CardWithdrawalPreprocessor } from "./implementations/card.withdrawal.pr
 import { CreditAdjustmentPreprocessor } from "./implementations/credit.adjustment.preprocessor";
 import { DebitAdjustmentPreprocessor } from "./implementations/debit.adjustment.preprocessor";
 import { PayrollDepositPreprocessor } from "./implementations/payroll.deposit.preprocessor";
-import { TransactionPreprocessorFactory } from "./transaction.preprocessor.factory";
+import { WalletDepositProcessor } from "./implementations/wallet.deposit.processor";
+import { TransactionProcessorFactory } from "./transaction.processor.factory";
 
 @Module({
   imports: [CommonModule, EmployeeModule, EmployerModule],
   providers: [
-    TransactionPreprocessorFactory,
+    TransactionProcessorFactory,
     // Preprocessors
     PayrollDepositPreprocessor,
     CardCreditAdjustmentPreprocessor,
@@ -23,7 +24,8 @@ import { TransactionPreprocessorFactory } from "./transaction.preprocessor.facto
     CardReversalPreprocessor,
     CreditAdjustmentPreprocessor,
     DebitAdjustmentPreprocessor,
+    WalletDepositProcessor,
   ],
-  exports: [TransactionPreprocessorFactory],
+  exports: [TransactionProcessorFactory],
 })
 export class TransactionPreprocessorModule {}

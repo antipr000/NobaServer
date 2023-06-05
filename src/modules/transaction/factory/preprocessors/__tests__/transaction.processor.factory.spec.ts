@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
+import { WorkflowName } from "../../../domain/Transaction";
 import { instance } from "ts-mockito";
 import { AppEnvironment, NOBA_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../../core/utils/AppConfigModule";
@@ -18,18 +18,21 @@ import { getMockCardWithdrawalPreprocessorWithDefaults } from "../mocks/mock.car
 import { getMockCreditAdjustmentPreprocessorWithDefaults } from "../mocks/mock.credit.adjustment.preprocessor";
 import { getMockDebitAdjustmentPreprocessorWithDefaults } from "../mocks/mock.debit.adjustment.preprocessor";
 import { getMockPayrollDepositPreprocessorWithDefaults } from "../mocks/mock.payroll.deposit.preprocessor";
-import { TransactionPreprocessorFactory } from "../transaction.preprocessor.factory";
+import { TransactionProcessorFactory } from "../transaction.processor.factory";
 import {
   CardReversalTransactionType,
   InitiateTransactionRequest,
-} from "../../../../../modules/transaction/dto/transaction.service.dto";
-import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
+  WalletDepositMode,
+} from "../../../dto/transaction.service.dto";
+import { Currency } from "../../../domain/TransactionTypes";
+import { WalletDepositProcessor } from "../implementations/wallet.deposit.processor";
+import { getMockWalletDepositProcessorWithDefaults } from "../mocks/mock.wallet.deposit.processor";
 
 describe("TransactionPreprocessorFactory", () => {
   jest.setTimeout(20000);
 
   let app: TestingModule;
-  let transactionPreprocessorFactory: TransactionPreprocessorFactory;
+  let transactionPreprocessorFactory: TransactionProcessorFactory;
 
   let cardCreditAdjustmentPreprocessor: CardCreditAdjustmentPreprocessor;
   let cardDebitAdjustmentPreprocessor: CardDebitAdjustmentPreprocessor;
@@ -38,6 +41,7 @@ describe("TransactionPreprocessorFactory", () => {
   let creditAdjustmentPreprocessor: CreditAdjustmentPreprocessor;
   let debitAdjustmentPreprocessor: DebitAdjustmentPreprocessor;
   let payrollDepositPreprocessor: PayrollDepositPreprocessor;
+  let walletDepositProcessor: WalletDepositProcessor;
 
   beforeEach(async () => {
     cardCreditAdjustmentPreprocessor = instance(getMockCardCreditAdjustmentPreprocessorWithDefaults());
@@ -47,6 +51,7 @@ describe("TransactionPreprocessorFactory", () => {
     creditAdjustmentPreprocessor = instance(getMockCreditAdjustmentPreprocessorWithDefaults());
     debitAdjustmentPreprocessor = instance(getMockDebitAdjustmentPreprocessorWithDefaults());
     payrollDepositPreprocessor = instance(getMockPayrollDepositPreprocessorWithDefaults());
+    walletDepositProcessor = instance(getMockWalletDepositProcessorWithDefaults());
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -86,11 +91,15 @@ describe("TransactionPreprocessorFactory", () => {
           provide: PayrollDepositPreprocessor,
           useFactory: () => payrollDepositPreprocessor,
         },
-        TransactionPreprocessorFactory,
+        {
+          provide: WalletDepositProcessor,
+          useFactory: () => walletDepositProcessor,
+        },
+        TransactionProcessorFactory,
       ],
     }).compile();
 
-    transactionPreprocessorFactory = app.get<TransactionPreprocessorFactory>(TransactionPreprocessorFactory);
+    transactionPreprocessorFactory = app.get<TransactionProcessorFactory>(TransactionProcessorFactory);
   });
 
   afterEach(async () => {
@@ -131,6 +140,11 @@ describe("TransactionPreprocessorFactory", () => {
     it("should return DebitAdjustmentPreprocessor instance when workflow name is DEBIT_ADJUSTMENT", () => {
       const preprocessor = transactionPreprocessorFactory.getPreprocessor(WorkflowName.DEBIT_ADJUSTMENT);
       expect(preprocessor).toBe(debitAdjustmentPreprocessor);
+    });
+
+    it("should return WalletDepositProcessor instance when workflow name is WALLET_DEPOSIT", () => {
+      const preprocessor = transactionPreprocessorFactory.getPreprocessor(WorkflowName.WALLET_DEPOSIT);
+      expect(preprocessor).toBe(walletDepositProcessor);
     });
 
     it("should throw error when workflow name is unknown", () => {
@@ -193,6 +207,14 @@ describe("TransactionPreprocessorFactory", () => {
         debitConsumerID: "DEBIT_CONSUMER_ID",
         memo: "MEMO",
       },
+      walletDepositRequest: {
+        debitAmount: 100,
+        debitCurrency: Currency.COP,
+        debitConsumerIDOrTag: "DEBIT_CONSUMER_ID",
+        memo: "MEMO",
+        depositMode: WalletDepositMode.COLLECTION_LINK,
+        sessionKey: "SESSION_KEY",
+      },
     };
 
     it("should return payroll deposit request when workflow name is PAYROLL_DEPOSIT", () => {
@@ -251,6 +273,14 @@ describe("TransactionPreprocessorFactory", () => {
       expect(preprocessorRequest).toEqual(request.debitAdjustmentRequest);
     });
 
+    it("should return wallet deposit request when workflow name is WALLET_DEPOSIT", () => {
+      const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
+      request.type = WorkflowName.WALLET_DEPOSIT;
+
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      expect(preprocessorRequest).toEqual(request.walletDepositRequest);
+    });
+
     it("should throw error when workflow name is unknown", () => {
       const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
       request.type = "UNKNOWN_WORKFLOW_NAME" as any;
@@ -258,6 +288,13 @@ describe("TransactionPreprocessorFactory", () => {
       expect(() => transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request)).toThrowError(
         "No preprocessor found for workflow name: UNKNOWN_WORKFLOW_NAME",
       );
+    });
+  });
+
+  describe("getQuoteProvider()", () => {
+    it("should return a walletDepositProcessor if type if WALLET_DEPOSIT", () => {
+      const quoteProvider = transactionPreprocessorFactory.getQuoteProvider(WorkflowName.WALLET_DEPOSIT);
+      expect(quoteProvider).toEqual(walletDepositProcessor);
     });
   });
 });

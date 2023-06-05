@@ -14,6 +14,7 @@ export type InitiateTransactionRequest = {
   cardDebitAdjustmentRequest?: CardDebitAdjustmentTransactionRequest;
   creditAdjustmentRequest?: CreditAdjustmentTransactionRequest;
   debitAdjustmentRequest?: DebitAdjustmentTransactionRequest;
+  walletDepositRequest?: WalletDepositTransactionRequest;
 };
 
 export type CardWithdrawalTransactionRequest = {
@@ -78,6 +79,19 @@ export type CardDebitAdjustmentTransactionRequest = {
   debitConsumerID: string;
 };
 
+export type WalletDepositTransactionRequest = {
+  debitAmount: number;
+  debitCurrency: Currency;
+  debitConsumerIDOrTag: string;
+  depositMode: WalletDepositMode;
+  memo: string;
+  sessionKey: string;
+};
+
+export enum WalletDepositMode {
+  COLLECTION_LINK = "COLLECTION_LINK",
+}
+
 export const validateInitiateTransactionRequest = (request: InitiateTransactionRequest) => {
   const intiateTransactionRequestValidationKeys: KeysRequired<InitiateTransactionRequest> = {
     type: Joi.string()
@@ -90,6 +104,7 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
     cardDebitAdjustmentRequest: Joi.object().optional(),
     creditAdjustmentRequest: Joi.object().optional(),
     debitAdjustmentRequest: Joi.object().optional(),
+    walletDepositRequest: Joi.object().optional(),
   };
 
   const initiateTransactionJoiSchema = Joi.object(intiateTransactionRequestValidationKeys)
@@ -101,6 +116,7 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
       "cardDebitAdjustmentRequest",
       "creditAdjustmentRequest",
       "debitAdjustmentRequest",
+      "walletDepositRequest",
     )
     .options({
       allowUnknown: false,
