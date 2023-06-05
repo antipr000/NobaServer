@@ -79,83 +79,17 @@ export type CardDebitAdjustmentTransactionRequest = {
 };
 
 export const validateInitiateTransactionRequest = (request: InitiateTransactionRequest) => {
-  const cardWithdrawalJoiValidationKeys: KeysRequired<CardWithdrawalTransactionRequest> = {
-    nobaTransactionID: Joi.string().required(),
-    debitConsumerID: Joi.string().required(),
-    debitAmountInUSD: Joi.number().required(),
-    creditAmount: Joi.number().required(),
-    creditCurrency: Joi.string()
-      .required()
-      .valid(...Object.values(Currency)),
-    exchangeRate: Joi.number().required(),
-    memo: Joi.string().required(),
-  };
-  const cardReversalJoiValidationKeys: KeysRequired<CardReversalTransactionRequest> = {
-    type: Joi.string()
-      .required()
-      .valid(...Object.values(CardReversalTransactionType)),
-    nobaTransactionID: Joi.string().required(),
-    consumerID: Joi.string().required(),
-    amountInUSD: Joi.number().required(),
-    exchangeRate: Joi.number().required(),
-    memo: Joi.string().required(),
-  };
-  const payrollRequestJoiValidationKeys: KeysRequired<PayrollDepositTransactionRequest> = {
-    disbursementID: Joi.string().required(),
-  };
-  const cardCreditAdjustmentJoiValidationKeys: KeysRequired<CardCreditAdjustmentTransactionRequest> = {
-    creditAmount: Joi.number().required(),
-    creditCurrency: Joi.string()
-      .required()
-      .valid(...Object.values(Currency)),
-    debitAmount: Joi.number().required(),
-    debitCurrency: Joi.string()
-      .required()
-      .valid(...Object.values(Currency)),
-    exchangeRate: Joi.number().required(),
-    memo: Joi.string().required(),
-    creditConsumerID: Joi.string().required(),
-  };
-  const cardDebitAdjustmentJoiValidationKeys: KeysRequired<CardDebitAdjustmentTransactionRequest> = {
-    creditAmount: Joi.number().required(),
-    creditCurrency: Joi.string()
-      .required()
-      .valid(...Object.values(Currency)),
-    debitAmount: Joi.number().required(),
-    debitCurrency: Joi.string()
-      .required()
-      .valid(...Object.values(Currency)),
-    exchangeRate: Joi.number().required(),
-    memo: Joi.string().required(),
-    debitConsumerID: Joi.string().required(),
-  };
-  const creditAdjustmentJoiValidationKeys: KeysRequired<CreditAdjustmentTransactionRequest> = {
-    creditConsumerID: Joi.string().required(),
-    creditAmount: Joi.number().required(),
-    creditCurrency: Joi.string()
-      .required()
-      .valid(...Object.values(Currency)),
-    memo: Joi.string().required(),
-  };
-  const debitAdjustmentJoiValidationKeys: KeysRequired<DebitAdjustmentTransactionRequest> = {
-    debitConsumerID: Joi.string().required(),
-    debitAmount: Joi.number().required(),
-    debitCurrency: Joi.string()
-      .required()
-      .valid(...Object.values(Currency)),
-    memo: Joi.string().required(),
-  };
   const intiateTransactionRequestValidationKeys: KeysRequired<InitiateTransactionRequest> = {
     type: Joi.string()
       .required()
       .valid(...Object.values(WorkflowName)),
-    cardWithdrawalRequest: Joi.object(cardWithdrawalJoiValidationKeys).optional(),
-    cardReversalRequest: Joi.object(cardReversalJoiValidationKeys).optional(),
-    payrollDepositRequest: Joi.object(payrollRequestJoiValidationKeys).optional(),
-    cardCreditAdjustmentRequest: Joi.object(cardCreditAdjustmentJoiValidationKeys).optional(),
-    cardDebitAdjustmentRequest: Joi.object(cardDebitAdjustmentJoiValidationKeys).optional(),
-    creditAdjustmentRequest: Joi.object(creditAdjustmentJoiValidationKeys).optional(),
-    debitAdjustmentRequest: Joi.object(debitAdjustmentJoiValidationKeys).optional(),
+    cardWithdrawalRequest: Joi.object().optional(),
+    cardReversalRequest: Joi.object().optional(),
+    payrollDepositRequest: Joi.object().optional(),
+    cardCreditAdjustmentRequest: Joi.object().optional(),
+    cardDebitAdjustmentRequest: Joi.object().optional(),
+    creditAdjustmentRequest: Joi.object().optional(),
+    debitAdjustmentRequest: Joi.object().optional(),
   };
 
   const initiateTransactionJoiSchema = Joi.object(intiateTransactionRequestValidationKeys)
