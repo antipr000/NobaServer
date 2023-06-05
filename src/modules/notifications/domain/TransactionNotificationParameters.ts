@@ -1,12 +1,10 @@
-import i18next from "i18next";
-import FsBackend, { FsBackendOptions } from "i18next-fs-backend";
 import { FeeType } from "../../../modules/transaction/domain/TransactionFee";
 import { Transaction, getFee, getTotalFees } from "../../../modules/transaction/domain/Transaction";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 import { Utils } from "../../../core/utils/Utils";
-import { join } from "path";
+import { LocaleUtils } from "../../../core/utils/LocaleUtils";
 
 export type TransactionParameters = {
   transactionRef: string;
@@ -231,9 +229,14 @@ export class TransactionNotificationPayloadMapper {
     locale: string,
   ): DepositFailedNotificationParameters {
     const transactionParams = this.toTransactionParams(transaction, locale);
+    const translatedContent = LocaleUtils.getTranslatedContent({
+      locale: locale,
+      translationDomain: "General",
+      translationKey: "TRANSACTION_FAILED",
+    });
     return {
       ...transactionParams,
-      reasonDeclined: "Something went wrong", // TODO (CRYPTO-698)
+      reasonDeclined: translatedContent,
     };
   }
 
@@ -271,9 +274,14 @@ export class TransactionNotificationPayloadMapper {
     locale: string,
   ): WithdrawalFailedNotificationParameters {
     const transactionParams = this.toTransactionParams(transaction, locale);
+    const translatedContent = LocaleUtils.getTranslatedContent({
+      locale: locale,
+      translationDomain: "General",
+      translationKey: "TRANSACTION_FAILED",
+    });
     return {
       ...transactionParams,
-      reasonDeclined: "Something went wrong", // TODO (CRYPTO-698)
+      reasonDeclined: translatedContent,
     };
   }
 
@@ -318,22 +326,12 @@ export class TransactionNotificationPayloadMapper {
   ): TransferFailedNotificationParameters {
     const locale = debitConsumer.props.locale;
     const transactionParams = this.toTransactionParams(transaction, locale);
-    let normalizedLocale = Utils.normalizeLocale(locale);
-    i18next.use(FsBackend).init<FsBackendOptions>({
-      initImmediate: false,
-      fallbackLng: "en-us",
-      lng: normalizedLocale,
-      backend: {
-        loadPath: join(__dirname, "../../../../appconfigs/i18n/translations_{{lng}}.json"),
-      },
+
+    const translatedContent = LocaleUtils.getTranslatedContent({
+      locale: locale,
+      translationDomain: "General",
+      translationKey: "TRANSACTION_FAILED",
     });
-
-    const transactionEventKey = `TransactionEvent.TRANSACTION_FAILED`;
-
-    let translatedContent = i18next.t(transactionEventKey);
-    if (!transactionEventKey || translatedContent === transactionEventKey) {
-      translatedContent = "";
-    }
 
     return {
       ...transactionParams,
@@ -341,7 +339,7 @@ export class TransactionNotificationPayloadMapper {
       creditConsumer_lastName: creditConsumer.props.lastName,
       creditConsumer_handle: creditConsumer.props.handle,
       debitConsumer_handle: debitConsumer.props.handle,
-      reasonDeclined: "Something went wrong", // TODO (CRYPTO-698)
+      reasonDeclined: translatedContent,
     };
   }
 

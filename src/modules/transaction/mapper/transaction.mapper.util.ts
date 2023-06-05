@@ -6,7 +6,7 @@ import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 import { join } from "path";
 import FsBackend, { FsBackendOptions } from "i18next-fs-backend";
 import { Utils } from "../../../core/utils/Utils";
-import { TranslationUtils } from "../../../core/utils/TranslationUtils";
+import { LocaleUtils } from "../../../core/utils/LocaleUtils";
 
 export const toTransactionFeesDTO = (transactionFees: TransactionFee): TransactionFeeDTO => {
   return {
@@ -27,7 +27,7 @@ export const toTransactionEventDTO = async (
     3: transactionEvent.param4,
     4: transactionEvent.param5,
   };
-  const translatedContent = TranslationUtils.getTranslatedContent({
+  const translatedContent = LocaleUtils.getTranslatedContent({
     locale: locale,
     translationDomain: "TransactionEvent",
     translationKey: transactionEvent.key,

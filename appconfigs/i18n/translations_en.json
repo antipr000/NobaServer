@@ -6,7 +6,9 @@
     "BANK_TRANSFER_DECLINED": "Bank Transfer was declined.",
     "INTERNAL_ERROR": "Unexpected error occurred.",
     "DUPLICATE_TRANSACTION": "Duplicate transaction detected.",
-    "COLLECTION_LINK_EXPIRED": "Mono collection link has expired.",
+    "COLLECTION_LINK_EXPIRED": "Mono collection link has expired."
+  },
+  "General": {
     "TRANSACTION_FAILED": "Transaction failed."
   }
 }

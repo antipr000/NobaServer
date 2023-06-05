@@ -6,7 +6,9 @@
     "BANK_TRANSFER_DECLINED": "La transferencia bancaria fue rechazada.",
     "INTERNAL_ERROR": "Se produjo un error inesperado.",
     "DUPLICATE_TRANSACTION": "Se detectó una transacción duplicada.",
-    "COLLECTION_LINK_EXPIRED": "El enlace de colección de Mono ha expirado.",
+    "COLLECTION_LINK_EXPIRED": "El enlace de colección de Mono ha expirado."
+  },
+  "General": {
     "TRANSACTION_FAILED": "La transacción falló."
   }
 }

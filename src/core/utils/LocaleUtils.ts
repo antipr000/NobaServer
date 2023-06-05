@@ -11,7 +11,7 @@ export interface ITranslationParams {
   4: string;
 }
 
-export class TranslationUtils {
+export class LocaleUtils {
   static getTranslatedContent({
     locale,
     translationDomain,
@@ -21,7 +21,7 @@ export class TranslationUtils {
     locale: string;
     translationDomain: string;
     translationKey: string;
-    translationParams: ITranslationParams;
+    translationParams?: ITranslationParams;
   }) {
     let normalizedLocale = Utils.normalizeLocale(locale);
 
