@@ -6,6 +6,7 @@ import { TransactionEventDTO } from "../dto/TransactionEventDTO";
 import { join } from "path";
 import FsBackend, { FsBackendOptions } from "i18next-fs-backend";
 import { Utils } from "../../../core/utils/Utils";
+import { TranslationUtils } from "../../../core/utils/TranslationUtils";
 
 export const toTransactionFeesDTO = (transactionFees: TransactionFee): TransactionFeeDTO => {
   return {
@@ -19,18 +20,6 @@ export const toTransactionEventDTO = async (
   transactionEvent: TransactionEvent,
   locale?: string,
 ): Promise<TransactionEventDTO> => {
-  await i18next.use(FsBackend).init<FsBackendOptions>({
-    initImmediate: false,
-    fallbackLng: "en-us",
-    backend: {
-      loadPath: join(__dirname, "../../../../appconfigs/i18n/translations_{{lng}}.json"),
-    },
-  });
-
-  let normalizedLocale = Utils.normalizeLocale(locale);
-
-  await i18next.changeLanguage(normalizedLocale || "en-us");
-
   const translationParams = {
     0: transactionEvent.param1,
     1: transactionEvent.param2,
@@ -38,13 +27,12 @@ export const toTransactionEventDTO = async (
     3: transactionEvent.param4,
     4: transactionEvent.param5,
   };
-
-  const transactionEventKey = `TransactionEvent.${transactionEvent.key}`;
-
-  let translatedContent = i18next.t(transactionEventKey, translationParams);
-  if (!transactionEventKey || translatedContent === transactionEventKey) {
-    translatedContent = "";
-  }
+  const translatedContent = await TranslationUtils.getTranslatedContent({
+    locale: locale,
+    translationDomain: "TransactionEvent",
+    translationKey: transactionEvent.message,
+    translationParams: translationParams,
+  });
 
   return {
     timestamp: transactionEvent.timestamp,

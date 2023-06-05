@@ -1,9 +1,12 @@
+import i18next from "i18next";
+import FsBackend, { FsBackendOptions } from "i18next-fs-backend";
 import { FeeType } from "../../../modules/transaction/domain/TransactionFee";
 import { Transaction, getFee, getTotalFees } from "../../../modules/transaction/domain/Transaction";
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 import { Utils } from "../../../core/utils/Utils";
+import { join } from "path";
 
 export type TransactionParameters = {
   transactionRef: string;
@@ -315,6 +318,23 @@ export class TransactionNotificationPayloadMapper {
   ): TransferFailedNotificationParameters {
     const locale = debitConsumer.props.locale;
     const transactionParams = this.toTransactionParams(transaction, locale);
+    let normalizedLocale = Utils.normalizeLocale(locale);
+    i18next.use(FsBackend).init<FsBackendOptions>({
+      initImmediate: false,
+      fallbackLng: "en-us",
+      lng: normalizedLocale,
+      backend: {
+        loadPath: join(__dirname, "../../../../appconfigs/i18n/translations_{{lng}}.json"),
+      },
+    });
+
+    const transactionEventKey = `TransactionEvent.TRANSACTION_FAILED`;
+
+    let translatedContent = i18next.t(transactionEventKey);
+    if (!transactionEventKey || translatedContent === transactionEventKey) {
+      translatedContent = "";
+    }
+
     return {
       ...transactionParams,
       creditConsumer_firstName: creditConsumer.props.firstName,
