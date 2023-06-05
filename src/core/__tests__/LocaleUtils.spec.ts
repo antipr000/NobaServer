@@ -2,7 +2,7 @@ import { readFileSync } from "fs";
 import { LocaleUtils } from "../utils/LocaleUtils";
 import { join } from "path";
 
-describe("Utils", () => {
+describe("LocaleUtils", () => {
   jest.setTimeout(2000);
 
   afterEach(async () => {
@@ -10,12 +10,14 @@ describe("Utils", () => {
   });
 
   describe("normalizeLocale", () => {
-    it("Should return en-us for empty locale", () => {
-      expect(LocaleUtils.normalizeLocale(null)).toEqual("en-us");
-    });
-
-    it("Should return en-us for invalid locale", () => {
-      expect(LocaleUtils.normalizeLocale("invalidlocale")).toEqual("en-us");
+    it.each([
+      ["invalidlocale", "en-us"],
+      [null, "en-us"],
+      [undefined, "en-us"],
+      ["", "en-us"],
+    ])("Should return en-us for invalid or empty locale", (locale, normalizedLocale) => {
+      const testLocale = locale as string;
+      expect(LocaleUtils.normalizeLocale(testLocale)).toEqual(normalizedLocale);
     });
 
     it.each([
@@ -88,12 +90,15 @@ describe("Utils", () => {
     );
 
     it.each([
-      ["en-us", null],
       ["en-us", undefined],
-      ["es-co", null],
+      ["en-us", null],
+      ["en-us", ""],
       ["es-co", undefined],
+      ["es-co", null],
+      ["es-co", ""],
     ])("Should throw error for null or undefined amount", (locale, amount) => {
-      expect(() => LocaleUtils.localizeAmount(amount, locale)).toThrowError();
+      const testAmount: number = amount as unknown as number;
+      expect(() => LocaleUtils.localizeAmount(testAmount, locale)).toThrowError();
     });
   });
 
@@ -172,9 +177,10 @@ describe("Utils", () => {
     it.each([[""], ["test"], ["fake-locale"], [null], [undefined]])(
       "should default to english if locale is not found",
       locale => {
+        const testLocale = locale as string;
         expect(
           LocaleUtils.getTranslatedContent({
-            locale: locale,
+            locale: testLocale,
             translationDomain: "General",
             translationKey: "TRANSACTION_FAILED",
           }),
