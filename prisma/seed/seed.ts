@@ -5,6 +5,7 @@ import { seedEmployers } from "./seed-employers";
 import { seedEventsAndTemplates } from "./seed-events";
 import { seedEmployees } from "./seed-employees";
 import { seedScheduledReminders } from "./seed-scheduled-reminders";
+import { seedExchangeRates } from "./seed-exchangerates";
 
 const prisma = new PrismaClient();
 
@@ -13,7 +14,7 @@ async function main() {
   if (process.env.NODE_ENV !== "production") {
     console.log("Seeding data...");
     await seedAdmins(prisma);
-    // await seedExchangeRates(prisma);
+    await seedExchangeRates(prisma);
     await seedConsumers(prisma);
     await seedEmployers(prisma);
     await seedEmployees(prisma);
