@@ -54,5 +54,35 @@ describe("TransactionNotificationPayloadMapper Tests", () => {
         ).toEqual(expectedReason);
       },
     );
+
+    it.each([
+      ["en-us", "Transaction failed."],
+      ["es-co", "La transacción falló."],
+    ])(
+      "should return a correct reason declined for DebitAdjustmentFailedNotificationParameters based on locale",
+      (locale, expectedReason) => {
+        const transaction: Transaction = getRandomTransaction("consumerID");
+
+        expect(
+          TransactionNotificationPayloadMapper.toDebitAdjustmentFailedNotificationParameters(transaction, locale)
+            .reasonDeclined,
+        ).toEqual(expectedReason);
+      },
+    );
+
+    it.each([
+      ["en-us", "Transaction failed."],
+      ["es-co", "La transacción falló."],
+    ])(
+      "should return a correct reason declined for CreditAdjustmentFailedNotificationParameters based on locale",
+      (locale, expectedReason) => {
+        const transaction: Transaction = getRandomTransaction("consumerID");
+
+        expect(
+          TransactionNotificationPayloadMapper.toCreditAdjustmentFailedNotificationParameters(transaction, locale)
+            .reasonDeclined,
+        ).toEqual(expectedReason);
+      },
+    );
   });
 });

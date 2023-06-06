@@ -39,11 +39,15 @@ export interface WithdrawalFailedNotificationParameters extends TransactionParam
 
 export type CreditAdjustmentCompletedNotificationParameters = TransactionParameters;
 
-export type CreditAdjustmentFailedNotificationParameters = TransactionParameters;
+export interface CreditAdjustmentFailedNotificationParameters extends TransactionParameters {
+  reasonDeclined: string;
+}
 
 export type DebitAdjustmentCompletedNotificationParameters = TransactionParameters;
 
-export type DebitAdjustmentFailedNotificationParameters = TransactionParameters;
+export interface DebitAdjustmentFailedNotificationParameters extends TransactionParameters {
+  reasonDeclined: string;
+}
 
 export interface TransferCompletedNotificationParameters extends TransactionParameters {
   creditConsumer_firstName: string;
@@ -167,7 +171,10 @@ export class TransactionNotificationParamsJoiSchema {
   }
 
   static getCreditAdjustmentFailedNotificationParamsSchema() {
-    return this.getTransactionParamsSchema();
+    return {
+      ...this.getTransactionParamsSchema(),
+      reasonDeclined: Joi.string().required(),
+    };
   }
 
   static getDebitAdjustmentCompletedNotificationParamsSchema() {
@@ -175,7 +182,10 @@ export class TransactionNotificationParamsJoiSchema {
   }
 
   static getDebitAdjustmentFailedNotificationParamsSchema() {
-    return this.getTransactionParamsSchema();
+    return {
+      ...this.getTransactionParamsSchema(),
+      reasonDeclined: Joi.string().required(),
+    };
   }
 }
 
@@ -352,7 +362,18 @@ export class TransactionNotificationPayloadMapper {
     transaction: Transaction,
     locale: string,
   ): CreditAdjustmentFailedNotificationParameters {
-    return this.toTransactionParams(transaction, locale);
+    const transactionParams = this.toTransactionParams(transaction, locale);
+
+    const translatedContent = LocaleUtils.getTranslatedContent({
+      locale: locale,
+      translationDomain: "General",
+      translationKey: "TRANSACTION_FAILED",
+    });
+
+    return {
+      ...transactionParams,
+      reasonDeclined: translatedContent,
+    };
   }
 
   static toDebitAdjustmentCompletedNotificationParameters(
@@ -366,6 +387,17 @@ export class TransactionNotificationPayloadMapper {
     transaction: Transaction,
     locale: string,
   ): DebitAdjustmentFailedNotificationParameters {
-    return this.toTransactionParams(transaction, locale);
+    const transactionParams = this.toTransactionParams(transaction, locale);
+
+    const translatedContent = LocaleUtils.getTranslatedContent({
+      locale: locale,
+      translationDomain: "General",
+      translationKey: "TRANSACTION_FAILED",
+    });
+
+    return {
+      ...transactionParams,
+      reasonDeclined: translatedContent,
+    };
   }
 }
