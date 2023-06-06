@@ -56,7 +56,7 @@ export const reminderScheduleMap: ReminderScheduleMap = {
   [NotificationEventType.DEPOSIT_FUNDS_REMINDER_EVENT]: {
     groupKey: "reminder_group_5",
     query: eventID =>
-      'SELECT * FROM "Consumer" c JOIN "Circle" cir ON c.id = cir."consumerID" ' +
+      'SELECT c.* FROM "Consumer" c JOIN "Circle" cir ON c.id = cir."consumerID" ' +
       `LEFT JOIN "ReminderHistory" rh ON c.id = rh."consumerID" AND rh."eventID" = '${eventID}' ` +
       "WHERE c.\"createdTimestamp\" <= NOW() - INTERVAL '24 hours' " +
       'AND cir."currentBalance" IS NOT NULL AND cir."currentBalance" = 0 ' +
