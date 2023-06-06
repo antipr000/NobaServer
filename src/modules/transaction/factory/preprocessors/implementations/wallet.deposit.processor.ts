@@ -204,5 +204,7 @@ export class WalletDepositProcessor implements TransactionPreprocessor, Transact
         message: "Consumer specified in 'debitConsumerIDOrTag' does not exist or is not active",
       });
     }
+
+    await this.getQuote(request.debitAmount, request.debitCurrency, Currency.USD, [TransactionFlags.IS_COLLECTION]);
   }
 }

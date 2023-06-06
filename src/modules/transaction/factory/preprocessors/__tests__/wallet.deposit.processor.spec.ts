@@ -178,6 +178,39 @@ describe("WalletDepositProcessor", () => {
           expect(err.message).toEqual(expect.stringContaining("debitConsumerIDOrTag"));
         }
       });
+
+      it("should throw SEMANTIC error if the postExchangeAmountWithBankFees amount is negative", async () => {
+        const consumer: Consumer = Consumer.createConsumer({
+          id: "1111111111",
+          firstName: "Rosie",
+          lastName: "Noba",
+          handle: "DEBIT_CONSUMER_ID_OR_TAG",
+          email: "rosie@noba.com",
+          gender: "Male",
+          phone: "+1234567890",
+          referralCode: "rosie-referral-code",
+          referredByID: "referred-by-1",
+          address: {
+            countryCode: "US",
+          },
+        });
+        when(consumerService.getActiveConsumer(VALID_REQUEST.debitConsumerIDOrTag)).thenResolve(consumer);
+        when(exchangeRateService.getExchangeRateForCurrencyPair(Currency.COP, Currency.USD)).thenResolve({
+          bankRate: 0.00021,
+          numeratorCurrency: Currency.COP,
+          denominatorCurrency: Currency.USD,
+          expirationTimestamp: new Date(new Date().getTime() + 24 * 60 * 60 * 1000), // 24 hrs
+          nobaRate: 0.00025,
+        });
+
+        try {
+          await walletDepositProcessor.validate(VALID_REQUEST);
+          expect(true).toBe(false);
+        } catch (err) {
+          expect(err.errorCode).toBe(ServiceErrorCode.SEMANTIC_VALIDATION);
+          expect(err.message).toEqual(expect.stringContaining("AMOUNT_TOO_LOW"));
+        }
+      });
     });
   });
 
