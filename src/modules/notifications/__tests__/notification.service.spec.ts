@@ -28,7 +28,6 @@ import { EventRepo } from "../repos/event.repo";
 import { getMockEventRepoWithDefaults } from "../mocks/mock.event.repo";
 import { EventHandlers } from "../domain/EventHandlers";
 import { SendInviteEmployeeEvent } from "../events/SendInviteEmployeeEvent";
-import { Utils } from "../../../core/utils/Utils";
 import { SendCreditAdjustmentCompletedEvent } from "../events/SendCreditAdjustmentCompletedEvent";
 import { SendCreditAdjustmentFailedEvent } from "../events/SendCreditAdjustmentFailedEvent";
 import { SendDebitAdjustmentCompletedEvent } from "../events/SendDebitAdjustmentCompletedEvent";
@@ -1074,6 +1073,7 @@ function getNotificationPayload(event: NotificationEventType): NotificationPaylo
           nobaFees: LocaleUtils.localizeAmount(0, "en-us"),
           totalFees: LocaleUtils.localizeAmount(0, "en-us"),
           totalFeesNumber: 0,
+          reasonDeclined: "reason",
         },
         locale: "en",
         nobaUserID: "fake-id-1234",
@@ -1121,6 +1121,7 @@ function getNotificationPayload(event: NotificationEventType): NotificationPaylo
           nobaFees: LocaleUtils.localizeAmount(0, "en-us"),
           totalFees: LocaleUtils.localizeAmount(0, "en-us"),
           totalFeesNumber: 0,
+          reasonDeclined: "reason",
         },
         locale: "en",
         nobaUserID: "fake-id-1234",
