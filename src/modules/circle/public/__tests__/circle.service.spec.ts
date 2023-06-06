@@ -782,6 +782,7 @@ describe("CircleService", () => {
 
     it("should call circle client when forceRefresh", async () => {
       when(mockCircleClient.getWalletBalance(anyString())).thenResolve(200);
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
       when(mockCircleRepo.updateCurrentBalance(anyString(), anyNumber())).thenResolve();
       const balance = await circleService.getBalance("cached-walletID", true);
       expect(balance).toEqual({ balance: 200, currency: "USD" });
@@ -797,6 +798,7 @@ describe("CircleService", () => {
     ])("should round updated circle balance", async (balance, roundedBalance) => {
       const cachedWalletID = "cached-walletID";
       when(mockCircleClient.getWalletBalance(cachedWalletID)).thenResolve(balance);
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
       when(mockCircleRepo.updateCurrentBalance(cachedWalletID, roundedBalance)).thenResolve();
       await expect(circleService.getBalance(cachedWalletID, true)).resolves.toEqual({
         balance: roundedBalance,
@@ -809,6 +811,7 @@ describe("CircleService", () => {
     it("should call circle client to get balance if balance doesn't exist in repo", async () => {
       when(mockCircleRepo.getCircleBalance("not-cached-id")).thenResolve(null);
       when(mockCircleClient.getWalletBalance(anyString())).thenResolve(300);
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
       when(mockCircleRepo.updateCurrentBalance(anyString(), anyNumber())).thenResolve();
       const balance = await circleService.getBalance("not-cached-id");
       expect(balance).toEqual({ balance: 300, currency: "USD" });
@@ -827,6 +830,15 @@ describe("CircleService", () => {
         new ServiceException({ errorCode: ServiceErrorCode.UNKNOWN }),
       );
       expect(circleService.getBalance("walletID", true)).rejects.toThrowServiceException(ServiceErrorCode.UNKNOWN);
+    });
+
+    it("should skip updating cached balance if walletID matches masterWalletID", async () => {
+      when(mockCircleClient.getWalletBalance("masterWalletID")).thenResolve(200);
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
+      const balance = await circleService.getBalance("masterWalletID", true);
+      expect(balance).toEqual({ balance: 200, currency: "USD" });
+      verify(mockCircleClient.getWalletBalance("masterWalletID")).once();
+      verify(mockCircleRepo.updateCurrentBalance("masterWalletID", 200)).never();
     });
   });
 
