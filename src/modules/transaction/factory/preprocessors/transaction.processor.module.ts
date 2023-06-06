@@ -12,6 +12,7 @@ import { CreditAdjustmentPreprocessor } from "./implementations/credit.adjustmen
 import { DebitAdjustmentPreprocessor } from "./implementations/debit.adjustment.preprocessor";
 import { PayrollDepositPreprocessor } from "./implementations/payroll.deposit.preprocessor";
 import { WalletDepositProcessor } from "./implementations/wallet.deposit.processor";
+import { WalletWithdrawalProcessor } from "./implementations/wallet.withdrawal.processor";
 import { TransactionProcessorFactory } from "./transaction.processor.factory";
 
 @Module({
@@ -27,6 +28,7 @@ import { TransactionProcessorFactory } from "./transaction.processor.factory";
     CreditAdjustmentPreprocessor,
     DebitAdjustmentPreprocessor,
     WalletDepositProcessor,
+    WalletWithdrawalProcessor,
   ],
   exports: [TransactionProcessorFactory],
 })

@@ -2,6 +2,7 @@ import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 import { WorkflowName } from "../domain/Transaction";
 import { Currency } from "../domain/TransactionTypes";
+import { AccountType, DocumentType } from "../domain/WithdrawalDetails";
 
 export type InitiateTransactionRequest = {
   // TODO: Replace `WorkflowName` with `TransactionType` enum.
@@ -15,6 +16,7 @@ export type InitiateTransactionRequest = {
   creditAdjustmentRequest?: CreditAdjustmentTransactionRequest;
   debitAdjustmentRequest?: DebitAdjustmentTransactionRequest;
   walletDepositRequest?: WalletDepositTransactionRequest;
+  walletWithdrawalRequest?: WalletWithdrawalTransactionRequest;
 };
 
 export type CardWithdrawalTransactionRequest = {
@@ -92,6 +94,23 @@ export enum WalletDepositMode {
   COLLECTION_LINK = "COLLECTION_LINK",
 }
 
+export type WalletWithdrawalTransactionRequest = {
+  debitConsumerIDOrTag: string;
+  debitAmount: number;
+  memo: string;
+  sessionKey: string;
+  creditCurrency: Currency;
+  withdrawalDetails: WalletWithdrawalDetails;
+};
+
+export type WalletWithdrawalDetails = {
+  bankCode: string;
+  accountNumber: string;
+  documentNumber: string;
+  documentType: DocumentType;
+  accountType: AccountType;
+};
+
 export const validateInitiateTransactionRequest = (request: InitiateTransactionRequest) => {
   const intiateTransactionRequestValidationKeys: KeysRequired<InitiateTransactionRequest> = {
     type: Joi.string()
@@ -105,6 +124,7 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
     creditAdjustmentRequest: Joi.object().optional(),
     debitAdjustmentRequest: Joi.object().optional(),
     walletDepositRequest: Joi.object().optional(),
+    walletWithdrawalRequest: Joi.object().optional(),
   };
 
   const initiateTransactionJoiSchema = Joi.object(intiateTransactionRequestValidationKeys)
@@ -117,6 +137,7 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
       "creditAdjustmentRequest",
       "debitAdjustmentRequest",
       "walletDepositRequest",
+      "walletWithdrawalRequest",
     )
     .options({
       allowUnknown: false,

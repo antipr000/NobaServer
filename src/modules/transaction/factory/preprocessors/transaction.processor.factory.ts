@@ -9,6 +9,7 @@ import { CreditAdjustmentPreprocessor } from "./implementations/credit.adjustmen
 import { DebitAdjustmentPreprocessor } from "./implementations/debit.adjustment.preprocessor";
 import { PayrollDepositPreprocessor } from "./implementations/payroll.deposit.preprocessor";
 import { WalletDepositProcessor } from "./implementations/wallet.deposit.processor";
+import { WalletWithdrawalProcessor } from "./implementations/wallet.withdrawal.processor";
 import { TransactionQuoteProvider } from "./quote.provider";
 import { TransactionPreprocessor, TransactionPreprocessorRequest } from "./transaction.preprocessor";
 
@@ -23,6 +24,7 @@ export class TransactionProcessorFactory {
     private readonly creditAdjustmentPreprocessor: CreditAdjustmentPreprocessor,
     private readonly debitAdjustmentPreprocessor: DebitAdjustmentPreprocessor,
     private readonly walletDepositProcessor: WalletDepositProcessor,
+    private readonly walletWithdrawalProcessor: WalletWithdrawalProcessor,
   ) {}
 
   getPreprocessor(workflowName: WorkflowName): TransactionPreprocessor {
@@ -43,6 +45,8 @@ export class TransactionProcessorFactory {
         return this.debitAdjustmentPreprocessor;
       case WorkflowName.WALLET_DEPOSIT:
         return this.walletDepositProcessor;
+      case WorkflowName.WALLET_WITHDRAWAL:
+        return this.walletWithdrawalProcessor;
       default:
         throw new Error(`No preprocessor found for workflow name: ${workflowName}`);
     }
@@ -66,6 +70,8 @@ export class TransactionProcessorFactory {
         return request.debitAdjustmentRequest;
       case WorkflowName.WALLET_DEPOSIT:
         return request.walletDepositRequest;
+      case WorkflowName.WALLET_WITHDRAWAL:
+        return request.walletWithdrawalRequest;
       default:
         throw new Error(`No preprocessor found for workflow name: ${request.type}`);
     }
@@ -75,6 +81,8 @@ export class TransactionProcessorFactory {
     switch (workflowName) {
       case WorkflowName.WALLET_DEPOSIT:
         return this.walletDepositProcessor;
+      case WorkflowName.WALLET_WITHDRAWAL:
+        return this.walletWithdrawalProcessor;
       default:
         throw new Error(`No quote provider found for workflow name: ${workflowName}`);
     }

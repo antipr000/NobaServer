@@ -27,6 +27,9 @@ import {
 import { Currency } from "../../../domain/TransactionTypes";
 import { WalletDepositProcessor } from "../implementations/wallet.deposit.processor";
 import { getMockWalletDepositProcessorWithDefaults } from "../mocks/mock.wallet.deposit.processor";
+import { WalletWithdrawalProcessor } from "../implementations/wallet.withdrawal.processor";
+import { getMockWalletWithdrawalProcessorWithDefaults } from "../mocks/mock.wallet.withdrawal.processor";
+import { AccountType, DocumentType } from "../../../../../modules/transaction/domain/WithdrawalDetails";
 
 describe("TransactionPreprocessorFactory", () => {
   jest.setTimeout(20000);
@@ -42,6 +45,7 @@ describe("TransactionPreprocessorFactory", () => {
   let debitAdjustmentPreprocessor: DebitAdjustmentPreprocessor;
   let payrollDepositPreprocessor: PayrollDepositPreprocessor;
   let walletDepositProcessor: WalletDepositProcessor;
+  let walletWithdrawalProcessor: WalletWithdrawalProcessor;
 
   beforeEach(async () => {
     cardCreditAdjustmentPreprocessor = instance(getMockCardCreditAdjustmentPreprocessorWithDefaults());
@@ -52,6 +56,7 @@ describe("TransactionPreprocessorFactory", () => {
     debitAdjustmentPreprocessor = instance(getMockDebitAdjustmentPreprocessorWithDefaults());
     payrollDepositPreprocessor = instance(getMockPayrollDepositPreprocessorWithDefaults());
     walletDepositProcessor = instance(getMockWalletDepositProcessorWithDefaults());
+    walletWithdrawalProcessor = instance(getMockWalletWithdrawalProcessorWithDefaults());
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -94,6 +99,10 @@ describe("TransactionPreprocessorFactory", () => {
         {
           provide: WalletDepositProcessor,
           useFactory: () => walletDepositProcessor,
+        },
+        {
+          provide: WalletWithdrawalProcessor,
+          useFactory: () => walletWithdrawalProcessor,
         },
         TransactionProcessorFactory,
       ],
@@ -145,6 +154,11 @@ describe("TransactionPreprocessorFactory", () => {
     it("should return WalletDepositProcessor instance when workflow name is WALLET_DEPOSIT", () => {
       const preprocessor = transactionPreprocessorFactory.getPreprocessor(WorkflowName.WALLET_DEPOSIT);
       expect(preprocessor).toBe(walletDepositProcessor);
+    });
+
+    it("should return WalletWithdrawalProcessor instance when workflow name is WALLET_WITHDRAWAL", () => {
+      const preprocessor = transactionPreprocessorFactory.getPreprocessor(WorkflowName.WALLET_WITHDRAWAL);
+      expect(preprocessor).toBe(walletWithdrawalProcessor);
     });
 
     it("should throw error when workflow name is unknown", () => {
@@ -215,6 +229,20 @@ describe("TransactionPreprocessorFactory", () => {
         depositMode: WalletDepositMode.COLLECTION_LINK,
         sessionKey: "SESSION_KEY",
       },
+      walletWithdrawalRequest: {
+        debitAmount: 100000,
+        debitConsumerIDOrTag: "DEBIT_CONSUMER_ID_OR_TAG",
+        creditCurrency: Currency.COP,
+        memo: "MEMO",
+        sessionKey: "SESSION_KEY",
+        withdrawalDetails: {
+          bankCode: "BANCOLOMBIA",
+          accountNumber: "1234567890",
+          documentNumber: "9876543210",
+          accountType: AccountType.CHECKING,
+          documentType: DocumentType.CC,
+        },
+      },
     };
 
     it("should return payroll deposit request when workflow name is PAYROLL_DEPOSIT", () => {
@@ -281,6 +309,14 @@ describe("TransactionPreprocessorFactory", () => {
       expect(preprocessorRequest).toEqual(request.walletDepositRequest);
     });
 
+    it("should return wallet withdrawal request when workflow name is WALLET_WITHDRAWAL", () => {
+      const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
+      request.type = WorkflowName.WALLET_WITHDRAWAL;
+
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      expect(preprocessorRequest).toEqual(request.walletWithdrawalRequest);
+    });
+
     it("should throw error when workflow name is unknown", () => {
       const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
       request.type = "UNKNOWN_WORKFLOW_NAME" as any;
@@ -295,6 +331,11 @@ describe("TransactionPreprocessorFactory", () => {
     it("should return a walletDepositProcessor if type if WALLET_DEPOSIT", () => {
       const quoteProvider = transactionPreprocessorFactory.getQuoteProvider(WorkflowName.WALLET_DEPOSIT);
       expect(quoteProvider).toEqual(walletDepositProcessor);
+    });
+
+    it("should return a walletDepositProcessor if type if WALLET_WITHDRAWAL", () => {
+      const quoteProvider = transactionPreprocessorFactory.getQuoteProvider(WorkflowName.WALLET_WITHDRAWAL);
+      expect(quoteProvider).toEqual(walletWithdrawalProcessor);
     });
   });
 });
