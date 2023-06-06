@@ -15,11 +15,13 @@ import {
   DatabaseInternalErrorException,
   InvalidDatabaseRecordException,
 } from "../../../core/exception/CommonAppException";
+import { AlertService } from "src/modules/common/alerts/alert.service";
 
 @Injectable()
 export class SQLExchangeRateRepo implements IExchangeRateRepo {
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly alertService: AlertService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -38,7 +40,7 @@ export class SQLExchangeRateRepo implements IExchangeRateRepo {
       const returnedExchangeRate = await this.prismaService.exchangeRate.create({ data: exchangeRateInput });
       savedExchangeRate = convertToDomainExchangeRate(returnedExchangeRate);
     } catch (err) {
-      this.logger.error(`${err} - ${JSON.stringify(err)} - ${JSON.stringify(exchangeRate)}`);
+      this.alertService.raiseError(`${err} - ${JSON.stringify(err)} - ${JSON.stringify(exchangeRate)}`);
       throw new DatabaseInternalErrorException({
         message: "Error saving transaction in database",
       });
@@ -47,7 +49,7 @@ export class SQLExchangeRateRepo implements IExchangeRateRepo {
     try {
       validateSavedExchangeRate(savedExchangeRate);
     } catch (err) {
-      this.logger.error(`JSON.stringify(err) - ${JSON.stringify(savedExchangeRate)}`);
+      this.alertService.raiseError(`JSON.stringify(err) - ${JSON.stringify(savedExchangeRate)}`);
       throw new InvalidDatabaseRecordException({
         message: "Invalid database record",
       });
@@ -85,7 +87,7 @@ export class SQLExchangeRateRepo implements IExchangeRateRepo {
 
       return convertToDomainExchangeRate(exchangeRate);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       return null;
     }
   }

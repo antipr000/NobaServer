@@ -16,11 +16,14 @@ import { createEmployee, saveAndGetEmployee } from "../../employee/test_utils/em
 import { createTestNobaTransaction, createTransaction } from "../../transaction/test_utils/test.utils";
 import { createTestConsumer } from "../../../modules/consumer/test_utils/test.utils";
 import { createTestEmployerAndStoreInDB } from "../test_utils/test.utils";
-import { Employee, EmployeeCreateRequest } from "../../../modules/employee/domain/Employee";
+import { EmployeeCreateRequest } from "../../../modules/employee/domain/Employee";
 import { getRandomEmployee } from "../../employee/test_utils/employee.test.utils";
 import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 import { EnrichedDisbursementSortOptions } from "../dto/enriched.disbursement.filter.options.dto";
 import { SortOrder } from "../../../core/infra/PaginationTypes";
+import { AlertService } from "src/modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 describe("SqlPayrollDisbursementRepo tests", () => {
   jest.setTimeout(20000);
@@ -28,6 +31,7 @@ describe("SqlPayrollDisbursementRepo tests", () => {
 
   let app: TestingModule;
   let prismaService: PrismaService;
+  let mockAlertService: AlertService;
 
   beforeEach(async () => {
     const appConfigurations = {
@@ -35,9 +39,17 @@ describe("SqlPayrollDisbursementRepo tests", () => {
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SqlPayrollDisbursementRepo],
+      providers: [
+        PrismaService,
+        SqlPayrollDisbursementRepo,
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
+      ],
     }).compile();
 
     payrollDisbursementRepo = app.get<SqlPayrollDisbursementRepo>(SqlPayrollDisbursementRepo);

@@ -20,11 +20,13 @@ import {
   InvalidDatabaseRecordException,
   NotFoundError,
 } from "../../../core/exception/CommonAppException";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class SqlPayrollRepo implements IPayrollRepo {
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly alertService: AlertService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -51,7 +53,7 @@ export class SqlPayrollRepo implements IPayrollRepo {
       const returnedPayroll: PrismaPayrollModel = await this.prismaService.payroll.create({ data: payrollInput });
       savedPayroll = convertToDomainPayroll(returnedPayroll);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       if (err.code === "P2025") {
         throw new DatabaseInternalErrorException({
           message: `Failed to store Payroll in database as employer with id ${payroll.employerID} was not found`,
@@ -66,7 +68,7 @@ export class SqlPayrollRepo implements IPayrollRepo {
       validatePayroll(savedPayroll);
       return savedPayroll;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new InvalidDatabaseRecordException({
         message: "Error saving Payroll in database",
       });
@@ -97,7 +99,7 @@ export class SqlPayrollRepo implements IPayrollRepo {
 
       return convertToDomainPayroll(returnedPayroll);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       if (err.meta && err.meta.cause === "Record to update not found.") {
         throw new NotFoundError({});
       }
@@ -112,7 +114,7 @@ export class SqlPayrollRepo implements IPayrollRepo {
       const returnedPayroll: PrismaPayrollModel = await this.prismaService.payroll.findUnique({ where: { id: id } });
       return convertToDomainPayroll(returnedPayroll);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       return null;
     }
   }
@@ -130,7 +132,7 @@ export class SqlPayrollRepo implements IPayrollRepo {
 
       return returnedPayrolls.map(payroll => convertToDomainPayroll(payroll));
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       return [];
     }
   }
@@ -154,7 +156,7 @@ export class SqlPayrollRepo implements IPayrollRepo {
 
       return returnedPayrolls.map(payroll => convertToDomainPayroll(payroll));
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       return [];
     }
   }
@@ -178,7 +180,7 @@ export class SqlPayrollRepo implements IPayrollRepo {
 
       return returnedPayrolls.map(payroll => convertToDomainPayroll(payroll));
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       return [];
     }
   }

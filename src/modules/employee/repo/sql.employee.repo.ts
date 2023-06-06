@@ -24,6 +24,7 @@ import { RepoErrorCode, RepoException } from "../../../core/exception/repo.excep
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 import { createPaginator } from "../../../infra/sql/paginate/PaginationPipeline";
 import { EmployeeFilterOptionsDTO } from "../dto/employee.filter.options.dto";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 type EmployeeModelType = EmployeePrismaModel & {
   employer?: EmployerPrismaModel;
@@ -33,6 +34,7 @@ type EmployeeModelType = EmployeePrismaModel & {
 export class SqlEmployeeRepo implements IEmployeeRepo {
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly alertService: AlertService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -69,7 +71,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
       });
       savedEmployee = convertToDomainEmployee(returnedEmployee);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       if (
         err.meta &&
         err.meta.target &&
@@ -93,7 +95,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
       validateEmployee(savedEmployee);
       return savedEmployee;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new InvalidDatabaseRecordException({
         message: "Error validating Employee record that was saved to the database",
       });
@@ -130,7 +132,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
       });
       return convertToDomainEmployee(returnedEmployee);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       if (err.meta && err.meta.cause === "Record to update not found.") {
         throw new NotFoundError({});
       }
@@ -159,7 +161,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
 
       return convertToDomainEmployee(employee);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
         message: `Error retrieving the Employee with ID: '${id}'`,
       });
@@ -192,7 +194,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
 
       return convertToDomainEmployee(employee);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
         message: `Error retrieving the Employee with consumer ID: '${consumerID}' and employer ID: '${employerID}'`,
       });
@@ -217,7 +219,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
 
       return employees.map(convertToDomainEmployee);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
         message: `Error retrieving employees with consumerID: '${consumerID}'`,
       });
@@ -273,7 +275,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
     try {
       return await paginator(this.prismaService.employee, filterQuery);
     } catch (err) {
-      this.logger.error(`Error retrieving employees with filter options: ${JSON.stringify(filterOptions)}`);
+      this.alertService.raiseError(`Error retrieving employees with filter options: ${JSON.stringify(filterOptions)}`);
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: "Error retrieving employees with given filters",
@@ -299,7 +301,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
 
       return employees.map(convertToDomainEmployee);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error retrieving employees for employer with ID: '${employerID}'`,
@@ -330,7 +332,7 @@ export class SqlEmployeeRepo implements IEmployeeRepo {
 
       return employees.map(convertToDomainEmployee);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error retrieving employees for employer with ID: '${employerID}'`,

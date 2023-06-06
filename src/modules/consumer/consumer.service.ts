@@ -507,7 +507,7 @@ export class ConsumerService {
     // if (paymentMethod.paymentProvider === PaymentProvider.CHECKOUT) {
     //   return this.paymentService.requestCheckoutPayment(consumer, transaction, paymentMethod);
     // } else {
-    //   this.logger.error(
+    //   this.logger.warn(
     //     `Error in making payment as payment provider ${
     //       paymentMethod.paymentProvider
     //     } is not supported. Consumer: ${JSON.stringify(consumer)}, Transaction: ${JSON.stringify(transaction)}`,
