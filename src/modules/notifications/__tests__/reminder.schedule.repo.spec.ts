@@ -8,6 +8,9 @@ import { SQLReminderScheduleRepo } from "../repos/sql.reminder.schedule.repo";
 import { createAndSaveEvent, createAndSaveReminderSchedule } from "../test_utils/notification.test.utils";
 import { RepoErrorCode } from "../../../core/exception/repo.exception";
 import { uuid } from "uuidv4";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 describe("ReminderScheduleRepoTests", () => {
   jest.setTimeout(20000);
@@ -15,16 +18,24 @@ describe("ReminderScheduleRepoTests", () => {
   let reminderScheduleRepo: ReminderScheduleRepo;
   let app: TestingModule;
   let prismaService: PrismaService;
+  let mockAlertService: AlertService;
 
   beforeAll(async () => {
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SQLReminderScheduleRepo],
+      providers: [
+        PrismaService,
+        SQLReminderScheduleRepo,
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
+      ],
     }).compile();
 
     reminderScheduleRepo = app.get<ReminderScheduleRepo>(SQLReminderScheduleRepo);

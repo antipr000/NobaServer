@@ -8,6 +8,9 @@ import { v4 } from "uuid";
 import { Utils } from "../../../core/utils/Utils";
 import { IPushTokenRepo } from "../repos/pushtoken.repo";
 import { SQLPushTokenRepo } from "../repos/sql.pushtoken.repo";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 describe("PushtokenRepoTests", () => {
   jest.setTimeout(20000);
@@ -15,16 +18,24 @@ describe("PushtokenRepoTests", () => {
   let pushTokenRepo: IPushTokenRepo;
   let app: TestingModule;
   let prismaService: PrismaService;
+  let mockAlertService: AlertService;
 
   beforeAll(async () => {
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SQLPushTokenRepo],
+      providers: [
+        PrismaService,
+        SQLPushTokenRepo,
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
+      ],
     }).compile();
 
     pushTokenRepo = app.get<SQLPushTokenRepo>(SQLPushTokenRepo);

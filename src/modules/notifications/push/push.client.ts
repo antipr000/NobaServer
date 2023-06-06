@@ -11,7 +11,7 @@ export abstract class PushClient {
     try {
       await this.sendPushNotificationInternal(request);
     } catch (e) {
-      this.logger.error(`Failed to send push notification. Reason: ${e.message}`);
+      this.logger.warn(`Failed to send push notification. Reason: ${e.message}`);
     }
   }
 }

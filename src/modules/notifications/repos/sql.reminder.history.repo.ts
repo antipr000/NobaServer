@@ -14,11 +14,15 @@ import { Logger } from "winston";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { Prisma, ReminderHistory as PrismaReminderHistoryModel } from "@prisma/client";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class SQLReminderHistoryRepo implements ReminderHistoryRepo {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   @Inject()
   private readonly prismaService: PrismaService;
@@ -53,7 +57,7 @@ export class SQLReminderHistoryRepo implements ReminderHistoryRepo {
 
       savedReminderHistory = convertToDomainReminderHistory(returnedReminderHistory);
     } catch (e) {
-      this.logger.error(`Failed to create reminder history: ${e}`);
+      this.alertService.raiseError(`Failed to create reminder history: ${e}`);
       throw new RepoException({
         message: "Failed to create reminder history",
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
@@ -64,7 +68,7 @@ export class SQLReminderHistoryRepo implements ReminderHistoryRepo {
       validateReminderHistory(savedReminderHistory);
       return savedReminderHistory;
     } catch (e) {
-      this.logger.error(`Failed to validate reminder history: ${e}`);
+      this.alertService.raiseError(`Failed to validate reminder history: ${e}`);
       throw new RepoException({
         message: "Failed to validate reminder history",
         errorCode: RepoErrorCode.INVALID_DATABASE_RECORD,
@@ -91,7 +95,7 @@ export class SQLReminderHistoryRepo implements ReminderHistoryRepo {
 
       return convertToDomainReminderHistory(returnedReminderHistory);
     } catch (e) {
-      this.logger.error(`Failed to update reminder history: ${e}`);
+      this.alertService.raiseError(`Failed to update reminder history: ${e}`);
       throw new RepoException({
         message: "Failed to update reminder history",
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
@@ -111,7 +115,7 @@ export class SQLReminderHistoryRepo implements ReminderHistoryRepo {
 
       return convertToDomainReminderHistory(returnedReminderHistory);
     } catch (e) {
-      this.logger.error(`Failed to get reminder history by ID: ${e}`);
+      this.alertService.raiseError(`Failed to get reminder history by ID: ${e}`);
       throw new RepoException({
         message: "Failed to get reminder history by ID",
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
@@ -138,7 +142,7 @@ export class SQLReminderHistoryRepo implements ReminderHistoryRepo {
 
       return convertToDomainReminderHistory(returnedReminderHistory);
     } catch (e) {
-      this.logger.error(`Failed to get reminder history by reminder schedule ID and consumer ID: ${e}`);
+      this.alertService.raiseError(`Failed to get reminder history by reminder schedule ID and consumer ID: ${e}`);
       throw new RepoException({
         message: "Failed to get reminder history by reminder schedule ID and consumer ID",
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
@@ -161,7 +165,7 @@ export class SQLReminderHistoryRepo implements ReminderHistoryRepo {
 
       return convertToDomainReminderHistory(returnedReminderHistory);
     } catch (e) {
-      this.logger.error(`Failed to get latest reminder history for consumer: ${e}`);
+      this.alertService.raiseError(`Failed to get latest reminder history for consumer: ${e}`);
       throw new RepoException({
         message: "Failed to get latest reminder history for consumer",
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
