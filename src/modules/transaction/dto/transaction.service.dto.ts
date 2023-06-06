@@ -17,6 +17,7 @@ export type InitiateTransactionRequest = {
   debitAdjustmentRequest?: DebitAdjustmentTransactionRequest;
   walletDepositRequest?: WalletDepositTransactionRequest;
   walletWithdrawalRequest?: WalletWithdrawalTransactionRequest;
+  walletTransferRequest?: WalletTransferTransactionRequest;
 };
 
 export type CardWithdrawalTransactionRequest = {
@@ -111,6 +112,15 @@ export type WalletWithdrawalDetails = {
   accountType: AccountType;
 };
 
+export type WalletTransferTransactionRequest = {
+  debitAmount: number;
+  debitCurrency: Currency;
+  debitConsumerIDOrTag: string;
+  creditConsumerIDOrTag: string;
+  memo: string;
+  sessionKey: string;
+};
+
 export const validateInitiateTransactionRequest = (request: InitiateTransactionRequest) => {
   const intiateTransactionRequestValidationKeys: KeysRequired<InitiateTransactionRequest> = {
     type: Joi.string()
@@ -125,6 +135,7 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
     debitAdjustmentRequest: Joi.object().optional(),
     walletDepositRequest: Joi.object().optional(),
     walletWithdrawalRequest: Joi.object().optional(),
+    walletTransferRequest: Joi.object().optional(),
   };
 
   const initiateTransactionJoiSchema = Joi.object(intiateTransactionRequestValidationKeys)
@@ -138,6 +149,7 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
       "debitAdjustmentRequest",
       "walletDepositRequest",
       "walletWithdrawalRequest",
+      "walletTransferRequest",
     )
     .options({
       allowUnknown: false,

@@ -30,6 +30,8 @@ import { getMockWalletDepositProcessorWithDefaults } from "../mocks/mock.wallet.
 import { WalletWithdrawalProcessor } from "../implementations/wallet.withdrawal.processor";
 import { getMockWalletWithdrawalProcessorWithDefaults } from "../mocks/mock.wallet.withdrawal.processor";
 import { AccountType, DocumentType } from "../../../../../modules/transaction/domain/WithdrawalDetails";
+import { WalletTransferPreprocessor } from "../implementations/wallet.transfer.preprocessor";
+import { getMockwalletTransferPreprocessorWithDefaults } from "../mocks/mock.wallet.transfer.preprocessor";
 
 describe("TransactionPreprocessorFactory", () => {
   jest.setTimeout(20000);
@@ -46,6 +48,7 @@ describe("TransactionPreprocessorFactory", () => {
   let payrollDepositPreprocessor: PayrollDepositPreprocessor;
   let walletDepositProcessor: WalletDepositProcessor;
   let walletWithdrawalProcessor: WalletWithdrawalProcessor;
+  let walletTransferPreprocessor: WalletTransferPreprocessor;
 
   beforeEach(async () => {
     cardCreditAdjustmentPreprocessor = instance(getMockCardCreditAdjustmentPreprocessorWithDefaults());
@@ -57,6 +60,7 @@ describe("TransactionPreprocessorFactory", () => {
     payrollDepositPreprocessor = instance(getMockPayrollDepositPreprocessorWithDefaults());
     walletDepositProcessor = instance(getMockWalletDepositProcessorWithDefaults());
     walletWithdrawalProcessor = instance(getMockWalletWithdrawalProcessorWithDefaults());
+    walletTransferPreprocessor = instance(getMockwalletTransferPreprocessorWithDefaults());
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -103,6 +107,10 @@ describe("TransactionPreprocessorFactory", () => {
         {
           provide: WalletWithdrawalProcessor,
           useFactory: () => walletWithdrawalProcessor,
+        },
+        {
+          provide: WalletTransferPreprocessor,
+          useFactory: () => walletTransferPreprocessor,
         },
         TransactionProcessorFactory,
       ],
@@ -159,6 +167,11 @@ describe("TransactionPreprocessorFactory", () => {
     it("should return WalletWithdrawalProcessor instance when workflow name is WALLET_WITHDRAWAL", () => {
       const preprocessor = transactionPreprocessorFactory.getPreprocessor(WorkflowName.WALLET_WITHDRAWAL);
       expect(preprocessor).toBe(walletWithdrawalProcessor);
+    });
+
+    it("should return WalletTransferPreprocessor instance when workflow name is WALLET_TRANSFER", () => {
+      const preprocessor = transactionPreprocessorFactory.getPreprocessor(WorkflowName.WALLET_TRANSFER);
+      expect(preprocessor).toBe(walletTransferPreprocessor);
     });
 
     it("should throw error when workflow name is unknown", () => {
@@ -243,6 +256,14 @@ describe("TransactionPreprocessorFactory", () => {
           documentType: DocumentType.CC,
         },
       },
+      walletTransferRequest: {
+        debitAmount: 100,
+        debitCurrency: Currency.COP,
+        debitConsumerIDOrTag: "DEBIT_CONSUMER_ID_OR_TAG",
+        creditConsumerIDOrTag: "CREDIT_CONSUMER_ID_OR_TAG",
+        memo: "MEMO",
+        sessionKey: "SESSION_KEY",
+      },
     };
 
     it("should return payroll deposit request when workflow name is PAYROLL_DEPOSIT", () => {
@@ -317,6 +338,14 @@ describe("TransactionPreprocessorFactory", () => {
       expect(preprocessorRequest).toEqual(request.walletWithdrawalRequest);
     });
 
+    it("should return wallet transfer request when workflow name is WALLET_TRANSFER", () => {
+      const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
+      request.type = WorkflowName.WALLET_TRANSFER;
+
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      expect(preprocessorRequest).toEqual(request.walletTransferRequest);
+    });
+
     it("should throw error when workflow name is unknown", () => {
       const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
       request.type = "UNKNOWN_WORKFLOW_NAME" as any;
@@ -336,6 +365,21 @@ describe("TransactionPreprocessorFactory", () => {
     it("should return a walletDepositProcessor if type if WALLET_WITHDRAWAL", () => {
       const quoteProvider = transactionPreprocessorFactory.getQuoteProvider(WorkflowName.WALLET_WITHDRAWAL);
       expect(quoteProvider).toEqual(walletWithdrawalProcessor);
+    });
+
+    it.each([
+      WorkflowName.CARD_WITHDRAWAL,
+      WorkflowName.CARD_REVERSAL,
+      WorkflowName.CARD_CREDIT_ADJUSTMENT,
+      WorkflowName.CARD_DEBIT_ADJUSTMENT,
+      WorkflowName.CREDIT_ADJUSTMENT,
+      WorkflowName.DEBIT_ADJUSTMENT,
+      WorkflowName.PAYROLL_DEPOSIT,
+      WorkflowName.WALLET_TRANSFER,
+    ])("should throw for '%s' type", type => {
+      expect(() => transactionPreprocessorFactory.getQuoteProvider(type)).toThrowError(
+        `No quote provider found for workflow name: ${type}`,
+      );
     });
   });
 });

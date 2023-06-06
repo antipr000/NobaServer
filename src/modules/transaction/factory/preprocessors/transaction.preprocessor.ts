@@ -8,6 +8,7 @@ import {
   DebitAdjustmentTransactionRequest,
   PayrollDepositTransactionRequest,
   WalletDepositTransactionRequest,
+  WalletTransferTransactionRequest,
   WalletWithdrawalTransactionRequest,
 } from "../../dto/transaction.service.dto";
 
@@ -20,7 +21,8 @@ export type TransactionPreprocessorRequest =
   | CardCreditAdjustmentTransactionRequest
   | CardDebitAdjustmentTransactionRequest
   | WalletDepositTransactionRequest
-  | WalletWithdrawalTransactionRequest;
+  | WalletWithdrawalTransactionRequest
+  | WalletTransferTransactionRequest;
 
 export interface TransactionPreprocessor {
   // Performs static and dynamic validation of the transaction.

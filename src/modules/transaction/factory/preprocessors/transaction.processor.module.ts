@@ -12,6 +12,7 @@ import { CreditAdjustmentPreprocessor } from "./implementations/credit.adjustmen
 import { DebitAdjustmentPreprocessor } from "./implementations/debit.adjustment.preprocessor";
 import { PayrollDepositPreprocessor } from "./implementations/payroll.deposit.preprocessor";
 import { WalletDepositProcessor } from "./implementations/wallet.deposit.processor";
+import { WalletTransferPreprocessor } from "./implementations/wallet.transfer.preprocessor";
 import { WalletWithdrawalProcessor } from "./implementations/wallet.withdrawal.processor";
 import { TransactionProcessorFactory } from "./transaction.processor.factory";
 
@@ -19,7 +20,7 @@ import { TransactionProcessorFactory } from "./transaction.processor.factory";
   imports: [CommonModule, EmployeeModule, EmployerModule, ExchangeRateModule, ConsumerModule],
   providers: [
     TransactionProcessorFactory,
-    // Preprocessors
+    // Preprocessors + Processors
     PayrollDepositPreprocessor,
     CardCreditAdjustmentPreprocessor,
     CardDebitAdjustmentPreprocessor,
@@ -29,6 +30,7 @@ import { TransactionProcessorFactory } from "./transaction.processor.factory";
     DebitAdjustmentPreprocessor,
     WalletDepositProcessor,
     WalletWithdrawalProcessor,
+    WalletTransferPreprocessor,
   ],
   exports: [TransactionProcessorFactory],
 })
