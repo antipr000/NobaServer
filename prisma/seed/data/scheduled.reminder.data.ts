@@ -37,7 +37,7 @@ export const reminderScheduleMap: ReminderScheduleMap = {
       `(SELECT DISTINCT "consumerID" FROM "ReminderHistory" WHERE "eventID" = '${eventID}' ` +
       'AND "lastSentTimestamp" <= NOW() - INTERVAL \'1 day\') RH ON C.id = RH."consumerID" WHERE RH."consumerID" is NULL ' +
       'AND EXISTS (SELECT 1 from "ExchangeRate" where "bankRate" < 4500 and "numeratorCurrency" = \'USD\' and "denominatorCurrency" = \'COP\' ' +
-      'AND "createdTimestamp" = (SELECT MAX("createdTimestamp") from "ExchangeRate")) AND EXISTS ( ' +
+      'AND "createdTimestamp" = (SELECT MAX("createdTimestamp") from "ExchangeRate" WHERE "numeratorCurrency" = \'USD\' and "denominatorCurrency" = \'COP\')) AND EXISTS ( ' +
       'SELECT 1 FROM "PushToken" WHERE "consumerID" = C.id);',
   },
   [NotificationEventType.SEND_MONEY_REMINDER_EVENT]: {
