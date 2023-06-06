@@ -243,18 +243,18 @@ export class CircleService implements IBank {
       response.status !== CircleTransferStatus.INSUFFICIENT_FUNDS
     ) {
       try {
-        // const masterWalletID = this.getMasterWalletID();
-        // if (sourceWalletID !== masterWalletID) {
-        await this.circleRepo.updateCurrentBalance(sourceWalletID, Utils.roundTo2DecimalNumber(balance - amount));
-        // }
+        const masterWalletID = this.getMasterWalletID();
+        if (sourceWalletID !== masterWalletID) {
+          await this.circleRepo.updateCurrentBalance(sourceWalletID, Utils.roundTo2DecimalNumber(balance - amount));
+        }
 
-        // if (destinationWalletID !== masterWalletID) {
-        const destinationCurrentBalance = await this.circleClient.getWalletBalance(destinationWalletID);
-        await this.circleRepo.updateCurrentBalance(
-          destinationWalletID,
-          Utils.roundTo2DecimalNumber(destinationCurrentBalance),
-        );
-        // }
+        if (destinationWalletID !== masterWalletID) {
+          const destinationCurrentBalance = await this.circleClient.getWalletBalance(destinationWalletID);
+          await this.circleRepo.updateCurrentBalance(
+            destinationWalletID,
+            Utils.roundTo2DecimalNumber(destinationCurrentBalance),
+          );
+        }
       } catch (e) {
         this.alertService.raiseAlert({
           key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
