@@ -963,7 +963,7 @@ describe("EmployerServiceTests", () => {
       });
 
       when(mockEmployerRepo.getEmployerByID(employerID)).thenResolve(employer);
-      when(mockAlertService.raiseAlert(anything())).thenResolve();
+      when(mockAlertService.raiseCriticalAlert(anything())).thenResolve();
       when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
       when(mockPayrollRepo.updatePayroll(anyString(), anything())).thenResolve({
         ...payroll,
@@ -1065,7 +1065,7 @@ describe("EmployerServiceTests", () => {
 
       when(mockPayrollRepo.getPayrollByID(payroll.id)).thenResolve(payroll);
       when(mockEmployerRepo.getEmployerByID(payroll.employerID)).thenResolve(employer);
-      when(mockAlertService.raiseAlert(anything())).thenResolve();
+      when(mockAlertService.raiseCriticalAlert(anything())).thenResolve();
       when(mockPayrollRepo.updatePayroll(anyString(), anything())).thenResolve({
         ...payroll,
         status: PayrollStatus.EXPIRED,
@@ -1084,7 +1084,7 @@ describe("EmployerServiceTests", () => {
       expect(payrollID).toEqual(payroll.id);
       expect(payrollUpdateRequest.status).toEqual(PayrollStatus.EXPIRED);
 
-      const [alertCall] = capture(mockAlertService.raiseAlert).last();
+      const [alertCall] = capture(mockAlertService.raiseCriticalAlert).last();
       expect(alertCall).toEqual(expect.objectContaining({ key: "PAYROLL_EXPIRED" }));
     });
   });

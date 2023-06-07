@@ -32,9 +32,13 @@ import {
 import { Utils } from "../../core/utils/Utils";
 import { IClient } from "../../core/domain/IClient";
 import { HealthCheckResponse, HealthCheckStatus } from "../../core/domain/HealthCheckTypes";
+import { AlertService } from "../common/alerts/alert.service";
 
 @Injectable()
 export class PlaidClient implements IClient {
+  @Inject()
+  private readonly alertService: AlertService;
+
   private plaidApi: PlaidApi;
   private plaidConfigs: PlaidConfigs;
 
@@ -83,13 +87,13 @@ export class PlaidClient implements IClient {
       );
 
       if (createTokenResponse.status !== 200) {
-        this.logger.error(`Error creating link token: ${JSON.stringify(createTokenResponse)}`);
+        this.alertService.raiseError(`Error creating link token: ${JSON.stringify(createTokenResponse)}`);
         throw new InternalServerErrorException("Service unavailable. Please try again.");
       }
 
       return createTokenResponse.data.link_token;
     } catch (err) {
-      this.logger.error(`Error while creating link token: ${JSON.stringify(err.response.data)}`);
+      this.alertService.raiseError(`Error while creating link token: ${JSON.stringify(err.response.data)}`);
       throw new InternalServerErrorException("Service unavailable. Please try again.");
     }
   }
@@ -106,7 +110,7 @@ export class PlaidClient implements IClient {
 
       return tokenResponse.data.access_token;
     } catch (err) {
-      this.logger.error(`Error while exchanging public token: ${JSON.stringify(err.response.data)}`);
+      this.alertService.raiseError(`Error while exchanging public token: ${JSON.stringify(err.response.data)}`);
       throw new InternalServerErrorException("Failed to authorize. Please try again.");
     }
   }
@@ -122,13 +126,13 @@ export class PlaidClient implements IClient {
 
       if (authData == null) {
         const errorMessage = `authGet call returned null for token ${request.accessToken}`;
-        this.logger.error(errorMessage);
+        this.alertService.raiseError(errorMessage);
         throw new InternalServerErrorException(errorMessage);
       }
 
       if (authData.data.accounts.length != 1) {
         const errorMessage = "Mismatch between access token and account id in Plaid AuthGet request.";
-        this.logger.error(errorMessage);
+        this.alertService.raiseError(errorMessage);
         throw new InternalServerErrorException(errorMessage);
       }
 
@@ -160,7 +164,7 @@ export class PlaidClient implements IClient {
         wireRoutingNumber: authData.data.numbers.ach[0].wire_routing,
       };
     } catch (err) {
-      this.logger.error(`Error while fetching auth data: ${err}`);
+      this.alertService.raiseError(`Error while fetching auth data: ${err}`);
       throw new InternalServerErrorException("Failed to authorize. Please try again in some time.");
     }
   }
@@ -174,7 +178,7 @@ export class PlaidClient implements IClient {
           break;
 
         default:
-          this.logger.error(`Invalid token processor: "${request.tokenProcessor}".`);
+          this.alertService.raiseError(`Invalid token processor: "${request.tokenProcessor}".`);
           throw new InternalServerErrorException("Internal server error.");
       }
 
@@ -190,7 +194,7 @@ export class PlaidClient implements IClient {
 
       return processorTokenResponse.data.processor_token;
     } catch (err) {
-      this.logger.error(`Error while creating processor token: ${JSON.stringify(err.response.data)}`);
+      this.alertService.raiseError(`Error while creating processor token: ${JSON.stringify(err.response.data)}`);
       throw new InternalServerErrorException("Failed to authorize. Please try again in some time.");
     }
   }

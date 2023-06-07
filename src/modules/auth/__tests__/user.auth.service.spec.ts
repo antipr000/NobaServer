@@ -22,6 +22,8 @@ import { getMockOTPServiceWithDefaults } from "../../common/mocks/mock.otp.servi
 import { NotificationEventType } from "../../../modules/notifications/domain/NotificationTypes";
 import { VerificationService } from "../../../modules/verification/verification.service";
 import { getMockVerificationServiceWithDefaults } from "../../../modules/verification/mocks/mock.verification.service";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
 
 describe("UserAuthService", () => {
   jest.setTimeout(5000);
@@ -32,6 +34,7 @@ describe("UserAuthService", () => {
     let mockTokenRepo: ITokenRepo;
     let mockNotificationService: NotificationService;
     let mockVerificationService: VerificationService;
+    let mockAlertService: AlertService;
 
     const testJwtSecret = "TEST_SECRET";
     const identityType = consumerIdentityIdentifier;
@@ -43,6 +46,7 @@ describe("UserAuthService", () => {
       mockTokenRepo = getMockTokenRepoWithDefaults();
       mockNotificationService = getMockNotificationServiceWithDefaults();
       mockVerificationService = getMockVerificationServiceWithDefaults();
+      mockAlertService = getMockAlertServiceWithDefaults();
 
       const app: TestingModule = await Test.createTestingModule({
         imports: [
@@ -74,6 +78,10 @@ describe("UserAuthService", () => {
           {
             provide: VerificationService,
             useFactory: () => instance(mockVerificationService),
+          },
+          {
+            provide: AlertService,
+            useFactory: () => instance(mockAlertService),
           },
           UserAuthService,
         ],
@@ -367,6 +375,7 @@ describe("UserAuthService", () => {
     let mockTokenRepo: ITokenRepo;
     let mockNotificationService: NotificationService;
     let mockVerificationService: VerificationService;
+    let mockAlertService: AlertService;
 
     const testJwtSecret = "TEST_SECRET";
 
@@ -392,6 +401,7 @@ describe("UserAuthService", () => {
       mockTokenRepo = getMockTokenRepoWithDefaults();
       mockNotificationService = getMockNotificationServiceWithDefaults();
       mockVerificationService = getMockVerificationServiceWithDefaults();
+      mockAlertService = getMockAlertServiceWithDefaults();
 
       const app: TestingModule = await Test.createTestingModule({
         imports: [
@@ -423,6 +433,10 @@ describe("UserAuthService", () => {
           {
             provide: VerificationService,
             useFactory: () => instance(mockVerificationService),
+          },
+          {
+            provide: AlertService,
+            useFactory: () => instance(mockAlertService),
           },
           UserAuthService,
         ],

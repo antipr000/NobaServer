@@ -9,9 +9,13 @@ import axios from "axios";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { DashboardClient } from "./dashboard.client";
 import { PayrollStatus } from "../../../modules/employer/domain/Payroll";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class BubbleClient implements DashboardClient {
+  @Inject()
+  private readonly alertService: AlertService;
+
   private bearerToken: string;
   private baseUrl: string;
 
@@ -47,7 +51,7 @@ export class BubbleClient implements DashboardClient {
       await axios.post(url, requestBody, { headers });
       this.logger.info(`Successfully registered new employee: ${JSON.stringify(requestBody)} to Bubble`);
     } catch (err) {
-      this.logger.error(
+      this.alertService.raiseError(
         `Failed to register new employee: ${JSON.stringify(requestBody)} to Bubble endpoint ${url}. Error: ${err}`,
       );
       throw new ServiceException({
@@ -73,7 +77,7 @@ export class BubbleClient implements DashboardClient {
       await axios.post(url, requestBody, { headers });
       this.logger.info(`Successfully updated employee : ${JSON.stringify(requestBody)} to Bubble`);
     } catch (err) {
-      this.logger.error(
+      this.alertService.raiseError(
         `Failed to update employee : ${JSON.stringify(requestBody)} to Bubble endpoint ${url}. Error: ${err}`,
       );
       throw new ServiceException({
@@ -99,7 +103,7 @@ export class BubbleClient implements DashboardClient {
       await axios.post(url, requestBody, { headers });
       this.logger.info(`Successfully updated payroll status : ${JSON.stringify(requestBody)} to Bubble`);
     } catch (err) {
-      this.logger.error(
+      this.alertService.raiseError(
         `Failed to update payroll status : ${JSON.stringify(requestBody)} to Bubble endpoint ${url}. Error: ${err}`,
       );
       throw new ServiceException({

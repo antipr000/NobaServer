@@ -12,7 +12,7 @@ export abstract class SMSClient {
     try {
       await this.sendSMSInternal(recipientPhoneNumber, body);
     } catch (e) {
-      this.logger.error(`Failed to send SMS. Reason: ${e.message}`);
+      this.logger.warn(`Failed to send SMS. Reason: ${e.message}`);
     }
   }
 }

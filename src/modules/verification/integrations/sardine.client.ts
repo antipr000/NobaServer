@@ -51,6 +51,7 @@ import { TransactionVerification } from "../domain/TransactionVerification";
 import { Utils } from "../../../core/utils/Utils";
 import { HealthCheckResponse, HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
 import { CircleService } from "../../../modules/circle/public/circle.service";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class Sardine implements IDVProvider {
@@ -60,6 +61,7 @@ export class Sardine implements IDVProvider {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly configService: CustomConfigService,
     private readonly consumerService: ConsumerService,
+    private readonly alertService: AlertService,
     private readonly circleService: CircleService,
   ) {
     this.BASE_URI = configService.get<SardineConfigs>(SARDINE_CONFIG_KEY).sardineBaseUri;
@@ -157,7 +159,7 @@ export class Sardine implements IDVProvider {
       }
     } catch (e) {
       if (e.response?.status == 422) {
-        this.logger.error(`Sardine request failed for KYC: ${JSON.stringify(e.response.data)}`);
+        this.alertService.raiseError(`Sardine request failed for KYC: ${JSON.stringify(e.response.data)}`);
         throw new BadRequestException(`${JSON.stringify(e.response.data)}`);
       } else throw new BadRequestException(e);
     }
@@ -200,12 +202,14 @@ export class Sardine implements IDVProvider {
       const { data } = await axios.post(this.BASE_URI + "/v1/identity-documents/verifications", formData, config);
       return data.id;
     } catch (e) {
-      this.logger.error(`Sardine request failed for Document submit: ${JSON.stringify(e)}`);
+      this.alertService.raiseError(`Sardine request failed for Document submit: ${JSON.stringify(e)}`);
       if (e.response) {
         if (e.response.status === 400) {
           return e.response.data.verification_id;
         } else if (e.response.status == 422) {
-          this.logger.error(`Sardine request failed for document verification: ${JSON.stringify(e.response.data)}`);
+          this.alertService.raiseError(
+            `Sardine request failed for document verification: ${JSON.stringify(e.response.data)}`,
+          );
           throw new BadRequestException(`${JSON.stringify(e.response.data)}`);
         }
       }
@@ -226,12 +230,12 @@ export class Sardine implements IDVProvider {
       return this.processDocumentVerificationResult(data as DocumentVerificationSardineResponse);
     } catch (e) {
       if (e.response?.status == 422) {
-        this.logger.error(
+        this.alertService.raiseError(
           `Sardine request failed to get document verification result: ${JSON.stringify(e.response.data)}`,
         );
         throw new BadRequestException(`${JSON.stringify(e.response.data)}`);
       } else {
-        this.logger.error("Sardine request failed to get document verification, returning not found");
+        this.alertService.raiseError("Sardine request failed to get document verification, returning not found");
         throw new NotFoundException();
       }
     }
@@ -274,7 +278,9 @@ export class Sardine implements IDVProvider {
       return data as IdentityDocumentURLResponse;
     } catch (e) {
       if (e.response?.status == 422) {
-        this.logger.error(`Sardine request failed to get identity document URL: ${JSON.stringify(e.response.data)}`);
+        this.alertService.raiseError(
+          `Sardine request failed to get identity document URL: ${JSON.stringify(e.response.data)}`,
+        );
         throw new BadRequestException(`${JSON.stringify(e.response.data)}`);
       } else throw new InternalServerErrorException("Unable to retrieve URL at this time");
     }
@@ -364,7 +370,7 @@ export class Sardine implements IDVProvider {
         break;
       default:
         // This should never happen
-        this.logger.error(`Unknown workflow name: ${transaction.workflowName}`);
+        this.alertService.raiseError(`Unknown workflow name: ${transaction.workflowName}`);
         throw new Error(`Unknown workflow name: ${transaction.workflowName}`);
     }
 
@@ -436,7 +442,9 @@ export class Sardine implements IDVProvider {
       };
     } catch (e) {
       if (e.response?.status == 422) {
-        this.logger.error(`Sardine request failed for Transaction validation: ${JSON.stringify(e.response.data)}`);
+        this.alertService.raiseError(
+          `Sardine request failed for Transaction validation: ${JSON.stringify(e.response.data)}`,
+        );
         throw new BadRequestException(`${JSON.stringify(e.response.data)}`);
       } else throw new BadRequestException(e);
     }
@@ -457,12 +465,12 @@ export class Sardine implements IDVProvider {
       return data;
     } catch (e) {
       if (e.response?.status == 422) {
-        this.logger.error(
+        this.alertService.raiseError(
           `Sardine request failed to get device verification result: ${JSON.stringify(e.response.data)}`,
         );
         throw new BadRequestException(`${JSON.stringify(e.response.data)}`);
       } else {
-        this.logger.error(`Sardine request failed for get device verification result: ${e}`);
+        this.alertService.raiseError(`Sardine request failed for get device verification result: ${e}`);
         throw new NotFoundException(e.message);
       }
     }
@@ -515,7 +523,7 @@ export class Sardine implements IDVProvider {
             };
 
           default:
-            this.logger.error(
+            this.alertService.raiseError(
               `Unexpected Sardine DocumentVerification Response: "${JSON.stringify(
                 documentVerificationSardineResponse,
               )}"`,
@@ -545,7 +553,7 @@ export class Sardine implements IDVProvider {
               };
 
             default:
-              this.logger.error(
+              this.alertService.raiseError(
                 `Unexpected Sardine DocumentVerification Response: "${JSON.stringify(
                   documentVerificationSardineResponse,
                 )}"`,
@@ -553,7 +561,7 @@ export class Sardine implements IDVProvider {
               throw new InternalServerErrorException();
           }
         } else {
-          this.logger.error(
+          this.alertService.raiseError(
             `Unexpected Sardine DocumentVerification Response: "${JSON.stringify(
               documentVerificationSardineResponse,
             )}"`,
@@ -568,7 +576,7 @@ export class Sardine implements IDVProvider {
         };
 
       default:
-        this.logger.error(
+        this.alertService.raiseError(
           `Unexpected Sardine DocumentVerification Response: "${JSON.stringify(documentVerificationSardineResponse)}"`,
         );
         return {
@@ -613,9 +621,11 @@ export class Sardine implements IDVProvider {
       await axios.post(this.BASE_URI + "/v1/feedbacks", payload, this.getAxiosConfig());
     } catch (e) {
       if (e.response?.status == 422) {
-        this.logger.error(`Sardine request failed to post consumer feedback: ${JSON.stringify(e.response.data)}`);
+        this.alertService.raiseError(
+          `Sardine request failed to post consumer feedback: ${JSON.stringify(e.response.data)}`,
+        );
       } else {
-        this.logger.error(`Sardine request failed for postConsumerFeedback: ${e}`);
+        this.alertService.raiseError(`Sardine request failed for postConsumerFeedback: ${e}`);
       }
     }
   }
@@ -637,9 +647,11 @@ export class Sardine implements IDVProvider {
       await axios.post(this.BASE_URI + "/v1/feedbacks", payload, this.getAxiosConfig());
     } catch (e) {
       if (e.response?.status == 422) {
-        this.logger.error(`Sardine request failed to post document feedback: ${JSON.stringify(e.response.data)}`);
+        this.alertService.raiseError(
+          `Sardine request failed to post document feedback: ${JSON.stringify(e.response.data)}`,
+        );
       } else {
-        this.logger.error(`Sardine request failed for postDocumentFeedback: ${e}`);
+        this.alertService.raiseError(`Sardine request failed for postDocumentFeedback: ${e}`);
       }
     }
   }
@@ -667,9 +679,11 @@ export class Sardine implements IDVProvider {
       await axios.post(this.BASE_URI + "/v1/feedbacks", payload, this.getAxiosConfig());
     } catch (e) {
       if (e.response?.status == 422) {
-        this.logger.error(`Sardine request failed to post transaction feedback: ${JSON.stringify(e.response.data)}`);
+        this.alertService.raiseError(
+          `Sardine request failed to post transaction feedback: ${JSON.stringify(e.response.data)}`,
+        );
       } else {
-        this.logger.error(`Sardine request failed for postTransactionFeedback: ${e}`);
+        this.alertService.raiseError(`Sardine request failed for postTransactionFeedback: ${e}`);
       }
     }
   }

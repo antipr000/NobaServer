@@ -8,6 +8,9 @@ import { CreditCardBinDataRepo } from "../repo/creditcardbindata.repo";
 import { BINValidity, CardType } from "../dto/CreditCardDTO";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { uuid } from "uuidv4";
+import { AlertService } from "../alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 describe("CreditCardBinDataRepo", () => {
   jest.setTimeout(20000);
@@ -15,6 +18,7 @@ describe("CreditCardBinDataRepo", () => {
   let creditCardBinDataRepo: CreditCardBinDataRepo;
   let prismaService: PrismaService;
   let app: TestingModule;
+  let mockAlertService: AlertService;
 
   beforeAll(async () => {
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
@@ -32,10 +36,17 @@ describe("CreditCardBinDataRepo", () => {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SQLCreditCardBinDataRepo],
+      providers: [
+        PrismaService,
+        SQLCreditCardBinDataRepo,
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
+      ],
     }).compile();
 
     creditCardBinDataRepo = app.get<SQLCreditCardBinDataRepo>(SQLCreditCardBinDataRepo);

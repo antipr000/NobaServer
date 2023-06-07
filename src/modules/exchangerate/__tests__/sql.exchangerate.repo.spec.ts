@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
-import { ExchangeRate, InputExchangeRate } from "../domain/ExchangeRate";
+import { InputExchangeRate } from "../domain/ExchangeRate";
 import { IExchangeRateRepo } from "../repo/exchangerate.repo";
 import { SQLExchangeRateRepo } from "../repo/sql.exchangerate.repo";
 import {
@@ -11,20 +11,32 @@ import {
 } from "../../../core/exception/CommonAppException";
 import * as ExchangeRateFunctionsForMocking from "../domain/ExchangeRate";
 import { getMockExchangeRateRepoWithDefaults } from "../mocks/mock.exchangerate.repo";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 describe("SQLExchangeRateRepo", () => {
   let exchangeRateRepo: IExchangeRateRepo;
   let prismaService: PrismaService;
   let app: TestingModule;
+  let mockAlertService: AlertService;
 
   jest.setTimeout(30000);
 
   beforeAll(async () => {
     exchangeRateRepo = getMockExchangeRateRepoWithDefaults();
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync({}), getTestWinstonModule()],
       controllers: [],
-      providers: [SQLExchangeRateRepo, PrismaService],
+      providers: [
+        SQLExchangeRateRepo,
+        PrismaService,
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
+      ],
     }).compile();
 
     exchangeRateRepo = app.get<SQLExchangeRateRepo>(SQLExchangeRateRepo);

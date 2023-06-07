@@ -6,11 +6,13 @@ import { Logger } from "winston";
 import { convertToDomainNobaCard, NobaCard } from "../domain/NobaCard";
 import { NobaCardRepo } from "./card.repo";
 import { RepoErrorCode, RepoException } from "../../../../core/exception/repo.exception";
+import { AlertService } from "../../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class SQLNobaCardRepo implements NobaCardRepo {
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly alertService: AlertService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -25,7 +27,7 @@ export class SQLNobaCardRepo implements NobaCardRepo {
       const nobaCards: NobaCard[] = returnedNobaCards.map(prismaNobaCard => convertToDomainNobaCard(prismaNobaCard));
       return nobaCards;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting the Noba Cards for consumerID: '${consumerID}'`,
@@ -47,7 +49,7 @@ export class SQLNobaCardRepo implements NobaCardRepo {
 
       return convertToDomainNobaCard(returnedNobaCard);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting the Noba Card with ID: '${id}'`,

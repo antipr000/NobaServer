@@ -76,7 +76,7 @@ export class MonoWebhookService {
 
       default:
         // Writing a logger.error is enough as throwing an error will cause the webhook to be retried
-        this.logger.error(`Unexpected Mono webhook event: ${JSON.stringify(requestBody)}`);
+        this.alertService.raiseError(`Unexpected Mono webhook event: ${JSON.stringify(requestBody)}`);
     }
   }
 
@@ -85,7 +85,7 @@ export class MonoWebhookService {
       event.collectionLinkID,
     );
     if (!monoTransaction) {
-      this.alertService.raiseAlert({
+      this.alertService.raiseCriticalAlert({
         key: AlertKey.MONO_TRANSACTION_NOT_FOUND,
         message: `Failed to find Mono collection record with ID ${event.collectionLinkID}`,
       });
@@ -106,7 +106,7 @@ export class MonoWebhookService {
     );
 
     if (!monoTransaction) {
-      this.alertService.raiseAlert({
+      this.alertService.raiseCriticalAlert({
         key: AlertKey.MONO_TRANSACTION_NOT_FOUND,
         message: `Failed to find Mono transfer record with ID ${event.transferID}`,
       });
@@ -125,7 +125,7 @@ export class MonoWebhookService {
     );
 
     if (!monoTransaction) {
-      this.alertService.raiseAlert({
+      this.alertService.raiseCriticalAlert({
         key: AlertKey.MONO_TRANSACTION_NOT_FOUND,
         message: `Failed to find Mono transfer record (for reject) with ID ${event.transferID}`,
       });
@@ -182,7 +182,7 @@ export class MonoWebhookService {
       return;
     }
 
-    this.alertService.raiseAlert({
+    this.alertService.raiseCriticalAlert({
       key: AlertKey.UNMATCHED_ACCOUNT_CREDITED_MONO_EVENT,
       message: `Unmatched event: "${JSON.stringify(event)}". Matching criteria: amount=${
         event.amount

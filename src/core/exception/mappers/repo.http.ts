@@ -13,7 +13,7 @@ export function repoToHTTP(logger: Logger, exception: RepoException) {
     case RepoErrorCode.UNKNOWN:
       return new InternalServerErrorException(exception.message);
     default:
-      logger.error("Unmapped Repository error code. Exception details:", exception);
+      logger.warn("Unmapped Repository error code. Exception details:", exception);
       return new HttpException(exception.message, 500);
   }
 }

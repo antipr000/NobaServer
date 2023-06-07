@@ -4,7 +4,8 @@ import { AlertService } from "../alerts/alert.service";
 export const getMockAlertServiceWithDefaults = () => {
   const mockAlertService: AlertService = mock(AlertService);
 
-  when(mockAlertService.raiseAlert(anything())).thenReject(new Error("Not implemented!"));
+  when(mockAlertService.raiseCriticalAlert(anything())).thenReject(new Error("Not implemented!"));
+  when(mockAlertService.raiseError(anything())).thenResolve();
 
   return mockAlertService;
 };

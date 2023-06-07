@@ -16,6 +16,8 @@ import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { RepoException } from "../../../core/exception/repo.exception";
 import { FeeType } from "../domain/TransactionFee";
 import { Prisma } from "@prisma/client";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
 
 describe("SQLWithdrawalDetailsRepo tests", () => {
   jest.setTimeout(20000);
@@ -24,6 +26,7 @@ describe("SQLWithdrawalDetailsRepo tests", () => {
   let kmsService: KmsService;
   let prismaService: PrismaService;
   let app: TestingModule;
+  let mockAlertService: AlertService;
 
   beforeAll(async () => {
     kmsService = getMockKMSServiceWithDefaults();
@@ -42,7 +45,7 @@ describe("SQLWithdrawalDetailsRepo tests", () => {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
       providers: [
@@ -51,6 +54,10 @@ describe("SQLWithdrawalDetailsRepo tests", () => {
         {
           provide: KmsService,
           useFactory: () => instance(kmsService),
+        },
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
         },
       ],
     }).compile();

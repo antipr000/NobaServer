@@ -14,8 +14,11 @@ import { createTestEmployerAndStoreInDB } from "../test_utils/test.utils";
 import { Payroll, PayrollStatus } from "../domain/Payroll";
 import { DatabaseInternalErrorException, NotFoundError } from "../../../core/exception/CommonAppException";
 import { uuid } from "uuidv4";
-import { getRandomEmployer, saveAndGetEmployer, saveEmployer } from "../test_utils/employer.test.utils";
+import { getRandomEmployer, saveEmployer } from "../test_utils/employer.test.utils";
 import { Employer } from "../domain/Employer";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 describe("SqlPayrollRepo tests", () => {
   jest.setTimeout(20000);
@@ -23,16 +26,24 @@ describe("SqlPayrollRepo tests", () => {
 
   let app: TestingModule;
   let prismaService: PrismaService;
+  let mockAlertService: AlertService;
 
   beforeAll(async () => {
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SqlPayrollRepo],
+      providers: [
+        PrismaService,
+        SqlPayrollRepo,
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
+      ],
     }).compile();
 
     payrollRepo = app.get<SqlPayrollRepo>(SqlPayrollRepo);
