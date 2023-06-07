@@ -32,6 +32,7 @@ import { Utils } from "../../../core/utils/Utils";
 import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
 import { ExchangeRateDTO } from "../../../modules/exchangerate/dto/exchangerate.dto";
 import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { LocaleUtils } from "../../../core/utils/LocaleUtils";
 
 @Injectable()
 export class PomeloTransactionService {
@@ -102,7 +103,7 @@ export class PomeloTransactionService {
     try {
       const pomeloTransaction: PomeloTransaction = await this.getOrCreatePomeloTransaction({
         pomeloTransactionID: request.pomeloTransactionID,
-        settlementDate: Utils.convertToColumbianDate(request.unixTimestampSeconds),
+        settlementDate: LocaleUtils.convertToColumbianDate(request.unixTimestampSeconds),
         parentPomeloTransactionID: null,
         localAmount: request.localAmount,
         localCurrency: request.localCurrency,
@@ -227,7 +228,7 @@ export class PomeloTransactionService {
     try {
       const pomeloTransaction: PomeloTransaction = await this.getOrCreatePomeloTransaction({
         pomeloTransactionID: request.pomeloTransactionID,
-        settlementDate: Utils.convertToColumbianDate(request.unixTimestampSeconds),
+        settlementDate: LocaleUtils.convertToColumbianDate(request.unixTimestampSeconds),
         parentPomeloTransactionID: request.pomeloOriginalTransactionID,
         localAmount: request.localAmount,
         localCurrency: request.localCurrency,

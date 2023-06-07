@@ -79,7 +79,7 @@ import { getMockCreditAdjustmentImplWithDefaults } from "../mocks/mock.credit.ad
 import { getMockDebitAdjustmentImplWithDefaults } from "../mocks/mock.dedit.adjustment.impl";
 import { DebitAdjustmentImpl } from "../factory/debit.adjustment.impl";
 import { ConsumerWorkflowName } from "../../../infra/temporal/workflow";
-import { TransactionPreprocessorFactory } from "../factory/preprocessors/transaction.preprocessor.factory";
+import { TransactionProcessorFactory } from "../factory/preprocessors/transaction.processor.factory";
 import { getMockTransactionPreprocessorFactoryWithDefaults } from "../factory/preprocessors/mocks/mock.transaction.preprocessor.factory";
 
 describe("TransactionServiceTests", () => {
@@ -104,7 +104,7 @@ describe("TransactionServiceTests", () => {
   let employerService: EmployerService;
   let alertService: AlertService;
   let kmsService: KmsService;
-  let transactionPreprocessorFactory: TransactionPreprocessorFactory;
+  let transactionPreprocessorFactory: TransactionProcessorFactory;
 
   beforeEach(async () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
@@ -186,7 +186,7 @@ describe("TransactionServiceTests", () => {
           useFactory: () => instance(kmsService),
         },
         {
-          provide: TransactionPreprocessorFactory,
+          provide: TransactionProcessorFactory,
           useFactory: () => instance(transactionPreprocessorFactory),
         },
         TransactionService,
