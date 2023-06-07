@@ -179,7 +179,9 @@ export class CircleService implements IBank {
     if (response.status !== CircleTransferStatus.TRANSFER_FAILED) {
       try {
         const currentBalance = await this.circleClient.getWalletBalance(walletID);
-        await this.circleRepo.updateCurrentBalance(walletID, Utils.roundTo2DecimalNumber(currentBalance));
+        if (walletID !== masterWalletID) {
+          await this.circleRepo.updateCurrentBalance(walletID, Utils.roundTo2DecimalNumber(currentBalance));
+        }
       } catch (e) {
         this.alertService.raiseAlert({
           key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,

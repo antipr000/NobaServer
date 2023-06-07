@@ -460,6 +460,38 @@ describe("CircleService", () => {
       expect(circleService.creditWalletBalance("workflowID", "walletID", 100)).rejects.toThrowServiceException();
     });
 
+    it("should not update circle balance if destination wallet is master wallet", async () => {
+      when(mockCircleClient.getMasterWalletID()).thenReturn("masterWalletID");
+      when(mockCircleClient.getWalletBalance("masterWalletID")).thenResolve(200);
+      when(
+        mockCircleClient.transfer(
+          deepEqual({
+            idempotencyKey: "workflowID",
+            sourceWalletID: "masterWalletID",
+            destinationWalletID: "masterWalletID",
+            amount: 100,
+          }),
+        ),
+      ).thenResolve({
+        transferID: "transferID",
+        amount: 100,
+        sourceWalletID: "masterWalletID",
+        destinationWalletID: "masterWalletID",
+        status: CircleTransferStatus.SUCCESS,
+        createdAt: "dateNow",
+      });
+
+      when(mockCircleRepo.updateCurrentBalance(anyString(), anything())).thenResolve();
+      const walletBalanceResponse = await circleService.creditWalletBalance("workflowID", "masterWalletID", 100);
+      expect(walletBalanceResponse).toEqual({
+        id: "transferID",
+        status: CircleTransferStatus.SUCCESS,
+        createdAt: "dateNow",
+      });
+
+      verify(mockCircleRepo.updateCurrentBalance("masterWalletID", anything())).never();
+    });
+
     it("should not update cached balance when transfer fails", async () => {
       const circleResponse = {
         id: "transferID",
