@@ -167,6 +167,7 @@ export class CircleService implements IBank {
       });
     }
 
+    this.logger.debug(`Transferring ${amount} from master wallet to ${walletID}`);
     const response = await this.circleClient.transfer({
       idempotencyKey: idempotencyKey,
       sourceWalletID: masterWalletID,
@@ -177,6 +178,7 @@ export class CircleService implements IBank {
     if (response.status !== CircleTransferStatus.TRANSFER_FAILED) {
       try {
         const currentBalance = await this.circleClient.getWalletBalance(walletID);
+        this.logger.debug(`Updating balance for wallet ${walletID} to ${Utils.roundTo2DecimalNumber(currentBalance)}`);
         await this.circleRepo.updateCurrentBalance(walletID, Utils.roundTo2DecimalNumber(currentBalance));
       } catch (e) {
         this.alertService.raiseAlert({
@@ -229,6 +231,7 @@ export class CircleService implements IBank {
       });
     }
 
+    this.logger.debug(`Transferring ${amount} from ${sourceWalletID} to ${destinationWalletID}`);
     const response = await this.circleClient.transfer({
       idempotencyKey: idempotencyKey,
       sourceWalletID: sourceWalletID,
@@ -244,6 +247,11 @@ export class CircleService implements IBank {
         await this.circleRepo.updateCurrentBalance(sourceWalletID, Utils.roundTo2DecimalNumber(balance - amount));
 
         const destinationCurrentBalance = await this.circleClient.getWalletBalance(destinationWalletID);
+        this.logger.debug(
+          `Updating balance for wallet ${destinationWalletID} to ${Utils.roundTo2DecimalNumber(
+            destinationCurrentBalance,
+          )}`,
+        );
         await this.circleRepo.updateCurrentBalance(
           destinationWalletID,
           Utils.roundTo2DecimalNumber(destinationCurrentBalance),
