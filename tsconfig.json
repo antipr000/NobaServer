@@ -16,7 +16,7 @@
     "esModuleInterop": true,
     "useDefineForClassFields": false,
     "allowJs": true,
-    "strict": true
+    "strictNullChecks": true
   },
   "ts-node": {
     "compilerOptions": {
