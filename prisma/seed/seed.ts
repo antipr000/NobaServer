@@ -1,11 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 import { seedAdmins } from "./seed-admins";
-import { seedExchangeRates } from "./seed-exchangerates";
 import { seedConsumers } from "./seed-consumers";
 import { seedEmployers } from "./seed-employers";
 import { seedEventsAndTemplates } from "./seed-events";
 import { seedEmployees } from "./seed-employees";
 import { seedScheduledReminders } from "./seed-scheduled-reminders";
+import { seedExchangeRates } from "./seed-exchangerates";
 
 const prisma = new PrismaClient();
 

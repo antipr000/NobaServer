@@ -86,6 +86,9 @@ export class ConsumerWalletDetailsDTO {
 
   @ApiProperty()
   walletID: string;
+
+  @ApiProperty()
+  currentBalance: number;
 }
 
 export class ConsumerInternalDTO {

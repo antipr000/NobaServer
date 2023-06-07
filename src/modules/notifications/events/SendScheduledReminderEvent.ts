@@ -8,13 +8,13 @@ export class SendScheduledReminderEvent extends BaseEvent {
 
 export const validateSendScheduledReminderEvent = (event: SendScheduledReminderEvent) => {
   const sendScheduledReminderEventJoiValidationKeys: KeysRequired<SendScheduledReminderEvent> = {
-    email: Joi.string().email().required(),
-    firstName: Joi.string().optional(),
-    lastName: Joi.string().optional(),
+    email: Joi.string().email().optional().allow(null),
+    firstName: Joi.string().optional().allow(null),
+    lastName: Joi.string().optional().allow(null),
     nobaUserID: Joi.string().required(),
-    locale: Joi.string().optional(),
-    phone: Joi.string().optional(),
-    handle: Joi.string().optional(),
+    locale: Joi.string().optional().allow(null),
+    phone: Joi.string().optional().allow(null),
+    handle: Joi.string().optional().allow(null),
     eventID: Joi.string().required(),
   };
 

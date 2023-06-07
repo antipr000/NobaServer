@@ -80,7 +80,7 @@ describe("CircleRepoTests", () => {
       const result = await circleRepo.addConsumerCircleWalletID(consumerID, walletID);
       expect(result.props.consumerID).toEqual(consumerID);
       expect(result.props.walletID).toEqual(walletID);
-      expect(result.props.currentBalance).toBe(0);
+      expect(result.props.currentBalance).toBeNull();
       const circleResult = await circleRepo.getCircleWalletID(consumerID);
       expect(circleResult.isSuccess).toBe(true);
       expect(circleResult.getValue()).toEqual(walletID);
@@ -112,7 +112,7 @@ describe("CircleRepoTests", () => {
       const consumerID = createdConsumer.props.id;
       const walletID = Math.random().toString(36).substring(7);
       const circleData = await circleRepo.addConsumerCircleWalletID(consumerID, walletID);
-      expect(circleData.props.currentBalance).toBe(0);
+      expect(circleData.props.currentBalance).toBeNull();
 
       // Update the balance
       const updatedCircleData = await circleRepo.updateCurrentBalance(walletID, 100);
@@ -139,7 +139,7 @@ describe("CircleRepoTests", () => {
       await circleRepo.addConsumerCircleWalletID(consumerID, walletID);
 
       let balance = await circleRepo.getCircleBalance(walletID);
-      expect(balance).toBe(0);
+      expect(balance).toBeNull();
 
       await circleRepo.updateCurrentBalance(walletID, 200);
 
@@ -156,7 +156,7 @@ describe("CircleRepoTests", () => {
       await circleRepo.addConsumerCircleWalletID(consumerID, walletID);
 
       let balance = await circleRepo.getCircleBalance(consumerID);
-      expect(balance).toBe(0);
+      expect(balance).toBeNull();
 
       await circleRepo.updateCurrentBalance(walletID, 200);
 

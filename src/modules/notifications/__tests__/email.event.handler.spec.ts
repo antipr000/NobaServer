@@ -47,6 +47,7 @@ import { getMockS3ServiceWithDefaults } from "../../../modules/common/mocks/mock
 import { getMockQRServiceWithDefaults } from "../../../modules/common/mocks/mock.qr.service";
 import { SendInviteEmployeeEvent } from "../events/SendInviteEmployeeEvent";
 import { SendScheduledReminderEvent } from "../events/SendScheduledReminderEvent";
+import { SendCreditAdjustmentCompletedEvent } from "../events/SendCreditAdjustmentCompletedEvent";
 
 describe("EmailEventHandler test for languages", () => {
   let currencyService: CurrencyService;
@@ -728,7 +729,6 @@ describe("EmailEventHandler test for languages", () => {
 
       await eventHandler.sendDepositCompletedEmail(payload);
       const subtotal = Utils.localizeAmount(payload.params.creditAmountNumber + payload.params.totalFeesNumber, locale);
-      console.log(subtotal);
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
@@ -1444,6 +1444,68 @@ describe("EmailEventHandler test for languages", () => {
     });
   });
 
+  describe.each([
+    ["en", "en"],
+    ["es_co", "es"],
+    ["fake-locale", "en"],
+  ])("SendCreditAdjustmentCompletedEvent", (locale, templateLocale) => {
+    it(`should send Credit Adjustment Completed email where locale ${locale} resolves to ${templateLocale} template`, async () => {
+      const payload: SendCreditAdjustmentCompletedEvent = {
+        email: "fake+user@noba.com",
+        firstName: "First",
+        handle: "fake-handle",
+        params: getTransactionParams(WorkflowName.CREDIT_ADJUSTMENT, locale),
+        locale: locale,
+      };
+
+      when(mockEventRepo.getEventByIDOrName(NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT)).thenResolve({
+        id: "fake-id",
+        name: NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT,
+        handlers: [EventHandlers.EMAIL],
+        createdTimestamp: new Date(),
+        updatedTimestamp: new Date(),
+        templates: [
+          {
+            id: "fake-template-id-1",
+            locale: "en",
+            externalKey: "en-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+          {
+            id: "fake-template-id-2",
+            locale: "es",
+            externalKey: "es-template",
+            createdTimestamp: new Date(),
+            updatedTimestamp: new Date(),
+            eventID: "fake-id",
+            type: EventHandlers.EMAIL,
+          },
+        ],
+      });
+
+      await eventHandler.sendCreditAdjustmentCompletedEmail(payload);
+
+      const [emailRequest] = capture(emailClient.sendEmail).last();
+      expect(emailRequest).toStrictEqual({
+        to: payload.email,
+        from: SENDER_EMAIL,
+        templateId: `${templateLocale}-template`,
+        dynamicTemplateData: {
+          firstName: payload.firstName,
+          lastName: payload.lastName,
+          creditAmount: payload.params.creditAmount,
+          creditCurrency: "USD",
+          handle: payload.handle,
+          transactionRef: payload.params.transactionRef,
+          createdTimestamp: payload.params.createdTimestamp,
+        },
+      });
+    });
+  });
+
   describe.each([["en"], ["es_co"], ["fake-locale"]])("SendEmployerRequest", locale => {
     it(`should send Employer Request email with 'en' template when locale is ${locale}`, async () => {
       const payload: SendEmployerRequestEvent = {
@@ -1669,6 +1731,22 @@ function getTransactionParams(workflow: WorkflowName, locale: string): Transacti
         nobaFees: Utils.localizeAmount(0.34, locale),
         totalFees: Utils.localizeAmount(0.57, locale),
         totalFeesNumber: 0.57,
+      };
+    case WorkflowName.CREDIT_ADJUSTMENT:
+      return {
+        creditAmount: Utils.localizeAmount(1, "en"),
+        creditAmountNumber: 1,
+        creditCurrency: "USD",
+        debitAmount: null,
+        debitAmountNumber: null,
+        debitCurrency: null,
+        exchangeRate: Utils.localizeAmount(1, "en"),
+        transactionRef: "transaction-1",
+        createdTimestamp: "2023-02-02T17:54:37.601Z",
+        processingFees: null,
+        nobaFees: null,
+        totalFees: null,
+        totalFeesNumber: null,
       };
   }
 }

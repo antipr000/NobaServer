@@ -66,8 +66,12 @@ export class PushEventHandler {
   }
 
   @OnEvent(`push.${NotificationEventType.SEND_SCHEDULED_REMINDER_EVENT}`)
-  async sendScheduledReminderEvent(payload: SendScheduledReminderEvent) {
+  async sendScheduledReminderEvent(payload: SendScheduledReminderEvent): Promise<boolean> {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
+
+    if (pushTokens.length === 0) {
+      return false;
+    }
 
     const templateData = await this.getOrDefaultTemplateData(payload.eventID, payload.locale);
 
@@ -85,6 +89,7 @@ export class PushEventHandler {
         title: templateData.title,
       });
     }
+    return true;
   }
 
   @OnEvent(`push.${NotificationEventType.SEND_DEPOSIT_COMPLETED_EVENT}`)
@@ -318,28 +323,17 @@ export class PushEventHandler {
   @OnEvent(`push.${NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT}`)
   async sendCreditAdjustmentCompletedEvent(payload: SendCreditAdjustmentCompletedEvent) {
     const pushTokens = await this.pushTokenService.getPushTokensForConsumer(payload.nobaUserID);
-    console.log(pushTokens);
     const templateData = await this.getOrDefaultTemplateData(
       NotificationEventType.SEND_CREDIT_ADJUSTMENT_COMPLETED_EVENT,
       payload.locale,
     );
-    console.log(templateData);
 
     const body = TemplateProcessor.parseTemplateString(templateData.body, {
       amount: payload.params.creditAmount,
       currency: payload.params.creditCurrency,
     });
 
-    console.log(body);
-
     const promises = pushTokens.map(async pushToken => {
-      console.log({
-        token: pushToken,
-        notificationType: PushNotificationType.TRANSACTION_UPDATE,
-        transactionRef: payload.params.transactionRef,
-        body,
-        title: templateData.title,
-      });
       return await this.pushClient.sendPushNotification({
         token: pushToken,
         notificationType: PushNotificationType.TRANSACTION_UPDATE,
