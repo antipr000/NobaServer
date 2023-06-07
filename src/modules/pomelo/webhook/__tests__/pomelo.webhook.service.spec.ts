@@ -45,6 +45,8 @@ import { CircleTransferStatus } from "../../../../modules/psp/domain/CircleTypes
 import { ExchangeRateService } from "../../../../modules/exchangerate/exchangerate.service";
 import { getMockExchangeRateServiceWithDefaults } from "../../../../modules/exchangerate/mocks/mock.exchangerate.service";
 import { ExchangeRateDTO } from "../../../../modules/exchangerate/dto/exchangerate.dto";
+import { AlertService } from "../../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../../modules/common/mocks/mock.alert.service";
 
 const getRawTransactionAuthzBodyBuffer = (): Buffer => {
   const data = `{
@@ -162,6 +164,7 @@ describe("PomeloTransactionServiceTests", () => {
   let mockPomeloService: PomeloService;
   let mockCircleService: CircleService;
   let mockExchangeRateService: ExchangeRateService;
+  let mockAlertService: AlertService;
 
   let app: TestingModule;
 
@@ -171,6 +174,7 @@ describe("PomeloTransactionServiceTests", () => {
     mockPomeloService = getMockPomeloServiceWithDefaults();
     mockCircleService = getMockCircleServiceWithDefaults();
     mockExchangeRateService = getMockExchangeRateServiceWithDefaults();
+    mockAlertService = getMockAlertServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/ tmp / test - ${Math.floor(Math.random() * 1000000)}.log`,
@@ -264,7 +268,7 @@ describe("PomeloTransactionServiceTests", () => {
 
       describe("should reject with OTHER status if 'signature' mismatched", () => {
         it("should return REJECTED if 'timestamp' differs by a few milliseconds", async () => {
-          let request: PomeloTransactionAuthzRequest = validRequest;
+          const request: PomeloTransactionAuthzRequest = validRequest;
           request.unixTimestampSeconds = "1680024225";
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
@@ -277,7 +281,7 @@ describe("PomeloTransactionServiceTests", () => {
         });
 
         it("should return REJECTED if 'rawBodyBuffer' is not valid", async () => {
-          let request: PomeloTransactionAuthzRequest = validRequest;
+          const request: PomeloTransactionAuthzRequest = validRequest;
           request.rawBodyBuffer = Buffer.from("DUMMY_BODY", "utf8");
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
@@ -290,7 +294,7 @@ describe("PomeloTransactionServiceTests", () => {
         });
 
         it("should return REJECTED if 'signature' is not valid", async () => {
-          let request: PomeloTransactionAuthzRequest = validRequest;
+          const request: PomeloTransactionAuthzRequest = validRequest;
           request.rawSignature = "INVALID_SIGNATURE";
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.authorizeTransaction(request);
@@ -359,8 +363,8 @@ describe("PomeloTransactionServiceTests", () => {
         updatedTimestamp: new Date(),
       };
       const nobaConsumerID = "NOBA_CONSUMER_ID";
-      const circleWalletID: string = "CIRCLE_WALLET_ID";
-      const circleWalletBalance: number = 50;
+      const circleWalletID = "CIRCLE_WALLET_ID";
+      const circleWalletBalance = 50;
       const exchangeRate: ExchangeRateDTO = {
         bankRate: 100,
         nobaRate: 100,
@@ -949,7 +953,7 @@ describe("PomeloTransactionServiceTests", () => {
 
       describe("should reject with OTHER status if 'signature' mismatched", () => {
         it("should return REJECTED if 'timestamp' differs by a few milliseconds", async () => {
-          let request: PomeloTransactionAdjustmentRequest = validRequest;
+          const request: PomeloTransactionAdjustmentRequest = validRequest;
           request.unixTimestampSeconds = "1681145220";
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(request);
@@ -962,7 +966,7 @@ describe("PomeloTransactionServiceTests", () => {
         });
 
         it("should return REJECTED if 'rawBodyBuffer' is not valid", async () => {
-          let request: PomeloTransactionAdjustmentRequest = validRequest;
+          const request: PomeloTransactionAdjustmentRequest = validRequest;
           request.rawBodyBuffer = Buffer.from("DUMMY_BODY", "utf8");
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(request);
@@ -975,7 +979,7 @@ describe("PomeloTransactionServiceTests", () => {
         });
 
         it("should return REJECTED if 'signature' is not valid", async () => {
-          let request: PomeloTransactionAdjustmentRequest = validRequest;
+          const request: PomeloTransactionAdjustmentRequest = validRequest;
           request.rawSignature = "INVALID_SIGNATURE";
 
           const response: PomeloTransactionAuthzResponse = await pomeloTransactionService.adjustTransaction(request);
@@ -991,8 +995,8 @@ describe("PomeloTransactionServiceTests", () => {
 
     describe("Noba Business logic tests (Valid Pomelo Signature)", () => {
       const nobaConsumerID = "NOBA_CONSUMER_ID";
-      const circleWalletID: string = "CIRCLE_WALLET_ID";
-      const circleWalletBalance: number = 50;
+      const circleWalletID = "CIRCLE_WALLET_ID";
+      const circleWalletBalance = 50;
 
       const creditRequest: PomeloTransactionAdjustmentRequest = {
         endpoint: "/transactions/adjustments/credit",
