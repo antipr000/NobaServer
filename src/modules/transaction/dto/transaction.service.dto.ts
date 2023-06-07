@@ -2,6 +2,7 @@ import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
 import { WorkflowName } from "../domain/Transaction";
 import { Currency } from "../domain/TransactionTypes";
+import { AccountType, DocumentType } from "../domain/WithdrawalDetails";
 
 export type InitiateTransactionRequest = {
   // TODO: Replace `WorkflowName` with `TransactionType` enum.
@@ -14,6 +15,9 @@ export type InitiateTransactionRequest = {
   cardDebitAdjustmentRequest?: CardDebitAdjustmentTransactionRequest;
   creditAdjustmentRequest?: CreditAdjustmentTransactionRequest;
   debitAdjustmentRequest?: DebitAdjustmentTransactionRequest;
+  walletDepositRequest?: WalletDepositTransactionRequest;
+  walletWithdrawalRequest?: WalletWithdrawalTransactionRequest;
+  walletTransferRequest?: WalletTransferTransactionRequest;
 };
 
 export type CardWithdrawalTransactionRequest = {
@@ -78,6 +82,45 @@ export type CardDebitAdjustmentTransactionRequest = {
   debitConsumerID: string;
 };
 
+export type WalletDepositTransactionRequest = {
+  debitAmount: number;
+  debitCurrency: Currency;
+  debitConsumerIDOrTag: string;
+  depositMode: WalletDepositMode;
+  memo: string;
+  sessionKey: string;
+};
+
+export enum WalletDepositMode {
+  COLLECTION_LINK = "COLLECTION_LINK",
+}
+
+export type WalletWithdrawalTransactionRequest = {
+  debitConsumerIDOrTag: string;
+  debitAmount: number;
+  memo: string;
+  sessionKey: string;
+  creditCurrency: Currency;
+  withdrawalDetails: WalletWithdrawalDetails;
+};
+
+export type WalletWithdrawalDetails = {
+  bankCode: string;
+  accountNumber: string;
+  documentNumber: string;
+  documentType: DocumentType;
+  accountType: AccountType;
+};
+
+export type WalletTransferTransactionRequest = {
+  debitAmount: number;
+  debitCurrency: Currency;
+  debitConsumerIDOrTag: string;
+  creditConsumerIDOrTag: string;
+  memo: string;
+  sessionKey: string;
+};
+
 export const validateInitiateTransactionRequest = (request: InitiateTransactionRequest) => {
   const intiateTransactionRequestValidationKeys: KeysRequired<InitiateTransactionRequest> = {
     type: Joi.string()
@@ -90,6 +133,9 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
     cardDebitAdjustmentRequest: Joi.object().optional(),
     creditAdjustmentRequest: Joi.object().optional(),
     debitAdjustmentRequest: Joi.object().optional(),
+    walletDepositRequest: Joi.object().optional(),
+    walletWithdrawalRequest: Joi.object().optional(),
+    walletTransferRequest: Joi.object().optional(),
   };
 
   const initiateTransactionJoiSchema = Joi.object(intiateTransactionRequestValidationKeys)
@@ -101,6 +147,9 @@ export const validateInitiateTransactionRequest = (request: InitiateTransactionR
       "cardDebitAdjustmentRequest",
       "creditAdjustmentRequest",
       "debitAdjustmentRequest",
+      "walletDepositRequest",
+      "walletWithdrawalRequest",
+      "walletTransferRequest",
     )
     .options({
       allowUnknown: false,

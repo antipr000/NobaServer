@@ -8,10 +8,14 @@ import { CardWithdrawalPreprocessor } from "./implementations/card.withdrawal.pr
 import { CreditAdjustmentPreprocessor } from "./implementations/credit.adjustment.preprocessor";
 import { DebitAdjustmentPreprocessor } from "./implementations/debit.adjustment.preprocessor";
 import { PayrollDepositPreprocessor } from "./implementations/payroll.deposit.preprocessor";
+import { WalletDepositProcessor } from "./implementations/wallet.deposit.processor";
+import { WalletTransferPreprocessor } from "./implementations/wallet.transfer.preprocessor";
+import { WalletWithdrawalProcessor } from "./implementations/wallet.withdrawal.processor";
+import { TransactionQuoteProvider } from "./quote.provider";
 import { TransactionPreprocessor, TransactionPreprocessorRequest } from "./transaction.preprocessor";
 
 @Injectable()
-export class TransactionPreprocessorFactory {
+export class TransactionProcessorFactory {
   constructor(
     private readonly payrollDepositPreprocessor: PayrollDepositPreprocessor,
     private readonly cardWithdrawalPreprocessor: CardWithdrawalPreprocessor,
@@ -20,6 +24,9 @@ export class TransactionPreprocessorFactory {
     private readonly cardDebitAdjustmentPreprocessor: CardDebitAdjustmentPreprocessor,
     private readonly creditAdjustmentPreprocessor: CreditAdjustmentPreprocessor,
     private readonly debitAdjustmentPreprocessor: DebitAdjustmentPreprocessor,
+    private readonly walletDepositProcessor: WalletDepositProcessor,
+    private readonly walletWithdrawalProcessor: WalletWithdrawalProcessor,
+    private readonly walletTransferPreprocessor: WalletTransferPreprocessor,
   ) {}
 
   getPreprocessor(workflowName: WorkflowName): TransactionPreprocessor {
@@ -38,6 +45,12 @@ export class TransactionPreprocessorFactory {
         return this.creditAdjustmentPreprocessor;
       case WorkflowName.DEBIT_ADJUSTMENT:
         return this.debitAdjustmentPreprocessor;
+      case WorkflowName.WALLET_DEPOSIT:
+        return this.walletDepositProcessor;
+      case WorkflowName.WALLET_WITHDRAWAL:
+        return this.walletWithdrawalProcessor;
+      case WorkflowName.WALLET_TRANSFER:
+        return this.walletTransferPreprocessor;
       default:
         throw new Error(`No preprocessor found for workflow name: ${workflowName}`);
     }
@@ -59,8 +72,25 @@ export class TransactionPreprocessorFactory {
         return request.creditAdjustmentRequest;
       case WorkflowName.DEBIT_ADJUSTMENT:
         return request.debitAdjustmentRequest;
+      case WorkflowName.WALLET_DEPOSIT:
+        return request.walletDepositRequest;
+      case WorkflowName.WALLET_WITHDRAWAL:
+        return request.walletWithdrawalRequest;
+      case WorkflowName.WALLET_TRANSFER:
+        return request.walletTransferRequest;
       default:
         throw new Error(`No preprocessor found for workflow name: ${request.type}`);
+    }
+  }
+
+  getQuoteProvider(workflowName: WorkflowName): TransactionQuoteProvider {
+    switch (workflowName) {
+      case WorkflowName.WALLET_DEPOSIT:
+        return this.walletDepositProcessor;
+      case WorkflowName.WALLET_WITHDRAWAL:
+        return this.walletWithdrawalProcessor;
+      default:
+        throw new Error(`No quote provider found for workflow name: ${workflowName}`);
     }
   }
 }
