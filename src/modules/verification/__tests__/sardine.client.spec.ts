@@ -20,7 +20,6 @@ import {
   KYC_SSN_LOW_RISK,
   KYC_SSN_VERY_HIGH_RISK,
 } from "../integrations/fakes/FakeSardineResponses";
-import { TransactionInformation } from "../domain/TransactionInformation";
 import { Consumer } from "../../consumer/domain/Consumer";
 import { BadRequestException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { DocumentInformation } from "../domain/DocumentInformation";
@@ -622,71 +621,6 @@ describe("SardineTests", () => {
       expect(async () => {
         await sardine.transactionVerification(FAKE_GOOD_TRANSACTION.data.sessionKey, consumer, transactionVerification);
       }).rejects.toThrow(Error);
-    });
-
-    it.skip("[CARD] Should return status APPROVED when transaction is low risk (card)", async () => {
-      const transactionInformation: TransactionInformation = {
-        transactionID: "transaction-1",
-        amount: 100,
-        currencyCode: "USD",
-        paymentMethodID: "card-1234",
-        cryptoCurrencyCode: "ETH",
-        walletAddress: "good+wallet",
-      };
-
-      const consumer = Consumer.createConsumer({
-        id: "fake-consumer-1234",
-        email: "fake+consumer@noba.com",
-        verificationData: {
-          kycCheckStatus: KYCStatus.APPROVED,
-          provider: KYCProvider.SARDINE,
-          documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
-          kycVerificationTimestamp: new Date(),
-          documentVerificationTimestamp: new Date(),
-          isSuspectedFraud: false,
-        },
-      });
-
-      when(consumerService.getAllPaymentMethodsForConsumer(consumer.props.id)).thenResolve([
-        PaymentMethod.createPaymentMethod({
-          id: "card-1234",
-          imageUri: "image-uri",
-          type: PaymentMethodType.CARD,
-          paymentProvider: PaymentProvider.CHECKOUT,
-          paymentToken: transactionInformation.paymentMethodID,
-          isDefault: false,
-          cardData: {
-            first6Digits: "123456",
-            last4Digits: "7890",
-            id: "card-type-1234",
-            scheme: "VISA",
-            cardType: "DEBIT",
-            authCode: "100001",
-            authReason: "Approved",
-            paymentMethodID: "card-1234",
-          },
-          consumerID: consumer.props.id,
-          status: PaymentMethodStatus.APPROVED,
-        }),
-      ]);
-
-      const responsePromise = sardine.transactionVerification(
-        FAKE_GOOD_TRANSACTION.data.sessionKey,
-        consumer,
-        transactionInformation as any, // 'as any' for the compiler
-      );
-      await sleep(500);
-      expect(mockAxios.post).toHaveBeenCalled();
-
-      mockAxios.mockResponse(FAKE_GOOD_TRANSACTION);
-
-      const response = await responsePromise;
-
-      expect(response.status).toBe(KYCStatus.APPROVED);
-      expect(response.idvProviderRiskLevel).toBe("low");
-      expect(response.pepLevel).toBeFalsy();
-      expect(response.sanctionLevel).toBeFalsy();
-      expect(response.walletStatus).toBe(WalletStatus.APPROVED);
     });
 
     it("Should throw BadRequestException when axios call fails", async () => {
