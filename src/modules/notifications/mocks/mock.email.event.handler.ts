@@ -13,9 +13,6 @@ export const getMockEmailEventHandlerWithDefaults = () => {
   when(mockEventHandler.sendDocVerificationPendingEmail(anything())).thenReject(new Error("Not implemented!"));
   when(mockEventHandler.sendDocVerificationRejectedEmail(anything())).thenReject(new Error("Not implemented!"));
   when(mockEventHandler.sendDocVerificationFailedTechEmail(anything())).thenReject(new Error("Not implemented!"));
-  when(mockEventHandler.sendCardAddedEmail(anything())).thenReject(new Error("Not implemented!"));
-  when(mockEventHandler.sendCardAdditionFailedEmail(anything())).thenReject(new Error("Not implemented!"));
-  when(mockEventHandler.sendCardDeletedEmail(anything())).thenReject(new Error("Not implemented!"));
   when(mockEventHandler.sendDepositCompletedEmail(anything())).thenReject(new Error("Not implemented!"));
   when(mockEventHandler.sendDepositFailedEmail(anything())).thenReject(new Error("Not implemented!"));
   when(mockEventHandler.sendDepositInitiatedEmail(anything())).thenReject(new Error("Not implemented!"));
@@ -23,7 +20,6 @@ export const getMockEmailEventHandlerWithDefaults = () => {
   when(mockEventHandler.sendWithdrawalFailedEmail(anything())).thenReject(new Error("Not implemented!"));
   when(mockEventHandler.sendWithdrawalInitiatedEmail(anything())).thenReject(new Error("Not implemented!"));
   when(mockEventHandler.sendTransferCompletedEmail(anything())).thenReject(new Error("Not implemented!"));
-  when(mockEventHandler.sendCollectionCompletedEvent(anything())).thenReject(new Error("Not implemented!"));
 
   return mockEventHandler;
 };
