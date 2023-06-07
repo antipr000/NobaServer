@@ -15,7 +15,8 @@
     "types": ["jest", "node"],
     "esModuleInterop": true,
     "useDefineForClassFields": false,
-    "allowJs": true
+    "allowJs": true,
+    "strict": true
   },
   "ts-node": {
     "compilerOptions": {

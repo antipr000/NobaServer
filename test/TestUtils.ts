@@ -8,6 +8,11 @@ export abstract class TestUtility {
   protected port: number;
   protected app: INestApplication;
 
+  constructor(port: number, app: INestApplication) {
+    this.port = port;
+    this.app = app;
+  }
+
   async reset(): Promise<void> {
     clearAccessTokenForNextRequests();
   }
@@ -66,9 +71,8 @@ export abstract class TestUtility {
 
 export class IntegrationTestUtility extends TestUtility {
   static async setUp(port: number): Promise<IntegrationTestUtility> {
-    const setup = new IntegrationTestUtility();
-    setup.port = port;
-    setup.app = await bootstrap({});
+    const app = await bootstrap({});
+    const setup = new IntegrationTestUtility(port, app);
     await setup.app.listen(setup.port);
     return setup;
   }
