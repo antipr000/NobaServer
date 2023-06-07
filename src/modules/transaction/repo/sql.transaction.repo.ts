@@ -35,6 +35,7 @@ import {
   validateInputTransactionEvent,
   validateSavedTransactionEvent,
 } from "../domain/TransactionEvent";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 type TransactionResponseType = PrismaTransactionModel & {
   transactionFees: PrismaTransactionFeeModel[];
@@ -44,6 +45,7 @@ type TransactionResponseType = PrismaTransactionModel & {
 export class SQLTransactionRepo implements ITransactionRepo {
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly alertService: AlertService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -97,7 +99,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
       });
       savedTransaction = convertToDomainTransaction(returnedTransaction);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
         message: "Error saving transaction in database",
       });
@@ -107,7 +109,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
       validateSavedTransaction(savedTransaction);
       return savedTransaction;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new InvalidDatabaseRecordException({
         message: "Invalid database record",
       });
@@ -132,7 +134,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
       }
       return convertToDomainTransaction(returnedTransaction);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       return null;
     }
   }
@@ -155,7 +157,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
       }
       return convertToDomainTransaction(returnedTransaction);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       return null;
     }
   }
@@ -241,7 +243,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
 
       return convertToDomainTransaction(returnedTransaction);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       if (err.meta && err.meta.cause === "Record to update not found.") {
         throw new NotFoundError({});
       }
@@ -275,7 +277,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
       });
       savedTransactionEvent = convertToDomainTransactionEvent(returnedTransactionEvent);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
         message: "Error saving transaction event in database",
       });
@@ -285,7 +287,7 @@ export class SQLTransactionRepo implements ITransactionRepo {
       validateSavedTransactionEvent(savedTransactionEvent);
       return savedTransactionEvent;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new InvalidDatabaseRecordException({
         message: "Invalid transaction event record",
       });

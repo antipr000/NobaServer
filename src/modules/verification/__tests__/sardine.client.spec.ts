@@ -12,9 +12,7 @@ import {
   FAKE_DOCUMENT_VERIFICATION_APPROVED_RESPONSE,
   FAKE_DOCUMENT_VERIFICATION_DOCUMENT_RECAPTURE_NEEDED_RESPONSE,
   FAKE_DOCUMENT_VERIFICATION_FRAUDULENT_DOCUMENT_RESPONSE,
-  FAKE_FRAUDULENT_TRANSACTION,
   FAKE_GOOD_TRANSACTION,
-  FAKE_HIGH_RISK_TRANSACTION,
   FAKE_KYC_CASE_NOTIFICATION_APPROVED,
   FAKE_KYC_CASE_NOTIFICATION_IN_PROGRESS_STATE,
   FAKE_KYC_CASE_NOTIFICATION_REJECTED,
@@ -31,15 +29,13 @@ import { Readable } from "stream";
 import { ConsumerVerificationResult, DocumentVerificationResult } from "../domain/VerificationResult";
 import { NationalIDTypes } from "../domain/NationalIDTypes";
 import {
-  AccountType,
   CustomerType,
   DocumentVerificationErrorCodes,
-  PaymentMethodTypes,
   SardineCustomerRequest,
   SardineDocumentProcessingStatus,
   SardineRiskLevels,
 } from "../integrations/SardineTypeDefinitions";
-import { anything, instance, when } from "ts-mockito";
+import { instance, when } from "ts-mockito";
 import { IDVerificationURLRequestLocale } from "../dto/IDVerificationRequestURLDTO";
 import {
   DocumentVerificationStatus,
@@ -58,6 +54,8 @@ import { WorkflowName } from "../../transaction/domain/Transaction";
 import { getMockCircleServiceWithDefaults } from "../../circle/public/mocks/mock.circle.service";
 import { HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
 import { CircleService } from "../../../modules/circle/public/circle.service";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -67,10 +65,12 @@ describe("SardineTests", () => {
   let circleService: CircleService;
   jest.setTimeout(10000);
   let sardine: Sardine;
+  let mockAlertService: AlertService;
 
   beforeEach(async () => {
     consumerService = getMockConsumerServiceWithDefaults();
     circleService = getMockCircleServiceWithDefaults();
+    mockAlertService = getMockAlertServiceWithDefaults();
     const app: TestingModule = await Test.createTestingModule({
       imports: [
         TestConfigModule.registerAsync({
@@ -92,6 +92,10 @@ describe("SardineTests", () => {
         {
           provide: CircleService,
           useFactory: () => instance(circleService),
+        },
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
         },
       ],
     }).compile();
