@@ -209,6 +209,10 @@ describe("PomeloTransactionServiceTests", () => {
           provide: ExchangeRateService,
           useFactory: () => instance(mockExchangeRateService),
         },
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
         PomeloTransactionService,
       ],
     }).compile();
