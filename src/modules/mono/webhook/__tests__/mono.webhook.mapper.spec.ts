@@ -14,6 +14,9 @@ import { InternalServiceErrorException } from "../../../../core/exception/Common
 import { createHmac } from "crypto";
 import { MonoCurrency, MonoTransactionState } from "../../domain/Mono";
 import { ServiceException } from "../../../../core/exception/service.exception";
+import { AlertService } from "../../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 const webhookSecret = "whsec_LVeQsJFZ9MxlmUZLkpZ8lGLmuCaGuySk";
 
@@ -27,6 +30,7 @@ describe("MonoWebhookMapperTest", () => {
 
   let monoWebhookMappers: MonoWebhookMappers;
   let app: TestingModule;
+  let mockAlertService: AlertService;
 
   beforeEach(async () => {
     const appConfigurations = {
@@ -38,10 +42,16 @@ describe("MonoWebhookMapperTest", () => {
       },
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [MonoWebhookMappers],
+      providers: [
+        MonoWebhookMappers,
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
+      ],
     }).compile();
 
     monoWebhookMappers = app.get<MonoWebhookMappers>(MonoWebhookMappers);

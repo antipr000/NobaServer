@@ -15,6 +15,7 @@ import { MONO_CONFIG_KEY } from "../../../config/ConfigurationUtils";
 import { MonoConfigs } from "../../../config/configtypes/MonoConfig";
 import { convertExternalTransactionStateToInternalState } from "../public/mono.utils";
 import Joi from "joi";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class MonoWebhookMappers {
@@ -22,6 +23,7 @@ export class MonoWebhookMappers {
 
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly alertService: AlertService,
     private readonly configService: CustomConfigService,
   ) {
     this.monoWebhookSecret = this.configService.get<MonoConfigs>(MONO_CONFIG_KEY).webhookSecret;
@@ -36,7 +38,7 @@ export class MonoWebhookMappers {
     const expectedSignature = createHmac("sha256", this.monoWebhookSecret).update(payload).digest("hex");
 
     if (receivedSignature !== expectedSignature) {
-      this.logger.error(
+      this.alertService.raiseError(
         `Received Mono signature "${receivedSignature}" and expected signature based on request body is "${expectedSignature}"`,
       );
     }
@@ -58,8 +60,8 @@ export class MonoWebhookMappers {
       webhookData.event.type !== "collection_intent_credited" ||
       webhookData.event.data.state !== "account_credited"
     ) {
-      this.logger.error("'collection_intent_credited' state is not 'account_credited'.");
-      this.logger.error(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
+      this.alertService.raiseError("'collection_intent_credited' state is not 'account_credited'.");
+      this.alertService.raiseError(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
 
       throw new InternalServiceErrorException({
         message: "Invalid 'collection_intent_credited' webhook response.",
@@ -83,8 +85,8 @@ export class MonoWebhookMappers {
     }
 
     if (webhookData.event.type !== "bank_transfer_approved" || webhookData.event.data.state !== "approved") {
-      this.logger.error("'bank_transfer_approved' state is not 'approved'.");
-      this.logger.error(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
+      this.alertService.raiseError("'bank_transfer_approved' state is not 'approved'.");
+      this.alertService.raiseError(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
 
       throw new InternalServiceErrorException({
         message: "Invalid 'bank_transfer_approved' webhook response.",
@@ -92,10 +94,10 @@ export class MonoWebhookMappers {
     }
 
     if (webhookData.event.data.declination_reason !== null) {
-      this.logger.error(
+      this.alertService.raiseError(
         `'bank_transfer_approved' has declination reason: ${webhookData.event.data.declination_reason}`,
       );
-      this.logger.error(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
+      this.alertService.raiseError(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
 
       throw new InternalServiceErrorException({
         message: "Invalid 'bank_transfer_approved' webhook response.",
@@ -119,8 +121,8 @@ export class MonoWebhookMappers {
     }
 
     if (webhookData.event.type !== "bank_transfer_rejected") {
-      this.logger.error("Event is not of type 'bank_transfer_rejected'.");
-      this.logger.error(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
+      this.alertService.raiseError("Event is not of type 'bank_transfer_rejected'.");
+      this.alertService.raiseError(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
 
       throw new InternalServiceErrorException({
         message: "Invalid 'bank_transfer_rejected' webhook response.",
@@ -128,8 +130,8 @@ export class MonoWebhookMappers {
     }
 
     if (webhookData.event.data.declination_reason === null) {
-      this.logger.error(`'bank_transfer_rejected' doesn't have declination_reason`);
-      this.logger.error(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
+      this.alertService.raiseError("'bank_transfer_rejected' doesn't have declination_reason");
+      this.alertService.raiseError(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
 
       throw new InternalServiceErrorException({
         message: "Invalid 'bank_transfer_rejected' webhook response.",
@@ -157,8 +159,8 @@ export class MonoWebhookMappers {
     try {
       this.validateAccountCreditedWebhookEvent(webhookData);
     } catch (err) {
-      this.logger.error("Event doesn't contains all the fields required for 'account_credited'.");
-      this.logger.error(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
+      this.alertService.raiseError("Event doesn't contains all the fields required for 'account_credited'.");
+      this.alertService.raiseError(`Skipping webhook response: ${JSON.stringify(webhookData)}`);
 
       throw new InternalServiceErrorException({
         message: `Invalid 'account_credited' webhook response - "${err.message}"`,

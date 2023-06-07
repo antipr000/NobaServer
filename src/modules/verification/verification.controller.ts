@@ -52,6 +52,7 @@ import { IDVerificationURLResponseDTO, IDVerificationURLRequestLocale } from "./
 import { AuthUser } from "../auth/auth.decorator";
 import { SessionResponseDTO } from "./dto/SessionResponseDTO";
 import { DocumentVerificationResponseDTO } from "./dto/DocumentVerificationResponseDTO";
+import { AlertService } from "../common/alerts/alert.service";
 
 @Roles(Role.CONSUMER)
 @ApiBearerAuth("JWT-auth")
@@ -235,6 +236,10 @@ export class VerificationController {
 export class VerificationWebhookController {
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
+
+  @Inject()
+  private readonly alertService: AlertService;
+
   private readonly sardineConfigs: SardineConfigs;
   private readonly verificationResponseMapper: VerificationResponseMapper;
 
@@ -260,7 +265,7 @@ export class VerificationWebhookController {
       if (!result) return null;
       return this.verificationResponseMapper.toDocumentResultDTO(result.status);
     } catch (err) {
-      this.logger.error(
+      this.alertService.raiseError(
         `Error processing Sardine webhook document verification response: request body: ${JSON.stringify(
           request.body,
         )}: error: ${JSON.stringify(err)}`,
@@ -285,7 +290,7 @@ export class VerificationWebhookController {
       await this.verificationService.processKycVerificationWebhookRequest(requestBody);
       return "Successfully received";
     } catch (err) {
-      this.logger.error(
+      this.alertService.raiseError(
         `Error processing Sardine webhook case verification response: request body: ${JSON.stringify(
           request.body,
         )}: error: ${JSON.stringify(err)}`,
@@ -299,7 +304,7 @@ export class VerificationWebhookController {
     const hmac = crypto_ts.createHmac("sha256", this.sardineConfigs.webhookSecretKey);
     const computedSignature = hmac.update(JSON.stringify(request.body)).digest("hex");
     if (sardineSignature !== computedSignature) {
-      this.logger.error(
+      this.alertService.raiseError(
         `sardineSignature: ${sardineSignature}, hexString: ${computedSignature}, requestBody: ${JSON.stringify(
           request.body,
         )}`,

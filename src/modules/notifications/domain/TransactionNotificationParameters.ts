@@ -3,7 +3,7 @@ import { Transaction, getFee, getTotalFees } from "../../../modules/transaction/
 import { Consumer } from "../../../modules/consumer/domain/Consumer";
 import Joi from "joi";
 import { KeysRequired } from "../../../modules/common/domain/Types";
-import { Utils } from "../../../core/utils/Utils";
+import { LocaleUtils } from "../../../core/utils/LocaleUtils";
 
 export type TransactionParameters = {
   transactionRef: string;
@@ -39,11 +39,15 @@ export interface WithdrawalFailedNotificationParameters extends TransactionParam
 
 export type CreditAdjustmentCompletedNotificationParameters = TransactionParameters;
 
-export type CreditAdjustmentFailedNotificationParameters = TransactionParameters;
+export interface CreditAdjustmentFailedNotificationParameters extends TransactionParameters {
+  reasonDeclined: string;
+}
 
 export type DebitAdjustmentCompletedNotificationParameters = TransactionParameters;
 
-export type DebitAdjustmentFailedNotificationParameters = TransactionParameters;
+export interface DebitAdjustmentFailedNotificationParameters extends TransactionParameters {
+  reasonDeclined: string;
+}
 
 export interface TransferCompletedNotificationParameters extends TransactionParameters {
   creditConsumer_firstName: string;
@@ -167,7 +171,10 @@ export class TransactionNotificationParamsJoiSchema {
   }
 
   static getCreditAdjustmentFailedNotificationParamsSchema() {
-    return this.getTransactionParamsSchema();
+    return {
+      ...this.getTransactionParamsSchema(),
+      reasonDeclined: Joi.string().required(),
+    };
   }
 
   static getDebitAdjustmentCompletedNotificationParamsSchema() {
@@ -175,23 +182,25 @@ export class TransactionNotificationParamsJoiSchema {
   }
 
   static getDebitAdjustmentFailedNotificationParamsSchema() {
-    return this.getTransactionParamsSchema();
+    return {
+      ...this.getTransactionParamsSchema(),
+      reasonDeclined: Joi.string().required(),
+    };
   }
 }
 
-// TODO(jira/CRYPTO-604): Remove hardcoded values and unnecessary fields once templates are ready
 export class TransactionNotificationPayloadMapper {
   static toTransactionParams(transaction: Transaction, locale: string): TransactionParameters {
     const processingFee = getFee(transaction, FeeType.PROCESSING);
     const nobaFee = getFee(transaction, FeeType.NOBA);
     const totalFeesNumber = getTotalFees(transaction);
 
-    const creditAmount = Utils.localizeAmount(transaction.creditAmount ?? 0, locale);
-    const debitAmount = Utils.localizeAmount(transaction.debitAmount ?? 0, locale);
-    const exchangeRate = Utils.localizeAmount(transaction.exchangeRate ?? 0, locale, false);
-    const nobaFees = Utils.localizeAmount(nobaFee ? nobaFee.amount : 0, locale);
-    const processingFees = Utils.localizeAmount(processingFee ? processingFee.amount : 0, locale);
-    const totalFees = Utils.localizeAmount(totalFeesNumber ?? 0, locale);
+    const creditAmount = LocaleUtils.localizeAmount(transaction.creditAmount ?? 0, locale);
+    const debitAmount = LocaleUtils.localizeAmount(transaction.debitAmount ?? 0, locale);
+    const exchangeRate = LocaleUtils.localizeAmount(transaction.exchangeRate ?? 0, locale, false);
+    const nobaFees = LocaleUtils.localizeAmount(nobaFee ? nobaFee.amount : 0, locale);
+    const processingFees = LocaleUtils.localizeAmount(processingFee ? processingFee.amount : 0, locale);
+    const totalFees = LocaleUtils.localizeAmount(totalFeesNumber ?? 0, locale);
     return {
       transactionRef: transaction.transactionRef,
       createdTimestamp: transaction.createdTimestamp.toUTCString(),
@@ -228,9 +237,14 @@ export class TransactionNotificationPayloadMapper {
     locale: string,
   ): DepositFailedNotificationParameters {
     const transactionParams = this.toTransactionParams(transaction, locale);
+    const translatedContent = LocaleUtils.getTranslatedContent({
+      locale: locale,
+      translationDomain: "General",
+      translationKey: "TRANSACTION_FAILED",
+    });
     return {
       ...transactionParams,
-      reasonDeclined: "Something went wrong", // TODO (CRYPTO-698)
+      reasonDeclined: translatedContent,
     };
   }
 
@@ -268,9 +282,14 @@ export class TransactionNotificationPayloadMapper {
     locale: string,
   ): WithdrawalFailedNotificationParameters {
     const transactionParams = this.toTransactionParams(transaction, locale);
+    const translatedContent = LocaleUtils.getTranslatedContent({
+      locale: locale,
+      translationDomain: "General",
+      translationKey: "TRANSACTION_FAILED",
+    });
     return {
       ...transactionParams,
-      reasonDeclined: "Something went wrong", // TODO (CRYPTO-698)
+      reasonDeclined: translatedContent,
     };
   }
 
@@ -315,13 +334,20 @@ export class TransactionNotificationPayloadMapper {
   ): TransferFailedNotificationParameters {
     const locale = debitConsumer.props.locale;
     const transactionParams = this.toTransactionParams(transaction, locale);
+
+    const translatedContent = LocaleUtils.getTranslatedContent({
+      locale: locale,
+      translationDomain: "General",
+      translationKey: "TRANSACTION_FAILED",
+    });
+
     return {
       ...transactionParams,
       creditConsumer_firstName: creditConsumer.props.firstName,
       creditConsumer_lastName: creditConsumer.props.lastName,
       creditConsumer_handle: creditConsumer.props.handle,
       debitConsumer_handle: debitConsumer.props.handle,
-      reasonDeclined: "Something went wrong", // TODO (CRYPTO-698)
+      reasonDeclined: translatedContent,
     };
   }
 
@@ -336,7 +362,18 @@ export class TransactionNotificationPayloadMapper {
     transaction: Transaction,
     locale: string,
   ): CreditAdjustmentFailedNotificationParameters {
-    return this.toTransactionParams(transaction, locale);
+    const transactionParams = this.toTransactionParams(transaction, locale);
+
+    const translatedContent = LocaleUtils.getTranslatedContent({
+      locale: locale,
+      translationDomain: "General",
+      translationKey: "TRANSACTION_FAILED",
+    });
+
+    return {
+      ...transactionParams,
+      reasonDeclined: translatedContent,
+    };
   }
 
   static toDebitAdjustmentCompletedNotificationParameters(
@@ -350,6 +387,17 @@ export class TransactionNotificationPayloadMapper {
     transaction: Transaction,
     locale: string,
   ): DebitAdjustmentFailedNotificationParameters {
-    return this.toTransactionParams(transaction, locale);
+    const transactionParams = this.toTransactionParams(transaction, locale);
+
+    const translatedContent = LocaleUtils.getTranslatedContent({
+      locale: locale,
+      translationDomain: "General",
+      translationKey: "TRANSACTION_FAILED",
+    });
+
+    return {
+      ...transactionParams,
+      reasonDeclined: translatedContent,
+    };
   }
 }

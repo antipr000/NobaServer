@@ -23,6 +23,8 @@ import { Gender } from "../domain/ExternalStates";
 import { RepoErrorCode } from "../../../core/exception/repo.exception";
 import { createTestConsumer } from "../test_utils/test.utils";
 import { getRandomIdentification } from "../test_utils/identification.test.utils";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
 
 const getAllConsumerRecords = async (prismaService: PrismaService): Promise<ConsumerProps[]> => {
   const allConsumerProps = await prismaService.consumer.findMany({});
@@ -42,10 +44,12 @@ describe("ConsumerRepoTests", () => {
   let prismaService: PrismaService;
   let kmsService: KmsService;
   let employeeService: EmployeeService;
+  let mockAlertService: AlertService;
 
   beforeAll(async () => {
     employeeService = getMockEmployeeServiceWithDefaults();
     kmsService = getMockKMSServiceWithDefaults();
+    mockAlertService = getMockAlertServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -65,6 +69,10 @@ describe("ConsumerRepoTests", () => {
         {
           provide: KmsService,
           useFactory: () => instance(kmsService),
+        },
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
         },
       ],
     }).compile();

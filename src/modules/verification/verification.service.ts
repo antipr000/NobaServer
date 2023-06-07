@@ -69,7 +69,7 @@ export class VerificationService {
       }
       return;
     } catch (e) {
-      this.logger.error(
+      this.alertService.raiseError(
         `Error verifying consumer information for login: ${e.message}. Consumer ID: ${consumerID}, sessionKey: ${sessionKey}.`,
       );
     }

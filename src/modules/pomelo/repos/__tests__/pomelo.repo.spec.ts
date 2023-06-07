@@ -35,6 +35,9 @@ import {
   PomeloTransactionStatus,
   PomeloTransactionType,
 } from "../../domain/PomeloTransaction";
+import { AlertService } from "../../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 const getAllPomeloUserRecords = async (prismaService: PrismaService): Promise<PrismaPomeloUserModel[]> => {
   return prismaService.pomeloUser.findMany({});
@@ -60,16 +63,24 @@ describe("SqlPomeloRepoTests", () => {
   let pomeloRepo: PomeloRepo;
   let app: TestingModule;
   let prismaService: PrismaService;
+  let mockAlertService: AlertService;
 
   beforeAll(async () => {
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SQLPomeloRepo],
+      providers: [
+        PrismaService,
+        SQLPomeloRepo,
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
+      ],
     }).compile();
 
     pomeloRepo = app.get<SQLPomeloRepo>(SQLPomeloRepo);

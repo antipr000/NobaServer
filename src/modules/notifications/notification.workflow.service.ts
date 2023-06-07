@@ -217,7 +217,7 @@ export class NotificationWorkflowService {
       case NotificationWorkflowTypes.DEBIT_ADJUSTMENT_FAILED_EVENT:
         return this.sendDebitAdjustmentFailedEventNotification(request.transactionID);
       default:
-        this.logger.error("Failed to send notification from workflow. Reason: Invalid notification type");
+        this.logger.warn("Failed to send notification from workflow. Reason: Invalid notification type");
         throw new ServiceException({
           message: "Invalid notification type",
           errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -227,7 +227,7 @@ export class NotificationWorkflowService {
 
   private async validateAndGetTransactionFromID(transactionID: string): Promise<Transaction> {
     if (!transactionID) {
-      this.logger.error("Failed to send notification from workflow. Reason: Transaction ID is required");
+      this.logger.warn("Failed to send notification from workflow. Reason: Transaction ID is required");
       throw new ServiceException({
         message: "Transaction ID is required",
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -235,7 +235,7 @@ export class NotificationWorkflowService {
     }
     const transaction = await this.transactionService.getTransactionByTransactionID(transactionID);
     if (!transaction) {
-      this.logger.error(
+      this.logger.warn(
         `Failed to send notification from workflow. Reason: Transaction with id ${transactionID} not found`,
       );
       throw new ServiceException({
@@ -307,7 +307,7 @@ export class NotificationWorkflowService {
 
   private async sendPayrollStatusUpdateNotification(payrollID: string, status: PayrollStatus) {
     if (!payrollID) {
-      this.logger.error("Failed to send notification from workflow. Reason: Payroll ID is required");
+      this.logger.warn("Failed to send notification from workflow. Reason: Payroll ID is required");
       throw new ServiceException({
         message: "Payroll ID is required",
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -315,7 +315,7 @@ export class NotificationWorkflowService {
     }
 
     if (!status) {
-      this.logger.error("Failed to send notification from workflow. Reason: Payroll status is required");
+      this.logger.warn("Failed to send notification from workflow. Reason: Payroll status is required");
       throw new ServiceException({
         message: "Payroll status is required",
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -325,7 +325,7 @@ export class NotificationWorkflowService {
     const payroll = await this.employerService.getPayrollByID(payrollID);
 
     if (!payroll) {
-      this.logger.error(`Failed to send notification from workflow. Reason: Payroll with id ${payrollID} not found`);
+      this.logger.warn(`Failed to send notification from workflow. Reason: Payroll with id ${payrollID} not found`);
       throw new ServiceException({
         message: `Payroll with id ${payrollID} not found`,
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,

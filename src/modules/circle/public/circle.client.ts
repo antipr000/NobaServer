@@ -113,6 +113,7 @@ export class CircleClient implements IClient {
           );
         }
       });
+      this.logger.info(`Wallet "${walletID}" balance: ${result}`);
 
       return result;
     } catch (err) {

@@ -22,29 +22,29 @@ export class MetaClient {
   }
 
   async raiseEvent(event: MetaEvent): Promise<void> {
-    const userData = new UserData();
-    userData.setExternalId(event.userData.id);
-    if (event.userData.email) userData.setEmail(event.userData.email);
-    if (event.userData.phone) userData.setPhone(event.userData.phone);
-    if (event.userData.firstName) userData.setFirstName(event.userData.firstName);
-    if (event.userData.lastName) userData.setLastName(event.userData.lastName);
-    if (event.userData.country) userData.setCountry(event.userData.country);
+    if (!this.testEventCode || this.testEventCode.length == 0) {
+      const userData = new UserData();
+      userData.setExternalId(event.userData.id);
+      if (event.userData.email) userData.setEmail(event.userData.email);
+      if (event.userData.phone) userData.setPhone(event.userData.phone);
+      if (event.userData.firstName) userData.setFirstName(event.userData.firstName);
+      if (event.userData.lastName) userData.setLastName(event.userData.lastName);
+      if (event.userData.country) userData.setCountry(event.userData.country);
 
-    const serverEvent = new ServerEvent()
-      .setEventId(uuid())
-      .setEventName(event.eventName.toString())
-      .setEventTime(Math.round(Date.now() / 1000))
-      .setActionSource("website")
-      .setUserData(userData);
-    const eventsData = [serverEvent];
-    const eventRequest = new EventRequest(this.accessToken, this.pixelID).setEvents(eventsData);
-    if (this.testEventCode) {
-      this.logger.info(`Setting Meta test event code to: ${this.testEventCode}`);
-      eventRequest.setTestEventCode(this.testEventCode);
+      const serverEvent = new ServerEvent()
+        .setEventId(uuid())
+        .setEventName(event.eventName.toString())
+        .setEventTime(Math.round(Date.now() / 1000))
+        .setActionSource("website")
+        .setUserData(userData);
+      const eventsData = [serverEvent];
+      const eventRequest = new EventRequest(this.accessToken, this.pixelID).setEvents(eventsData);
+
+      this.logger.info(`Sending event to Meta: ${JSON.stringify(event)}`);
+      const response = await eventRequest.execute();
+      this.logger.info(`Response from Meta: ${JSON.stringify(response)}`);
+    } else {
+      this.logger.info("Skipping Meta event because test event code is set");
     }
-
-    this.logger.info(`Sending event to Meta: ${JSON.stringify(event)}`);
-    const response = await eventRequest.execute();
-    this.logger.info(`Response from Meta: ${JSON.stringify(response)}`);
   }
 }

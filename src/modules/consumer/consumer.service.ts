@@ -41,6 +41,7 @@ import { NotificationPayloadMapper } from "../notifications/domain/NotificationP
 import { MetaService } from "../marketing/public/meta.service";
 import { MetaEventName } from "../marketing/dto/meta.service.dto";
 import { ConsumerRaw } from "./domain/ConsumerRaw";
+import { AlertService } from "../common/alerts/alert.service";
 
 @Injectable()
 export class ConsumerService {
@@ -73,6 +74,9 @@ export class ConsumerService {
 
   @Inject()
   private readonly consumerMapper: ConsumerMapper;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   private otpOverride: number;
   private qrCodePrefix: string;
@@ -233,7 +237,7 @@ export class ConsumerService {
     try {
       return await this.consumerRepo.updateConsumer(consumer.props.id, updateConsumerProps);
     } catch (e) {
-      this.logger.error(`updateConsumer failed with error: ${e}`);
+      this.alertService.raiseError(`updateConsumer failed with error: ${JSON.stringify(e)}`);
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
         message: "Database error updating consumer. Confirm your input values and see logs for details.",
@@ -503,7 +507,7 @@ export class ConsumerService {
     // if (paymentMethod.paymentProvider === PaymentProvider.CHECKOUT) {
     //   return this.paymentService.requestCheckoutPayment(consumer, transaction, paymentMethod);
     // } else {
-    //   this.logger.error(
+    //   this.logger.warn(
     //     `Error in making payment as payment provider ${
     //       paymentMethod.paymentProvider
     //     } is not supported. Consumer: ${JSON.stringify(consumer)}, Transaction: ${JSON.stringify(transaction)}`,
@@ -610,7 +614,7 @@ export class ConsumerService {
     if (isSanctionedWallet) {
       // Flag the wallet if it is a sanctioned wallet address.
       cryptoWallet.props.status = WalletStatus.FLAGGED;
-      this.logger.error(
+      this.alertService.raiseError(
         `Failed to add a sanctioned wallet: ${cryptoWallet.props.address} for consumer: ${consumer.props.id}`,
       );
       await this.addOrUpdateCryptoWallet(consumer, cryptoWallet);

@@ -12,6 +12,9 @@ import {
   createAndSaveReminderSchedule,
 } from "../test_utils/notification.test.utils";
 import { RepoErrorCode } from "../../../core/exception/repo.exception";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 describe("ReminderHistoryRepoTests", () => {
   jest.setTimeout(20000);
@@ -19,16 +22,24 @@ describe("ReminderHistoryRepoTests", () => {
   let reminderHistoryRepo: ReminderHistoryRepo;
   let app: TestingModule;
   let prismaService: PrismaService;
+  let mockAlertService: AlertService;
 
   beforeAll(async () => {
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SQLReminderHistoryRepo],
+      providers: [
+        PrismaService,
+        SQLReminderHistoryRepo,
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
+      ],
     }).compile();
 
     reminderHistoryRepo = app.get<ReminderHistoryRepo>(SQLReminderHistoryRepo);

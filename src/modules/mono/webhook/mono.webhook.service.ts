@@ -76,7 +76,7 @@ export class MonoWebhookService {
 
       default:
         // Writing a logger.error is enough as throwing an error will cause the webhook to be retried
-        this.logger.error(`Unexpected Mono webhook event: ${JSON.stringify(requestBody)}`);
+        this.alertService.raiseError(`Unexpected Mono webhook event: ${JSON.stringify(requestBody)}`);
     }
   }
 

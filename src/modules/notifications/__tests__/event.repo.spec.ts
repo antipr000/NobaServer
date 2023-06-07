@@ -10,6 +10,9 @@ import { uuid } from "uuidv4";
 import { EventHandlers } from "../domain/EventHandlers";
 import { RepoException } from "../../../core/exception/repo.exception";
 import { EventTemplateCreateRequest, EventTemplateUpdateRequest } from "../domain/EventTemplates";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 describe("EventRepoTests", () => {
   jest.setTimeout(20000);
@@ -17,6 +20,7 @@ describe("EventRepoTests", () => {
   let eventRepo: EventRepo;
   let app: TestingModule;
   let prismaService: PrismaService;
+  let mockAlertService: AlertService;
 
   beforeAll(async () => {
     const appConfigurations = {
@@ -24,9 +28,17 @@ describe("EventRepoTests", () => {
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SQLEventRepo],
+      providers: [
+        PrismaService,
+        SQLEventRepo,
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
+      ],
     }).compile();
 
     eventRepo = app.get<EventRepo>(SQLEventRepo);

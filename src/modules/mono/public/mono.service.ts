@@ -2,17 +2,12 @@ import { Inject, Injectable } from "@nestjs/common";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Consumer } from "../../consumer/domain/Consumer";
 import { Logger } from "winston";
-import { isTerminalState, MonoCurrency, MonoTransaction, MonoTransactionType } from "../domain/Mono";
-import {
-  MonoClientCollectionLinkResponse,
-  MonoTransferResponse,
-  MonoTransferStatusResponse,
-} from "../dto/mono.client.dto";
+import { MonoCurrency, MonoTransaction, MonoTransactionType } from "../domain/Mono";
+import { MonoClientCollectionLinkResponse, MonoTransferResponse } from "../dto/mono.client.dto";
 import { MonoClient } from "./mono.client";
 import { IMonoRepo } from "../repo/mono.repo";
 import { MONO_REPO_PROVIDER } from "../repo/mono.repo.module";
 import { ConsumerService } from "../../consumer/consumer.service";
-import { MonoWebhookMappers } from "../webhook/mono.webhook.mapper";
 import { SupportedBanksDTO } from "../../psp/dto/SupportedBanksDTO";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { KmsService } from "../../common/kms.service";
@@ -67,7 +62,9 @@ export class MonoService implements IBank {
   }
 
   async getTransactionByNobaTransactionID(nobaTransactionID: string): Promise<MonoTransaction | null> {
-    let monoTransaction: MonoTransaction = await this.monoRepo.getMonoTransactionByNobaTransactionID(nobaTransactionID);
+    const monoTransaction: MonoTransaction = await this.monoRepo.getMonoTransactionByNobaTransactionID(
+      nobaTransactionID,
+    );
     if (!monoTransaction) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.DOES_NOT_EXIST,
@@ -100,7 +97,9 @@ export class MonoService implements IBank {
         currency: balance.currency,
       };
     } catch (e) {
-      this.logger.error(`Error obtaining balance for account ending in ${accountNumber.slice(-4)}: ${e.message}`);
+      this.alertService.raiseError(
+        `Error obtaining balance for account ending in ${accountNumber.slice(-4)}: ${e.message}`,
+      );
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
         message: "Error obtaining Mono account balance",
@@ -297,7 +296,7 @@ export class MonoService implements IBank {
         });
       }
 
-      this.logger.error(`Mono collection link creation failed: ${e}`);
+      this.alertService.raiseError(`Mono collection link creation failed: ${e}`);
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
         message: `Mono collection link creation failed: ${e}`,

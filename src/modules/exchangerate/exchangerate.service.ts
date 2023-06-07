@@ -63,7 +63,7 @@ export class ExchangeRateService {
         expirationTimestamp: createdExchangeRate.expirationTimestamp,
       };
     } catch (err) {
-      this.logger.error(`Error creating exchangeRate in database: ${err} - ${JSON.stringify(exchangeRate)}`);
+      this.logger.warn(`Error creating exchangeRate in database: ${err} - ${JSON.stringify(exchangeRate)}`);
       throw new ServiceException({
         error: err,
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -85,7 +85,7 @@ export class ExchangeRateService {
       );
       if (!exchangeRateClient) {
         const errorMessage = `No exchange rate client found for currency pair "${currencyPairText}"`;
-        this.logger.error(errorMessage);
+        this.logger.warn(errorMessage);
         errorMessages.push(errorMessage);
         continue;
       }
@@ -98,14 +98,14 @@ export class ExchangeRateService {
         );
       } catch (err) {
         const errorMessage = `Error getting exchange rate from provider for currency pair "${currencyPairText}": ${err}`;
-        this.logger.error(errorMessage);
+        this.logger.warn(errorMessage);
         errorMessages.push(errorMessage);
         continue;
       }
 
       if (!exchangeRate) {
         const errorMessage = `No exchange rate found for currency pair "${currencyPairText}": "${exchangeRate}"`;
-        this.logger.error(errorMessage);
+        this.logger.warn(errorMessage);
         errorMessages.push(errorMessage);
         continue;
       }
@@ -120,7 +120,7 @@ export class ExchangeRateService {
         (exchangeRate < existingExchangeRate.bankRate * 0.9 || exchangeRate > existingExchangeRate.bankRate * 1.1)
       ) {
         const errorMessage = `Exchange rate from provider for currency pair "${currencyPairText}" is outside of the 10% threshold of existing exchange rate. Provider: ${exchangeRate} Existing: ${existingExchangeRate.bankRate}`;
-        this.logger.error(errorMessage);
+        this.logger.warn(errorMessage);
         errorMessages.push(errorMessage);
         continue;
       }
@@ -178,7 +178,7 @@ export class ExchangeRateService {
         expirationTimestamp: rate.expirationTimestamp,
       };
     } catch (err) {
-      this.logger.error(
+      this.logger.warn(
         `Error getting exchange rate from database for currency pair "${numeratorCurrency}-${denominatorCurrency}": ${err}`,
       );
       return null;

@@ -15,11 +15,13 @@ import {
 } from "../domain/Mono";
 import { IMonoRepo } from "./mono.repo";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class SqlMonoRepo implements IMonoRepo {
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly alertService: AlertService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -56,7 +58,7 @@ export class SqlMonoRepo implements IMonoRepo {
       });
       savedTransaction = convertToDomainTransaction(returnedTransaction);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: "Error saving transaction in database",
@@ -67,7 +69,7 @@ export class SqlMonoRepo implements IMonoRepo {
       validateMonoTransaction(savedTransaction);
       return savedTransaction;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.INVALID_DATABASE_RECORD,
         message: "Invalid database record",
@@ -94,7 +96,7 @@ export class SqlMonoRepo implements IMonoRepo {
 
       return convertToDomainTransaction(returnedTransaction);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       if (err.meta && err.meta.cause === "Record to update not found.") {
         throw new RepoException({
           errorCode: RepoErrorCode.NOT_FOUND,
@@ -122,7 +124,7 @@ export class SqlMonoRepo implements IMonoRepo {
 
       return convertToDomainTransaction(returnedTransaction);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting the Mono transaction with nobaTransactionID: '${nobaTransactionID}'`,
@@ -144,7 +146,7 @@ export class SqlMonoRepo implements IMonoRepo {
 
       return convertToDomainTransaction(returnedTransaction);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting the Mono transaction with collectionLinkID: '${collectionLinkID}'`,
@@ -166,7 +168,7 @@ export class SqlMonoRepo implements IMonoRepo {
 
       return convertToDomainTransaction(returnedTransaction);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting the Mono transaction with transferID: '${transferID}'`,

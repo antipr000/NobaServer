@@ -43,6 +43,7 @@ import {
 import { ConsumerRaw } from "../domain/ConsumerRaw";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Logger } from "winston";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class SQLConsumerRepo implements IConsumerRepo {
@@ -54,6 +55,9 @@ export class SQLConsumerRepo implements IConsumerRepo {
 
   @Inject()
   private readonly kmsService: KmsService;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   private readonly mapper: ConsumerRepoMapper;
 
@@ -105,6 +109,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
       });
       return Consumer.createConsumer(consumerProps);
     } catch (e) {
+      this.alertService.raiseError(`Failed to create consumer. Reason: ${JSON.stringify(e)}`);
       throw new BadRequestError({
         message: e.message,
       });
@@ -408,6 +413,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
       });
       return Consumer.createConsumer(consumerProps);
     } catch (e) {
+      this.alertService.raiseError(`Failed to update consumer in db. Reason: ${JSON.stringify(e)}`);
       throw new BadRequestError({
         message: `Failed to update consumer. Reason: ${e.message}`,
       });
@@ -502,6 +508,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
       });
       savedIdentification = convertToDomainIdentification(returnedIdentification);
     } catch (err) {
+      this.alertService.raiseError(`Error creating Identification. Reason: ${JSON.stringify(err)}`);
       if (err.code === "P2025") {
         throw new RepoException({
           errorCode: RepoErrorCode.NOT_FOUND,
@@ -542,6 +549,9 @@ export class SQLConsumerRepo implements IConsumerRepo {
 
       return convertToDomainIdentification(returnedIdentification);
     } catch (err) {
+      this.alertService.raiseError(
+        `Error updating the Identification with ID: '${id}'. Reason: ${JSON.stringify(err)}`,
+      );
       if (err.meta && err.meta.cause === "Record to update not found.") {
         throw new RepoException({
           errorCode: RepoErrorCode.NOT_FOUND,
@@ -632,6 +642,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
       validateConsumerConfiguration(savedConfiguration);
       return savedConfiguration;
     } catch (err) {
+      this.alertService.raiseError(`Failed to create consumer configuration with. Reason: ${JSON.stringify(err)}`);
       throw new RepoException({
         errorCode: RepoErrorCode.INVALID_DATABASE_RECORD,
         message: "Error saving Configuration in database",
@@ -659,6 +670,9 @@ export class SQLConsumerRepo implements IConsumerRepo {
 
       return convertToDomainConsumerConfiguration(returnedConfiguration);
     } catch (err) {
+      this.alertService.raiseError(
+        `Failed to update consumer configuration with id ${id}. Reason: ${JSON.stringify(err)}`,
+      );
       if (err.meta && err.meta.cause === "Record to update not found.") {
         throw new RepoException({
           errorCode: RepoErrorCode.NOT_FOUND,
@@ -701,7 +715,7 @@ export class SQLConsumerRepo implements IConsumerRepo {
       const consumers = await this.prisma.$queryRawUnsafe<ConsumerRaw[]>(query);
       return consumers;
     } catch (e) {
-      this.logger.error(`Error executing raw query: ${query}`, e);
+      this.alertService.raiseError(`Error executing raw query: ${query}. Reason: ${JSON.stringify(e)}`);
       return [];
     }
   }

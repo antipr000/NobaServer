@@ -10,6 +10,9 @@ import { NobaCardRepo } from "../repos/card.repo";
 import { SQLNobaCardRepo } from "../repos/sql.card.repo";
 import { CardProvider, NobaCard } from "../domain/NobaCard";
 import { createNobaCard } from "../test_utils/util";
+import { AlertService } from "../../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 const getAllNobaCardsRecords = async (prismaService: PrismaService): Promise<PrismaNobaCardModel[]> => {
   return prismaService.nobaCard.findMany({});
@@ -21,16 +24,24 @@ describe("SqlNobaCardRepo", () => {
   let nobaCardRepo: NobaCardRepo;
   let app: TestingModule;
   let prismaService: PrismaService;
+  let mockAlertService: AlertService;
 
   beforeAll(async () => {
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SQLNobaCardRepo],
+      providers: [
+        PrismaService,
+        SQLNobaCardRepo,
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
+      ],
     }).compile();
 
     nobaCardRepo = app.get<SQLNobaCardRepo>(SQLNobaCardRepo);
