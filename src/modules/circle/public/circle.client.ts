@@ -107,6 +107,7 @@ export class CircleClient implements IClient {
           this.logger.error(`Circle returns an invalid currency for wallet "${walletID}": ${JSON.stringify(balance)}`);
         }
       });
+      this.logger.info(`Wallet "${walletID}" balance: ${result}`);
 
       return result;
     } catch (err) {
