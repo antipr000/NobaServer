@@ -21,7 +21,7 @@ import { getRandomEmployee } from "../../employee/test_utils/employee.test.utils
 import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 import { EnrichedDisbursementSortOptions } from "../dto/enriched.disbursement.filter.options.dto";
 import { SortOrder } from "../../../core/infra/PaginationTypes";
-import { AlertService } from "src/modules/common/alerts/alert.service";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
 import { instance } from "ts-mockito";
 

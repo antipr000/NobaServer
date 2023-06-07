@@ -84,13 +84,18 @@ import {
 import { getTestWinstonModule } from "../../../core/utils/WinstonModule";
 import { TestConfigModule } from "../../../core/utils/AppConfigModule";
 import { PlaidClient } from "../plaid.client";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 describe("PlaidClientTests", () => {
   let plaidClient: PlaidClient;
+  let alertService: AlertService;
 
   beforeEach(async () => {
+    alertService = getMockAlertServiceWithDefaults();
     const app: TestingModule = await Test.createTestingModule({
       imports: [
         TestConfigModule.registerAsync({
@@ -105,7 +110,13 @@ describe("PlaidClientTests", () => {
         getTestWinstonModule(),
       ],
       controllers: [],
-      providers: [PlaidClient],
+      providers: [
+        PlaidClient,
+        {
+          provide: AlertService,
+          useFactory: () => instance(alertService),
+        },
+      ],
     }).compile();
 
     plaidClient = app.get<PlaidClient>(PlaidClient);

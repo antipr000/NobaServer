@@ -16,7 +16,7 @@ import { IEmployeeRepo } from "../repo/employee.repo";
 import { SqlEmployeeRepo } from "../repo/sql.employee.repo";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { PaginatedResult, SortOrder } from "../../../core/infra/PaginationTypes";
-import { AlertService } from "src/modules/common/alerts/alert.service";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
 import { instance } from "ts-mockito";
 

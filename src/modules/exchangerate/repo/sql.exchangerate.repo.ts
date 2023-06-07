@@ -15,7 +15,7 @@ import {
   DatabaseInternalErrorException,
   InvalidDatabaseRecordException,
 } from "../../../core/exception/CommonAppException";
-import { AlertService } from "src/modules/common/alerts/alert.service";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class SQLExchangeRateRepo implements IExchangeRateRepo {
