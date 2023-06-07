@@ -16,6 +16,9 @@ import { IEmployeeRepo } from "../repo/employee.repo";
 import { SqlEmployeeRepo } from "../repo/sql.employee.repo";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { PaginatedResult, SortOrder } from "../../../core/infra/PaginationTypes";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 type EmployeeModel = PrismaEmployeeModel & {
   employer?: PrismaEmployerModel;
@@ -66,6 +69,7 @@ describe("SqlEmployeeRepoTests", () => {
   let employeeRepo: IEmployeeRepo;
   let app: TestingModule;
   let prismaService: PrismaService;
+  let alertService: AlertService;
 
   beforeAll(async () => {
     const appConfigurations = {
@@ -73,9 +77,17 @@ describe("SqlEmployeeRepoTests", () => {
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
+    alertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SqlEmployeeRepo],
+      providers: [
+        PrismaService,
+        SqlEmployeeRepo,
+        {
+          provide: AlertService,
+          useFactory: () => instance(alertService),
+        },
+      ],
     }).compile();
 
     employeeRepo = app.get<SqlEmployeeRepo>(SqlEmployeeRepo);

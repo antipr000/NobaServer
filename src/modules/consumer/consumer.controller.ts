@@ -129,7 +129,7 @@ export class ConsumerController {
       if (requestBody.referredByCode) {
         referredByID = await this.consumerService.findConsumerIDByReferralCode(requestBody.referredByCode);
         if (referredByID === null) {
-          this.logger.error("Unable to find user with referral code: " + requestBody.referredByCode);
+          this.logger.warn("Unable to find user with referral code: " + requestBody.referredByCode);
         }
       }
       const consumerProps: Partial<ConsumerProps> = {
@@ -162,7 +162,7 @@ export class ConsumerController {
       else if (e instanceof ServiceException) {
         throw e;
       } */ else {
-        this.logger.error(`Error updating consumer record: ${JSON.stringify(e)}`);
+        this.logger.warn(`Error updating consumer record: ${JSON.stringify(e)}`);
         throw new BadRequestException("Failed to update requested details");
       }
     }

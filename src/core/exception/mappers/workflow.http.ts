@@ -9,7 +9,7 @@ export function workflowToHTTP(logger: Logger, exception: WorkflowException) {
     case WorkflowErrorCode.UNKNOWN:
       return new InternalServerErrorException(exception.message);
     default:
-      logger.error("Unmapped Workflow error code. Exception details:", exception);
+      logger.warn("Unmapped Workflow error code. Exception details:", exception);
       return new HttpException(exception.message, 500);
   }
 }

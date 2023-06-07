@@ -42,12 +42,12 @@ export class PaymentWebhooksController {
       }
     });
     if (!isValidRequest) {
-      this.logger.error(`Invalid webhook event from Checkout: ${JSON.stringify(requestBody)}`);
+      this.logger.warn(`Invalid webhook event from Checkout: ${JSON.stringify(requestBody)}`);
       return;
     }
 
     if (!this.IsAuthenticRequest(requestBody, headers["cko-signature"])) {
-      this.logger.error(
+      this.logger.warn(
         `Someone tries to impersonate Checkout. Request: "${JSON.stringify(requestBody)}" and headers: ${JSON.stringify(
           headers,
         )}`,
@@ -86,7 +86,7 @@ export class PaymentWebhooksController {
       }
 
       case "payment_declined": {
-        this.logger.error(`'payment_declined' event is received - "${JSON.stringify(requestBody)}"`);
+        this.logger.warn(`'payment_declined' event is received - "${JSON.stringify(requestBody)}"`);
         break;
       }
 
@@ -106,12 +106,12 @@ export class PaymentWebhooksController {
       }
 
       case "payment_returned": {
-        this.logger.error(`'payment_declined' event is received - "${JSON.stringify(requestBody)}"`);
+        this.logger.warn(`'payment_declined' event is received - "${JSON.stringify(requestBody)}"`);
         break;
       }
 
       default: {
-        this.logger.error(`Invalid 'type' in Checkout webhook event: "${JSON.stringify(requestBody)}"`);
+        this.logger.warn(`Invalid 'type' in Checkout webhook event: "${JSON.stringify(requestBody)}"`);
         return;
       }
     }*/

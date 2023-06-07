@@ -33,11 +33,13 @@ import {
   PomeloTransactionStatus,
 } from "../domain/PomeloTransaction";
 import { CardProvider, convertToDomainNobaCard, validateNobaCard, NobaCard } from "../../psp/card/domain/NobaCard";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class SQLPomeloRepo implements PomeloRepo {
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly alertService: AlertService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -63,7 +65,7 @@ export class SQLPomeloRepo implements PomeloRepo {
       });
       savedPomeloUser = convertToDomainPomeloUser(returnedPomeloUser);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: "Error saving transaction in database",
@@ -74,7 +76,7 @@ export class SQLPomeloRepo implements PomeloRepo {
       validatePomeloUser(savedPomeloUser);
       return savedPomeloUser;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.INVALID_DATABASE_RECORD,
         message: "Invalid database record",
@@ -96,7 +98,7 @@ export class SQLPomeloRepo implements PomeloRepo {
 
       return convertToDomainPomeloUser(returnedPomeloUser);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting the Pomelo user with consumerID: '${consumerID}'`,
@@ -118,7 +120,7 @@ export class SQLPomeloRepo implements PomeloRepo {
 
       return convertToDomainPomeloUser(returnedPomeloUser);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting the Pomelo user with pomeloUserID: '${pomeloUserID}'`,
@@ -161,7 +163,7 @@ export class SQLPomeloRepo implements PomeloRepo {
       });
       savedNobaCard = convertToDomainNobaCard(returnedCard);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: "Error saving transaction in database",
@@ -172,7 +174,7 @@ export class SQLPomeloRepo implements PomeloRepo {
       validateNobaCard(savedNobaCard);
       return savedNobaCard;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.INVALID_DATABASE_RECORD,
         message: "Invalid database record",
@@ -197,7 +199,7 @@ export class SQLPomeloRepo implements PomeloRepo {
 
       return convertToDomainNobaCard(returnedNobaCard);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       if (err.meta && err.meta.cause === "Record to update not found.") {
         throw new RepoException({
           errorCode: RepoErrorCode.NOT_FOUND,
@@ -225,7 +227,7 @@ export class SQLPomeloRepo implements PomeloRepo {
 
       return convertToDomainPomeloCard(returnedPomeloCard);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting the Pomelo Card with pomeloCardID: '${pomeloCardID}'`,
@@ -247,7 +249,7 @@ export class SQLPomeloRepo implements PomeloRepo {
 
       return convertToDomainPomeloCard(returnedPomeloCard);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting the Pomelo Card with nobaCardID: '${nobaCardID}'`,
@@ -279,7 +281,7 @@ export class SQLPomeloRepo implements PomeloRepo {
 
       return queryResult.pomeloUser.consumerID;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting the Noba consumerID for (pomeloCardID, pomeloUserID): '(${pomeloCardID}, ${pomeloUserID})'`,
@@ -340,7 +342,7 @@ export class SQLPomeloRepo implements PomeloRepo {
       });
       savedPomeloTransaction = convertToDomainPomeloTransaction(returnedTransaction);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: "Error saving transaction in database",
@@ -351,7 +353,7 @@ export class SQLPomeloRepo implements PomeloRepo {
       validatePomeloTransaction(savedPomeloTransaction);
       return savedPomeloTransaction;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.INVALID_DATABASE_RECORD,
         message: "Invalid database record",
@@ -370,7 +372,7 @@ export class SQLPomeloRepo implements PomeloRepo {
         },
       });
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       if (err.meta && err.meta.cause === "Record to update not found.") {
         throw new RepoException({
           errorCode: RepoErrorCode.NOT_FOUND,
@@ -399,7 +401,7 @@ export class SQLPomeloRepo implements PomeloRepo {
 
       return convertToDomainPomeloTransaction(returnedPomeloTransaction);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting the Pomelo Transaction with nobaTransactionID: '${nobaTransactionID}'`,
@@ -422,7 +424,7 @@ export class SQLPomeloRepo implements PomeloRepo {
 
       return convertToDomainPomeloTransaction(returnedPomeloTransaction);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting the Pomelo Transaction with pomeloIdempotencyKey: '${pomeloIdempotencyKey}'`,
@@ -445,7 +447,7 @@ export class SQLPomeloRepo implements PomeloRepo {
 
       return convertToDomainPomeloTransaction(returnedPomeloTransaction);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting the Pomelo Transaction with pomeloTransactionID: '${pomeloTransactionID}'`,
@@ -468,7 +470,7 @@ export class SQLPomeloRepo implements PomeloRepo {
 
       return returnedPomeloTransactions.map(txn => convertToDomainPomeloTransaction(txn));
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Error getting all the PomeloTransactions for pomeloUserID '${pomeloUserID}' & settlementDate '${settlementDate}'.`,

@@ -27,7 +27,7 @@ import {
   DebitBankRequestDTO,
   WorkflowTransactionDTO,
 } from "./dto/transaction.workflow.controller.dto";
-import { DebitBankResponse, Transaction, TransactionStatus, WorkflowName } from "./domain/Transaction";
+import { DebitBankResponse, Transaction } from "./domain/Transaction";
 import { TransactionWorkflowMapper } from "./mapper/transaction.workflow.mapper";
 import { BlankResponseDTO } from "../common/dto/BlankResponseDTO";
 import { TransactionEvent } from "./domain/TransactionEvent";
@@ -120,7 +120,7 @@ export class TransactionWorkflowController {
       return await this.transactionService.debitFromBank(requestBody.transactionID);
     } catch (e) {
       if (e instanceof ServiceException && e.errorCode === ServiceErrorCode.ALREADY_EXISTS) {
-        this.logger.error(`Error while debiting from bank: ${e.message}`);
+        this.logger.warn(`Error while debiting from bank: ${e.message}`);
         throw new ConflictException(e.message);
       }
     }

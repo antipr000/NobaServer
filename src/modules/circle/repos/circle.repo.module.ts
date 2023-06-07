@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { InfraProvidersModule } from "../../../infraproviders/infra.module";
 import { SQLCircleRepo } from "./sql.circle.repo";
+import { CommonModule } from "../../../modules/common/common.module";
 
 const CircleRepoProvider = {
   provide: "CircleRepo",
@@ -8,7 +9,7 @@ const CircleRepoProvider = {
 };
 
 @Module({
-  imports: [InfraProvidersModule],
+  imports: [InfraProvidersModule, CommonModule],
   controllers: [],
   providers: [CircleRepoProvider],
   exports: [CircleRepoProvider],

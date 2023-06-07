@@ -13,6 +13,7 @@ import { Logger } from "winston";
 import { KmsService } from "../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class SQLWithdrawalDetailsRepo implements IWithdrawalDetailsRepo {
@@ -21,6 +22,9 @@ export class SQLWithdrawalDetailsRepo implements IWithdrawalDetailsRepo {
 
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   @Inject()
   private readonly kmsService: KmsService;
@@ -68,7 +72,7 @@ export class SQLWithdrawalDetailsRepo implements IWithdrawalDetailsRepo {
       validateSavedWithdrawalDetails(savedWithdrawalDetails);
       return savedWithdrawalDetails;
     } catch (e) {
-      this.logger.error(`Failed to save withdrawal details: ${JSON.stringify(e)}}`);
+      this.alertService.raiseError(`Failed to save withdrawal details: ${JSON.stringify(e)}}`);
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: "Failed to save withdrawal details",

@@ -69,6 +69,8 @@ import { getMockPushTokenServiceWithDefaults } from "../../../modules/notificati
 import { MetaService } from "../../../modules/marketing/public/meta.service";
 import { getMockMetaServiceWithDefaults } from "../../../modules/marketing/public/mocks/mock.meta.service";
 import { MetaEventName } from "../../../modules/marketing/dto/meta.service.dto";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
 
 const getRandomEmployer = (): Employer => {
   const employer: Employer = {
@@ -129,6 +131,7 @@ describe("ConsumerService", () => {
   let mockIdentificationService: IdentificationService;
   let mockPushTokenService: PushTokenService;
   let mockMetaService: MetaService;
+  let mockAlertService: AlertService;
 
   jest.setTimeout(30000);
 
@@ -149,6 +152,7 @@ describe("ConsumerService", () => {
     mockIdentificationService = getMockIdentificationServiceWithDefaults();
     mockPushTokenService = getMockPushTokenServiceWithDefaults();
     mockMetaService = getMockMetaServiceWithDefaults();
+    mockAlertService = getMockAlertServiceWithDefaults();
 
     const ConsumerRepoProvider = {
       provide: "ConsumerRepo",
@@ -229,6 +233,10 @@ describe("ConsumerService", () => {
         {
           provide: MetaService,
           useFactory: () => instance(mockMetaService),
+        },
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
         },
       ],
     }).compile();

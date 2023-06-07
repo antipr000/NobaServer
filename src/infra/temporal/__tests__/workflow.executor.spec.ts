@@ -93,7 +93,7 @@ describe("WorkflowExecutor", () => {
 
     workflowExecutor = app.get<WorkflowExecutor>(WorkflowExecutor);
 
-    when(alertService.raiseAlert(anything())).thenResolve();
+    when(alertService.raiseCriticalAlert(anything())).thenResolve();
   });
 
   afterEach(async () => {
@@ -114,7 +114,7 @@ describe("WorkflowExecutor", () => {
     });
 
     it("Should fail a health check", async () => {
-      when(alertService.raiseAlert(anything())).thenResolve();
+      when(alertService.raiseCriticalAlert(anything())).thenResolve();
       mockHealthServiceCheck.mockResolvedValue({ status: 2 });
 
       const health = await workflowExecutor.getHealth();
@@ -148,7 +148,7 @@ describe("WorkflowExecutor", () => {
     });
 
     it("Should try to connect 5 times before giving up", async () => {
-      when(alertService.raiseAlert(anything())).thenResolve();
+      when(alertService.raiseCriticalAlert(anything())).thenResolve();
 
       // 5 rejections (1st is the initial call, 4 retries))
       mockTemporalConn.mockRejectedValueOnce(new Error("Unable to connect 1"));
@@ -161,7 +161,7 @@ describe("WorkflowExecutor", () => {
       expect(success).toBe(false);
       expect(mockTemporalConn).toHaveBeenCalledTimes(5);
 
-      const [alertCall] = capture(alertService.raiseAlert).last();
+      const [alertCall] = capture(alertService.raiseCriticalAlert).last();
       expect(alertCall).toEqual(expect.objectContaining({ key: "TEMPORAL_DOWN" }));
     });
   });

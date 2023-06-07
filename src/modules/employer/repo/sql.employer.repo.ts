@@ -20,11 +20,15 @@ import {
 } from "../../../core/exception/CommonAppException";
 import { KmsService } from "../../../modules/common/kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class SqlEmployerRepo implements IEmployerRepo {
   @Inject()
   private readonly kmsService: KmsService;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   constructor(
     private readonly prismaService: PrismaService,
@@ -62,7 +66,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
       });
       savedEmployer = convertToDomainEmployer(returnedEmployer);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
         message: "Error saving Employer in database",
       });
@@ -72,7 +76,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
       validateEmployer(savedEmployer);
       return savedEmployer;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new InvalidDatabaseRecordException({
         message: "Error saving Employer in database",
       });
@@ -108,7 +112,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
       });
       return convertToDomainEmployer(returnedEmployer);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       if (err.meta && err.meta.cause === "Record to update not found.") {
         throw new NotFoundError({});
       }
@@ -133,7 +137,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
 
       return convertToDomainEmployer(employer);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
         message: `Error retrieving the Employer with ID: '${id}'`,
       });
@@ -154,7 +158,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
 
       return convertToDomainEmployer(employer);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
         message: `Error retrieving the Employer with referralID: '${referralID}'`,
       });
@@ -175,7 +179,7 @@ export class SqlEmployerRepo implements IEmployerRepo {
 
       return convertToDomainEmployer(employer);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
         message: `Error retrieving the Employer with bubbleID: '${bubbleID}'`,
       });

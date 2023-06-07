@@ -38,7 +38,7 @@ export class PayrollDepositPreprocessor implements TransactionPreprocessor {
 
     const payroll: Payroll = await this.employerService.getPayrollByID(payrollDisbursement.payrollID);
     if (!payroll) {
-      this.alertService.raiseAlert({
+      this.alertService.raiseCriticalAlert({
         key: AlertKey.POSSIBLE_DATA_CORRUPTION,
         message: `Payroll disbursement with ID '${payrollDisbursement.id}' exist but corresponding Payroll with ID '${payrollDisbursement.payrollID} not found.`,
       });
@@ -50,7 +50,7 @@ export class PayrollDepositPreprocessor implements TransactionPreprocessor {
 
     const employer: Employer = await this.employerService.getEmployerByID(payroll.employerID);
     if (!employer) {
-      this.alertService.raiseAlert({
+      this.alertService.raiseCriticalAlert({
         key: AlertKey.POSSIBLE_DATA_CORRUPTION,
         message: `Employer '${payroll.employerID}' for payroll ID '${payroll.id}' does not exist.`,
       });
@@ -62,7 +62,7 @@ export class PayrollDepositPreprocessor implements TransactionPreprocessor {
 
     const employee: Employee = await this.employeeService.getEmployeeByID(payrollDisbursement.employeeID);
     if (!employee) {
-      this.alertService.raiseAlert({
+      this.alertService.raiseCriticalAlert({
         key: AlertKey.POSSIBLE_DATA_CORRUPTION,
         message: `Employee with ID '${payrollDisbursement.employeeID}' not found.`,
       });

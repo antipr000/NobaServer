@@ -13,6 +13,8 @@ import { KmsService } from "../../../modules/common/kms.service";
 import { instance, when } from "ts-mockito";
 import { getMockKMSServiceWithDefaults } from "../../../modules/common/mocks/mock.kms.service";
 import { KmsKeyType } from "../../../config/configtypes/KmsConfigs";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
 
 const getAllEmployerRecords = async (prismaService: PrismaService): Promise<PrismaEmployerModel[]> => {
   return prismaService.employer.findMany({});
@@ -43,6 +45,7 @@ describe("SqlEmployerRepoTests", () => {
   let app: TestingModule;
   let prismaService: PrismaService;
   let kmsService: KmsService;
+  let mockAlertService: AlertService;
 
   beforeAll(async () => {
     kmsService = getMockKMSServiceWithDefaults();
@@ -51,7 +54,7 @@ describe("SqlEmployerRepoTests", () => {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
       providers: [
@@ -60,6 +63,10 @@ describe("SqlEmployerRepoTests", () => {
         {
           provide: KmsService,
           useFactory: () => instance(kmsService),
+        },
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
         },
       ],
     }).compile();

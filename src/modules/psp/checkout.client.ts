@@ -92,7 +92,7 @@ export class CheckoutClient implements IClient {
         cardType: instrument["card_type"],
       };
     } catch (err) {
-      this.logger.error(`Failed to add card card: ${err}`);
+      this.logger.warn(`Failed to add card card: ${err}`);
       throw new BadRequestException({ message: "Failed to add card" });
     }
   }
@@ -158,7 +158,7 @@ export class CheckoutClient implements IClient {
         response_code: checkoutResponse["responseCode"],
       };
     } catch (e) {
-      this.logger.error(
+      this.logger.warn(
         `Exception while requesting checkout payment for transaction id ${transactionId}: ${JSON.stringify(e)}`,
       );
       throw e;
@@ -214,7 +214,7 @@ export class CheckoutClient implements IClient {
         bin: checkoutResponse["source"]["bin"],
       };
     } catch (err) {
-      this.logger.error(
+      this.logger.warn(
         `Exception while requesting checkout payment for transaction id ${transactionId}: ${JSON.stringify(err)}`,
       );
       throw err;
@@ -321,7 +321,7 @@ export class CheckoutClient implements IClient {
       // const webhookResponse = await this.checkoutApi.workflows.add(createWorkflowRequest);
       // console.log("Webhook created", webhookResponse);
     } catch (e) {
-      this.logger.error(e, e.response);
+      this.logger.warn(e, e.response);
       throw e;
     }
   }

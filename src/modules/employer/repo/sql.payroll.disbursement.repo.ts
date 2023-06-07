@@ -26,11 +26,13 @@ import { PaginatedResult, SortOrder } from "../../../core/infra/PaginationTypes"
 import { createPaginator } from "../../../infra/sql/paginate/PaginationPipeline";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
 import { PayrollStatus } from "../domain/Payroll";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly alertService: AlertService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -57,7 +59,7 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
         await this.prismaService.payrollDisbursement.create({ data: payrollDisbursementInput });
       savedPayrollDisbursement = convertToDomainPayrollDisbursement(returnedPayrollDisbursement);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
 
       throw new DatabaseInternalErrorException({
         message: "Error saving Payroll disbursement in database",
@@ -68,7 +70,7 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
       validatePayrollDisbursement(savedPayrollDisbursement);
       return savedPayrollDisbursement;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new InvalidDatabaseRecordException({
         message: "Error saving Payroll disbursement in database",
       });
@@ -102,7 +104,7 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
         });
       return convertToDomainPayrollDisbursement(returnedPayrollDisbursement);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
         message: `Error updating the Payroll disbursement with ID: '${id}'`,
       });
@@ -119,7 +121,7 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
         });
       return convertToDomainPayrollDisbursement(returnedPayrollDisbursement);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       return null;
     }
   }
@@ -134,7 +136,7 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
         });
       return convertToDomainPayrollDisbursement(returnedPayrollDisbursement);
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       return null;
     }
   }
@@ -146,7 +148,7 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
       });
       return allDisbursementsForEmployee.map(disbursement => convertToDomainPayrollDisbursement(disbursement));
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       return [];
     }
   }
@@ -165,9 +167,9 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
       });
       return aggregation._sum.allocationAmount ?? 0;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new DatabaseInternalErrorException({
-        message: `Error calculating total disbursement amount`,
+        message: "Error calculating total disbursement amount",
       });
     }
   }
@@ -179,7 +181,7 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
       });
       return allDisbursementsForEmployee.map(disbursement => convertToDomainPayrollDisbursement(disbursement));
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       return [];
     }
   }
@@ -221,7 +223,7 @@ export class SqlPayrollDisbursementRepo implements IPayrollDisbursementRepo {
       return await paginator(this.prismaService.payrollDisbursement, filterQuery);
     } catch (err) {
       console.log(err);
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: "Error retrieving payroll disbursements with given filters",

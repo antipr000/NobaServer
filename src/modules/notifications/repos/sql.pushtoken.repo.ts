@@ -3,11 +3,15 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { IPushTokenRepo } from "./pushtoken.repo";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class SQLPushTokenRepo implements IPushTokenRepo {
   @Inject()
   private readonly prisma: PrismaService;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   @Inject(WINSTON_MODULE_PROVIDER)
   private readonly logger: Logger;
@@ -25,7 +29,7 @@ export class SQLPushTokenRepo implements IPushTokenRepo {
 
       return consumerPushTokens.map(tokenData => tokenData.pushToken);
     } catch (e) {
-      this.logger.error(JSON.stringify(e));
+      this.alertService.raiseError(JSON.stringify(e));
       return [];
     }
   }
@@ -44,7 +48,7 @@ export class SQLPushTokenRepo implements IPushTokenRepo {
 
       return consumerPushToken.id;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Failed to get push token for consumerID: ${consumerID} and pushToken: ${pushToken}`,
@@ -66,7 +70,7 @@ export class SQLPushTokenRepo implements IPushTokenRepo {
 
       return createdPushToken.id;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       throw new RepoException({
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
         message: `Failed to add push token for consumerID: ${consumerID} and pushToken: ${pushToken}`,
@@ -90,7 +94,7 @@ export class SQLPushTokenRepo implements IPushTokenRepo {
 
       return deletedPushToken.id;
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       if (err.code === "P2025") {
         // Record to delete does not exist
         return null;

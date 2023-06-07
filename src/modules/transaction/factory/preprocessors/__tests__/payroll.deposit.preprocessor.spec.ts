@@ -75,7 +75,7 @@ describe("PayrollDepositPreprocessor", () => {
   });
 
   describe("validate()", () => {
-    const DISBURSEMENT_ID: string = "DISBURSEMENT_ID";
+    const DISBURSEMENT_ID = "DISBURSEMENT_ID";
     const VALID_REQUEST: PayrollDepositTransactionRequest = {
       disbursementID: DISBURSEMENT_ID,
     };
@@ -86,7 +86,7 @@ describe("PayrollDepositPreprocessor", () => {
           await payrollDepositPreprocessor.validate(null);
           expect(true).toBe(false);
         } catch (err) {
-          expect(err.message).toEqual(expect.stringContaining(`object`));
+          expect(err.message).toEqual(expect.stringContaining("object"));
         }
       });
 
@@ -95,7 +95,7 @@ describe("PayrollDepositPreprocessor", () => {
           await payrollDepositPreprocessor.validate(null);
           expect(true).toBe(false);
         } catch (err) {
-          expect(err.message).toEqual(expect.stringContaining(`object`));
+          expect(err.message).toEqual(expect.stringContaining("object"));
         }
       });
 
@@ -133,7 +133,7 @@ describe("PayrollDepositPreprocessor", () => {
 
   describe("convertToRepoInputTransaction()", () => {
     beforeEach(() => {
-      when(alertService.raiseAlert(anything())).thenResolve(null);
+      when(alertService.raiseCriticalAlert(anything())).thenResolve(null);
     });
 
     it("should raise an Alert AND throw ServiceException with UNKNOWN error if the Payroll is not found", async () => {
@@ -158,7 +158,7 @@ describe("PayrollDepositPreprocessor", () => {
         expect(ex.errorCode).toBe(ServiceErrorCode.UNKNOWN);
         expect(ex.message).toEqual(expect.stringContaining(payroll.id));
 
-        const [alertPayload] = capture(alertService.raiseAlert).last();
+        const [alertPayload] = capture(alertService.raiseCriticalAlert).last();
         expect(alertPayload.key).toBe(AlertKey.POSSIBLE_DATA_CORRUPTION);
         expect(alertPayload.message).toEqual(expect.stringContaining(payroll.id));
       }
@@ -187,7 +187,7 @@ describe("PayrollDepositPreprocessor", () => {
         expect(ex.errorCode).toBe(ServiceErrorCode.UNKNOWN);
         expect(ex.message).toEqual(expect.stringContaining(employer.id));
 
-        const [alertPayload] = capture(alertService.raiseAlert).last();
+        const [alertPayload] = capture(alertService.raiseCriticalAlert).last();
         expect(alertPayload.key).toBe(AlertKey.POSSIBLE_DATA_CORRUPTION);
         expect(alertPayload.message).toEqual(expect.stringContaining(employer.id));
       }
@@ -217,7 +217,7 @@ describe("PayrollDepositPreprocessor", () => {
         expect(ex.errorCode).toBe(ServiceErrorCode.UNKNOWN);
         expect(ex.message).toEqual(expect.stringContaining(employee.id));
 
-        const [alertPayload] = capture(alertService.raiseAlert).last();
+        const [alertPayload] = capture(alertService.raiseCriticalAlert).last();
         expect(alertPayload.key).toBe(AlertKey.POSSIBLE_DATA_CORRUPTION);
         expect(alertPayload.message).toEqual(expect.stringContaining(employee.id));
       }
