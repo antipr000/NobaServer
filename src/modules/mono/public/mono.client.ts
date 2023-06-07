@@ -21,9 +21,13 @@ import { IClient } from "../../../core/domain/IClient";
 import { HealthCheckResponse, HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
 import { convertExternalTransactionStateToInternalState } from "./mono.utils";
 import { MonoClientErrorCode, MonoClientException } from "../exception/mono.client.exception";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class MonoClient implements IClient {
+  @Inject()
+  private readonly alertService: AlertService;
+
   private readonly apiVersion = "v1";
   private readonly expiryTimeInMillis = 15 * 60 * 1000; // 15 minutes
 
@@ -73,7 +77,7 @@ export class MonoClient implements IClient {
       const { data } = await axios.get(url, { headers });
       return data["banks"];
     } catch (e) {
-      this.logger.error(`Failed to fetch bank list from mono. ${JSON.stringify(e.response?.data)}`);
+      this.alertService.raiseError(`Failed to fetch bank list from mono. ${JSON.stringify(e.response?.data)}`);
       throw new MonoClientException({
         errorCode: MonoClientErrorCode.UNKNOWN,
         message: "Failed to fetch data from Mono",
@@ -81,7 +85,7 @@ export class MonoClient implements IClient {
     }
   }
 
-  async getAccountBalance(accountID: String): Promise<MonoClientAccountBalanceResponse> {
+  async getAccountBalance(accountID: string): Promise<MonoClientAccountBalanceResponse> {
     const url = `${this.baseUrl}/${this.apiVersion}/accounts/${accountID}/balances`;
     const headers = {
       ...this.getAuthorizationHeader(),
@@ -103,7 +107,7 @@ export class MonoClient implements IClient {
         currency: availableBalance.currency,
       };
     } catch (e) {
-      this.logger.error(`Failed to fetch accountbalance from mono. ${JSON.stringify(e.response?.data)}`);
+      this.alertService.raiseError(`Failed to fetch accountbalance from mono. ${JSON.stringify(e.response?.data)}`);
       throw new MonoClientException({
         errorCode: MonoClientErrorCode.UNKNOWN,
         message: "Failed to fetch account balance from Mono",
@@ -156,7 +160,7 @@ export class MonoClient implements IClient {
         collectionLinkID: response.data.id,
       };
     } catch (err) {
-      this.logger.error(
+      this.alertService.raiseError(
         `Error while creating collection link: ${JSON.stringify(err.response?.data)}. Request body: ${JSON.stringify(
           requestBody,
         )}`,
@@ -205,7 +209,7 @@ export class MonoClient implements IClient {
     try {
       const response = await axios.post(url, requestBody, { headers });
       if (response.status === 200) {
-        this.logger.error(
+        this.alertService.raiseError(
           `Mono transfer was successful but found duplicate transaction ID:${
             request.transactionID
           }. Request body: ${JSON.stringify(requestBody)}`,
@@ -222,7 +226,9 @@ export class MonoClient implements IClient {
       };
     } catch (err) {
       if (err.response?.status == 422 || err.response?.status == 400) {
-        this.logger.error(`Mono transfer failed for Transaction validation: ${JSON.stringify(err.response.data)}`);
+        this.alertService.raiseError(
+          `Mono transfer failed for Transaction validation: ${JSON.stringify(err.response.data)}`,
+        );
         const transactionEvent = {
           transactionID: request.transactionID, // assume result is in the database
           message: "Mono transfer failed for Transaction validation",
@@ -234,7 +240,7 @@ export class MonoClient implements IClient {
           message: JSON.stringify(transactionEvent),
         });
       } else {
-        this.logger.error(
+        this.alertService.raiseError(
           `Error while transferring funds from Mono: ${JSON.stringify(
             err.response?.data,
           )}. Request body: ${JSON.stringify(requestBody)}`,
@@ -275,7 +281,9 @@ export class MonoClient implements IClient {
         declinationReason: transfer.declination_reason,
       };
     } catch (err) {
-      this.logger.error(`Error while fetching the Transfer status from Mono: ${JSON.stringify(err.response?.data)}`);
+      this.alertService.raiseError(
+        `Error while fetching the Transfer status from Mono: ${JSON.stringify(err.response?.data)}`,
+      );
       throw new MonoClientException({
         errorCode: MonoClientErrorCode.UNKNOWN,
         message: "Error while fetching the Transfer status from Mono",

@@ -23,6 +23,7 @@ import { ServiceErrorCode, ServiceException } from "../../../core/exception/serv
 import { IClient } from "../../../core/domain/IClient";
 import { HealthCheckResponse, HealthCheckStatus } from "../../../core/domain/HealthCheckTypes";
 import { NobaConfigs } from "../../../config/configtypes/NobaConfigs";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class CircleClient implements IClient {
@@ -30,6 +31,9 @@ export class CircleClient implements IClient {
   private readonly masterWalletID: string;
 
   private readonly axiosConfig: AxiosRequestConfig;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   constructor(configService: CustomConfigService, @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {
     const circleConfigs: CircleConfigs = configService.get<CircleConfigs>(CIRCLE_CONFIG_KEY);
@@ -82,7 +86,7 @@ export class CircleClient implements IClient {
 
       return response.data.data.walletId;
     } catch (err) {
-      this.logger.error(
+      this.alertService.raiseError(
         `Error while creating the wallet: ${JSON.stringify(err.response?.data)}, ${JSON.stringify(
           err.response?.headers,
         )}`,
@@ -104,14 +108,16 @@ export class CircleClient implements IClient {
         if (balance.currency === "USD") {
           result = Number(balance.amount);
         } else {
-          this.logger.error(`Circle returns an invalid currency for wallet "${walletID}": ${JSON.stringify(balance)}`);
+          this.alertService.raiseError(
+            `Circle returns an invalid currency for wallet "${walletID}": ${JSON.stringify(balance)}`,
+          );
         }
       });
       this.logger.info(`Wallet "${walletID}" balance: ${result}`);
 
       return result;
     } catch (err) {
-      this.logger.error(
+      this.alertService.raiseError(
         `Error while retrieving wallet balance: ${JSON.stringify(err.response.data)}, ${JSON.stringify(
           err.response.headers,
         )}`,
@@ -147,7 +153,7 @@ export class CircleClient implements IClient {
       if (transferResponse.status !== 201) {
         throw new ServiceException({
           errorCode: ServiceErrorCode.UNKNOWN,
-          message: `Circle Transfer request failed.`,
+          message: "Circle Transfer request failed.",
         });
       }
 
@@ -182,7 +188,7 @@ export class CircleClient implements IClient {
       }
       return response;
     } catch (err) {
-      this.logger.error(`Error while transferring funds: ${JSON.stringify(err.response?.data)}`);
+      this.alertService.raiseError(`Error while transferring funds: ${JSON.stringify(err.response?.data)}`);
       if (err instanceof ServiceException) {
         throw err;
       }

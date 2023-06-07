@@ -17,7 +17,7 @@ export class MetaService {
       await this.metaClient.raiseEvent(event);
     } catch (err) {
       // Log an error but don't fail, as Meta events are best-effort
-      this.logger.error(`Error raising meta event: ${JSON.stringify(event)} - ${JSON.stringify(err)}`);
+      this.logger.warn(`Error raising meta event: ${JSON.stringify(event)} - ${JSON.stringify(err)}`);
     }
   }
 }

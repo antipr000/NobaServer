@@ -14,6 +14,7 @@ import {
 } from "../domain/ReminderSchedule";
 import { Prisma, ReminderSchedule as PrismaReminderScheduleModel } from "@prisma/client";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class SQLReminderScheduleRepo implements ReminderScheduleRepo {
@@ -22,6 +23,9 @@ export class SQLReminderScheduleRepo implements ReminderScheduleRepo {
 
   @Inject()
   private readonly prismaService: PrismaService;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   async createReminderSchedule(reminderSchedule: ReminderScheduleCreateRequest): Promise<ReminderSchedule> {
     validateReminderScheduleCreateRequest(reminderSchedule);
@@ -45,7 +49,7 @@ export class SQLReminderScheduleRepo implements ReminderScheduleRepo {
 
       savedReminderSchedule = convertToDomainReminderSchedule(returnedEventSchedule);
     } catch (e) {
-      this.logger.error(`Failed to create reminder schedule: ${e}`);
+      this.alertService.raiseError(`Failed to create reminder schedule: ${e}`);
       throw new RepoException({
         message: "Failed to create reminder schedule",
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
@@ -56,7 +60,7 @@ export class SQLReminderScheduleRepo implements ReminderScheduleRepo {
       validateReminderSchedule(savedReminderSchedule);
       return savedReminderSchedule;
     } catch (e) {
-      this.logger.error(`Failed to validate reminder schedule: ${e}`);
+      this.alertService.raiseError(`Failed to validate reminder schedule: ${e}`);
       throw new RepoException({
         message: "Failed to validate reminder schedule",
         errorCode: RepoErrorCode.INVALID_DATABASE_RECORD,
@@ -82,7 +86,7 @@ export class SQLReminderScheduleRepo implements ReminderScheduleRepo {
 
       return convertToDomainReminderSchedule(returnedReminderSchedule);
     } catch (e) {
-      this.logger.error(`Failed to update reminder schedule: ${e}`);
+      this.alertService.raiseError(`Failed to update reminder schedule: ${e}`);
       throw new RepoException({
         message: "Failed to update reminder schedule",
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
@@ -100,7 +104,7 @@ export class SQLReminderScheduleRepo implements ReminderScheduleRepo {
 
       return convertToDomainReminderSchedule(reminderSchedule);
     } catch (e) {
-      this.logger.error(`Failed to get reminder schedule by ID: ${e}`);
+      this.alertService.raiseError(`Failed to get reminder schedule by ID: ${e}`);
       throw new RepoException({
         message: "Failed to get reminder schedule by ID",
         errorCode: RepoErrorCode.NOT_FOUND,
@@ -118,7 +122,7 @@ export class SQLReminderScheduleRepo implements ReminderScheduleRepo {
 
       return convertToDomainReminderSchedule(reminderSchedule);
     } catch (e) {
-      this.logger.error(`Failed to get reminder schedule by event ID: ${e}`);
+      this.alertService.raiseError(`Failed to get reminder schedule by event ID: ${e}`);
       throw new RepoException({
         message: "Failed to get reminder schedule by event ID",
         errorCode: RepoErrorCode.NOT_FOUND,
@@ -136,7 +140,7 @@ export class SQLReminderScheduleRepo implements ReminderScheduleRepo {
 
       return reminderSchedules.map(reminderSchedule => convertToDomainReminderSchedule(reminderSchedule));
     } catch (e) {
-      this.logger.error(`Failed to get all reminder schedules for group: ${e}`);
+      this.alertService.raiseError(`Failed to get all reminder schedules for group: ${e}`);
       throw new RepoException({
         message: "Failed to get all reminder schedules for group",
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
@@ -152,7 +156,7 @@ export class SQLReminderScheduleRepo implements ReminderScheduleRepo {
         },
       });
     } catch (e) {
-      this.logger.error(`Failed to delete reminder schedule: ${e}`);
+      this.alertService.raiseError(`Failed to delete reminder schedule: ${e}`);
       throw new RepoException({
         message: "Failed to delete reminder schedule",
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,

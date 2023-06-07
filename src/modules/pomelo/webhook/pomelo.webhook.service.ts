@@ -31,6 +31,7 @@ import { ServiceErrorCode, ServiceException } from "../../../core/exception/serv
 import { Utils } from "../../../core/utils/Utils";
 import { ExchangeRateService } from "../../../modules/exchangerate/exchangerate.service";
 import { ExchangeRateDTO } from "../../../modules/exchangerate/dto/exchangerate.dto";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 import { LocaleUtils } from "../../../core/utils/LocaleUtils";
 
 @Injectable()
@@ -71,6 +72,7 @@ export class PomeloTransactionService {
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly transactionService: TransactionService,
     private readonly exchangeRateService: ExchangeRateService,
+    private readonly alertService: AlertService,
     @Inject(POMELO_REPO_PROVIDER) private readonly pomeloRepo: PomeloRepo,
     private readonly circleService: CircleService,
   ) {
@@ -82,7 +84,7 @@ export class PomeloTransactionService {
 
   async authorizeTransaction(request: PomeloTransactionAuthzRequest): Promise<PomeloTransactionAuthzResponse> {
     if (request.endpoint !== this.transactionAuthzEndpoint) {
-      this.logger.error(
+      this.alertService.raiseError(
         `'endpoint' mismatch. Received '${request.endpoint}' and expected '${this.transactionAuthzEndpoint}'`,
       );
       return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.OTHER);
@@ -195,7 +197,7 @@ export class PomeloTransactionService {
           return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.APPROVED);
       }
     } catch (err) {
-      this.logger.error(err.toString());
+      this.alertService.raiseError(err.toString());
       return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.SYSTEM_ERROR);
     }
   }
@@ -207,7 +209,7 @@ export class PomeloTransactionService {
   async adjustTransaction(request: PomeloTransactionAdjustmentRequest): Promise<PomeloTransactionAuthzResponse> {
     const expectedAdjustmentEndpoint = `${this.transactionAdjustmentEndpointPrefix}/${request.adjustmentType}`;
     if (request.endpoint !== expectedAdjustmentEndpoint) {
-      this.logger.error(
+      this.alertService.raiseError(
         `'endpoint' mismatch. Received '${request.endpoint}' and expected '${expectedAdjustmentEndpoint}'`,
       );
       return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.OTHER);
@@ -337,7 +339,7 @@ export class PomeloTransactionService {
         return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.APPROVED);
       }
     } catch (err) {
-      this.logger.error(JSON.stringify(err));
+      this.alertService.raiseError(JSON.stringify(err));
       return this.prepareAuthorizationResponse(PomeloTransactionAuthzDetailStatus.SYSTEM_ERROR);
     }
   }
@@ -364,7 +366,7 @@ export class PomeloTransactionService {
 
   private verifySignature(receivedSignature: string, expectedSignature: string): boolean {
     if (!receivedSignature.startsWith("hmac-sha256")) {
-      this.logger.error(`Unsupported signature algorithm, expecting hmac-sha256, got ${receivedSignature}`);
+      this.alertService.raiseError(`Unsupported signature algorithm, expecting hmac-sha256, got ${receivedSignature}`);
       return false;
     }
 

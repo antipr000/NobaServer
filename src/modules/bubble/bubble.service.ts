@@ -256,7 +256,7 @@ export class BubbleService {
     const emails = await this.csvService.getAllRowsForSpecificColumn(file.buffer, 0);
     const invalidEmail = emails.find(email => !/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(email));
     if (invalidEmail) {
-      this.logger.error(`Invalid email found in CSV file: ${invalidEmail}`);
+      this.logger.warn(`Invalid email found in CSV file: ${invalidEmail}`);
       throw new ServiceException({
         message: `Invalid email found in CSV file: ${invalidEmail}`,
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -267,7 +267,7 @@ export class BubbleService {
     const salarys = (await this.csvService.getAllRowsForSpecificColumn(file.buffer, 3)).map(salary => Number(salary));
     const invalidSalary = salarys.find(salary => !Number.isInteger(salary));
     if (invalidSalary) {
-      this.logger.error(`Invalid salary found in CSV file: ${invalidSalary}`);
+      this.logger.warn(`Invalid salary found in CSV file: ${invalidSalary}`);
       throw new ServiceException({
         message: `Invalid salary found in CSV file: ${invalidSalary}. Salary can only be integer.`,
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,

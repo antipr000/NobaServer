@@ -16,7 +16,7 @@ export class QRService {
         { type: "image/png", color: { dark: "004252" }, width: 1000 },
         (err, base64OfImage) => {
           if (err) {
-            logger.error(JSON.stringify(err));
+            logger.warn(JSON.stringify(err));
             reject(err);
           }
           resolve(base64OfImage);

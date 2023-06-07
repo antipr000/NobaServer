@@ -11,11 +11,15 @@ import { HeaderValidationService } from "../header.validation.service";
 import { BadRequestException } from "@nestjs/common";
 import CryptoJS from "crypto-js";
 import { HmacSHA256 } from "crypto-js";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 describe("HeaderValidationService", () => {
   jest.setTimeout(5000);
 
   let headerValidationService: HeaderValidationService;
+  let mockAlertService: AlertService;
 
   describe("non-prod environment tests", () => {
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
@@ -38,10 +42,17 @@ describe("HeaderValidationService", () => {
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
 
     beforeEach(async () => {
+      mockAlertService = getMockAlertServiceWithDefaults();
       const app: TestingModule = await Test.createTestingModule({
         imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
         controllers: [],
-        providers: [HeaderValidationService],
+        providers: [
+          HeaderValidationService,
+          {
+            provide: AlertService,
+            useFactory: () => instance(mockAlertService),
+          },
+        ],
       }).compile();
 
       process.env.NODE_ENV = AppEnvironment.DEV;
@@ -258,7 +269,13 @@ describe("HeaderValidationService", () => {
       const app: TestingModule = await Test.createTestingModule({
         imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
         controllers: [],
-        providers: [HeaderValidationService],
+        providers: [
+          HeaderValidationService,
+          {
+            provide: AlertService,
+            useFactory: () => instance(mockAlertService),
+          },
+        ],
       }).compile();
       process.env.NODE_ENV = AppEnvironment.PROD;
       headerValidationService = app.get<HeaderValidationService>(HeaderValidationService);

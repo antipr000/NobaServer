@@ -14,7 +14,11 @@ export class AlertService {
     this.environment = configService.get<NobaConfigs>(NOBA_CONFIG_KEY).environment;
   }
 
-  raiseAlert(alert: Alert): void {
-    this.logger.error(`[${this.environment}] CRITICAL ALERT! ${JSON.stringify(alert)}`);
+  raiseCriticalAlert(alert: Alert): void {
+    this.logger.error(`[${this.environment}] [CRITICAL] ${JSON.stringify(alert)}`);
+  }
+
+  raiseError(message: string): void {
+    this.logger.error(`[${this.environment}] [ERROR] ${message}`);
   }
 }

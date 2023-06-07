@@ -2,11 +2,12 @@ import { Module } from "@nestjs/common";
 import { InfraProvidersModule } from "../../../infraproviders/infra.module";
 import { SqlPayrollRepo } from "./sql.payroll.repo";
 import { SqlPayrollDisbursementRepo } from "./sql.payroll.disbursement.repo";
+import { CommonModule } from "../../../modules/common/common.module";
 
 export const PAYROLL_REPO_PROVIDER = "PAYROLL_REPO";
 export const PAYROLL_DISBURSEMENT_REPO_PROVIDER = "PAYROLL_DISBURSEMENT_REPO";
 @Module({
-  imports: [InfraProvidersModule],
+  imports: [InfraProvidersModule, CommonModule],
   controllers: [],
   providers: [
     {

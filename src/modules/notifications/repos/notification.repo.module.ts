@@ -4,6 +4,7 @@ import { SQLPushTokenRepo } from "./sql.pushtoken.repo";
 import { SQLEventRepo } from "./sql.event.repo";
 import { SQLReminderScheduleRepo } from "./sql.reminder.schedule.repo";
 import { SQLReminderHistoryRepo } from "./sql.reminder.history.repo";
+import { CommonModule } from "../../../modules/common/common.module";
 
 const PushTokenRepoProvider = {
   provide: "PushTokenRepo",
@@ -26,7 +27,7 @@ const ReminderHistoryRepoProvider = {
 };
 
 @Module({
-  imports: [InfraProvidersModule],
+  imports: [InfraProvidersModule, CommonModule],
   controllers: [],
   providers: [PushTokenRepoProvider, EventRepoProvider, ReminderHistoryRepoProvider, ReminderScheduleRepoProvider],
   exports: [PushTokenRepoProvider, EventRepoProvider, ReminderHistoryRepoProvider, ReminderScheduleRepoProvider],

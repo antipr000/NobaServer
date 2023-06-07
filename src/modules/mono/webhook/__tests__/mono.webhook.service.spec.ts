@@ -2,7 +2,6 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { SERVER_LOG_FILE_PATH } from "../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../core/utils/WinstonModule";
-import { uuid } from "uuidv4";
 import { IMonoRepo } from "../../repo/mono.repo";
 import { MonoCurrency, MonoTransaction, MonoTransactionState, MonoTransactionType } from "../../domain/Mono";
 import { getMockMonoRepoWithDefaults } from "../../repo/mocks/mock.mono.repo";
@@ -26,7 +25,7 @@ import { getMockAlertServiceWithDefaults } from "../../../common/mocks/mock.aler
 import { MonoWebhookService } from "../../webhook/mono.webhook.service";
 import { EmployerService } from "../../../../modules/employer/employer.service";
 import { getMockEmployerServiceWithDefaults } from "../../../../modules/employer/mocks/mock.employer.service";
-import { Payroll, PayrollStatus } from "../../../../modules/employer/domain/Payroll";
+import { PayrollStatus } from "../../../../modules/employer/domain/Payroll";
 import { getRandomPayroll } from "../../../../modules/employer/test_utils/payroll.test.utils";
 
 describe("MonoServiceTests", () => {
@@ -156,13 +155,13 @@ describe("MonoServiceTests", () => {
         when(
           monoRepo.getMonoTransactionByCollectionLinkID(monoTransaction.collectionLinkDepositDetails.collectionLinkID),
         ).thenResolve(null);
-        when(alertService.raiseAlert(anything())).thenResolve();
+        when(alertService.raiseCriticalAlert(anything())).thenResolve();
 
         await monoWebhookService.processWebhookEvent(webhookBody, webhookSignature);
 
         verify(monoRepo.updateMonoTransaction(anyString(), anything())).never();
 
-        const [alertCall] = capture(alertService.raiseAlert).last();
+        const [alertCall] = capture(alertService.raiseCriticalAlert).last();
         expect(alertCall).toEqual(expect.objectContaining({ key: "MONO_TRANSACTION_NOT_FOUND" }));
       });
     });
@@ -227,13 +226,13 @@ describe("MonoServiceTests", () => {
           convertedEvent,
         );
         when(monoRepo.getMonoTransactionByTransferID(monoTransaction.withdrawalDetails.transferID)).thenResolve(null);
-        when(alertService.raiseAlert(anything())).thenResolve();
+        when(alertService.raiseCriticalAlert(anything())).thenResolve();
 
         await monoWebhookService.processWebhookEvent(webhookBody, webhookSignature);
 
         verify(monoRepo.updateMonoTransaction(anyString(), anything())).never();
 
-        const [alertCall] = capture(alertService.raiseAlert).last();
+        const [alertCall] = capture(alertService.raiseCriticalAlert).last();
         expect(alertCall).toEqual(expect.objectContaining({ key: "MONO_TRANSACTION_NOT_FOUND" }));
       });
     });
@@ -303,13 +302,13 @@ describe("MonoServiceTests", () => {
           convertedEvent,
         );
         when(monoRepo.getMonoTransactionByTransferID(monoTransaction.withdrawalDetails.transferID)).thenResolve(null);
-        when(alertService.raiseAlert(anything())).thenResolve();
+        when(alertService.raiseCriticalAlert(anything())).thenResolve();
 
         await monoWebhookService.processWebhookEvent(webhookBody, webhookSignature);
 
         verify(monoRepo.updateMonoTransaction(anyString(), anything())).never();
 
-        const [alertCall] = capture(alertService.raiseAlert).last();
+        const [alertCall] = capture(alertService.raiseCriticalAlert).last();
         expect(alertCall).toEqual(expect.objectContaining({ key: "MONO_TRANSACTION_NOT_FOUND" }));
       });
     });
@@ -485,13 +484,13 @@ describe("MonoServiceTests", () => {
           payroll3,
           payroll2,
         ]);
-        when(alertService.raiseAlert(anything())).thenResolve();
+        when(alertService.raiseCriticalAlert(anything())).thenResolve();
 
         await monoWebhookService.processWebhookEvent(webhookBody, webhookSignature);
 
         verify(employerService.updatePayroll(anyString(), anything())).never();
 
-        const [alertCall] = capture(alertService.raiseAlert).last();
+        const [alertCall] = capture(alertService.raiseCriticalAlert).last();
         expect(alertCall).toEqual(expect.objectContaining({ key: "UNMATCHED_ACCOUNT_CREDITED_MONO_EVENT" }));
       });
 
@@ -530,13 +529,13 @@ describe("MonoServiceTests", () => {
           payroll3,
           payroll2,
         ]);
-        when(alertService.raiseAlert(anything())).thenResolve();
+        when(alertService.raiseCriticalAlert(anything())).thenResolve();
 
         await monoWebhookService.processWebhookEvent(webhookBody, webhookSignature);
 
         verify(employerService.updatePayroll(anyString(), anything())).never();
 
-        const [alertCall] = capture(alertService.raiseAlert).last();
+        const [alertCall] = capture(alertService.raiseCriticalAlert).last();
         expect(alertCall).toEqual(expect.objectContaining({ key: "UNMATCHED_ACCOUNT_CREDITED_MONO_EVENT" }));
       });
     });
