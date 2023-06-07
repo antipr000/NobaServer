@@ -48,6 +48,7 @@ import { getMockQRServiceWithDefaults } from "../../../modules/common/mocks/mock
 import { SendInviteEmployeeEvent } from "../events/SendInviteEmployeeEvent";
 import { SendScheduledReminderEvent } from "../events/SendScheduledReminderEvent";
 import { SendCreditAdjustmentCompletedEvent } from "../events/SendCreditAdjustmentCompletedEvent";
+import { LocaleUtils } from "../../../core/utils/LocaleUtils";
 
 describe("EmailEventHandler test for languages", () => {
   let currencyService: CurrencyService;
@@ -728,7 +729,10 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendDepositCompletedEmail(payload);
-      const subtotal = Utils.localizeAmount(payload.params.creditAmountNumber + payload.params.totalFeesNumber, locale);
+      const subtotal = LocaleUtils.localizeAmount(
+        payload.params.creditAmountNumber + payload.params.totalFeesNumber,
+        locale,
+      );
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
@@ -798,7 +802,7 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendDepositFailedEmail(payload);
-      const subtotal = Utils.localizeAmount(
+      const subtotal = LocaleUtils.localizeAmount(
         payload.params.creditAmountNumber + payload.params.totalFeesNumber,
         payload.locale,
       );
@@ -872,7 +876,7 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendDepositInitiatedEmail(payload);
-      const subtotal = Utils.localizeAmount(
+      const subtotal = LocaleUtils.localizeAmount(
         payload.params.creditAmountNumber + payload.params.totalFeesNumber,
         payload.locale,
       );
@@ -945,7 +949,10 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendWithdrawalCompletedEmail(payload);
-      const subtotal = Utils.localizeAmount(payload.params.debitAmountNumber - payload.params.totalFeesNumber, locale);
+      const subtotal = LocaleUtils.localizeAmount(
+        payload.params.debitAmountNumber - payload.params.totalFeesNumber,
+        locale,
+      );
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
@@ -1015,7 +1022,10 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendWithdrawalInitiatedEmail(payload);
-      const subtotal = Utils.localizeAmount(payload.params.debitAmountNumber - payload.params.totalFeesNumber, locale);
+      const subtotal = LocaleUtils.localizeAmount(
+        payload.params.debitAmountNumber - payload.params.totalFeesNumber,
+        locale,
+      );
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
@@ -1095,7 +1105,10 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendWithdrawalFailedEmail(payload);
-      const subtotal = Utils.localizeAmount(payload.params.debitAmountNumber - payload.params.totalFeesNumber, locale);
+      const subtotal = LocaleUtils.localizeAmount(
+        payload.params.debitAmountNumber - payload.params.totalFeesNumber,
+        locale,
+      );
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
         to: payload.email,
@@ -1169,7 +1182,10 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendTransferCompletedEmail(payload);
-      const subtotal = Utils.localizeAmount(payload.params.debitAmountNumber - payload.params.totalFeesNumber, locale);
+      const subtotal = LocaleUtils.localizeAmount(
+        payload.params.debitAmountNumber - payload.params.totalFeesNumber,
+        locale,
+      );
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
@@ -1265,7 +1281,10 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendTransferReceivedEvent(payload);
-      const subtotal = Utils.localizeAmount(payload.params.debitAmountNumber - payload.params.totalFeesNumber, locale);
+      const subtotal = LocaleUtils.localizeAmount(
+        payload.params.debitAmountNumber - payload.params.totalFeesNumber,
+        locale,
+      );
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
@@ -1344,7 +1363,10 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendTransferFailedEmail(payload);
-      const subtotal = Utils.localizeAmount(payload.params.debitAmountNumber - payload.params.totalFeesNumber, locale);
+      const subtotal = LocaleUtils.localizeAmount(
+        payload.params.debitAmountNumber - payload.params.totalFeesNumber,
+        locale,
+      );
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
@@ -1418,7 +1440,10 @@ describe("EmailEventHandler test for languages", () => {
       });
 
       await eventHandler.sendPayrollDepositCompletedEmail(payload);
-      const subtotal = Utils.localizeAmount(payload.params.creditAmountNumber + payload.params.totalFeesNumber, locale);
+      const subtotal = LocaleUtils.localizeAmount(
+        payload.params.creditAmountNumber + payload.params.totalFeesNumber,
+        locale,
+      );
 
       const [emailRequest] = capture(emailClient.sendEmail).last();
       expect(emailRequest).toStrictEqual({
@@ -1669,78 +1694,78 @@ function getTransactionParams(workflow: WorkflowName, locale: string): Transacti
   switch (workflow) {
     case WorkflowName.WALLET_DEPOSIT:
       return {
-        debitAmount: Utils.localizeAmount(5000, locale),
+        debitAmount: LocaleUtils.localizeAmount(5000, locale),
         debitAmountNumber: 5000,
         debitCurrency: "COP",
-        creditAmount: Utils.localizeAmount(1, locale),
+        creditAmount: LocaleUtils.localizeAmount(1, locale),
         creditAmountNumber: 1,
         creditCurrency: "USD",
-        exchangeRate: Utils.localizeAmount(0.0025, locale),
+        exchangeRate: LocaleUtils.localizeAmount(0.0025, locale),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: Utils.localizeAmount(0.23, locale),
-        nobaFees: Utils.localizeAmount(0.34, locale),
-        totalFees: Utils.localizeAmount(0.57, locale),
+        processingFees: LocaleUtils.localizeAmount(0.23, locale),
+        nobaFees: LocaleUtils.localizeAmount(0.34, locale),
+        totalFees: LocaleUtils.localizeAmount(0.57, locale),
         totalFeesNumber: 0.57,
       };
 
     case WorkflowName.WALLET_WITHDRAWAL:
       return {
-        debitAmount: Utils.localizeAmount(1, locale),
+        debitAmount: LocaleUtils.localizeAmount(1, locale),
         debitAmountNumber: 1,
         debitCurrency: "USD",
-        creditAmount: Utils.localizeAmount(5000, locale),
+        creditAmount: LocaleUtils.localizeAmount(5000, locale),
         creditAmountNumber: 5000,
         creditCurrency: "COP",
-        exchangeRate: Utils.localizeAmount(5000, locale, false),
+        exchangeRate: LocaleUtils.localizeAmount(5000, locale, false),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: Utils.localizeAmount(0.23, locale),
-        nobaFees: Utils.localizeAmount(0.34, locale),
-        totalFees: Utils.localizeAmount(0.57, locale),
+        processingFees: LocaleUtils.localizeAmount(0.23, locale),
+        nobaFees: LocaleUtils.localizeAmount(0.34, locale),
+        totalFees: LocaleUtils.localizeAmount(0.57, locale),
         totalFeesNumber: 0.57,
       };
     case WorkflowName.WALLET_TRANSFER:
       return {
-        debitAmount: Utils.localizeAmount(10, locale),
+        debitAmount: LocaleUtils.localizeAmount(10, locale),
         debitAmountNumber: 10,
         debitCurrency: "USD",
-        creditAmount: Utils.localizeAmount(9.43, locale),
+        creditAmount: LocaleUtils.localizeAmount(9.43, locale),
         creditAmountNumber: 9.43,
         creditCurrency: "USD",
-        exchangeRate: Utils.localizeAmount(0.0025, locale, false),
+        exchangeRate: LocaleUtils.localizeAmount(0.0025, locale, false),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: Utils.localizeAmount(0.23, locale),
-        nobaFees: Utils.localizeAmount(0.34, locale),
-        totalFees: Utils.localizeAmount(0.57, locale),
+        processingFees: LocaleUtils.localizeAmount(0.23, locale),
+        nobaFees: LocaleUtils.localizeAmount(0.34, locale),
+        totalFees: LocaleUtils.localizeAmount(0.57, locale),
         totalFeesNumber: 0.57,
       };
     case WorkflowName.PAYROLL_DEPOSIT:
       return {
-        debitAmount: Utils.localizeAmount(5000, locale),
+        debitAmount: LocaleUtils.localizeAmount(5000, locale),
         debitAmountNumber: 5000,
         debitCurrency: "COP",
-        creditAmount: Utils.localizeAmount(1, locale),
+        creditAmount: LocaleUtils.localizeAmount(1, locale),
         creditAmountNumber: 1,
         creditCurrency: "USD",
-        exchangeRate: Utils.localizeAmount(0.0025, locale, false),
+        exchangeRate: LocaleUtils.localizeAmount(0.0025, locale, false),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
-        processingFees: Utils.localizeAmount(0.23, locale),
-        nobaFees: Utils.localizeAmount(0.34, locale),
-        totalFees: Utils.localizeAmount(0.57, locale),
+        processingFees: LocaleUtils.localizeAmount(0.23, locale),
+        nobaFees: LocaleUtils.localizeAmount(0.34, locale),
+        totalFees: LocaleUtils.localizeAmount(0.57, locale),
         totalFeesNumber: 0.57,
       };
     case WorkflowName.CREDIT_ADJUSTMENT:
       return {
-        creditAmount: Utils.localizeAmount(1, "en"),
+        creditAmount: LocaleUtils.localizeAmount(1, "en"),
         creditAmountNumber: 1,
         creditCurrency: "USD",
         debitAmount: null,
         debitAmountNumber: null,
         debitCurrency: null,
-        exchangeRate: Utils.localizeAmount(1, "en"),
+        exchangeRate: LocaleUtils.localizeAmount(1, "en"),
         transactionRef: "transaction-1",
         createdTimestamp: "2023-02-02T17:54:37.601Z",
         processingFees: null,
