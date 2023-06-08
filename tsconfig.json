@@ -16,7 +16,8 @@
     "esModuleInterop": true,
     "useDefineForClassFields": false,
     "allowJs": true,
-    "strictBindCallApply": true
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true
   },
   "ts-node": {
     "compilerOptions": {
