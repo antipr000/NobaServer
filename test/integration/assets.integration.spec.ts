@@ -35,7 +35,7 @@ describe("CryptoCurrencies & Locations", () => {
   //let mongoServer: MongoMemoryServer;
   let mongoUri: string;
   let app: INestApplication;
-  let TEST_TIMESTAMP;
+  let TEST_TIMESTAMP: string;
 
   beforeAll(async () => {
     const port = process.env.PORT;

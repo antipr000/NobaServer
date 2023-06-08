@@ -73,7 +73,7 @@ export class NoUnExpectedKeysValidationPipe implements PipeTransform<any> {
 export function createClassTypeToPropertiesMapFromSwaggerSchemas(
   schemas: Record<string, any>,
 ): ClassTypeToPropertiesMap {
-  const res = {};
+  const res: ClassTypeToPropertiesMap = {};
   Object.getOwnPropertyNames(schemas).forEach(schemaType => {
     res[schemaType] = schemas[schemaType].properties
       ? Object.getOwnPropertyNames(schemas[schemaType].properties)

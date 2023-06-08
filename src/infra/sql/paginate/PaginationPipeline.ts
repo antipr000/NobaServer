@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 
 export type PaginateFunction = <T, K>(model: any, args?: K) => Promise<PaginatedResult<T>>;
@@ -14,7 +15,7 @@ export const createPaginator = <T>(
     if (!perPage) perPage = 10;
 
     const skip = page > 0 ? perPage * (page - 1) : 0;
-    const [total, data] = await Promise.all([
+    const [total, data]: [number, any] = await Promise.all([
       model.count({ where: args.where }),
       model.findMany({
         ...args,
@@ -25,7 +26,7 @@ export const createPaginator = <T>(
     const lastPage = Math.ceil(total / perPage);
 
     return {
-      items: data.map(item => convertToDomainObject(item)),
+      items: data.map((item: any) => convertToDomainObject(item)), // try to revisit this
       page: page,
       hasNextPage: page < lastPage,
       totalPages: lastPage,

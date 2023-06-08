@@ -41,7 +41,7 @@ describe("Verification", () => {
   jest.setTimeout(20000);
 
   let integrationTestUtils: IntegrationTestUtility;
-  let TEST_TIMESTAMP;
+  let TEST_TIMESTAMP: string;
 
   beforeAll(async () => {
     integrationTestUtils = await IntegrationTestUtility.setUp(port);

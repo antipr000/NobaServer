@@ -7,7 +7,7 @@ import {
   SardineRiskLevels,
 } from "../SardineTypeDefinitions";
 
-export const KYC_SSN_LOW_RISK = {
+export const KYC_SSN_LOW_RISK: any = {
   data: {
     sessionKey: "280CBF35-B4B0-4193-A111",
     level: "low",
@@ -129,7 +129,7 @@ export const KYC_SSN_LOW_RISK = {
   },
 };
 
-export const KYC_SSN_HIGH_RISK = {
+export const KYC_SSN_HIGH_RISK: any = {
   data: {
     sessionKey: "280CBF35-B4B0-4193-A111",
     level: "high",
@@ -252,7 +252,7 @@ export const KYC_SSN_HIGH_RISK = {
   },
 };
 
-export const KYC_SSN_VERY_HIGH_RISK = {
+export const KYC_SSN_VERY_HIGH_RISK: any = {
   data: {
     sessionKey: "280CBF35-B4B0-4193-A111",
     level: "very_high",
