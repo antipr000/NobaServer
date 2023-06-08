@@ -41,7 +41,7 @@ export class VerificationService {
   @Inject()
   private readonly notificationService: NotificationService;
 
-  constructor(private consumerService: ConsumerService, private readonly alertService: AlertService) {}
+  constructor(private consumerService: ConsumerService, private readonly alertService: AlertService) { }
 
   async getHealth(): Promise<HealthCheckResponse> {
     return this.idvProvider.getHealth();
@@ -80,23 +80,49 @@ export class VerificationService {
   async verifyConsumerInformation(consumerID: string, sessionKey: string): Promise<KYCStatus> {
     const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
 
-    const verifiedConsumerData = await this.verifyConsumerInformationInternal(consumer, sessionKey, [KYCFlow.CUSTOMER]);
-    const updatedConsumer = await this.consumerService.updateConsumer(verifiedConsumerData);
-    const status = verifiedConsumerData.verificationData.kycCheckStatus;
+    // Check if we are doing a standard KYC or doc verification. Doc verification can only be done if KYC status is already APPROVED, so use
+    // this as our determining factor.
+    const isDocVerification = consumer.props.verificationData?.kycCheckStatus === KYCStatus.APPROVED && consumer.props.verificationData?.documentVerificationStatus !== DocumentVerificationStatus.APPROVED;
 
-    if (status === KYCStatus.APPROVED) {
-      await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
-      const payload = NotificationPayloadMapper.toKycApprovedUSEvent(updatedConsumer);
-      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, payload);
-    } else if (status === KYCStatus.REJECTED) {
-      await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
-      const payload = NotificationPayloadMapper.toKycDeniedEvent(updatedConsumer);
-      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_DENIED_EVENT, payload);
+    // Since doc verification is handled via external Au10tix API and we will be informed about doc status only via webhook, we don't need
+    // to call the IDVProvider here. We just update the consumer's doc status to pending (if required) and send a notification. The call
+    // structure is a bit odd but it's an artifact of how we handled KYC/Doc verification in the onramp and changing this flow would require
+    // app changes. We can refactor this later if we want to as part of CRYPTO-968.
+    if (!isDocVerification) {
+      const verifiedConsumerData = await this.verifyConsumerInformationInternal(consumer, sessionKey, [KYCFlow.CUSTOMER]);
+      const updatedConsumer = await this.consumerService.updateConsumer(verifiedConsumerData);
+      const status = verifiedConsumerData.verificationData.kycCheckStatus;
+
+      if (status === KYCStatus.APPROVED) {
+        await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
+        const payload = NotificationPayloadMapper.toKycApprovedUSEvent(updatedConsumer);
+        await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_APPROVED_US_EVENT, payload);
+      } else if (status === KYCStatus.REJECTED) {
+        await this.idvProvider.postConsumerFeedback(sessionKey, consumerID, status);
+        const payload = NotificationPayloadMapper.toKycDeniedEvent(updatedConsumer);
+        await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_DENIED_EVENT, payload);
+      } else {
+        const payload = NotificationPayloadMapper.toKycPendingOrFlaggedEvent(updatedConsumer);
+        await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT, payload);
+      }
+      return status;
     } else {
-      const payload = NotificationPayloadMapper.toKycPendingOrFlaggedEvent(updatedConsumer);
-      await this.notificationService.sendNotification(NotificationEventType.SEND_KYC_PENDING_OR_FLAGGED_EVENT, payload);
+      if (consumer.props.verificationData.documentVerificationStatus === DocumentVerificationStatus.REQUIRED) {
+        await this.consumerService.updateConsumer({
+          ...consumer.props,
+          verificationData: {
+            ...consumer.props.verificationData,
+            documentVerificationStatus: DocumentVerificationStatus.PENDING,
+          }
+        });
+        const payload = NotificationPayloadMapper.toDocumentVerificationPendingEvent(consumer);
+        await this.notificationService.sendNotification(NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT, payload);
+      } else {
+        this.logger.info(`Consumer ${consumerID} is already in document verification flow. Current doc verification status: ${consumer.props.verificationData?.documentVerificationStatus}.`);
+      }
+      // Return KYC status to maintain the contract
+      return consumer.props.verificationData.kycCheckStatus;
     }
-    return status;
   }
 
   private async verifyConsumerInformationInternal(
@@ -137,7 +163,7 @@ export class VerificationService {
         kycVerificationTimestamp: new Date(),
         riskRating: result.idvProviderRiskLevel,
         // This may change depending on the response from the IDV provider
-        documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
+        //documentVerificationStatus: DocumentVerificationStatus.NOT_REQUIRED,
       },
     };
     return verifiedConsumerData;
@@ -171,6 +197,7 @@ export class VerificationService {
     }
   }
 
+  // Note: This is NOT currently used in the app. It is an onramp artifacts but the code is here in case we need it in the future.
   async verifyDocument(
     consumerID: string,
     sessionKey: string,

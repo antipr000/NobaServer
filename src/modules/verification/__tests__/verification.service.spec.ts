@@ -374,6 +374,64 @@ describe("VerificationService", () => {
         ),
       ).once();
     });
+
+    it("should update document verification status from REQUIRED to PENDING send pending email", async () => {
+      const consumer = getFakeConsumer();
+      // User is KYC approved but has been flagged for document verification
+      consumer.props.verificationData.kycCheckStatus = KYCStatus.APPROVED;
+      consumer.props.verificationData.documentVerificationStatus = DocumentVerificationStatus.REQUIRED;
+      const consumerInformation = getFakeConsumerInformation(consumer);
+
+      const sessionKey = "fake-session";
+
+
+      const newConsumerData: ConsumerProps = {
+        ...consumer.props,
+        address: consumerInformation.address,
+        firstName: consumerInformation.firstName,
+        lastName: consumerInformation.lastName,
+        dateOfBirth: consumerInformation.dateOfBirth,
+        phone: consumerInformation.phoneNumber,
+        verificationData: {
+          ...consumer.props.verificationData,
+          documentVerificationStatus: DocumentVerificationStatus.PENDING,
+        },
+      };
+
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+
+      when(consumerService.updateConsumer(anything())).thenResolve(Consumer.createConsumer(newConsumerData)); //we cannot predict input accurately as there is timestamp
+      const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
+      expect(result).toStrictEqual(consumer.props.verificationData.kycCheckStatus);
+      verify(
+        notificationService.sendNotification(
+          NotificationEventType.SEND_DOCUMENT_VERIFICATION_PENDING_EVENT,
+          deepEqual({
+            locale: newConsumerData.locale,
+            firstName: newConsumerData.firstName,
+            lastName: newConsumerData.lastName,
+            nobaUserID: newConsumerData.id,
+            email: newConsumerData.email,
+          }),
+        ),
+      ).once();
+    });
+
+    it("should not make any changes document verification status is already PENDING", async () => {
+      const consumer = getFakeConsumer();
+      // User is KYC approved but has been flagged for document verification
+      consumer.props.verificationData.kycCheckStatus = KYCStatus.APPROVED;
+      consumer.props.verificationData.documentVerificationStatus = DocumentVerificationStatus.PENDING;
+
+      const sessionKey = "fake-session";
+
+      when(consumerService.getConsumer(consumer.props.id)).thenResolve(consumer);
+
+      const result = await verificationService.verifyConsumerInformation(consumer.props.id, sessionKey);
+      expect(result).toStrictEqual(consumer.props.verificationData.kycCheckStatus);
+      verify(consumerService.updateConsumer(anything())).never();
+      verify(notificationService.sendNotification(anything(), anything())).never();
+    });
   });
 
   describe("verifyConsumerInformationForLogin", () => {
