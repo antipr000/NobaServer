@@ -36,7 +36,7 @@ import { AlertKey } from "../common/alerts/alert.dto";
 import { InitiateTransactionRequest, validateInitiateTransactionRequest } from "./dto/transaction.service.dto";
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 import { KmsService } from "../common/kms.service";
-import { TransactionPreprocessorFactory } from "./factory/preprocessors/transaction.preprocessor.factory";
+import { TransactionProcessorFactory } from "./factory/preprocessors/transaction.processor.factory";
 import {
   TransactionPreprocessor,
   TransactionPreprocessorRequest,
@@ -54,7 +54,7 @@ export class TransactionService {
     private readonly bankFactory: BankFactory,
     private readonly alertService: AlertService,
     private readonly kmsService: KmsService,
-    private readonly transactionPreprocessorFactory: TransactionPreprocessorFactory,
+    private readonly transactionPreprocessorFactory: TransactionProcessorFactory,
   ) {}
 
   async getTransactionByTransactionRef(transactionRef: string, consumerID?: string): Promise<Transaction> {
@@ -241,7 +241,7 @@ export class TransactionService {
     }
 
     if (transactionDetails.status !== undefined && transactionDetails.status === TransactionStatus.FAILED) {
-      this.alertService.raiseAlert({
+      this.alertService.raiseCriticalAlert({
         key: AlertKey.TRANSACTION_FAILED,
         message: `Transaction with ID '${transactionID}' is transitioned to 'FAILED' state.`,
       });

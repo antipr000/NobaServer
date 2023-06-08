@@ -21,10 +21,12 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Prisma, EventTemplate as PrismaEventTemplateModel } from "@prisma/client";
 import { Logger } from "winston";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 export class SQLEventRepo implements EventRepo {
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly alertService: AlertService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -48,7 +50,7 @@ export class SQLEventRepo implements EventRepo {
 
       savedEvent = convertToDomainEvent(returnedEvent);
     } catch (e) {
-      this.logger.error(`Failed to create event: ${e}`);
+      this.alertService.raiseError(`Failed to create event: ${e}`);
       throw new RepoException({
         message: "Failed to create event",
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
@@ -59,7 +61,7 @@ export class SQLEventRepo implements EventRepo {
       validateEvent(savedEvent);
       return savedEvent;
     } catch (e) {
-      this.logger.error(`Failed to validate event: ${e}`);
+      this.alertService.raiseError(`Failed to validate event: ${e}`);
       throw new RepoException({
         message: "Failed to validate event",
         errorCode: RepoErrorCode.INVALID_DATABASE_RECORD,
@@ -87,7 +89,7 @@ export class SQLEventRepo implements EventRepo {
 
       return convertToDomainEvent(event);
     } catch (e) {
-      this.logger.error(`Failed to get event by id: ${e}`);
+      this.alertService.raiseError(`Failed to get event by id: ${e}`);
       throw new RepoException({
         message: "Failed to get event by id",
         errorCode: RepoErrorCode.NOT_FOUND,
@@ -115,7 +117,7 @@ export class SQLEventRepo implements EventRepo {
 
       return convertToDomainEvent(updatedEvent);
     } catch (e) {
-      this.logger.error(`Failed to update event: ${e}`);
+      this.alertService.raiseError(`Failed to update event: ${e}`);
       throw new RepoException({
         message: "Failed to update event",
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
@@ -146,7 +148,7 @@ export class SQLEventRepo implements EventRepo {
 
       return this.getEventByIDOrName(eventTemplate.eventID);
     } catch (e) {
-      this.logger.error(`Failed to create event template: ${e}`);
+      this.alertService.raiseError(`Failed to create event template: ${e}`);
       throw new RepoException({
         message: "Failed to create event template",
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
@@ -174,7 +176,7 @@ export class SQLEventRepo implements EventRepo {
 
       return this.getEventByIDOrName(eventTemplate.eventID);
     } catch (e) {
-      this.logger.error(`Failed to update event template: ${e}`);
+      this.alertService.raiseError(`Failed to update event template: ${e}`);
       throw new RepoException({
         message: "Failed to update event template",
         errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,

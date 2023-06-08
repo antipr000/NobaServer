@@ -19,7 +19,7 @@ export class DashboardEventHandler {
     try {
       await this.dashboardClient.updatePayrollStatus(payload.payrollStatus, payload.nobaPayrollID);
     } catch (err) {
-      this.logger.error(`Failed to update the payroll status in dashboard, ${JSON.stringify(err)}`);
+      this.logger.warn(`Failed to update the payroll status in dashboard, ${JSON.stringify(err)}`);
     }
   }
 }

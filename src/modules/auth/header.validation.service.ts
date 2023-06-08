@@ -5,6 +5,7 @@ import { HmacSHA256 } from "crypto-js";
 import { isE2ETestEnvironment, isProductionEnvironment, NOBA_CONFIG_KEY } from "../../config/ConfigurationUtils";
 import { CustomConfigService } from "../../core/utils/AppConfigModule";
 import { NobaConfigs } from "../../config/configtypes/NobaConfigs";
+import { AlertService } from "../common/alerts/alert.service";
 
 @Injectable()
 export class HeaderValidationService {
@@ -12,6 +13,9 @@ export class HeaderValidationService {
   private readonly logger: Logger;
 
   private readonly appSecretKey: string;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   constructor(configService: CustomConfigService) {
     this.appSecretKey = configService.get<NobaConfigs>(NOBA_CONFIG_KEY).appSecretKey;
@@ -42,13 +46,13 @@ export class HeaderValidationService {
       );
       const hmacSignatureString = CryptoJS.enc.Hex.stringify(HmacSHA256(signatureString, secretKey));
       if (hmacSignatureString !== signature) {
-        this.logger.error(`Signature mismatch. Signature: ${hmacSignatureString}, Expected: ${signature}, 
+        this.alertService.raiseError(`Signature mismatch. Signature: ${hmacSignatureString}, Expected: ${signature}, 
         timestamp: ${timestamp}, requestMethod: ${requestMethod}, requestPath: ${requestPath}, requestBody: ${requestBody}`);
         throw new BadRequestException("Signature does not match");
       }
       return true;
     } catch (e) {
-      this.logger.error(e);
+      this.logger.warn(e);
       throw e;
     }
   }

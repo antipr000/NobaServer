@@ -17,22 +17,32 @@ import {
   PomeloTransactionAuthzRequest,
 } from "../../dto/pomelo.transaction.service.dto";
 import { PomeloWebhookMapper } from "../pomelo.webhook.mapper";
+import { AlertService } from "../../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 describe("PomeloWebhookMapperService", () => {
   jest.setTimeout(20000);
 
   let pomeloWebhookMapper: PomeloWebhookMapper;
   let app: TestingModule;
+  let mockAlertService: AlertService;
 
   beforeEach(async () => {
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PomeloWebhookMapper],
+      providers: [
+        PomeloWebhookMapper,
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
+      ],
     }).compile();
 
     pomeloWebhookMapper = app.get<PomeloWebhookMapper>(PomeloWebhookMapper);

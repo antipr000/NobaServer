@@ -13,6 +13,7 @@ import { Token } from "./domain/Token";
 import { VerificationService } from "../verification/verification.service";
 import { IdentityType } from "./domain/IdentityType";
 import { NotificationPayloadMapper } from "../notifications/domain/NotificationPayload";
+import { AlertService } from "../common/alerts/alert.service";
 
 @Injectable()
 export abstract class AuthService {
@@ -33,6 +34,9 @@ export abstract class AuthService {
 
   @Inject()
   private readonly verificationService: VerificationService;
+
+  @Inject()
+  private readonly alertService: AlertService;
 
   private otpOverride: number;
 
@@ -58,7 +62,7 @@ export abstract class AuthService {
       const token: Token = await this.tokenRepo.getToken(rawToken, userID);
       return token.isMatching(rawToken);
     } catch (error) {
-      this.logger.error(`Error while fetching token: ${rawToken} for user: ${userID}, error: ${error}`);
+      this.alertService.raiseError(`Error while fetching token: ${rawToken} for user: ${userID}, error: ${error}`);
     }
 
     return false;
@@ -76,7 +80,7 @@ export abstract class AuthService {
     if (this.getIdentityType() == IdentityType.CONSUMER) {
       // Run login KYC on the user
       if (!sessionKey) {
-        this.logger.error(
+        this.alertService.raiseError(
           `Session key is missing for consumer ${consumerID} access token request. Calling with generic "NOT_PROVIDED" session key.`,
         );
       } else {

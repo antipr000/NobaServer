@@ -79,7 +79,7 @@ import { getMockCreditAdjustmentImplWithDefaults } from "../mocks/mock.credit.ad
 import { getMockDebitAdjustmentImplWithDefaults } from "../mocks/mock.dedit.adjustment.impl";
 import { DebitAdjustmentImpl } from "../factory/debit.adjustment.impl";
 import { ConsumerWorkflowName } from "../../../infra/temporal/workflow";
-import { TransactionPreprocessorFactory } from "../factory/preprocessors/transaction.preprocessor.factory";
+import { TransactionProcessorFactory } from "../factory/preprocessors/transaction.processor.factory";
 import { getMockTransactionPreprocessorFactoryWithDefaults } from "../factory/preprocessors/mocks/mock.transaction.preprocessor.factory";
 
 describe("TransactionServiceTests", () => {
@@ -104,7 +104,7 @@ describe("TransactionServiceTests", () => {
   let employerService: EmployerService;
   let alertService: AlertService;
   let kmsService: KmsService;
-  let transactionPreprocessorFactory: TransactionPreprocessorFactory;
+  let transactionPreprocessorFactory: TransactionProcessorFactory;
 
   beforeEach(async () => {
     transactionRepo = getMockTransactionRepoWithDefaults();
@@ -186,7 +186,7 @@ describe("TransactionServiceTests", () => {
           useFactory: () => instance(kmsService),
         },
         {
-          provide: TransactionPreprocessorFactory,
+          provide: TransactionProcessorFactory,
           useFactory: () => instance(transactionPreprocessorFactory),
         },
         TransactionService,
@@ -991,7 +991,7 @@ describe("TransactionServiceTests", () => {
     it("should update the status 'AND' raise the alert if transaction is transition to 'FAILED' status", async () => {
       const { transaction } = getRandomTransaction("consumerID", "consumerID2");
       when(transactionRepo.getTransactionByID(transaction.id)).thenResolve(transaction);
-      when(alertService.raiseAlert(anything())).thenResolve();
+      when(alertService.raiseCriticalAlert(anything())).thenResolve();
 
       const updateTransactionDTO: UpdateTransactionDTO = {
         status: TransactionStatus.FAILED,
@@ -1010,7 +1010,7 @@ describe("TransactionServiceTests", () => {
 
       expect(updatedTransaction.status).toEqual(updateTransactionDTO.status);
 
-      const [alertCall] = capture(alertService.raiseAlert).last();
+      const [alertCall] = capture(alertService.raiseCriticalAlert).last();
       expect(alertCall).toEqual(expect.objectContaining({ key: "TRANSACTION_FAILED" }));
       expect(alertCall).toEqual(expect.objectContaining({ message: expect.stringContaining(transaction.id) }));
     });

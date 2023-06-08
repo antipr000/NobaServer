@@ -32,7 +32,7 @@ export function serviceToHTTP(logger: Logger, exception: ServiceException) {
     case ServiceErrorCode.UNKNOWN:
       return new InternalServerErrorException(exception.message);
     default:
-      logger.error("Unmapped Service error code. Exception details:", exception);
+      logger.warn("Unmapped Service error code. Exception details:", exception);
       return new HttpException(exception.message, 500);
   }
 }

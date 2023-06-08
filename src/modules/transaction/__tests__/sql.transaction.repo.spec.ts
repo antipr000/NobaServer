@@ -23,6 +23,9 @@ import {
 import { InputTransactionEvent } from "../domain/TransactionEvent";
 import { FeeType } from "../domain/TransactionFee";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 const getAllTransactionRecords = async (prismaService: PrismaService): Promise<PrismaTransactionModel[]> => {
   return prismaService.transaction.findMany({});
@@ -92,16 +95,24 @@ describe("PostgresTransactionRepoTests", () => {
   let transactionRepo: ITransactionRepo;
   let app: TestingModule;
   let prismaService: PrismaService;
+  let mockAlertService: AlertService;
 
   beforeAll(async () => {
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SQLTransactionRepo],
+      providers: [
+        PrismaService,
+        SQLTransactionRepo,
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
+      ],
     }).compile();
 
     transactionRepo = app.get<SQLTransactionRepo>(SQLTransactionRepo);

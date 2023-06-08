@@ -1,7 +1,8 @@
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { uuid } from "uuidv4";
 import { createTestConsumer } from "../../consumer/test_utils/test.utils";
-import { TransactionStatus, WorkflowName } from "../domain/Transaction";
+import { Transaction, TransactionStatus, WorkflowName } from "../domain/Transaction";
+import { FeeType } from "../domain/TransactionFee";
 
 export const createTestNobaTransaction = async (prismaService: PrismaService): Promise<string> => {
   const consumerID = await createTestConsumer(prismaService);
@@ -55,4 +56,31 @@ export const createTransaction = async ({
   });
 
   return savedNobaTransaction.id;
+};
+
+export const getRandomTransaction = (consumerID: string): Transaction => {
+  const transaction: Transaction = {
+    transactionRef: uuid(),
+    exchangeRate: 1,
+    status: TransactionStatus.INITIATED,
+    workflowName: WorkflowName.WALLET_DEPOSIT,
+    id: uuid(),
+    sessionKey: uuid(),
+    memo: "New transaction",
+    createdTimestamp: new Date(),
+    updatedTimestamp: new Date(),
+    debitAmount: 100,
+    debitCurrency: "USD",
+    debitConsumerID: consumerID,
+    transactionFees: [
+      {
+        amount: 10,
+        currency: "USD",
+        type: FeeType.NOBA,
+        id: uuid(),
+        timestamp: new Date(),
+      },
+    ],
+  };
+  return transaction;
 };

@@ -51,7 +51,9 @@ export class CircleService implements IBank {
     try {
       await this.circleRepo.addConsumerCircleWalletID(consumerID, circleWalletID);
     } catch (err) {
-      this.logger.error(`Could not link Circle wallet to consumerID: ${consumerID}. Error:  ${JSON.stringify(err)}`);
+      this.alertService.raiseError(
+        `Could not link Circle wallet to consumerID: ${consumerID}. Error:  ${JSON.stringify(err)}`,
+      );
       throw new ServiceException({
         errorCode: ServiceErrorCode.UNKNOWN,
         message: "Could not link Circle wallet to consumer",
@@ -121,10 +123,14 @@ export class CircleService implements IBank {
       response.status !== CircleTransferStatus.INSUFFICIENT_FUNDS
     ) {
       try {
-        this.logger.info(`Updating balance for wallet ${walletID} to ${Utils.roundTo2DecimalNumber(balance - amount)}`);
-        await this.circleRepo.updateCurrentBalance(walletID, Utils.roundTo2DecimalNumber(balance - amount));
+        if (walletID !== masterWalletID) {
+          this.logger.info(
+            `Updating balance for wallet ${walletID} to ${Utils.roundTo2DecimalNumber(balance - amount)}`,
+          );
+          await this.circleRepo.updateCurrentBalance(walletID, Utils.roundTo2DecimalNumber(balance - amount));
+        }
       } catch (e) {
-        this.alertService.raiseAlert({
+        this.alertService.raiseCriticalAlert({
           key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
           message: `Could not update balance for wallet ${walletID}. Reason: ${JSON.stringify(e)}`,
         });
@@ -162,7 +168,9 @@ export class CircleService implements IBank {
     const masterWalletID = this.getMasterWalletID();
     const masterWalletBalance = await this.getWalletBalance(masterWalletID);
     if (masterWalletBalance < amount) {
-      this.logger.error(`Insufficient funds in master wallet (have: ${masterWalletBalance}, need: ${amount})`);
+      this.alertService.raiseError(
+        `Insufficient funds in master wallet (have: ${masterWalletBalance}, need: ${amount})`,
+      );
 
       throw new ServiceException({
         message: "Insufficient funds in master wallet",
@@ -182,11 +190,13 @@ export class CircleService implements IBank {
 
     if (response.status !== CircleTransferStatus.TRANSFER_FAILED) {
       try {
-        const updatedWalletBalance = Utils.roundTo2DecimalNumber(walletBalance + amount);
-        this.logger.info(`Updating balance for wallet ${walletID} to ${updatedWalletBalance}`);
-        await this.circleRepo.updateCurrentBalance(walletID, updatedWalletBalance);
+        if (walletID !== masterWalletID) {
+          const updatedWalletBalance = Utils.roundTo2DecimalNumber(walletBalance + amount);
+          this.logger.info(`Updating balance for wallet ${walletID} to ${updatedWalletBalance}`);
+          await this.circleRepo.updateCurrentBalance(walletID, updatedWalletBalance);
+        }
       } catch (e) {
-        this.alertService.raiseAlert({
+        this.alertService.raiseCriticalAlert({
           key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
           message: `Could not update balance for wallet ${walletID}. Reason: ${JSON.stringify(e)}`,
         });
@@ -253,15 +263,20 @@ export class CircleService implements IBank {
       response.status !== CircleTransferStatus.INSUFFICIENT_FUNDS
     ) {
       try {
-        const updateSourceWalletBalance = Utils.roundTo2DecimalNumber(sourceWalletBalance - amount);
-        this.logger.info(`Updating balance for wallet ${sourceWalletID} to ${updateSourceWalletBalance}`);
-        await this.circleRepo.updateCurrentBalance(sourceWalletID, updateSourceWalletBalance);
+        const masterWalletID = this.getMasterWalletID();
+        if (sourceWalletID !== masterWalletID) {
+          const updateSourceWalletBalance = Utils.roundTo2DecimalNumber(sourceWalletBalance - amount);
+          this.logger.info(`Updating balance for wallet ${sourceWalletID} to ${updateSourceWalletBalance}`);
+          await this.circleRepo.updateCurrentBalance(sourceWalletID, updateSourceWalletBalance);
+        }
 
-        const updateDestinationWalletBalance = Utils.roundTo2DecimalNumber(destinationWalletBalance + amount);
-        this.logger.info(`Updating balance for wallet ${destinationWalletID} to ${updateDestinationWalletBalance}`);
-        await this.circleRepo.updateCurrentBalance(destinationWalletID, updateDestinationWalletBalance);
+        if (destinationWalletID !== masterWalletID) {
+          const updateDestinationWalletBalance = Utils.roundTo2DecimalNumber(destinationWalletBalance + amount);
+          this.logger.info(`Updating balance for wallet ${destinationWalletID} to ${updateDestinationWalletBalance}`);
+          await this.circleRepo.updateCurrentBalance(destinationWalletID, updateDestinationWalletBalance);
+        }
       } catch (e) {
-        this.alertService.raiseAlert({
+        this.alertService.raiseCriticalAlert({
           key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
           message: `Could not update balance for wallet ${sourceWalletID} or ${destinationWalletID}. Reason: ${JSON.stringify(
             e,
@@ -302,9 +317,12 @@ export class CircleService implements IBank {
     // Cache it
     const roundedBalance = Utils.roundTo2DecimalNumber(balance);
     try {
-      await this.circleRepo.updateCurrentBalance(walletID, roundedBalance);
+      const masterWalletID = this.getMasterWalletID();
+      if (walletID !== masterWalletID) {
+        await this.circleRepo.updateCurrentBalance(walletID, roundedBalance);
+      }
     } catch (e) {
-      this.alertService.raiseAlert({
+      this.alertService.raiseCriticalAlert({
         key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
         message: `Could not update balance for wallet ${walletID}. Reason: ${JSON.stringify(e)}`,
       });
@@ -351,7 +369,7 @@ export class CircleService implements IBank {
       return transferResponse.status;
     }
 
-    this.alertService.raiseAlert({
+    this.alertService.raiseCriticalAlert({
       key: AlertKey.UNEXPECTED_TRANSFER_CHECK,
       message: `Unexpected 'getTransferStatus' requested ('${idempotencyKey}', '${sourceWalletID}', '${destinationWalletID}', '${amount}')`,
     });

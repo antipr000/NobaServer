@@ -15,6 +15,7 @@ import {
 } from "../dto/pomelo.client.dto";
 import { ServiceErrorCode, ServiceException } from "../../../core/exception/service.exception";
 import { uuid } from "uuidv4";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class PomeloClient {
@@ -22,6 +23,7 @@ export class PomeloClient {
 
   constructor(
     private readonly configService: CustomConfigService,
+    private readonly alertService: AlertService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {
     this.pomeloConfigs = this.configService.get<PomeloConfigs>(POMELO_CONFIG_KEY);
@@ -72,7 +74,9 @@ export class PomeloClient {
       });
       return data.access_token;
     } catch (error) {
-      this.logger.error(`Failed to fetch access token from Pomelo. Reason: ${JSON.stringify(error.response?.data)}`);
+      this.alertService.raiseError(
+        `Failed to fetch access token from Pomelo. Reason: ${JSON.stringify(error.response?.data)}`,
+      );
       throw new ServiceException({
         message: "Failed to fetch access token from Pomelo",
         errorCode: ServiceErrorCode.UNKNOWN,
@@ -96,7 +100,7 @@ export class PomeloClient {
         status: data.data.status,
       };
     } catch (e) {
-      this.logger.error(`Failed to create user in Pomelo. Reason: ${JSON.stringify(e.response?.data)}`);
+      this.alertService.raiseError(`Failed to create user in Pomelo. Reason: ${JSON.stringify(e.response?.data)}`);
       if (e.response?.data.error.error_code === "DUPLICATE_USER") {
         throw new ServiceException({
           message: "User already exists in Pomelo",
@@ -126,7 +130,7 @@ export class PomeloClient {
         status: data.data.status,
       };
     } catch (e) {
-      this.logger.error(`Failed to get user from Pomelo. Reason: ${JSON.stringify(e.response?.data)}`);
+      this.alertService.raiseError(`Failed to get user from Pomelo. Reason: ${JSON.stringify(e.response?.data)}`);
       if (e.response.status === HttpStatus.NOT_FOUND) {
         throw new ServiceException({
           message: `User not found in Pomelo with id ${id}`,
@@ -159,7 +163,7 @@ export class PomeloClient {
 
       return null;
     } catch (e) {
-      this.logger.error(`Failed to find user in Pomelo. Reason: ${JSON.stringify(e.response?.data)}`);
+      this.alertService.raiseError(`Failed to find user in Pomelo. Reason: ${JSON.stringify(e.response?.data)}`);
 
       throw new ServiceException({
         message: "Error searching for user in Pomelo",
@@ -184,7 +188,7 @@ export class PomeloClient {
         status: data.data.status,
       };
     } catch (e) {
-      this.logger.error(`Failed to update user in Pomelo. Reason: ${JSON.stringify(e.response?.data)}`);
+      this.alertService.raiseError(`Failed to update user in Pomelo. Reason: ${JSON.stringify(e.response?.data)}`);
       if (e.response.status === HttpStatus.NOT_FOUND) {
         throw new ServiceException({
           message: "User not found in Pomelo",
@@ -212,7 +216,7 @@ export class PomeloClient {
 
       return data.access_token;
     } catch (e) {
-      this.logger.error(
+      this.alertService.raiseError(
         `Failed to generate access token for user: ${userID}. Reason: ${JSON.stringify(e.response?.data)}`,
       );
       throw new ServiceException({
@@ -246,7 +250,7 @@ export class PomeloClient {
         provider: data.data.provider,
       };
     } catch (e) {
-      this.logger.error(`Failed to create card in Pomelo. Reason: ${JSON.stringify(e.response?.data)}`);
+      this.alertService.raiseError(`Failed to create card in Pomelo. Reason: ${JSON.stringify(e.response?.data)}`);
       throw new ServiceException({
         message: "Failed to create card in Pomelo",
         errorCode: ServiceErrorCode.UNKNOWN,
@@ -276,7 +280,7 @@ export class PomeloClient {
         provider: data.data.provider,
       };
     } catch (e) {
-      this.logger.error(`Failed to get card from Pomelo. Reason: ${JSON.stringify(e.response?.data)}`);
+      this.alertService.raiseError(`Failed to get card from Pomelo. Reason: ${JSON.stringify(e.response?.data)}`);
       if (e.response.status === HttpStatus.NOT_FOUND) {
         throw new ServiceException({
           message: "Card not found in Pomelo",
@@ -301,7 +305,7 @@ export class PomeloClient {
         body: request,
       });
     } catch (e) {
-      this.logger.error(`Failed to update card in Pomelo. Reason: ${JSON.stringify(e.response?.data)}`);
+      this.alertService.raiseError(`Failed to update card in Pomelo. Reason: ${JSON.stringify(e.response?.data)}`);
       throw new ServiceException({
         message: "Failed to update card in Pomelo",
         errorCode: ServiceErrorCode.UNKNOWN,

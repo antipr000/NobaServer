@@ -1,8 +1,8 @@
 import { anything, mock, when } from "ts-mockito";
-import { TransactionPreprocessorFactory } from "../transaction.preprocessor.factory";
+import { TransactionProcessorFactory } from "../transaction.processor.factory";
 
-export function getMockTransactionPreprocessorFactoryWithDefaults(): TransactionPreprocessorFactory {
-  const transactionPreprocessorFactory = mock(TransactionPreprocessorFactory);
+export function getMockTransactionPreprocessorFactoryWithDefaults(): TransactionProcessorFactory {
+  const transactionPreprocessorFactory = mock(TransactionProcessorFactory);
 
   when(transactionPreprocessorFactory.getPreprocessor(anything())).thenReject(new Error("Not implemented!"));
   when(transactionPreprocessorFactory.extractTransactionPreprocessorRequest(anything())).thenReject(

@@ -16,6 +16,9 @@ import {
 } from "../../domain/Mono";
 import { createTestNobaTransaction } from "../../../transaction/test_utils/test.utils";
 import { RepoException } from "../../../../core/exception/repo.exception";
+import { AlertService } from "../../../../modules/common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../../modules/common/mocks/mock.alert.service";
+import { instance } from "ts-mockito";
 
 const getAllTransactionRecords = async (prismaService: PrismaService): Promise<PrismaMonoModel[]> => {
   return prismaService.mono.findMany({});
@@ -55,16 +58,24 @@ describe("SqlMonoRepoTests", () => {
   let monoRepo: IMonoRepo;
   let app: TestingModule;
   let prismaService: PrismaService;
+  let mockAlertService: AlertService;
 
   beforeAll(async () => {
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
     };
     // ***************** ENVIRONMENT VARIABLES CONFIGURATION *****************
-
+    mockAlertService = getMockAlertServiceWithDefaults();
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [PrismaService, SqlMonoRepo],
+      providers: [
+        PrismaService,
+        SqlMonoRepo,
+        {
+          provide: AlertService,
+          useFactory: () => instance(mockAlertService),
+        },
+      ],
     }).compile();
 
     monoRepo = app.get<SqlMonoRepo>(SqlMonoRepo);

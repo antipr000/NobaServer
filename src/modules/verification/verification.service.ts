@@ -69,7 +69,7 @@ export class VerificationService {
       }
       return;
     } catch (e) {
-      this.logger.error(
+      this.alertService.raiseError(
         `Error verifying consumer information for login: ${e.message}. Consumer ID: ${consumerID}, sessionKey: ${sessionKey}.`,
       );
     }
@@ -239,7 +239,7 @@ export class VerificationService {
     const consumerID = documentVerificationResult.data.case.customerID;
     const consumer: Consumer = await this.consumerService.getConsumer(consumerID);
     if (!consumer) {
-      this.alertService.raiseAlert({
+      this.alertService.raiseCriticalAlert({
         key: AlertKey.WEBHOOK_CONSUMER_NOT_FOUND,
         message: `Failed to find consumer with ID ${consumerID}`,
       });

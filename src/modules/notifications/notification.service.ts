@@ -114,7 +114,7 @@ export class NotificationService {
     };
 
     if (notificationEvent.notificationEventHandler.length === 0) {
-      this.logger.error(`Failed to send notification for event type ${eventType} as no notification medium was found`);
+      this.logger.warn(`Failed to send notification for event type ${eventType} as no notification medium was found`);
       return;
     }
 
@@ -260,7 +260,7 @@ export class NotificationService {
         }
         break;
       default:
-        this.logger.error(`Unknown Notification event type: ${eventType}`);
+        this.logger.warn(`Unknown Notification event type: ${eventType}`);
         break;
     }
   }

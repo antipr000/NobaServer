@@ -18,7 +18,7 @@ import { EmployerModule } from "../employer/employer.module";
 import { EmployeeModule } from "../employee/employee.module";
 import { CirclePublicModule } from "../circle/public/circle.public.module";
 import { MonoPublicModule } from "../mono/public/mono.public.module";
-import { TransactionPreprocessorModule } from "./factory/preprocessors/transaction.preprocessor.module";
+import { TransactionPreprocessorModule } from "./factory/preprocessors/transaction.processor.module";
 
 @Module({
   imports: [

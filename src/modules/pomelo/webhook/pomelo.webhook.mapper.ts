@@ -16,10 +16,14 @@ import {
   PomeloTransactionAdjustmentRequest,
   PomeloTransactionAuthzRequest,
 } from "../dto/pomelo.transaction.service.dto";
+import { AlertService } from "../../../modules/common/alerts/alert.service";
 
 @Injectable()
 export class PomeloWebhookMapper {
-  constructor(@Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger) {}
+  constructor(
+    @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
+    private readonly alertService: AlertService,
+  ) {}
 
   convertToPomeloTransactionAuthzRequest(
     requestBody: Record<string, any>,
@@ -29,7 +33,7 @@ export class PomeloWebhookMapper {
       this.validateAuthzRequestHeaders(headers);
       this.validateAuthzRequestBody(requestBody);
     } catch (err) {
-      this.logger.error("Transaction AuthZ request validation error: " + err.message);
+      this.alertService.raiseError("Transaction AuthZ request validation error: " + err.message);
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: err.message,
@@ -80,7 +84,7 @@ export class PomeloWebhookMapper {
       this.validateAdjustmentType(adjustmentType);
       this.validateAdjustmentRequestBody(requestBody, adjustmentType as PomeloAdjustmentType);
     } catch (err) {
-      this.logger.error("Transaction AuthZ request validation error: " + err.message);
+      this.alertService.raiseError("Transaction AuthZ request validation error: " + err.message);
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
         message: err.message,

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
+import { WorkflowName } from "../../../domain/Transaction";
 import { instance } from "ts-mockito";
 import { AppEnvironment, NOBA_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../../core/utils/AppConfigModule";
@@ -18,18 +18,26 @@ import { getMockCardWithdrawalPreprocessorWithDefaults } from "../mocks/mock.car
 import { getMockCreditAdjustmentPreprocessorWithDefaults } from "../mocks/mock.credit.adjustment.preprocessor";
 import { getMockDebitAdjustmentPreprocessorWithDefaults } from "../mocks/mock.debit.adjustment.preprocessor";
 import { getMockPayrollDepositPreprocessorWithDefaults } from "../mocks/mock.payroll.deposit.preprocessor";
-import { TransactionPreprocessorFactory } from "../transaction.preprocessor.factory";
+import { TransactionProcessorFactory } from "../transaction.processor.factory";
 import {
   CardReversalTransactionType,
   InitiateTransactionRequest,
-} from "../../../../../modules/transaction/dto/transaction.service.dto";
-import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
+  WalletDepositMode,
+} from "../../../dto/transaction.service.dto";
+import { Currency } from "../../../domain/TransactionTypes";
+import { WalletDepositProcessor } from "../implementations/wallet.deposit.processor";
+import { getMockWalletDepositProcessorWithDefaults } from "../mocks/mock.wallet.deposit.processor";
+import { WalletWithdrawalProcessor } from "../implementations/wallet.withdrawal.processor";
+import { getMockWalletWithdrawalProcessorWithDefaults } from "../mocks/mock.wallet.withdrawal.processor";
+import { AccountType, DocumentType } from "../../../../../modules/transaction/domain/WithdrawalDetails";
+import { WalletTransferPreprocessor } from "../implementations/wallet.transfer.preprocessor";
+import { getMockwalletTransferPreprocessorWithDefaults } from "../mocks/mock.wallet.transfer.preprocessor";
 
 describe("TransactionPreprocessorFactory", () => {
   jest.setTimeout(20000);
 
   let app: TestingModule;
-  let transactionPreprocessorFactory: TransactionPreprocessorFactory;
+  let transactionPreprocessorFactory: TransactionProcessorFactory;
 
   let cardCreditAdjustmentPreprocessor: CardCreditAdjustmentPreprocessor;
   let cardDebitAdjustmentPreprocessor: CardDebitAdjustmentPreprocessor;
@@ -38,6 +46,9 @@ describe("TransactionPreprocessorFactory", () => {
   let creditAdjustmentPreprocessor: CreditAdjustmentPreprocessor;
   let debitAdjustmentPreprocessor: DebitAdjustmentPreprocessor;
   let payrollDepositPreprocessor: PayrollDepositPreprocessor;
+  let walletDepositProcessor: WalletDepositProcessor;
+  let walletWithdrawalProcessor: WalletWithdrawalProcessor;
+  let walletTransferPreprocessor: WalletTransferPreprocessor;
 
   beforeEach(async () => {
     cardCreditAdjustmentPreprocessor = instance(getMockCardCreditAdjustmentPreprocessorWithDefaults());
@@ -47,6 +58,9 @@ describe("TransactionPreprocessorFactory", () => {
     creditAdjustmentPreprocessor = instance(getMockCreditAdjustmentPreprocessorWithDefaults());
     debitAdjustmentPreprocessor = instance(getMockDebitAdjustmentPreprocessorWithDefaults());
     payrollDepositPreprocessor = instance(getMockPayrollDepositPreprocessorWithDefaults());
+    walletDepositProcessor = instance(getMockWalletDepositProcessorWithDefaults());
+    walletWithdrawalProcessor = instance(getMockWalletWithdrawalProcessorWithDefaults());
+    walletTransferPreprocessor = instance(getMockwalletTransferPreprocessorWithDefaults());
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -86,11 +100,23 @@ describe("TransactionPreprocessorFactory", () => {
           provide: PayrollDepositPreprocessor,
           useFactory: () => payrollDepositPreprocessor,
         },
-        TransactionPreprocessorFactory,
+        {
+          provide: WalletDepositProcessor,
+          useFactory: () => walletDepositProcessor,
+        },
+        {
+          provide: WalletWithdrawalProcessor,
+          useFactory: () => walletWithdrawalProcessor,
+        },
+        {
+          provide: WalletTransferPreprocessor,
+          useFactory: () => walletTransferPreprocessor,
+        },
+        TransactionProcessorFactory,
       ],
     }).compile();
 
-    transactionPreprocessorFactory = app.get<TransactionPreprocessorFactory>(TransactionPreprocessorFactory);
+    transactionPreprocessorFactory = app.get<TransactionProcessorFactory>(TransactionProcessorFactory);
   });
 
   afterEach(async () => {
@@ -131,6 +157,21 @@ describe("TransactionPreprocessorFactory", () => {
     it("should return DebitAdjustmentPreprocessor instance when workflow name is DEBIT_ADJUSTMENT", () => {
       const preprocessor = transactionPreprocessorFactory.getPreprocessor(WorkflowName.DEBIT_ADJUSTMENT);
       expect(preprocessor).toBe(debitAdjustmentPreprocessor);
+    });
+
+    it("should return WalletDepositProcessor instance when workflow name is WALLET_DEPOSIT", () => {
+      const preprocessor = transactionPreprocessorFactory.getPreprocessor(WorkflowName.WALLET_DEPOSIT);
+      expect(preprocessor).toBe(walletDepositProcessor);
+    });
+
+    it("should return WalletWithdrawalProcessor instance when workflow name is WALLET_WITHDRAWAL", () => {
+      const preprocessor = transactionPreprocessorFactory.getPreprocessor(WorkflowName.WALLET_WITHDRAWAL);
+      expect(preprocessor).toBe(walletWithdrawalProcessor);
+    });
+
+    it("should return WalletTransferPreprocessor instance when workflow name is WALLET_TRANSFER", () => {
+      const preprocessor = transactionPreprocessorFactory.getPreprocessor(WorkflowName.WALLET_TRANSFER);
+      expect(preprocessor).toBe(walletTransferPreprocessor);
     });
 
     it("should throw error when workflow name is unknown", () => {
@@ -193,6 +234,36 @@ describe("TransactionPreprocessorFactory", () => {
         debitConsumerID: "DEBIT_CONSUMER_ID",
         memo: "MEMO",
       },
+      walletDepositRequest: {
+        debitAmount: 100,
+        debitCurrency: Currency.COP,
+        debitConsumerIDOrTag: "DEBIT_CONSUMER_ID",
+        memo: "MEMO",
+        depositMode: WalletDepositMode.COLLECTION_LINK,
+        sessionKey: "SESSION_KEY",
+      },
+      walletWithdrawalRequest: {
+        debitAmount: 100000,
+        debitConsumerIDOrTag: "DEBIT_CONSUMER_ID_OR_TAG",
+        creditCurrency: Currency.COP,
+        memo: "MEMO",
+        sessionKey: "SESSION_KEY",
+        withdrawalDetails: {
+          bankCode: "BANCOLOMBIA",
+          accountNumber: "1234567890",
+          documentNumber: "9876543210",
+          accountType: AccountType.CHECKING,
+          documentType: DocumentType.CC,
+        },
+      },
+      walletTransferRequest: {
+        debitAmount: 100,
+        debitCurrency: Currency.COP,
+        debitConsumerIDOrTag: "DEBIT_CONSUMER_ID_OR_TAG",
+        creditConsumerIDOrTag: "CREDIT_CONSUMER_ID_OR_TAG",
+        memo: "MEMO",
+        sessionKey: "SESSION_KEY",
+      },
     };
 
     it("should return payroll deposit request when workflow name is PAYROLL_DEPOSIT", () => {
@@ -251,12 +322,63 @@ describe("TransactionPreprocessorFactory", () => {
       expect(preprocessorRequest).toEqual(request.debitAdjustmentRequest);
     });
 
+    it("should return wallet deposit request when workflow name is WALLET_DEPOSIT", () => {
+      const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
+      request.type = WorkflowName.WALLET_DEPOSIT;
+
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      expect(preprocessorRequest).toEqual(request.walletDepositRequest);
+    });
+
+    it("should return wallet withdrawal request when workflow name is WALLET_WITHDRAWAL", () => {
+      const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
+      request.type = WorkflowName.WALLET_WITHDRAWAL;
+
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      expect(preprocessorRequest).toEqual(request.walletWithdrawalRequest);
+    });
+
+    it("should return wallet transfer request when workflow name is WALLET_TRANSFER", () => {
+      const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
+      request.type = WorkflowName.WALLET_TRANSFER;
+
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      expect(preprocessorRequest).toEqual(request.walletTransferRequest);
+    });
+
     it("should throw error when workflow name is unknown", () => {
       const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
       request.type = "UNKNOWN_WORKFLOW_NAME" as any;
 
       expect(() => transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request)).toThrowError(
         "No preprocessor found for workflow name: UNKNOWN_WORKFLOW_NAME",
+      );
+    });
+  });
+
+  describe("getQuoteProvider()", () => {
+    it("should return a walletDepositProcessor if type if WALLET_DEPOSIT", () => {
+      const quoteProvider = transactionPreprocessorFactory.getQuoteProvider(WorkflowName.WALLET_DEPOSIT);
+      expect(quoteProvider).toEqual(walletDepositProcessor);
+    });
+
+    it("should return a walletDepositProcessor if type if WALLET_WITHDRAWAL", () => {
+      const quoteProvider = transactionPreprocessorFactory.getQuoteProvider(WorkflowName.WALLET_WITHDRAWAL);
+      expect(quoteProvider).toEqual(walletWithdrawalProcessor);
+    });
+
+    it.each([
+      WorkflowName.CARD_WITHDRAWAL,
+      WorkflowName.CARD_REVERSAL,
+      WorkflowName.CARD_CREDIT_ADJUSTMENT,
+      WorkflowName.CARD_DEBIT_ADJUSTMENT,
+      WorkflowName.CREDIT_ADJUSTMENT,
+      WorkflowName.DEBIT_ADJUSTMENT,
+      WorkflowName.PAYROLL_DEPOSIT,
+      WorkflowName.WALLET_TRANSFER,
+    ])("should throw for '%s' type", type => {
+      expect(() => transactionPreprocessorFactory.getQuoteProvider(type)).toThrowError(
+        `No quote provider found for workflow name: ${type}`,
       );
     });
   });
