@@ -29,13 +29,13 @@ export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
     //log error info on service side, don't catch everything else how would we know what is going wrong?
     const log = true;
     if (log) {
-      let messageToBeLogged;
+      let messageToBeLogged: string;
       if (originalException instanceof HttpException) {
         messageToBeLogged = originalException.message;
       } else if (originalException instanceof Error) {
         messageToBeLogged = originalException.message + "\n" + originalException.stack?.toString();
       } else {
-        messageToBeLogged = originalException;
+        messageToBeLogged = originalException.toString();
       }
 
       this.logger.warn(messageToBeLogged, {

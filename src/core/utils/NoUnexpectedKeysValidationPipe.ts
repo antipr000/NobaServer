@@ -29,10 +29,9 @@ export class NoUnExpectedKeysValidationPipe implements PipeTransform<any> {
     readonly throwIfUnexpectedKeys: boolean = false,
   ) {}
 
-  transform(apiRequestArgument, argumentMetaData: ArgumentMetadata) {
+  transform(apiRequestArgument: any, argumentMetaData: ArgumentMetadata) {
     if (argumentMetaData.type === "body") {
       //for now we only transform request's body to strip the fields which are not in controller's accepted body type
-      const transformedArgument = {};
       const classType = argumentMetaData.metatype.name;
       if (!this.classTypeToPropertiesMap[classType]) {
         console.warn(
@@ -42,6 +41,8 @@ export class NoUnExpectedKeysValidationPipe implements PipeTransform<any> {
         );
         return apiRequestArgument; //return original as this is unknown type and its a mistake from our developers
       } else {
+        const transformedArgument: any = {};
+
         this.classTypeToPropertiesMap[classType]
           .filter(k => apiRequestArgument.hasOwnProperty(k))
           .forEach(typeKey => (transformedArgument[typeKey] = apiRequestArgument[typeKey]));

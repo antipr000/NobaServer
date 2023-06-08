@@ -17,7 +17,9 @@
     "useDefineForClassFields": false,
     "allowJs": true,
     "strictBindCallApply": true,
-    "strictFunctionTypes": true
+    "strictFunctionTypes": true,
+    "noImplicitThis": true,
+    "noImplicitAny": true
   },
   "ts-node": {
     "compilerOptions": {
