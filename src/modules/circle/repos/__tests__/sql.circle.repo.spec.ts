@@ -59,7 +59,10 @@ describe("CircleRepoTests", () => {
       const createdConsumer = await createConsumer(prismaService, consumer);
       const consumerID = createdConsumer.props.id;
       const walletID = Math.random().toString(36).substring(7);
-      const result = await circleRepo.addConsumerCircleWalletID(consumerID, walletID);
+      await circleRepo.addConsumerCircleWalletID({
+        consumerID,
+        walletID,
+      });
       const circleResult = await circleRepo.getCircleWalletID(consumerID);
       expect(circleResult.isSuccess).toBe(true);
       expect(circleResult.getValue()).toEqual(walletID);
@@ -77,10 +80,13 @@ describe("CircleRepoTests", () => {
       const createdConsumer = await createConsumer(prismaService, consumer);
       const consumerID = createdConsumer.props.id;
       const walletID = Math.random().toString(36).substring(7);
-      const result = await circleRepo.addConsumerCircleWalletID(consumerID, walletID);
-      expect(result.props.consumerID).toEqual(consumerID);
-      expect(result.props.walletID).toEqual(walletID);
-      expect(result.props.currentBalance).toBeNull();
+      const result = await circleRepo.addConsumerCircleWalletID({
+        consumerID,
+        walletID,
+      });
+      expect(result.consumerID).toEqual(consumerID);
+      expect(result.walletID).toEqual(walletID);
+      expect(result.currentBalance).toBeUndefined();
       const circleResult = await circleRepo.getCircleWalletID(consumerID);
       expect(circleResult.isSuccess).toBe(true);
       expect(circleResult.getValue()).toEqual(walletID);
@@ -91,17 +97,35 @@ describe("CircleRepoTests", () => {
       const createdConsumer = await createConsumer(prismaService, consumer);
       const consumerID = createdConsumer.props.id;
       const walletID = Math.random().toString(36).substring(7);
-      await circleRepo.addConsumerCircleWalletID(consumerID, walletID);
-      expect(circleRepo.addConsumerCircleWalletID(consumerID, walletID)).rejects.toThrow();
+      await circleRepo.addConsumerCircleWalletID({
+        consumerID,
+        walletID,
+      });
+      expect(
+        circleRepo.addConsumerCircleWalletID({
+          consumerID,
+          walletID,
+        }),
+      ).rejects.toThrowRepoException(RepoErrorCode.DATABASE_INTERNAL_ERROR);
     });
 
     it("should fail to add a consumer circle wallet id", async () => {
-      expect(circleRepo.addConsumerCircleWalletID(null, null)).rejects.toThrow();
+      expect(
+        circleRepo.addConsumerCircleWalletID({
+          consumerID: null,
+          walletID: null,
+        }),
+      ).rejects.toThrowError();
     });
 
     it("should fail if consumer does not exist", async () => {
       const walletID = Math.random().toString(36).substring(7);
-      expect(circleRepo.addConsumerCircleWalletID("does-not-exist", walletID)).rejects.toThrow();
+      expect(
+        circleRepo.addConsumerCircleWalletID({
+          consumerID: "does-not-exist",
+          walletID,
+        }),
+      ).rejects.toThrowRepoException(RepoErrorCode.DATABASE_INTERNAL_ERROR);
     });
   });
 
@@ -111,22 +135,29 @@ describe("CircleRepoTests", () => {
       const createdConsumer = await createConsumer(prismaService, consumer);
       const consumerID = createdConsumer.props.id;
       const walletID = Math.random().toString(36).substring(7);
-      const circleData = await circleRepo.addConsumerCircleWalletID(consumerID, walletID);
-      expect(circleData.props.currentBalance).toBeNull();
+      const circleData = await circleRepo.addConsumerCircleWalletID({
+        consumerID,
+        walletID,
+      });
+      expect(circleData.currentBalance).toBeUndefined();
 
       // Update the balance
-      const updatedCircleData = await circleRepo.updateCurrentBalance(walletID, 100);
+      const updatedCircleData = await circleRepo.updateCurrentBalance(walletID, {
+        currentBalance: 100,
+      });
 
-      expect(updatedCircleData.props.currentBalance).toBe(100);
+      expect(updatedCircleData.currentBalance).toBe(100);
 
       const balance = await circleRepo.getCircleBalance(consumerID);
       expect(balance).toBe(100);
     });
 
     it("should throw RepoException if it fails to update", async () => {
-      await expect(circleRepo.updateCurrentBalance("fake-wallet-id", 100)).rejects.toThrowRepoException(
-        RepoErrorCode.NOT_FOUND,
-      );
+      await expect(
+        circleRepo.updateCurrentBalance("fake-wallet-id", {
+          currentBalance: 100,
+        }),
+      ).rejects.toThrowRepoException(RepoErrorCode.NOT_FOUND);
     });
   });
 
@@ -136,12 +167,17 @@ describe("CircleRepoTests", () => {
       const createdConsumer = await createConsumer(prismaService, consumer);
       const consumerID = createdConsumer.props.id;
       const walletID = Math.random().toString(36).substring(7);
-      await circleRepo.addConsumerCircleWalletID(consumerID, walletID);
+      await circleRepo.addConsumerCircleWalletID({
+        consumerID,
+        walletID,
+      });
 
       let balance = await circleRepo.getCircleBalance(walletID);
       expect(balance).toBeNull();
 
-      await circleRepo.updateCurrentBalance(walletID, 200);
+      await circleRepo.updateCurrentBalance(walletID, {
+        currentBalance: 200,
+      });
 
       balance = await circleRepo.getCircleBalance(walletID);
 
@@ -153,12 +189,17 @@ describe("CircleRepoTests", () => {
       const createdConsumer = await createConsumer(prismaService, consumer);
       const consumerID = createdConsumer.props.id;
       const walletID = Math.random().toString(36).substring(7);
-      await circleRepo.addConsumerCircleWalletID(consumerID, walletID);
+      await circleRepo.addConsumerCircleWalletID({
+        consumerID,
+        walletID,
+      });
 
       let balance = await circleRepo.getCircleBalance(consumerID);
       expect(balance).toBeNull();
 
-      await circleRepo.updateCurrentBalance(walletID, 200);
+      await circleRepo.updateCurrentBalance(walletID, {
+        currentBalance: 200,
+      });
 
       balance = await circleRepo.getCircleBalance(consumerID);
 

@@ -49,7 +49,10 @@ export class CircleService implements IBank {
     const circleWalletID: string = await this.circleClient.createWallet(consumerID);
 
     try {
-      await this.circleRepo.addConsumerCircleWalletID(consumerID, circleWalletID);
+      await this.circleRepo.addConsumerCircleWalletID({
+        consumerID,
+        walletID: circleWalletID,
+      });
     } catch (err) {
       this.alertService.raiseError(
         `Could not link Circle wallet to consumerID: ${consumerID}. Error:  ${JSON.stringify(err)}`,
@@ -127,7 +130,9 @@ export class CircleService implements IBank {
           this.logger.info(
             `Updating balance for wallet ${walletID} to ${Utils.roundTo2DecimalNumber(balance - amount)}`,
           );
-          await this.circleRepo.updateCurrentBalance(walletID, Utils.roundTo2DecimalNumber(balance - amount));
+          await this.circleRepo.updateCurrentBalance(walletID, {
+            currentBalance: Utils.roundTo2DecimalNumber(balance - amount),
+          });
         }
       } catch (e) {
         this.alertService.raiseCriticalAlert({
@@ -193,7 +198,7 @@ export class CircleService implements IBank {
         if (walletID !== masterWalletID) {
           const updatedWalletBalance = Utils.roundTo2DecimalNumber(walletBalance + amount);
           this.logger.info(`Updating balance for wallet ${walletID} to ${updatedWalletBalance}`);
-          await this.circleRepo.updateCurrentBalance(walletID, updatedWalletBalance);
+          await this.circleRepo.updateCurrentBalance(walletID, { currentBalance: updatedWalletBalance });
         }
       } catch (e) {
         this.alertService.raiseCriticalAlert({
@@ -267,13 +272,15 @@ export class CircleService implements IBank {
         if (sourceWalletID !== masterWalletID) {
           const updateSourceWalletBalance = Utils.roundTo2DecimalNumber(sourceWalletBalance - amount);
           this.logger.info(`Updating balance for wallet ${sourceWalletID} to ${updateSourceWalletBalance}`);
-          await this.circleRepo.updateCurrentBalance(sourceWalletID, updateSourceWalletBalance);
+          await this.circleRepo.updateCurrentBalance(sourceWalletID, { currentBalance: updateSourceWalletBalance });
         }
 
         if (destinationWalletID !== masterWalletID) {
           const updateDestinationWalletBalance = Utils.roundTo2DecimalNumber(destinationWalletBalance + amount);
           this.logger.info(`Updating balance for wallet ${destinationWalletID} to ${updateDestinationWalletBalance}`);
-          await this.circleRepo.updateCurrentBalance(destinationWalletID, updateDestinationWalletBalance);
+          await this.circleRepo.updateCurrentBalance(destinationWalletID, {
+            currentBalance: updateDestinationWalletBalance,
+          });
         }
       } catch (e) {
         this.alertService.raiseCriticalAlert({
@@ -319,7 +326,9 @@ export class CircleService implements IBank {
     try {
       const masterWalletID = this.getMasterWalletID();
       if (walletID !== masterWalletID) {
-        await this.circleRepo.updateCurrentBalance(walletID, roundedBalance);
+        await this.circleRepo.updateCurrentBalance(walletID, {
+          currentBalance: roundedBalance,
+        });
       }
     } catch (e) {
       this.alertService.raiseCriticalAlert({
