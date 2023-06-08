@@ -82,7 +82,7 @@ model KYC {
   riskRating                    String?
   isSuspectedFraud              Boolean                    @default(false)
   kycCheckStatus                KYCStatus                  @default(NOT_SUBMITTED)
-  documentVerificationStatus    DocumentVerificationStatus @default(REQUIRED)
+  documentVerificationStatus    DocumentVerificationStatus @default(NOT_REQUIRED)
   documentVerificationTimestamp DateTime?
   kycVerificationTimestamp      DateTime?
   sanctionLevel                 String?
