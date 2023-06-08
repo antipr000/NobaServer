@@ -384,7 +384,6 @@ describe("VerificationService", () => {
 
       const sessionKey = "fake-session";
 
-
       const newConsumerData: ConsumerProps = {
         ...consumer.props,
         address: consumerInformation.address,
