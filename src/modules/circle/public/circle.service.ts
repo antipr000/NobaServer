@@ -150,6 +150,8 @@ export class CircleService implements IBank {
       });
     }
 
+    amount = Utils.roundTo2DecimalNumber(amount);
+
     if (amount <= 0) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -169,6 +171,7 @@ export class CircleService implements IBank {
       });
     }
 
+    const walletBalance = await this.circleClient.getWalletBalance(walletID);
     this.logger.info(`Transferring ${amount} from master wallet to ${walletID}`);
     const response = await this.circleClient.transfer({
       idempotencyKey: idempotencyKey,
@@ -179,9 +182,9 @@ export class CircleService implements IBank {
 
     if (response.status !== CircleTransferStatus.TRANSFER_FAILED) {
       try {
-        const currentBalance = await this.circleClient.getWalletBalance(walletID);
-        this.logger.info(`Updating balance for wallet ${walletID} to ${Utils.roundTo2DecimalNumber(currentBalance)}`);
-        await this.circleRepo.updateCurrentBalance(walletID, Utils.roundTo2DecimalNumber(currentBalance));
+        const updatedWalletBalance = Utils.roundTo2DecimalNumber(walletBalance + amount);
+        this.logger.info(`Updating balance for wallet ${walletID} to ${updatedWalletBalance}`);
+        await this.circleRepo.updateCurrentBalance(walletID, updatedWalletBalance);
       } catch (e) {
         this.alertService.raiseAlert({
           key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
@@ -217,6 +220,8 @@ export class CircleService implements IBank {
       });
     }
 
+    amount = Utils.roundTo2DecimalNumber(amount);
+
     if (amount <= 0) {
       throw new ServiceException({
         errorCode: ServiceErrorCode.SEMANTIC_VALIDATION,
@@ -224,14 +229,16 @@ export class CircleService implements IBank {
       });
     }
 
-    const balance = await this.circleClient.getWalletBalance(sourceWalletID);
-    if (balance < amount) {
+    const sourceWalletBalance = await this.circleClient.getWalletBalance(sourceWalletID);
+    if (sourceWalletBalance < amount) {
       throw new ServiceException({
         message: "Insufficient funds",
         errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
         retry: false,
       });
     }
+
+    const destinationWalletBalance = await this.circleClient.getWalletBalance(destinationWalletID);
 
     this.logger.info(`Transferring ${amount} from ${sourceWalletID} to ${destinationWalletID}`);
     const response = await this.circleClient.transfer({
@@ -246,21 +253,13 @@ export class CircleService implements IBank {
       response.status !== CircleTransferStatus.INSUFFICIENT_FUNDS
     ) {
       try {
-        this.logger.info(
-          `Updating balance for wallet ${sourceWalletID} to ${Utils.roundTo2DecimalNumber(balance - amount)}`,
-        );
-        await this.circleRepo.updateCurrentBalance(sourceWalletID, Utils.roundTo2DecimalNumber(balance - amount));
+        const updateSourceWalletBalance = Utils.roundTo2DecimalNumber(sourceWalletBalance - amount);
+        this.logger.info(`Updating balance for wallet ${sourceWalletID} to ${updateSourceWalletBalance}`);
+        await this.circleRepo.updateCurrentBalance(sourceWalletID, updateSourceWalletBalance);
 
-        const destinationCurrentBalance = await this.circleClient.getWalletBalance(destinationWalletID);
-        this.logger.info(
-          `Updating balance for wallet ${destinationWalletID} to ${Utils.roundTo2DecimalNumber(
-            destinationCurrentBalance,
-          )}`,
-        );
-        await this.circleRepo.updateCurrentBalance(
-          destinationWalletID,
-          Utils.roundTo2DecimalNumber(destinationCurrentBalance),
-        );
+        const updateDestinationWalletBalance = Utils.roundTo2DecimalNumber(destinationWalletBalance + amount);
+        this.logger.info(`Updating balance for wallet ${destinationWalletID} to ${updateDestinationWalletBalance}`);
+        await this.circleRepo.updateCurrentBalance(destinationWalletID, updateDestinationWalletBalance);
       } catch (e) {
         this.alertService.raiseAlert({
           key: AlertKey.CIRCLE_BALANCE_UPDATE_FAILED,
