@@ -31,7 +31,7 @@ import { TransactionService } from "../../../modules/transaction/transaction.ser
 import { CircleService } from "../../../modules/circle/public/circle.service";
 import { getMockTransactionServiceWithDefaults } from "../../../modules/transaction/mocks/mock.transaction.service";
 import { ConsumerWorkflowName } from "../../../infra/temporal/workflow";
-import { TransactionStatus } from "../../../modules/transaction/domain/Transaction";
+import { Transaction, TransactionStatus } from "../../../modules/transaction/domain/Transaction";
 import { Currency } from "../../../modules/transaction/domain/TransactionTypes";
 
 describe("AdminService", () => {
@@ -716,7 +716,7 @@ describe("AdminService", () => {
 
   describe("initiateTransaction", () => {
     it("should initiate a CREDIT_ADJUSTMENT transaction", async () => {
-      const transaction = {
+      const transaction: Transaction = {
         id: "transaction-id-1",
         creditConsumerID: "consumer-id-1",
         creditAmount: 100,
@@ -755,7 +755,7 @@ describe("AdminService", () => {
     });
 
     it("should initiate a DEBIT_ADJUSTMENT transaction", async () => {
-      const transaction = {
+      const transaction: Transaction = {
         id: "transaction-id-1",
         debitConsumerID: "consumer-id-1",
         debitAmount: 100,

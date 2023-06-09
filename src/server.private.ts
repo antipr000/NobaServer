@@ -5,7 +5,7 @@ import { json, urlencoded } from "express";
 import { writeFileSync } from "fs";
 import helmet from "helmet";
 import morgan from "morgan";
-import { WINSTON_MODULE_NEST_PROVIDER, WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { WINSTON_MODULE_NEST_PROVIDER, WINSTON_MODULE_PROVIDER, WinstonLogger } from "nest-winston";
 import { PrivateAppModule } from "./app.module";
 import { DefaultExceptionsFilter } from "./core/exception/filters/DefaultExceptionsFilter";
 import {
@@ -17,10 +17,13 @@ import { AppEnvironment, getEnvironmentName } from "./config/ConfigurationUtils"
 import { PspWorkflowModule } from "./modules/psp/psp.module";
 import { TransactionWorkflowModule } from "./modules/transaction/transaction.module";
 import { NotificationWorkflowModule } from "./modules/notifications/notification.workflow.module";
+import winston from "winston";
 
 // `environmentVariables` stores extra environment varaibles that needs to be loaded before the app startup.
 // This will come handy while running tests & inserting any dependent environment varaibles.
-export const bootstrapPrivateEndpoints = async (environmentVariables): Promise<INestApplication> => {
+export const bootstrapPrivateEndpoints = async (
+  environmentVariables: Record<string, string>,
+): Promise<INestApplication> => {
   const environmentKeys = Object.keys(environmentVariables);
   for (let i = 0; i < environmentKeys.length; i++) {
     const environmentKey = environmentKeys[i];
@@ -30,7 +33,7 @@ export const bootstrapPrivateEndpoints = async (environmentVariables): Promise<I
   const app = await NestFactory.create(PrivateAppModule, {});
 
   const logger: Logger = app.get(WINSTON_MODULE_NEST_PROVIDER); //logger is of Nestjs type
-  const winstonLogger = app.get(WINSTON_MODULE_PROVIDER); //logger of winston type
+  const winstonLogger: winston.Logger = app.get(WINSTON_MODULE_PROVIDER); //logger of winston type
 
   const appEnvType: AppEnvironment = getEnvironmentName();
 
@@ -106,7 +109,7 @@ function generateSwaggerDoc(
   return swaggerDocument;
 }
 
-function getMorgan(winstonLogger) {
+function getMorgan(winstonLogger: winston.Logger) {
   const morganOptions = {
     stream: {
       write: (text: string) => {
