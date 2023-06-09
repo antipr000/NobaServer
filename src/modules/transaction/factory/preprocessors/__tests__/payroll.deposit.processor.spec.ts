@@ -23,6 +23,7 @@ import { Employer } from "../../../../employer/domain/Employer";
 import { getRandomEmployer } from "../../../../employer/test_utils/employer.test.utils";
 import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
 import { Currency } from "../../../domain/TransactionTypes";
+import { getRandomTransaction } from "../../../../../modules/transaction/test_utils/test.utils";
 
 describe("PayrollDepositPreprocessor", () => {
   jest.setTimeout(20000);
@@ -251,6 +252,16 @@ describe("PayrollDepositPreprocessor", () => {
         sessionKey: "PAYROLL",
         transactionFees: [],
       });
+    });
+  });
+
+  describe("performPostProcessing", () => {
+    it("shouldn't do anything", async () => {
+      const request: PayrollDepositTransactionRequest = {
+        disbursementID: "DISBURSEMENT_ID",
+      };
+
+      await payrollDepositPreprocessor.performPostProcessing(request, getRandomTransaction("CONSUMER_ID"));
     });
   });
 });

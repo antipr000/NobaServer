@@ -11,7 +11,7 @@ import { Employer } from "../../../../employer/domain/Employer";
 import { Payroll } from "../../../../employer/domain/Payroll";
 import { PayrollDisbursement } from "../../../../employer/domain/PayrollDisbursement";
 import { EmployerService } from "../../../../employer/employer.service";
-import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
+import { InputTransaction, Transaction, WorkflowName } from "../../../domain/Transaction";
 import { Currency } from "../../../domain/TransactionTypes";
 import { PayrollDepositTransactionRequest } from "../../../dto/transaction.service.dto";
 import { TransactionProcessor } from "../transaction.processor";
@@ -87,6 +87,11 @@ export class PayrollDepositProcessor implements TransactionProcessor {
       creditConsumerID: employee.consumerID,
     };
   }
+
+  async performPostProcessing(
+    request: PayrollDepositTransactionRequest,
+    createdTransaction: Transaction,
+  ): Promise<void> {}
 
   private performStaticValidations(request: PayrollDepositTransactionRequest): void {
     const validationSchema = Joi.object(this.validationKeys).options({

@@ -14,6 +14,7 @@ import { getMockConsumerServiceWithDefaults } from "../../../../consumer/mocks/m
 import { ServiceErrorCode } from "../../../../../core/exception/service.exception";
 import { WorkflowExecutor } from "../../../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../../../infra/temporal/mocks/mock.workflow.executor";
+import { getRandomTransaction } from "../../../../../modules/transaction/test_utils/test.utils";
 
 const getRandomConsumer = (): Consumer => {
   return Consumer.createConsumer({
@@ -185,6 +186,21 @@ describe("WalletTransferPreprocessor", () => {
       await walletTransferPreprocessor.initiateWorkflow("TRANSACTION_ID", "TRANSACTION_REF");
 
       verify(workflowExecutor.executeWalletTransferWorkflow("TRANSACTION_ID", "TRANSACTION_REF")).once();
+    });
+  });
+
+  describe("performPostProcessing", () => {
+    it("shouldn't do anything", async () => {
+      const request: WalletTransferTransactionRequest = {
+        debitAmount: 100,
+        debitCurrency: Currency.USD,
+        debitConsumerIDOrTag: "DEBIT_CONSUMER_ID_OR_TAG",
+        creditConsumerIDOrTag: "CREDIT_CONSUMER_ID_OR_TAG",
+        memo: "MEMO",
+        sessionKey: "SESSION_KEY",
+      };
+
+      await walletTransferPreprocessor.performPostProcessing(request, getRandomTransaction("CONSUMER_ID"));
     });
   });
 });

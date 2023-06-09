@@ -8,5 +8,8 @@ export function getMockCardDebitAdjustmentPreprocessorWithDefaults(): CardDebitA
   when(cardDebitAdjustmentPreprocessor.convertToRepoInputTransaction(anything())).thenReject(
     new Error("Not implemented!"),
   );
+  when(cardDebitAdjustmentPreprocessor.performPostProcessing(anything(), anything())).thenReject(
+    new Error("Not implemented!"),
+  );
   return cardDebitAdjustmentPreprocessor;
 }

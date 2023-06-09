@@ -6,6 +6,7 @@ import { CardWithdrawalTransactionRequest } from "../../../dto/transaction.servi
 import { WorkflowName } from "../../../domain/Transaction";
 import { Currency } from "../../../domain/TransactionTypes";
 import { CardWithdrawalProcessor } from "../implementations/card.withdrawal.processor";
+import { getRandomTransaction } from "../../../../../modules/transaction/test_utils/test.utils";
 
 describe("CardWithdrawalPreprocessor", () => {
   jest.setTimeout(20000);
@@ -107,6 +108,22 @@ describe("CardWithdrawalPreprocessor", () => {
         sessionKey: "CARD_WITHDRAWAL",
         transactionFees: [],
       });
+    });
+  });
+
+  describe("performPostProcessing", () => {
+    it("shouldn't do anything", async () => {
+      const request: CardWithdrawalTransactionRequest = {
+        debitAmountInUSD: 100,
+        creditAmount: 100,
+        creditCurrency: Currency.COP,
+        debitConsumerID: "DEBIT_CONSUMER_ID",
+        exchangeRate: 1,
+        memo: "MEMO",
+        nobaTransactionID: "NOBA_TRANSACTION_ID",
+      };
+
+      await cardWithdrawalPreprocessor.performPostProcessing(request, getRandomTransaction("CONSUMER_ID"));
     });
   });
 });

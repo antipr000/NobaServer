@@ -6,5 +6,9 @@ export function getMockCardReversalPreprocessorWithDefaults(): CardReversalProce
 
   when(cardReversalPreprocessor.validate(anything())).thenReject(new Error("Not implemented!"));
   when(cardReversalPreprocessor.convertToRepoInputTransaction(anything())).thenReject(new Error("Not implemented!"));
+  when(cardReversalPreprocessor.performPostProcessing(anything(), anything())).thenReject(
+    new Error("Not implemented!"),
+  );
+
   return cardReversalPreprocessor;
 }

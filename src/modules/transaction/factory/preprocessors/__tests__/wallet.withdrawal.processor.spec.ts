@@ -23,6 +23,7 @@ import { WalletWithdrawalProcessor } from "../implementations/wallet.withdrawal.
 import { AccountType, DocumentType } from "../../../../../modules/transaction/domain/WithdrawalDetails";
 import { WorkflowExecutor } from "../../../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../../../infra/temporal/mocks/mock.workflow.executor";
+import { getRandomTransaction } from "../../../../../modules/transaction/test_utils/test.utils";
 
 describe("WalletWithdrawalProcessor", () => {
   jest.setTimeout(20000);
@@ -343,6 +344,27 @@ describe("WalletWithdrawalProcessor", () => {
       await walletWithdrawalProcessor.initiateWorkflow("TRANSACTION_ID", "TRANSACTION_REF");
 
       verify(workflowExecutor.executeWalletWithdrawalWorkflow("TRANSACTION_ID", "TRANSACTION_REF")).once();
+    });
+  });
+
+  describe("performPostProcessing", () => {
+    it("shouldn't do anything", async () => {
+      const request: WalletWithdrawalTransactionRequest = {
+        debitAmount: 50,
+        debitConsumerIDOrTag: "DEBIT_CONSUMER_ID_OR_TAG",
+        creditCurrency: Currency.COP,
+        memo: "MEMO",
+        sessionKey: "SESSION_KEY",
+        withdrawalDetails: {
+          bankCode: "BANCOLOMBIA",
+          accountNumber: "1234567890",
+          documentNumber: "9876543210",
+          accountType: AccountType.CHECKING,
+          documentType: DocumentType.CC,
+        },
+      };
+
+      await walletWithdrawalProcessor.performPostProcessing(request, getRandomTransaction("CONSUMER_ID"));
     });
   });
 });

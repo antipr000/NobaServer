@@ -6,5 +6,9 @@ export function getMockDebitAdjustmentPreprocessorWithDefaults(): DebitAdjustmen
 
   when(debitAdjustmentPreprocessor.validate(anything())).thenReject(new Error("Not implemented!"));
   when(debitAdjustmentPreprocessor.convertToRepoInputTransaction(anything())).thenReject(new Error("Not implemented!"));
+  when(debitAdjustmentPreprocessor.performPostProcessing(anything(), anything())).thenReject(
+    new Error("Not implemented!"),
+  );
+
   return debitAdjustmentPreprocessor;
 }

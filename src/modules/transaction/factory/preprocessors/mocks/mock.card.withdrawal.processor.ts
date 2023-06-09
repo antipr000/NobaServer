@@ -6,5 +6,9 @@ export function getMockCardWithdrawalPreprocessorWithDefaults(): CardWithdrawalP
 
   when(cardWithdrawalPreprocessor.validate(anything())).thenReject(new Error("Not implemented!"));
   when(cardWithdrawalPreprocessor.convertToRepoInputTransaction(anything())).thenReject(new Error("Not implemented!"));
+  when(cardWithdrawalPreprocessor.performPostProcessing(anything(), anything())).thenReject(
+    new Error("Not implemented!"),
+  );
+
   return cardWithdrawalPreprocessor;
 }

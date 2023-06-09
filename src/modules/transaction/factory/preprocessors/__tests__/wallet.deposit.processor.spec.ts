@@ -14,11 +14,11 @@ import {
 import { TestConfigModule } from "../../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../../core/utils/WinstonModule";
 import { WalletDepositMode, WalletDepositTransactionRequest } from "../../../dto/transaction.service.dto";
-import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
+import { InputTransaction, Transaction, TransactionStatus, WorkflowName } from "../../../domain/Transaction";
 import { Currency } from "../../../domain/TransactionTypes";
 import { WalletDepositProcessor } from "../implementations/wallet.deposit.processor";
 import { ExchangeRateService } from "../../../../exchangerate/exchangerate.service";
-import { anyString, instance, verify, when } from "ts-mockito";
+import { anyString, anything, capture, instance, verify, when } from "ts-mockito";
 import { getMockExchangeRateServiceWithDefaults } from "../../../../exchangerate/mocks/mock.exchangerate.service";
 import { ConsumerService } from "../../../../consumer/consumer.service";
 import { AlertService } from "../../../../common/alerts/alert.service";
@@ -30,6 +30,9 @@ import { TransactionFlags } from "../../../../../modules/transaction/domain/Tran
 import { FeeType } from "../../../../../modules/transaction/domain/TransactionFee";
 import { WorkflowExecutor } from "../../../../../infra/temporal/workflow.executor";
 import { getMockWorkflowExecutorWithDefaults } from "../../../../../infra/temporal/mocks/mock.workflow.executor";
+import { MonoService } from "../../../../../modules/mono/public/mono.service";
+import { getMockMonoServiceWithDefaults } from "../../../../../modules/mono/public/mocks/mock.mono.service";
+import { MonoCurrency, MonoTransactionType } from "../../../../../modules/mono/domain/Mono";
 
 describe("WalletDepositProcessor", () => {
   jest.setTimeout(20000);
@@ -40,12 +43,14 @@ describe("WalletDepositProcessor", () => {
   let consumerService: ConsumerService;
   let alertService: AlertService;
   let workflowExecutor: WorkflowExecutor;
+  let monoService: MonoService;
 
   beforeEach(async () => {
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
     alertService = getMockAlertServiceWithDefaults();
     workflowExecutor = getMockWorkflowExecutorWithDefaults();
+    monoService = getMockMonoServiceWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -79,6 +84,10 @@ describe("WalletDepositProcessor", () => {
         {
           provide: WorkflowExecutor,
           useFactory: () => instance(workflowExecutor),
+        },
+        {
+          provide: MonoService,
+          useFactory: () => instance(monoService),
         },
         WalletDepositProcessor,
       ],
@@ -357,6 +366,44 @@ describe("WalletDepositProcessor", () => {
       await walletDepositProcessor.initiateWorkflow("TRANSACTION_ID", "TRANSACTION_REF");
 
       verify(workflowExecutor.executeWalletDepositWorkflow("TRANSACTION_ID", "TRANSACTION_REF")).once();
+    });
+  });
+
+  describe("performPostProcessing", () => {
+    it("should successfully create Mono Transaction", async () => {
+      const request: WalletDepositTransactionRequest = {
+        debitAmount: 100,
+        debitCurrency: Currency.COP,
+        debitConsumerIDOrTag: "DEBIT_CONSUMER_ID",
+        memo: "MEMO",
+        depositMode: WalletDepositMode.COLLECTION_LINK,
+        sessionKey: "SESSION_KEY",
+      };
+      const transaction: Transaction = {
+        id: "TRANSACTION_ID",
+        workflowName: WorkflowName.WALLET_DEPOSIT,
+        exchangeRate: 0.00025,
+        memo: "MEMO",
+        sessionKey: "SESSION_KEY",
+        status: TransactionStatus.INITIATED,
+        transactionRef: "TRANSACTION_REF",
+        transactionFees: [],
+        debitAmount: 100,
+        debitCurrency: Currency.COP,
+        debitConsumerID: "DEBIT_CONSUMER_ID",
+      };
+      when(monoService.createMonoTransaction(anything())).thenResolve();
+
+      await walletDepositProcessor.performPostProcessing(request, transaction);
+
+      const [monoCreateTransactionRequest] = capture(monoService.createMonoTransaction).last();
+      expect(monoCreateTransactionRequest).toStrictEqual({
+        type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
+        amount: 100,
+        currency: MonoCurrency.COP,
+        consumerID: "DEBIT_CONSUMER_ID",
+        nobaTransactionID: "TRANSACTION_ID",
+      });
     });
   });
 });

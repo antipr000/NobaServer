@@ -6,5 +6,9 @@ export function getMockPayrollDepositPreprocessorWithDefaults(): PayrollDepositP
 
   when(payrollDepositPreprocessor.validate(anything())).thenReject(new Error("Not implemented!"));
   when(payrollDepositPreprocessor.convertToRepoInputTransaction(anything())).thenReject(new Error("Not implemented!"));
+  when(payrollDepositPreprocessor.performPostProcessing(anything(), anything())).thenReject(
+    new Error("Not implemented!"),
+  );
+
   return payrollDepositPreprocessor;
 }

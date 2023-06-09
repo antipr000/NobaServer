@@ -6,6 +6,7 @@ import { CardReversalTransactionRequest, CardReversalTransactionType } from "../
 import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
 import { Currency } from "../../../domain/TransactionTypes";
 import { CardReversalProcessor } from "../implementations/card.reversal.processor";
+import { getRandomTransaction } from "../../../../../modules/transaction/test_utils/test.utils";
 
 describe("CardReversalPreprocessor", () => {
   jest.setTimeout(20000);
@@ -118,6 +119,21 @@ describe("CardReversalPreprocessor", () => {
         sessionKey: "CARD_REVERSAL",
         transactionFees: [],
       });
+    });
+  });
+
+  describe("performPostProcessing", () => {
+    it("shouldn't do anything", async () => {
+      const request: CardReversalTransactionRequest = {
+        type: CardReversalTransactionType.CREDIT,
+        amountInUSD: 100,
+        consumerID: "CREDIT_CONSUMER_ID",
+        exchangeRate: 1,
+        memo: "MEMO",
+        nobaTransactionID: "NOBA_TRANSACTION_ID",
+      };
+
+      await cardReversalPreprocessor.performPostProcessing(request, getRandomTransaction("CONSUMER_ID"));
     });
   });
 });

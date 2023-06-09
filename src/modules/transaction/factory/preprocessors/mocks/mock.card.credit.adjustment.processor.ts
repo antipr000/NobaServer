@@ -8,5 +8,8 @@ export function getMockCardCreditAdjustmentPreprocessorWithDefaults(): CardCredi
   when(cardCreditAdjustmentPreprocessor.convertToRepoInputTransaction(anything())).thenReject(
     new Error("Not implemented!"),
   );
+  when(cardCreditAdjustmentPreprocessor.performPostProcessing(anything(), anything())).thenReject(
+    new Error("Not implemented!"),
+  );
   return cardCreditAdjustmentPreprocessor;
 }

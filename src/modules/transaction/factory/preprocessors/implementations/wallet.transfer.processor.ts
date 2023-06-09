@@ -5,7 +5,7 @@ import { ConsumerService } from "../../../../consumer/consumer.service";
 import { Consumer } from "../../../../consumer/domain/Consumer";
 import { Utils } from "../../../../../core/utils/Utils";
 import { KeysRequired } from "../../../../common/domain/Types";
-import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
+import { InputTransaction, Transaction, WorkflowName } from "../../../domain/Transaction";
 import { Currency } from "../../../domain/TransactionTypes";
 import { WalletTransferTransactionRequest } from "../../../dto/transaction.service.dto";
 import { TransactionProcessor } from "../transaction.processor";
@@ -55,6 +55,11 @@ export class WalletTransferProcessor implements TransactionProcessor, WorkflowIn
   async initiateWorkflow(transactionID: string, transactionRef: string): Promise<void> {
     await this.workflowExecutor.executeWalletTransferWorkflow(transactionID, transactionRef);
   }
+
+  async performPostProcessing(
+    request: WalletTransferTransactionRequest,
+    createdTransaction: Transaction,
+  ): Promise<void> {}
 
   private performStaticValidations(request: WalletTransferTransactionRequest): void {
     try {

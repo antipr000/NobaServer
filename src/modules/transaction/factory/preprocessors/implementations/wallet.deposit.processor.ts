@@ -19,12 +19,14 @@ import { Utils } from "../../../../../core/utils/Utils";
 import { AlertKey } from "../../../../common/alerts/alert.dto";
 import { AlertService } from "../../../../common/alerts/alert.service";
 import { KeysRequired } from "../../../../common/domain/Types";
-import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
+import { InputTransaction, Transaction, WorkflowName } from "../../../domain/Transaction";
 import { Currency } from "../../../domain/TransactionTypes";
 import { TransactionQuoteProvider } from "../quote.provider";
 import { TransactionProcessor } from "../transaction.processor";
 import { WorkflowExecutor } from "../../../../../infra/temporal/workflow.executor";
 import { WorkflowInitiator } from "../workflow.initiator";
+import { MonoService } from "../../../../../modules/mono/public/mono.service";
+import { MonoCurrency, MonoTransactionType } from "../../../../../modules/mono/domain/Mono";
 
 @Injectable()
 export class WalletDepositProcessor implements TransactionProcessor, TransactionQuoteProvider, WorkflowInitiator {
@@ -53,6 +55,7 @@ export class WalletDepositProcessor implements TransactionProcessor, Transaction
     private readonly exchangeRateService: ExchangeRateService,
     private readonly consumerService: ConsumerService,
     private readonly workflowExecutor: WorkflowExecutor,
+    private readonly monoService: MonoService,
     private configService: CustomConfigService,
   ) {
     this.depositFeeFixedAmount = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeeFixedAmount;
@@ -165,6 +168,22 @@ export class WalletDepositProcessor implements TransactionProcessor, Transaction
 
   async initiateWorkflow(transactionID: string, transactionRef: string): Promise<void> {
     await this.workflowExecutor.executeWalletDepositWorkflow(transactionID, transactionRef);
+  }
+
+  async performPostProcessing(
+    request: WalletDepositTransactionRequest,
+    createdTransaction: Transaction,
+  ): Promise<void> {
+    // TODO: Add a check for the MonoCurrency here. Mono should be called "only" for COP currencies.
+
+    // There is just 1 valid "WalletDepositMode" now and hence no check required.
+    await this.monoService.createMonoTransaction({
+      type: MonoTransactionType.COLLECTION_LINK_DEPOSIT,
+      amount: createdTransaction.debitAmount,
+      currency: createdTransaction.debitCurrency as MonoCurrency,
+      consumerID: createdTransaction.debitConsumerID,
+      nobaTransactionID: createdTransaction.id,
+    });
   }
 
   private performStaticValidations(request: WalletDepositTransactionRequest): void {

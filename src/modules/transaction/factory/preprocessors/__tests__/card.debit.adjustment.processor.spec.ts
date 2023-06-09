@@ -6,6 +6,7 @@ import { CardDebitAdjustmentTransactionRequest } from "../../../dto/transaction.
 import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
 import { Currency } from "../../../domain/TransactionTypes";
 import { CardDebitAdjustmentProcessor } from "../implementations/card.debit.adjustment.processor";
+import { getRandomTransaction } from "../../../../../modules/transaction/test_utils/test.utils";
 
 describe("CardDebitAdjustmentPreprocessor", () => {
   jest.setTimeout(20000);
@@ -106,6 +107,22 @@ describe("CardDebitAdjustmentPreprocessor", () => {
         sessionKey: "CARD_ADJUSTMENTS",
         transactionFees: [],
       });
+    });
+  });
+
+  describe("performPostProcessing", () => {
+    it("shouldn't do anything", async () => {
+      const request: CardDebitAdjustmentTransactionRequest = {
+        creditAmount: 100,
+        creditCurrency: Currency.COP,
+        debitAmount: 10,
+        debitCurrency: Currency.USD,
+        debitConsumerID: "DEBIT_CONSUMER_ID",
+        exchangeRate: 0.1,
+        memo: "MEMO",
+      };
+
+      await cardDebitAdjustmentPreprocessor.performPostProcessing(request, getRandomTransaction("CONSUMER_ID"));
     });
   });
 });

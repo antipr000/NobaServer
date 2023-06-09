@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import Joi from "joi";
 import { Utils } from "../../../../../core/utils/Utils";
 import { KeysRequired } from "../../../../common/domain/Types";
-import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
+import { InputTransaction, Transaction, WorkflowName } from "../../../domain/Transaction";
 import { Currency } from "../../../domain/TransactionTypes";
 import { CardDebitAdjustmentTransactionRequest } from "../../../dto/transaction.service.dto";
 import { TransactionProcessor } from "../transaction.processor";
@@ -45,6 +45,11 @@ export class CardDebitAdjustmentProcessor implements TransactionProcessor {
       transactionFees: [],
     };
   }
+
+  async performPostProcessing(
+    request: CardDebitAdjustmentTransactionRequest,
+    createdTransaction: Transaction,
+  ): Promise<void> {}
 
   private performStaticValidations(request: CardDebitAdjustmentTransactionRequest): void {
     const validationSchema = Joi.object(this.validationKeys).options({

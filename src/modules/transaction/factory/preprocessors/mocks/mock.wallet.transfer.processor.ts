@@ -7,5 +7,8 @@ export function getMockwalletTransferPreprocessorWithDefaults(): WalletTransferP
   when(walletTransferPreprocessor.validate(anything())).thenReject(new Error("Not implemented!"));
   when(walletTransferPreprocessor.convertToRepoInputTransaction(anything())).thenReject(new Error("Not implemented!"));
   when(walletTransferPreprocessor.initiateWorkflow(anything(), anything())).thenReject(new Error("Not implemented!"));
+  when(walletTransferPreprocessor.performPostProcessing(anything(), anything())).thenReject(
+    new Error("Not implemented!"),
+  );
   return walletTransferPreprocessor;
 }

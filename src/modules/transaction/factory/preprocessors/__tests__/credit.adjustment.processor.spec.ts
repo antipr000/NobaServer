@@ -6,6 +6,7 @@ import { CreditAdjustmentTransactionRequest } from "../../../dto/transaction.ser
 import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
 import { Currency } from "../../../domain/TransactionTypes";
 import { CreditAdjustmentProcessor } from "../implementations/credit.adjustment.processor";
+import { getRandomTransaction } from "../../../../../modules/transaction/test_utils/test.utils";
 
 describe("CreditAdjustmentPreprocessor", () => {
   jest.setTimeout(20000);
@@ -95,6 +96,19 @@ describe("CreditAdjustmentPreprocessor", () => {
         debitAmount: 100,
         debitCurrency: Currency.COP,
       });
+    });
+  });
+
+  describe("performPostProcessing", () => {
+    it("shouldn't do anything", async () => {
+      const request: CreditAdjustmentTransactionRequest = {
+        creditAmount: 100,
+        creditCurrency: Currency.COP,
+        creditConsumerID: "CREDIT_CONSUMER_ID",
+        memo: "MEMO",
+      };
+
+      await creditAdjustmentPreprocessor.performPostProcessing(request, getRandomTransaction("CONSUMER_ID"));
     });
   });
 });

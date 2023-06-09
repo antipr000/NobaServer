@@ -8,5 +8,9 @@ export function getMockCreditAdjustmentPreprocessorWithDefaults(): CreditAdjustm
   when(creditAdjustmentPreprocessor.convertToRepoInputTransaction(anything())).thenReject(
     new Error("Not implemented!"),
   );
+  when(creditAdjustmentPreprocessor.performPostProcessing(anything(), anything())).thenReject(
+    new Error("Not implemented!"),
+  );
+
   return creditAdjustmentPreprocessor;
 }

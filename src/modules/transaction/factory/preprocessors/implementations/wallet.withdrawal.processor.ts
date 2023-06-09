@@ -11,7 +11,7 @@ import { TransactionFlags } from "../../../../../modules/transaction/domain/Tran
 import { QuoteResponseDTO } from "../../../../../modules/transaction/dto/QuoteResponseDTO";
 import { Utils } from "../../../../../core/utils/Utils";
 import { KeysRequired } from "../../../../../modules/common/domain/Types";
-import { InputTransaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
+import { InputTransaction, Transaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
 import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
 import {
   WalletWithdrawalDetails,
@@ -159,6 +159,11 @@ export class WalletWithdrawalProcessor implements TransactionProcessor, Transact
   async initiateWorkflow(transactionID: string, transactionRef: string): Promise<void> {
     await this.workflowExecutor.executeWalletWithdrawalWorkflow(transactionID, transactionRef);
   }
+
+  async performPostProcessing(
+    request: WalletWithdrawalTransactionRequest,
+    createdTransaction: Transaction,
+  ): Promise<void> {}
 
   private performStaticValidations(request: WalletWithdrawalTransactionRequest): void {
     try {
