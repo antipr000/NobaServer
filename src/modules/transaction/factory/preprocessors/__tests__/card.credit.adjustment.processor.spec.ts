@@ -2,16 +2,17 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { AppEnvironment, NOBA_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../../core/utils/WinstonModule";
-import { CardDebitAdjustmentTransactionRequest } from "../../../../../modules/transaction/dto/transaction.service.dto";
-import { InputTransaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
-import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
-import { CardDebitAdjustmentPreprocessor } from "../implementations/card.debit.adjustment.preprocessor";
+import { CardCreditAdjustmentTransactionRequest } from "../../../dto/transaction.service.dto";
+import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
+import { Currency } from "../../../domain/TransactionTypes";
+import { CardCreditAdjustmentProcessor } from "../implementations/card.credit.adjustment.processor";
+import { getRandomTransaction } from "../../../../../modules/transaction/test_utils/test.utils";
 
-describe("CardDebitAdjustmentPreprocessor", () => {
+describe("CardCreditAdjustmentPreprocessor", () => {
   jest.setTimeout(20000);
 
   let app: TestingModule;
-  let cardDebitAdjustmentPreprocessor: CardDebitAdjustmentPreprocessor;
+  let cardCreditAdjustmentPreprocessor: CardCreditAdjustmentProcessor;
 
   beforeEach(async () => {
     const appConfigurations = {
@@ -23,10 +24,10 @@ describe("CardDebitAdjustmentPreprocessor", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [CardDebitAdjustmentPreprocessor],
+      providers: [CardCreditAdjustmentProcessor],
     }).compile();
 
-    cardDebitAdjustmentPreprocessor = app.get<CardDebitAdjustmentPreprocessor>(CardDebitAdjustmentPreprocessor);
+    cardCreditAdjustmentPreprocessor = app.get<CardCreditAdjustmentProcessor>(CardCreditAdjustmentProcessor);
   });
 
   afterEach(async () => {
@@ -35,12 +36,12 @@ describe("CardDebitAdjustmentPreprocessor", () => {
 
   describe("validate()", () => {
     describe("Static validations", () => {
-      const VALID_REQUEST: CardDebitAdjustmentTransactionRequest = {
+      const VALID_REQUEST: CardCreditAdjustmentTransactionRequest = {
         creditAmount: 100,
         creditCurrency: Currency.COP,
         debitAmount: 10,
         debitCurrency: Currency.USD,
-        debitConsumerID: "DEBIT_CONSUMER_ID",
+        creditConsumerID: "CREDIT_CONSUMER_ID",
         exchangeRate: 0.1,
         memo: "MEMO",
       };
@@ -52,13 +53,13 @@ describe("CardDebitAdjustmentPreprocessor", () => {
         "creditCurrency",
         "exchangeRate",
         "memo",
-        "debitConsumerID",
+        "creditConsumerID",
       ])("should throw error if '%s' is not specified", async field => {
         const request = JSON.parse(JSON.stringify(VALID_REQUEST));
         delete request[field];
 
         try {
-          await cardDebitAdjustmentPreprocessor.validate(request);
+          await cardCreditAdjustmentPreprocessor.validate(request);
           expect(true).toBe(false);
         } catch (err) {
           expect(err.message).toEqual(expect.stringContaining(`${field}`));
@@ -70,7 +71,7 @@ describe("CardDebitAdjustmentPreprocessor", () => {
         request[field] = "INVALID";
 
         try {
-          await cardDebitAdjustmentPreprocessor.validate(request);
+          await cardCreditAdjustmentPreprocessor.validate(request);
           expect(true).toBe(false);
         } catch (err) {
           expect(err.message).toEqual(expect.stringContaining(`${field}`));
@@ -80,25 +81,25 @@ describe("CardDebitAdjustmentPreprocessor", () => {
   });
 
   describe("convertToRepoInputTransaction()", () => {
-    it("should correctly map the CARD_DEBIT_ADJUSTMENT transaction to InputTransaction", async () => {
-      const request: CardDebitAdjustmentTransactionRequest = {
+    it("should correctly map the CARD_CREDIT_ADJUSTMENT transaction to InputTransaction", async () => {
+      const request: CardCreditAdjustmentTransactionRequest = {
         creditAmount: 100,
         creditCurrency: Currency.COP,
         debitAmount: 10,
         debitCurrency: Currency.USD,
-        debitConsumerID: "DEBIT_CONSUMER_ID",
+        creditConsumerID: "CREDIT_CONSUMER_ID",
         exchangeRate: 0.1,
         memo: "MEMO",
       };
 
-      const response: InputTransaction = await cardDebitAdjustmentPreprocessor.convertToRepoInputTransaction(request);
+      const response: InputTransaction = await cardCreditAdjustmentPreprocessor.convertToRepoInputTransaction(request);
 
       expect(response).toStrictEqual({
         transactionRef: expect.any(String),
-        workflowName: WorkflowName.CARD_DEBIT_ADJUSTMENT,
+        workflowName: WorkflowName.CARD_CREDIT_ADJUSTMENT,
         debitAmount: 10,
         debitCurrency: Currency.USD,
-        debitConsumerID: "DEBIT_CONSUMER_ID",
+        creditConsumerID: "CREDIT_CONSUMER_ID",
         creditAmount: 100,
         creditCurrency: Currency.COP,
         memo: "MEMO",
@@ -106,6 +107,22 @@ describe("CardDebitAdjustmentPreprocessor", () => {
         sessionKey: "CARD_ADJUSTMENTS",
         transactionFees: [],
       });
+    });
+  });
+
+  describe("performPostProcessing", () => {
+    it("shouldn't do anything", async () => {
+      const request: CardCreditAdjustmentTransactionRequest = {
+        creditAmount: 100,
+        creditCurrency: Currency.COP,
+        debitAmount: 10,
+        debitCurrency: Currency.USD,
+        creditConsumerID: "CREDIT_CONSUMER_ID",
+        exchangeRate: 0.1,
+        memo: "MEMO",
+      };
+
+      await cardCreditAdjustmentPreprocessor.performPostProcessing(request, getRandomTransaction("CONSUMER_ID"));
     });
   });
 });

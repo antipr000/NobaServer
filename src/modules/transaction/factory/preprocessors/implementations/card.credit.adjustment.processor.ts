@@ -1,14 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import Joi from "joi";
 import { Utils } from "../../../../../core/utils/Utils";
-import { KeysRequired } from "../../../../../modules/common/domain/Types";
-import { InputTransaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
-import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
-import { CardCreditAdjustmentTransactionRequest } from "../../../../../modules/transaction/dto/transaction.service.dto";
-import { TransactionPreprocessor } from "../transaction.preprocessor";
+import { KeysRequired } from "../../../../common/domain/Types";
+import { InputTransaction, Transaction, WorkflowName } from "../../../domain/Transaction";
+import { Currency } from "../../../domain/TransactionTypes";
+import { CardCreditAdjustmentTransactionRequest } from "../../../dto/transaction.service.dto";
+import { TransactionProcessor } from "../transaction.processor";
 
 @Injectable()
-export class CardCreditAdjustmentPreprocessor implements TransactionPreprocessor {
+export class CardCreditAdjustmentProcessor implements TransactionProcessor {
   private readonly validationKeys: KeysRequired<CardCreditAdjustmentTransactionRequest> = {
     creditAmount: Joi.number().required(),
     creditCurrency: Joi.string()
@@ -45,6 +45,11 @@ export class CardCreditAdjustmentPreprocessor implements TransactionPreprocessor
       transactionFees: [],
     };
   }
+
+  async performPostProcessing(
+    request: CardCreditAdjustmentTransactionRequest,
+    createdTransaction: Transaction,
+  ): Promise<void> {}
 
   private performStaticValidations(request: CardCreditAdjustmentTransactionRequest): void {
     const validationSchema = Joi.object(this.validationKeys).options({

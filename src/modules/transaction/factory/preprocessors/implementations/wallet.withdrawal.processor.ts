@@ -11,19 +11,21 @@ import { TransactionFlags } from "../../../../../modules/transaction/domain/Tran
 import { QuoteResponseDTO } from "../../../../../modules/transaction/dto/QuoteResponseDTO";
 import { Utils } from "../../../../../core/utils/Utils";
 import { KeysRequired } from "../../../../../modules/common/domain/Types";
-import { InputTransaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
+import { InputTransaction, Transaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
 import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
 import {
   WalletWithdrawalDetails,
   WalletWithdrawalTransactionRequest,
 } from "../../../../../modules/transaction/dto/transaction.service.dto";
 import { TransactionQuoteProvider } from "../quote.provider";
-import { TransactionPreprocessor } from "../transaction.preprocessor";
+import { TransactionProcessor } from "../transaction.processor";
 import { FeeType } from "../../../../../modules/transaction/domain/TransactionFee";
 import { AccountType, DocumentType } from "../../../../../modules/transaction/domain/WithdrawalDetails";
+import { WorkflowInitiator } from "../workflow.initiator";
+import { WorkflowExecutor } from "../../../../../infra/temporal/workflow.executor";
 
 @Injectable()
-export class WalletWithdrawalProcessor implements TransactionPreprocessor, TransactionQuoteProvider {
+export class WalletWithdrawalProcessor implements TransactionProcessor, TransactionQuoteProvider, WorkflowInitiator {
   private readonly walletWithdrawalDetailsKeys: KeysRequired<WalletWithdrawalDetails> = {
     bankCode: Joi.string().required(),
     accountNumber: Joi.string().required(),
@@ -52,6 +54,7 @@ export class WalletWithdrawalProcessor implements TransactionPreprocessor, Trans
   constructor(
     private readonly consumerService: ConsumerService,
     private readonly exchangeRateService: ExchangeRateService,
+    private readonly workflowExecutor: WorkflowExecutor,
     private configService: CustomConfigService,
   ) {
     this.monoWithdrawalFeeAmount =
@@ -152,6 +155,15 @@ export class WalletWithdrawalProcessor implements TransactionPreprocessor, Trans
       nobaRate: nobaRate.toString(),
     };
   }
+
+  async initiateWorkflow(transactionID: string, transactionRef: string): Promise<void> {
+    await this.workflowExecutor.executeWalletWithdrawalWorkflow(transactionID, transactionRef);
+  }
+
+  async performPostProcessing(
+    request: WalletWithdrawalTransactionRequest,
+    createdTransaction: Transaction,
+  ): Promise<void> {}
 
   private performStaticValidations(request: WalletWithdrawalTransactionRequest): void {
     try {

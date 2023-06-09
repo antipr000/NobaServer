@@ -2,16 +2,17 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { AppEnvironment, NOBA_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../../core/utils/WinstonModule";
-import { DebitAdjustmentTransactionRequest } from "../../../../../modules/transaction/dto/transaction.service.dto";
-import { InputTransaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
-import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
-import { DebitAdjustmentPreprocessor } from "../implementations/debit.adjustment.preprocessor";
+import { DebitAdjustmentTransactionRequest } from "../../../dto/transaction.service.dto";
+import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
+import { Currency } from "../../../domain/TransactionTypes";
+import { DebitAdjustmentProcessor } from "../implementations/debit.adjustment.processor";
+import { getRandomTransaction } from "../../../../../modules/transaction/test_utils/test.utils";
 
 describe("DebitAdjustmentPreprocessor", () => {
   jest.setTimeout(20000);
 
   let app: TestingModule;
-  let debitAdjustmentPreprocessor: DebitAdjustmentPreprocessor;
+  let debitAdjustmentPreprocessor: DebitAdjustmentProcessor;
 
   beforeEach(async () => {
     const appConfigurations = {
@@ -23,10 +24,10 @@ describe("DebitAdjustmentPreprocessor", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [DebitAdjustmentPreprocessor],
+      providers: [DebitAdjustmentProcessor],
     }).compile();
 
-    debitAdjustmentPreprocessor = app.get<DebitAdjustmentPreprocessor>(DebitAdjustmentPreprocessor);
+    debitAdjustmentPreprocessor = app.get<DebitAdjustmentProcessor>(DebitAdjustmentProcessor);
   });
 
   afterEach(async () => {
@@ -95,6 +96,19 @@ describe("DebitAdjustmentPreprocessor", () => {
         creditAmount: 100,
         creditCurrency: Currency.COP,
       });
+    });
+  });
+
+  describe("performPostProcessing", () => {
+    it("shouldn't do anything", async () => {
+      const request: DebitAdjustmentTransactionRequest = {
+        debitAmount: 100,
+        debitCurrency: Currency.COP,
+        debitConsumerID: "DEBIT_CONSUMER_ID",
+        memo: "MEMO",
+      };
+
+      await debitAdjustmentPreprocessor.performPostProcessing(request, getRandomTransaction("CONSUMER_ID"));
     });
   });
 });

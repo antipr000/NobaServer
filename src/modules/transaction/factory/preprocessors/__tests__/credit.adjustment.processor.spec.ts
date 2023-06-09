@@ -2,16 +2,17 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { AppEnvironment, NOBA_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../../core/utils/WinstonModule";
-import { CreditAdjustmentTransactionRequest } from "../../../../../modules/transaction/dto/transaction.service.dto";
-import { InputTransaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
-import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
-import { CreditAdjustmentPreprocessor } from "../implementations/credit.adjustment.preprocessor";
+import { CreditAdjustmentTransactionRequest } from "../../../dto/transaction.service.dto";
+import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
+import { Currency } from "../../../domain/TransactionTypes";
+import { CreditAdjustmentProcessor } from "../implementations/credit.adjustment.processor";
+import { getRandomTransaction } from "../../../../../modules/transaction/test_utils/test.utils";
 
 describe("CreditAdjustmentPreprocessor", () => {
   jest.setTimeout(20000);
 
   let app: TestingModule;
-  let creditAdjustmentPreprocessor: CreditAdjustmentPreprocessor;
+  let creditAdjustmentPreprocessor: CreditAdjustmentProcessor;
 
   beforeEach(async () => {
     const appConfigurations = {
@@ -23,10 +24,10 @@ describe("CreditAdjustmentPreprocessor", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [CreditAdjustmentPreprocessor],
+      providers: [CreditAdjustmentProcessor],
     }).compile();
 
-    creditAdjustmentPreprocessor = app.get<CreditAdjustmentPreprocessor>(CreditAdjustmentPreprocessor);
+    creditAdjustmentPreprocessor = app.get<CreditAdjustmentProcessor>(CreditAdjustmentProcessor);
   });
 
   afterEach(async () => {
@@ -95,6 +96,19 @@ describe("CreditAdjustmentPreprocessor", () => {
         debitAmount: 100,
         debitCurrency: Currency.COP,
       });
+    });
+  });
+
+  describe("performPostProcessing", () => {
+    it("shouldn't do anything", async () => {
+      const request: CreditAdjustmentTransactionRequest = {
+        creditAmount: 100,
+        creditCurrency: Currency.COP,
+        creditConsumerID: "CREDIT_CONSUMER_ID",
+        memo: "MEMO",
+      };
+
+      await creditAdjustmentPreprocessor.performPostProcessing(request, getRandomTransaction("CONSUMER_ID"));
     });
   });
 });

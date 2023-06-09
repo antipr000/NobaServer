@@ -2,30 +2,28 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { AppEnvironment, NOBA_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../../core/utils/WinstonModule";
-import { AlertService } from "../../../../../modules/common/alerts/alert.service";
-import { getMockAlertServiceWithDefaults } from "../../../../../modules/common/mocks/mock.alert.service";
-import { EmployeeService } from "../../../../../modules/employee/employee.service";
-import { getMockEmployeeServiceWithDefaults } from "../../../../../modules/employee/mocks/mock.employee.service";
-import { EmployerService } from "../../../../../modules/employer/employer.service";
-import { getMockEmployerServiceWithDefaults } from "../../../../../modules/employer/mocks/mock.employer.service";
-import { PayrollDepositTransactionRequest } from "../../../../../modules/transaction/dto/transaction.service.dto";
+import { AlertService } from "../../../../common/alerts/alert.service";
+import { getMockAlertServiceWithDefaults } from "../../../../common/mocks/mock.alert.service";
+import { EmployeeService } from "../../../../employee/employee.service";
+import { getMockEmployeeServiceWithDefaults } from "../../../../employee/mocks/mock.employee.service";
+import { EmployerService } from "../../../../employer/employer.service";
+import { getMockEmployerServiceWithDefaults } from "../../../../employer/mocks/mock.employer.service";
+import { PayrollDepositTransactionRequest } from "../../../dto/transaction.service.dto";
 import { anything, capture, instance, when } from "ts-mockito";
 import { uuid } from "uuidv4";
-import { PayrollDepositPreprocessor } from "../implementations/payroll.deposit.preprocessor";
+import { PayrollDepositProcessor } from "../implementations/payroll.deposit.processor";
 import { ServiceErrorCode, ServiceException } from "../../../../../core/exception/service.exception";
-import { getRandomEmployee } from "../../../../../modules/employee/test_utils/employee.test.utils";
-import {
-  getRandomPayroll,
-  getRandomPayrollDisbursement,
-} from "../../../../../modules/employer/test_utils/payroll.test.utils";
-import { Payroll } from "../../../../../modules/employer/domain/Payroll";
-import { Employee } from "../../../../../modules/employee/domain/Employee";
-import { PayrollDisbursement } from "../../../../../modules/employer/domain/PayrollDisbursement";
-import { AlertKey } from "../../../../../modules/common/alerts/alert.dto";
-import { Employer } from "../../../../../modules/employer/domain/Employer";
-import { getRandomEmployer } from "../../../../../modules/employer/test_utils/employer.test.utils";
-import { InputTransaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
-import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
+import { getRandomEmployee } from "../../../../employee/test_utils/employee.test.utils";
+import { getRandomPayroll, getRandomPayrollDisbursement } from "../../../../employer/test_utils/payroll.test.utils";
+import { Payroll } from "../../../../employer/domain/Payroll";
+import { Employee } from "../../../../employee/domain/Employee";
+import { PayrollDisbursement } from "../../../../employer/domain/PayrollDisbursement";
+import { AlertKey } from "../../../../common/alerts/alert.dto";
+import { Employer } from "../../../../employer/domain/Employer";
+import { getRandomEmployer } from "../../../../employer/test_utils/employer.test.utils";
+import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
+import { Currency } from "../../../domain/TransactionTypes";
+import { getRandomTransaction } from "../../../../../modules/transaction/test_utils/test.utils";
 
 describe("PayrollDepositPreprocessor", () => {
   jest.setTimeout(20000);
@@ -34,7 +32,7 @@ describe("PayrollDepositPreprocessor", () => {
   let employeeService: EmployeeService;
   let employerService: EmployerService;
   let alertService: AlertService;
-  let payrollDepositPreprocessor: PayrollDepositPreprocessor;
+  let payrollDepositPreprocessor: PayrollDepositProcessor;
 
   beforeEach(async () => {
     employeeService = getMockEmployeeServiceWithDefaults();
@@ -63,11 +61,11 @@ describe("PayrollDepositPreprocessor", () => {
           provide: AlertService,
           useFactory: () => instance(alertService),
         },
-        PayrollDepositPreprocessor,
+        PayrollDepositProcessor,
       ],
     }).compile();
 
-    payrollDepositPreprocessor = app.get<PayrollDepositPreprocessor>(PayrollDepositPreprocessor);
+    payrollDepositPreprocessor = app.get<PayrollDepositProcessor>(PayrollDepositProcessor);
   });
 
   afterEach(async () => {
@@ -254,6 +252,16 @@ describe("PayrollDepositPreprocessor", () => {
         sessionKey: "PAYROLL",
         transactionFees: [],
       });
+    });
+  });
+
+  describe("performPostProcessing", () => {
+    it("shouldn't do anything", async () => {
+      const request: PayrollDepositTransactionRequest = {
+        disbursementID: "DISBURSEMENT_ID",
+      };
+
+      await payrollDepositPreprocessor.performPostProcessing(request, getRandomTransaction("CONSUMER_ID"));
     });
   });
 });

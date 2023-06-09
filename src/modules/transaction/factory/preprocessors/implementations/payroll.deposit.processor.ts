@@ -2,22 +2,22 @@ import { Injectable } from "@nestjs/common";
 import Joi from "joi";
 import { ServiceErrorCode, ServiceException } from "../../../../../core/exception/service.exception";
 import { Utils } from "../../../../../core/utils/Utils";
-import { AlertKey } from "../../../../../modules/common/alerts/alert.dto";
-import { AlertService } from "../../../../../modules/common/alerts/alert.service";
-import { KeysRequired } from "../../../../../modules/common/domain/Types";
-import { Employee } from "../../../../../modules/employee/domain/Employee";
-import { EmployeeService } from "../../../../../modules/employee/employee.service";
-import { Employer } from "../../../../../modules/employer/domain/Employer";
-import { Payroll } from "../../../../../modules/employer/domain/Payroll";
-import { PayrollDisbursement } from "../../../../../modules/employer/domain/PayrollDisbursement";
-import { EmployerService } from "../../../../../modules/employer/employer.service";
-import { InputTransaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
-import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
-import { PayrollDepositTransactionRequest } from "../../../../../modules/transaction/dto/transaction.service.dto";
-import { TransactionPreprocessor } from "../transaction.preprocessor";
+import { AlertKey } from "../../../../common/alerts/alert.dto";
+import { AlertService } from "../../../../common/alerts/alert.service";
+import { KeysRequired } from "../../../../common/domain/Types";
+import { Employee } from "../../../../employee/domain/Employee";
+import { EmployeeService } from "../../../../employee/employee.service";
+import { Employer } from "../../../../employer/domain/Employer";
+import { Payroll } from "../../../../employer/domain/Payroll";
+import { PayrollDisbursement } from "../../../../employer/domain/PayrollDisbursement";
+import { EmployerService } from "../../../../employer/employer.service";
+import { InputTransaction, Transaction, WorkflowName } from "../../../domain/Transaction";
+import { Currency } from "../../../domain/TransactionTypes";
+import { PayrollDepositTransactionRequest } from "../../../dto/transaction.service.dto";
+import { TransactionProcessor } from "../transaction.processor";
 
 @Injectable()
-export class PayrollDepositPreprocessor implements TransactionPreprocessor {
+export class PayrollDepositProcessor implements TransactionProcessor {
   private readonly validationKeys: KeysRequired<PayrollDepositTransactionRequest> = {
     disbursementID: Joi.string().required(),
   };
@@ -87,6 +87,11 @@ export class PayrollDepositPreprocessor implements TransactionPreprocessor {
       creditConsumerID: employee.consumerID,
     };
   }
+
+  async performPostProcessing(
+    request: PayrollDepositTransactionRequest,
+    createdTransaction: Transaction,
+  ): Promise<void> {}
 
   private performStaticValidations(request: PayrollDepositTransactionRequest): void {
     const validationSchema = Joi.object(this.validationKeys).options({

@@ -2,16 +2,19 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { AppEnvironment, NOBA_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../../core/utils/WinstonModule";
-import { WalletTransferTransactionRequest } from "../../../../../modules/transaction/dto/transaction.service.dto";
-import { InputTransaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
-import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
-import { Consumer } from "../../../../../modules/consumer/domain/Consumer";
+import { WalletTransferTransactionRequest } from "../../../dto/transaction.service.dto";
+import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
+import { Currency } from "../../../domain/TransactionTypes";
+import { Consumer } from "../../../../consumer/domain/Consumer";
 import { uuid } from "uuidv4";
-import { WalletTransferPreprocessor } from "../implementations/wallet.transfer.preprocessor";
-import { ConsumerService } from "../../../../../modules/consumer/consumer.service";
-import { instance, when } from "ts-mockito";
-import { getMockConsumerServiceWithDefaults } from "../../../../../modules/consumer/mocks/mock.consumer.service";
+import { WalletTransferProcessor } from "../implementations/wallet.transfer.processor";
+import { ConsumerService } from "../../../../consumer/consumer.service";
+import { anyString, instance, verify, when } from "ts-mockito";
+import { getMockConsumerServiceWithDefaults } from "../../../../consumer/mocks/mock.consumer.service";
 import { ServiceErrorCode } from "../../../../../core/exception/service.exception";
+import { WorkflowExecutor } from "../../../../../infra/temporal/workflow.executor";
+import { getMockWorkflowExecutorWithDefaults } from "../../../../../infra/temporal/mocks/mock.workflow.executor";
+import { getRandomTransaction } from "../../../../../modules/transaction/test_utils/test.utils";
 
 const getRandomConsumer = (): Consumer => {
   return Consumer.createConsumer({
@@ -35,10 +38,12 @@ describe("WalletTransferPreprocessor", () => {
 
   let app: TestingModule;
   let consumerService: ConsumerService;
-  let walletTransferPreprocessor: WalletTransferPreprocessor;
+  let walletTransferPreprocessor: WalletTransferProcessor;
+  let workflowExecutor: WorkflowExecutor;
 
   beforeEach(async () => {
     consumerService = getMockConsumerServiceWithDefaults();
+    workflowExecutor = getMockWorkflowExecutorWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -54,11 +59,15 @@ describe("WalletTransferPreprocessor", () => {
           provide: ConsumerService,
           useFactory: () => instance(consumerService),
         },
-        WalletTransferPreprocessor,
+        {
+          provide: WorkflowExecutor,
+          useFactory: () => instance(workflowExecutor),
+        },
+        WalletTransferProcessor,
       ],
     }).compile();
 
-    walletTransferPreprocessor = app.get<WalletTransferPreprocessor>(WalletTransferPreprocessor);
+    walletTransferPreprocessor = app.get<WalletTransferProcessor>(WalletTransferProcessor);
   });
 
   afterEach(async () => {
@@ -167,6 +176,31 @@ describe("WalletTransferPreprocessor", () => {
         exchangeRate: 1,
         transactionFees: [],
       });
+    });
+  });
+
+  describe("initiateWorkflow()", () => {
+    it("should initiate a WALLET_TRANSFER workflow", async () => {
+      when(workflowExecutor.executeWalletTransferWorkflow(anyString(), anyString())).thenResolve();
+
+      await walletTransferPreprocessor.initiateWorkflow("TRANSACTION_ID", "TRANSACTION_REF");
+
+      verify(workflowExecutor.executeWalletTransferWorkflow("TRANSACTION_ID", "TRANSACTION_REF")).once();
+    });
+  });
+
+  describe("performPostProcessing", () => {
+    it("shouldn't do anything", async () => {
+      const request: WalletTransferTransactionRequest = {
+        debitAmount: 100,
+        debitCurrency: Currency.USD,
+        debitConsumerIDOrTag: "DEBIT_CONSUMER_ID_OR_TAG",
+        creditConsumerIDOrTag: "CREDIT_CONSUMER_ID_OR_TAG",
+        memo: "MEMO",
+        sessionKey: "SESSION_KEY",
+      };
+
+      await walletTransferPreprocessor.performPostProcessing(request, getRandomTransaction("CONSUMER_ID"));
     });
   });
 });

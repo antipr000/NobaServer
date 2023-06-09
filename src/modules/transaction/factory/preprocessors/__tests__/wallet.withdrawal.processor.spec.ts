@@ -12,7 +12,7 @@ import { WalletWithdrawalTransactionRequest } from "../../../dto/transaction.ser
 import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
 import { Currency } from "../../../domain/TransactionTypes";
 import { ExchangeRateService } from "../../../../exchangerate/exchangerate.service";
-import { instance, when } from "ts-mockito";
+import { anyString, instance, verify, when } from "ts-mockito";
 import { getMockExchangeRateServiceWithDefaults } from "../../../../exchangerate/mocks/mock.exchangerate.service";
 import { ConsumerService } from "../../../../consumer/consumer.service";
 import { getMockConsumerServiceWithDefaults } from "../../../../consumer/mocks/mock.consumer.service";
@@ -21,6 +21,9 @@ import { Consumer } from "../../../../../modules/consumer/domain/Consumer";
 import { FeeType } from "../../../../../modules/transaction/domain/TransactionFee";
 import { WalletWithdrawalProcessor } from "../implementations/wallet.withdrawal.processor";
 import { AccountType, DocumentType } from "../../../../../modules/transaction/domain/WithdrawalDetails";
+import { WorkflowExecutor } from "../../../../../infra/temporal/workflow.executor";
+import { getMockWorkflowExecutorWithDefaults } from "../../../../../infra/temporal/mocks/mock.workflow.executor";
+import { getRandomTransaction } from "../../../../../modules/transaction/test_utils/test.utils";
 
 describe("WalletWithdrawalProcessor", () => {
   jest.setTimeout(20000);
@@ -29,10 +32,12 @@ describe("WalletWithdrawalProcessor", () => {
   let walletWithdrawalProcessor: WalletWithdrawalProcessor;
   let exchangeRateService: ExchangeRateService;
   let consumerService: ConsumerService;
+  let workflowExecutor: WorkflowExecutor;
 
   beforeEach(async () => {
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
+    workflowExecutor = getMockWorkflowExecutorWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -54,6 +59,10 @@ describe("WalletWithdrawalProcessor", () => {
         {
           provide: ConsumerService,
           useFactory: () => instance(consumerService),
+        },
+        {
+          provide: WorkflowExecutor,
+          useFactory: () => instance(workflowExecutor),
         },
         WalletWithdrawalProcessor,
       ],
@@ -325,6 +334,37 @@ describe("WalletWithdrawalProcessor", () => {
         debitCurrency: Currency.USD,
         debitConsumerID: "1111111111",
       });
+    });
+  });
+
+  describe("initiateWorkflow()", () => {
+    it("should initiate a WALLET_WITHDRAWAL workflow", async () => {
+      when(workflowExecutor.executeWalletWithdrawalWorkflow(anyString(), anyString())).thenResolve();
+
+      await walletWithdrawalProcessor.initiateWorkflow("TRANSACTION_ID", "TRANSACTION_REF");
+
+      verify(workflowExecutor.executeWalletWithdrawalWorkflow("TRANSACTION_ID", "TRANSACTION_REF")).once();
+    });
+  });
+
+  describe("performPostProcessing", () => {
+    it("shouldn't do anything", async () => {
+      const request: WalletWithdrawalTransactionRequest = {
+        debitAmount: 50,
+        debitConsumerIDOrTag: "DEBIT_CONSUMER_ID_OR_TAG",
+        creditCurrency: Currency.COP,
+        memo: "MEMO",
+        sessionKey: "SESSION_KEY",
+        withdrawalDetails: {
+          bankCode: "BANCOLOMBIA",
+          accountNumber: "1234567890",
+          documentNumber: "9876543210",
+          accountType: AccountType.CHECKING,
+          documentType: DocumentType.CC,
+        },
+      };
+
+      await walletWithdrawalProcessor.performPostProcessing(request, getRandomTransaction("CONSUMER_ID"));
     });
   });
 });

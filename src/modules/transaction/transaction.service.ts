@@ -37,10 +37,7 @@ import { InitiateTransactionRequest, validateInitiateTransactionRequest } from "
 import { KmsKeyType } from "../../config/configtypes/KmsConfigs";
 import { KmsService } from "../common/kms.service";
 import { TransactionProcessorFactory } from "./factory/preprocessors/transaction.processor.factory";
-import {
-  TransactionPreprocessor,
-  TransactionPreprocessorRequest,
-} from "./factory/preprocessors/transaction.preprocessor";
+import { TransactionProcessor, TransactionProcessorRequest } from "./factory/preprocessors/transaction.processor";
 
 @Injectable()
 export class TransactionService {
@@ -108,14 +105,15 @@ export class TransactionService {
 
     validateInitiateTransactionRequest(request);
 
-    const preprocessorRequest: TransactionPreprocessorRequest =
-      this.transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
-    const preprocessor: TransactionPreprocessor = this.transactionPreprocessorFactory.getPreprocessor(request.type);
+    const processorRequest: TransactionProcessorRequest =
+      this.transactionPreprocessorFactory.extractTransactionProcessorRequest(request);
+    const processor: TransactionProcessor = this.transactionPreprocessorFactory.getPreprocessor(request.type);
 
-    await preprocessor.validate(preprocessorRequest);
-    const inputTransaction: InputTransaction = await preprocessor.convertToRepoInputTransaction(preprocessorRequest);
-
+    await processor.validate(processorRequest);
+    const inputTransaction: InputTransaction = await processor.convertToRepoInputTransaction(processorRequest);
     const transaction: Transaction = await this.transactionRepo.createTransaction(inputTransaction);
+    await processor.performPostProcessing(processorRequest, transaction);
+
     return transaction;
   }
 

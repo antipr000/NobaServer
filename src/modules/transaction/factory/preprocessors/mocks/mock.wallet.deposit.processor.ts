@@ -9,5 +9,8 @@ export function getMockWalletDepositProcessorWithDefaults(): WalletDepositProces
   when(walletDepositProcessor.getQuote(anything(), anything(), anything(), anything())).thenReject(
     new Error("Not implemented!"),
   );
+  when(walletDepositProcessor.initiateWorkflow(anything(), anything())).thenReject(new Error("Not implemented!"));
+  when(walletDepositProcessor.performPostProcessing(anything(), anything())).thenReject(new Error("Not implemented!"));
+
   return walletDepositProcessor;
 }

@@ -1,14 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import Joi from "joi";
 import { Utils } from "../../../../../core/utils/Utils";
-import { KeysRequired } from "../../../../../modules/common/domain/Types";
-import { InputTransaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
-import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
-import { DebitAdjustmentTransactionRequest } from "../../../../../modules/transaction/dto/transaction.service.dto";
-import { TransactionPreprocessor } from "../transaction.preprocessor";
+import { KeysRequired } from "../../../../common/domain/Types";
+import { InputTransaction, Transaction, WorkflowName } from "../../../domain/Transaction";
+import { Currency } from "../../../domain/TransactionTypes";
+import { DebitAdjustmentTransactionRequest } from "../../../dto/transaction.service.dto";
+import { TransactionProcessor } from "../transaction.processor";
 
 @Injectable()
-export class DebitAdjustmentPreprocessor implements TransactionPreprocessor {
+export class DebitAdjustmentProcessor implements TransactionProcessor {
   private readonly validationKeys: KeysRequired<DebitAdjustmentTransactionRequest> = {
     debitConsumerID: Joi.string().required(),
     debitAmount: Joi.number().required(),
@@ -40,6 +40,11 @@ export class DebitAdjustmentPreprocessor implements TransactionPreprocessor {
       creditCurrency: request.debitCurrency,
     };
   }
+
+  async performPostProcessing(
+    request: DebitAdjustmentTransactionRequest,
+    createdTransaction: Transaction,
+  ): Promise<void> {}
 
   private performStaticValidations(request: DebitAdjustmentTransactionRequest): void {
     const validationSchema = Joi.object(this.validationKeys).options({

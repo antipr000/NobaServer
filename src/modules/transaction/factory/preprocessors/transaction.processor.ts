@@ -1,4 +1,4 @@
-import { InputTransaction } from "../../domain/Transaction";
+import { InputTransaction, Transaction } from "../../domain/Transaction";
 import {
   CardCreditAdjustmentTransactionRequest,
   CardDebitAdjustmentTransactionRequest,
@@ -12,7 +12,7 @@ import {
   WalletWithdrawalTransactionRequest,
 } from "../../dto/transaction.service.dto";
 
-export type TransactionPreprocessorRequest =
+export type TransactionProcessorRequest =
   | PayrollDepositTransactionRequest
   | CardWithdrawalTransactionRequest
   | CardReversalTransactionRequest
@@ -24,12 +24,17 @@ export type TransactionPreprocessorRequest =
   | WalletWithdrawalTransactionRequest
   | WalletTransferTransactionRequest;
 
-export interface TransactionPreprocessor {
+export interface TransactionProcessor {
   // Performs static and dynamic validation of the transaction.
   //   - Will complete successfully if the transaction is valid.
   //   - Throws an exception if the transaction is invalid.
-  validate(request: TransactionPreprocessorRequest): Promise<void>;
+  validate(request: TransactionProcessorRequest): Promise<void>;
 
   // Converts the transaction to InputTransaction (interface to the Repository layer).
-  convertToRepoInputTransaction(request: TransactionPreprocessorRequest): Promise<InputTransaction>;
+  convertToRepoInputTransaction(request: TransactionProcessorRequest): Promise<InputTransaction>;
+
+  // TODO: This is not transactional. Identify a way to make this transactional (maybe Temporal).
+  // Performs post-processing after the transaction creation.
+  // Any external system calls (e.g. Mono Transaction creation) should be done here.
+  performPostProcessing(request: TransactionProcessorRequest, createdTransaction: Transaction): Promise<void>;
 }

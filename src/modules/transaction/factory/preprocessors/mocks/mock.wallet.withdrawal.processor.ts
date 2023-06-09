@@ -9,5 +9,10 @@ export function getMockWalletWithdrawalProcessorWithDefaults(): WalletWithdrawal
   when(walletWithdrawalProcessor.getQuote(anything(), anything(), anything(), anything())).thenReject(
     new Error("Not implemented!"),
   );
+  when(walletWithdrawalProcessor.initiateWorkflow(anything(), anything())).thenReject(new Error("Not implemented!"));
+  when(walletWithdrawalProcessor.performPostProcessing(anything(), anything())).thenReject(
+    new Error("Not implemented!"),
+  );
+
   return walletWithdrawalProcessor;
 }
