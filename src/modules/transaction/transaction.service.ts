@@ -111,8 +111,9 @@ export class TransactionService {
 
     await preprocessor.validate(preprocessorRequest);
     const inputTransaction: InputTransaction = await preprocessor.convertToRepoInputTransaction(preprocessorRequest);
-
     const transaction: Transaction = await this.transactionRepo.createTransaction(inputTransaction);
+    await preprocessor.performPostProcessing(preprocessorRequest, transaction);
+
     return transaction;
   }
 
