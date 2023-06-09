@@ -61,7 +61,7 @@ export class TransactionProcessorFactory {
     }
   }
 
-  extractTransactionPreprocessorRequest(request: InitiateTransactionRequest): TransactionProcessorRequest {
+  extractTransactionProcessorRequest(request: InitiateTransactionRequest): TransactionProcessorRequest {
     switch (request.type) {
       case WorkflowName.PAYROLL_DEPOSIT:
         return request.payrollDepositRequest;

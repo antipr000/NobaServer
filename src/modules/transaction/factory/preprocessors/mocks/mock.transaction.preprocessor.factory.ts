@@ -5,7 +5,7 @@ export function getMockTransactionPreprocessorFactoryWithDefaults(): Transaction
   const transactionPreprocessorFactory = mock(TransactionProcessorFactory);
 
   when(transactionPreprocessorFactory.getPreprocessor(anything())).thenReject(new Error("Not implemented!"));
-  when(transactionPreprocessorFactory.extractTransactionPreprocessorRequest(anything())).thenReject(
+  when(transactionPreprocessorFactory.extractTransactionProcessorRequest(anything())).thenReject(
     new Error("Not implemented!"),
   );
   return transactionPreprocessorFactory;

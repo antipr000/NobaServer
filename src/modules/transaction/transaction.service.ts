@@ -105,14 +105,14 @@ export class TransactionService {
 
     validateInitiateTransactionRequest(request);
 
-    const preprocessorRequest: TransactionProcessorRequest =
-      this.transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
-    const preprocessor: TransactionProcessor = this.transactionPreprocessorFactory.getPreprocessor(request.type);
+    const processorRequest: TransactionProcessorRequest =
+      this.transactionPreprocessorFactory.extractTransactionProcessorRequest(request);
+    const processor: TransactionProcessor = this.transactionPreprocessorFactory.getPreprocessor(request.type);
 
-    await preprocessor.validate(preprocessorRequest);
-    const inputTransaction: InputTransaction = await preprocessor.convertToRepoInputTransaction(preprocessorRequest);
+    await processor.validate(processorRequest);
+    const inputTransaction: InputTransaction = await processor.convertToRepoInputTransaction(processorRequest);
     const transaction: Transaction = await this.transactionRepo.createTransaction(inputTransaction);
-    await preprocessor.performPostProcessing(preprocessorRequest, transaction);
+    await processor.performPostProcessing(processorRequest, transaction);
 
     return transaction;
   }

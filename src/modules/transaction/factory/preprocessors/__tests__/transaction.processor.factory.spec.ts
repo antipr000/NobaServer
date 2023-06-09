@@ -270,7 +270,7 @@ describe("TransactionPreprocessorFactory", () => {
       const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
       request.type = WorkflowName.PAYROLL_DEPOSIT;
 
-      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionProcessorRequest(request);
       expect(preprocessorRequest).toEqual(request.payrollDepositRequest);
     });
 
@@ -278,7 +278,7 @@ describe("TransactionPreprocessorFactory", () => {
       const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
       request.type = WorkflowName.CARD_WITHDRAWAL;
 
-      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionProcessorRequest(request);
       expect(preprocessorRequest).toEqual(request.cardWithdrawalRequest);
     });
 
@@ -286,7 +286,7 @@ describe("TransactionPreprocessorFactory", () => {
       const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
       request.type = WorkflowName.CARD_REVERSAL;
 
-      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionProcessorRequest(request);
       expect(preprocessorRequest).toEqual(request.cardReversalRequest);
     });
 
@@ -294,7 +294,7 @@ describe("TransactionPreprocessorFactory", () => {
       const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
       request.type = WorkflowName.CARD_CREDIT_ADJUSTMENT;
 
-      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionProcessorRequest(request);
       expect(preprocessorRequest).toEqual(request.cardCreditAdjustmentRequest);
     });
 
@@ -302,7 +302,7 @@ describe("TransactionPreprocessorFactory", () => {
       const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
       request.type = WorkflowName.CARD_DEBIT_ADJUSTMENT;
 
-      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionProcessorRequest(request);
       expect(preprocessorRequest).toEqual(request.cardDebitAdjustmentRequest);
     });
 
@@ -310,7 +310,7 @@ describe("TransactionPreprocessorFactory", () => {
       const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
       request.type = WorkflowName.CREDIT_ADJUSTMENT;
 
-      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionProcessorRequest(request);
       expect(preprocessorRequest).toEqual(request.creditAdjustmentRequest);
     });
 
@@ -318,7 +318,7 @@ describe("TransactionPreprocessorFactory", () => {
       const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
       request.type = WorkflowName.DEBIT_ADJUSTMENT;
 
-      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionProcessorRequest(request);
       expect(preprocessorRequest).toEqual(request.debitAdjustmentRequest);
     });
 
@@ -326,7 +326,7 @@ describe("TransactionPreprocessorFactory", () => {
       const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
       request.type = WorkflowName.WALLET_DEPOSIT;
 
-      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionProcessorRequest(request);
       expect(preprocessorRequest).toEqual(request.walletDepositRequest);
     });
 
@@ -334,7 +334,7 @@ describe("TransactionPreprocessorFactory", () => {
       const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
       request.type = WorkflowName.WALLET_WITHDRAWAL;
 
-      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionProcessorRequest(request);
       expect(preprocessorRequest).toEqual(request.walletWithdrawalRequest);
     });
 
@@ -342,7 +342,7 @@ describe("TransactionPreprocessorFactory", () => {
       const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
       request.type = WorkflowName.WALLET_TRANSFER;
 
-      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request);
+      const preprocessorRequest = transactionPreprocessorFactory.extractTransactionProcessorRequest(request);
       expect(preprocessorRequest).toEqual(request.walletTransferRequest);
     });
 
@@ -350,7 +350,7 @@ describe("TransactionPreprocessorFactory", () => {
       const request = JSON.parse(JSON.stringify(REQUEST_WITH_EVERYTHING));
       request.type = "UNKNOWN_WORKFLOW_NAME" as any;
 
-      expect(() => transactionPreprocessorFactory.extractTransactionPreprocessorRequest(request)).toThrowError(
+      expect(() => transactionPreprocessorFactory.extractTransactionProcessorRequest(request)).toThrowError(
         "No preprocessor found for workflow name: UNKNOWN_WORKFLOW_NAME",
       );
     });
