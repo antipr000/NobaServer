@@ -1,29 +1,77 @@
 import Joi from "joi";
-import { Circle as CircleProps } from "@prisma/client";
+import { Circle as PrismaCircleModel } from "@prisma/client";
 import { KeysRequired } from "../../common/domain/Types";
-import { Entity, basePropsJoiSchemaKeys } from "../../../core/domain/Entity";
-import { AggregateRoot } from "../../../core/domain/AggregateRoot";
 
-const circleDataValidationJoiKeys: KeysRequired<CircleProps> = {
-  ...basePropsJoiSchemaKeys,
-  id: Joi.string().min(10).required(),
-  walletID: Joi.string().required(),
-  consumerID: Joi.string().required(),
-  currentBalance: Joi.number().optional().allow(null),
+export class Circle {
+  id: string;
+  walletID: string;
+  consumerID: string;
+  currentBalance?: number;
+  createdTimestamp?: Date;
+  updatedTimestamp?: Date;
+}
+
+export class CircleCreateRequest {
+  walletID: string;
+  consumerID: string;
+}
+
+export class CircleUpdateRequest {
+  currentBalance?: number;
+}
+
+export const validateCircleCreateRequest = (payload: CircleCreateRequest) => {
+  const circleJoiValidationKeys: KeysRequired<CircleCreateRequest> = {
+    walletID: Joi.string().required(),
+    consumerID: Joi.string().required(),
+  };
+
+  const circleJoiSchema = Joi.object(circleJoiValidationKeys).options({
+    allowUnknown: false,
+    stripUnknown: true,
+  });
+
+  Joi.attempt(payload, circleJoiSchema);
 };
 
-export const circleJoiSchema = Joi.object(circleDataValidationJoiKeys).options({
-  allowUnknown: false,
-  stripUnknown: false,
-});
+export const validateCircleUpdateRequest = (payload: CircleUpdateRequest) => {
+  const circleJoiValidationKeys: KeysRequired<CircleUpdateRequest> = {
+    currentBalance: Joi.number().optional(),
+  };
 
-export class Circle extends AggregateRoot<CircleProps> {
-  private constructor(circleProps: CircleProps) {
-    super(circleProps);
-  }
+  const circleJoiSchema = Joi.object(circleJoiValidationKeys).options({
+    allowUnknown: false,
+    stripUnknown: true,
+  });
 
-  public static createCircle(circleProps: Partial<CircleProps>): Circle {
-    if (!circleProps.id) circleProps.id = Entity.getNewID();
-    return new Circle(Joi.attempt(circleProps, circleJoiSchema));
-  }
-}
+  Joi.attempt(payload, circleJoiSchema);
+};
+
+export const validateCircle = (circle: Circle) => {
+  const circleJoiValidationKeys: KeysRequired<Circle> = {
+    id: Joi.string().required(),
+    walletID: Joi.string().required(),
+    consumerID: Joi.string().required(),
+    currentBalance: Joi.number().optional(),
+    createdTimestamp: Joi.date().optional(),
+    updatedTimestamp: Joi.date().optional(),
+  };
+
+  const circleJoiSchema = Joi.object(circleJoiValidationKeys).options({
+    allowUnknown: false,
+    stripUnknown: true,
+  });
+
+  Joi.attempt(circle, circleJoiSchema);
+};
+
+export const convertToDomainCircle = (prismaCircle: PrismaCircleModel): Circle => {
+  return {
+    id: prismaCircle.id,
+    walletID: prismaCircle.walletID,
+    consumerID: prismaCircle.consumerID,
+    ...(prismaCircle.currentBalance && { currentBalance: prismaCircle.currentBalance }),
+    createdTimestamp: prismaCircle.createdTimestamp,
+    updatedTimestamp: prismaCircle.updatedTimestamp,
+  };
+};

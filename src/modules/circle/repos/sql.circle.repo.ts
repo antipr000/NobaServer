@@ -1,8 +1,16 @@
 import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Result } from "../../../core/logic/Result";
-import { Circle } from "../domain/Circle";
+import {
+  Circle,
+  CircleCreateRequest,
+  CircleUpdateRequest,
+  convertToDomainCircle,
+  validateCircle,
+  validateCircleCreateRequest,
+  validateCircleUpdateRequest,
+} from "../domain/Circle";
 import { ICircleRepo } from "./circle.repo";
-import { Prisma } from "@prisma/client";
+import { Prisma, Circle as PrismaCircleModel } from "@prisma/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { PrismaService } from "../../../infraproviders/PrismaService";
 import { RepoErrorCode, RepoException } from "../../../core/exception/repo.exception";
@@ -19,43 +27,70 @@ export class SQLCircleRepo implements ICircleRepo {
   @Inject()
   private readonly alertService: AlertService;
 
-  async addConsumerCircleWalletID(consumerID: string, circleWalletID: string): Promise<Circle> {
-    const circle: Circle = Circle.createCircle({ consumerID: consumerID, walletID: circleWalletID });
-    const circlePrisma: Prisma.CircleCreateInput = {
-      id: circle.props.id,
-      walletID: circle.props.walletID,
-      consumer: {
-        connect: {
-          id: circle.props.consumerID,
+  async addConsumerCircleWalletID(request: CircleCreateRequest): Promise<Circle> {
+    validateCircleCreateRequest(request);
+
+    let savedCircle: Circle;
+    try {
+      const circleInput: Prisma.CircleCreateInput = {
+        walletID: request.walletID,
+        consumer: {
+          connect: {
+            id: request.consumerID,
+          },
         },
-      },
-    };
-    const circleProps = await this.prisma.circle.create({ data: circlePrisma });
-    return Circle.createCircle(circleProps);
+      };
+
+      const returnedCircle: PrismaCircleModel = await this.prisma.circle.create({
+        data: circleInput,
+      });
+
+      savedCircle = convertToDomainCircle(returnedCircle);
+    } catch (e) {
+      this.alertService.raiseError(`Failed to create circle: ${e}`);
+      throw new RepoException({
+        message: "Failed to create circle",
+        errorCode: RepoErrorCode.DATABASE_INTERNAL_ERROR,
+      });
+    }
+
+    try {
+      validateCircle(savedCircle);
+      return savedCircle;
+    } catch (e) {
+      this.alertService.raiseError(`Failed to validate circle data: ${e}`);
+      throw new RepoException({
+        message: "Failed to validate circle data",
+        errorCode: RepoErrorCode.INVALID_DATABASE_RECORD,
+      });
+    }
   }
 
   async getCircleWalletID(consumerID: string): Promise<Result<string>> {
-    const circleProps = await this.prisma.circle.findUnique({ where: { consumerID: consumerID } });
+    const returnedCircle: PrismaCircleModel = await this.prisma.circle.findUnique({
+      where: { consumerID: consumerID },
+    });
 
-    if (circleProps) {
-      return Result.ok(circleProps.walletID);
+    if (returnedCircle) {
+      return Result.ok(returnedCircle.walletID);
     } else {
       return Result.fail("Couldn't find circle wallet for given consumer in the db");
     }
   }
 
-  async updateCurrentBalance(walletID: string, balance: number): Promise<Circle> {
-    const updateProps: Prisma.CircleUpdateInput = {
-      currentBalance: balance,
-    };
+  async updateCurrentBalance(walletID: string, request: CircleUpdateRequest): Promise<Circle> {
+    validateCircleUpdateRequest(request);
 
     try {
-      const circleProps = await this.prisma.circle.update({
+      const updateProps: Prisma.CircleUpdateInput = {
+        currentBalance: request.currentBalance,
+      };
+      const returnedCircle: PrismaCircleModel = await this.prisma.circle.update({
         where: { walletID: walletID },
         data: updateProps,
       });
 
-      return Circle.createCircle(circleProps);
+      return convertToDomainCircle(returnedCircle);
     } catch (e) {
       this.alertService.raiseError(
         `Failed to update circle balance for wallet id ${walletID}. Reason: ${JSON.stringify(e)}`,
@@ -69,7 +104,7 @@ export class SQLCircleRepo implements ICircleRepo {
 
   async getCircleBalance(consumerOrWalletID: string): Promise<number> {
     try {
-      const circleProps = await this.prisma.circle.findFirst({
+      const returnedCircle: PrismaCircleModel = await this.prisma.circle.findFirst({
         where: {
           OR: [
             {
@@ -82,7 +117,7 @@ export class SQLCircleRepo implements ICircleRepo {
         },
       });
 
-      return circleProps.currentBalance;
+      return returnedCircle.currentBalance;
     } catch (e) {
       this.alertService.raiseError(
         `Failed to fetch circle balance for consumerOrWallerID: ${consumerOrWalletID}. Reason: ${JSON.stringify(e)}`,

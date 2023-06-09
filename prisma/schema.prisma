@@ -82,7 +82,7 @@ model KYC {
   riskRating                    String?
   isSuspectedFraud              Boolean                    @default(false)
   kycCheckStatus                KYCStatus                  @default(NOT_SUBMITTED)
-  documentVerificationStatus    DocumentVerificationStatus @default(REQUIRED)
+  documentVerificationStatus    DocumentVerificationStatus @default(NOT_REQUIRED)
   documentVerificationTimestamp DateTime?
   kycVerificationTimestamp      DateTime?
   sanctionLevel                 String?
@@ -231,7 +231,7 @@ model ACH {
 }
 
 model Circle {
-  id               String    @id
+  id               String    @id @default(uuid())
   createdTimestamp DateTime? @default(now()) // Marking optional so we don't need to set in tests
   updatedTimestamp DateTime? @updatedAt // Marking optional so we don't need to set in tests
   walletID         String    @unique()
