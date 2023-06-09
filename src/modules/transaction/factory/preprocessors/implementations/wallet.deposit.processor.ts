@@ -23,9 +23,11 @@ import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
 import { Currency } from "../../../domain/TransactionTypes";
 import { TransactionQuoteProvider } from "../quote.provider";
 import { TransactionPreprocessor } from "../transaction.preprocessor";
+import { WorkflowExecutor } from "../../../../../infra/temporal/workflow.executor";
+import { WorkflowInitiator } from "../workflow.initiator";
 
 @Injectable()
-export class WalletDepositProcessor implements TransactionPreprocessor, TransactionQuoteProvider {
+export class WalletDepositProcessor implements TransactionPreprocessor, TransactionQuoteProvider, WorkflowInitiator {
   private depositFeeFixedAmount: number;
   private depositFeeMultiplier: number;
   private depositNobaFeeAmount: number;
@@ -50,6 +52,7 @@ export class WalletDepositProcessor implements TransactionPreprocessor, Transact
     private readonly alertService: AlertService,
     private readonly exchangeRateService: ExchangeRateService,
     private readonly consumerService: ConsumerService,
+    private readonly workflowExecutor: WorkflowExecutor,
     private configService: CustomConfigService,
   ) {
     this.depositFeeFixedAmount = this.configService.get<NobaConfigs>(NOBA_CONFIG_KEY).transaction.depositFeeFixedAmount;
@@ -158,6 +161,10 @@ export class WalletDepositProcessor implements TransactionPreprocessor, Transact
       quoteAmountWithFees: Utils.roundTo2DecimalString(postExchangeAmountWithBankFees),
       nobaRate: nobaRate.toString(),
     };
+  }
+
+  async initiateWorkflow(transactionID: string, transactionRef: string): Promise<void> {
+    await this.workflowExecutor.executeWalletDepositWorkflow(transactionID, transactionRef);
   }
 
   private performStaticValidations(request: WalletDepositTransactionRequest): void {

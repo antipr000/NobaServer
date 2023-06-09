@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { ServiceErrorCode, ServiceException } from "../../../../core/exception/service.exception";
 import { WorkflowName } from "../../domain/Transaction";
 import { InitiateTransactionRequest } from "../../dto/transaction.service.dto";
 import { CardCreditAdjustmentPreprocessor } from "./implementations/card.credit.adjustment.preprocessor";
@@ -13,6 +14,7 @@ import { WalletTransferPreprocessor } from "./implementations/wallet.transfer.pr
 import { WalletWithdrawalProcessor } from "./implementations/wallet.withdrawal.processor";
 import { TransactionQuoteProvider } from "./quote.provider";
 import { TransactionPreprocessor, TransactionPreprocessorRequest } from "./transaction.preprocessor";
+import { WorkflowInitiator } from "./workflow.initiator";
 
 @Injectable()
 export class TransactionProcessorFactory {
@@ -52,7 +54,10 @@ export class TransactionProcessorFactory {
       case WorkflowName.WALLET_TRANSFER:
         return this.walletTransferPreprocessor;
       default:
-        throw new Error(`No preprocessor found for workflow name: ${workflowName}`);
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+          message: `No preprocessor found for workflow name: ${workflowName}`,
+        });
     }
   }
 
@@ -79,7 +84,10 @@ export class TransactionProcessorFactory {
       case WorkflowName.WALLET_TRANSFER:
         return request.walletTransferRequest;
       default:
-        throw new Error(`No preprocessor found for workflow name: ${request.type}`);
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+          message: `No preprocessor found for workflow name: ${request.type}`,
+        });
     }
   }
 
@@ -90,7 +98,26 @@ export class TransactionProcessorFactory {
       case WorkflowName.WALLET_WITHDRAWAL:
         return this.walletWithdrawalProcessor;
       default:
-        throw new Error(`No quote provider found for workflow name: ${workflowName}`);
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+          message: `No quote provider found for workflow name: ${workflowName}`,
+        });
+    }
+  }
+
+  getWorkflowInitiator(workflowName: WorkflowName): WorkflowInitiator {
+    switch (workflowName) {
+      case WorkflowName.WALLET_DEPOSIT:
+        return this.walletDepositProcessor;
+      case WorkflowName.WALLET_WITHDRAWAL:
+        return this.walletWithdrawalProcessor;
+      case WorkflowName.WALLET_TRANSFER:
+        return this.walletTransferPreprocessor;
+      default:
+        throw new ServiceException({
+          errorCode: ServiceErrorCode.UNABLE_TO_PROCESS,
+          message: `No workflow initiator found for workflow name: ${workflowName}`,
+        });
     }
   }
 }

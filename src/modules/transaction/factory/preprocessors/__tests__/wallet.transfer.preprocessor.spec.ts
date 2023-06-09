@@ -9,9 +9,11 @@ import { Consumer } from "../../../../../modules/consumer/domain/Consumer";
 import { uuid } from "uuidv4";
 import { WalletTransferPreprocessor } from "../implementations/wallet.transfer.preprocessor";
 import { ConsumerService } from "../../../../../modules/consumer/consumer.service";
-import { instance, when } from "ts-mockito";
+import { anyString, instance, verify, when } from "ts-mockito";
 import { getMockConsumerServiceWithDefaults } from "../../../../../modules/consumer/mocks/mock.consumer.service";
 import { ServiceErrorCode } from "../../../../../core/exception/service.exception";
+import { WorkflowExecutor } from "../../../../../infra/temporal/workflow.executor";
+import { getMockWorkflowExecutorWithDefaults } from "../../../../../infra/temporal/mocks/mock.workflow.executor";
 
 const getRandomConsumer = (): Consumer => {
   return Consumer.createConsumer({
@@ -36,9 +38,11 @@ describe("WalletTransferPreprocessor", () => {
   let app: TestingModule;
   let consumerService: ConsumerService;
   let walletTransferPreprocessor: WalletTransferPreprocessor;
+  let workflowExecutor: WorkflowExecutor;
 
   beforeEach(async () => {
     consumerService = getMockConsumerServiceWithDefaults();
+    workflowExecutor = getMockWorkflowExecutorWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -53,6 +57,10 @@ describe("WalletTransferPreprocessor", () => {
         {
           provide: ConsumerService,
           useFactory: () => instance(consumerService),
+        },
+        {
+          provide: WorkflowExecutor,
+          useFactory: () => instance(workflowExecutor),
         },
         WalletTransferPreprocessor,
       ],
@@ -167,6 +175,16 @@ describe("WalletTransferPreprocessor", () => {
         exchangeRate: 1,
         transactionFees: [],
       });
+    });
+  });
+
+  describe("initiateWorkflow()", () => {
+    it("should initiate a WALLET_TRANSFER workflow", async () => {
+      when(workflowExecutor.executeWalletTransferWorkflow(anyString(), anyString())).thenResolve();
+
+      await walletTransferPreprocessor.initiateWorkflow("TRANSACTION_ID", "TRANSACTION_REF");
+
+      verify(workflowExecutor.executeWalletTransferWorkflow("TRANSACTION_ID", "TRANSACTION_REF")).once();
     });
   });
 });

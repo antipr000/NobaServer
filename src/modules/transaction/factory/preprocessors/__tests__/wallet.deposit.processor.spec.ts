@@ -18,7 +18,7 @@ import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
 import { Currency } from "../../../domain/TransactionTypes";
 import { WalletDepositProcessor } from "../implementations/wallet.deposit.processor";
 import { ExchangeRateService } from "../../../../exchangerate/exchangerate.service";
-import { instance, when } from "ts-mockito";
+import { anyString, instance, verify, when } from "ts-mockito";
 import { getMockExchangeRateServiceWithDefaults } from "../../../../exchangerate/mocks/mock.exchangerate.service";
 import { ConsumerService } from "../../../../consumer/consumer.service";
 import { AlertService } from "../../../../common/alerts/alert.service";
@@ -28,6 +28,8 @@ import { ServiceErrorCode, ServiceException } from "../../../../../core/exceptio
 import { Consumer } from "../../../../../modules/consumer/domain/Consumer";
 import { TransactionFlags } from "../../../../../modules/transaction/domain/TransactionFlags";
 import { FeeType } from "../../../../../modules/transaction/domain/TransactionFee";
+import { WorkflowExecutor } from "../../../../../infra/temporal/workflow.executor";
+import { getMockWorkflowExecutorWithDefaults } from "../../../../../infra/temporal/mocks/mock.workflow.executor";
 
 describe("WalletDepositProcessor", () => {
   jest.setTimeout(20000);
@@ -37,11 +39,13 @@ describe("WalletDepositProcessor", () => {
   let exchangeRateService: ExchangeRateService;
   let consumerService: ConsumerService;
   let alertService: AlertService;
+  let workflowExecutor: WorkflowExecutor;
 
   beforeEach(async () => {
     exchangeRateService = getMockExchangeRateServiceWithDefaults();
     consumerService = getMockConsumerServiceWithDefaults();
     alertService = getMockAlertServiceWithDefaults();
+    workflowExecutor = getMockWorkflowExecutorWithDefaults();
 
     const appConfigurations = {
       [SERVER_LOG_FILE_PATH]: `/tmp/test-${Math.floor(Math.random() * 1000000)}.log`,
@@ -71,6 +75,10 @@ describe("WalletDepositProcessor", () => {
         {
           provide: AlertService,
           useFactory: () => instance(alertService),
+        },
+        {
+          provide: WorkflowExecutor,
+          useFactory: () => instance(workflowExecutor),
         },
         WalletDepositProcessor,
       ],
@@ -339,6 +347,16 @@ describe("WalletDepositProcessor", () => {
         debitCurrency: Currency.COP,
         debitConsumerID: "1111111111",
       });
+    });
+  });
+
+  describe("initiateWorkflow()", () => {
+    it("should initiate a WALLET_DEPOSIT workflow", async () => {
+      when(workflowExecutor.executeWalletDepositWorkflow(anyString(), anyString())).thenResolve();
+
+      await walletDepositProcessor.initiateWorkflow("TRANSACTION_ID", "TRANSACTION_REF");
+
+      verify(workflowExecutor.executeWalletDepositWorkflow("TRANSACTION_ID", "TRANSACTION_REF")).once();
     });
   });
 });

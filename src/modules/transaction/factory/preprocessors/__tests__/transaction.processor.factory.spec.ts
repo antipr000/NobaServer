@@ -382,4 +382,35 @@ describe("TransactionPreprocessorFactory", () => {
       );
     });
   });
+
+  describe("getWorkflowInitiator()", () => {
+    it("should return a walletDepositProcessor if type if WALLET_DEPOSIT", () => {
+      const workflowInitiator = transactionPreprocessorFactory.getWorkflowInitiator(WorkflowName.WALLET_DEPOSIT);
+      expect(workflowInitiator).toEqual(walletDepositProcessor);
+    });
+
+    it("should return a walletDepositProcessor if type if WALLET_WITHDRAWAL", () => {
+      const workflowInitiator = transactionPreprocessorFactory.getWorkflowInitiator(WorkflowName.WALLET_WITHDRAWAL);
+      expect(workflowInitiator).toEqual(walletWithdrawalProcessor);
+    });
+
+    it("should return a walletTransferPreprocessor if type if WALLET_TRANSFER", () => {
+      const workflowInitiator = transactionPreprocessorFactory.getWorkflowInitiator(WorkflowName.WALLET_TRANSFER);
+      expect(workflowInitiator).toEqual(walletTransferPreprocessor);
+    });
+
+    it.each([
+      WorkflowName.CARD_WITHDRAWAL,
+      WorkflowName.CARD_REVERSAL,
+      WorkflowName.CARD_CREDIT_ADJUSTMENT,
+      WorkflowName.CARD_DEBIT_ADJUSTMENT,
+      WorkflowName.CREDIT_ADJUSTMENT,
+      WorkflowName.DEBIT_ADJUSTMENT,
+      WorkflowName.PAYROLL_DEPOSIT,
+    ])("should throw for '%s' type", type => {
+      expect(() => transactionPreprocessorFactory.getWorkflowInitiator(type)).toThrowError(
+        `No workflow initiator found for workflow name: ${type}`,
+      );
+    });
+  });
 });

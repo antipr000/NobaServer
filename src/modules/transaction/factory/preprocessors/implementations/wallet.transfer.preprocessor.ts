@@ -9,9 +9,11 @@ import { InputTransaction, WorkflowName } from "../../../../../modules/transacti
 import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
 import { WalletTransferTransactionRequest } from "../../../../../modules/transaction/dto/transaction.service.dto";
 import { TransactionPreprocessor } from "../transaction.preprocessor";
+import { WorkflowExecutor } from "../../../../../infra/temporal/workflow.executor";
+import { WorkflowInitiator } from "../workflow.initiator";
 
 @Injectable()
-export class WalletTransferPreprocessor implements TransactionPreprocessor {
+export class WalletTransferPreprocessor implements TransactionPreprocessor, WorkflowInitiator {
   private readonly validationKeys: KeysRequired<WalletTransferTransactionRequest> = {
     creditConsumerIDOrTag: Joi.string().required(),
     debitConsumerIDOrTag: Joi.string().required(),
@@ -23,7 +25,7 @@ export class WalletTransferPreprocessor implements TransactionPreprocessor {
     sessionKey: Joi.string().required(),
   };
 
-  constructor(private readonly consumerService: ConsumerService) {}
+  constructor(private readonly consumerService: ConsumerService, private readonly workflowExecutor: WorkflowExecutor) {}
 
   async validate(request: WalletTransferTransactionRequest): Promise<void> {
     this.performStaticValidations(request);
@@ -48,6 +50,10 @@ export class WalletTransferPreprocessor implements TransactionPreprocessor {
       creditAmount: request.debitAmount,
       creditCurrency: request.debitCurrency,
     };
+  }
+
+  async initiateWorkflow(transactionID: string, transactionRef: string): Promise<void> {
+    await this.workflowExecutor.executeWalletTransferWorkflow(transactionID, transactionRef);
   }
 
   private performStaticValidations(request: WalletTransferTransactionRequest): void {
