@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { MonoPublicModule } from "../../../../modules/mono/public/mono.public.module";
 import { TemporalModule } from "../../../../infra/temporal/temporal.module";
 import { ConsumerModule } from "../../../../modules/consumer/consumer.module";
 import { ExchangeRateModule } from "../../../../modules/exchangerate/exchangerate.module";
@@ -18,7 +19,15 @@ import { WalletWithdrawalProcessor } from "./implementations/wallet.withdrawal.p
 import { TransactionProcessorFactory } from "./transaction.processor.factory";
 
 @Module({
-  imports: [CommonModule, TemporalModule, EmployeeModule, EmployerModule, ExchangeRateModule, ConsumerModule],
+  imports: [
+    CommonModule,
+    TemporalModule,
+    MonoPublicModule,
+    EmployeeModule,
+    EmployerModule,
+    ExchangeRateModule,
+    ConsumerModule,
+  ],
   providers: [
     TransactionProcessorFactory,
     // Preprocessors + Processors
