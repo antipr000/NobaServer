@@ -4,20 +4,20 @@ import { instance } from "ts-mockito";
 import { AppEnvironment, NOBA_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../../core/utils/WinstonModule";
-import { CardCreditAdjustmentPreprocessor } from "../implementations/card.credit.adjustment.preprocessor";
-import { CardDebitAdjustmentPreprocessor } from "../implementations/card.debit.adjustment.preprocessor";
-import { CardReversalPreprocessor } from "../implementations/card.reversal.preprocessor";
-import { CardWithdrawalPreprocessor } from "../implementations/card.withdrawal.preprocessro";
-import { CreditAdjustmentPreprocessor } from "../implementations/credit.adjustment.preprocessor";
-import { DebitAdjustmentPreprocessor } from "../implementations/debit.adjustment.preprocessor";
-import { PayrollDepositPreprocessor } from "../implementations/payroll.deposit.preprocessor";
-import { getMockCardCreditAdjustmentPreprocessorWithDefaults } from "../mocks/mock.card.credit.adjustment.preprocessor";
-import { getMockCardDebitAdjustmentPreprocessorWithDefaults } from "../mocks/mock.card.debit.adjustment.preprocessor";
-import { getMockCardReversalPreprocessorWithDefaults } from "../mocks/mock.card.reversal.preprocessor";
-import { getMockCardWithdrawalPreprocessorWithDefaults } from "../mocks/mock.card.withdrawal.preprocessor";
-import { getMockCreditAdjustmentPreprocessorWithDefaults } from "../mocks/mock.credit.adjustment.preprocessor";
-import { getMockDebitAdjustmentPreprocessorWithDefaults } from "../mocks/mock.debit.adjustment.preprocessor";
-import { getMockPayrollDepositPreprocessorWithDefaults } from "../mocks/mock.payroll.deposit.preprocessor";
+import { CardCreditAdjustmentProcessor } from "../implementations/card.credit.adjustment.processor";
+import { CardDebitAdjustmentProcessor } from "../implementations/card.debit.adjustment.processor";
+import { CardReversalProcessor } from "../implementations/card.reversal.processor";
+import { CardWithdrawalProcessor } from "../implementations/card.withdrawal.processor";
+import { CreditAdjustmentProcessor } from "../implementations/credit.adjustment.processor";
+import { DebitAdjustmentProcessor } from "../implementations/debit.adjustment.processor";
+import { PayrollDepositProcessor } from "../implementations/payroll.deposit.processor";
+import { getMockCardCreditAdjustmentPreprocessorWithDefaults } from "../mocks/mock.card.credit.adjustment.processor";
+import { getMockCardDebitAdjustmentPreprocessorWithDefaults } from "../mocks/mock.card.debit.adjustment.processor";
+import { getMockCardReversalPreprocessorWithDefaults } from "../mocks/mock.card.reversal.processor";
+import { getMockCardWithdrawalPreprocessorWithDefaults } from "../mocks/mock.card.withdrawal.processor";
+import { getMockCreditAdjustmentPreprocessorWithDefaults } from "../mocks/mock.credit.adjustment.processor";
+import { getMockDebitAdjustmentPreprocessorWithDefaults } from "../mocks/mock.debit.adjustment.processor";
+import { getMockPayrollDepositPreprocessorWithDefaults } from "../mocks/mock.payroll.deposit.processor";
 import { TransactionProcessorFactory } from "../transaction.processor.factory";
 import {
   CardReversalTransactionType,
@@ -30,8 +30,8 @@ import { getMockWalletDepositProcessorWithDefaults } from "../mocks/mock.wallet.
 import { WalletWithdrawalProcessor } from "../implementations/wallet.withdrawal.processor";
 import { getMockWalletWithdrawalProcessorWithDefaults } from "../mocks/mock.wallet.withdrawal.processor";
 import { AccountType, DocumentType } from "../../../../../modules/transaction/domain/WithdrawalDetails";
-import { WalletTransferPreprocessor } from "../implementations/wallet.transfer.preprocessor";
-import { getMockwalletTransferPreprocessorWithDefaults } from "../mocks/mock.wallet.transfer.preprocessor";
+import { WalletTransferProcessor } from "../implementations/wallet.transfer.processor";
+import { getMockwalletTransferPreprocessorWithDefaults } from "../mocks/mock.wallet.transfer.processor";
 
 describe("TransactionPreprocessorFactory", () => {
   jest.setTimeout(20000);
@@ -39,16 +39,16 @@ describe("TransactionPreprocessorFactory", () => {
   let app: TestingModule;
   let transactionPreprocessorFactory: TransactionProcessorFactory;
 
-  let cardCreditAdjustmentPreprocessor: CardCreditAdjustmentPreprocessor;
-  let cardDebitAdjustmentPreprocessor: CardDebitAdjustmentPreprocessor;
-  let cardReversalPreprocessor: CardReversalPreprocessor;
-  let cardWithdrawalPreprocessor: CardWithdrawalPreprocessor;
-  let creditAdjustmentPreprocessor: CreditAdjustmentPreprocessor;
-  let debitAdjustmentPreprocessor: DebitAdjustmentPreprocessor;
-  let payrollDepositPreprocessor: PayrollDepositPreprocessor;
+  let cardCreditAdjustmentPreprocessor: CardCreditAdjustmentProcessor;
+  let cardDebitAdjustmentPreprocessor: CardDebitAdjustmentProcessor;
+  let cardReversalPreprocessor: CardReversalProcessor;
+  let cardWithdrawalPreprocessor: CardWithdrawalProcessor;
+  let creditAdjustmentPreprocessor: CreditAdjustmentProcessor;
+  let debitAdjustmentPreprocessor: DebitAdjustmentProcessor;
+  let payrollDepositPreprocessor: PayrollDepositProcessor;
   let walletDepositProcessor: WalletDepositProcessor;
   let walletWithdrawalProcessor: WalletWithdrawalProcessor;
-  let walletTransferPreprocessor: WalletTransferPreprocessor;
+  let walletTransferPreprocessor: WalletTransferProcessor;
 
   beforeEach(async () => {
     cardCreditAdjustmentPreprocessor = instance(getMockCardCreditAdjustmentPreprocessorWithDefaults());
@@ -73,31 +73,31 @@ describe("TransactionPreprocessorFactory", () => {
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
       providers: [
         {
-          provide: CardCreditAdjustmentPreprocessor,
+          provide: CardCreditAdjustmentProcessor,
           useFactory: () => cardCreditAdjustmentPreprocessor,
         },
         {
-          provide: CardDebitAdjustmentPreprocessor,
+          provide: CardDebitAdjustmentProcessor,
           useFactory: () => cardDebitAdjustmentPreprocessor,
         },
         {
-          provide: CardReversalPreprocessor,
+          provide: CardReversalProcessor,
           useFactory: () => cardReversalPreprocessor,
         },
         {
-          provide: CardWithdrawalPreprocessor,
+          provide: CardWithdrawalProcessor,
           useFactory: () => cardWithdrawalPreprocessor,
         },
         {
-          provide: CreditAdjustmentPreprocessor,
+          provide: CreditAdjustmentProcessor,
           useFactory: () => creditAdjustmentPreprocessor,
         },
         {
-          provide: DebitAdjustmentPreprocessor,
+          provide: DebitAdjustmentProcessor,
           useFactory: () => debitAdjustmentPreprocessor,
         },
         {
-          provide: PayrollDepositPreprocessor,
+          provide: PayrollDepositProcessor,
           useFactory: () => payrollDepositPreprocessor,
         },
         {
@@ -109,7 +109,7 @@ describe("TransactionPreprocessorFactory", () => {
           useFactory: () => walletWithdrawalProcessor,
         },
         {
-          provide: WalletTransferPreprocessor,
+          provide: WalletTransferProcessor,
           useFactory: () => walletTransferPreprocessor,
         },
         TransactionProcessorFactory,

@@ -2,36 +2,36 @@ import { Injectable } from "@nestjs/common";
 import { ServiceErrorCode, ServiceException } from "../../../../core/exception/service.exception";
 import { WorkflowName } from "../../domain/Transaction";
 import { InitiateTransactionRequest } from "../../dto/transaction.service.dto";
-import { CardCreditAdjustmentPreprocessor } from "./implementations/card.credit.adjustment.preprocessor";
-import { CardDebitAdjustmentPreprocessor } from "./implementations/card.debit.adjustment.preprocessor";
-import { CardReversalPreprocessor } from "./implementations/card.reversal.preprocessor";
-import { CardWithdrawalPreprocessor } from "./implementations/card.withdrawal.preprocessro";
-import { CreditAdjustmentPreprocessor } from "./implementations/credit.adjustment.preprocessor";
-import { DebitAdjustmentPreprocessor } from "./implementations/debit.adjustment.preprocessor";
-import { PayrollDepositPreprocessor } from "./implementations/payroll.deposit.preprocessor";
+import { CardCreditAdjustmentProcessor } from "./implementations/card.credit.adjustment.processor";
+import { CardDebitAdjustmentProcessor } from "./implementations/card.debit.adjustment.processor";
+import { CardReversalProcessor } from "./implementations/card.reversal.processor";
+import { CardWithdrawalProcessor } from "./implementations/card.withdrawal.processor";
+import { CreditAdjustmentProcessor } from "./implementations/credit.adjustment.processor";
+import { DebitAdjustmentProcessor } from "./implementations/debit.adjustment.processor";
+import { PayrollDepositProcessor } from "./implementations/payroll.deposit.processor";
 import { WalletDepositProcessor } from "./implementations/wallet.deposit.processor";
-import { WalletTransferPreprocessor } from "./implementations/wallet.transfer.preprocessor";
+import { WalletTransferProcessor } from "./implementations/wallet.transfer.processor";
 import { WalletWithdrawalProcessor } from "./implementations/wallet.withdrawal.processor";
 import { TransactionQuoteProvider } from "./quote.provider";
-import { TransactionPreprocessor, TransactionPreprocessorRequest } from "./transaction.preprocessor";
+import { TransactionProcessor, TransactionProcessorRequest } from "./transaction.processor";
 import { WorkflowInitiator } from "./workflow.initiator";
 
 @Injectable()
 export class TransactionProcessorFactory {
   constructor(
-    private readonly payrollDepositPreprocessor: PayrollDepositPreprocessor,
-    private readonly cardWithdrawalPreprocessor: CardWithdrawalPreprocessor,
-    private readonly cardReversalPreprocessor: CardReversalPreprocessor,
-    private readonly cardCreditAdjustmentPreprocessor: CardCreditAdjustmentPreprocessor,
-    private readonly cardDebitAdjustmentPreprocessor: CardDebitAdjustmentPreprocessor,
-    private readonly creditAdjustmentPreprocessor: CreditAdjustmentPreprocessor,
-    private readonly debitAdjustmentPreprocessor: DebitAdjustmentPreprocessor,
+    private readonly payrollDepositPreprocessor: PayrollDepositProcessor,
+    private readonly cardWithdrawalPreprocessor: CardWithdrawalProcessor,
+    private readonly cardReversalPreprocessor: CardReversalProcessor,
+    private readonly cardCreditAdjustmentPreprocessor: CardCreditAdjustmentProcessor,
+    private readonly cardDebitAdjustmentPreprocessor: CardDebitAdjustmentProcessor,
+    private readonly creditAdjustmentPreprocessor: CreditAdjustmentProcessor,
+    private readonly debitAdjustmentPreprocessor: DebitAdjustmentProcessor,
     private readonly walletDepositProcessor: WalletDepositProcessor,
     private readonly walletWithdrawalProcessor: WalletWithdrawalProcessor,
-    private readonly walletTransferPreprocessor: WalletTransferPreprocessor,
+    private readonly walletTransferPreprocessor: WalletTransferProcessor,
   ) {}
 
-  getPreprocessor(workflowName: WorkflowName): TransactionPreprocessor {
+  getPreprocessor(workflowName: WorkflowName): TransactionProcessor {
     switch (workflowName) {
       case WorkflowName.PAYROLL_DEPOSIT:
         return this.payrollDepositPreprocessor;
@@ -61,7 +61,7 @@ export class TransactionProcessorFactory {
     }
   }
 
-  extractTransactionPreprocessorRequest(request: InitiateTransactionRequest): TransactionPreprocessorRequest {
+  extractTransactionPreprocessorRequest(request: InitiateTransactionRequest): TransactionProcessorRequest {
     switch (request.type) {
       case WorkflowName.PAYROLL_DEPOSIT:
         return request.payrollDepositRequest;

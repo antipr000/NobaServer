@@ -1,8 +1,8 @@
 import { anything, mock, when } from "ts-mockito";
-import { PayrollDepositPreprocessor } from "../implementations/payroll.deposit.preprocessor";
+import { PayrollDepositProcessor } from "../implementations/payroll.deposit.processor";
 
-export function getMockPayrollDepositPreprocessorWithDefaults(): PayrollDepositPreprocessor {
-  const payrollDepositPreprocessor = mock(PayrollDepositPreprocessor);
+export function getMockPayrollDepositPreprocessorWithDefaults(): PayrollDepositProcessor {
+  const payrollDepositPreprocessor = mock(PayrollDepositProcessor);
 
   when(payrollDepositPreprocessor.validate(anything())).thenReject(new Error("Not implemented!"));
   when(payrollDepositPreprocessor.convertToRepoInputTransaction(anything())).thenReject(new Error("Not implemented!"));

@@ -18,14 +18,14 @@ import {
   WalletWithdrawalTransactionRequest,
 } from "../../../../../modules/transaction/dto/transaction.service.dto";
 import { TransactionQuoteProvider } from "../quote.provider";
-import { TransactionPreprocessor } from "../transaction.preprocessor";
+import { TransactionProcessor } from "../transaction.processor";
 import { FeeType } from "../../../../../modules/transaction/domain/TransactionFee";
 import { AccountType, DocumentType } from "../../../../../modules/transaction/domain/WithdrawalDetails";
 import { WorkflowInitiator } from "../workflow.initiator";
 import { WorkflowExecutor } from "../../../../../infra/temporal/workflow.executor";
 
 @Injectable()
-export class WalletWithdrawalProcessor implements TransactionPreprocessor, TransactionQuoteProvider, WorkflowInitiator {
+export class WalletWithdrawalProcessor implements TransactionProcessor, TransactionQuoteProvider, WorkflowInitiator {
   private readonly walletWithdrawalDetailsKeys: KeysRequired<WalletWithdrawalDetails> = {
     bankCode: Joi.string().required(),
     accountNumber: Joi.string().required(),

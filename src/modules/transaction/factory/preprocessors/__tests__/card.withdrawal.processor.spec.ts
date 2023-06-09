@@ -2,16 +2,16 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { AppEnvironment, NOBA_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../../core/utils/WinstonModule";
-import { CardDebitAdjustmentTransactionRequest } from "../../../../../modules/transaction/dto/transaction.service.dto";
-import { InputTransaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
-import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
-import { CardDebitAdjustmentPreprocessor } from "../implementations/card.debit.adjustment.preprocessor";
+import { CardWithdrawalTransactionRequest } from "../../../dto/transaction.service.dto";
+import { WorkflowName } from "../../../domain/Transaction";
+import { Currency } from "../../../domain/TransactionTypes";
+import { CardWithdrawalProcessor } from "../implementations/card.withdrawal.processor";
 
-describe("CardDebitAdjustmentPreprocessor", () => {
+describe("CardWithdrawalPreprocessor", () => {
   jest.setTimeout(20000);
 
   let app: TestingModule;
-  let cardDebitAdjustmentPreprocessor: CardDebitAdjustmentPreprocessor;
+  let cardWithdrawalPreprocessor: CardWithdrawalProcessor;
 
   beforeEach(async () => {
     const appConfigurations = {
@@ -23,10 +23,10 @@ describe("CardDebitAdjustmentPreprocessor", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [CardDebitAdjustmentPreprocessor],
+      providers: [CardWithdrawalProcessor],
     }).compile();
 
-    cardDebitAdjustmentPreprocessor = app.get<CardDebitAdjustmentPreprocessor>(CardDebitAdjustmentPreprocessor);
+    cardWithdrawalPreprocessor = app.get<CardWithdrawalProcessor>(CardWithdrawalProcessor);
   });
 
   afterEach(async () => {
@@ -35,42 +35,42 @@ describe("CardDebitAdjustmentPreprocessor", () => {
 
   describe("validate()", () => {
     describe("Static validations", () => {
-      const VALID_REQUEST: CardDebitAdjustmentTransactionRequest = {
+      const VALID_REQUEST: CardWithdrawalTransactionRequest = {
+        debitAmountInUSD: 100,
         creditAmount: 100,
         creditCurrency: Currency.COP,
-        debitAmount: 10,
-        debitCurrency: Currency.USD,
         debitConsumerID: "DEBIT_CONSUMER_ID",
-        exchangeRate: 0.1,
+        exchangeRate: 1,
         memo: "MEMO",
+        nobaTransactionID: "NOBA_TRANSACTION_ID",
       };
 
       it.each([
-        "debitAmount",
-        "debitCurrency",
-        "creditAmount",
-        "creditCurrency",
+        "nobaTransactionID",
+        "debitConsumerID",
+        "debitAmountInUSD",
         "exchangeRate",
         "memo",
-        "debitConsumerID",
+        "creditCurrency",
+        "creditAmount",
       ])("should throw error if '%s' is not specified", async field => {
         const request = JSON.parse(JSON.stringify(VALID_REQUEST));
         delete request[field];
 
         try {
-          await cardDebitAdjustmentPreprocessor.validate(request);
+          await cardWithdrawalPreprocessor.validate(request);
           expect(true).toBe(false);
         } catch (err) {
           expect(err.message).toEqual(expect.stringContaining(`${field}`));
         }
       });
 
-      it.each(["creditCurrency", "debitCurrency"])("should throw error if '%s' has INVALID value", async field => {
+      it.each(["creditCurrency"])("should throw error if '%s' has INVALID value", async field => {
         const request = JSON.parse(JSON.stringify(VALID_REQUEST));
         request[field] = "INVALID";
 
         try {
-          await cardDebitAdjustmentPreprocessor.validate(request);
+          await cardWithdrawalPreprocessor.validate(request);
           expect(true).toBe(false);
         } catch (err) {
           expect(err.message).toEqual(expect.stringContaining(`${field}`));
@@ -80,30 +80,31 @@ describe("CardDebitAdjustmentPreprocessor", () => {
   });
 
   describe("convertToRepoInputTransaction()", () => {
-    it("should correctly map the CARD_DEBIT_ADJUSTMENT transaction to InputTransaction", async () => {
-      const request: CardDebitAdjustmentTransactionRequest = {
+    it("should correctly map the CARD_WITHDRAWAL request to InputTransaction", async () => {
+      const request: CardWithdrawalTransactionRequest = {
+        debitAmountInUSD: 100,
         creditAmount: 100,
         creditCurrency: Currency.COP,
-        debitAmount: 10,
-        debitCurrency: Currency.USD,
         debitConsumerID: "DEBIT_CONSUMER_ID",
-        exchangeRate: 0.1,
+        exchangeRate: 1,
         memo: "MEMO",
+        nobaTransactionID: "NOBA_TRANSACTION_ID",
       };
 
-      const response: InputTransaction = await cardDebitAdjustmentPreprocessor.convertToRepoInputTransaction(request);
+      const response = await cardWithdrawalPreprocessor.convertToRepoInputTransaction(request);
 
       expect(response).toStrictEqual({
+        id: "NOBA_TRANSACTION_ID",
         transactionRef: expect.any(String),
-        workflowName: WorkflowName.CARD_DEBIT_ADJUSTMENT,
-        debitAmount: 10,
+        workflowName: WorkflowName.CARD_WITHDRAWAL,
+        debitAmount: 100,
         debitCurrency: Currency.USD,
         debitConsumerID: "DEBIT_CONSUMER_ID",
         creditAmount: 100,
         creditCurrency: Currency.COP,
         memo: "MEMO",
-        exchangeRate: 0.1,
-        sessionKey: "CARD_ADJUSTMENTS",
+        exchangeRate: 1,
+        sessionKey: "CARD_WITHDRAWAL",
         transactionFees: [],
       });
     });

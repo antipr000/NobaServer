@@ -1,8 +1,8 @@
 import { anything, mock, when } from "ts-mockito";
-import { CreditAdjustmentPreprocessor } from "../implementations/credit.adjustment.preprocessor";
+import { CreditAdjustmentProcessor } from "../implementations/credit.adjustment.processor";
 
-export function getMockCreditAdjustmentPreprocessorWithDefaults(): CreditAdjustmentPreprocessor {
-  const creditAdjustmentPreprocessor = mock(CreditAdjustmentPreprocessor);
+export function getMockCreditAdjustmentPreprocessorWithDefaults(): CreditAdjustmentProcessor {
+  const creditAdjustmentPreprocessor = mock(CreditAdjustmentProcessor);
 
   when(creditAdjustmentPreprocessor.validate(anything())).thenReject(new Error("Not implemented!"));
   when(creditAdjustmentPreprocessor.convertToRepoInputTransaction(anything())).thenReject(

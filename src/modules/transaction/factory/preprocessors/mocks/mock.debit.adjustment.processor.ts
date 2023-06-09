@@ -1,8 +1,8 @@
 import { anything, mock, when } from "ts-mockito";
-import { DebitAdjustmentPreprocessor } from "../implementations/debit.adjustment.preprocessor";
+import { DebitAdjustmentProcessor } from "../implementations/debit.adjustment.processor";
 
-export function getMockDebitAdjustmentPreprocessorWithDefaults(): DebitAdjustmentPreprocessor {
-  const debitAdjustmentPreprocessor = mock(DebitAdjustmentPreprocessor);
+export function getMockDebitAdjustmentPreprocessorWithDefaults(): DebitAdjustmentProcessor {
+  const debitAdjustmentPreprocessor = mock(DebitAdjustmentProcessor);
 
   when(debitAdjustmentPreprocessor.validate(anything())).thenReject(new Error("Not implemented!"));
   when(debitAdjustmentPreprocessor.convertToRepoInputTransaction(anything())).thenReject(new Error("Not implemented!"));

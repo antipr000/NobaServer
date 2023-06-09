@@ -2,19 +2,16 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { AppEnvironment, NOBA_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../../core/utils/WinstonModule";
-import {
-  CardReversalTransactionRequest,
-  CardReversalTransactionType,
-} from "../../../../../modules/transaction/dto/transaction.service.dto";
-import { InputTransaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
-import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
-import { CardReversalPreprocessor } from "../implementations/card.reversal.preprocessor";
+import { CardReversalTransactionRequest, CardReversalTransactionType } from "../../../dto/transaction.service.dto";
+import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
+import { Currency } from "../../../domain/TransactionTypes";
+import { CardReversalProcessor } from "../implementations/card.reversal.processor";
 
 describe("CardReversalPreprocessor", () => {
   jest.setTimeout(20000);
 
   let app: TestingModule;
-  let cardReversalPreprocessor: CardReversalPreprocessor;
+  let cardReversalPreprocessor: CardReversalProcessor;
 
   beforeEach(async () => {
     const appConfigurations = {
@@ -26,10 +23,10 @@ describe("CardReversalPreprocessor", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [CardReversalPreprocessor],
+      providers: [CardReversalProcessor],
     }).compile();
 
-    cardReversalPreprocessor = app.get<CardReversalPreprocessor>(CardReversalPreprocessor);
+    cardReversalPreprocessor = app.get<CardReversalProcessor>(CardReversalProcessor);
   });
 
   afterEach(async () => {

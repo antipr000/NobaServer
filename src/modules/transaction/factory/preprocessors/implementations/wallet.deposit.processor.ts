@@ -22,12 +22,12 @@ import { KeysRequired } from "../../../../common/domain/Types";
 import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
 import { Currency } from "../../../domain/TransactionTypes";
 import { TransactionQuoteProvider } from "../quote.provider";
-import { TransactionPreprocessor } from "../transaction.preprocessor";
+import { TransactionProcessor } from "../transaction.processor";
 import { WorkflowExecutor } from "../../../../../infra/temporal/workflow.executor";
 import { WorkflowInitiator } from "../workflow.initiator";
 
 @Injectable()
-export class WalletDepositProcessor implements TransactionPreprocessor, TransactionQuoteProvider, WorkflowInitiator {
+export class WalletDepositProcessor implements TransactionProcessor, TransactionQuoteProvider, WorkflowInitiator {
   private depositFeeFixedAmount: number;
   private depositFeeMultiplier: number;
   private depositNobaFeeAmount: number;

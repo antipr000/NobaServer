@@ -2,16 +2,16 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { AppEnvironment, NOBA_CONFIG_KEY, SERVER_LOG_FILE_PATH } from "../../../../../config/ConfigurationUtils";
 import { TestConfigModule } from "../../../../../core/utils/AppConfigModule";
 import { getTestWinstonModule } from "../../../../../core/utils/WinstonModule";
-import { CardCreditAdjustmentTransactionRequest } from "../../../../../modules/transaction/dto/transaction.service.dto";
-import { InputTransaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
-import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
-import { CardCreditAdjustmentPreprocessor } from "../implementations/card.credit.adjustment.preprocessor";
+import { CardCreditAdjustmentTransactionRequest } from "../../../dto/transaction.service.dto";
+import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
+import { Currency } from "../../../domain/TransactionTypes";
+import { CardCreditAdjustmentProcessor } from "../implementations/card.credit.adjustment.processor";
 
 describe("CardCreditAdjustmentPreprocessor", () => {
   jest.setTimeout(20000);
 
   let app: TestingModule;
-  let cardCreditAdjustmentPreprocessor: CardCreditAdjustmentPreprocessor;
+  let cardCreditAdjustmentPreprocessor: CardCreditAdjustmentProcessor;
 
   beforeEach(async () => {
     const appConfigurations = {
@@ -23,10 +23,10 @@ describe("CardCreditAdjustmentPreprocessor", () => {
 
     app = await Test.createTestingModule({
       imports: [TestConfigModule.registerAsync(appConfigurations), getTestWinstonModule()],
-      providers: [CardCreditAdjustmentPreprocessor],
+      providers: [CardCreditAdjustmentProcessor],
     }).compile();
 
-    cardCreditAdjustmentPreprocessor = app.get<CardCreditAdjustmentPreprocessor>(CardCreditAdjustmentPreprocessor);
+    cardCreditAdjustmentPreprocessor = app.get<CardCreditAdjustmentProcessor>(CardCreditAdjustmentProcessor);
   });
 
   afterEach(async () => {

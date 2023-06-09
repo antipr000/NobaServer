@@ -1,19 +1,19 @@
 import { Injectable } from "@nestjs/common";
 import Joi from "joi";
 import { ServiceErrorCode, ServiceException } from "../../../../../core/exception/service.exception";
-import { ConsumerService } from "../../../../../modules/consumer/consumer.service";
-import { Consumer } from "../../../../../modules/consumer/domain/Consumer";
+import { ConsumerService } from "../../../../consumer/consumer.service";
+import { Consumer } from "../../../../consumer/domain/Consumer";
 import { Utils } from "../../../../../core/utils/Utils";
-import { KeysRequired } from "../../../../../modules/common/domain/Types";
-import { InputTransaction, WorkflowName } from "../../../../../modules/transaction/domain/Transaction";
-import { Currency } from "../../../../../modules/transaction/domain/TransactionTypes";
-import { WalletTransferTransactionRequest } from "../../../../../modules/transaction/dto/transaction.service.dto";
-import { TransactionPreprocessor } from "../transaction.preprocessor";
+import { KeysRequired } from "../../../../common/domain/Types";
+import { InputTransaction, WorkflowName } from "../../../domain/Transaction";
+import { Currency } from "../../../domain/TransactionTypes";
+import { WalletTransferTransactionRequest } from "../../../dto/transaction.service.dto";
+import { TransactionProcessor } from "../transaction.processor";
 import { WorkflowExecutor } from "../../../../../infra/temporal/workflow.executor";
 import { WorkflowInitiator } from "../workflow.initiator";
 
 @Injectable()
-export class WalletTransferPreprocessor implements TransactionPreprocessor, WorkflowInitiator {
+export class WalletTransferProcessor implements TransactionProcessor, WorkflowInitiator {
   private readonly validationKeys: KeysRequired<WalletTransferTransactionRequest> = {
     creditConsumerIDOrTag: Joi.string().required(),
     debitConsumerIDOrTag: Joi.string().required(),

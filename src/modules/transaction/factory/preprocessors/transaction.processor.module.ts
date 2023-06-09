@@ -1,36 +1,37 @@
 import { Module } from "@nestjs/common";
+import { TemporalModule } from "../../../../infra/temporal/temporal.module";
 import { ConsumerModule } from "../../../../modules/consumer/consumer.module";
 import { ExchangeRateModule } from "../../../../modules/exchangerate/exchangerate.module";
 import { CommonModule } from "../../../common/common.module";
 import { EmployeeModule } from "../../../employee/employee.module";
 import { EmployerModule } from "../../../employer/employer.module";
-import { CardCreditAdjustmentPreprocessor } from "./implementations/card.credit.adjustment.preprocessor";
-import { CardDebitAdjustmentPreprocessor } from "./implementations/card.debit.adjustment.preprocessor";
-import { CardReversalPreprocessor } from "./implementations/card.reversal.preprocessor";
-import { CardWithdrawalPreprocessor } from "./implementations/card.withdrawal.preprocessro";
-import { CreditAdjustmentPreprocessor } from "./implementations/credit.adjustment.preprocessor";
-import { DebitAdjustmentPreprocessor } from "./implementations/debit.adjustment.preprocessor";
-import { PayrollDepositPreprocessor } from "./implementations/payroll.deposit.preprocessor";
+import { CardCreditAdjustmentProcessor } from "./implementations/card.credit.adjustment.processor";
+import { CardDebitAdjustmentProcessor } from "./implementations/card.debit.adjustment.processor";
+import { CardReversalProcessor } from "./implementations/card.reversal.processor";
+import { CardWithdrawalProcessor } from "./implementations/card.withdrawal.processor";
+import { CreditAdjustmentProcessor } from "./implementations/credit.adjustment.processor";
+import { DebitAdjustmentProcessor } from "./implementations/debit.adjustment.processor";
+import { PayrollDepositProcessor } from "./implementations/payroll.deposit.processor";
 import { WalletDepositProcessor } from "./implementations/wallet.deposit.processor";
-import { WalletTransferPreprocessor } from "./implementations/wallet.transfer.preprocessor";
+import { WalletTransferProcessor } from "./implementations/wallet.transfer.processor";
 import { WalletWithdrawalProcessor } from "./implementations/wallet.withdrawal.processor";
 import { TransactionProcessorFactory } from "./transaction.processor.factory";
 
 @Module({
-  imports: [CommonModule, EmployeeModule, EmployerModule, ExchangeRateModule, ConsumerModule],
+  imports: [CommonModule, TemporalModule, EmployeeModule, EmployerModule, ExchangeRateModule, ConsumerModule],
   providers: [
     TransactionProcessorFactory,
     // Preprocessors + Processors
-    PayrollDepositPreprocessor,
-    CardCreditAdjustmentPreprocessor,
-    CardDebitAdjustmentPreprocessor,
-    CardWithdrawalPreprocessor,
-    CardReversalPreprocessor,
-    CreditAdjustmentPreprocessor,
-    DebitAdjustmentPreprocessor,
+    PayrollDepositProcessor,
+    CardCreditAdjustmentProcessor,
+    CardDebitAdjustmentProcessor,
+    CardWithdrawalProcessor,
+    CardReversalProcessor,
+    CreditAdjustmentProcessor,
+    DebitAdjustmentProcessor,
     WalletDepositProcessor,
     WalletWithdrawalProcessor,
-    WalletTransferPreprocessor,
+    WalletTransferProcessor,
   ],
   exports: [TransactionProcessorFactory],
 })
