@@ -6,7 +6,6 @@ import {
   NotFoundException,
   Param,
   Query,
-  Headers,
   BadRequestException,
 } from "@nestjs/common";
 import {

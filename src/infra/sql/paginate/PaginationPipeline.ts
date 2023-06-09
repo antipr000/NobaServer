@@ -1,4 +1,3 @@
-import { Prisma } from "@prisma/client";
 import { PaginatedResult } from "../../../core/infra/PaginationTypes";
 
 export type PaginateFunction = <T, K>(model: any, args?: K) => Promise<PaginatedResult<T>>;
@@ -26,7 +25,7 @@ export const createPaginator = <T>(
     const lastPage = Math.ceil(total / perPage);
 
     return {
-      items: data.map((item: any) => convertToDomainObject(item)), // try to revisit this
+      items: data.map((item: any) => convertToDomainObject(item)), // try to revisit types on this
       page: page,
       hasNextPage: page < lastPage,
       totalPages: lastPage,

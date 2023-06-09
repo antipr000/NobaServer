@@ -61,7 +61,6 @@ import { TransactionEvent } from "../transaction/domain/TransactionEvent";
 import { ExchangeRateService } from "../exchangerate/exchangerate.service";
 import { ExchangeRateDTO } from "../exchangerate/dto/exchangerate.dto";
 import { InitiateTransactionDTO } from "../transaction/dto/CreateTransactionDTO";
-import { UserRequest } from "../auth/domain/user.request";
 
 @Roles(Role.NOBA_ADMIN)
 @Controller("v1/admins")

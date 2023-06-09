@@ -1,11 +1,10 @@
 import { INestApplication, Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, OpenAPIObject, SwaggerDocumentOptions, SwaggerModule } from "@nestjs/swagger";
-import { json, urlencoded, text } from "express";
 import { writeFileSync } from "fs";
 import helmet from "helmet";
 import morgan from "morgan";
-import { WINSTON_MODULE_NEST_PROVIDER, WINSTON_MODULE_PROVIDER, WinstonModule } from "nest-winston";
+import { WINSTON_MODULE_NEST_PROVIDER, WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { AppModule } from "./app.module";
 import { DefaultExceptionsFilter } from "./core/exception/filters/DefaultExceptionsFilter";
 import {
