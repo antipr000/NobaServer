@@ -184,7 +184,7 @@ describe("AppController", () => {
         },
       ]);
 
-      const result = await appController.supportedCryptocurrencies({});
+      const result = await appController.supportedCryptocurrencies();
 
       // Just ensuring something's returned. Other unit tests are responsible for exactly what's returned.
       //expect(result.length).toEqual(1);

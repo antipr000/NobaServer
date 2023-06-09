@@ -3,6 +3,7 @@ import { PassportStrategy } from "@nestjs/passport";
 import { ForbiddenException, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { jwtConstants } from "./constants";
 import { ConsumerService } from "../consumer/consumer.service";
+import { Request } from "express";
 
 import { allIdentities, consumerIdentityIdentifier, nobaAdminIdentityIdentifier } from "./domain/IdentityType";
 import { AdminService } from "../admin/admin.service";
@@ -34,9 +35,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (payload.identityType === nobaAdminIdentityIdentifier) {
       return this.getIdentityDomain(payload.id, payload.identityType);
     }
-    const apiKey = request.headers[X_NOBA_API_KEY];
-    const signature = request.headers[X_NOBA_SIGNATURE];
-    const timestamp = request.headers[X_NOBA_TIMESTAMP];
+    const apiKey = request.headers[X_NOBA_API_KEY] as string;
+    const signature = request.headers[X_NOBA_SIGNATURE] as string;
+    const timestamp = request.headers[X_NOBA_TIMESTAMP] as string;
     try {
       await this.headerValidationService.validateApiKeyAndSignature(
         apiKey,

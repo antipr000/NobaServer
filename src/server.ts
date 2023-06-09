@@ -1,7 +1,6 @@
 import { INestApplication, Logger, ValidationPipe } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, OpenAPIObject, SwaggerDocumentOptions, SwaggerModule } from "@nestjs/swagger";
-import { json, urlencoded, text } from "express";
 import { writeFileSync } from "fs";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -14,10 +13,11 @@ import {
 } from "./core/utils/NoUnexpectedKeysValidationPipe";
 import { joiToSwagger } from "./joi2Swagger";
 import { AppEnvironment, getEnvironmentName } from "./config/ConfigurationUtils";
+import winston from "winston";
 
 // `environmentVariables` stores extra environment varaibles that needs to be loaded before the app startup.
 // This will come handy while running tests & inserting any dependent environment varaibles.
-export const bootstrap = async (environmentVariables): Promise<INestApplication> => {
+export const bootstrap = async (environmentVariables: Record<string, string>): Promise<INestApplication> => {
   const environmentKeys = Object.keys(environmentVariables);
   for (let i = 0; i < environmentKeys.length; i++) {
     const environmentKey = environmentKeys[i];
@@ -29,7 +29,7 @@ export const bootstrap = async (environmentVariables): Promise<INestApplication>
   });
 
   const logger: Logger = app.get(WINSTON_MODULE_NEST_PROVIDER); //logger is of Nestjs type
-  const winstonLogger = app.get(WINSTON_MODULE_PROVIDER); //logger of winston type
+  const winstonLogger: winston.Logger = app.get(WINSTON_MODULE_PROVIDER); //logger of winston type
 
   const appEnvType: AppEnvironment = getEnvironmentName();
 
@@ -96,7 +96,7 @@ function generateSwaggerDoc(
   return swaggerDocument;
 }
 
-function getMorgan(winstonLogger) {
+function getMorgan(winstonLogger: winston.Logger) {
   const morganOptions = {
     stream: {
       write: (text: string) => {

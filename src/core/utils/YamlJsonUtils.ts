@@ -16,7 +16,7 @@ export function readConfigsFromYamlFiles(...filesPaths: string[]) {
  * @param item
  * @returns {boolean}
  */
-export function isObject(item) {
+export function isObject(item: any) {
   return item && typeof item === "object" && !Array.isArray(item);
 }
 
@@ -25,7 +25,7 @@ export function isObject(item) {
  * @param target
  * @param ...sources
  */
-export function mergeDeep(target, ...sources) {
+export function mergeDeep(target: any, ...sources: any[]): any {
   if (!sources.length) return target;
   const source = sources.shift();
 

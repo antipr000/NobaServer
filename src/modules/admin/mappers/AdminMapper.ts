@@ -21,7 +21,7 @@ export class AdminMapper implements Mapper<Admin> {
     dto.id = nobaAdmin.props.id;
     dto.email = nobaAdmin.props.email;
     dto.name = nobaAdmin.props.name;
-    dto.role = NOBA_ADMIN_ROLE_TYPES[nobaAdmin.props.role];
+    dto.role = NOBA_ADMIN_ROLE_TYPES[nobaAdmin.props.role as keyof typeof NOBA_ADMIN_ROLE_TYPES];
 
     return dto;
   }

@@ -27,9 +27,9 @@ export class Utils {
   }
 
   private static round(num: number, decimalPlaces: number): string {
-    const shift = function (value, exponent: number) {
-      value = (value + "e").split("e");
-      return +(value[0] + "e" + (+value[1] + (exponent || 0)));
+    const shift = function (value: number, exponent: number) {
+      const valueUpdated = (value + "e").split("e");
+      return +(valueUpdated[0] + "e" + (+valueUpdated[1] + (exponent || 0)));
     };
     const n = shift(num, +decimalPlaces);
     return shift(Math.round(n), -decimalPlaces).toFixed(decimalPlaces);

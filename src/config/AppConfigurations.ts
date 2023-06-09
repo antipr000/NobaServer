@@ -240,7 +240,7 @@ export default async function loadAppConfigs() {
    * For avoiding this, we have "secrets.yaml" which is already added in '.gitignore' and you can
    *    configure any such secret credential in "secrets.yaml" and it will be applied during app startup.
    */
-  const extraSecretsFiles = [];
+  const extraSecretsFiles: string[] = [];
   if (fs.existsSync(join(configsDir, "secrets.yaml"))) {
     extraSecretsFiles.push(join(configsDir, "secrets.yaml"));
   }

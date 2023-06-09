@@ -39,7 +39,7 @@ describe("Authentication", () => {
   const staticOTP = TEST_OTP;
 
   let integrationTestUtils: IntegrationTestUtility;
-  let timestamp;
+  let timestamp: string;
 
   beforeAll(async () => {
     integrationTestUtils = await IntegrationTestUtility.setUp(port);

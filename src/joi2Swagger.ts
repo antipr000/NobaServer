@@ -1,21 +1,21 @@
+import { ComponentsObject } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface";
 import { AnySchema } from "joi";
 import j2s, { ComponentsSchema } from "joi-to-swagger";
 
-export function joiToSwagger(existingComponents) {
-  let mergedComponents = existingComponents;
+export function joiToSwagger(existingComponents: ComponentsObject): ComponentsObject {
+  let mergedSchemas: ComponentsSchema = { ...existingComponents };
+
+  // Because getJoiSchemas() always returns an empty array, mergedSchemas will always be the same as existingComponents
   getJoiSchemas().forEach(joiSchema => {
     const resp = j2s(joiSchema);
-    mergedComponents = mergeComponents(mergedComponents, resp.components);
+    mergedSchemas = mergeSchemas(mergedSchemas, resp.components);
   });
 
-  delete mergedComponents.schemas[""];
-
-  // console.log(mergedComponents)
-
-  return mergedComponents;
+  delete mergedSchemas.schemas[""];
+  return mergedSchemas;
 }
 
-function mergeComponents(existingComponents: ComponentsSchema, newComponents: ComponentsSchema) {
+function mergeSchemas(existingComponents: ComponentsSchema, newComponents: ComponentsSchema): ComponentsSchema {
   //new components override existing components
   const newSchemas = { ...existingComponents.schemas, ...newComponents?.schemas };
   return { ...existingComponents, schemas: newSchemas };

@@ -1,4 +1,5 @@
 import { ExecutionContext, ForbiddenException, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
+import { Request } from "express";
 import { AuthGuard } from "@nestjs/passport";
 import { Reflector } from "@nestjs/core";
 import { Observable } from "rxjs";
@@ -39,9 +40,9 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
   }
 
   private async validateHeaders(request: Request): Promise<boolean> {
-    const apiKey = request.headers[X_NOBA_API_KEY];
-    const signature = request.headers[X_NOBA_SIGNATURE];
-    const timestamp = request.headers[X_NOBA_TIMESTAMP];
+    const apiKey = request.headers[X_NOBA_API_KEY] as string;
+    const signature = request.headers[X_NOBA_SIGNATURE] as string;
+    const timestamp = request.headers[X_NOBA_TIMESTAMP] as string;
     try {
       await this.headerValidationService.validateApiKeyAndSignature(
         apiKey,
@@ -72,7 +73,7 @@ export class JwtAuthGuard extends AuthGuard("jwt") {
     if (doesNotNeedApiKey) {
       return true;
     }
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<Request>();
     const path: string = request.path;
 
     if (path.startsWith("/wf/v1")) {

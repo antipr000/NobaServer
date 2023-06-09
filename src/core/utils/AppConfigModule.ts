@@ -33,7 +33,7 @@ export async function getAppConfigModule() {
 
 @Injectable()
 export class CustomConfigService extends ConfigService {
-  constructor(configs) {
+  constructor(configs: Record<string, any>) {
     super(configs);
   }
 }

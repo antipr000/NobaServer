@@ -15,7 +15,11 @@
     "types": ["jest", "node"],
     "esModuleInterop": true,
     "useDefineForClassFields": false,
-    "allowJs": true
+    "allowJs": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "noImplicitThis": true,
+    "noImplicitAny": false
   },
   "ts-node": {
     "compilerOptions": {

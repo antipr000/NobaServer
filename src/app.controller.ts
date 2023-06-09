@@ -6,7 +6,6 @@ import {
   NotFoundException,
   Param,
   Query,
-  Headers,
   BadRequestException,
 } from "@nestjs/common";
 import {
@@ -98,7 +97,7 @@ export class AppController {
     description: "List of all supported cryptocurrencies",
   })
   @ApiTags("Assets")
-  async supportedCryptocurrencies(@Headers() headers): Promise<Array<CurrencyDTO>> {
+  async supportedCryptocurrencies(): Promise<Array<CurrencyDTO>> {
     return await this.currencyService.getSupportedCryptocurrencies();
   }
 

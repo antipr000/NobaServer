@@ -3,6 +3,7 @@ import { Logger } from "winston";
 import { convertToHTTPException } from "../ExceptionToHTTPExceptionMap";
 import Joi from "joi";
 import { BaseException } from "../base.exception";
+import { Request } from "express";
 
 @Catch()
 export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
@@ -12,7 +13,7 @@ export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
   catch(originalException: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
-    const request = ctx.getRequest();
+    const request = ctx.getRequest<Request>();
 
     const timestamp = new Date().toISOString();
 
@@ -29,13 +30,13 @@ export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
     //log error info on service side, don't catch everything else how would we know what is going wrong?
     const log = true;
     if (log) {
-      let messageToBeLogged;
+      let messageToBeLogged: string;
       if (originalException instanceof HttpException) {
         messageToBeLogged = originalException.message;
       } else if (originalException instanceof Error) {
         messageToBeLogged = originalException.message + "\n" + originalException.stack?.toString();
       } else {
-        messageToBeLogged = originalException;
+        messageToBeLogged = originalException.toString();
       }
 
       this.logger.warn(messageToBeLogged, {
