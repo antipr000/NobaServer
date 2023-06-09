@@ -61,6 +61,7 @@ import { TransactionEvent } from "../transaction/domain/TransactionEvent";
 import { ExchangeRateService } from "../exchangerate/exchangerate.service";
 import { ExchangeRateDTO } from "../exchangerate/dto/exchangerate.dto";
 import { InitiateTransactionDTO } from "../transaction/dto/CreateTransactionDTO";
+import { UserRequest } from "../auth/domain/user.request";
 
 @Roles(Role.NOBA_ADMIN)
 @Controller("v1/admins")
@@ -124,9 +125,13 @@ export class AdminController {
   @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The newly created Noba admin" })
   @ApiForbiddenResponse({ description: "User forbidden from adding new Noba admin" })
   @ApiConflictResponse({ description: "User is already a Noba admin" })
-  async createNobaAdmin(@Request() request, @Body() nobaAdmin: AddNobaAdminDTO): Promise<NobaAdminDTO> {
-    const authenticatedUser: Admin = request.user.entity;
-    if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canAddNobaAdmin()) {
+  async createNobaAdmin(@Request() request: UserRequest, @Body() nobaAdmin: AddNobaAdminDTO): Promise<NobaAdminDTO> {
+    const authenticatedUser = request.user.entity;
+    if (!(authenticatedUser instanceof Admin)) {
+      throw new ForbiddenException("Only admins can add a new Noba admin.");
+    }
+
+    if (!authenticatedUser.canAddNobaAdmin()) {
       throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't add a new Noba admin.`);
     }
 
@@ -142,8 +147,8 @@ export class AdminController {
   @ApiOperation({ summary: "Gets the details of the logged in Noba admin" })
   @ApiResponse({ status: HttpStatus.OK, type: NobaAdminDTO, description: "The logged in Noba admin" })
   @ApiForbiddenResponse({ description: "User forbidden from retrieving details of the Noba admin" })
-  async getNobaAdmin(@Request() request): Promise<NobaAdminDTO> {
-    const authenticatedUser: Admin = request.user.entity;
+  async getNobaAdmin(@Request() request: UserRequest): Promise<NobaAdminDTO> {
+    const authenticatedUser = request.user.entity;
     if (!(authenticatedUser instanceof Admin)) {
       throw new ForbiddenException("This endpoint is only for Noba admins.");
     }
@@ -155,10 +160,14 @@ export class AdminController {
   @ApiOperation({ summary: "Gets the details of all Noba admins" })
   @ApiResponse({ status: HttpStatus.OK, type: [NobaAdminDTO], description: "All Noba admins" })
   @ApiForbiddenResponse({ description: "User forbidden from retrieving details of all Noba admin" })
-  async getAllNobaAdmins(@Request() request): Promise<NobaAdminDTO[]> {
-    const authenticatedUser: Admin = request.user.entity;
+  async getAllNobaAdmins(@Request() request: UserRequest): Promise<NobaAdminDTO[]> {
+    const authenticatedUser = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canViewAllAdmins()) {
-      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't retrieve NobaAdmins.`);
+      if (authenticatedUser instanceof Admin) {
+        throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't retrieve NobaAdmins.`);
+      }
+
+      throw new ForbiddenException("Only admins can retrieve NobaAdmins.");
     }
 
     const allAdmins = await this.adminService.getAllNobaAdmins();
@@ -173,13 +182,17 @@ export class AdminController {
   })
   @ApiNotFoundResponse({ description: "Noba admin not found" })
   async updateNobaAdmin(
-    @Request() request,
+    @Request() request: UserRequest,
     @Param(AdminId) adminId: string,
     @Body() req: UpdateNobaAdminDTO,
   ): Promise<NobaAdminDTO> {
-    const authenticatedUser: Admin = request.user.entity;
+    const authenticatedUser = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canChangeNobaAdminPrivileges()) {
-      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update NobaAdmins.`);
+      if (authenticatedUser instanceof Admin) {
+        throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update NobaAdmins.`);
+      }
+
+      throw new ForbiddenException("Only admins can update NobaAdmins.");
     }
 
     if (authenticatedUser.props.id === adminId) {
@@ -207,10 +220,14 @@ export class AdminController {
     description: "User forbidden from deleting Noba admin or attempt to delete one's own record",
   })
   @ApiNotFoundResponse({ description: "Noba admin not found" })
-  async deleteNobaAdmin(@Request() request, @Param(AdminId) adminId: string): Promise<DeleteNobaAdminDTO> {
-    const authenticatedUser: Admin = request.user.entity;
+  async deleteNobaAdmin(@Request() request: UserRequest, @Param(AdminId) adminId: string): Promise<DeleteNobaAdminDTO> {
+    const authenticatedUser = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canRemoveNobaAdmin()) {
-      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update privileges.`);
+      if (authenticatedUser instanceof Admin) {
+        throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update privileges.`);
+      }
+
+      throw new ForbiddenException("Only admins can update privileges.");
     }
 
     if (authenticatedUser.props.id === adminId) {
@@ -238,11 +255,15 @@ export class AdminController {
   async updateConsumer(
     @Param("consumerID") consumerID: string,
     @Body() requestBody: AdminUpdateConsumerRequestDTO,
-    @Request() request,
+    @Request() request: UserRequest,
   ): Promise<ConsumerInternalDTO> {
-    const authenticatedUser: Admin = request.user.entity;
+    const authenticatedUser = request.user.entity;
     if (!(authenticatedUser instanceof Admin) || !authenticatedUser.canUpdateConsumerData()) {
-      throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update a Consumer.`);
+      if (authenticatedUser instanceof Admin) {
+        throw new ForbiddenException(`Admins with role '${authenticatedUser.props.role}' can't update a Consumer.`);
+      }
+
+      throw new ForbiddenException("Only admins can update a Consumer.");
     }
 
     return this.adminService.updateConsumer(consumerID, requestBody);
@@ -255,10 +276,10 @@ export class AdminController {
     description: "User forbidden from getting account balances",
   })
   async getAccountBalances(
-    @Request() request,
+    @Request() request: UserRequest,
     @Query() filters: AccountBalanceFiltersDTO,
   ): Promise<AccountBalanceDTO[]> {
-    const authenticatedUser: Admin = request.user.entity;
+    const authenticatedUser = request.user.entity;
     if (!(authenticatedUser instanceof Admin)) {
       throw new ForbiddenException("User is forbidden from calling this API.");
     }
@@ -277,11 +298,11 @@ export class AdminController {
     description: "User forbidden from updating the Payroll status",
   })
   async updatePayrollStatus(
-    @Request() request,
+    @Request() request: UserRequest,
     @Param("payrollID") payrollID: string,
     @Body() requestBody: UpdatePayrollRequestDTO,
   ): Promise<PayrollDTO> {
-    const authenticatedUser: Admin = request.user.entity;
+    const authenticatedUser = request.user.entity;
     if (!(authenticatedUser instanceof Admin)) {
       throw new ForbiddenException("User is forbidden from calling this API.");
     }
@@ -307,8 +328,8 @@ export class AdminController {
   @ApiForbiddenResponse({
     description: "User forbidden from updating the Payroll status",
   })
-  async retryPayroll(@Request() request, @Param("payrollID") payrollID: string): Promise<PayrollDTO> {
-    const authenticatedUser: Admin = request.user.entity;
+  async retryPayroll(@Request() request: UserRequest, @Param("payrollID") payrollID: string): Promise<PayrollDTO> {
+    const authenticatedUser = request.user.entity;
     if (!(authenticatedUser instanceof Admin)) {
       throw new ForbiddenException("User is forbidden from calling this API.");
     }
@@ -332,8 +353,11 @@ export class AdminController {
   @ApiOperation({ summary: "Gets all consumers or a subset based on query parameters" })
   @ApiResponse({ status: HttpStatus.OK, type: ConsumerInternalDTO, description: "List of consumers", isArray: true })
   @ApiForbiddenResponse({ description: "User forbidden from getting consumers" })
-  async getConsumers(@Request() request, @Query() filters: ConsumerSearchDTO): Promise<ConsumerInternalDTO[]> {
-    const authenticatedUser: Admin = request.user.entity;
+  async getConsumers(
+    @Request() request: UserRequest,
+    @Query() filters: ConsumerSearchDTO,
+  ): Promise<ConsumerInternalDTO[]> {
+    const authenticatedUser = request.user.entity;
     if (!(authenticatedUser instanceof Admin)) {
       throw new ForbiddenException("User is forbidden from calling this API.");
     }
@@ -352,11 +376,11 @@ export class AdminController {
   @ApiForbiddenResponse({ description: "User forbidden from adding new exchange rate" })
   @ApiQuery({ name: "addInverse", type: "boolean", description: "Whether to also add the inverse of this rate" })
   async createExchangeRate(
-    @Request() request,
+    @Request() request: UserRequest,
     @Body() exchangeRate: ExchangeRateDTO,
     @Query("addInverse") addInverse = "false",
   ): Promise<ExchangeRateDTO[]> {
-    const authenticatedUser: Admin = request.user.entity;
+    const authenticatedUser = request.user.entity;
     if (!(authenticatedUser instanceof Admin)) {
       throw new ForbiddenException("User is forbidden from calling this API.");
     }
@@ -402,10 +426,10 @@ export class AdminController {
   @ApiForbiddenResponse({ description: "User forbidden from getting all transactions" })
   @ApiBadRequestResponse({ description: "Invalid request parameters" })
   async getAllTransactions(
-    @Request() request,
+    @Request() request: UserRequest,
     @Query() filters: TransactionFilterOptionsDTO,
   ): Promise<TransactionQueryResultDTO> {
-    const authenticatedUser: Admin = request.user.entity;
+    const authenticatedUser = request.user.entity;
     if (!(authenticatedUser instanceof Admin)) {
       throw new ForbiddenException("User is forbidden from calling this API.");
     }
@@ -437,11 +461,11 @@ export class AdminController {
   })
   @ApiNotFoundResponse({ description: "Requested transaction is not found" })
   async getTransaction(
-    @Request() request,
+    @Request() request: UserRequest,
     @Query("includeEvents") includeEvents: IncludeEventTypes,
     @Param("transactionRef") transactionRef: string,
   ): Promise<TransactionDTO> {
-    const authenticatedUser: Admin = request.user.entity;
+    const authenticatedUser = request.user.entity;
     if (!(authenticatedUser instanceof Admin)) {
       throw new ForbiddenException("User is forbidden from calling this API.");
     }

@@ -3,6 +3,7 @@ import { Logger } from "winston";
 import { convertToHTTPException } from "../ExceptionToHTTPExceptionMap";
 import Joi from "joi";
 import { BaseException } from "../base.exception";
+import { Request } from "express";
 
 @Catch()
 export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
@@ -12,7 +13,7 @@ export class DefaultExceptionsFilter<Error> implements ExceptionFilter {
   catch(originalException: Error, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
-    const request = ctx.getRequest();
+    const request = ctx.getRequest<Request>();
 
     const timestamp = new Date().toISOString();
 

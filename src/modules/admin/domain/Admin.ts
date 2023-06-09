@@ -47,7 +47,7 @@ const AdminRolesWithTheirPrivileges = {
 
 export const AllRoles = Object.keys(AdminRolesWithTheirPrivileges);
 
-export const isValidRole = role => {
+export const isValidRole = (role: string) => {
   return AllRoles.find(validRole => (role === validRole ? role : undefined)) !== undefined;
 };
 

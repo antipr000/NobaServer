@@ -27,7 +27,7 @@ export class PomeloWebhookMapper {
 
   convertToPomeloTransactionAuthzRequest(
     requestBody: Record<string, any>,
-    headers: Record<string, any>,
+    headers: Record<string, string>,
   ): PomeloTransactionAuthzRequest {
     try {
       this.validateAuthzRequestHeaders(headers);
